@@ -21,8 +21,7 @@ CATALOG_YAML = textwrap.dedent("""\
     version: 1
     datasets:
       - name: ds_a
-        url: "https://example.com/a.tar.gz"
-        sha256: "aaa"
+        script: "scripts/benchmark_datasets/prepare_ds_a.py"
         size_tier: tiny
 """)
 

@@ -1,15 +1,13 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Dataset catalog - loading, downloading, and checksum verification."""
+"""Dataset catalog - loading and script-based provisioning."""
 
 from __future__ import annotations
 
-import hashlib
 import logging
-import shutil
-import tarfile
-import zipfile
+import subprocess
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -17,9 +15,6 @@ from typing import Any
 import yaml
 
 logger = logging.getLogger(__name__)
-
-SENTINEL_FILENAME = ".sha256"
-_DOWNLOAD_CHUNK_SIZE = 1 << 20  # 1 MiB
 
 
 # ---------------------------------------------------------------------------
@@ -32,14 +27,13 @@ class DatasetEntry:
     """A single dataset declared in the catalog."""
 
     name: str
-    url: str
-    sha256: str
+    script: str  # path to preparation script (relative to repo root)
     size_tier: str  # tiny | small | medium | large
     extra: dict[str, Any] = field(default_factory=dict)
 
     @property
     def relative_path(self) -> Path:
-        """Return the conventional extraction directory: ``<name>``."""
+        """Return the conventional dataset directory: ``<name>``."""
         return Path(self.name)
 
 
@@ -102,105 +96,78 @@ def load_catalog(path: Path) -> DatasetCatalog:
 
 
 # ---------------------------------------------------------------------------
-# Download & verification
+# Script execution
 # ---------------------------------------------------------------------------
 
 
-def _sha256_of_file(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        while chunk := f.read(_DOWNLOAD_CHUNK_SIZE):
-            h.update(chunk)
-    return h.hexdigest()
+def _resolve_script_path(script: str) -> Path:
+    """Resolve a script path relative to the repository root.
+
+    The *script* field in the catalog is relative to the repo root.
+    We walk up from the ``catalog.py`` source file to find ``library/``.
+    """
+    # catalog.py is at library/src/otx/benchmark/catalog.py
+    # repo root is 4 levels up (src/otx/benchmark/catalog.py -> library/)
+    library_root = Path(__file__).resolve().parents[3]
+    return library_root / script
 
 
-def _read_sentinel(dataset_dir: Path) -> str | None:
-    sentinel = dataset_dir / SENTINEL_FILENAME
-    if sentinel.exists():
-        return sentinel.read_text().strip()
-    return None
+def _run_script(script_path: Path, data_root: Path, name: str) -> None:
+    """Execute a dataset preparation script."""
+    logger.info("Running preparation script: %s (dataset=%s)", script_path, name)
+
+    result = subprocess.run(  # noqa: S603, PLW1510
+        [sys.executable, str(script_path), "--output-dir", str(data_root), "--name", name],
+        capture_output=True,
+        text=True,
+    )
+
+    if result.stdout:
+        for line in result.stdout.strip().splitlines():
+            logger.info("  [script] %s", line)
+    if result.stderr:
+        for line in result.stderr.strip().splitlines():
+            logger.warning("  [script stderr] %s", line)
+
+    if result.returncode != 0:
+        msg = (
+            f"Preparation script for dataset '{name}' failed with exit code {result.returncode}.\n"
+            f"Script: {script_path}\n"
+            f"stderr: {result.stderr}"
+        )
+        raise RuntimeError(msg)
 
 
-def _write_sentinel(dataset_dir: Path, sha: str) -> None:
-    sentinel = dataset_dir / SENTINEL_FILENAME
-    sentinel.write_text(sha + "\n")
-
-
-def _download(url: str, dest: Path) -> None:
-    """Download *url* to *dest* with a progress bar."""
-    import urllib.request
-
-    logger.info("Downloading %s -> %s", url, dest)
-    dest.parent.mkdir(parents=True, exist_ok=True)
-
-    # Use urllib so we have no extra dependency beyond stdlib.
-    with urllib.request.urlopen(url) as response, dest.open("wb") as out:  # nosec B310  # noqa: S310
-        total = int(response.headers.get("Content-Length", 0))
-        downloaded = 0
-        while chunk := response.read(_DOWNLOAD_CHUNK_SIZE):
-            out.write(chunk)
-            downloaded += len(chunk)
-            if total:
-                pct = downloaded * 100 // total
-                print(f"\r  {pct:3d}% ({downloaded}/{total})", end="", flush=True)
-    print()  # newline after progress
-
-
-def _extract(archive: Path, dest: Path) -> None:
-    """Extract a ``.tar.gz`` or ``.zip`` archive into *dest*."""
-    logger.info("Extracting %s -> %s", archive, dest)
-    dest.mkdir(parents=True, exist_ok=True)
-    if tarfile.is_tarfile(archive):
-        with tarfile.open(archive) as tf:
-            tf.extractall(dest, filter="data")
-    elif zipfile.is_zipfile(archive):
-        with zipfile.ZipFile(archive) as zf:
-            zf.extractall(dest)  # noqa: S202
-    else:
-        msg = f"Unsupported archive format: {archive}"
-        raise ValueError(msg)
+# ---------------------------------------------------------------------------
+# Provisioning
+# ---------------------------------------------------------------------------
 
 
 def provision_dataset(entry: DatasetEntry, data_root: Path) -> Path:
-    """Ensure a single dataset is downloaded, verified, and extracted.
+    """Ensure a single dataset is prepared and ready.
 
-    Returns the path to the extracted dataset directory.
+    If the dataset directory already exists, the script is skipped.
+    Otherwise the preparation script is executed to produce it.
+
+    Returns the path to the prepared dataset directory.
     """
     dataset_dir = data_root / entry.relative_path
 
-    existing_sha = _read_sentinel(dataset_dir)
-    if existing_sha == entry.sha256 and dataset_dir.exists():
-        logger.info("Dataset '%s' is up-to-date (cache hit).", entry.name)
+    if dataset_dir.exists():
+        logger.info("Dataset '%s' already exists, skipping.", entry.name)
         return dataset_dir
 
-    # Need to (re-)download
-    if existing_sha and existing_sha != entry.sha256:
-        logger.warning(
-            "Dataset '%s' checksum mismatch (catalog changed?). Re-downloading.",
-            entry.name,
-        )
+    script_path = _resolve_script_path(entry.script)
 
-    archive_suffix = "".join(Path(entry.url).suffixes[-2:])  # e.g. ".tar.gz"
-    archive_path = data_root / ".archives" / f"{entry.name}{archive_suffix}"
-    archive_path.parent.mkdir(parents=True, exist_ok=True)
+    if not script_path.exists():
+        msg = f"Preparation script not found for dataset '{entry.name}': {script_path}"
+        raise FileNotFoundError(msg)
 
-    _download(entry.url, archive_path)
+    _run_script(script_path, data_root, entry.name)
 
-    # Verify checksum
-    actual_sha = _sha256_of_file(archive_path)
-    if actual_sha != entry.sha256:
-        msg = f"SHA-256 mismatch for dataset '{entry.name}': expected {entry.sha256}, got {actual_sha}"
+    if not dataset_dir.exists():
+        msg = f"Preparation script for '{entry.name}' did not create expected directory: {dataset_dir}"
         raise RuntimeError(msg)
-
-    # Clean old extraction if present, then extract
-    if dataset_dir.exists():
-        shutil.rmtree(dataset_dir)
-    _extract(archive_path, dataset_dir)
-
-    _write_sentinel(dataset_dir, entry.sha256)
-
-    # Clean up archive to save disk
-    archive_path.unlink(missing_ok=True)
 
     return dataset_dir
 
@@ -211,9 +178,9 @@ def provision_datasets(
     *,
     entries: list[DatasetEntry] | None = None,
 ) -> dict[str, Path]:
-    """Download and verify all datasets (or a filtered subset).
+    """Run preparation scripts for all datasets (or a filtered subset).
 
-    Returns a mapping ``{dataset_name: extracted_path}``.
+    Returns a mapping ``{dataset_name: prepared_path}``.
     """
     targets = entries if entries is not None else catalog.all_entries()
     result: dict[str, Path] = {}

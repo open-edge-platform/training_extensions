@@ -5,19 +5,15 @@
 
 from __future__ import annotations
 
-import tarfile
 import textwrap
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
 from otx.benchmark.catalog import (
     DatasetCatalog,
     DatasetEntry,
-    _extract,
-    _read_sentinel,
-    _sha256_of_file,
-    _write_sentinel,
     load_catalog,
     provision_dataset,
     provision_datasets,
@@ -35,16 +31,13 @@ def catalog_yaml(tmp_path: Path) -> Path:
         version: 1
         datasets:
           - name: ds_tiny
-            url: "https://example.com/ds_tiny.tar.gz"
-            sha256: "aaa"
+            script: "scripts/benchmark_datasets/prepare_ds_tiny.py"
             size_tier: tiny
           - name: ds_small
-            url: "https://example.com/ds_small.tar.gz"
-            sha256: "bbb"
+            script: "scripts/benchmark_datasets/prepare_ds_small.py"
             size_tier: small
           - name: cls_tiny
-            url: "https://example.com/cls_tiny.tar.gz"
-            sha256: "ccc"
+            script: "scripts/benchmark_datasets/prepare_cls_tiny.py"
             size_tier: tiny
     """)
     p = tmp_path / "catalog.yaml"
@@ -75,7 +68,7 @@ class TestLoadCatalog:
     def test_entry_fields(self, catalog: DatasetCatalog) -> None:
         entry = catalog.get("ds_tiny")
         assert entry.name == "ds_tiny"
-        assert entry.sha256 == "aaa"
+        assert entry.script == "scripts/benchmark_datasets/prepare_ds_tiny.py"
         assert entry.size_tier == "tiny"
 
     def test_get_unknown_raises(self, catalog: DatasetCatalog) -> None:
@@ -118,99 +111,104 @@ class TestDatasetEntry:
     def test_relative_path(self) -> None:
         entry = DatasetEntry(
             name="my_ds",
-            url="",
-            sha256="",
+            script="scripts/prepare.py",
             size_tier="tiny",
         )
         assert entry.relative_path == Path("my_ds")
 
 
 # ---------------------------------------------------------------------------
-# Provisioning (with a real tiny archive)
+# Helper: create a simple preparation script
 # ---------------------------------------------------------------------------
 
 
-def _make_tar_gz(archive_path: Path, inner_files: dict[str, str]) -> str:
-    """Create a tar.gz with the given files and return its sha256."""
-    with tarfile.open(archive_path, "w:gz") as tf:
-        for name, content in inner_files.items():
-            import io
+def _make_prep_script(script_path: Path, file_content: str = "world") -> None:
+    """Create a minimal preparation script that creates the dataset directory."""
+    script_path.parent.mkdir(parents=True, exist_ok=True)
+    script_path.write_text(
+        textwrap.dedent(f"""\
+        import argparse
+        from pathlib import Path
 
-            data = content.encode()
-            info = tarfile.TarInfo(name=name)
-            info.size = len(data)
-            tf.addfile(info, io.BytesIO(data))
-    return _sha256_of_file(archive_path)
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--output-dir", type=Path, required=True)
+        parser.add_argument("--name", type=str, required=True)
+        args = parser.parse_args()
+
+        dest = args.output_dir / args.name
+        dest.mkdir(parents=True, exist_ok=True)
+        (dest / "hello.txt").write_text("{file_content}")
+    """)
+    )
 
 
 class TestProvisionDataset:
-    def test_cache_hit(self, tmp_path: Path) -> None:
-        """If the sentinel matches, no download should happen."""
+    def test_skips_when_directory_exists(self, tmp_path: Path) -> None:
+        """If the dataset directory already exists, the script should not run."""
         data_root = tmp_path / "data"
         ds_dir = data_root / "cached_ds"
         ds_dir.mkdir(parents=True)
-        _write_sentinel(ds_dir, "match_me")
 
         entry = DatasetEntry(
             name="cached_ds",
-            url="https://will-not-be-called.example.com/x.tar.gz",
-            sha256="match_me",
+            script="scripts/prepare.py",
             size_tier="tiny",
         )
-        # Should NOT attempt any download (url is unreachable)
+        # No need to mock _resolve_script_path — it should never be called
         result = provision_dataset(entry, data_root)
         assert result == ds_dir
 
-    def test_download_and_extract(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Simulate a successful download + extraction cycle."""
+    def test_run_script_and_provision(self, tmp_path: Path) -> None:
+        """Script should be run and dataset dir created."""
         data_root = tmp_path / "data"
-        archive_dir = tmp_path / "serve"
-        archive_dir.mkdir()
-        archive_path = archive_dir / "test_ds.tar.gz"
-        real_sha = _make_tar_gz(archive_path, {"hello.txt": "world"})
 
-        # Monkeypatch _download to copy the local file instead of HTTP
-        def fake_download(url: str, dest: Path) -> None:
-            import shutil
-
-            shutil.copy(archive_path, dest)
-
-        monkeypatch.setattr("otx.benchmark.catalog._download", fake_download)
+        script_path = tmp_path / "scripts" / "prepare.py"
+        _make_prep_script(script_path)
 
         entry = DatasetEntry(
             name="test_ds",
-            url="https://fake.example.com/test_ds.tar.gz",
-            sha256=real_sha,
+            script="scripts/prepare.py",
             size_tier="tiny",
         )
-        result = provision_dataset(entry, data_root)
+
+        with patch("otx.benchmark.catalog._resolve_script_path", return_value=script_path):
+            result = provision_dataset(entry, data_root)
+
         assert result.exists()
         assert (result / "hello.txt").exists()
-        # Sentinel should be written
-        assert (result / ".sha256").read_text().strip() == real_sha
+        assert (result / "hello.txt").read_text() == "world"
 
-    def test_checksum_mismatch_raises(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """A bad checksum must raise RuntimeError."""
+    def test_script_not_found_raises(self, tmp_path: Path) -> None:
+        """Missing preparation script must raise FileNotFoundError."""
         data_root = tmp_path / "data"
-        archive_dir = tmp_path / "serve"
-        archive_dir.mkdir()
-        archive_path = archive_dir / "bad.tar.gz"
-        _make_tar_gz(archive_path, {"x.txt": "y"})
+        entry = DatasetEntry(
+            name="missing",
+            script="scripts/does_not_exist.py",
+            size_tier="tiny",
+        )
 
-        def fake_download(url: str, dest: Path) -> None:
-            import shutil
+        with patch(
+            "otx.benchmark.catalog._resolve_script_path",
+            return_value=tmp_path / "scripts" / "does_not_exist.py",
+        ), pytest.raises(FileNotFoundError, match="Preparation script not found"):
+            provision_dataset(entry, data_root)
 
-            shutil.copy(archive_path, dest)
-
-        monkeypatch.setattr("otx.benchmark.catalog._download", fake_download)
+    def test_script_failure_raises(self, tmp_path: Path) -> None:
+        """A script that exits non-zero must raise RuntimeError."""
+        data_root = tmp_path / "data"
+        script_path = tmp_path / "scripts" / "bad.py"
+        script_path.parent.mkdir(parents=True, exist_ok=True)
+        script_path.write_text("import sys; sys.exit(1)\n")
 
         entry = DatasetEntry(
             name="bad_ds",
-            url="https://fake.example.com/bad.tar.gz",
-            sha256="wrong_sha",
+            script="scripts/bad.py",
             size_tier="tiny",
         )
-        with pytest.raises(RuntimeError, match="SHA-256 mismatch"):
+
+        with patch("otx.benchmark.catalog._resolve_script_path", return_value=script_path), pytest.raises(
+            RuntimeError, match="failed with exit code"
+        ):
             provision_dataset(entry, data_root)
 
 
@@ -225,8 +223,7 @@ class TestLoadCatalogExtras:
             version: 1
             datasets:
               - name: ds_custom
-                url: "https://example.com/ds.tar.gz"
-                sha256: "abc"
+                script: "scripts/prepare.py"
                 size_tier: tiny
                 custom_field: 42
                 another_field: hello
@@ -243,8 +240,7 @@ class TestLoadCatalogExtras:
         content = textwrap.dedent("""\
             datasets:
               - name: ds
-                url: "https://example.com/ds.tar.gz"
-                sha256: "x"
+                script: "scripts/prepare.py"
                 size_tier: tiny
         """)
         p = tmp_path / "catalog.yaml"
@@ -266,159 +262,48 @@ class TestLoadCatalogExtras:
 
 
 # ---------------------------------------------------------------------------
-# Sentinel helpers
+# Provision multiple datasets
 # ---------------------------------------------------------------------------
-
-
-class TestSentinel:
-    def test_write_and_read_sentinel(self, tmp_path: Path) -> None:
-        ds_dir = tmp_path / "ds"
-        ds_dir.mkdir()
-        _write_sentinel(ds_dir, "abc123")
-        assert _read_sentinel(ds_dir) == "abc123"
-
-    def test_read_sentinel_missing(self, tmp_path: Path) -> None:
-        assert _read_sentinel(tmp_path / "nope") is None
-
-
-# ---------------------------------------------------------------------------
-# Archive extraction
-# ---------------------------------------------------------------------------
-
-
-class TestExtract:
-    def test_extract_zip(self, tmp_path: Path) -> None:
-        import zipfile
-
-        archive_path = tmp_path / "test.zip"
-        with zipfile.ZipFile(archive_path, "w") as zf:
-            zf.writestr("hello.txt", "world")
-
-        dest = tmp_path / "extracted"
-        _extract(archive_path, dest)
-        assert (dest / "hello.txt").exists()
-        assert (dest / "hello.txt").read_text() == "world"
-
-    def test_extract_tar_gz(self, tmp_path: Path) -> None:
-        archive_path = tmp_path / "test.tar.gz"
-        _make_tar_gz(archive_path, {"data.txt": "content"})
-
-        dest = tmp_path / "extracted"
-        _extract(archive_path, dest)
-        assert (dest / "data.txt").exists()
-
-    def test_extract_unsupported_format_raises(self, tmp_path: Path) -> None:
-        bad_file = tmp_path / "bad.dat"
-        bad_file.write_text("not an archive")
-        with pytest.raises(ValueError, match="Unsupported archive format"):
-            _extract(bad_file, tmp_path / "out")
-
-
-class TestProvisionDatasetAdvanced:
-    def test_redownload_on_sha_mismatch(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """If sentinel has a different sha, dataset should be re-downloaded."""
-        data_root = tmp_path / "data"
-        ds_dir = data_root / "evolving_ds"
-        ds_dir.mkdir(parents=True)
-        _write_sentinel(ds_dir, "old_sha")
-
-        archive_dir = tmp_path / "serve"
-        archive_dir.mkdir()
-        archive_path = archive_dir / "evolving_ds.tar.gz"
-        new_sha = _make_tar_gz(archive_path, {"updated.txt": "new content"})
-
-        def fake_download(url: str, dest: Path) -> None:
-            import shutil
-
-            shutil.copy(archive_path, dest)
-
-        monkeypatch.setattr("otx.benchmark.catalog._download", fake_download)
-
-        entry = DatasetEntry(
-            name="evolving_ds",
-            url="https://example.com/evolving_ds.tar.gz",
-            sha256=new_sha,
-            size_tier="tiny",
-        )
-        result = provision_dataset(entry, data_root)
-        assert result.exists()
-        assert (result / "updated.txt").exists()
-        assert _read_sentinel(result) == new_sha
-
-    def test_download_and_extract_zip(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Provision should work with .zip archives too."""
-        import zipfile
-
-        data_root = tmp_path / "data"
-        archive_dir = tmp_path / "serve"
-        archive_dir.mkdir()
-        archive_path = archive_dir / "zip_ds.zip"
-        with zipfile.ZipFile(archive_path, "w") as zf:
-            zf.writestr("file.txt", "zip content")
-        real_sha = _sha256_of_file(archive_path)
-
-        def fake_download(url: str, dest: Path) -> None:
-            import shutil
-
-            shutil.copy(archive_path, dest)
-
-        monkeypatch.setattr("otx.benchmark.catalog._download", fake_download)
-
-        entry = DatasetEntry(
-            name="zip_ds",
-            url="https://example.com/zip_ds.zip",
-            sha256=real_sha,
-            size_tier="tiny",
-        )
-        result = provision_dataset(entry, data_root)
-        assert (result / "file.txt").read_text() == "zip content"
 
 
 class TestProvisionDatasets:
-    def test_provisions_all_entries(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        archive_dir = tmp_path / "serve"
-        archive_dir.mkdir()
-        archive_a = archive_dir / "a.tar.gz"
-        archive_b = archive_dir / "b.tar.gz"
-        sha_a = _make_tar_gz(archive_a, {"a.txt": "content_a"})
-        sha_b = _make_tar_gz(archive_b, {"b.txt": "content_b"})
+    def test_provisions_all_entries(self, tmp_path: Path) -> None:
+        script_a = tmp_path / "scripts" / "prepare_a.py"
+        script_b = tmp_path / "scripts" / "prepare_b.py"
+        _make_prep_script(script_a, file_content="content_a")
+        _make_prep_script(script_b, file_content="content_b")
 
-        def fake_download(url: str, dest: Path) -> None:
-            import shutil
-
-            name = Path(url).name
-            shutil.copy(archive_dir / name, dest)
-
-        monkeypatch.setattr("otx.benchmark.catalog._download", fake_download)
-
-        entry_a = DatasetEntry(name="a", url="https://x.com/a.tar.gz", sha256=sha_a, size_tier="tiny")
-        entry_b = DatasetEntry(name="b", url="https://x.com/b.tar.gz", sha256=sha_b, size_tier="tiny")
+        entry_a = DatasetEntry(name="a", script="scripts/prepare_a.py", size_tier="tiny")
+        entry_b = DatasetEntry(name="b", script="scripts/prepare_b.py", size_tier="tiny")
         catalog = DatasetCatalog(version=1, datasets={"a": entry_a, "b": entry_b})
 
         data_root = tmp_path / "data"
-        result = provision_datasets(catalog, data_root)
+
+        def resolve(script: str) -> Path:
+            return tmp_path / script
+
+        with patch("otx.benchmark.catalog._resolve_script_path", side_effect=resolve):
+            result = provision_datasets(catalog, data_root)
+
         assert set(result.keys()) == {"a", "b"}
-        assert (result["a"] / "a.txt").exists()
-        assert (result["b"] / "b.txt").exists()
+        assert (result["a"] / "hello.txt").exists()
+        assert (result["b"] / "hello.txt").exists()
 
-    def test_provisions_subset(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        archive_dir = tmp_path / "serve"
-        archive_dir.mkdir()
-        archive = archive_dir / "only.tar.gz"
-        sha = _make_tar_gz(archive, {"only.txt": "data"})
+    def test_provisions_subset(self, tmp_path: Path) -> None:
+        script_a = tmp_path / "scripts" / "prepare_a.py"
+        _make_prep_script(script_a, file_content="data")
 
-        def fake_download(url: str, dest: Path) -> None:
-            import shutil
-
-            shutil.copy(archive, dest)
-
-        monkeypatch.setattr("otx.benchmark.catalog._download", fake_download)
-
-        entry_a = DatasetEntry(name="a", url="https://x.com/only.tar.gz", sha256=sha, size_tier="tiny")
-        entry_b = DatasetEntry(name="b", url="https://unreachable.com/b.tar.gz", sha256="nope", size_tier="tiny")
+        entry_a = DatasetEntry(name="a", script="scripts/prepare_a.py", size_tier="tiny")
+        entry_b = DatasetEntry(name="b", script="scripts/prepare_b.py", size_tier="tiny")
         catalog = DatasetCatalog(version=1, datasets={"a": entry_a, "b": entry_b})
 
         data_root = tmp_path / "data"
-        result = provision_datasets(catalog, data_root, entries=[entry_a])
+
+        def resolve(script: str) -> Path:
+            return tmp_path / script
+
+        with patch("otx.benchmark.catalog._resolve_script_path", side_effect=resolve):
+            result = provision_datasets(catalog, data_root, entries=[entry_a])
+
         assert "a" in result
         assert "b" not in result

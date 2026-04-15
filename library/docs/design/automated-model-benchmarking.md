@@ -135,10 +135,11 @@ from `perf_v2/`) while fixing the structural issues.
 │           │                     │                         │              │
 │           ▼                     ▼                         ▼              │
 │   ┌────────────────┐    ┌────────────────┐    ┌───────────────────────┐  │
-│   │ Dataset        │    │ Benchmark      │    │ MLflow                │  │
-│   │ Archive        │    │ Runner         │    │ Tracking Server       │  │
-│   │ (Intel Geti    │    │ (Python)       │    │ (local or remote)     │  │
-│   │  Storage)      │    │                │    │                       │  │
+│   │ Preparation    │    │ Benchmark      │    │ MLflow                │  │
+│   │ Scripts        │    │ Runner         │    │ Tracking Server       │  │
+│   │ (scripts/      │    │ (Python)       │    │ (local or remote)     │  │
+│   │  benchmark_    │    │                │    │                       │  │
+│   │  datasets/)    │    │                │    │                       │  │
 │   └────────────────┘    └───────┬────────┘    └───────────┬───────────┘  │
 │                                 │                         │              │
 │                                 ▼                         ▼              │
@@ -153,12 +154,12 @@ from `perf_v2/`) while fixing the structural issues.
 
 The system is composed of four independent layers:
 
-| Layer                | Responsibility                                           | Artifact                          |
-| -------------------- | -------------------------------------------------------- | --------------------------------- |
-| **Dataset Catalog**  | Declare datasets, their storage location, and size class | `benchmark_catalog.yaml`          |
-| **Benchmark Runner** | Download data, run experiments, log to MLflow            | Python package `otx.benchmark`    |
-| **Report Generator** | Compare against baselines, produce human-readable report | Markdown + CSV                    |
-| **CI Workflow**      | Orchestrate the above on GitHub Actions runners          | `.github/workflows/benchmark.yml` |
+| Layer                | Responsibility                                              | Artifact                                                 |
+| -------------------- | ----------------------------------------------------------- | -------------------------------------------------------- |
+| **Dataset Catalog**  | Declare datasets, their preparation scripts, and size class | `benchmark_catalog.yaml` + `scripts/benchmark_datasets/` |
+| **Benchmark Runner** | Provision data via scripts, run experiments, log to MLflow  | Python package `otx.benchmark`                           |
+| **Report Generator** | Compare against baselines, produce human-readable report    | Markdown + CSV                                           |
+| **CI Workflow**      | Orchestrate the above on GitHub Actions runners             | `.github/workflows/benchmark.yml`                        |
 
 Each layer is independently testable and usable outside CI (e.g., an engineer
 can run the benchmark runner locally with `python -m otx.benchmark run ...`).
@@ -172,10 +173,15 @@ can run the benchmark runner locally with `python -m otx.benchmark run ...`).
 - Every dataset used for benchmarking is **declared in a single YAML manifest**
   (`benchmark_catalog.yaml`) rather than scattered across Python files.
 - Datasets are classified by **size tier**: `tiny`, `small`, `medium`, `large`.
-- Each entry includes a **download URL** (Intel Geti test-data storage at
-  `https://storage.geti.intel.com/test-data/`).
-- Datasets must have **verified, meaningful annotations**. The catalog includes a
-  checksum (SHA-256) to guarantee integrity.
+- Each entry references a **preparation script** — a Python script that lives in
+  the repository under `scripts/benchmark_datasets/`. The script is responsible
+  for downloading the raw dataset from its source (e.g. a public URL, a
+  cloud bucket, or any other origin), applying any necessary transformations
+  (format conversion, annotation adjustments, subset sampling), and placing
+  the final dataset in the designated data directory.
+- Datasets must have **verified, meaningful annotations**. Because scripts are
+  version-controlled, the exact transformation logic is reviewable and
+  reproducible.
 
 #### Size Tier Definitions
 
@@ -199,57 +205,123 @@ used by multiple tasks (e.g. a multi-annotation dataset used for detection,
 segmentation, and classification), the catalog is **task-independent**. The
 manifest (§6) declares which datasets each task uses.
 
+Each entry specifies a `script` field — the path (relative to the repository
+root) to a Python preparation script. The script must accept two arguments:
+
+1. `--output-dir` — the directory where the final dataset should be placed.
+2. `--name` — the dataset name (used by the script to determine its output
+   sub-directory within the output dir).
+
 ```yaml
 # benchmark_catalog.yaml
 version: 1
 
 datasets:
   - name: pothole_tiny
-    url: "https://storage.geti.intel.com/test-data/pothole_tiny.tar.gz"
-    sha256: "abc123..."
+    script: "scripts/benchmark_datasets/prepare_pothole.py"
     size_tier: tiny
 
   - name: wgisd_small
-    url: "https://storage.geti.intel.com/test-data/wgisd_small.tar.gz"
-    sha256: "def456..."
+    script: "scripts/benchmark_datasets/prepare_wgisd.py"
     size_tier: small
 
   - name: diopsis_medium
-    url: "..."
-    sha256: "..."
+    script: "scripts/benchmark_datasets/prepare_diopsis.py"
     size_tier: medium
 
   - name: visdrone_large
-    url: "..."
-    sha256: "..."
+    script: "scripts/benchmark_datasets/prepare_visdrone.py"
     size_tier: large
 
   - name: pneumonia_tiny
-    url: "..."
-    sha256: "..."
+    script: "scripts/benchmark_datasets/prepare_pneumonia.py"
     size_tier: tiny
   # ...
 ```
 
-### 5.3 Download & Cache
+### 5.3 Script-Based Provisioning & Cache
 
 A utility (`otx.benchmark.catalog`) will:
 
 1. Read the catalog.
-2. For each required dataset, check if it already exists in
-   `<data_root>/<name>` by looking for a `.sha256` sentinel file that
-   was written after the last successful extraction. The sentinel contains the
-   SHA-256 of the **downloaded archive**.
-3. If the sentinel is missing, has a mismatched checksum, or the extracted
-   directory does not exist: download the archive from the URL, verify the
-   archive's SHA-256 against the catalog checksum, extract, and write the
-   sentinel file.
+2. For each required dataset, check if the directory `<data_root>/<name>`
+   already exists. If it does, the dataset is considered ready and the
+   script is skipped.
+3. If the directory does not exist, run the preparation script via
+   `python <script> --output-dir <data_root> --name <name>`.
 4. On CI runners, use the GitHub Actions cache (`actions/cache`) keyed on the
-   catalog checksum to avoid re-downloading on every run.
+   hash of all preparation scripts to avoid re-provisioning on every run.
+   To force re-provisioning (e.g. after a script change), delete the dataset
+   directory or bust the CI cache.
 
 Because datasets are stored in a flat `<data_root>/<name>/` layout (no task
-prefix), datasets shared across multiple tasks are only downloaded and stored
+prefix), datasets shared across multiple tasks are only prepared and stored
 once.
+
+#### 5.3.1 Preparation Script Contract
+
+Each preparation script in `scripts/benchmark_datasets/` must:
+
+- Accept `--output-dir <path>` and `--name <dataset_name>` CLI arguments.
+- Download raw data from its source (URL, cloud storage, etc.).
+- Apply any transformations (format conversion, annotation fixes, sampling).
+- Place the final dataset in `<output-dir>/<name>/`.
+- Be **idempotent** — running the script twice produces the same result.
+- Exit with code 0 on success, non-zero on failure.
+
+Scripts should use the shared helpers in `otx.benchmark.dataset_helpers` to
+avoid duplicating boilerplate. The module provides:
+
+| Helper              | Purpose                                                             |
+| ------------------- | ------------------------------------------------------------------- |
+| `parse_args()`      | Parse `--output-dir` / `--name`; returns a `DatasetArgs` dataclass  |
+| `download()`        | Download a URL to a local directory; returns the local file path    |
+| `extract_archive()` | Extract `.tar.gz`, `.tar`, or `.zip` into a destination directory   |
+| `DatasetArgs`       | Dataclass with `.dest` (final path), `.archive_dir` (temp archives) |
+
+A simple "download + extract" dataset needs only ~10 lines:
+
+```python
+#!/usr/bin/env python3
+# scripts/benchmark_datasets/prepare_pothole.py
+"""Download and prepare the pothole_tiny benchmark dataset."""
+
+from otx.benchmark.dataset_helpers import download, extract_archive, parse_args
+
+_URL = "https://storage.geti.intel.com/test-data/pothole_tiny.tar.gz"
+
+
+def main() -> None:
+    args = parse_args(description="Prepare the pothole_tiny dataset.")
+
+    archive = download(_URL, dest_dir=args.archive_dir, filename=f"{args.name}.tar.gz")
+    extract_archive(archive, args.dest)
+    archive.unlink(missing_ok=True)
+
+    print(f"Dataset '{args.name}' ready at {args.dest}")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+For datasets that need transformation after extraction, add custom logic
+between `extract_archive()` and the final print:
+
+```python
+def main() -> None:
+    args = parse_args(description="Prepare the wgisd dataset (subsampled to 200 images).")
+
+    archive = download(_URL, dest_dir=args.archive_dir, filename=f"{args.name}.zip")
+    extract_archive(archive, args.dest)
+    archive.unlink(missing_ok=True)
+
+    # Dataset-specific: subsample to 200 images for the "small" tier
+    _subsample_images(args.dest / "images", max_count=200)
+    _rewrite_annotations(args.dest / "annotations.json")
+
+    print(f"Dataset '{args.name}' ready at {args.dest}")
+```
 
 ```python
 # otx/benchmark/catalog.py  (simplified)
@@ -259,9 +331,9 @@ def provision_datasets(
     *,
     entries: list[DatasetEntry] | None = None,
 ) -> dict[str, Path]:
-    """Download and verify all datasets (or a filtered subset).
+    """Run preparation scripts for all datasets (or a filtered subset).
 
-    Returns a mapping {dataset_name: extracted_path}.
+    Returns a mapping {dataset_name: prepared_path}.
     """
     ...
 ```
@@ -774,6 +846,7 @@ src/otx/benchmark/
 ├── __main__.py          # CLI entry: `python -m otx.benchmark`
 ├── cli.py               # Argument parsing
 ├── catalog.py           # Dataset catalog loading & provisioning
+├── dataset_helpers.py   # Shared helpers for preparation scripts (download, extract, parse_args)
 ├── manifest.py          # Benchmark manifest loading & filtering
 ├── runner.py            # Core orchestration loop
 ├── experiment.py        # Single experiment (train/test/export/optimize)
@@ -1336,7 +1409,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: data/
-          key: benchmark-datasets-${{ hashFiles('benchmark_catalog.yaml') }}
+          key: benchmark-datasets-${{ hashFiles('scripts/benchmark_datasets/**') }}
 
       - name: Provision datasets
         run: python -m otx.benchmark provision --catalog benchmark_catalog.yaml --data-root data/
@@ -1563,6 +1636,12 @@ library/
 │   ├── experiment.py
 │   ├── tracking.py
 │   └── report.py
+├── scripts/
+│   └── benchmark_datasets/
+│       ├── prepare_pothole.py
+│       ├── prepare_wgisd.py
+│       ├── prepare_diopsis.py
+│       └── ...
 ├── benchmark_catalog.yaml
 └── benchmark_manifest.yaml
 ```
@@ -1636,9 +1715,10 @@ results/
 ### Phase 1 — Foundation (2 weeks)
 
 - [ ] Create `src/otx/benchmark/` package skeleton.
-- [ ] Implement `catalog.py`: YAML parsing, download, checksum verification (including cache-hit re-verification).
+- [ ] Implement `catalog.py`: YAML parsing, script execution, sentinel-based caching (script hash re-verification).
 - [ ] Implement `manifest.py`: YAML parsing, filtering, experiment enumeration, `{metric}` placeholder resolution.
 - [ ] Write `benchmark_catalog.yaml` for detection (one task, end-to-end proof of concept).
+- [ ] Write preparation scripts in `scripts/benchmark_datasets/` for detection datasets.
 - [ ] Write `benchmark_manifest.yaml` for detection.
 - [ ] Implement `experiment.py`: thin wrapper around `OTXEngine` with timing, JSON serialization for complex overrides.
 - [ ] Implement `runner.py`: core loop with catch-and-continue, phase-level resume support (§13.3).
@@ -1673,7 +1753,7 @@ results/
       (no `tasks/rotated_detection.py` exists). Models, datasets, and criteria must
       be defined from scratch. Coordinate with rotated detection model owners to
       identify appropriate datasets and accuracy metrics.
-- [ ] Curate and upload all datasets to the public archive.
+- [ ] Curate and write preparation scripts for all datasets.
 - [ ] Run full matrix on GPU runner; generate initial baselines (first `develop` run logs to MLflow, establishing the baseline for future comparisons).
 - [ ] Add tiling scenario configurations.
 
@@ -1688,13 +1768,13 @@ results/
 
 ## 17. Open Questions
 
-| #   | Question                                            | Proposed Default                                          | Notes                                                                                                                                                                                                                                                                                                                                   |
-| --- | --------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Where to host benchmark datasets?                   | Intel Geti Storage (`storage.geti.intel.com/test-data/`)  | Internal storage, accessible from CI runners. No external dependency on third-party hosting.                                                                                                                                                                                                                                            |
-| 2   | Remote MLflow server or local-only?                 | Start local (`mlruns/`), move to remote server in Phase 5 | Avoids infra dependency in early phases.                                                                                                                                                                                                                                                                                                |
-| 3   | How many seeds per experiment?                      | 3                                                         | Balances statistical confidence vs. CI cost. 5 seeds would be better but almost doubles runtime.                                                                                                                                                                                                                                        |
-| 4   | Should the benchmark block PR merges on regression? | No (advisory only)                                        | Flaky GPU tests + margin of error make hard-gating risky initially. Revisit after baseline stability is established.                                                                                                                                                                                                                    |
-| 5   | Should we support multi-GPU training benchmarks?    | Not in v1                                                 | The existing `benchmark.py` has `num_devices` support. Add as a scenario later if needed (`num_devices > 1`).                                                                                                                                                                                                                           |
-| 6   | Maximum acceptable CI runtime for weekly run?       | ~20 hours on a single A100                                | All benchmarks run sequentially on one self-hosted GPU runner. The runner is given a 48h timeout. Use `--priority`, `--size-tier`, and model rotation (§6.4.2) to keep runtime within budget. Nightly quick runs (~5 hours) use `core` models + `tiny`+`small` datasets only.                                                           |
-| 7   | How to handle dataset version changes?              | Treat as a baseline-breaking change                       | When a dataset's SHA-256 changes (e.g., annotation fix), all baselines for experiments using that dataset become stale. The reporter should flag these as `no_baseline` rather than `regression`. Document the process: update catalog checksum → re-run benchmark on `develop` → new MLflow results become the baseline automatically. |
-| 8   | `deterministic: true` performance impact            | Document as known trade-off                               | Setting `deterministic: true` disables cuDNN benchmark mode and uses slower deterministic CUDA algorithms. Benchmark timings under this setting may be 10–30% slower than real-world training. This is acceptable for regression detection (relative comparisons) but should be noted in published reports.                             |
+| #   | Question                                            | Proposed Default                                                        | Notes                                                                                                                                                                                                                                                                                                                                                                                             |
+| --- | --------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Where to host benchmark datasets?                   | Produced by in-repo preparation scripts (`scripts/benchmark_datasets/`) | Scripts download from any source, transform, and place data locally. No dependency on a single hosting service.                                                                                                                                                                                                                                                                                   |
+| 2   | Remote MLflow server or local-only?                 | Start local (`mlruns/`), move to remote server in Phase 5               | Avoids infra dependency in early phases.                                                                                                                                                                                                                                                                                                                                                          |
+| 3   | How many seeds per experiment?                      | 3                                                                       | Balances statistical confidence vs. CI cost. 5 seeds would be better but almost doubles runtime.                                                                                                                                                                                                                                                                                                  |
+| 4   | Should the benchmark block PR merges on regression? | No (advisory only)                                                      | Flaky GPU tests + margin of error make hard-gating risky initially. Revisit after baseline stability is established.                                                                                                                                                                                                                                                                              |
+| 5   | Should we support multi-GPU training benchmarks?    | Not in v1                                                               | The existing `benchmark.py` has `num_devices` support. Add as a scenario later if needed (`num_devices > 1`).                                                                                                                                                                                                                                                                                     |
+| 6   | Maximum acceptable CI runtime for weekly run?       | ~20 hours on a single A100                                              | All benchmarks run sequentially on one self-hosted GPU runner. The runner is given a 48h timeout. Use `--priority`, `--size-tier`, and model rotation (§6.4.2) to keep runtime within budget. Nightly quick runs (~5 hours) use `core` models + `tiny`+`small` datasets only.                                                                                                                     |
+| 7   | How to handle dataset version changes?              | Treat as a baseline-breaking change                                     | When a preparation script changes, the sentinel hash mismatches and the dataset is re-provisioned automatically. All baselines for experiments using that dataset become stale. The reporter should flag these as `no_baseline` rather than `regression`. Document the process: update preparation script → re-run benchmark on `develop` → new MLflow results become the baseline automatically. |
+| 8   | `deterministic: true` performance impact            | Document as known trade-off                                             | Setting `deterministic: true` disables cuDNN benchmark mode and uses slower deterministic CUDA algorithms. Benchmark timings under this setting may be 10–30% slower than real-world training. This is acceptable for regression detection (relative comparisons) but should be noted in published reports.                                                                                       |

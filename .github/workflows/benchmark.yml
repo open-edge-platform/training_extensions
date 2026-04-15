@@ -1,0 +1,297 @@
+# OTX Model Benchmark Workflow
+#
+# Automated benchmarking of OTX models on curated datasets.
+# Results are logged to a centralized MLflow tracking server and
+# summarized as Markdown reports (posted as PR comments or CI artifacts).
+#
+# Triggers:
+#   - Weekly full benchmark (Sunday 02:00 UTC) — core + extended models, all dataset tiers
+#   - Nightly quick benchmark (Mon–Sat 02:00 UTC) — core models, tiny + small datasets
+#   - PR label — benchmark:run (quick), benchmark:params (parameter scenarios), benchmark:full
+#   - Manual workflow_dispatch — full control over all parameters
+#
+# Required secrets:
+#   MLFLOW_TRACKING_URI — URL of the centralized MLflow server (e.g. http://mlflow.internal:5000)
+#
+# Self-hosted runner labels:
+#   gpu — NVIDIA GPU runner (primary)
+#   xpu — Intel XPU runner
+#   cpu — CPU-only runner
+
+name: Model Benchmark
+
+on:
+  schedule:
+    - cron: "0 2 * * 0" # Weekly full: Sunday 02:00 UTC
+    - cron: "0 2 * * 1-6" # Nightly quick: Mon–Sat 02:00 UTC
+  pull_request:
+    types: [labeled] # Trigger on benchmark labels
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Task filter (e.g. detection, all)"
+        default: "all"
+      model:
+        description: "Model filter (comma-separated, or 'all')"
+        default: "all"
+      priority:
+        description: "Model priority tiers to include"
+        default: "core,extended"
+        type: choice
+        options:
+          - core
+          - "core,extended"
+          - "core,extended,exploratory"
+      size_tier:
+        description: "Dataset size tiers to include"
+        default: "tiny,small,medium"
+      scenario:
+        description: "Scenario filter (default, tiling, lr_high, ... or 'all')"
+        default: "default"
+      accelerator:
+        description: "Accelerator target"
+        default: "gpu"
+        type: choice
+        options: [gpu, xpu, cpu]
+      eval_upto:
+        description: "Last evaluation phase (train → export → optimize)"
+        default: "optimize"
+        type: choice
+        options: [train, export, optimize]
+      num_seeds:
+        description: "Number of seeds per experiment"
+        default: "3"
+
+concurrency:
+  group: benchmark-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ---------------------------------------------------------------------------
+# Job 1: Determine run parameters based on trigger type
+# ---------------------------------------------------------------------------
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    outputs:
+      priority: ${{ steps.cfg.outputs.priority }}
+      size_tier: ${{ steps.cfg.outputs.size_tier }}
+      num_seeds: ${{ steps.cfg.outputs.num_seeds }}
+      eval_upto: ${{ steps.cfg.outputs.eval_upto }}
+      scenario: ${{ steps.cfg.outputs.scenario }}
+      accelerator: ${{ steps.cfg.outputs.accelerator }}
+      trigger: ${{ steps.cfg.outputs.trigger }}
+      should_run: ${{ steps.cfg.outputs.should_run }}
+    steps:
+      - id: cfg
+        shell: bash
+        run: |
+          # ── workflow_dispatch: use inputs directly ──────────────────────
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "priority=${{ inputs.priority }}" >> "$GITHUB_OUTPUT"
+            echo "size_tier=${{ inputs.size_tier }}" >> "$GITHUB_OUTPUT"
+            echo "num_seeds=${{ inputs.num_seeds }}" >> "$GITHUB_OUTPUT"
+            echo "eval_upto=${{ inputs.eval_upto }}" >> "$GITHUB_OUTPUT"
+            echo "scenario=${{ inputs.scenario }}" >> "$GITHUB_OUTPUT"
+            echo "accelerator=${{ inputs.accelerator }}" >> "$GITHUB_OUTPUT"
+            echo "trigger=manual" >> "$GITHUB_OUTPUT"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+
+          # ── Weekly full: Sunday schedule ────────────────────────────────
+          elif [[ "${{ github.event.schedule }}" == "0 2 * * 0" ]]; then
+            echo "priority=core,extended" >> "$GITHUB_OUTPUT"
+            echo "size_tier=tiny,small,medium" >> "$GITHUB_OUTPUT"
+            echo "num_seeds=3" >> "$GITHUB_OUTPUT"
+            echo "eval_upto=optimize" >> "$GITHUB_OUTPUT"
+            echo "scenario=default" >> "$GITHUB_OUTPUT"
+            echo "accelerator=gpu" >> "$GITHUB_OUTPUT"
+            echo "trigger=weekly" >> "$GITHUB_OUTPUT"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+
+          # ── Nightly quick: Mon–Sat schedule ────────────────────────────
+          elif [[ "${{ github.event.schedule }}" == "0 2 * * 1-6" ]]; then
+            echo "priority=core" >> "$GITHUB_OUTPUT"
+            echo "size_tier=tiny,small" >> "$GITHUB_OUTPUT"
+            echo "num_seeds=1" >> "$GITHUB_OUTPUT"
+            echo "eval_upto=export" >> "$GITHUB_OUTPUT"
+            echo "scenario=default" >> "$GITHUB_OUTPUT"
+            echo "accelerator=gpu" >> "$GITHUB_OUTPUT"
+            echo "trigger=nightly" >> "$GITHUB_OUTPUT"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+
+          # ── PR labels ──────────────────────────────────────────────────
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            LABEL="${{ github.event.label.name }}"
+            if [[ "$LABEL" == "benchmark:run" ]]; then
+              echo "priority=core" >> "$GITHUB_OUTPUT"
+              echo "size_tier=tiny" >> "$GITHUB_OUTPUT"
+              echo "num_seeds=1" >> "$GITHUB_OUTPUT"
+              echo "eval_upto=train" >> "$GITHUB_OUTPUT"
+              echo "scenario=default" >> "$GITHUB_OUTPUT"
+              echo "accelerator=gpu" >> "$GITHUB_OUTPUT"
+              echo "trigger=pr" >> "$GITHUB_OUTPUT"
+              echo "should_run=true" >> "$GITHUB_OUTPUT"
+            elif [[ "$LABEL" == "benchmark:params" ]]; then
+              echo "priority=core" >> "$GITHUB_OUTPUT"
+              echo "size_tier=tiny" >> "$GITHUB_OUTPUT"
+              echo "num_seeds=1" >> "$GITHUB_OUTPUT"
+              echo "eval_upto=train" >> "$GITHUB_OUTPUT"
+              echo "scenario=default,configurable" >> "$GITHUB_OUTPUT"
+              echo "accelerator=gpu" >> "$GITHUB_OUTPUT"
+              echo "trigger=pr" >> "$GITHUB_OUTPUT"
+              echo "should_run=true" >> "$GITHUB_OUTPUT"
+            elif [[ "$LABEL" == "benchmark:full" ]]; then
+              echo "priority=core,extended" >> "$GITHUB_OUTPUT"
+              echo "size_tier=tiny,small,medium" >> "$GITHUB_OUTPUT"
+              echo "num_seeds=3" >> "$GITHUB_OUTPUT"
+              echo "eval_upto=optimize" >> "$GITHUB_OUTPUT"
+              echo "scenario=default" >> "$GITHUB_OUTPUT"
+              echo "accelerator=gpu" >> "$GITHUB_OUTPUT"
+              echo "trigger=pr" >> "$GITHUB_OUTPUT"
+              echo "should_run=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "should_run=false" >> "$GITHUB_OUTPUT"
+            fi
+
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Job 2: Run benchmarks on a self-hosted GPU runner
+  # ---------------------------------------------------------------------------
+  benchmark:
+    needs: configure
+    if: needs.configure.outputs.should_run == 'true'
+    runs-on: [self-hosted, "${{ needs.configure.outputs.accelerator }}"]
+    timeout-minutes: 2880 # 48h safety net for large weekly runs
+    defaults:
+      run:
+        working-directory: library
+    env:
+      MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install OTX + benchmark dependencies
+        run: |
+          ACCEL="${{ needs.configure.outputs.accelerator }}"
+          # Map accelerator label to the pyproject.toml extra name
+          if [[ "$ACCEL" == "gpu" ]]; then EXTRA="cuda"; else EXTRA="$ACCEL"; fi
+          uv sync --frozen --extra "$EXTRA"
+
+      # ── Dataset provisioning with cache ──────────────────────────────
+      - name: Restore dataset cache
+        uses: actions/cache@v4
+        with:
+          path: library/data/
+          key: benchmark-datasets-${{ hashFiles('library/benchmark_catalog.yaml') }}
+          restore-keys: benchmark-datasets-
+
+      - name: Provision datasets
+        run: |
+          uv run python -m otx.benchmark provision \
+            --catalog benchmark_catalog.yaml \
+            --data-root data/
+
+      # ── Run benchmarks ───────────────────────────────────────────────
+      - name: Run benchmarks
+        run: |
+          # Determine the trigger label for MLflow experiment naming
+          TRIGGER="${{ needs.configure.outputs.trigger }}"
+
+          # Determine the branch name
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BRANCH="${{ github.head_ref }}"
+          else
+            BRANCH="${{ github.ref_name }}"
+          fi
+
+          uv run python -m otx.benchmark run \
+            --manifest benchmark_manifest.yaml \
+            --catalog benchmark_catalog.yaml \
+            --data-root data/ \
+            --output-root results/ \
+            --mlflow-uri "${MLFLOW_TRACKING_URI:-./mlruns}" \
+            --branch "$BRANCH" \
+            --trigger "$TRIGGER" \
+            --priority ${{ needs.configure.outputs.priority }} \
+            --size-tier ${{ needs.configure.outputs.size_tier }} \
+            --eval-upto "${{ needs.configure.outputs.eval_upto }}" \
+            --accelerator "${{ needs.configure.outputs.accelerator }}" \
+            --num-seeds "${{ needs.configure.outputs.num_seeds }}" \
+            --scenario ${{ needs.configure.outputs.scenario }}
+
+      # ── Disk cleanup: remove heavy artifacts, keep only metrics ─────
+      - name: Cleanup checkpoints and exported models
+        if: always()
+        run: |
+          echo "Disk usage before cleanup:"
+          du -sh results/ || true
+
+          # Remove training checkpoints (large .ckpt files)
+          find results/ -name "*.ckpt" -delete 2>/dev/null || true
+          # Remove exported/optimized OpenVINO models
+          find results/ -name "*.xml" -delete 2>/dev/null || true
+          find results/ -name "*.bin" -delete 2>/dev/null || true
+          # Remove any __pycache__ or .pyc files
+          find results/ -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+
+          echo "Disk usage after cleanup:"
+          du -sh results/ || true
+
+      # ── Generate standalone report (fallback if run step failed) ────
+      - name: Generate report
+        if: always()
+        run: |
+          uv run python -m otx.benchmark report \
+            --manifest benchmark_manifest.yaml \
+            --mlflow-uri "${MLFLOW_TRACKING_URI:-./mlruns}" \
+            --branch "${{ github.ref_name }}" \
+            --trigger "${{ needs.configure.outputs.trigger }}" \
+            --accelerator "${{ needs.configure.outputs.accelerator }}" \
+            --output-root results/ \
+            --output results/report.md
+
+      # ── Upload artifacts ─────────────────────────────────────────────
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-${{ github.sha }}
+          path: |
+            library/results/report.md
+            library/results/aggregated.csv
+            library/results/failed_experiments.json
+          retention-days: 90
+
+      # ── Post report as PR comment ────────────────────────────────────
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: library/results/report.md
+
+      # ── MLflow retention: prune old feature-branch runs ────────────
+      - name: Cleanup old MLflow runs
+        if: always() && needs.configure.outputs.trigger == 'weekly'
+        run: |
+          uv run python -m otx.benchmark clean \
+            --mlflow-uri "${MLFLOW_TRACKING_URI:-./mlruns}" \
+            --max-age-days 90 \
+            --protect-branch develop main
+
+      # ── Post report to job summary (visible on all triggers) ────────
+      - name: Write job summary
+        if: always()
+        run: |
+          if [[ -f results/report.md ]]; then
+            cat results/report.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "⚠️ No benchmark report was generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
