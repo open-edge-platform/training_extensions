@@ -1,13 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState, type SyntheticEvent } from 'react';
 
-import { View } from '@geti/ui';
-
+import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import { useWebRTCConnection } from './web-rtc-connection-provider';
-
-import classes from './stream.module.scss';
 
 const useStreamToVideo = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -29,7 +26,7 @@ const useStreamToVideo = () => {
         if (videoOutput && videoOutput.srcObject !== stream) {
             videoOutput.srcObject = stream;
         }
-    }, [videoRef, webRTCConnectionRef]);
+    }, [webRTCConnectionRef]);
 
     useEffect(() => {
         if (status === 'connected') {
@@ -55,16 +52,32 @@ const useStreamToVideo = () => {
     return videoRef;
 };
 
+const DEFAULT_VIDEO_SIZE = { width: 1280, height: 720 };
+
 export const Stream = () => {
     const videoRef = useStreamToVideo();
-    const { status } = useWebRTCConnection();
+    const [videoSize, setVideoSize] = useState(DEFAULT_VIDEO_SIZE);
+
+    const onLoadedMetadata = (e: SyntheticEvent<HTMLVideoElement>) => {
+        const { videoWidth, videoHeight } = e.currentTarget;
+
+        if (videoWidth && videoHeight) {
+            setVideoSize({ width: videoWidth, height: videoHeight });
+        }
+    };
 
     return (
-        <View gridArea={'innercanvas'} width={'100%'} height={'100%'}>
-            {status === 'connected' && (
-                // eslint-disable-next-line jsx-a11y/media-has-caption
-                <video ref={videoRef} autoPlay playsInline controls={false} className={classes.video} />
-            )}
-        </View>
+        <ZoomTransform target={videoSize}>
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                controls={false}
+                width={videoSize.width}
+                height={videoSize.height}
+                onLoadedMetadata={onLoadedMetadata}
+            />
+        </ZoomTransform>
     );
 };

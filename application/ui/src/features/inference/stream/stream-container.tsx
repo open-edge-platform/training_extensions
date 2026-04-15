@@ -1,8 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect } from 'react';
-
 import { dimensionValue, Flex, Loading, Text, toast, View } from '@geti/ui';
 import { Pause, Play } from '@geti/ui/icons';
 import { clsx } from 'clsx';
@@ -14,7 +12,7 @@ import { useWebRTCConnection } from './web-rtc-connection-provider';
 import classes from './stream.module.scss';
 
 export const StreamContainer = () => {
-    const { start, stop, status } = useWebRTCConnection();
+    const { start, stop, status, webRTCConnectionRef } = useWebRTCConnection();
     const { data: pipeline } = usePipeline();
 
     const isPipelineRunning = pipeline?.status === 'running';
@@ -23,13 +21,18 @@ export const StreamContainer = () => {
     const isConnected = status === 'connected';
 
     const canStart = isStopped && isPipelineRunning;
-    const handleClick = isConnected ? stop : canStart ? start : undefined;
 
-    useEffect(() => {
-        if (status === 'failed') {
-            toast({ type: 'error', message: 'Failed to connect to the stream' });
+    const handleClick = async () => {
+        if (isConnected) {
+            await stop();
+        } else if (canStart) {
+            await start();
+
+            if (webRTCConnectionRef.current?.getStatus() === 'failed') {
+                toast({ type: 'error', message: 'Failed to connect to the stream' });
+            }
         }
-    }, [status]);
+    };
 
     return (
         <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
