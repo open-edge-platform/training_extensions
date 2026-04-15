@@ -1,12 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-export const BUTTON_LEFT = {
+const BUTTON_LEFT = {
     button: 0,
     buttons: 1,
 };
 
-export const BUTTON_RIGHT = {
+const BUTTON_RIGHT = {
     button: 2,
     buttons: 2,
 };
@@ -21,7 +21,7 @@ const BUTTON_ERASER = {
     buttons: 32,
 };
 
-export interface MouseButton {
+interface MouseButton {
     button: number;
     buttons: number;
 }
@@ -33,16 +33,8 @@ export const isLeftButton = (button: MouseButton): boolean => {
     return isButton(button, BUTTON_LEFT);
 };
 
-export const isRightButton = (button: MouseButton): boolean => {
-    return isButton(button, BUTTON_RIGHT);
-};
-
 export const isWheelButton = (button: MouseButton): boolean => {
     return isButton(button, BUTTON_WHEEL);
-};
-
-export const isEraserButton = (button: MouseButton): boolean => {
-    return isButton(button, BUTTON_ERASER);
 };
 
 export const isEraserOrRightButton = (button: MouseButton): boolean => {

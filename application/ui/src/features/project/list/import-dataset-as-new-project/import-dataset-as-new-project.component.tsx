@@ -52,7 +52,7 @@ export const ImportDatasetAsNewProject = ({ dialogState }: ImportDatasetAsNewPro
 
                         <ImportErrorBoundary>
                             <Suspense fallback={<ImportLoadingCard />}>
-                                <View flex={'1'} width={'100%'} backgroundColor={'gray-50'}>
+                                <View flex={'1'} width={'100%'} minHeight={'size-6000'} backgroundColor={'gray-50'}>
                                     {currentStep === 'uploading' && (
                                         <ImportUploadFile
                                             formatOptions='Geti, Datumaro, COCO, YOLO, VOC'
