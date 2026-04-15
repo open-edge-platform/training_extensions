@@ -70,6 +70,8 @@ export const RangeParameterField = ({
                 formatOptions={{ maximumFractionDigits: decimalPlaces }}
             />
             <RangeSlider
+                minValue={minValue}
+                maxValue={maxValue}
                 value={parameterValues}
                 onChange={setParameterValues}
                 onChangeEnd={handleRangeChangeEnd}

@@ -1,14 +1,15 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, screen } from '@testing-library/react';
+import { useState } from 'react';
+
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { render } from 'test-utils/render';
 
 import { RangeParameterField } from './range-parameter-field.component';
 
 describe('RangeParameterField', () => {
-    const defaultValue: [number, number] = [0.5, 1.5];
     const name = 'Scaling ratio range';
     const onChange = vi.fn();
 
@@ -17,14 +18,22 @@ describe('RangeParameterField', () => {
     });
 
     const renderApp = ({
-        value = defaultValue,
+        value = [0.5, 1.5],
         isDisabled = false,
     }: {
         value?: [number, number];
         isDisabled?: boolean;
     }) => {
         return render(
-            <RangeParameterField value={value} onChange={onChange} name={name} isDisabled={isDisabled} step={0.001} />
+            <RangeParameterField
+                value={value}
+                onChange={onChange}
+                name={name}
+                isDisabled={isDisabled}
+                step={0.001}
+                minValue={0}
+                maxValue={2}
+            />
         );
     };
 
@@ -59,20 +68,20 @@ describe('RangeParameterField', () => {
         expect(onChange).toHaveBeenCalledWith([0.5, 1]);
     });
 
-    it('does not allow start and end to be equal', async () => {
+    it('allows start and end to be equal', async () => {
         renderApp({});
 
         const startField = screen.getByLabelText(`Change ${name} start range value`);
-        const endField = screen.getByLabelText(`Change ${name} end range value`);
         await userEvent.clear(startField);
         await userEvent.type(startField, '1');
         startField.blur();
+
+        const endField = screen.getByLabelText(`Change ${name} end range value`);
         await userEvent.clear(endField);
         await userEvent.type(endField, '1');
         endField.blur();
 
-        // onChange should not be called with [1, 1] because end value was not change to the same as start value
-        expect(onChange).toHaveBeenCalledWith([1, 1.5]);
+        expect(onChange).toHaveBeenCalledWith([1, 1]);
     });
 
     it('disables fields when isDisabled is true', () => {
@@ -82,15 +91,67 @@ describe('RangeParameterField', () => {
         expect(screen.getByLabelText(`Change ${name} end range value`)).toBeDisabled();
     });
 
-    it('does not allow range slider start and end to be equal', async () => {
-        renderApp({});
+    it('does not allow start value to exceed end value', async () => {
+        renderApp({ value: [0.5, 1.5] });
 
-        const handle = screen.getByRole('button', { name: 'Increase Change Scaling ratio range start range value' });
+        const startField = screen.getByLabelText(`Change ${name} start range value`);
+        await userEvent.clear(startField);
+        await userEvent.type(startField, '2');
+        startField.blur();
 
-        fireEvent.mouseDown(handle, { clientX: 0 });
-        fireEvent.mouseMove(handle, { clientX: 1000 }); // Move it far to the right
-        fireEvent.mouseUp(handle);
+        expect(onChange).toHaveBeenCalledWith([1.5, 1.5]);
+        expect(onChange).not.toHaveBeenCalledWith([2, 1.5]);
 
-        expect(onChange).not.toHaveBeenCalledWith([1.5, 1.5]);
+        await waitFor(() => {
+            expect(screen.getByLabelText(`Change ${name} start range value`)).toHaveValue('1.5');
+            expect(screen.getByLabelText(`Change ${name} end range value`)).toHaveValue('1.5');
+        });
+    });
+
+    it('does not allow end value to go below start value', async () => {
+        renderApp({ value: [0.5, 1.5] });
+
+        const endField = screen.getByLabelText(`Change ${name} end range value`);
+        await userEvent.clear(endField);
+        await userEvent.type(endField, '0');
+        endField.blur();
+
+        expect(onChange).toHaveBeenCalledWith([0.5, 0.5]);
+        expect(onChange).not.toHaveBeenCalledWith([0.5, 0]);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(`Change ${name} start range value`)).toHaveValue('0.5');
+            expect(screen.getByLabelText(`Change ${name} end range value`)).toHaveValue('0.5');
+        });
+    });
+
+    it('syncs internal state when value prop changes externally', () => {
+        const ControlledWrapper = () => {
+            const [value, setValue] = useState<[number, number]>([0.5, 1.5]);
+
+            return (
+                <>
+                    <button onClick={() => setValue([0.2, 1.8])}>Update value</button>
+                    <RangeParameterField
+                        value={value}
+                        onChange={onChange}
+                        name={name}
+                        step={0.001}
+                        minValue={0}
+                        maxValue={2}
+                    />
+                </>
+            );
+        };
+
+        render(<ControlledWrapper />);
+
+        expect(screen.getByLabelText(`Change ${name} start range value`)).toHaveValue('0.5');
+        expect(screen.getByLabelText(`Change ${name} end range value`)).toHaveValue('1.5');
+
+        fireEvent.click(screen.getByRole('button', { name: 'Update value' }));
+
+        expect(screen.getByLabelText(`Change ${name} start range value`)).toHaveValue('0.2');
+        expect(screen.getByLabelText(`Change ${name} end range value`)).toHaveValue('1.8');
     });
 });
