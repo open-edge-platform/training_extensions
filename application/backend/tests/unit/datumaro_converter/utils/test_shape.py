@@ -12,6 +12,8 @@ def test_rectangle_to_bbox() -> None:
 
 
 def test_polygon_to_points() -> None:
-    polygon = Polygon(points=[Point(x=10, y=20), Point(x=20, y=30), Point(x=30, y=40), Point(x=40, y=50)])
+    polygon = Polygon(
+        points=[Point(x=10.1, y=20.2), Point(x=20.2, y=30.3), Point(x=30.3, y=40.4), Point(x=40.4, y=50.5)]
+    )
     result = ShapeConverter.polygon_to_points(polygon)
-    assert result == [[10, 20], [20, 30], [30, 40], [40, 50]]
+    assert result == [[10.1, 20.2], [20.2, 30.3], [30.3, 40.4], [40.4, 50.5]]

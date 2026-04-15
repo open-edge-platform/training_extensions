@@ -6,8 +6,8 @@ from pydantic import BaseModel, Field
 
 
 class Point(BaseModel):
-    x: int = Field(..., description="Point x coordinate", ge=0)
-    y: int = Field(..., description="Point y coordinate", ge=0)
+    x: float = Field(..., description="Point x coordinate", ge=0)
+    y: float = Field(..., description="Point y coordinate", ge=0)
 
 
 class Rectangle(BaseModel):

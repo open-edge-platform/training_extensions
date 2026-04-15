@@ -231,7 +231,7 @@ class TestSegmentationConversion:
     def test_convert_segmentation_sample(self, fxt_converter, fxt_project_labels):
         """Test converting an instance segmentation sample."""
         labels = np.array([0])
-        polygons = np.array([[[10.0, 20.0], [30.0, 40.0], [50.0, 60.0]]])
+        polygons = np.array([[[10.2, 20.5], [30.6, 40.7], [50.1, 60.3]]])
         confidences = np.array([0.92])
         sample = InstanceSegmentationImportExportSample(label=labels, polygons=polygons, confidence=confidences)
 
@@ -240,8 +240,8 @@ class TestSegmentationConversion:
         assert len(result) == 1
         assert isinstance(result[0].shape, Polygon)
         assert len(result[0].shape.points) == 3
-        assert result[0].shape.points[0].x == 10.0
-        assert result[0].shape.points[0].y == 20.0
+        assert result[0].shape.points[0].x == 10.2
+        assert result[0].shape.points[0].y == 20.5
         assert result[0].labels[0].id == fxt_project_labels[0].id
         assert result[0].confidences == pytest.approx([0.92], abs=1e-6)
 
