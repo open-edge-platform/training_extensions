@@ -59,19 +59,46 @@ def extract_video_frame(
     Returns:
         Extracted video frame as numpy array (RGB format)
     """
+    frames = extract_video_frames(video_path=video_path, frame_indexes=[frame_index])
+    return frames[frame_index]
+
+
+def extract_video_frames(
+    video_path: Path,
+    frame_indexes: list[int],
+) -> dict[int, np.ndarray]:
+    """
+    Extracts multiple video frames in a single pass over the video file.
+    The video is opened once and frames are read in ascending index order for optimal sequential access.
+
+    Args:
+        video_path: Video binary file path
+        frame_indexes: List of frame indexes to extract
+
+    Returns:
+        Dictionary mapping frame index to the extracted frame as numpy array (RGB format)
+    """
+    if not frame_indexes:
+        return {}
+
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open video: {video_path}")
 
+    frames: dict[int, np.ndarray] = {}
     try:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
-        # Read the frame at the requested position
-        read_success, frame = cap.read()
-        if not read_success:
-            raise RuntimeError(f"Cannot read frame at {frame_index} index from video: {video_path}")
-        return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        sorted_indexes = sorted(set(frame_indexes))
+        for frame_index in sorted_indexes:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+            read_success, frame = cap.read()
+            if not read_success:
+                raise RuntimeError(f"Cannot read frame at {frame_index} index from video: {video_path}")
+            frames[frame_index] = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        return frames
+    except RuntimeError:
+        raise
     except Exception as e:
-        logger.error(f"Failed extracting video frame {frame_index} from video {video_path}", exc_info=e)
-        raise RuntimeError("Error occurred while extracting video frame")
+        logger.error(f"Failed extracting video frames from video {video_path}", exc_info=e)
+        raise RuntimeError("Error occurred while extracting video frames")
     finally:
         cap.release()

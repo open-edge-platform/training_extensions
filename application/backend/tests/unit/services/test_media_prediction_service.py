@@ -1,6 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import ANY, MagicMock, call, patch
 from uuid import uuid4
 
 import numpy as np
@@ -9,6 +9,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.models import (
+    BatchInferenceInput,
     BatchInferenceMedia,
     BatchInferencePrediction,
     BatchInferenceResult,
@@ -164,18 +165,18 @@ class TestMediaPredictionServiceUnit:
         video_frame = MagicMock(spec=VideoFrame, type=MediaType.VIDEO_FRAME, video_id=video_id, frame_index=0)
 
         not_annotated_video_frame = NotAnnotatedVideoFrame(video=video, frame_index=1)
-        not_annotated_video_frame_binary = PILImage.new("RGB", (1024, 768))
+        not_annotated_video_frame_binary = np.random.randint(0, 255, (768, 1024, 3), dtype=np.uint8)
 
         loaded_media = LoadedMedia(
             single_media=[image],
             video_frames=[video_frame, not_annotated_video_frame],
         )
 
-        fxt_media_service.get_frame_binary.return_value = not_annotated_video_frame_binary
+        fxt_media_service.get_frame_binaries.return_value = {1: not_annotated_video_frame_binary}
 
         with patch.object(fxt_media_prediction_service, "_load_media_binary") as mock_load_media_binary:
             mock_load_media_binary.side_effect = [np.random.rand(100, 100, 3), np.random.rand(100, 100, 3)]
-            result_inputs, result_frame_images = fxt_media_prediction_service._convert_to_inference_input(
+            result_inputs = fxt_media_prediction_service._convert_to_inference_input(
                 project=project,
                 loaded_media=loaded_media,
             )
@@ -186,9 +187,10 @@ class TestMediaPredictionServiceUnit:
                 call(project_id=project.id, media=video_frame),
             ]
         )
-        fxt_media_service.get_frame_binary.assert_called_once_with(project=project, video=video, frame_index=1)
+        fxt_media_service.get_frame_binaries.assert_called_once_with(project=project, video=video, frame_indexes=[1])
         assert len(result_inputs) == 3
-        assert result_frame_images == {not_annotated_video_frame: not_annotated_video_frame_binary}
+        na_frame_input = next(inp for inp in result_inputs if inp.media_id == video_id and inp.frame_index == 1)
+        np.testing.assert_array_equal(na_frame_input.data, not_annotated_video_frame_binary)
 
     def test_create_or_update_dataset_item_not_found(self, fxt_media_prediction_service, fxt_dataset_service):
         model_id = uuid4()
@@ -281,13 +283,17 @@ class TestMediaPredictionServiceUnit:
         not_annotated_video_frame_image_annotation = MagicMock(spec=DatasetItemAnnotation)
 
         not_annotated_video_frame = NotAnnotatedVideoFrame(video=video, frame_index=1)
-        not_annotated_video_frame_binary = PILImage.new("RGB", (1024, 768))
+        not_annotated_video_frame_numpy = np.random.randint(0, 255, (768, 1024, 3), dtype=np.uint8)
 
         loaded_media = LoadedMedia(
             single_media=[image],
             video_frames=[video_frame, not_annotated_video_frame],
         )
-        frame_images = {not_annotated_video_frame: not_annotated_video_frame_binary}
+        inputs = [
+            BatchInferenceInput(media_id=image_id, data=np.random.rand(100, 100, 3)),
+            BatchInferenceInput(media_id=video_id, data=np.random.rand(100, 100, 3), frame_index=0),
+            BatchInferenceInput(media_id=video_id, data=not_annotated_video_frame_numpy, frame_index=1),
+        ]
         batch_inference_result = BatchInferenceResult(
             predictions=[
                 image_prediction,
@@ -307,7 +313,7 @@ class TestMediaPredictionServiceUnit:
             fxt_media_prediction_service._create_dataset_items(
                 project=project,
                 loaded_media=loaded_media,
-                frame_images=frame_images,
+                inputs=inputs,
                 batch_inference_result=batch_inference_result,
                 model_id=model_id,
             )
@@ -327,8 +333,11 @@ class TestMediaPredictionServiceUnit:
 
         # Assert that new frame is created together with new dataset item
         fxt_media_service.save_video_frame.assert_called_once_with(
-            project=project, video=video, frame_index=1, frame_image=not_annotated_video_frame_binary
+            project=project, video=video, frame_index=1, frame_image=ANY
         )
+        saved_frame_image = fxt_media_service.save_video_frame.call_args.kwargs["frame_image"]
+        assert isinstance(saved_frame_image, PILImage.Image)
+        np.testing.assert_array_equal(np.asarray(saved_frame_image), not_annotated_video_frame_numpy)
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
             project_id=project.id,
             task=task,
@@ -348,7 +357,6 @@ class TestMediaPredictionServiceUnit:
 
         loaded_media = LoadedMedia(single_media=[], video_frames=[])
         inputs = MagicMock(spec=list)
-        frame_images = MagicMock(spec=dict)
         labels = MagicMock(spec=list)
         batch_inference_result = MagicMock(spec=BatchInferenceResult)
 
@@ -363,7 +371,7 @@ class TestMediaPredictionServiceUnit:
         with (
             patch.object(fxt_media_prediction_service, "_load_media", return_value=loaded_media) as mock_load_media,
             patch.object(
-                fxt_media_prediction_service, "_convert_to_inference_input", return_value=(inputs, frame_images)
+                fxt_media_prediction_service, "_convert_to_inference_input", return_value=inputs
             ) as mock_convert_to_inference_input,
             patch.object(fxt_media_prediction_service, "_create_dataset_items") as mock_create_dataset_items,
         ):
@@ -380,7 +388,7 @@ class TestMediaPredictionServiceUnit:
             mock_create_dataset_items.assert_called_once_with(
                 project=project,
                 loaded_media=loaded_media,
-                frame_images=frame_images,
+                inputs=inputs,
                 batch_inference_result=batch_inference_result,
                 model_id=request.model_id,
             )
