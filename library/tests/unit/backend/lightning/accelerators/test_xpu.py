@@ -6,14 +6,14 @@
 import pytest
 import torch
 
-from getitune.backend.lightning.lightning.accelerators import XPUAccelerator
+from getitune.backend.lightning.accelerators import XPUAccelerator
 from getitune.utils.device import is_xpu_available
 
 
 class TestXPUAccelerator:
     @pytest.fixture
     def accelerator(self, mocker):
-        mock_torch = mocker.patch("getitune.backend.lightning.lightning.accelerators.xpu.torch")
+        mock_torch = mocker.patch("getitune.backend.lightning.accelerators.xpu.torch")
         return XPUAccelerator(), mock_torch
 
     def test_setup_device(self, accelerator):
