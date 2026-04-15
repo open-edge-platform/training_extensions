@@ -1,0 +1,29 @@
+# ── Output / working directories ─────────────────────────────────────
+outputs/
+test_ov_workdir/
+tensorboard/
+debug_pipeline_yolo/
+otx-benchmark-xpu/
+__pycache__/
+.venv/
+*.egg-info/
+
+# ── Model weights & large binaries ───────────────────────────────────
+*.pt
+*.pth
+*.ckpt
+*.tar
+*.onnx
+*.xml
+*.bin
+*.zip
+
+# ── Benchmark & profiling artefacts ──────────────────────────────────
+benchmark*.csv
+benchmark*.xlsx
+*.raw.csv
+
+# ── IDE / OS ──────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.DS_Store
