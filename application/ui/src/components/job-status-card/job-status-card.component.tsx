@@ -49,7 +49,7 @@ export const JobStatusCard = ({
                 <Flex alignItems='center' gap='size-100'>
                     {bottomIcon}
 
-                    <Text>{bottomLeftMessage}</Text>
+                    {isNonEmptyString(bottomLeftMessage) ? <Text>{bottomLeftMessage}</Text> : bottomLeftMessage}
                 </Flex>
 
                 {isNonEmptyString(bottomRightMessage) && <Text>{bottomRightMessage}</Text>}

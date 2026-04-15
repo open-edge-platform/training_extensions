@@ -4,7 +4,7 @@
 import { Button } from '@geti/ui';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
-import { formatBytes } from '../../../shared/util';
+import { formatBytes, isNonEmptyString } from '../../../shared/util';
 import { JobStatusCard } from '../../job-status-card/job-status-card.component';
 
 import classes from './import-failed-job.module.scss';
@@ -44,7 +44,8 @@ export const ImportFailedJob = ({
 }: ImportFailedJobProps) => {
     const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId, deleteEntry });
 
-    const errorMessage = message ?? 'An unknown error occurred';
+    const errorMessage = isNonEmptyString(message) ? message : 'An unknown error occurred';
+    const errorDetails = isNonEmptyString(error) ? error : undefined;
 
     return (
         <JobStatusCard
@@ -61,7 +62,9 @@ export const ImportFailedJob = ({
                     Close
                 </Button>
             }
-            bottomLeftMessage={error ? <BottomMessage error={error} message={errorMessage} /> : errorMessage}
+            bottomLeftMessage={
+                errorDetails ? <BottomMessage error={errorDetails} message={errorMessage} /> : errorMessage
+            }
         />
     );
 };
