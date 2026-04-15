@@ -45,8 +45,8 @@ export const StreamContainer = () => {
                             >
                                 <Play
                                     color={'currentColor'}
-                                    width={dimensionValue('size-800')}
-                                    height={dimensionValue('size-800')}
+                                    width={dimensionValue('size-400')}
+                                    height={dimensionValue('size-400')}
                                     aria-label={isPipelineRunning ? 'Start stream' : 'Enable pipeline to start stream'}
                                     aria-disabled={!isPipelineRunning}
                                 />
@@ -70,13 +70,13 @@ export const StreamContainer = () => {
                                 justifyContent='center'
                                 width='100%'
                                 height='100%'
-                                UNSAFE_className={classes.pauseOverlay}
+                                UNSAFE_className={classes.overlay}
                             >
                                 <Flex UNSAFE_className={classes.playPauseButton}>
                                     <Pause
                                         color={'currentColor'}
-                                        width={dimensionValue('size-800')}
-                                        height={dimensionValue('size-800')}
+                                        width={dimensionValue('size-400')}
+                                        height={dimensionValue('size-400')}
                                         aria-label={'Stop stream'}
                                     />
                                 </Flex>
