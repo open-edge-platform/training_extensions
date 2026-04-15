@@ -59,8 +59,16 @@ services:
         --backend-store-uri "postgresql://mlflow:${MLFLOW_DB_PASSWORD}@db:5432/mlflow"
         --default-artifact-root /mlflow/artifacts
         --workers 2
+        --allowed-hosts "*"
+        --cors-allowed-origins "*"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')",
+        ]
       interval: 10s
       timeout: 5s
       retries: 3

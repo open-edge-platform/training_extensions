@@ -267,6 +267,17 @@ class BenchmarkTracker:
         with mlflow.start_run(run_name=run_name) as run:
             mlflow.set_tags(tags.as_dict())
 
+            # Log key identifiers as params for UI visibility and searchability
+            mlflow.log_params(
+                {
+                    "task": result.task,
+                    "model": result.model,
+                    "dataset": result.dataset,
+                    "scenario": result.scenario,
+                    "seed": result.seed,
+                }
+            )
+
             if result.success:
                 # Log all metrics from all phases
                 all_metrics = result.all_metrics()
@@ -285,6 +296,18 @@ class BenchmarkTracker:
                 mlflow.set_tag("error", result.error[:250])  # MLflow tag value limit
 
             logger.debug("Logged MLflow run %s (id=%s)", run_name, run.info.run_id)
+
+        # Adjust the run's end time so the "Duration" column in the MLflow UI
+        # reflects the actual experiment wall time, not just the logging time.
+        total_wall_time = sum(p.wall_time for p in result.phases)
+        if total_wall_time > 0:
+            try:
+                client = mlflow.tracking.MlflowClient(self.config.tracking_uri)
+                start_ms = run.info.start_time
+                end_ms = start_ms + int(total_wall_time * 1000)
+                client.set_terminated(run.info.run_id, end_time=end_ms)
+            except Exception:
+                logger.debug("Could not update run end time for duration display.")
 
     # -- baseline resolution -----------------------------------------------
 
