@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useState } from 'react';
+
 import { dimensionValue, Flex, Loading, Text, toast, View } from '@geti/ui';
 import { Pause, Play } from '@geti/ui/icons';
 import { clsx } from 'clsx';
@@ -20,12 +22,16 @@ export const StreamContainer = () => {
     const isConnecting = status === 'connecting';
     const isConnected = status === 'connected';
 
+    const [isPaused, setIsPaused] = useState(false);
+
     const canStart = isStopped && isPipelineRunning;
 
     const handleClick = async () => {
         if (isConnected) {
+            setIsPaused(true);
             await stop();
         } else if (canStart) {
+            setIsPaused(false);
             await start();
 
             if (webRTCConnectionRef.current?.getStatus() === 'failed') {
@@ -37,7 +43,7 @@ export const StreamContainer = () => {
     return (
         <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
             <div className={classes.canvasContainer} onClick={handleClick}>
-                <View backgroundColor={'gray-200'} height={'100%'}>
+                <View height={'100%'} position='relative'>
                     {isStopped && (
                         <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
                             <Flex
@@ -66,27 +72,23 @@ export const StreamContainer = () => {
                     )}
 
                     {isConnected && (
-                        <View position='relative' width='100%' height='100%' UNSAFE_className={classes.streamWrapper}>
-                            <Stream />
-
+                        <>
+                            {!isPaused && <Stream />}
                             <Flex
-                                position='absolute'
                                 alignItems='center'
                                 justifyContent='center'
-                                width='100%'
-                                height='100%'
-                                UNSAFE_className={classes.overlay}
+                                UNSAFE_className={clsx(classes.pauseFlash, { [classes.pauseFlashActive]: isPaused })}
                             >
-                                <Flex UNSAFE_className={classes.playPauseButton}>
+                                <Flex UNSAFE_className={clsx(classes.playPauseButton, classes.pauseFlashButton)}>
                                     <Pause
                                         color={'currentColor'}
                                         width={dimensionValue('size-400')}
                                         height={dimensionValue('size-400')}
-                                        aria-label={'Stop stream'}
+                                        aria-label={'Stream stopped'}
                                     />
                                 </Flex>
                             </Flex>
-                        </View>
+                        </>
                     )}
                 </View>
             </div>

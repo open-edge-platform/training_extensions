@@ -29,25 +29,18 @@ const useStreamToVideo = () => {
     }, [webRTCConnectionRef]);
 
     useEffect(() => {
-        if (status === 'connected') {
-            connect();
-        }
-    }, [status, connect]);
+        if (status !== 'connected') return;
 
-    useEffect(() => {
-        const webrtcConnection = webRTCConnectionRef.current;
-        const peerConnection = webrtcConnection?.getPeerConnection();
+        const peerConnection = webRTCConnectionRef.current?.getPeerConnection();
+        if (!peerConnection) return;
 
-        if (!peerConnection) {
-            return;
-        }
-
+        connect();
         peerConnection.addEventListener('track', connect);
 
         return () => {
             peerConnection.removeEventListener('track', connect);
         };
-    }, [webRTCConnectionRef, connect]);
+    }, [status, webRTCConnectionRef, connect]);
 
     return videoRef;
 };

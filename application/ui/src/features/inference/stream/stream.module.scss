@@ -17,16 +17,39 @@
     cursor: default;
 }
 
-.streamWrapper:hover .overlay {
-    opacity: 1;
-    visibility: visible;
+.pauseFlashActive {
+    animation: pauseFlash 3s forwards;
 }
 
-.overlay {
+.pauseFlashActive .pauseFlashButton {
+    animation: pausePulse 0.6s ease-in-out 4;
+}
+
+@keyframes pauseFlash {
+    0% {
+        opacity: 1;
+    }
+    67% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes pausePulse {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+.pauseFlash {
+    position: absolute;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    visibility: hidden;
     pointer-events: none;
-    transition: opacity 150ms ease-in-out;
+    opacity: 0;
 }
