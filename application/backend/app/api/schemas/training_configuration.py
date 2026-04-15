@@ -88,6 +88,8 @@ class FloatRangeParameterView(_BaseConfigurableParameterView):
     value_type: Literal["float_range"] = "float_range"
     value: tuple[float, float] = Field(title="Actual value of the parameter")
     default_value: tuple[float, float] = Field(title="Default value of the parameter")
+    min_value: float = Field(title="Minimum value for range elements.")
+    max_value: float = Field(title="Maximum value for range elements.")
 
 
 def _parameter_view_discriminator(v: dict | _BaseConfigurableParameterView) -> str:
@@ -169,6 +171,21 @@ class TrainingConfigurationView(BaseModel):
                 elif hasattr(constraint, "lt"):
                     max_value = constraint.lt
 
+        return min_value, max_value
+
+    @classmethod
+    def _extract_range_bounds(cls, field_info: FieldInfo) -> tuple[float, float]:
+        """Extract min_value/max_value bounds for float_range fields from json_schema_extra."""
+        if not isinstance(field_info.json_schema_extra, dict):
+            raise ValueError(
+                f"Field '{field_info.title}' must have a json_schema_extra to define min and max range parameters"
+            )
+        min_value = field_info.json_schema_extra["min_value"]
+        max_value = field_info.json_schema_extra["max_value"]
+        if not isinstance(min_value, float) or not isinstance(max_value, float):
+            raise ValueError(
+                f"Field '{field_info.title}' must have float min and max in json_schema_extra for range parameters"
+            )
         return min_value, max_value
 
     @classmethod
@@ -295,7 +312,8 @@ class TrainingConfigurationView(BaseModel):
         if value_type == "bool":
             return BoolParameterView(**common_kwargs)  # type: ignore
         if value_type == "float_range":
-            return FloatRangeParameterView(**common_kwargs, allowed_values=allowed_values)  # type: ignore
+            min_value, max_value = cls._extract_range_bounds(field_info)
+            return FloatRangeParameterView(**common_kwargs, min_value=min_value, max_value=max_value)  # type: ignore
         return StringParameterView(**common_kwargs, allowed_values=allowed_values)  # type: ignore
 
     @classmethod
@@ -725,7 +743,8 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.5, 1.5],
                                                 "default_value": [0.5, 1.5],
                                                 "value_type": "float_range",
-                                                "allowed_values": None,
+                                                "min_value": 0.0,
+                                                "max_value": 10.0,
                                             },
                                             {
                                                 "type": "parameter",
@@ -846,7 +865,8 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.875, 1.125],
                                                 "default_value": [0.875, 1.125],
                                                 "value_type": "float_range",
-                                                "allowed_values": None,
+                                                "min_value": 0.0,
+                                                "max_value": 5.0,
                                             },
                                             {
                                                 "type": "parameter",
@@ -861,7 +881,8 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.5, 1.5],
                                                 "default_value": [0.5, 1.5],
                                                 "value_type": "float_range",
-                                                "allowed_values": None,
+                                                "min_value": 0.0,
+                                                "max_value": 5.0,
                                             },
                                             {
                                                 "type": "parameter",
@@ -876,7 +897,8 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.5, 1.5],
                                                 "default_value": [0.5, 1.5],
                                                 "value_type": "float_range",
-                                                "allowed_values": None,
+                                                "min_value": 0.0,
+                                                "max_value": 5.0,
                                             },
                                             {
                                                 "type": "parameter",
@@ -891,7 +913,8 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [-0.05, 0.05],
                                                 "default_value": [-0.05, 0.05],
                                                 "value_type": "float_range",
-                                                "allowed_values": None,
+                                                "min_value": -0.5,
+                                                "max_value": 0.5,
                                             },
                                             {
                                                 "type": "parameter",
@@ -952,7 +975,8 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.1, 2.0],
                                                 "default_value": [0.1, 2.0],
                                                 "value_type": "float_range",
-                                                "allowed_values": None,
+                                                "min_value": 0.0,
+                                                "max_value": 10.0,
                                             },
                                             {
                                                 "type": "parameter",

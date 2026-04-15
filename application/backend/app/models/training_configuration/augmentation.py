@@ -21,6 +21,7 @@ class RandomResizeCrop(BaseAugmentationParameter):
             "For example, (0.8, 1.0) will randomly crop between 80% and 100% of the original size. "
             "Both values should be between 0.0 and 1.0."
         ),
+        json_schema_extra={"min_value": 0.0, "max_value": 1.0},
     )
     aspect_ratio_range: tuple[float, float] = Field(
         title="Aspect ratio range",
@@ -29,6 +30,7 @@ class RandomResizeCrop(BaseAugmentationParameter):
             "Aspect ratio is defined as width divided by height. "
             "For example, (0.75, 1.33) allows the crop to have an aspect ratio between 3:4 and 4:3."
         ),
+        json_schema_extra={"min_value": 0.0, "max_value": 10.0},
     )
 
     @model_validator(mode="after")
@@ -79,6 +81,7 @@ class RandomAffine(BaseAugmentationParameter):
             "Both values should be > 0.0. "
             "For example, (0.8, 1.2) will randomly scale the image between 80% and 120% of its original size."
         ),
+        json_schema_extra={"min_value": 0.0, "max_value": 10.0},
     )
     max_shear_degree: float = Field(
         title="Maximum shear degree",
@@ -188,6 +191,7 @@ class GaussianBlur(BaseAugmentationParameter):
             "Sigma controls the amount of blurring. "
             "A random value from this range will be used for each image."
         ),
+        json_schema_extra={"min_value": 0.0, "max_value": 10.0},
     )
     probability: float = Field(
         ge=0.0,
@@ -223,6 +227,7 @@ class ColorJitter(BaseAugmentationParameter):
             "A random factor from this range will be multiplied with the image brightness. "
             "For example, (0.8, 1.2) means brightness can be reduced by 20% or increased by 20%."
         ),
+        json_schema_extra={"min_value": 0.0, "max_value": 5.0},
     )
     contrast: tuple[float, float] = Field(
         title="Contrast range",
@@ -231,6 +236,7 @@ class ColorJitter(BaseAugmentationParameter):
             "A random factor from this range will be multiplied with the image contrast. "
             "For example, (0.5, 1.5) means contrast can be halved or increased by up to 50%."
         ),
+        json_schema_extra={"min_value": 0.0, "max_value": 5.0},
     )
     saturation: tuple[float, float] = Field(
         title="Saturation range",
@@ -239,6 +245,7 @@ class ColorJitter(BaseAugmentationParameter):
             "A random factor from this range will be multiplied with the image saturation. "
             "For example, (0.5, 1.5) means saturation can be halved or increased by up to 50%."
         ),
+        json_schema_extra={"min_value": 0.0, "max_value": 5.0},
     )
     hue: tuple[float, float] = Field(
         title="Hue range",
@@ -247,6 +254,7 @@ class ColorJitter(BaseAugmentationParameter):
             "A random value from this range will be added to the image hue. "
             "For example, (-0.05, 0.05) means hue can be shifted by up to ±0.05."
         ),
+        json_schema_extra={"min_value": -0.5, "max_value": 0.5},
     )
     probability: float = Field(
         ge=0.0,
@@ -387,6 +395,7 @@ class RandomErasing(BaseAugmentationParameter):
             "Range (min, max) of the proportion of the image area to erase. "
             "For example, (0.02, 0.33) means erasing between 2% and 33% of the image area."
         ),
+        json_schema_extra={"min_value": 0.0, "max_value": 1.0},
     )
     ratio: tuple[float, float] = Field(
         title="Erasing aspect ratio range",
@@ -394,6 +403,7 @@ class RandomErasing(BaseAugmentationParameter):
             "Range (min, max) of the aspect ratio of the erased area. "
             "For example, (0.3, 3.3) allows the erased rectangle to have varying proportions."
         ),
+        json_schema_extra={"min_value": 0.0, "max_value": 10.0},
     )
     probability: float = Field(
         ge=0.0,
@@ -488,6 +498,7 @@ class RandomZoomOut(BaseAugmentationParameter):
             "For example, (1.0, 4.0) means the canvas can be up to 4x the original image size. "
             "The minimum value must be >= 1.0."
         ),
+        json_schema_extra={"min_value": 1.0, "max_value": 16.0},
     )
     probability: float = Field(
         ge=0.0,
