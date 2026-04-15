@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@geti/ui';
+import { Button, Text } from '@geti/ui';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 import { formatBytes, isNonEmptyString } from '../../../shared/util';
@@ -19,7 +19,7 @@ type ImportFailedJobProps = {
 };
 
 const TechnicalDetails = ({ error }: { error: string }) => (
-    <details className={classes.details}>
+    <details className={classes.details} aria-label={'Technical details of the job failure'}>
         <summary className={classes.summary}>Technical details</summary>
         <pre className={classes.traceback}>{error}</pre>
     </details>
@@ -28,7 +28,7 @@ const TechnicalDetails = ({ error }: { error: string }) => (
 const BottomMessage = ({ error, message }: { error: string; message: string }) => {
     return (
         <>
-            {message}
+            <Text>{message}</Text>
             <TechnicalDetails error={error} />
         </>
     );
