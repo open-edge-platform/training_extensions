@@ -1,9 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
+import { Flex } from '@geti/ui';
 
 import type { Media, MediaVideo } from '../../constants/shared-types';
+import { formatDurationText } from '../../features/annotator/video-player/video-toolbar/time-utils';
 import { isVideo } from '../../shared/media-item-utils';
 
 import classes from './media-thumbnail.module.scss';
@@ -13,18 +14,25 @@ type MediaThumbnailProps = {
     onDoubleClick?: () => void;
     url: string;
     alt: string;
-    item: Pick<Media, 'type'> | Pick<MediaVideo, 'type' | 'frame_count'>;
+    item: Pick<Media, 'type'> | Pick<MediaVideo, 'type' | 'frame_count' | 'annotated_frame_count' | 'duration'>;
 };
 
 type VideoIndicatorProps = {
-    frameCount: number;
+    duration: number;
 };
 
-const VideoIndicator = ({ frameCount }: VideoIndicatorProps) => {
+const VideoIndicator = ({ duration }: VideoIndicatorProps) => {
     return (
-        <View position={'absolute'} bottom={'size-50'} left={'size-50'} UNSAFE_className={classes.videoIndicator}>
-            {frameCount} {frameCount !== 1 ? 'frames' : 'frame'}
-        </View>
+        <Flex
+            gap={'size-50'}
+            left={'size-50'}
+            bottom={'size-50'}
+            position={'absolute'}
+            alignItems={'center'}
+            UNSAFE_className={classes.videoIndicator}
+        >
+            {formatDurationText(duration)}
+        </Flex>
     );
 };
 
@@ -32,7 +40,7 @@ export const MediaThumbnail = ({ onDoubleClick, onClick, url, alt, item }: Media
     return (
         <div onDoubleClick={onDoubleClick} onClick={onClick} className={classes.imgContainer}>
             <img src={url} alt={alt} className={classes.img} />
-            {isVideo(item) && <VideoIndicator frameCount={item.frame_count} />}
+            {isVideo(item) && <VideoIndicator duration={item.duration} />}
         </div>
     );
 };
