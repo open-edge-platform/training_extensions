@@ -430,7 +430,7 @@ class HGNetv2Module(nn.Module):
                 "stage3": [256, 64, 512, 2, True, True, 5, 3],
                 "stage4": [512, 128, 1024, 1, True, True, 5, 3],
             },
-            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B0_stage1.pth",
+            "url": "https://storage.geti.intel.com/weights/PPHGNetV2_B0_stage1.pth",
         },
         "B2": {
             "stem_channels": [3, 24, 32],
@@ -441,7 +441,7 @@ class HGNetv2Module(nn.Module):
                 "stage3": [384, 128, 768, 3, True, True, 5, 4],
                 "stage4": [768, 256, 1536, 1, True, True, 5, 4],
             },
-            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B2_stage1.pth",
+            "url": "https://storage.geti.intel.com/weights/PPHGNetV2_B2_stage1.pth",
         },
         "B4": {
             "stem_channels": [3, 32, 48],
@@ -452,7 +452,7 @@ class HGNetv2Module(nn.Module):
                 "stage3": [512, 192, 1024, 3, True, True, 5, 6],
                 "stage4": [1024, 384, 2048, 1, True, True, 5, 6],
             },
-            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B4_stage1.pth",
+            "url": "https://storage.geti.intel.com/weights/PPHGNetV2_B4_stage1.pth",
         },
         "B5": {
             "stem_channels": [3, 32, 64],
@@ -463,7 +463,7 @@ class HGNetv2Module(nn.Module):
                 "stage3": [512, 256, 1024, 5, True, True, 5, 6],
                 "stage4": [1024, 512, 2048, 2, True, True, 5, 6],
             },
-            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B5_stage1.pth",
+            "url": "https://storage.geti.intel.com/weights/PPHGNetV2_B5_stage1.pth",
         },
     }
 

@@ -62,11 +62,8 @@ class MaskRCNN(OTXInstanceSegModel):
     """
 
     _pretrained_weights: ClassVar[dict[str, Any]] = {
-        "maskrcnn_efficientnet_b2b": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/"
-        "models/instance_segmentation/v2/efficientnet_b2b-mask_rcnn-576x576.pth",
-        "maskrcnn_swin_tiny": "https://download.openmmlab.com/mmdetection/v2.0/swin/"
-        "mask_rcnn_swin-t-p4-w7_fpn_fp16_ms-crop-3x_coco/"
-        "mask_rcnn_swin-t-p4-w7_fpn_fp16_ms-crop-3x_coco_20210908_165006-90a4008c.pth",
+        "maskrcnn_efficientnet_b2b": "https://storage.geti.intel.com/weights/efficientnet_b2b-mask_rcnn-576x576.pth",
+        "maskrcnn_swin_tiny": "https://storage.geti.intel.com/weights/mask_rcnn_swin-t-p4-w7_fpn_fp16_ms-crop-3x_coco_20210908_165006-90a4008c.pth",
     }
 
     def __init__(

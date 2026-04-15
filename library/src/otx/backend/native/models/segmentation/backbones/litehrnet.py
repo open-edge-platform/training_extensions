@@ -1257,7 +1257,7 @@ class LiteHRNetBackbone:
                 "reduce_ratios": [8, 8],
                 "num_channels": [[60, 120], [60, 120, 240]],
             },
-            "pretrained_weights": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/custom_semantic_segmentation/litehrnetsv2_imagenet1k_rsc.pth",
+            "pretrained_weights": "https://storage.geti.intel.com/weights/litehrnetsv2_imagenet1k_rsc.pth",
         },
         "lite_hrnet_18": {
             "stem_configuration": {},
@@ -1271,7 +1271,7 @@ class LiteHRNetBackbone:
                 "reduce_ratios": [8, 8, 8],
                 "num_channels": [[40, 80], [40, 80, 160], [40, 80, 160, 320]],
             },
-            "pretrained_weights": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/custom_semantic_segmentation/litehrnet18_imagenet1k_rsc.pth",
+            "pretrained_weights": "https://storage.geti.intel.com/weights/litehrnet18_imagenet1k_rsc.pth",
         },
         "lite_hrnet_x": {
             "stem_configuration": {"stem_channels": 60, "out_channels": 60, "strides": (2, 1)},
@@ -1286,7 +1286,7 @@ class LiteHRNetBackbone:
                 "reduce_ratios": [2, 4, 8, 8],
                 "num_channels": [[18, 60], [18, 60, 80], [18, 60, 80, 160], [18, 60, 80, 160, 320]],
             },
-            "pretrained_weights": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/custom_semantic_segmentation/litehrnetxv3_imagenet1k_rsc.pth",
+            "pretrained_weights": "https://storage.geti.intel.com/weights/litehrnetxv3_imagenet1k_rsc.pth",
         },
     }
 

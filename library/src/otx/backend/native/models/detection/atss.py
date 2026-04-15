@@ -55,10 +55,8 @@ class ATSS(OTXDetectionModel):
     """
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "atss_mobilenetv2": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/"
-        "models/object_detection/v2/mobilenet_v2-atss.pth",
-        "atss_resnext101": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/"
-        "object_detection/v2/resnext101_atss_070623.pth",
+        "atss_mobilenetv2": "https://storage.geti.intel.com/weights/mobilenet_v2-atss.pth",
+        "atss_resnext101": "https://storage.geti.intel.com/weights/resnext101_atss_070623.pth",
     }
 
     def __init__(

@@ -18,11 +18,10 @@ from torch.nn import functional
 
 from otx.backend.native.models.utils.utils import load_checkpoint_to_model, load_from_http
 
-pretrained_root = "https://github.com/d-li14/mobilenetv3.pytorch/blob/master/pretrained/"
 pretrained_urls = {
-    "mobilenetv3_small": pretrained_root + "mobilenetv3-small-55df8e1f.pth?raw=true",
-    "mobilenetv3_large": pretrained_root + "mobilenetv3-large-1cd25616.pth?raw=true",
-    "mobilenetv3_large_075": pretrained_root + "mobilenetv3-large-0.75-9632d2a8.pth?raw=true",
+    "mobilenetv3_small": "https://storage.geti.intel.com/weights/mobilenetv3-small-55df8e1f.pth",
+    "mobilenetv3_large": "https://storage.geti.intel.com/weights/mobilenetv3-large-1cd25616.pth",
+    "mobilenetv3_large_075": "https://storage.geti.intel.com/weights/mobilenetv3-large-0.75-9632d2a8.pth",
 }
 
 

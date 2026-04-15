@@ -221,7 +221,7 @@ class FCNHead:
             "in_index": [0, 1, 2, 3],
             "input_transform": "resize_concat",
             "channels": 1536,
-            "pretrained_weights": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_ade20k_linear_head.pth",
+            "pretrained_weights": "https://storage.geti.intel.com/weights/dinov2_vits14_ade20k_linear_head.pth",
         },
     }
 
