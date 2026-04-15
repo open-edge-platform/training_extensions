@@ -8,8 +8,8 @@ from __future__ import annotations
 import pytest
 import torch
 
-from otx.metrics.mlc_map import MultilabelmAP
-from otx.types.label import LabelInfo
+from getitune.metrics.mlc_map import MultilabelmAP
+from getitune.types.label import LabelInfo
 
 
 class TestMAP:

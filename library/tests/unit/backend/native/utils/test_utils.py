@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from otx.backend.native.utils.utils import (
+from getitune.backend.native.utils.utils import (
     is_ckpt_for_finetuning,
     remove_state_dict_prefix,
 )

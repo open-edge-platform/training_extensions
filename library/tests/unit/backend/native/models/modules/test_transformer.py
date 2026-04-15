@@ -7,8 +7,8 @@ import pytest
 import torch
 from torch import nn
 
-from otx.backend.native.models.modules.drop import DropPath
-from otx.backend.native.models.modules.transformer import FFN, AdaptivePadding, PatchEmbed
+from getitune.backend.native.models.modules.drop import DropPath
+from getitune.backend.native.models.modules.transformer import FFN, AdaptivePadding, PatchEmbed
 
 
 def test_adaptive_padding():

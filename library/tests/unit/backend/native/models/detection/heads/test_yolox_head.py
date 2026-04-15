@@ -9,10 +9,10 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/tests/test_mod
 import torch
 from omegaconf import DictConfig
 
-from otx.backend.native.models.detection.heads.yolox_head import YOLOXHeadModule
-from otx.backend.native.models.detection.utils.assigners import SimOTAAssigner
-from otx.backend.native.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
-from otx.backend.native.models.utils.utils import InstanceData
+from getitune.backend.native.models.detection.heads.yolox_head import YOLOXHeadModule
+from getitune.backend.native.models.detection.utils.assigners import SimOTAAssigner
+from getitune.backend.native.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
+from getitune.backend.native.models.utils.utils import InstanceData
 
 
 class TestYOLOXHeadModule:
@@ -59,7 +59,7 @@ class TestYOLOXHeadModule:
         # background
         gt_instances = [InstanceData(bboxes=torch.empty((0, 4)), labels=torch.LongTensor([]))]
         mocker.patch(
-            "otx.backend.native.models.detection.heads.base_head.unpack_det_entity",
+            "getitune.backend.native.models.detection.heads.base_head.unpack_det_entity",
             return_value=(gt_instances, img_metas),
         )
 

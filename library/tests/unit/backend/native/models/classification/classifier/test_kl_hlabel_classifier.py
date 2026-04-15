@@ -5,12 +5,12 @@ import pytest
 import torch
 from torch import nn
 
-from otx.backend.native.models.classification.backbones import EfficientNetBackbone
-from otx.backend.native.models.classification.classifier import HLabelClassifier, KLHLabelClassifier
-from otx.backend.native.models.classification.heads import LinearClsHead, MultiLabelLinearClsHead
-from otx.backend.native.models.classification.heads.hlabel_cls_head import HierarchicalClsHead
-from otx.backend.native.models.classification.losses import AsymmetricAngularLossWithIgnore
-from otx.backend.native.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.native.models.classification.backbones import EfficientNetBackbone
+from getitune.backend.native.models.classification.classifier import HLabelClassifier, KLHLabelClassifier
+from getitune.backend.native.models.classification.heads import LinearClsHead, MultiLabelLinearClsHead
+from getitune.backend.native.models.classification.heads.hlabel_cls_head import HierarchicalClsHead
+from getitune.backend.native.models.classification.losses import AsymmetricAngularLossWithIgnore
+from getitune.backend.native.models.classification.necks.gap import GlobalAveragePooling
 
 
 class TestHierHead(HierarchicalClsHead):

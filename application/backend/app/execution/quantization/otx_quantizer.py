@@ -8,11 +8,11 @@ from pathlib import Path
 from uuid import UUID
 
 from datumaro.experimental.fields import Subset
+from getitune.backend.openvino.engine import OVEngine
+from getitune.config.data import SamplerConfig, SubsetConfig
+from getitune.data.factory import TransformLibFactory
+from getitune.data.module import OTXDataModule
 from loguru import logger
-from otx.backend.openvino.engine import OVEngine
-from otx.config.data import SamplerConfig, SubsetConfig
-from otx.data.factory import TransformLibFactory
-from otx.data.module import OTXDataModule
 from sqlalchemy.orm import Session
 
 from app.execution.base import Execution, step
@@ -197,7 +197,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         return OVEngine(
             model=ov_model_xml_path,
             data=datamodule,
-            work_dir=self._data_dir / f"otx-quantize-workspace-{params.model_id}",
+            work_dir=self._data_dir / f"getitune-quantize-workspace-{params.model_id}",
         )
 
     @step("Run Quantization", 80)

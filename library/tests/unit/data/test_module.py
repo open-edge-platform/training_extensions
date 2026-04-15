@@ -12,12 +12,12 @@ from lightning.pytorch.loggers import CSVLogger
 from omegaconf import DictConfig, OmegaConf
 from torchvision.transforms.v2 import Normalize
 
-from otx.config.data import (
+from getitune.config.data import (
     SubsetConfig,
     TileConfig,
 )
-from otx.data import module as target_file
-from otx.data.module import (
+from getitune.data import module as target_file
+from getitune.data.module import (
     DeviceType,
     OTXDataModule,
     OTXTaskType,
@@ -67,11 +67,11 @@ class TestOTXDataModule:
 
     @pytest.fixture
     def mock_dm_dataset(self, mocker) -> MagicMock:
-        return mocker.patch("otx.data.module.import_dataset")
+        return mocker.patch("getitune.data.module.import_dataset")
 
     @pytest.fixture
     def mock_otx_dataset_factory(self, mocker) -> MagicMock:
-        return mocker.patch("otx.data.module.OTXDatasetFactory")
+        return mocker.patch("getitune.data.module.OTXDatasetFactory")
 
     @pytest.mark.parametrize(
         "task",
@@ -147,7 +147,7 @@ class TestOTXDataModule:
 
     @pytest.fixture
     def fxt_real_tv_cls_config(self) -> DictConfig:
-        cfg_path = files("otx") / "recipe" / "_base_" / "data" / "classification.yaml"
+        cfg_path = files("getitune") / "recipe" / "_base_" / "data" / "classification.yaml"
         cfg = OmegaConf.load(cfg_path)
         assert isinstance(cfg, DictConfig)
         OmegaConf.set_struct(cfg, False)
@@ -421,7 +421,7 @@ class TestOTXDataModule:
     )
     def test_extract_normalization_params(self, transforms_source, expected) -> None:
         """Test CPUAugmentationPipeline._extract_normalization_params."""
-        from otx.data.augmentation.pipeline import CPUAugmentationPipeline
+        from getitune.data.augmentation.pipeline import CPUAugmentationPipeline
 
         pipeline = CPUAugmentationPipeline(augmentations=transforms_source)
         result = (pipeline.mean, pipeline.std)

@@ -16,7 +16,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../../src"))
 
-from otx import __version__
+from getitune import __version__
 
 # ruff: noqa
 

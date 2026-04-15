@@ -34,7 +34,7 @@ from pycocotools import mask as mask_utils
 from pycocotools.coco import COCO
 from torchvision import tv_tensors
 
-from otx.data.entity.sample import InstanceSegmentationSample
+from getitune.data.entity.sample import InstanceSegmentationSample
 
 COCO_ANNOTATIONS_URL = "https://images.cocodataset.org/annotations/annotations_trainval2017.zip"
 COCO_VAL_IMAGES_URL = "https://images.cocodataset.org/val2017/{filename}"

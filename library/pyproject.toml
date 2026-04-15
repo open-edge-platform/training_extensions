@@ -8,9 +8,9 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "otx"
-dynamic = ["version"]
-description = "OpenVINO™ Training Extensions: Train, Evaluate, Optimize, Deploy Computer Vision Models via OpenVINO™"
+name = "getitune"
+version = "0.1.0"
+description = "Geti Tune: Train, Evaluate, Optimize, Deploy Computer Vision Models"
 # TODO restore after creating a proper README file for the library
 # readme = "README.md"
 requires-python = ">=3.11,<3.15"
@@ -132,7 +132,8 @@ ci_publish = [
 ]
 
 [project.scripts]
-otx = "otx.cli:main"
+getitune = "getitune.cli:main"
+otx = "getitune.cli:main"  # backward-compat alias; will be removed in a future release
 
 [project.urls]
 Documentation = "https://open-edge-platform.github.io/training_extensions/"
@@ -190,15 +191,12 @@ name = "torch-xpu"
 url = "https://download.pytorch.org/whl/xpu"
 explicit = true
 
-[tool.setuptools.dynamic]
-version = {attr = "otx.__version__"}
-
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["otx*"]
+include = ["getitune*", "otx"]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # COVERAGE CONFIGURATION.                                                     #
@@ -210,14 +208,14 @@ exclude_lines = [
 
 [tool.coverage.run]
 source = [
-    "src/otx/",
+    "src/getitune/",
 ]
 omit = [
     "**/__init__.py",
-    "src/otx/recipes/*",
-    "src/otx/tools/*",
+    "src/getitune/recipes/*",
+    "src/getitune/tools/*",
     "**/exportable_code/*",
-    "src/otx/core/model/utils/*",
+    "src/getitune/core/model/utils/*",
 
     # Ignore some generated files by opencv-python
     "config.py",
@@ -364,7 +362,7 @@ exclude = [
     "tests/regression/*.py",
 
     # Mostly borrowed from jsonargparse codebase
-    "src/otx/core/utils/jsonargparse.py",
+    "src/getitune/core/utils/jsonargparse.py",
 
     # Sphinx auto-generated files
     "docs/source/conf.py",
@@ -377,13 +375,13 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Allow default arguments like, e.g., `data: List[str] = fastapi.Query(None)`.
 extend-immutable-calls = [
     # Label info objects
-    "otx.types.label.LabelInfo",
-    "otx.types.label.HLabelInfo",
-    "otx.types.label.SegLabelInfo",
-    "otx.types.label.NullLabelInfo",
+    "getitune.types.label.LabelInfo",
+    "getitune.types.label.HLabelInfo",
+    "getitune.types.label.SegLabelInfo",
+    "getitune.types.label.NullLabelInfo",
 
     # Config objects
-    "otx.config.data.TileConfig",
+    "getitune.config.data.TileConfig",
 ]
 
 [tool.ruff.lint.mccabe]
@@ -417,11 +415,11 @@ notice-rgx = """
     "D",     # Test skips missing docstring argument with magic (fixture) methods.
     "ARG001",   # Some arguments are passed for executing fixture
 ]
-"src/otx/**/*.py" = [
+"src/getitune/**/*.py" = [
     "ERA001",
 ]
 # See https://github.com/openvinotoolkit/training_extensions/actions/runs/7109500350/job/19354528819?pr=2700
-"src/otx/core/config/**/*.py" = [
+"src/getitune/core/config/**/*.py" = [
     "UP007"
 ]
 
@@ -438,5 +436,5 @@ python_files = "tests/**/*.py"
 
 [tool.pyrefly]
 python-version = "3.11.0"
-project-includes = ["src/otx/**/*.py*", "tests/**/*.py*"]
+project-includes = ["src/getitune/**/*.py*", "tests/**/*.py*"]
 ignore-missing-imports = ["*"]

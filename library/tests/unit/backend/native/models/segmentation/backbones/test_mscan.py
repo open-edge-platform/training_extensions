@@ -7,8 +7,8 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 
-from otx.backend.native.models.segmentation.backbones import mscan as target_file
-from otx.backend.native.models.segmentation.backbones.mscan import DropPath, MSCANModule, drop_path
+from getitune.backend.native.models.segmentation.backbones import mscan as target_file
+from getitune.backend.native.models.segmentation.backbones.mscan import DropPath, MSCANModule, drop_path
 
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4])
@@ -94,7 +94,7 @@ class TestMSCABlock:
 
     @pytest.fixture
     def mock_torch_load(self, mocker) -> MagicMock:
-        return mocker.patch("otx.backend.native.models.segmentation.backbones.mscan.torch.load")
+        return mocker.patch("getitune.backend.native.models.segmentation.backbones.mscan.torch.load")
 
     def test_load_pretrained_weights(self, pretrained_weight, mock_torch_load, mock_load_checkpoint_to_model):
         MSCANModule(pretrained_weights=pretrained_weight)

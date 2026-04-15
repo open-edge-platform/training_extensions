@@ -6,7 +6,7 @@
 import pytest
 import torch
 
-from otx.backend.native.models.detection.backbones.vit_tiny import (
+from getitune.backend.native.models.detection.backbones.vit_tiny import (
     Attention,
     Block,
     DropPath,

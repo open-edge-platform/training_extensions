@@ -9,12 +9,12 @@ import torch
 from torchmetrics import MetricCollection
 from torchvision import tv_tensors
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.detection.base import OTXDetectionModel
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from otx.metrics.fmeasure import FMeasure
-from otx.types.label import LabelInfo
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.detection.base import OTXDetectionModel
+from getitune.data.entity.base import ImageInfo
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.metrics.fmeasure import FMeasure
+from getitune.types.label import LabelInfo
 
 
 class MockDetectionModel(OTXDetectionModel):
@@ -253,8 +253,8 @@ class TestFilterOutputsByThreshold:
 class TestTestStep:
     """Test cases for test_step method."""
 
-    @patch("otx.backend.native.models.detection.base.OTXDetectionModel.forward")
-    @patch("otx.backend.native.models.detection.base.OTXDetectionModel._filter_outputs_by_threshold")
+    @patch("getitune.backend.native.models.detection.base.OTXDetectionModel.forward")
+    @patch("getitune.backend.native.models.detection.base.OTXDetectionModel._filter_outputs_by_threshold")
     def test_filtering_before_metric_computation(
         self,
         mock_filter,
@@ -299,10 +299,10 @@ class TestTestStep:
             mock_filter.assert_called_once_with(sample_predictions)
             assert result == filtered_preds
 
-    @patch("otx.backend.native.models.detection.base.OTXDetectionModel.forward")
+    @patch("getitune.backend.native.models.detection.base.OTXDetectionModel.forward")
     def test_test_step_with_loss_entity_raises_error(self, mock_forward, detection_model, sample_batch):
         """Test that test_step raises TypeError when forward returns OTXBatchLossEntity."""
-        from otx.data.entity.base import OTXBatchLossEntity
+        from getitune.data.entity.base import OTXBatchLossEntity
 
         # Setup mock to return loss entity
         mock_forward.return_value = OTXBatchLossEntity()
@@ -311,8 +311,8 @@ class TestTestStep:
         with pytest.raises(TypeError):
             detection_model.test_step(sample_batch, 0)
 
-    @patch("otx.backend.native.models.detection.base.OTXDetectionModel.forward")
-    @patch("otx.backend.native.models.detection.base.OTXDetectionModel._filter_outputs_by_threshold")
+    @patch("getitune.backend.native.models.detection.base.OTXDetectionModel.forward")
+    @patch("getitune.backend.native.models.detection.base.OTXDetectionModel._filter_outputs_by_threshold")
     def test_test_step_with_list_metric_inputs(
         self,
         mock_filter,

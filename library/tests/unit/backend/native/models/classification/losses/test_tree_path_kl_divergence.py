@@ -5,7 +5,7 @@ import pytest
 import torch
 from torch.nn import functional
 
-from otx.backend.native.models.classification.losses.tree_path_kl_divergence_loss import TreePathKLDivergenceLoss
+from getitune.backend.native.models.classification.losses.tree_path_kl_divergence_loss import TreePathKLDivergenceLoss
 
 
 @pytest.mark.parametrize(

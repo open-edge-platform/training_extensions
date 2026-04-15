@@ -10,14 +10,14 @@ from unittest.mock import MagicMock
 import pytest
 from lightning.pytorch.loggers.logger import DummyLogger
 
-from otx.backend.native.tools.adaptive_bs import runner as target_file
-from otx.backend.native.tools.adaptive_bs.runner import (
+from getitune.backend.native.tools.adaptive_bs import runner as target_file
+from getitune.backend.native.tools.adaptive_bs.runner import (
     BatchSizeFinder,
     _adjust_train_args,
     _train_model,
     adapt_batch_size,
 )
-from otx.utils.device import is_xpu_available
+from getitune.utils.device import is_xpu_available
 
 
 @pytest.fixture
@@ -190,7 +190,7 @@ def test_adapt_batch_size_cpu(
 ):
     mock_is_cuda_available.return_value = False
     mock_is_xpu_available.return_value = False
-    mock_logger = mocker.patch("otx.backend.native.tools.adaptive_bs.runner.logger")
+    mock_logger = mocker.patch("getitune.backend.native.tools.adaptive_bs.runner.logger")
     adapt_batch_size(mock_engine, **train_args)
     mock_logger.warning.assert_called_once_with("Adaptive batch size supports only CUDA or XPU.")
 

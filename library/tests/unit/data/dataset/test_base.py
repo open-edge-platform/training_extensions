@@ -11,8 +11,8 @@ import pytest
 import torch
 from datumaro.experimental import Dataset
 
-from otx.data.dataset.base import OTXDataset, _default_collate_fn
-from otx.data.entity.sample import OTXSample, OTXSampleBatch
+from getitune.data.dataset.base import OTXDataset, _default_collate_fn
+from getitune.data.entity.sample import OTXSample, OTXSampleBatch
 
 
 class TestDefaultCollateFn:

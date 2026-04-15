@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 from datumaro.experimental import Dataset
 
-from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
+from getitune.data.dataset.instance_segmentation import OTXInstanceSegDataset
 
 
 class TestOTXInstanceSegDataset:

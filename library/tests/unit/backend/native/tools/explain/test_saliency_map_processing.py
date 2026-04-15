@@ -5,11 +5,11 @@ import numpy as np
 import pytest
 import torch
 
-from otx.backend.native.models.utils.xai_utils import process_saliency_maps, process_saliency_maps_in_pred_entity
-from otx.config.explain import ExplainConfig
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.sample import OTXPredictionBatch
-from otx.types.explain import TargetExplainGroup
+from getitune.backend.native.models.utils.xai_utils import process_saliency_maps, process_saliency_maps_in_pred_entity
+from getitune.config.explain import ExplainConfig
+from getitune.data.entity.base import ImageInfo
+from getitune.data.entity.sample import OTXPredictionBatch
+from getitune.types.explain import TargetExplainGroup
 
 NUM_CLASSES = 6
 BATCH_SIZE = 3

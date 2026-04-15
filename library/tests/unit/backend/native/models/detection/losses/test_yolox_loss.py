@@ -4,10 +4,10 @@
 
 import torch
 
-from otx.backend.native.models.detection.heads.yolox_head import YOLOXHeadModule
-from otx.backend.native.models.detection.losses import YOLOXCriterion
-from otx.backend.native.models.detection.utils.assigners.sim_ota_assigner import SimOTAAssigner
-from otx.backend.native.models.utils.utils import InstanceData
+from getitune.backend.native.models.detection.heads.yolox_head import YOLOXHeadModule
+from getitune.backend.native.models.detection.losses import YOLOXCriterion
+from getitune.backend.native.models.detection.utils.assigners.sim_ota_assigner import SimOTAAssigner
+from getitune.backend.native.models.utils.utils import InstanceData
 
 
 class TestYOLOXCriterion:
@@ -31,7 +31,7 @@ class TestYOLOXCriterion:
         gt_instances = InstanceData(bboxes=torch.empty((0, 4)), labels=torch.LongTensor([]))
 
         mocker.patch(
-            "otx.backend.native.models.detection.heads.base_head.unpack_det_entity",
+            "getitune.backend.native.models.detection.heads.base_head.unpack_det_entity",
             return_value=([gt_instances], img_metas),
         )
         raw_dict = head.prepare_loss_inputs(feat, mocker.MagicMock())
@@ -57,7 +57,7 @@ class TestYOLOXCriterion:
         )
 
         mocker.patch(
-            "otx.backend.native.models.detection.heads.base_head.unpack_det_entity",
+            "getitune.backend.native.models.detection.heads.base_head.unpack_det_entity",
             return_value=([gt_instances], img_metas),
         )
         raw_dict = head.prepare_loss_inputs(feat, mocker.MagicMock())
@@ -78,7 +78,7 @@ class TestYOLOXCriterion:
         )
 
         mocker.patch(
-            "otx.backend.native.models.detection.heads.base_head.unpack_det_entity",
+            "getitune.backend.native.models.detection.heads.base_head.unpack_det_entity",
             return_value=([gt_instances], img_metas),
         )
         raw_dict = head.prepare_loss_inputs(feat, mocker.MagicMock())

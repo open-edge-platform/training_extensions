@@ -18,10 +18,10 @@
 !application/ui/tsconfig.json
 !application/ui/rsbuild.config.ts
 
-# Library – only what uv needs to resolve deps and build the otx wheel
+# Library – only what uv needs to resolve deps and build the getitune wheel
 !library/pyproject.toml
 !library/MANIFEST.in
-!library/src/otx
+!library/src/getitune
 
 # Exclude non-essential files that sneak in via the above whitelists
 **/__pycache__
@@ -30,6 +30,7 @@
 **/.ruff_cache
 **/.import_linter_cache
 **/otx-workspace*
+**/getitune-workspace*
 **/.venv
 **/*.pyc
 **/*.pyo

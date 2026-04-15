@@ -14,8 +14,8 @@ import torch
 from lightning.pytorch import LightningModule, Trainer
 from lightning.pytorch.callbacks.callback import Callback
 
-from otx.backend.native.callbacks.aug_scheduler import AugmentationSchedulerCallback, DataAugSwitch
-from otx.data.augmentation import CPUAugmentationPipeline, GPUAugmentationPipeline
+from getitune.backend.native.callbacks.aug_scheduler import AugmentationSchedulerCallback, DataAugSwitch
+from getitune.data.augmentation import CPUAugmentationPipeline, GPUAugmentationPipeline
 
 # ---------------------------------------------------------------------------
 # Helpers / fixtures shared across test classes
@@ -24,7 +24,7 @@ from otx.data.augmentation import CPUAugmentationPipeline, GPUAugmentationPipeli
 
 def _make_minimal_policies(
     *,
-    cpu_class: str = "otx.data.augmentation.transforms.Resize",
+    cpu_class: str = "getitune.data.augmentation.transforms.Resize",
     gpu_class: str = "kornia.augmentation.Normalize",
 ) -> dict:
     """Return a 4-policy dict with simple Resize (CPU) + Normalize (GPU)."""
@@ -117,7 +117,7 @@ class TestDataAugSwitch:
             name: {
                 "augmentations_cpu": [
                     {
-                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "class_path": "getitune.data.augmentation.transforms.Resize",
                         "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
                     },
                 ],
@@ -220,7 +220,7 @@ class TestDataAugSwitch:
             name: {
                 "augmentations_cpu": [
                     {
-                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "class_path": "getitune.data.augmentation.transforms.Resize",
                         "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
                     },
                 ],
@@ -248,7 +248,7 @@ class TestAugmentationSchedulerCallback:
 
     @pytest.fixture
     def mock_gpu_callback(self):
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         cb = MagicMock(spec=GPUAugmentationCallback)
         mock_pipeline = MagicMock(spec=GPUAugmentationPipeline)
@@ -384,7 +384,7 @@ class TestAugmentationSchedulerCallback:
             name: {
                 "augmentations_cpu": [
                     {
-                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "class_path": "getitune.data.augmentation.transforms.Resize",
                         "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
                     },
                 ],
@@ -394,7 +394,7 @@ class TestAugmentationSchedulerCallback:
         switch = DataAugSwitch(POLICY_EPOCHS, policies, input_size=[640, 640])
         switch.set_shared_epoch(Value("i", 0))
 
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         mock_gpu_cb = MagicMock(spec=GPUAugmentationCallback)
         original_pipeline = MagicMock()

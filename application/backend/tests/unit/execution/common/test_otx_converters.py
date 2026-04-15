@@ -4,11 +4,11 @@
 from unittest.mock import Mock
 
 import pytest
-from otx.data import OTXDetectionDataset, OTXInstanceSegDataset, OTXMulticlassClsDataset, OTXMultilabelClsDataset
-from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
-from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
-from otx.metrics.types import MetricCallable
-from otx.types.task import OTXTaskType
+from getitune.data import OTXDetectionDataset, OTXInstanceSegDataset, OTXMulticlassClsDataset, OTXMultilabelClsDataset
+from getitune.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
+from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
+from getitune.metrics.types import MetricCallable
+from getitune.types.task import OTXTaskType
 
 from app.execution.common.otx_converters import (
     get_metric_by_task,

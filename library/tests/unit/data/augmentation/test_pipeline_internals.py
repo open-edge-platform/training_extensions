@@ -8,7 +8,7 @@ import pytest
 import torch
 from torch import nn
 
-from otx.data.augmentation.pipeline import (
+from getitune.data.augmentation.pipeline import (
     _DTYPE_TO_BIT_DEPTH,
     GPUAugmentationPipeline,
     _IntensityAdapter,
