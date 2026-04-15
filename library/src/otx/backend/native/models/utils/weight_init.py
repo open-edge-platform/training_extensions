@@ -17,7 +17,7 @@ import numpy as np
 import torch
 from torch import Tensor, nn
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def update_init_info(module: nn.Module, init_info: str) -> None:
