@@ -40,7 +40,8 @@ div[class*='mediaItem']:is([data-hovered], [data-selected]) {
 }
 
 // When media actions menu is open, we don't want to hide the button that opens it
-div[class*='mediaItem']:has(button[aria-label='Media actions'][aria-expanded='true']) {
+div[class*='mediaItem']:has(button[aria-label='Media actions'][aria-expanded='true']),
+div[class*='mediaItem']:has(button[aria-label='Media information'][aria-expanded='true']) {
     .rightTopElement {
         opacity: 1;
     }

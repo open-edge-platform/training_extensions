@@ -19,6 +19,7 @@ import { DatasetDropZone } from './drop-zone.component';
 import { EmptyDataset } from './empty-dataset.component';
 import { useSelectDatasetItem } from './hooks/use-select-dataset-item.hook';
 import { MediaItemActions } from './media-item-actions/media-item-actions.component';
+import { MediaItemContextualHelp } from './media-item-contextual-help/media-item-contextual-help.component';
 import { useUploadFiles } from './use-upload-files';
 
 type GalleryProps = {
@@ -101,13 +102,17 @@ const GalleryList = ({
                             </Flex>
                         )}
                         topRightElement={() => (
-                            <MediaItemActions
-                                id={item.id}
-                                onDeleted={toggleSelectedKeys}
-                                mediaUrl={fullMediaUrl}
-                                mediaFileName={mediaFileName}
-                                onAnnotate={() => onSelectedMediaItemChange(item)}
-                            />
+                            <Flex alignItems={'center'} gap={'size-50'}>
+                                <MediaItemContextualHelp item={item} />
+
+                                <MediaItemActions
+                                    id={item.id}
+                                    onDeleted={toggleSelectedKeys}
+                                    mediaUrl={fullMediaUrl}
+                                    mediaFileName={mediaFileName}
+                                    onAnnotate={() => onSelectedMediaItemChange(item)}
+                                />
+                            </Flex>
                         )}
                         bottomRightElement={() => (
                             <AnnotationStatusIcon state={isUserReviewed(item.id) ? 'accepted' : undefined} />

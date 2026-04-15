@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Content, ContextualHelp, Flex, Text } from '@geti/ui';
+import { Flex } from '@geti/ui';
 
 import type { Media, MediaVideo } from '../../constants/shared-types';
 import { formatDurationText } from '../../features/annotator/video-player/video-toolbar/time-utils';
@@ -18,12 +18,10 @@ type MediaThumbnailProps = {
 };
 
 type VideoIndicatorProps = {
-    frameCount: number;
     duration: number;
-    annotatedFrameCount: number;
 };
 
-const VideoIndicator = ({ frameCount, duration, annotatedFrameCount }: VideoIndicatorProps) => {
+const VideoIndicator = ({ duration }: VideoIndicatorProps) => {
     return (
         <Flex
             gap={'size-50'}
@@ -34,18 +32,6 @@ const VideoIndicator = ({ frameCount, duration, annotatedFrameCount }: VideoIndi
             UNSAFE_className={classes.videoIndicator}
         >
             {formatDurationText(duration)}
-
-            <ContextualHelp
-                variant='info'
-                UNSAFE_className={classes.videoIndicatorDetails}
-                aria-label='annotated frames'
-            >
-                <Content>
-                    <Text>Total frames: {frameCount}</Text>
-                    <br />
-                    <Text>Number of annotated frames: {annotatedFrameCount}</Text>
-                </Content>
-            </ContextualHelp>
         </Flex>
     );
 };
@@ -54,13 +40,7 @@ export const MediaThumbnail = ({ onDoubleClick, onClick, url, alt, item }: Media
     return (
         <div onDoubleClick={onDoubleClick} onClick={onClick} className={classes.imgContainer}>
             <img src={url} alt={alt} className={classes.img} />
-            {isVideo(item) && (
-                <VideoIndicator
-                    duration={item.duration}
-                    frameCount={item.frame_count}
-                    annotatedFrameCount={item.annotated_frame_count}
-                />
-            )}
+            {isVideo(item) && <VideoIndicator duration={item.duration} />}
         </div>
     );
 };
