@@ -10,15 +10,13 @@
 1. [Architecture Overview](#architecture-overview)
 2. [Golden Rules](#golden-rules)
 3. [Working with Alembic](#working-with-alembic)
-4. [Scenario Cookbook](#scenario-cookbook)
+4. [Examples](#examples)
    - [Add a New Field to an Existing Table](#1-add-a-new-field-to-an-existing-table)
    - [Remove a Field from an Existing Table](#2-remove-a-field-from-an-existing-table)
    - [Split a Table](#3-split-a-table)
    - [Merge Two Tables into One](#4-merge-two-tables-into-one)
    - [Add a New Table](#5-add-a-new-table)
    - [Remove a Table](#6-remove-a-table)
-   - [Add an Index to an Existing Table](#7-add-an-index-to-an-existing-table)
-   - [Move Objects Under a Different Prefix](#8-move-objects-under-a-different-storage-prefix)
 5. [File-Storage Migrations](#file-storage-migrations)
 6. [Testing Migrations](#testing-migrations)
 7. [Review Checklist](#review-checklist)
@@ -130,7 +128,7 @@ with op.batch_alter_table("projects") as batch_op:
 
 ---
 
-## Scenario Cookbook
+## Examples
 
 ### 1. Add a New Field to an Existing Table
 
@@ -411,59 +409,26 @@ def downgrade() -> None:
 
 ---
 
-### 7. Add an Index to an Existing Table
-
-**Breaking?** No — purely additive and transparent to application code.
-
-#### Step 1: Add to the model
-
-```python
-class MediaDB(BaseID):
-    __tablename__ = "media"
-    __table_args__ = (
-        Index("idx_media_video_id", "video_id"),
-        Index("idx_media_project_type", "project_id", "type"),  # NEW
-        UniqueConstraint("video_id", "frame_index", name="uq_video_id_frame_index"),
-    )
-```
-
-#### Step 2: Auto-generate
-
-```bash
-uv run alembic -c app/alembic.ini revision --autogenerate -m "add_media_project_type_index"
-```
-
-#### Step 3: Verify
-
-```python
-def upgrade() -> None:
-    op.create_index("idx_media_project_type", "media", ["project_id", "type"], unique=False)
-
-def downgrade() -> None:
-    op.drop_index("idx_media_project_type", table_name="media")
-```
-
----
-
-### 8. Move Objects Under a Different Storage Prefix
-
-**Breaking?** Yes — the application must be able to find files at the new location.
-
-**Example:** Move media from `projects/<id>/dataset/` to `projects/<id>/media/`.
-
-This is a **file-storage migration**. Alembic migration scripts can (and should) be used to orchestrate it. See the next section for the full pattern.
-
----
-
 ## File-Storage Migrations
 
-### Can Alembic be used for file-storage changes?
-
-**Yes.** Alembic migration scripts are regular Python code — they can do anything, including moving, renaming, or restructuring files on disk. Since `MigrationManager` runs `alembic upgrade head` on every application startup, this is the natural place to put storage layout changes.
+Alembic migration scripts are regular Python code — they can do anything, including moving, renaming, or restructuring files on disk. Since `MigrationManager` runs `alembic upgrade head` on every application startup, this is the natural place to put storage layout changes.
 
 The key benefit: **the Alembic revision number becomes the single source of truth for both the database schema version and the storage layout version.** This is already leveraged by the project import/export system, which checks `get_database_schema_version()` to ensure compatibility.
 
-### Pattern: Storage Migration inside an Alembic Script
+### Creating a Storage-Only Migration
+
+Since a file-storage migration has **no schema changes**, Alembic's `--autogenerate` won't detect anything. Instead, generate an **empty** migration and fill in the logic by hand:
+
+```bash
+cd application/backend
+uv run alembic -c app/alembic.ini revision -m "move_media_to_new_prefix"
+```
+
+> **Important:** Do NOT invent a revision ID yourself. The `alembic revision` command auto-generates a unique 12-character hex ID (e.g., `a3f8b1c9d2e4`) and sets `down_revision` to the current head. The placeholder values in the example below (like `abc123def456`) are for illustration only — in practice they will be generated for you.
+
+If your migration involves **both** schema changes and storage changes, you can use `--autogenerate` instead — Alembic will generate the schema diff, and you then hand-edit the script to add the file-moving logic.
+
+### Example Storage Migration
 
 ```python
 """move_media_to_new_prefix
@@ -480,6 +445,7 @@ from alembic import op
 from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
+# These are auto-generated — do not change them manually.
 revision: str = "abc123def456"
 down_revision: str = "2d2b0c9a5c2c"
 branch_labels = None
