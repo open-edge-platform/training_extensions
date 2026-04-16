@@ -72,6 +72,7 @@ overrides:
           init_args:
             size: $(input_size)
             keep_aspect_ratio: true
+            resize_targets: false
     test_subset:
       num_workers: 4
       augmentations_cpu:
@@ -79,3 +80,4 @@ overrides:
           init_args:
             size: $(input_size)
             keep_aspect_ratio: true
+            resize_targets: false
