@@ -85,9 +85,6 @@ export const DataCollection = () => {
 
     return (
         <Flex direction={'column'} minHeight={0} height={'100%'}>
-            <Flex alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
-                <Heading level={4}>Data collection</Heading>
-            </Flex>
             <Flex direction={'column'} flex={1} UNSAFE_style={{ overflow: 'hidden auto' }}>
                 <Heading level={3} margin={0}>
                     Max dataset size

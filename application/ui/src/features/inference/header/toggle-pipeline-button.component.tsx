@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Button, toast } from '@geti/ui';
+import { Switch, toast } from '@geti/ui';
 import { useDisablePipeline, useEnablePipeline, usePipeline } from 'hooks/api/pipeline.hook';
 import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -22,6 +22,7 @@ export const TogglePipelineButton = () => {
 
     const isPipelineEnabled = pipelineQuery.data?.status === 'running';
     const canEnablePipeline = useIsPipelineConfigured(pipelineQuery.data);
+    const isPending = disablePipelineMutation.isPending || enablePipelineMutation.isPending;
 
     const mutationParams = { params: { path: { project_id: projectId } } };
 
@@ -54,12 +55,9 @@ export const TogglePipelineButton = () => {
 
     return (
         <>
-            <Button
-                isPending={disablePipelineMutation.isPending || enablePipelineMutation.isPending}
-                onPress={handleToggle}
-            >
+            <Switch isEmphasized isSelected={isPipelineEnabled} isDisabled={isPending} onChange={handleToggle}>
                 {isPipelineEnabled ? 'Disable' : 'Enable'} pipeline
-            </Button>
+            </Switch>
 
             <EnablePipelineBlockedDialog
                 isOpen={isEnableBlockedDialogOpen}
