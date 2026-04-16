@@ -62,7 +62,7 @@ test.describe('Toast Rendering', () => {
         );
 
         await page.goto('/projects/id-1/inference');
-        await page.getByRole('switch', { name: 'Disable Pipeline' }).click();
+        await page.getByRole('switch', { name: /Disable pipeline/i }).click();
 
         await expectToastToBeInteractive(page, 'Pipeline disabled successfully');
     });

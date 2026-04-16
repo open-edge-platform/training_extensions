@@ -68,7 +68,7 @@ test('Inference', async ({ streamPage, page, network }) => {
     await test.step('toggles pipeline', async () => {
         await page.goto('/projects/id-1/inference');
 
-        await expect(page.getByRole('switch', { name: 'Enable Pipeline' })).toBeEnabled();
+        await expect(page.getByRole('switch', { name: /Enable pipeline/i })).toBeEnabled();
 
         network.use(
             http.post('/api/projects/{project_id}/pipeline:enable', () => {
@@ -79,7 +79,7 @@ test('Inference', async ({ streamPage, page, network }) => {
             })
         );
 
-        await page.getByRole('switch', { name: 'Enable Pipeline' }).click();
+        await page.getByRole('switch', { name: /Enable pipeline/i }).click();
 
         await expect(page.getByRole('switch', { name: 'Disable Pipeline' })).toBeEnabled();
         network.use(
@@ -93,7 +93,7 @@ test('Inference', async ({ streamPage, page, network }) => {
 
         await page.getByRole('switch', { name: 'Disable Pipeline' }).click();
 
-        await expect(page.getByRole('switch', { name: 'Enable Pipeline' })).toBeEnabled();
+        await expect(page.getByRole('switch', { name: /Enable pipeline/i })).toBeEnabled();
     });
 
     await test.step('updates data collection policy', async () => {

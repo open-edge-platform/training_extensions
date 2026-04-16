@@ -55,13 +55,18 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
                 backgroundColor={'gray-100'}
                 paddingY={'size-400'}
                 paddingX={'size-500'}
+                aria-hidden={!isExpanded || undefined}
             >
-                <Flex alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
-                    <Heading level={2}>{tab}</Heading>
-                </Flex>
-                <Flex direction={'column'} flex={1} UNSAFE_style={{ overflow: 'hidden auto' }}>
-                    {content}
-                </Flex>
+                {isExpanded && (
+                    <>
+                        <Flex alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
+                            <Heading level={2}>{tab}</Heading>
+                        </Flex>
+                        <Flex direction={'column'} flex={1} UNSAFE_style={{ overflow: 'hidden auto' }}>
+                            {content}
+                        </Flex>
+                    </>
+                )}
             </View>
             <View gridColumn={'2/3'} backgroundColor={'gray-200'} padding={'size-100'}>
                 <Flex direction={'column'} height={'100%'} alignItems={'center'} gap={'size-100'}>
