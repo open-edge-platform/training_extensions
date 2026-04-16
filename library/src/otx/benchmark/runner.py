@@ -219,15 +219,15 @@ class BenchmarkRunner:
                 else:
                     self.failures.append(result)
 
+            # Persist report after each experiment so partial results survive crashes
+            if self.config.enable_report:
+                self._generate_report(manifest)
+
         logger.info(
             "Benchmark complete. %d succeeded, %d failed.",
             len(self.results),
             len(self.failures),
         )
-
-        # Generate report if enabled
-        if self.config.enable_report:
-            self._generate_report(manifest)
 
         # Cleanup heavy artifacts to save disk space
         if not self.config.keep_checkpoints:
