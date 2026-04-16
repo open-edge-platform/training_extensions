@@ -19,7 +19,7 @@ from app.models import (
     Project,
     VideoFrame,
 )
-from app.models.media import Media, MediaListPredictionRequest, MediaType, Video, VideoRange
+from app.models.media import Media, MediaListPredictionRequest, MediaPredictionRequest, MediaType, Video, VideoRange
 from app.models.system import DeviceInfo
 
 from .base import BaseSessionManagedService, ResourceError, ResourceNotFoundError, ResourceType
@@ -98,15 +98,15 @@ class MediaPredictionService(BaseSessionManagedService):
             video_frames.append(Frame(frame_index=frame_index, annotated_frame=annotated_frame, skip=skip))
         return video_frames
 
-    def _load_media(self, project: Project, request: MediaListPredictionRequest) -> LoadedMedia:
+    def _load_media(self, project: Project, media_requests: list[MediaPredictionRequest]) -> LoadedMedia:
         single_media: list[Image | VideoFrame] = []
         video_frames: dict[Video, list[Frame]] = {}
 
-        media_ids: list[UUID] = [media_request.media_id for media_request in request.media]
+        media_ids: list[UUID] = [media_request.media_id for media_request in media_requests]
         media_list = self._media_service.get_media_by_ids(project_id=project.id, media_ids=media_ids)
         media_dict: dict[UUID, Media] = {media.id: media for media in media_list}
 
-        for media_request in request.media:
+        for media_request in media_requests:
             media = media_dict.get(media_request.media_id, None)
             if media is None:
                 raise ResourceNotFoundError(ResourceType.MEDIA, str(media_request.media_id))
@@ -204,6 +204,15 @@ class MediaPredictionService(BaseSessionManagedService):
 
         return BatchInferenceResult(predictions=predictions)
 
+    def _infer_batch(
+        self, project: Project, model_id: UUID, device: DeviceInfo, inputs: list[BatchInferenceInput]
+    ) -> dict[tuple[UUID, int | None], list[DatasetItemAnnotation]]:
+        labels = self._label_service.list_all(project_id=project.id)
+        self._inference_server.set_inference_model(
+            project_id=project.id, model_id=model_id, device=device, ttl=self._inference_model_ttl
+        )
+        return self._inference_server.infer_batch(labels=labels, inputs=inputs)
+
     def predict_media(
         self,
         project: Project,
@@ -225,17 +234,11 @@ class MediaPredictionService(BaseSessionManagedService):
         """
         logger.debug("Performing batch inference using model {}", request.model_id)
 
-        loaded_media = self._load_media(project=project, request=request)
+        loaded_media = self._load_media(project=project, media_requests=request.media)
         logger.debug(
             "Loaded {} media and {} video frames", len(loaded_media.single_media), len(loaded_media.video_frames)
         )
 
         inputs = self._convert_to_inference_input(project=project, loaded_media=loaded_media)
-
-        labels = self._label_service.list_all(project_id=project.id)
-
-        self._inference_server.set_inference_model(
-            project_id=project.id, model_id=request.model_id, device=device, ttl=self._inference_model_ttl
-        )
-        result = self._inference_server.infer_batch(labels=labels, inputs=inputs)
+        result = self._infer_batch(project=project, model_id=request.model_id, device=device, inputs=inputs)
         return self._convert_result(loaded_media=loaded_media, inference_result=result)
