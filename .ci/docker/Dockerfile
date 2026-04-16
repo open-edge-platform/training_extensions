@@ -38,7 +38,7 @@ WORKDIR /home/validation
 
 
 #########################################################
-## Geti Tune Development Env
+## getitune Development Env
 #########################################################
 
 FROM python_base_cuda as getitune_development_env
