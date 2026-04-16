@@ -15,7 +15,7 @@ type LoadingImportDatasetProps = {
     size: number;
     fileName: string;
     stagedDatasetId: string;
-    onSuccess: () => void;
+    onSuccess: () => Promise<void> | void;
     deleteEntry: () => void;
 };
 
@@ -31,10 +31,10 @@ export const LoadingImportDataset = ({
 
     const { data: job, ...response } = useImportJobStatus({
         jobId,
-        onSuccess: () => {
-            onSuccess();
+        onSuccess: async () => {
             deleteEntry();
             deleteStagedFileMutation.mutate();
+            await onSuccess();
 
             toast({
                 message: `Dataset ${fileName} ${formatBytes(size)} imported successfully.`,

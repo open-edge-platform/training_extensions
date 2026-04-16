@@ -28,14 +28,17 @@ export const ImportJobsList = () => {
     const stagedImportsQueue = stagedImports.reverse();
     const preparingImportsQueue = preparingImports.reverse();
 
-    const handleImportSuccess = () => {
-        queryClient.invalidateQueries({
-            queryKey: getQueryKey([
-                'get',
-                '/api/projects/{project_id}/dataset/media',
-                { params: { path: { project_id: projectId } } },
-            ]),
-        });
+    const handleImportSuccess = async () => {
+        const params = { path: { project_id: projectId } };
+
+        await Promise.all([
+            queryClient.invalidateQueries({
+                queryKey: getQueryKey(['get', '/api/projects/{project_id}/dataset/media', { params }]),
+            }),
+            queryClient.invalidateQueries({
+                queryKey: getQueryKey(['get', '/api/projects/{project_id}/dataset/items', { params }]),
+            }),
+        ]);
     };
 
     const handleOpen = (stagedDatasetId: string) => {
