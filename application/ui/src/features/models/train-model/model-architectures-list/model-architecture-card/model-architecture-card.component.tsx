@@ -47,28 +47,23 @@ const ModelArchitectureParameters = () => {
     );
 };
 
-const ModelArchitectureBenchmark = () => {
+const ModelArchitectureDetailedParameters = () => {
     const { modelArchitecture } = useModelArchitecture();
     const accuracyMetric = getAccuracyMetric(modelArchitecture);
 
     return (
         <ul className={classes.modelArchitectureParameters}>
+            <li>Number of parameters: {modelArchitecture.stats.trainable_parameters} million</li>
             <li>Gigaflops: {modelArchitecture.stats.gigaflops}</li>
             {accuracyMetric !== undefined && (
                 <li>
                     {accuracyMetric.label}: {accuracyMetric.value}%
                 </li>
             )}
+            <li>License: Apache 2.0</li>
         </ul>
     );
 };
-
-const ModelArchitectureDetailedParameters = () => (
-    <>
-        <ModelArchitectureParameters />
-        <ModelArchitectureBenchmark />
-    </>
-);
 
 const ModelArchitectureName = () => {
     const { modelArchitecture, isSelected } = useModelArchitecture();
