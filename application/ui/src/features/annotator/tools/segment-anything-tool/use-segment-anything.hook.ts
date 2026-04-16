@@ -22,6 +22,7 @@ import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
 type SegmentAnythingRemoteInstance = Remote<SegmentAnythingWorkerInstance>;
 const SAM_TIMEOUT_MS = 5000;
+const SAM_ENCODER_TIMEOUT_MS = 30000;
 
 const getSegmentAnythingWorkerQueryKey = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER') =>
     ['workers', algorithmType] as const;
@@ -71,7 +72,7 @@ export const segmentAnythingEncodingQueryOptions = (
                 throw new Error('Model not yet initialized');
             }
 
-            return executeWithTimeout(model.processEncoder(image), 'SAM encoder', SAM_TIMEOUT_MS);
+            return executeWithTimeout(model.processEncoder(image), 'SAM encoder', SAM_ENCODER_TIMEOUT_MS);
         },
         staleTime: Infinity,
         gcTime: 3600 * 15,
@@ -97,10 +98,8 @@ const useEncodingQuery = (
         mediaItem !== undefined && image !== undefined
             ? segmentAnythingEncodingQueryOptions(mediaItem, model, image, isEnabled)
             : {
-                  queryKey: ['segment-anything-model', 'encoding', 'disabled'] as const,
+                  queryKey: ['segment-anything-model', 'encoding', 'disabled'],
                   queryFn: skipToken,
-                  staleTime: Infinity,
-                  gcTime: 3600 * 15,
               }
     );
 };
@@ -171,10 +170,12 @@ export const useSegmentAnythingModel = ({ nextMediaItem }: SegmentAnythingModelO
 
     // First we get the encoding for the CURRENT image
     const encodingQuery = useEncodingQuery(encoderModel, mediaItem, image, isImageReady);
+
     // At the same time we start prefetching the encoding for the NEXT image,
     // so when the user moves to the next media item the decoding will be faster.
     // We don't need to get the decoding query result for the next image, we just want to cache the encoding result.
-    useEncodingQuery(encoderModel, nextMediaItem, nextImageQuery.data, nextImageQuery.isSuccess);
+    const canPrefetch = nextImageQuery.isSuccess && !encodingQuery.isFetching;
+    useEncodingQuery(encoderModel, nextMediaItem, nextImageQuery.data, canPrefetch);
 
     const decodingQueryFn = useDecodingFn(decoderModel, encodingQuery.data);
 
