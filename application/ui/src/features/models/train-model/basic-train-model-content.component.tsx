@@ -6,7 +6,7 @@ import { Divider, Flex, View } from '@geti/ui';
 import { ModelArchitecturesList } from './model-architectures-list/model-architectures-list.component';
 import { SelectDatasetRevision } from './select-dataset-revision.component';
 import { SelectModelRevision } from './select-model-revision.component';
-import { SelectTrainingDevice } from './select-training-device.component';
+import { SelectTrainingDevice } from './select-training-device/select-training-device.component';
 
 export const BasicTrainModelContent = () => {
     return (
