@@ -7,7 +7,6 @@ import { Flex, Loading, View } from '@geti/ui';
 
 import { ActiveModel } from './active-model.component';
 import { InferenceDevices } from './inference-devices.component';
-import { InputOutputSetup } from './input-output-setup.component';
 import { TogglePipelineButton } from './toggle-pipeline-button.component';
 
 export const Header = () => {
@@ -32,7 +31,6 @@ export const Header = () => {
 
                 <Flex marginStart='auto' gap={'size-100'}>
                     <TogglePipelineButton />
-                    <InputOutputSetup />
                 </Flex>
             </Flex>
         </View>

@@ -316,7 +316,7 @@ test('Inference', async ({ streamPage, page, network }) => {
         await expect(page.getByText('Device: FaceTime HD Camera')).toBeVisible();
 
         // Go to output tab
-        await page.getByLabel('Dataset import tabs').getByText('Output').click();
+        await page.getByLabel('Pipeline configuration tabs').getByText('Output').click();
 
         await page.getByRole('button', { name: 'Add new sink' }).click();
         await page.getByRole('button', { name: 'Folder' }).click();
@@ -348,7 +348,7 @@ test('Inference', async ({ streamPage, page, network }) => {
         await page.click('body', { position: { x: 10, y: 10 } });
 
         await page.getByRole('button', { name: 'Pipeline configuration' }).click();
-        await page.getByLabel('Dataset import tabs').getByText('Output').click();
+        await page.getByLabel('Pipeline configuration tabs').getByText('Output').click();
 
         await expect(page.getByText('New Folder')).toBeVisible();
         await expect(page.getByText('Folder path: some/path')).toBeVisible();

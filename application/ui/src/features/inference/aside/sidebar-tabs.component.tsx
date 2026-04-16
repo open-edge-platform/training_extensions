@@ -3,33 +3,42 @@
 
 import { useState } from 'react';
 
-import { Flex, Grid, ToggleButton, Tooltip, TooltipTrigger, View } from '@geti/ui';
+import { Flex, Grid, Heading, ToggleButton, Tooltip, TooltipTrigger, View } from '@geti/ui';
 import { Gear, GraphChart } from '@geti/ui/icons';
 
+import { ReactComponent as PipelineIcon } from '../../../assets/icons/pipeline.svg';
 import { DataCollection } from './data-collection.component';
 import { Graphs } from './graphs.component';
+import { PipelineConfiguration } from './pipeline-configuration.component';
 
 import styles from './sidebar-tabs.module.scss';
 
 const TABS = [
+    { label: 'Pipeline configuration', icon: <PipelineIcon />, content: <PipelineConfiguration /> },
     { label: 'Data collection policy', icon: <Gear />, content: <DataCollection /> },
     { label: 'Model statistics', icon: <GraphChart />, content: <Graphs /> },
 ];
 
-interface TabProps {
+type TabProps = {
     tabs: (typeof TABS)[number][];
-    selectedTab: string | null;
-}
+    selectedTab: string;
+};
 
 const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
-    const [tab, setTab] = useState<string | null>(selectedTab);
+    const [tab, setTab] = useState<string>(selectedTab);
+    const [isExpanded, setIsExpanded] = useState(true);
 
-    const gridTemplateColumns = tab !== null ? ['clamp(size-4600, 35vw, 40rem)', 'size-600'] : ['0px', 'size-600'];
+    const gridTemplateColumns = isExpanded ? ['clamp(size-4600, 35vw, 40rem)', 'size-600'] : ['0px', 'size-600'];
 
     const content = tabs.find(({ label }) => label === tab)?.content;
 
     const handleSetTab = (label: string) => {
-        setTab(label === tab ? null : label);
+        if (label === tab) {
+            setIsExpanded((prev) => !prev);
+        } else {
+            setTab(label);
+            setIsExpanded(true);
+        }
     };
 
     return (
@@ -37,7 +46,7 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
             gridArea={'aside'}
             UNSAFE_className={styles.container}
             columns={gridTemplateColumns}
-            data-expanded={tab !== null}
+            data-expanded={isExpanded}
             minHeight={0}
         >
             <View
@@ -47,7 +56,12 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
                 paddingY={'size-400'}
                 paddingX={'size-500'}
             >
-                {content}
+                <Flex alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
+                    <Heading level={2}>{tab}</Heading>
+                </Flex>
+                <Flex direction={'column'} flex={1} UNSAFE_style={{ overflow: 'hidden auto' }}>
+                    {content}
+                </Flex>
             </View>
             <View gridColumn={'2/3'} backgroundColor={'gray-200'} padding={'size-100'}>
                 <Flex direction={'column'} height={'100%'} alignItems={'center'} gap={'size-100'}>
@@ -72,5 +86,5 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
 };
 
 export const Sidebar = () => {
-    return <SidebarTabs tabs={TABS} selectedTab={null} />;
+    return <SidebarTabs tabs={TABS} selectedTab={TABS[0].label} />;
 };
