@@ -1,14 +1,14 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
 import { http } from '../../../../../api/utils';
-import { AnnotationType, TaskType } from '../../../../../constants/shared-types';
+import { AnnotationType, DatasetFormat, TaskType } from '../../../../../constants/shared-types';
 import { server } from '../../../../../msw-node-setup';
 import { ImportTaskSelection } from './import-task-selection.component';
 
@@ -41,10 +41,18 @@ describe('ImportTaskSelection', () => {
         vi.clearAllMocks();
     });
 
-    const renderApp = (annotationType: AnnotationType, taskType: TaskType = 'classification') => {
+    const renderApp = ({
+        format = 'geti',
+        taskType,
+        annotationType,
+    }: {
+        format: DatasetFormat;
+        taskType?: TaskType;
+        annotationType: AnnotationType;
+    }) => {
         getImportEntrySpy.mockReturnValue({
-            project: { name: 'Project #2', task_type: taskType },
             step: 'taskTypeSelection',
+            project: { name: 'Project #2', task_type: taskType },
         });
 
         server.use(
@@ -52,7 +60,7 @@ describe('ImportTaskSelection', () => {
             http.get('/api/staged_datasets/{staged_dataset_id}', () => {
                 return HttpResponse.json({
                     id: mockedStagedDatasetId,
-                    format: 'geti',
+                    format,
                     size: 123,
                     metadata: {
                         labels: [],
@@ -74,41 +82,38 @@ describe('ImportTaskSelection', () => {
         render(<ImportTaskSelection stagedDatasetId={mockedStagedDatasetId} />);
     };
 
-    it('shows Detection as recommended task for bounding box annotations', async () => {
-        renderApp('bounding_box');
+    it('shows only Detection as recommended for bounding box annotations in geti format', async () => {
+        renderApp({ format: 'geti', taskType: 'detection', annotationType: 'bounding_box' });
 
-        await waitFor(() => {
-            const projectNameInput = screen.getByLabelText('Project name') as HTMLInputElement;
-            expect(projectNameInput.value).toBe('Project #2');
-        });
-
-        expect(await screen.findByText('Detection (Recommended)')).toBeVisible();
+        expect(await screen.findByRole('button', { name: /Task type/i })).toHaveTextContent('Detection (Recommended)');
     });
 
-    it('shows Instance segmentation as recommended task for polygon annotations', async () => {
-        renderApp('polygon');
+    it('shows only Instance segmentation as recommended for polygon annotations in geti format', async () => {
+        renderApp({ format: 'geti', taskType: 'instance_segmentation', annotationType: 'polygon' });
 
-        await waitFor(() => {
-            const projectNameInput = screen.getByLabelText('Project name') as HTMLInputElement;
-            expect(projectNameInput.value).toBe('Project #2');
-        });
-
-        expect(await screen.findByText('Instance segmentation (Recommended)')).toBeVisible();
+        expect(await screen.findByRole('button', { name: /Task type/i })).toHaveTextContent(
+            'Instance segmentation (Recommended)'
+        );
+        expect(screen.getByText('Detection')).toBeVisible();
+        expect(screen.getByText('Classification')).toBeVisible();
     });
 
-    it('shows Classification as recommended task for label annotations', async () => {
-        renderApp('label', 'instance_segmentation');
+    it('shows only Classification as recommended for label annotations in geti format', async () => {
+        renderApp({ format: 'geti', taskType: 'classification', annotationType: 'label' });
 
-        await waitFor(() => {
-            const projectNameInput = screen.getByLabelText('Project name') as HTMLInputElement;
-            expect(projectNameInput.value).toBe('Project #2');
-        });
+        expect(await screen.findByRole('button', { name: /Task type/i })).toHaveTextContent(
+            'Classification (Recommended)'
+        );
+    });
 
-        expect(await screen.findByText('Classification (Recommended)')).toBeVisible();
+    it('does not show recommended task types for non-geti format', async () => {
+        renderApp({ format: 'coco', annotationType: 'bounding_box' });
+
+        expect(await screen.findByRole('button', { name: /Task type/i })).toHaveTextContent(/Select an option.../i);
     });
 
     it('shows an error when the project name already exists', async () => {
-        renderApp('bounding_box');
+        renderApp({ format: 'geti', taskType: 'detection', annotationType: 'bounding_box' });
 
         const projectNameInput = await screen.findByLabelText('Project name');
 
