@@ -98,6 +98,24 @@ export const isBoolEnableParameterGroup = (
     );
 };
 
+
+/**
+ * Filters a list of training configuration parameters based on their `depends_on` conditions.
+ *
+ * For each parameter that declares a `depends_on` mapping, this function looks for the
+ * referenced parameter at the same depth. A parameter is included in the output only if:
+ * - It has no `depends_on` declaration, OR
+ * - Its dependency parameter cannot be found (or is a group, not a leaf parameter), OR
+ * - The dependency parameter's current value satisfies the condition specified in `depends_on`
+ *   (either an exact match or inclusion in an allowed-values array).
+ *
+ * Parameter groups without a `depends_on` are recursively processed so that their nested
+ * parameters are also filtered.
+ *
+ * @param parameters - The flat or nested list of {@link TrainingConfigurationParameter} objects to filter.
+ * @returns A new array containing only the parameters (and recursively filtered groups) that
+ *          satisfy their dependency conditions.
+ */
 export const filterDependentParameters = (
     parameters: TrainingConfigurationParameter[]
 ): TrainingConfigurationParameter[] => {
