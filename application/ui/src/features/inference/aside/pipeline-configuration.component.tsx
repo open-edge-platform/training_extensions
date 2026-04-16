@@ -23,12 +23,12 @@ const ConfigurationItem = ({ children }: { children: ReactNode }) => {
 
 export const PipelineConfiguration = () => {
     return (
-        <Flex direction={'column'} gap={'size-100'}>
+        <Flex direction={'column'} gap={'size-100'} minHeight={0}>
             <Heading level={3}>Inference device</Heading>
             <Suspense fallback={<Loading />}>
                 <InferenceDevices />
             </Suspense>
-            <Tabs aria-label={'Pipeline configuration tabs'} height={'100%'}>
+            <Tabs aria-label={'Pipeline configuration tabs'} minHeight={0}>
                 <TabList marginBottom={'size-200'}>
                     <Item key='sources' textValue='Sources'>
                         <Text>Input</Text>
@@ -37,7 +37,13 @@ export const PipelineConfiguration = () => {
                         <Text>Output</Text>
                     </Item>
                 </TabList>
-                <TabPanels>
+                <TabPanels
+                    UNSAFE_style={{
+                        // --spectrum-global-dimension-size-700 = to all elements above the panels
+                        maxHeight: 'calc(100% - var(--spectrum-global-dimension-size-700))',
+                        overflowY: 'auto',
+                    }}
+                >
                     <Item key='sources'>
                         <ConfigurationItem>
                             <SourceActions />
