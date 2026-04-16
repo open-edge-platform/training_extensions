@@ -102,25 +102,26 @@ export const filterDependentParameters = (
     parameters: TrainingConfigurationParameter[]
 ): TrainingConfigurationParameter[] => {
     return parameters
-        .reduce<TrainingConfigurationParameter[][]>((acc, curr) => {
-            if (isParameter(curr) && curr.depends_on == null) {
-                const parametersDependingOnCurr = parameters.filter((parameter) => {
-                    if (parameter.depends_on == null) return false;
-
-                    const dependsOnValue = parameter.depends_on[curr.key];
-
-                    if (Array.isArray(dependsOnValue)) {
-                        return dependsOnValue.includes(curr.value);
-                    }
-
-                    return dependsOnValue === curr.value;
-                });
-
-                acc.push([curr, ...parametersDependingOnCurr]);
-                return acc;
-            }
-
+        .reduce<TrainingConfigurationParameter[][]>((acc, curr, _idx, parametersOnTheDepth) => {
             if (curr.depends_on != null) {
+                const dependentParameter = parametersOnTheDepth.find(
+                    (parameter) => curr.depends_on != null && curr.depends_on[parameter.key] != null
+                );
+
+                if (dependentParameter === undefined || !isParameter(dependentParameter)) {
+                    acc.push([curr]);
+                    return acc;
+                }
+
+                const dependsOnValue = curr.depends_on[dependentParameter.key];
+                const shouldBeVisible = Array.isArray(dependsOnValue)
+                    ? dependsOnValue.includes(dependentParameter.value)
+                    : dependsOnValue === dependentParameter.value;
+
+                if (shouldBeVisible) {
+                    acc.push([curr]);
+                }
+
                 return acc;
             }
 
