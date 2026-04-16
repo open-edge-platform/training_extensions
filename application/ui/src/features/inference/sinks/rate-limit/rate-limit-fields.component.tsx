@@ -14,7 +14,7 @@ export const RateLimitFields = ({ rateLimit }: RateLimitFieldsProps) => {
     const seconds = samples !== undefined ? 1 : undefined;
 
     return (
-        <Flex direction='row' gap='size-100' alignItems={'end'}>
+        <Flex gap='size-100' alignItems={'end'} wrap>
             <NumberField label='Samples' name='rate_limit_samples' minValue={0.1} step={0.1} defaultValue={samples} />
             <Text>every</Text>
             <NumberField label='Seconds' name='rate_limit_seconds' minValue={0.1} step={0.1} defaultValue={seconds} />
