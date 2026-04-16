@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Various utilities for Geti Tune performance benchmarking."""
+"""Various utilities for getitune performance benchmarking."""
 
 from __future__ import annotations
 
@@ -245,7 +245,7 @@ def completeness_check(
 
 
 def get_parser() -> ArgumentParser:
-    """Get argument parser for Geti Tune benchmarking.
+    """Get argument parser for getitune benchmarking.
 
     Returns:
         ArgumentParser: JSON Argument parser.
@@ -311,7 +311,7 @@ def get_parser() -> ArgumentParser:
         "--dry-run",
         action="store_true",
         default=False,
-        help="Print Geti Tune commands without execution.",
+        help="Print getitune commands without execution.",
     )
     parser.add_argument(
         "--deterministic",

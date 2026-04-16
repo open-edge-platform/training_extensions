@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Geti Tune keypoint detection perfomance benchmark tests."""
+"""getitune keypoint detection perfomance benchmark tests."""
 
 from __future__ import annotations
 

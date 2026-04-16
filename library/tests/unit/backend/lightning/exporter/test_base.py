@@ -34,7 +34,7 @@ def exporter():
     )
 
 
-class TestOTXModelExporter:
+class TestLightningModelExporter:
     def test_to_openvino(self, mock_model, exporter, tmp_path):
         output_dir = tmp_path
         base_model_name = "test_model"

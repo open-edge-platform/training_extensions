@@ -22,11 +22,11 @@ from getitune.backend.lightning.models.common.utils.samplers import PseudoSample
 from getitune.backend.lightning.models.detection.heads.anchor_head import AnchorHead
 from getitune.data.entity.sample import SampleBatch
 ========
-from getitune.backend.native.models.common.utils.coders import BaseBBoxCoder
-from getitune.backend.native.models.common.utils.prior_generators import BasePriorGenerator
-from getitune.backend.native.models.common.utils.samplers import PseudoSampler
-from getitune.backend.native.models.detection.heads.anchor_head import AnchorHead
-from getitune.data.entity.sample import OTXSampleBatch
+from getitune.backend.lightning.models.common.utils.coders import BaseBBoxCoder
+from getitune.backend.lightning.models.common.utils.prior_generators import BasePriorGenerator
+from getitune.backend.lightning.models.common.utils.samplers import PseudoSampler
+from getitune.backend.lightning.models.detection.heads.anchor_head import AnchorHead
+from getitune.data.entity.sample import SampleBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/ssd_head.py
 
 
@@ -130,7 +130,7 @@ class SSDHeadModule(AnchorHead):
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (TorchDataBatch): Entity from Geti Tune dataset.
+            entity (TorchDataBatch): Entity from getitune dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.

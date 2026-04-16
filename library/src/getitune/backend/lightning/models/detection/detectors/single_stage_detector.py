@@ -3,7 +3,7 @@
 
 # Copyright (c) OpenMMLab. All rights reserved.
 
-"""SSD object detector for the Geti Tune detection.
+"""SSD object detector for the getitune detection.
 
 Implementation modified from mmdet.models.detectors.single_stage.
 Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/detectors/single_stage.py
@@ -20,9 +20,9 @@ from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.data.entity.sample import SampleBatch
 ========
-from getitune.backend.native.models.modules.base_module import BaseModule
-from getitune.backend.native.models.utils.utils import InstanceData
-from getitune.data.entity.sample import OTXSampleBatch
+from getitune.backend.lightning.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.utils.utils import InstanceData
+from getitune.data.entity.sample import SampleBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/detectors/single_stage_detector.py
 
 if TYPE_CHECKING:

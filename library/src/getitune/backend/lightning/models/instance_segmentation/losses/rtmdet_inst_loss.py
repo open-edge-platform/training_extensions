@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/losses/rtmdet_inst_loss.py
 from getitune.backend.lightning.models.detection.losses import RTMDetCriterion
 ========
-from getitune.backend.native.models.detection.losses import RTMDetCriterion
+from getitune.backend.lightning.models.detection.losses import RTMDetCriterion
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/losses/rtmdet_inst_loss.py
 
 if TYPE_CHECKING:

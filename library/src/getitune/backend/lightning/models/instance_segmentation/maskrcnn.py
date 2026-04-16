@@ -35,27 +35,27 @@ from getitune.backend.lightning.models.utils.utils import load_checkpoint
 from getitune.config.data import TileConfig
 from getitune.data.entity.sample import PredictionBatch
 ========
-from getitune.backend.native.exporter.base import OTXModelExporter
-from getitune.backend.native.exporter.native import OTXNativeModelExporter
-from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.native.models.common.backbones import build_model_including_pytorchcv
-from getitune.backend.native.models.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, L1Loss
-from getitune.backend.native.models.common.utils.assigners import MaxIoUAssigner
-from getitune.backend.native.models.common.utils.coders import DeltaXYWHBBoxCoder
-from getitune.backend.native.models.common.utils.prior_generators import AnchorGenerator
-from getitune.backend.native.models.common.utils.samplers import RandomSampler
-from getitune.backend.native.models.detection.necks import FPN
-from getitune.backend.native.models.instance_segmentation.backbones.swin import SwinTransformer
-from getitune.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
-from getitune.backend.native.models.instance_segmentation.heads import ConvFCBBoxHead, FCNMaskHead, RoIHead, RPNHead
-from getitune.backend.native.models.instance_segmentation.losses import ROICriterion, RPNCriterion
-from getitune.backend.native.models.instance_segmentation.rotated_det import RotatedPredictMixin
-from getitune.backend.native.models.instance_segmentation.segmentors.two_stage import TwoStageDetector
-from getitune.backend.native.models.instance_segmentation.utils.roi_extractors import SingleRoIExtractor
-from getitune.backend.native.models.modules.norm import build_norm_layer
-from getitune.backend.native.models.utils.utils import load_checkpoint
+from getitune.backend.lightning.exporter.base import ModelExporter
+from getitune.backend.lightning.exporter.native import LightningModelExporter
+from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.lightning.models.common.backbones import build_model_including_pytorchcv
+from getitune.backend.lightning.models.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, L1Loss
+from getitune.backend.lightning.models.common.utils.assigners import MaxIoUAssigner
+from getitune.backend.lightning.models.common.utils.coders import DeltaXYWHBBoxCoder
+from getitune.backend.lightning.models.common.utils.prior_generators import AnchorGenerator
+from getitune.backend.lightning.models.common.utils.samplers import RandomSampler
+from getitune.backend.lightning.models.detection.necks import FPN
+from getitune.backend.lightning.models.instance_segmentation.backbones.swin import SwinTransformer
+from getitune.backend.lightning.models.instance_segmentation.base import LightningInstanceSegModel
+from getitune.backend.lightning.models.instance_segmentation.heads import ConvFCBBoxHead, FCNMaskHead, RoIHead, RPNHead
+from getitune.backend.lightning.models.instance_segmentation.losses import ROICriterion, RPNCriterion
+from getitune.backend.lightning.models.instance_segmentation.rotated_det import RotatedPredictMixin
+from getitune.backend.lightning.models.instance_segmentation.segmentors.two_stage import TwoStageDetector
+from getitune.backend.lightning.models.instance_segmentation.utils.roi_extractors import SingleRoIExtractor
+from getitune.backend.lightning.models.modules.norm import build_norm_layer
+from getitune.backend.lightning.models.utils.utils import load_checkpoint
 from getitune.config.data import TileConfig
-from getitune.data.entity.sample import OTXPredictionBatch
+from getitune.data.entity.sample import PredictionBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/maskrcnn.py
 from getitune.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 
@@ -65,7 +65,7 @@ if TYPE_CHECKING:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/maskrcnn.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 ========
-    from getitune.backend.native.schedulers import LRSchedulerListCallable
+    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/maskrcnn.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
@@ -419,7 +419,7 @@ class MaskRCNN(LightningInstanceSegModel):
 
 
 class RotatedMaskRCNNModel(RotatedPredictMixin, MaskRCNN):
-    """Base class for the rotated detection models used in Geti Tune."""
+    """Base class for the rotated detection models used in getitune."""
 
     def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> PredictionBatch:
         """Perform prediction step for rotated detection."""

@@ -120,7 +120,7 @@ def _default_collate_fn(items: list[BaseSample]) -> SampleBatch:
 class VisionDataset(TorchDataset):
     """Base VisionDataset using new Datumaro experimental Dataset.
 
-    This class defines the basic logic and interface for Geti Tune datasets, providing
+    This class defines the basic logic and interface for getitune datasets, providing
     functionality for data transformation, image decoding, and label handling.
 
     Args:
@@ -232,5 +232,5 @@ class VisionDataset(TorchDataset):
 
     @property
     def task_type(self) -> TaskType | None:
-        """Geti Tune Task Type for the dataset. Can be None if no task is defined."""
+        """getitune Task Type for the dataset. Can be None if no task is defined."""
         return None

@@ -17,7 +17,7 @@ from torch import Tensor
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/utils/coders/delta_xywh_bbox_coder.py
 from getitune.backend.lightning.models.common.utils.utils import clip_bboxes
 ========
-from getitune.backend.native.models.common.utils.utils import clip_bboxes
+from getitune.backend.lightning.models.common.utils.utils import clip_bboxes
 >>>>>>>> develop:library/src/getitune/backend/native/models/common/utils/coders/delta_xywh_bbox_coder.py
 
 from .base_bbox_coder import BaseBBoxCoder

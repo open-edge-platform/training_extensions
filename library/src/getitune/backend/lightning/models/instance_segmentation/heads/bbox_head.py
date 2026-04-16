@@ -34,20 +34,20 @@ from getitune.data.utils.structures.bbox import scale_boxes
 if TYPE_CHECKING:
     from getitune.backend.lightning.models.common.utils.coders import DeltaXYWHBBoxCoder
 ========
-from getitune.backend.native.models.common.utils.nms import multiclass_nms
-from getitune.backend.native.models.common.utils.structures import SamplingResult
-from getitune.backend.native.models.common.utils.utils import multi_apply
-from getitune.backend.native.models.detection.heads.class_incremental_mixin import (
+from getitune.backend.lightning.models.common.utils.nms import multiclass_nms
+from getitune.backend.lightning.models.common.utils.structures import SamplingResult
+from getitune.backend.lightning.models.common.utils.utils import multi_apply
+from getitune.backend.lightning.models.detection.heads.class_incremental_mixin import (
     ClassIncrementalMixin,
 )
-from getitune.backend.native.models.instance_segmentation.layers import multiclass_nms_torch
-from getitune.backend.native.models.instance_segmentation.utils.utils import empty_instances
-from getitune.backend.native.models.modules.base_module import BaseModule
-from getitune.backend.native.models.utils.utils import InstanceData
+from getitune.backend.lightning.models.instance_segmentation.layers import multiclass_nms_torch
+from getitune.backend.lightning.models.instance_segmentation.utils.utils import empty_instances
+from getitune.backend.lightning.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.data.utils.structures.bbox import scale_boxes
 
 if TYPE_CHECKING:
-    from getitune.backend.native.models.common.utils.coders import DeltaXYWHBBoxCoder
+    from getitune.backend.lightning.models.common.utils.coders import DeltaXYWHBBoxCoder
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/heads/bbox_head.py
 
 

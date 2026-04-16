@@ -19,9 +19,9 @@ from app.execution.base import Execution, step
 from app.execution.common.geti_config_converter import GetiConfigConverter
 from app.execution.common.getitune_converters import (
     convert_metrics,
-    get_metric_by_task,
     get_getitune_dataset_class_by_task_type,
     get_getitune_task_type_by_task,
+    get_metric_by_task,
 )
 from app.models import DatasetItemSubset, EvaluationResult, ModelRevision, TrainingStatus
 from app.models.jobs.quantization_job import QuantizationJobParams
@@ -41,7 +41,7 @@ class QuantizationDependencies:
 
 
 class GetiTuneQuantizer(Execution[QuantizationJobParams]):
-    """Geti Tune-specific quantization implementation using OVEngine."""
+    """getitune-specific quantization implementation using OVEngine."""
 
     params_type = QuantizationJobParams
 
@@ -104,7 +104,7 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
                 model_revision_id=params.model_id,
             )
 
-        # Convert to Geti Tune config format
+        # Convert to getitune config format
         with self._db_session_factory() as db:
             self._project_service.set_db_session(db)
             project = self._project_service.get_project_by_id(params.project_id)
@@ -153,11 +153,11 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
             dm_subset=dm_training_dataset,
             transforms=train_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
         )
-        otx_validation_dataset = getitune_dataset_class(
+        getitune_validation_dataset = getitune_dataset_class(
             dm_subset=dm_validation_dataset,
             transforms=val_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
         )
-        otx_testing_dataset = getitune_dataset_class(
+        getitune_testing_dataset = getitune_dataset_class(
             dm_subset=dm_testing_dataset,
             transforms=test_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
         )
@@ -165,8 +165,8 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         # Build the DataModule
         getitune_datamodule = DataModule.from_vision_datasets(
             train_dataset=getitune_training_dataset,
-            val_dataset=otx_validation_dataset,
-            test_dataset=otx_testing_dataset,
+            val_dataset=getitune_validation_dataset,
+            test_dataset=getitune_testing_dataset,
             train_subset=train_subset_config,
             val_subset=val_subset_config,
             test_subset=test_subset_config,
@@ -175,8 +175,8 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         logger.info(
             "Calibration dataset prepared with {} training, {} validation, {} testing samples",
             len(getitune_training_dataset),
-            len(otx_validation_dataset),
-            len(otx_testing_dataset),
+            len(getitune_validation_dataset),
+            len(getitune_testing_dataset),
         )
         return getitune_datamodule
 
@@ -267,10 +267,10 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
             shutil.copyfile(bin_path, variant_dir / "model.bin")
         logger.info("Stored quantized model variant at {}", variant_dir)
 
-        # Cleanup the Geti Tune work directory
+        # Cleanup the getitune work directory
         if getitune_work_dir.exists():
             shutil.rmtree(getitune_work_dir)
-            logger.info("Cleaned up Geti Tune quantization work directory at {}", getitune_work_dir)
+            logger.info("Cleaned up getitune quantization work directory at {}", getitune_work_dir)
 
     def execute(self, params: QuantizationJobParams) -> None:
         """Execute the full quantization pipeline."""
@@ -326,7 +326,7 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
             getitune_work_dir = Path(ov_engine.work_dir)
             if getitune_work_dir.exists():
                 shutil.rmtree(getitune_work_dir)
-                logger.info("Cleaned up Geti Tune work directory after failure at {}", getitune_work_dir)
+                logger.info("Cleaned up getitune work directory after failure at {}", getitune_work_dir)
             raise
 
     def _base_model_path(self, project_id: UUID, model_id: UUID) -> Path:

@@ -17,9 +17,9 @@ from getitune.backend.lightning.models.modules import Conv2dModule, build_activa
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
 from getitune.backend.lightning.models.segmentation.modules import resize
 ========
-from getitune.backend.native.models.modules import Conv2dModule, build_activation_layer
-from getitune.backend.native.models.modules.norm import build_norm_layer
-from getitune.backend.native.models.segmentation.modules import resize
+from getitune.backend.lightning.models.modules import Conv2dModule, build_activation_layer
+from getitune.backend.lightning.models.modules.norm import build_norm_layer
+from getitune.backend.lightning.models.segmentation.modules import resize
 >>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/heads/ham_head.py
 
 from .base_segm_head import BaseSegmentationHead

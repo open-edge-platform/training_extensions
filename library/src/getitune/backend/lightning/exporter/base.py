@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for base model exporter used in Geti Tune."""
+"""Class definition for base model exporter used in getitune."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING, Any, Literal
 from getitune.types.export import ExportFormat, TaskLevelExportParameters
 from getitune.types.precision import Precision
 ========
-from getitune.types.export import OTXExportFormatType, TaskLevelExportParameters
-from getitune.types.precision import OTXPrecisionType
+from getitune.types.export import ExportFormat, TaskLevelExportParameters
+from getitune.types.precision import Precision
 >>>>>>>> develop:library/src/getitune/backend/native/exporter/base.py
 
 if TYPE_CHECKING:
@@ -26,12 +26,12 @@ if TYPE_CHECKING:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/exporter/base.py
     from getitune.backend.lightning.models.base import DataInputParams, LightningModel
 ========
-    from getitune.backend.native.models.base import DataInputParams, OTXModel
+    from getitune.backend.lightning.models.base import DataInputParams, LightningModel
 >>>>>>>> develop:library/src/getitune/backend/native/exporter/base.py
 
 
 class ModelExporter:
-    """Base class for the model exporters used in Geti Tune.
+    """Base class for the model exporters used in getitune.
 
     Args:
         task_level_export_parameters (TaskLevelExportParameters): Collection of export parameters

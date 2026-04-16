@@ -32,16 +32,16 @@ from getitune.backend.lightning.models.modules.norm import build_norm_layer
 from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.data.entity.sample import SampleBatch
 ========
-from getitune.backend.native.models.common.utils.nms import batched_nms, multiclass_nms
-from getitune.backend.native.models.common.utils.prior_generators import MlvlPointGenerator
-from getitune.backend.native.models.common.utils.samplers import PseudoSampler
-from getitune.backend.native.models.common.utils.utils import multi_apply, reduce_mean
-from getitune.backend.native.models.detection.heads.base_head import BaseDenseHead
-from getitune.backend.native.models.modules.activation import Swish, build_activation_layer
-from getitune.backend.native.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
-from getitune.backend.native.models.modules.norm import build_norm_layer
-from getitune.backend.native.models.utils.utils import InstanceData
-from getitune.data.entity.sample import OTXSampleBatch
+from getitune.backend.lightning.models.common.utils.nms import batched_nms, multiclass_nms
+from getitune.backend.lightning.models.common.utils.prior_generators import MlvlPointGenerator
+from getitune.backend.lightning.models.common.utils.samplers import PseudoSampler
+from getitune.backend.lightning.models.common.utils.utils import multi_apply, reduce_mean
+from getitune.backend.lightning.models.detection.heads.base_head import BaseDenseHead
+from getitune.backend.lightning.models.modules.activation import Swish, build_activation_layer
+from getitune.backend.lightning.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
+from getitune.backend.lightning.models.modules.norm import build_norm_layer
+from getitune.backend.lightning.models.utils.utils import InstanceData
+from getitune.data.entity.sample import SampleBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/yolox_head.py
 
 logger = logging.getLogger()
@@ -470,7 +470,7 @@ class YOLOXHeadModule(BaseDenseHead):
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (TorchDataBatch): Entity from Geti Tune dataset.
+            entity (TorchDataBatch): Entity from getitune dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.

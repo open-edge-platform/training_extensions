@@ -19,7 +19,7 @@ from torch import Tensor, nn
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/backbones/hgnetv2.py
 from getitune.backend.lightning.models.modules.norm import FrozenBatchNorm2d
 ========
-from getitune.backend.native.models.modules.norm import FrozenBatchNorm2d
+from getitune.backend.lightning.models.modules.norm import FrozenBatchNorm2d
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/backbones/hgnetv2.py
 
 # Constants for initialization
@@ -60,7 +60,7 @@ class LearnableAffineBlock(nn.Module):
 class ConvBNAct(nn.Module):
     """Convolutional block with batch normalization and activation.
 
-        TODO(Eugene): External LAB is embedded. 'Try'? switching to Geti Tune ConvModule implementation in next PR.
+        TODO(Eugene): External LAB is embedded. 'Try'? switching to getitune ConvModule implementation in next PR.
 
     Args:
         in_channels (int): In channels.

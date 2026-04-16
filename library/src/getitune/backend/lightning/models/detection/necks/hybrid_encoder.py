@@ -19,11 +19,11 @@ from getitune.backend.lightning.models.modules import Conv2dModule, build_activa
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
 ========
-from getitune.backend.native.models.common.layers.transformer_layers import TransformerEncoder, TransformerEncoderLayer
-from getitune.backend.native.models.detection.layers import CSPRepLayer
-from getitune.backend.native.models.modules import Conv2dModule, build_activation_layer
-from getitune.backend.native.models.modules.base_module import BaseModule
-from getitune.backend.native.models.modules.norm import build_norm_layer
+from getitune.backend.lightning.models.common.layers.transformer_layers import TransformerEncoder, TransformerEncoderLayer
+from getitune.backend.lightning.models.detection.layers import CSPRepLayer
+from getitune.backend.lightning.models.modules import Conv2dModule, build_activation_layer
+from getitune.backend.lightning.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.modules.norm import build_norm_layer
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/necks/hybrid_encoder.py
 
 __all__ = ["HybridEncoder"]

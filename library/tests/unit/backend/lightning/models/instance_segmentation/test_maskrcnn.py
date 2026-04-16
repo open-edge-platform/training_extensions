@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Test of Geti Tune MaskRCNN architecture."""
+"""Test of getitune MaskRCNN architecture."""
 
 import pytest
 import torch

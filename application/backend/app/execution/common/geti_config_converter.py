@@ -187,7 +187,7 @@ TEMPLATE_ID_MAPPING = {
 class TransformsUpdater:
     """Handles augmentation updates for the new CPU/GPU augmentation pipeline.
 
-    Maps Geti augmentation names to Geti Tune/kornia/torchvision class paths and the
+    Maps Geti augmentation names to getitune/kornia/torchvision class paths and the
     pipeline stage (cpu or gpu). Parameters come directly from the Geti model template;
     only a few Geti param names need renaming to match kornia's API.
 
@@ -295,7 +295,7 @@ class TransformsUpdater:
 
         Args:
             augmentation_params: Dict mapping Geti aug names to their parameter dicts.
-            config: The full Geti Tune config dictionary.
+            config: The full getitune config dictionary.
         """
         if not augmentation_params:
             return
@@ -418,7 +418,7 @@ class TransformsUpdater:
 
         Args:
             tiling_dict: Dict with keys: enable, enable_adaptive_tiling, tile_size, tile_overlap.
-            config: The full Geti Tune config dictionary.
+            config: The full getitune config dictionary.
         """
         if tiling_dict is None:
             logger.info("Tiling parameters are not provided, skipping update.")
@@ -450,7 +450,7 @@ class HyperparametersUpdater:
 
         Args:
             hyperparameters: Dict of hyperparameter updates.
-            config: The full Geti Tune config dictionary.
+            config: The full getitune config dictionary.
         """
         for key, value in hyperparameters.items():
             if key == "learning_rate":
@@ -543,7 +543,7 @@ class HyperparametersUpdater:
 
         Args:
             size_value: Tuple of (height, width) or None.
-            config: The full Geti Tune config dictionary.
+            config: The full getitune config dictionary.
         """
         if size_value is None or any(v is None for v in size_value):
             logger.info("Input size is not provided, skipping update.")
@@ -647,7 +647,7 @@ class HyperparametersUpdater:
 
 
 class GetiConfigConverter:
-    """Convert Geti model manifest to Geti Tune recipe dictionary.
+    """Convert Geti model manifest to getitune recipe dictionary.
 
     Example:
         The following examples show how to use the Converter class.
@@ -719,10 +719,10 @@ class GetiConfigConverter:
 
     @staticmethod
     def _update_params(config: dict, param_dict: dict) -> None:
-        """Update params of Geti Tune recipe from Geti configurable params.
+        """Update params of getitune recipe from Geti configurable params.
 
         Uses TransformsUpdater and HyperparametersUpdater classes to apply updates
-        from the Geti model template to the Geti Tune recipe config.
+        from the Geti model template to the getitune recipe config.
         """
         augmentation_params = param_dict.get("dataset_preparation", {}).get("augmentation", {})
         tiling = augmentation_params.pop("tiling", None)

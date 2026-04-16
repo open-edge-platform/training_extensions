@@ -130,7 +130,7 @@ def fxt_getitune_quantizer(
     return create
 
 
-class TestOTXQuantizerValidateModel:
+class TestGetiTuneQuantizerValidateModel:
     """Tests for ``GetiTuneQuantizer.validate_model``."""
 
     def test_validate_model_success(
@@ -251,7 +251,7 @@ class TestOTXQuantizerValidateModel:
             quantizer.validate_model(params=fxt_quantization_params)
 
 
-class TestOTXQuantizerRunQuantization:
+class TestGetiTuneQuantizerRunQuantization:
     """Tests for ``GetiTuneQuantizer.run_quantization``."""
 
     def test_run_quantization_standard_ptq(
@@ -314,7 +314,7 @@ class TestOTXQuantizerRunQuantization:
             )
 
 
-class TestOTXQuantizerInitializeEngine:
+class TestGetiTuneQuantizerInitializeEngine:
     """Tests for ``GetiTuneQuantizer.initialize_engine``."""
 
     def test_initialize_engine_success(
@@ -376,7 +376,7 @@ class TestOTXQuantizerInitializeEngine:
             )
 
 
-class TestOTXQuantizerEvaluateQuantizedModel:
+class TestGetiTuneQuantizerEvaluateQuantizedModel:
     """Tests for ``GetiTuneQuantizer.evaluate_quantized_model``."""
 
     @pytest.mark.parametrize(
@@ -462,7 +462,7 @@ class TestOTXQuantizerEvaluateQuantizedModel:
         assert saved_result.metrics == pytest.approx({"mAP": 0.75, "recall": 0.9}, rel=1e-6)
 
 
-class TestOTXQuantizerStoreArtifacts:
+class TestGetiTuneQuantizerStoreArtifacts:
     """Tests for ``GetiTuneQuantizer.store_artifacts``."""
 
     def test_store_artifacts_copies_files_and_cleans_up(
@@ -476,7 +476,7 @@ class TestOTXQuantizerStoreArtifacts:
 
         variant_id = uuid4()
 
-        # Create quantized model files in a fake Geti Tune work dir
+        # Create quantized model files in a fake getitune work dir
         getitune_work_dir = tmp_path / "getitune-workspace"
         getitune_work_dir.mkdir()
         quantized_xml = getitune_work_dir / "optimized_model.xml"
@@ -543,7 +543,7 @@ class TestOTXQuantizerStoreArtifacts:
         assert not (variant_dir / "model.bin").exists()
 
 
-class TestOTXQuantizerExecute:
+class TestGetiTuneQuantizerExecute:
     """Tests for the full ``GetiTuneQuantizer.execute`` pipeline."""
 
     def test_execute_standard_ptq(
@@ -658,7 +658,7 @@ class TestOTXQuantizerExecute:
         assert (variant_dir / "model.xml").read_text() == "<q/>"
         assert (variant_dir / "model.bin").read_bytes() == b"\x00"
 
-        # Geti Tune workspace cleaned up
+        # getitune workspace cleaned up
         assert not getitune_work_dir.exists()
 
     def test_execute_accuracy_aware_ptq(
@@ -748,7 +748,7 @@ class TestOTXQuantizerExecute:
         fxt_model_service: Mock,
         fxt_project_service: Mock,
     ):
-        """If quantization fails, the Geti Tune workspace is still cleaned up."""
+        """If quantization fails, the getitune workspace is still cleaned up."""
         quantizer = fxt_getitune_quantizer()
         project_id = uuid4()
         model_id = uuid4()
@@ -803,7 +803,7 @@ class TestOTXQuantizerExecute:
         assert not getitune_work_dir.exists()
 
 
-class TestOTXQuantizerHelpers:
+class TestGetiTuneQuantizerHelpers:
     """Tests for static helper methods on ``GetiTuneQuantizer``."""
 
     def test_get_openvino_fp16_variant_found(self):

@@ -21,7 +21,7 @@ class DummyTileConfig:
         self.overlap = 0
 
 
-class TestOTXTileDatasetFactory:
+class TestTileDatasetFactory:
     def _make_mock_dm_subset(self, subset: Subset) -> Mock:
         mock_item = Mock()
         mock_item.subset = subset
@@ -34,7 +34,7 @@ class TestOTXTileDatasetFactory:
         mock_dm.__len__ = Mock(return_value=1)
         return mock_dm
 
-    def _make_mock_otx_dataset(self, task_type: TaskType, subset: Subset) -> Mock:
+    def _make_mock_dataset(self, task_type: TaskType, subset: Subset) -> Mock:
         mock_ds = Mock()
         mock_ds.task_type = task_type
         mock_ds.dm_subset = self._make_mock_dm_subset(subset)
@@ -46,7 +46,7 @@ class TestOTXTileDatasetFactory:
         return mock_ds
 
     def test_create_returns_training_wrapped_dataset(self):
-        dataset = self._make_mock_otx_dataset(TaskType.DETECTION, Subset.TRAINING)
+        dataset = self._make_mock_dataset(TaskType.DETECTION, Subset.TRAINING)
         cfg = DummyTileConfig()
 
         out = TileDatasetFactory.create(dataset, cfg)
@@ -57,21 +57,21 @@ class TestOTXTileDatasetFactory:
         assert dataset.dm_subset.transform.call_count >= 1
 
     def test_create_returns_det_tile_dataset_for_validation(self):
-        dataset = self._make_mock_otx_dataset(TaskType.DETECTION, Subset.VALIDATION)
+        dataset = self._make_mock_dataset(TaskType.DETECTION, Subset.VALIDATION)
         cfg = DummyTileConfig()
 
         out = TileDatasetFactory.create(dataset, cfg)
         assert isinstance(out, TileDetTestDataset)
 
     def test_create_returns_inst_seg_tile_dataset_for_test(self):
-        dataset = self._make_mock_otx_dataset(TaskType.INSTANCE_SEGMENTATION, Subset.TESTING)
+        dataset = self._make_mock_dataset(TaskType.INSTANCE_SEGMENTATION, Subset.TESTING)
         cfg = DummyTileConfig()
 
         out = TileDatasetFactory.create(dataset, cfg)
         assert isinstance(out, TileInstSegTestDataset)
 
     def test_create_returns_sem_seg_tile_dataset_for_validation(self):
-        dataset = self._make_mock_otx_dataset(TaskType.SEMANTIC_SEGMENTATION, Subset.VALIDATION)
+        dataset = self._make_mock_dataset(TaskType.SEMANTIC_SEGMENTATION, Subset.VALIDATION)
         cfg = DummyTileConfig()
 
         out = TileDatasetFactory.create(dataset, cfg)

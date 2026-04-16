@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune export-related types definition."""
+"""getitune export-related types definition."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from getitune.types.label import HLabelInfo, LabelInfo
 
 
 class ExportFormat(str, Enum):
-    """Geti Tune export format type definition."""
+    """getitune export format type definition."""
 
     ONNX = "ONNX"
     OPENVINO = "OPENVINO"
@@ -29,7 +29,7 @@ class TaskLevelExportParameters:
         model_type (str): Model type field used in ModelAPI.
         model_name (str): Model name field.
         task_type (str): Task type field used in ModelAPI.
-        label_info (LabelInfo): Geti Tune label info metadata.
+        label_info (LabelInfo): getitune label info metadata.
             It will be parsed into a format compatible with ModelAPI.
         optimization_config (dict): Configurations for NNCF PTQ model optimization.
         multilabel (bool | None): Whether it is multilabel or not.

@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune APIs for User-friendliness."""
+"""getitune APIs for User-friendliness."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from pathlib import Path
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/cli/utils.py
 from getitune.types.task import TaskType
 ========
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 >>>>>>>> develop:library/src/getitune/backend/native/cli/utils.py
 
 
@@ -32,9 +32,9 @@ def get_getitune_root_path() -> Path:
     if getitune_module:
         file_path = inspect.getfile(getitune_module)
 ========
-    otx_module = importlib.import_module("getitune")
-    if otx_module:
-        file_path = inspect.getfile(otx_module)
+    getitune_module = importlib.import_module("getitune")
+    if getitune_module:
+        file_path = inspect.getfile(getitune_module)
 >>>>>>>> develop:library/src/getitune/backend/native/cli/utils.py
         return Path(file_path).parent
     msg = "Cannot find getitune."
@@ -93,7 +93,7 @@ def list_models(
         from rich.table import Table
 
         console = Console()
-        table = Table(title="Geti Tune Recipes", show_header=True, header_style="bold magenta")
+        table = Table(title="getitune Recipes", show_header=True, header_style="bold magenta")
         table.add_column("Task")
         table.add_column("Model Name")
         table.add_column("Recipe Path")

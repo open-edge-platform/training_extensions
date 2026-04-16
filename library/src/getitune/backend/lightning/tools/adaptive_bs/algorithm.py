@@ -112,7 +112,7 @@ class BsSearchAlgo:
             if oom:
                 logger.warning(
                     "The auto batch size algorithm attempted to use a batch size of 2 but still "
-                    "encountered a CUDA OOM error. Geti Tune will proceed with training at batch size 1; "
+                    "encountered a CUDA OOM error. getitune will proceed with training at batch size 1; "
                     "however, it is also possible to encounter a CUDA OOM error during training.",
                 )
                 return 1

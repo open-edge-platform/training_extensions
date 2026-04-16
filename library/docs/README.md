@@ -1,8 +1,8 @@
-# Geti Tune Documentation
+# getitune Documentation
 
 ## Introduction
 
-This is the source code for the Geti Tune documentation. It is built using sphinx-design and myst parser.
+This is the source code for the getitune documentation. It is built using sphinx-design and myst parser.
 
 ## Installation
 

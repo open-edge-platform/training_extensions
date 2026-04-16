@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for detection model entity used in Geti Tune."""
+"""Class definition for detection model entity used in getitune."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ class OVDetectionModel(OVModel):
     """OVDetectionModel: Object detection model compatible for OpenVINO IR inference.
 
     This class is designed to work with OpenVINO IR models or models from the Intel OMZ repository.
-    It provides compatibility with the OTX testing pipeline for object detection tasks.
+    It provides compatibility with the getitune testing pipeline for object detection tasks.
 
         Initialize the OVDetectionModel.
 
@@ -128,7 +128,7 @@ class OVDetectionModel(OVModel):
         else:
             msg = (
                 "Cannot get best_confidence_threshold from OpenVINO IR's rt_info. "
-                "Please check whether this model is trained by OTX or not. "
+                "Please check whether this model is trained by getitune or not. "
                 "Without this information, it can produce a wrong F1 metric score. "
                 "At this time, it will be set as the default value = None."
             )

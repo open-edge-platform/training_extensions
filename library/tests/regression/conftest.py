@@ -77,7 +77,7 @@ def fxt_mlflow_experiment_name(fxt_user_name) -> str:
     """
     tz = timezone(offset=timedelta(hours=9), name="Seoul")
     date = datetime.now(tz=tz).date()
-    return f"Geti Tune: {__version__}, Signed-off-by: {fxt_user_name}, Date: {date}"
+    return f"getitune: {__version__}, Signed-off-by: {fxt_user_name}, Date: {date}"
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -123,7 +123,7 @@ def fxt_mlflow_experiment(
 
 @pytest.fixture(scope="module", autouse=True)
 def fxt_recipe_dir() -> Path:
-    """Geti Tune recipe directory."""
-    import getitune.recipe as otx_recipe
+    """getitune recipe directory."""
+    import getitune.recipe as getitune_recipe
 
-    return Path(otx_recipe.__file__).parent
+    return Path(getitune_recipe.__file__).parent

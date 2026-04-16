@@ -35,7 +35,7 @@ logger = logging.getLogger()
 class OVEngine(Engine):
     """OV Engine.
 
-    This class defines the OV Engine for OTX, which governs each step of the OpenVINO validation workflow.
+    This class defines the OV Engine for getitune, which governs each step of the OpenVINO validation workflow.
     """
 
     def __init__(
@@ -120,19 +120,19 @@ class OVEngine(Engine):
 
         if task_type == "classification":
             if rt_info.find(".//hierarchical").attrib.get("value") == "True":
-                otx_task_name = task_type + "_hcl"
+                task_name = task_type + "_hcl"
             elif rt_info.find(".//multilabel").attrib.get("value") == "True":
-                otx_task_name = task_type + "_mlc"
+                task_name = task_type + "_mlc"
             else:
-                otx_task_name = task_type + "_mc"
+                task_name = task_type + "_mc"
         else:
-            otx_task_name = task_type
+            task_name = task_type
 
-        if otx_task_name not in task_map:
-            msg = f"Unsupported task type '{otx_task_name}' derived from the IR model XML file."
+        if task_name not in task_map:
+            msg = f"Unsupported task type '{task_name}' derived from the IR model XML file."
             raise ValueError(msg)
 
-        return task_map[otx_task_name]
+        return task_map[task_name]
 
     def train(self, *args, **kwargs) -> METRICS:
         """Train method is not supported for OVEngine."""

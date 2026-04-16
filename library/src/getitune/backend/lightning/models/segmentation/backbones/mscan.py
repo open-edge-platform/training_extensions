@@ -18,9 +18,9 @@ from getitune.backend.lightning.models.modules import build_norm_layer
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http
 ========
-from getitune.backend.native.models.modules import build_norm_layer
-from getitune.backend.native.models.modules.base_module import BaseModule
-from getitune.backend.native.models.utils.utils import load_checkpoint_to_model, load_from_http
+from getitune.backend.lightning.models.modules import build_norm_layer
+from getitune.backend.lightning.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http
 >>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/backbones/mscan.py
 
 if TYPE_CHECKING:

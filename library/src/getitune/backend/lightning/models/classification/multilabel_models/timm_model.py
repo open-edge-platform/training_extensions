@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""TIMM wrapper model class for Geti Tune."""
+"""TIMM wrapper model class for getitune."""
 
 from __future__ import annotations
 
@@ -21,18 +21,18 @@ from getitune.backend.lightning.models.classification.multilabel_models.base imp
 from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 ========
-from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.native.models.classification.backbones.timm import TimmBackbone
-from getitune.backend.native.models.classification.classifier import ImageClassifier
-from getitune.backend.native.models.classification.heads import MultiLabelLinearClsHead
-from getitune.backend.native.models.classification.losses.asymmetric_angular_loss_with_ignore import (
+from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.lightning.models.classification.backbones.timm import TimmBackbone
+from getitune.backend.lightning.models.classification.classifier import ImageClassifier
+from getitune.backend.lightning.models.classification.heads import MultiLabelLinearClsHead
+from getitune.backend.lightning.models.classification.losses.asymmetric_angular_loss_with_ignore import (
     AsymmetricAngularLossWithIgnore,
 )
-from getitune.backend.native.models.classification.multilabel_models.base import (
-    OTXMultilabelClsModel,
+from getitune.backend.lightning.models.classification.multilabel_models.base import (
+    LightningMultilabelClsModel,
 )
-from getitune.backend.native.models.classification.necks.gap import GlobalAveragePooling
-from getitune.backend.native.schedulers import LRSchedulerListCallable
+from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 >>>>>>>> develop:library/src/getitune/backend/native/models/classification/multilabel_models/timm_model.py
 from getitune.metrics.accuracy import MultiLabelClsMetricCallable
 from getitune.types.label import LabelInfoTypes

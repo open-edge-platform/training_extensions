@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for Geti Tune base data entities."""
+"""Module for getitune base data entities."""
 
 from __future__ import annotations
 

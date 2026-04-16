@@ -1,4 +1,4 @@
-"""Typing hints for Geti Tune."""
+"""Typing hints for getitune."""
 
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0

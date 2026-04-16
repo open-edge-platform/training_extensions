@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""Class definition for keypoint detection model entity used in Geti Tune."""
+"""Class definition for keypoint detection model entity used in getitune."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ class OVKeypointDetectionModel(OVModel):
     """Keypoint detection model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository
-    and create the OTX keypoint detection model compatible for OTX testing pipeline.
+    and create the getitune keypoint detection model compatible for getitune testing pipeline.
     """
 
     def __init__(

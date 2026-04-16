@@ -1,7 +1,7 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTXClassificationDatasets using new Datumaro experimental Dataset."""
+"""Module for ClassificationDatasets using new Datumaro experimental Dataset."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 
 class MulticlassClsDataset(VisionDataset):
-    """Geti Tune Dataset for multi-class classification tasks.
+    """getitune Dataset for multi-class classification tasks.
 
     This dataset handles single-label classification where each image belongs to exactly one class.
     It processes Datumaro dataset items and converts them into BaseSample format suitable for
@@ -93,7 +93,7 @@ class MulticlassClsDataset(VisionDataset):
 
     @property
     def task_type(self) -> TaskType:
-        """Geti Tune Task Type for the dataset.
+        """getitune Task Type for the dataset.
 
         Returns:
             TaskType: The multi-class classification task type.
@@ -102,7 +102,7 @@ class MulticlassClsDataset(VisionDataset):
 
 
 class MultilabelClsDataset(VisionDataset):
-    """Geti Tune Dataset for multi-label classification tasks.
+    """getitune Dataset for multi-label classification tasks.
 
     This dataset handles multi-label classification where each image can belong to multiple classes
     simultaneously. It processes Datumaro dataset items and converts them into BaseSample format
@@ -194,7 +194,7 @@ class MultilabelClsDataset(VisionDataset):
 
     @property
     def task_type(self) -> TaskType:
-        """Geti Tune Task Type for the dataset.
+        """getitune Task Type for the dataset.
 
         Returns:
             TaskType: The multi-label classification task type.
@@ -203,7 +203,7 @@ class MultilabelClsDataset(VisionDataset):
 
 
 class HlabelClsDataset(VisionDataset):
-    """Geti Tune Dataset for hierarchical label classification tasks.
+    """getitune Dataset for hierarchical label classification tasks.
 
     This dataset handles hierarchical classification where labels are organized in a tree structure
     with multiple classification heads. It supports both multiclass heads (where one class per head
@@ -345,7 +345,7 @@ class HlabelClsDataset(VisionDataset):
 
     @property
     def task_type(self) -> TaskType:
-        """Geti Tune Task Type for the dataset.
+        """getitune Task Type for the dataset.
 
         Returns:
             TaskType: The hierarchical label classification task type.

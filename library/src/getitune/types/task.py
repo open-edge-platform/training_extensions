@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune task type definition."""
+"""getitune task type definition."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from enum import Enum
 
 
 class TaskType(str, Enum):
-    """Geti Tune task type definition."""
+    """getitune task type definition."""
 
     # Classification
     MULTI_CLASS_CLS = "MULTI_CLASS_CLS"

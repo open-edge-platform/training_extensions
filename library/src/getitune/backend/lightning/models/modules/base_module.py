@@ -19,7 +19,7 @@ from torch import nn
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/modules/base_module.py
 from getitune.backend.lightning.models.utils.weight_init import PretrainedInit, initialize, update_init_info
 ========
-from getitune.backend.native.models.utils.weight_init import PretrainedInit, initialize, update_init_info
+from getitune.backend.lightning.models.utils.weight_init import PretrainedInit, initialize, update_init_info
 >>>>>>>> develop:library/src/getitune/backend/native/models/modules/base_module.py
 
 logger = logging.getLogger()

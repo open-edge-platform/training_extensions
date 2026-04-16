@@ -18,10 +18,10 @@ from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
 from getitune.backend.lightning.models.modules.norm import FrozenBatchNorm2d, build_norm_layer
 ========
-from getitune.backend.native.models.modules import build_activation_layer
-from getitune.backend.native.models.modules.base_module import BaseModule
-from getitune.backend.native.models.modules.conv_module import Conv2dModule
-from getitune.backend.native.models.modules.norm import FrozenBatchNorm2d, build_norm_layer
+from getitune.backend.lightning.models.modules import build_activation_layer
+from getitune.backend.lightning.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
+from getitune.backend.lightning.models.modules.norm import FrozenBatchNorm2d, build_norm_layer
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/backbones/presnet.py
 
 __all__ = ["PResNet"]

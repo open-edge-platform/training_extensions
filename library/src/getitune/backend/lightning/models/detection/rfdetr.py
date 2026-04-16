@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""RF-DETR model implementations for Geti Tune.
+"""RF-DETR model implementations for getitune.
 
 RF-DETR is a state-of-the-art real-time object detector from Roboflow based on
 DINOv2 backbone with a lightweight DETR decoder.
@@ -23,12 +23,12 @@ from getitune.backend.lightning.models.common.rfdetr_mixin import RFDETRMixin
 from getitune.backend.lightning.models.detection.base import LightningDetectionModel
 from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
 ========
-from getitune.backend.native.exporter.base import OTXModelExporter
-from getitune.backend.native.exporter.native import OTXNativeModelExporter
-from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.native.models.common.rfdetr_mixin import RFDETRMixin
-from getitune.backend.native.models.detection.base import OTXDetectionModel
-from getitune.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
+from getitune.backend.lightning.exporter.base import ModelExporter
+from getitune.backend.lightning.exporter.native import LightningModelExporter
+from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.lightning.models.common.rfdetr_mixin import RFDETRMixin
+from getitune.backend.lightning.models.detection.base import LightningDetectionModel
+from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/rfdetr.py
 from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
@@ -39,14 +39,14 @@ if TYPE_CHECKING:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/rfdetr.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 ========
-    from getitune.backend.native.schedulers import LRSchedulerListCallable
+    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/rfdetr.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
 
 
 class RFDETR(RFDETRMixin, LightningDetectionModel):  # pyrefly: ignore[inconsistent-inheritance]
-    """Geti Tune Detection model class for RF-DETR.
+    """getitune Detection model class for RF-DETR.
 
     RF-DETR (Real-time Fast DETR) is a state-of-the-art object detector from Roboflow
     that combines a DINOv2 backbone with a lightweight DETR decoder for real-time

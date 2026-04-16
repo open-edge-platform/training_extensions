@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 class DetectionDataset(VisionDataset, DataAugSwitchMixin):
-    """Geti Tune Dataset for object detection tasks.
+    """getitune Dataset for object detection tasks.
 
     This dataset handles object detection where each image contains multiple objects with
     bounding box annotations. It processes Datumaro dataset items and converts them into
@@ -88,7 +88,7 @@ class DetectionDataset(VisionDataset, DataAugSwitchMixin):
 
     @property
     def task_type(self) -> TaskType:
-        """Geti Tune Task Type for the dataset.
+        """getitune Task Type for the dataset.
 
         Returns:
             TaskType: The object detection task type.

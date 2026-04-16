@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for keypoint detection model entity used in Geti Tune."""
+"""Class definition for keypoint detection model entity used in getitune."""
 
 # type: ignore[override]
 
@@ -22,15 +22,15 @@ from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.data.entity.base import ImageInfo, BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 ========
-from getitune.backend.native.models.base import (
+from getitune.backend.lightning.models.base import (
     DataInputParams,
     DefaultOptimizerCallable,
     DefaultSchedulerCallable,
-    OTXModel,
+    LightningModel,
 )
-from getitune.backend.native.schedulers import LRSchedulerListCallable
-from getitune.data.entity.base import ImageInfo, OTXBatchLossEntity
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.backend.lightning.schedulers import LRSchedulerListCallable
+from getitune.data.entity.base import ImageInfo, BatchLoss
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/keypoint_detection/base.py
 from getitune.metrics import MetricCallable, MetricInput
 from getitune.metrics.pck import PCKMeasureCallable
@@ -39,7 +39,7 @@ from getitune.types.label import LabelInfoTypes
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/keypoint_detection/base.py
 from getitune.types.task import TaskType
 ========
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 >>>>>>>> develop:library/src/getitune/backend/native/models/keypoint_detection/base.py
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 
 
 class LightningKeypointDetectionModel(LightningModel):
-    """Base class for the keypoint detection models used in Geti Tune.
+    """Base class for the keypoint detection models used in getitune.
 
     Args:
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.

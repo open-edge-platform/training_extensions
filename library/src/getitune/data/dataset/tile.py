@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune tile dataset."""
+"""getitune tile dataset."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
 
 class TileDatasetFactory:
-    """Geti Tune tile dataset factory."""
+    """getitune tile dataset factory."""
 
     @classmethod
     def create(
@@ -52,8 +52,8 @@ class TileDatasetFactory:
               type due to different annotation format and data entity.
 
         Args:
-            task (TaskType): Geti Tune task type.
-            dataset (VisionDataset): OTX dataset.
+            task (TaskType): getitune task type.
+            dataset (VisionDataset): getitune dataset.
             tile_config (TilerConfig): Tile configuration.
 
         Returns:
@@ -90,10 +90,10 @@ class TileDatasetFactory:
 
 
 class TileDataset(VisionDataset):
-    """Geti Tune tile dataset base class.
+    """getitune tile dataset base class.
 
     Args:
-        dataset (VisionDataset): OTX dataset.
+        dataset (VisionDataset): getitune dataset.
         tile_config (TilerConfig): Tile configuration.
     """
 
@@ -180,12 +180,12 @@ class TileDataset(VisionDataset):
 
 
 class TileDetTestDataset(TileDataset):
-    """Geti Tune tile detection test dataset.
+    """getitune tile detection test dataset.
 
     TileDetTestDataset wraps a list of tiles (DetDataEntity) into a single TileDetDataEntity for testing/predicting.
 
     Args:
-        dataset (DetectionDataset): Geti Tune detection dataset.
+        dataset (DetectionDataset): getitune detection dataset.
         tile_config (TilerConfig): Tile configuration.
     """
 
@@ -227,13 +227,13 @@ class TileDetTestDataset(TileDataset):
 
 
 class TileInstSegTestDataset(TileDataset):
-    """Geti Tune tile inst-seg test dataset.
+    """getitune tile inst-seg test dataset.
 
     TileDetTestDataset wraps a list of tiles (TorchDataItem) into a single TileDetDataEntity
     for testing/predicting.
 
     Args:
-        dataset (InstanceSegDataset): OTX inst-seg dataset.
+        dataset (InstanceSegDataset): getitune inst-seg dataset.
         tile_config (TilerConfig): Tile configuration.
     """
 
@@ -276,13 +276,13 @@ class TileInstSegTestDataset(TileDataset):
 
 
 class TileSemanticSegTestDataset(TileDataset):
-    """Geti Tune tile semantic-seg test dataset.
+    """getitune tile semantic-seg test dataset.
 
     TileSemanticSegTestDataset wraps a list of tiles (SegDataEntity) into a single TileSegDataEntity
     for testing/predicting.
 
     Args:
-        dataset (SegmentationDataset): OTX semantic-seg dataset.
+        dataset (SegmentationDataset): getitune semantic-seg dataset.
         tile_config (TilerConfig): Tile configuration.
     """
 

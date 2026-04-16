@@ -6,7 +6,7 @@ import torch
 from getitune.backend.lightning.models.classification.backbones.mobilenet_v3 import MobileNetV3Backbone
 
 
-class TestOTXMobileNetV3:
+class TestMobileNetV3:
     def test_forward(self):
         model = MobileNetV3Backbone()
         assert model(torch.randn(1, 3, 244, 244))[0].shape == torch.Size([1, 960, 8, 8])

@@ -12,7 +12,7 @@ from datumaro.experimental import Dataset
 from getitune.data.dataset.classification import MulticlassClsDataset
 
 
-class TestOTXMulticlassClsDataset:
+class TestMulticlassClsDataset:
     """Test MulticlassClsDataset class."""
 
     def setup_method(self):

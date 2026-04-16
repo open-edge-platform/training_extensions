@@ -34,21 +34,21 @@ if TYPE_CHECKING:
     from getitune.backend.lightning.models.common.utils.prior_generators import AnchorGenerator
     from getitune.backend.lightning.models.common.utils.samplers.base_sampler import BaseSampler
 ========
-from getitune.backend.native.models.common.utils.nms import batched_nms, multiclass_nms
-from getitune.backend.native.models.common.utils.utils import dynamic_topk, gather_topk
-from getitune.backend.native.models.detection.heads.anchor_head import AnchorHead
-from getitune.backend.native.models.instance_segmentation.utils.utils import unpack_inst_seg_entity
-from getitune.backend.native.models.modules import build_activation_layer
-from getitune.backend.native.models.modules.conv_module import Conv2dModule
-from getitune.backend.native.models.utils.utils import InstanceData
-from getitune.data.entity.sample import OTXSampleBatch
+from getitune.backend.lightning.models.common.utils.nms import batched_nms, multiclass_nms
+from getitune.backend.lightning.models.common.utils.utils import dynamic_topk, gather_topk
+from getitune.backend.lightning.models.detection.heads.anchor_head import AnchorHead
+from getitune.backend.lightning.models.instance_segmentation.utils.utils import unpack_inst_seg_entity
+from getitune.backend.lightning.models.modules import build_activation_layer
+from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
+from getitune.backend.lightning.models.utils.utils import InstanceData
+from getitune.data.entity.sample import SampleBatch
 from getitune.data.utils.structures.bbox import empty_box_as, get_box_wh
 
 if TYPE_CHECKING:
-    from getitune.backend.native.models.common.utils.assigners import MaxIoUAssigner
-    from getitune.backend.native.models.common.utils.coders import DeltaXYWHBBoxCoder
-    from getitune.backend.native.models.common.utils.prior_generators import AnchorGenerator
-    from getitune.backend.native.models.common.utils.samplers.base_sampler import BaseSampler
+    from getitune.backend.lightning.models.common.utils.assigners import MaxIoUAssigner
+    from getitune.backend.lightning.models.common.utils.coders import DeltaXYWHBBoxCoder
+    from getitune.backend.lightning.models.common.utils.prior_generators import AnchorGenerator
+    from getitune.backend.lightning.models.common.utils.samplers.base_sampler import BaseSampler
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/heads/rpn_head.py
 
 # ruff: noqa: PLW2901
@@ -189,7 +189,7 @@ class RPNHeadModule(AnchorHead):
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (TorchDataBatch): Entity from Geti Tune dataset.
+            entity (TorchDataBatch): Entity from getitune dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.

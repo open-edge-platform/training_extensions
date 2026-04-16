@@ -17,7 +17,7 @@ from torch.nn import init
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/heads/rtdetr_decoder.py
 from getitune.backend.lightning.models.common.layers.transformer_layers import (
 ========
-from getitune.backend.native.models.common.layers.transformer_layers import (
+from getitune.backend.lightning.models.common.layers.transformer_layers import (
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/rtdetr_decoder.py
     MLP,
     MSDeformableAttention,
@@ -27,8 +27,8 @@ from getitune.backend.native.models.common.layers.transformer_layers import (
 from getitune.backend.lightning.models.common.utils.utils import inverse_sigmoid
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 ========
-from getitune.backend.native.models.common.utils.utils import inverse_sigmoid
-from getitune.backend.native.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.common.utils.utils import inverse_sigmoid
+from getitune.backend.lightning.models.modules.base_module import BaseModule
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/rtdetr_decoder.py
 
 __all__ = ["RTDETRTransformer"]

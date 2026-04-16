@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Custom FCNHead modules for Geti Tune segmentation model."""
+"""Custom FCNHead modules for getitune segmentation model."""
 
 from __future__ import annotations
 
@@ -16,9 +16,9 @@ from getitune.backend.lightning.models.modules import Conv2dModule, build_activa
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
 from getitune.backend.lightning.models.segmentation.modules import IterativeAggregator
 ========
-from getitune.backend.native.models.modules import Conv2dModule, build_activation_layer
-from getitune.backend.native.models.modules.norm import build_norm_layer
-from getitune.backend.native.models.segmentation.modules import IterativeAggregator
+from getitune.backend.lightning.models.modules import Conv2dModule, build_activation_layer
+from getitune.backend.lightning.models.modules.norm import build_norm_layer
+from getitune.backend.lightning.models.segmentation.modules import IterativeAggregator
 >>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/heads/fcn_head.py
 
 from .base_segm_head import BaseSegmentationHead

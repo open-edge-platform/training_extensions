@@ -13,7 +13,7 @@ from getitune.data.dataset.detection import DetectionDataset
 from getitune.data.dataset.mixins import DataAugSwitchMixin
 
 
-class TestOTXDetectionDatasetWithAugSwitch:
+class TestDetectionDatasetWithAugSwitch:
     """Integration tests for DetectionDataset with DataAugSwitchMixin."""
 
     @pytest.fixture

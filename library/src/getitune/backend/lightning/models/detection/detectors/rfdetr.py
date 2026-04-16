@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""RF-DETR detector wrapper for Geti Tune integration.
+"""RF-DETR detector wrapper for getitune integration.
 
 RF-DETR is a state-of-the-art real-time object detector from Roboflow based on
 DINOv2 backbone with a lightweight DETR decoder.
@@ -23,7 +23,7 @@ from torchvision.tv_tensors import BoundingBoxes
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/detectors/rfdetr.py
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 ========
-from getitune.backend.native.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.modules.base_module import BaseModule
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/detectors/rfdetr.py
 
 if TYPE_CHECKING:
@@ -31,9 +31,9 @@ if TYPE_CHECKING:
 
 
 class RFDETRDetector(BaseModule):
-    """Wrapper around RF-DETR's LWDETR model for Geti Tune integration.
+    """Wrapper around RF-DETR's LWDETR model for getitune integration.
 
-    This wrapper handles the interface between Geti Tune's training pipeline and
+    This wrapper handles the interface between getitune's training pipeline and
     the rfdetr package's LWDETR model and SetCriterion.
 
     Args:

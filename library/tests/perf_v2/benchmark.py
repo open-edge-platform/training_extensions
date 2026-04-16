@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune benchmark runner."""
+"""getitune benchmark runner."""
 
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ class AggregateError(Exception):
 
 
 class Benchmark:
-    """Benchmark runner for OTX2.x.
+    """Benchmark runner for getitune 2.x.
 
     Args:
         data_root (str): Path to the root of dataset directories. Defaults to './data'.
@@ -78,7 +78,7 @@ class Benchmark:
             e.x) Eval up to 'optimize': train -> eval -> export -> eval -> optimize -> eval
             Default to 'train'.
         tags (dict, optional): Key-values pair metadata for the experiment.
-        dry_run (bool): Whether to just print the Geti Tune command without execution. Defaults to False.
+        dry_run (bool): Whether to just print the getitune command without execution. Defaults to False.
         deterministic (bool): Whether to turn on deterministic training mode. Defaults to False.
         accelerator (str): Accelerator device on which to run benchmark. Defaults to gpu.
         reference_results (pd.DataFrame): Reference benchmark results for performance checking.
@@ -301,7 +301,7 @@ class Benchmark:
         del engine
         total_time = time() - start_time
 
-        # Geti Tune does not create metrics.cvs during optimization,
+        # getitune does not create metrics.cvs during optimization,
         # So we are manually write optimize:e2e_time to csv.
         data_frame = pd.DataFrame({"optimize:e2e_time": [total_time]})
         data_frame.to_csv(sub_work_dir / f"{SubCommand.OPTIMIZE.value}/metrics.csv", index=False)
@@ -498,7 +498,7 @@ class Benchmark:
 
         Args:
             work_dir (Path): work directory
-            tags (dict[str, str]): Geti Tune metadata (ie. task, model, data_group, data, seed, etc)
+            tags (dict[str, str]): getitune metadata (ie. task, model, data_group, data, seed, etc)
             criteria (list[Criterion]): task criteria
             extra_metrics (dict[str, Any] | None, optional): extra metrics to be logged. Defaults to None.
         """

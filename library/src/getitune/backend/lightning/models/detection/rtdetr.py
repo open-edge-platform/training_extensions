@@ -29,18 +29,18 @@ from getitune.config.data import TileConfig
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 ========
-from getitune.backend.native.exporter.base import OTXModelExporter
-from getitune.backend.native.exporter.native import OTXNativeModelExporter
-from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.native.models.detection.backbones import PResNet
-from getitune.backend.native.models.detection.base import OTXDetectionModel
-from getitune.backend.native.models.detection.detectors import DETR
-from getitune.backend.native.models.detection.heads import RTDETRTransformer
-from getitune.backend.native.models.detection.necks import HybridEncoder
-from getitune.backend.native.models.utils.utils import load_checkpoint
+from getitune.backend.lightning.exporter.base import ModelExporter
+from getitune.backend.lightning.exporter.native import LightningModelExporter
+from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.lightning.models.detection.backbones import PResNet
+from getitune.backend.lightning.models.detection.base import LightningDetectionModel
+from getitune.backend.lightning.models.detection.detectors import DETR
+from getitune.backend.lightning.models.detection.heads import RTDETRTransformer
+from getitune.backend.lightning.models.detection.necks import HybridEncoder
+from getitune.backend.lightning.models.utils.utils import load_checkpoint
 from getitune.config.data import TileConfig
-from getitune.data.entity.base import OTXBatchLossEntity
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.base import BatchLoss
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/rtdetr.py
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
@@ -50,14 +50,14 @@ if TYPE_CHECKING:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/rtdetr.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 ========
-    from getitune.backend.native.schedulers import LRSchedulerListCallable
+    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/rtdetr.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
 
 
 class RTDETR(LightningDetectionModel):
-    """Geti Tune Detection model class for RTDETR.
+    """getitune Detection model class for RTDETR.
 
     Attributes:
         pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.

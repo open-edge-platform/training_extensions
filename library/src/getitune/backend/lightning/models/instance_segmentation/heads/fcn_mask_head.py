@@ -26,11 +26,11 @@ from getitune.backend.lightning.models.modules.base_module import BaseModule, Mo
 from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
 ========
-from getitune.backend.native.models.common.utils.structures import SamplingResult
-from getitune.backend.native.models.instance_segmentation.utils.utils import empty_instances
-from getitune.backend.native.models.modules.base_module import BaseModule, ModuleList
-from getitune.backend.native.models.modules.conv_module import Conv2dModule
-from getitune.backend.native.models.modules.norm import build_norm_layer
+from getitune.backend.lightning.models.common.utils.structures import SamplingResult
+from getitune.backend.lightning.models.instance_segmentation.utils.utils import empty_instances
+from getitune.backend.lightning.models.modules.base_module import BaseModule, ModuleList
+from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
+from getitune.backend.lightning.models.modules.norm import build_norm_layer
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/heads/fcn_mask_head.py
 from getitune.data.utils.structures.mask import mask_target
 
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/heads/fcn_mask_head.py
     from getitune.backend.lightning.models.utils.utils import InstanceData
 ========
-    from getitune.backend.native.models.utils.utils import InstanceData
+    from getitune.backend.lightning.models.utils.utils import InstanceData
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/heads/fcn_mask_head.py
 
 

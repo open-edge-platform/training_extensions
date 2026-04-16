@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Backbone modules for Geti Tune custom model."""
+"""Backbone modules for getitune custom model."""
 
 from .efficientnet import EfficientNetBackbone
 from .mobilenet_v3 import MobileNetV3Backbone

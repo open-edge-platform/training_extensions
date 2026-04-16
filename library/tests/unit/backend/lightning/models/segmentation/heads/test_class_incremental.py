@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Test of class incremental mixin of Geti Tune segmentation task."""
+"""Test of class incremental mixin of getitune segmentation task."""
 
 import torch
 

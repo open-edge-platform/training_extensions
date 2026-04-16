@@ -3,7 +3,7 @@
 
 # Copyright (c) OpenMMLab. All rights reserved.
 
-"""Utils for Geti Tune detection algo.
+"""Utils for getitune detection algo.
 
 Reference :
     - https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/utils.
@@ -24,8 +24,8 @@ from torchvision.ops import box_convert
 from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.data.entity.sample import SampleBatch
 ========
-from getitune.backend.native.models.utils.utils import InstanceData
-from getitune.data.entity.sample import OTXSampleBatch
+from getitune.backend.lightning.models.utils.utils import InstanceData
+from getitune.data.entity.sample import SampleBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/utils/utils.py
 
 
@@ -230,7 +230,7 @@ def round_up(x: int | Tensor, div: int = 1) -> int | Tensor:
 def generate_anchors(image_size: tuple[int, int], strides: list[int]) -> tuple[Tensor, Tensor]:
     """Find the anchor maps for each height and width.
 
-    TODO (sungchul): check if it can be integrated with Geti Tune anchor generators
+    TODO (sungchul): check if it can be integrated with getitune anchor generators
 
     Args:
         image_size (tuple[int, int]): the image size of augmented image size.

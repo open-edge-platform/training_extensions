@@ -16,13 +16,13 @@ from getitune.backend.lightning.models.detection.losses.deim_loss import DEIMCri
 from getitune.backend.lightning.models.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from getitune.backend.lightning.models.utils.utils import load_checkpoint
 ========
-from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.native.models.detection.backbones.dinov3sta import DINOv3STAs
-from getitune.backend.native.models.detection.detectors import DETR
-from getitune.backend.native.models.detection.heads.deim_decoder import DEIMTransformer
-from getitune.backend.native.models.detection.losses.deim_loss import DEIMCriterion
-from getitune.backend.native.models.detection.necks.dfine_hybrid_encoder import HybridEncoder
-from getitune.backend.native.models.utils.utils import load_checkpoint
+from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.lightning.models.detection.backbones.dinov3sta import DINOv3STAs
+from getitune.backend.lightning.models.detection.detectors import DETR
+from getitune.backend.lightning.models.detection.heads.deim_decoder import DEIMTransformer
+from getitune.backend.lightning.models.detection.losses.deim_loss import DEIMCriterion
+from getitune.backend.lightning.models.detection.necks.dfine_hybrid_encoder import HybridEncoder
+from getitune.backend.lightning.models.utils.utils import load_checkpoint
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/deimv2.py
 from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
@@ -35,14 +35,14 @@ if TYPE_CHECKING:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/deimv2.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 ========
-    from getitune.backend.native.schedulers import LRSchedulerListCallable
+    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/deimv2.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
 
 
 class DEIMV2(DEIMDFine):
-    """Geti Tune Detection model class for DEIMV2.
+    """getitune Detection model class for DEIMV2.
 
     DEIMV2 is an improved version of DEIMV1, which introduces DINOV3 backbone and improved decoder.
 
@@ -54,8 +54,8 @@ class DEIMV2(DEIMDFine):
     :class:`~getitune.backend.lightning.callbacks.aug_scheduler.DataAugSwitch` and
     :class:`~getitune.backend.lightning.callbacks.aug_scheduler.AugmentationSchedulerCallback`
 ========
-    :class:`~getitune.backend.native.callbacks.aug_scheduler.DataAugSwitch` and
-    :class:`~getitune.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback`
+    :class:`~getitune.backend.lightning.callbacks.aug_scheduler.DataAugSwitch` and
+    :class:`~getitune.backend.lightning.callbacks.aug_scheduler.AugmentationSchedulerCallback`
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/deimv2.py
     for dynamic augmentation scheduling.
 

@@ -21,9 +21,9 @@ from getitune.backend.lightning.models.common.layers.position_embed import RopeP
 from getitune.backend.lightning.models.common.layers.transformer_layers import MLP2L as MLP
 from getitune.backend.lightning.models.utils.weight_init import trunc_normal_
 ========
-from getitune.backend.native.models.common.layers.position_embed import RopePositionEmbedding
-from getitune.backend.native.models.common.layers.transformer_layers import MLP2L as MLP
-from getitune.backend.native.models.utils.weight_init import trunc_normal_
+from getitune.backend.lightning.models.common.layers.position_embed import RopePositionEmbedding
+from getitune.backend.lightning.models.common.layers.transformer_layers import MLP2L as MLP
+from getitune.backend.lightning.models.utils.weight_init import trunc_normal_
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/backbones/vit_tiny.py
 
 

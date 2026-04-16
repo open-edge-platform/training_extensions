@@ -26,18 +26,18 @@ from getitune.backend.lightning.models.classification.multilabel_models.base imp
 )
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 ========
-from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.native.models.classification.backbones.vision_transformer import VisionTransformerBackbone
-from getitune.backend.native.models.classification.classifier import ImageClassifier
-from getitune.backend.native.models.classification.heads import (
+from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.lightning.models.classification.backbones.vision_transformer import VisionTransformerBackbone
+from getitune.backend.lightning.models.classification.classifier import ImageClassifier
+from getitune.backend.lightning.models.classification.heads import (
     MultiLabelLinearClsHead,
 )
-from getitune.backend.native.models.classification.losses import AsymmetricAngularLossWithIgnore
-from getitune.backend.native.models.classification.multiclass_models.vit import ForwardExplainMixInForViT
-from getitune.backend.native.models.classification.multilabel_models.base import (
-    OTXMultilabelClsModel,
+from getitune.backend.lightning.models.classification.losses import AsymmetricAngularLossWithIgnore
+from getitune.backend.lightning.models.classification.multiclass_models.vit import ForwardExplainMixInForViT
+from getitune.backend.lightning.models.classification.multilabel_models.base import (
+    LightningMultilabelClsModel,
 )
-from getitune.backend.native.schedulers import LRSchedulerListCallable
+from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 >>>>>>>> develop:library/src/getitune/backend/native/models/classification/multilabel_models/vit.py
 from getitune.metrics.accuracy import MultiLabelClsMetricCallable
 from getitune.types.label import LabelInfoTypes

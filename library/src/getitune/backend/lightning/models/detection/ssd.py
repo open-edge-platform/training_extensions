@@ -3,7 +3,7 @@
 
 # Copyright (c) OpenMMLab. All rights reserved.
 
-"""SSD object detector for the Geti Tune detection.
+"""SSD object detector for the getitune detection.
 
 Implementation modified from mmdet.models.detectors.single_stage.
 Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/detectors/single_stage.py
@@ -30,17 +30,17 @@ from getitune.backend.lightning.models.detection.losses import SSDCriterion
 from getitune.backend.lightning.models.detection.utils.prior_generators import SSDAnchorGeneratorClustered
 from getitune.backend.lightning.models.utils.utils import load_checkpoint
 ========
-from getitune.backend.native.exporter.base import OTXModelExporter
-from getitune.backend.native.exporter.native import OTXNativeModelExporter
-from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.native.models.common.utils.assigners import MaxIoUAssigner
-from getitune.backend.native.models.common.utils.coders import DeltaXYWHBBoxCoder
-from getitune.backend.native.models.detection.base import OTXDetectionModel
-from getitune.backend.native.models.detection.detectors import SingleStageDetector
-from getitune.backend.native.models.detection.heads import SSDHead
-from getitune.backend.native.models.detection.losses import SSDCriterion
-from getitune.backend.native.models.detection.utils.prior_generators import SSDAnchorGeneratorClustered
-from getitune.backend.native.models.utils.utils import load_checkpoint
+from getitune.backend.lightning.exporter.base import ModelExporter
+from getitune.backend.lightning.exporter.native import LightningModelExporter
+from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.lightning.models.common.utils.assigners import MaxIoUAssigner
+from getitune.backend.lightning.models.common.utils.coders import DeltaXYWHBBoxCoder
+from getitune.backend.lightning.models.detection.base import LightningDetectionModel
+from getitune.backend.lightning.models.detection.detectors import SingleStageDetector
+from getitune.backend.lightning.models.detection.heads import SSDHead
+from getitune.backend.lightning.models.detection.losses import SSDCriterion
+from getitune.backend.lightning.models.detection.utils.prior_generators import SSDAnchorGeneratorClustered
+from getitune.backend.lightning.models.utils.utils import load_checkpoint
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/ssd.py
 from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
@@ -54,8 +54,8 @@ if TYPE_CHECKING:
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
     from getitune.data.dataset.base import VisionDataset
 ========
-    from getitune.backend.native.schedulers import LRSchedulerListCallable
-    from getitune.data.dataset.base import OTXDataset
+    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
+    from getitune.data.dataset.base import VisionDataset
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/ssd.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
@@ -65,7 +65,7 @@ logger = logging.getLogger()
 
 
 class SSD(LightningDetectionModel):
-    """Geti Tune Detection model class for SSD.
+    """getitune Detection model class for SSD.
 
     Attributes:
         pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
@@ -186,7 +186,7 @@ class SSD(LightningDetectionModel):
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/ssd.py
             from getitune.backend.lightning.models.common.backbones import build_model_including_pytorchcv
 ========
-            from getitune.backend.native.models.common.backbones import build_model_including_pytorchcv
+            from getitune.backend.lightning.models.common.backbones import build_model_including_pytorchcv
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/ssd.py
 
             return build_model_including_pytorchcv(
@@ -203,7 +203,7 @@ class SSD(LightningDetectionModel):
         raise ValueError(msg)
 
     def setup(self, stage: str) -> None:
-        """Callback for setup Geti Tune SSD Model.
+        """Callback for setup getitune SSD Model.
 
         SSD requires auto anchor generating w.r.t. training dataset for better accuracy.
         This callback will provide training dataset to model's anchor generator.

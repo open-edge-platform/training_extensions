@@ -13,7 +13,7 @@ from torch import Tensor, nn
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/layers/channel_attention_layer.py
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 ========
-from getitune.backend.native.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.modules.base_module import BaseModule
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/layers/channel_attention_layer.py
 
 

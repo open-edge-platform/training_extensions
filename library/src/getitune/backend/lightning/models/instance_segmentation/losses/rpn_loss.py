@@ -12,7 +12,7 @@ from torch import Tensor, nn
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/losses/rpn_loss.py
 from getitune.backend.lightning.models.common.utils.utils import multi_apply
 ========
-from getitune.backend.native.models.common.utils.utils import multi_apply
+from getitune.backend.lightning.models.common.utils.utils import multi_apply
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/losses/rpn_loss.py
 
 

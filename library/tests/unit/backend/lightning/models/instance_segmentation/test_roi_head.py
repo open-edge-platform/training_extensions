@@ -1,6 +1,6 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Unit test of custom heads of Geti Tune Instance Segmentation tasks."""
+"""Unit test of custom heads of getitune Instance Segmentation tasks."""
 
 from __future__ import annotations
 

@@ -24,13 +24,13 @@ from getitune.backend.lightning.models.detection.utils.prior_generators.utils im
 from getitune.backend.lightning.models.detection.utils.utils import images_to_levels, unmap
 from getitune.backend.lightning.models.utils.utils import InstanceData
 ========
-from getitune.backend.native.models.common.utils.coders import BaseBBoxCoder
-from getitune.backend.native.models.common.utils.prior_generators import BasePriorGenerator
-from getitune.backend.native.models.common.utils.utils import multi_apply
-from getitune.backend.native.models.detection.heads.base_head import BaseDenseHead
-from getitune.backend.native.models.detection.utils.prior_generators.utils import anchor_inside_flags
-from getitune.backend.native.models.detection.utils.utils import images_to_levels, unmap
-from getitune.backend.native.models.utils.utils import InstanceData
+from getitune.backend.lightning.models.common.utils.coders import BaseBBoxCoder
+from getitune.backend.lightning.models.common.utils.prior_generators import BasePriorGenerator
+from getitune.backend.lightning.models.common.utils.utils import multi_apply
+from getitune.backend.lightning.models.detection.heads.base_head import BaseDenseHead
+from getitune.backend.lightning.models.detection.utils.prior_generators.utils import anchor_inside_flags
+from getitune.backend.lightning.models.detection.utils.utils import images_to_levels, unmap
+from getitune.backend.lightning.models.utils.utils import InstanceData
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/anchor_head.py
 
 

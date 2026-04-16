@@ -23,16 +23,16 @@ from getitune.backend.lightning.models.classification.losses.asymmetric_angular_
 from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 ========
-from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.native.models.classification.backbones.efficientnet import EfficientNetBackbone
-from getitune.backend.native.models.classification.classifier import HLabelClassifier
-from getitune.backend.native.models.classification.heads import HierarchicalLinearClsHead
-from getitune.backend.native.models.classification.hlabel_models.base import OTXHlabelClsModel
-from getitune.backend.native.models.classification.losses.asymmetric_angular_loss_with_ignore import (
+from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.lightning.models.classification.backbones.efficientnet import EfficientNetBackbone
+from getitune.backend.lightning.models.classification.classifier import HLabelClassifier
+from getitune.backend.lightning.models.classification.heads import HierarchicalLinearClsHead
+from getitune.backend.lightning.models.classification.hlabel_models.base import LightningHlabelClsModel
+from getitune.backend.lightning.models.classification.losses.asymmetric_angular_loss_with_ignore import (
     AsymmetricAngularLossWithIgnore,
 )
-from getitune.backend.native.models.classification.necks.gap import GlobalAveragePooling
-from getitune.backend.native.schedulers import LRSchedulerListCallable
+from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 >>>>>>>> develop:library/src/getitune/backend/native/models/classification/hlabel_models/efficientnet.py
 from getitune.metrics.accuracy import HLabelClsMetricCallable
 from getitune.types.label import HLabelInfo

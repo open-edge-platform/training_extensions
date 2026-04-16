@@ -1,3 +1,3 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Test of custom backbones of Geti Tune tasks."""
+"""Test of custom backbones of getitune tasks."""

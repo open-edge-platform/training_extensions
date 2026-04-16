@@ -12,7 +12,7 @@ from torch import Tensor, nn
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/losses/yolox_loss.py
 from getitune.backend.lightning.models.common.losses import CrossEntropyLoss, IoULoss, L1Loss
 ========
-from getitune.backend.native.models.common.losses import CrossEntropyLoss, IoULoss, L1Loss
+from getitune.backend.lightning.models.common.losses import CrossEntropyLoss, IoULoss, L1Loss
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/losses/yolox_loss.py
 
 

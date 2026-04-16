@@ -17,9 +17,9 @@ from getitune.backend.lightning.models.common.utils.assigners.hungarian_matcher 
 from getitune.backend.lightning.models.common.utils.bbox_overlaps import bbox_overlaps
 from getitune.backend.lightning.models.detection.utils.utils import dfine_bbox2distance
 ========
-from getitune.backend.native.models.common.utils.assigners.hungarian_matcher import HungarianMatcher
-from getitune.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
-from getitune.backend.native.models.detection.utils.utils import dfine_bbox2distance
+from getitune.backend.lightning.models.common.utils.assigners.hungarian_matcher import HungarianMatcher
+from getitune.backend.lightning.models.common.utils.bbox_overlaps import bbox_overlaps
+from getitune.backend.lightning.models.detection.utils.utils import dfine_bbox2distance
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/losses/dfine_loss.py
 
 

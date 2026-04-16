@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune tile merge module."""
+"""getitune tile merge module."""
 
 from __future__ import annotations
 
@@ -22,10 +22,10 @@ from getitune.config.data import TileConfig
 from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import Prediction, PredictionBatch
 ========
-from getitune.backend.native.tools.explain.explain_algo import InstSegExplainAlgo
+from getitune.backend.lightning.tools.explain.explain_algo import InstSegExplainAlgo
 from getitune.config.data import TileConfig
 from getitune.data.entity.base import ImageInfo
-from getitune.data.entity.sample import OTXPrediction, OTXPredictionBatch
+from getitune.data.entity.sample import Prediction, PredictionBatch
 >>>>>>>> develop:library/src/getitune/backend/native/tools/tile_merge.py
 
 if TYPE_CHECKING:

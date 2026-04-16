@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune classification performance benchmark tests."""
+"""getitune classification performance benchmark tests."""
 
 from __future__ import annotations
 

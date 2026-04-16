@@ -18,8 +18,8 @@ from getitune.data.augmentation import GPUAugmentationPipeline
 from getitune.data.entity.sample import SampleBatch
 from getitune.types.task import TaskType
 ========
-from getitune.data.entity.sample import OTXSampleBatch
-from getitune.types.task import OTXTaskType
+from getitune.data.entity.sample import SampleBatch
+from getitune.types.task import TaskType
 >>>>>>>> develop:library/src/getitune/backend/native/callbacks/gpu_augmentation.py
 
 if TYPE_CHECKING:

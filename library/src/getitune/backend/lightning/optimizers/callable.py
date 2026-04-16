@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class OptimizerCallableSupportAdaptiveBS:
-    """Optimizer callable supports Geti Tune adaptive batch size.
+    """Optimizer callable supports getitune adaptive batch size.
 
     It makes OptimizerCallable pickelable and accessible to parameters.
     It is used for adaptive batch size.
@@ -36,7 +36,7 @@ class OptimizerCallableSupportAdaptiveBS:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/optimizers/callable.py
         from getitune.backend.lightning.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
 ========
-        from getitune.backend.native.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
+        from getitune.backend.lightning.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
 >>>>>>>> develop:library/src/getitune/backend/native/optimizers/callable.py
 
         model = MobileNetV3ForMulticlassCls(
@@ -58,7 +58,7 @@ class OptimizerCallableSupportAdaptiveBS:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/optimizers/callable.py
         from getitune.backend.lightning.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
 ========
-        from getitune.backend.native.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
+        from getitune.backend.lightning.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
 >>>>>>>> develop:library/src/getitune/backend/native/optimizers/callable.py
 
         model = MobileNetV3ForMulticlassCls(

@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Unit tests for Geti Tune Dice metric."""
+"""Unit tests for getitune Dice metric."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from getitune.metrics.dice import DiceMetric, SegmCallable
 from getitune.types.label import SegLabelInfo
 
 
-class TestOTXDice:
+class TestDice:
     def test_segm_callable_builds_expected_metrics(self, fxt_seg_label_info: SegLabelInfo) -> None:
         metric = SegmCallable(fxt_seg_label_info)
 
@@ -38,7 +38,7 @@ class TestOTXDice:
         preds = torch.tensor([[[0, 1], [2, 1]]])
         target = torch.tensor([[[0, 1], [1, 2]]])
 
-        otx_metric = DiceMetric(num_classes=3, average="macro", ignore_index=None)
+        dice_metric = DiceMetric(num_classes=3, average="macro", ignore_index=None)
         ref_metric = DiceScore(
             num_classes=3,
             average="macro",
@@ -47,10 +47,10 @@ class TestOTXDice:
             include_background=False,
         )
 
-        otx_metric.update(preds.clone(), target.clone())
+        dice_metric.update(preds.clone(), target.clone())
         ref_metric.update(preds.clone().long(), target.clone().long())
 
-        assert torch.allclose(otx_metric.compute(), ref_metric.compute())
+        assert torch.allclose(dice_metric.compute(), ref_metric.compute())
 
     def test_ignore_index_excludes_ignored_pixels(self) -> None:
         metric = DiceMetric(num_classes=3, average="macro", ignore_index=255)

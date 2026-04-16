@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Type definitions for Geti Tune metrics."""
+"""Type definitions for getitune metrics."""
 
 import logging
 from typing import Any, Callable

@@ -28,15 +28,15 @@ from getitune.backend.lightning.models.modules.activation import build_activatio
 from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
 ========
-from getitune.backend.native.models.common.layers.transformer_layers import (
+from getitune.backend.lightning.models.common.layers.transformer_layers import (
     TransformerEncoder,
     TransformerEncoderLayer,
 )
-from getitune.backend.native.models.detection.layers.csp_layer import CSPRepLayer
-from getitune.backend.native.models.detection.utils.utils import auto_pad
-from getitune.backend.native.models.modules.activation import build_activation_layer
-from getitune.backend.native.models.modules.conv_module import Conv2dModule
-from getitune.backend.native.models.modules.norm import build_norm_layer
+from getitune.backend.lightning.models.detection.layers.csp_layer import CSPRepLayer
+from getitune.backend.lightning.models.detection.utils.utils import auto_pad
+from getitune.backend.lightning.models.modules.activation import build_activation_layer
+from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
+from getitune.backend.lightning.models.modules.norm import build_norm_layer
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/necks/dfine_hybrid_encoder.py
 
 # =============================================================================
@@ -657,7 +657,7 @@ class HybridEncoderModule(nn.Module):
                     RepNCSPELAN5(input_dim, hidden_dim, hidden_dim * 2, c4, num_blocks, act=activation)
                 )
             else:
-                # D-FINE style with Geti Tune layers
+                # D-FINE style with getitune layers
                 self.lateral_convs.append(
                     Conv2dModule(
                         hidden_dim,
@@ -824,7 +824,7 @@ class HybridEncoder:
     """
 
     encoder_cfg: ClassVar[dict[str, dict[str, Any]]] = {
-        # D-FINE models (use concat fusion, Geti Tune layers)
+        # D-FINE models (use concat fusion, getitune layers)
         "dfine_hgnetv2_n": {
             "in_channels": [512, 1024],
             "feat_strides": [16, 32],
@@ -853,7 +853,7 @@ class HybridEncoder:
             "hidden_dim": 384,
             "dim_feedforward": 2048,
         },
-        # DEIM-DFINE models (use concat fusion, Geti Tune layers)
+        # DEIM-DFINE models (use concat fusion, getitune layers)
         "deim_dfine_hgnetv2_n": {
             "in_channels": [512, 1024],
             "feat_strides": [16, 32],

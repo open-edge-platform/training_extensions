@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for Geti Tune tile data entities."""
+"""Module for getitune tile data entities."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ class TileDataEntity:
 
     @property
     def task(self) -> TaskType:
-        """Geti Tune Task type definition."""
+        """getitune Task type definition."""
         raise NotImplementedError
 
 
@@ -56,7 +56,7 @@ class TileDetDataEntity(TileDataEntity):
 
     @property
     def task(self) -> TaskType:
-        """Geti Tune Task type definition."""
+        """getitune Task type definition."""
         return TaskType.DETECTION
 
 
@@ -167,7 +167,7 @@ class TileInstSegDataEntity(TileDataEntity):
 
     @property
     def task(self) -> TaskType:
-        """Geti Tune Task type definition."""
+        """getitune Task type definition."""
         return TaskType.INSTANCE_SEGMENTATION
 
 
@@ -248,7 +248,7 @@ class TileSegDataEntity(TileDataEntity):
 
     @property
     def task(self) -> TaskType:
-        """Geti Tune Task type definition."""
+        """getitune Task type definition."""
         return TaskType.SEMANTIC_SEGMENTATION
 
 

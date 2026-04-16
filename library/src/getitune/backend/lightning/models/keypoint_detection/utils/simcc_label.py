@@ -14,7 +14,7 @@ import numpy as np
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/keypoint_detection/utils/simcc_label.py
 from getitune.backend.lightning.models.keypoint_detection.utils.keypoint_eval import get_simcc_maximum, refine_simcc_dark
 ========
-from getitune.backend.native.models.keypoint_detection.utils.keypoint_eval import get_simcc_maximum, refine_simcc_dark
+from getitune.backend.lightning.models.keypoint_detection.utils.keypoint_eval import get_simcc_maximum, refine_simcc_dark
 >>>>>>>> develop:library/src/getitune/backend/native/models/keypoint_detection/utils/simcc_label.py
 
 

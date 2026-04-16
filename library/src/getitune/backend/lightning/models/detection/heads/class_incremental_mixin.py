@@ -17,11 +17,11 @@ from getitune.backend.lightning.models.detection.utils.utils import images_to_le
 if TYPE_CHECKING:
     from getitune.backend.lightning.models.utils.utils import InstanceData
 ========
-from getitune.backend.native.models.common.utils.utils import multi_apply
-from getitune.backend.native.models.detection.utils.utils import images_to_levels
+from getitune.backend.lightning.models.common.utils.utils import multi_apply
+from getitune.backend.lightning.models.detection.utils.utils import images_to_levels
 
 if TYPE_CHECKING:
-    from getitune.backend.native.models.utils.utils import InstanceData
+    from getitune.backend.lightning.models.utils.utils import InstanceData
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/class_incremental_mixin.py
 
 

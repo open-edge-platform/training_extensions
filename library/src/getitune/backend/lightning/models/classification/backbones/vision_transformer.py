@@ -35,11 +35,11 @@ from getitune.backend.lightning.models.classification.utils.peft import (
 )
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 ========
-from getitune.backend.native.models.classification.utils.peft import (
+from getitune.backend.lightning.models.classification.utils.peft import (
     AttentionWithDoRA,
     AttentionWithLoRA,
 )
-from getitune.backend.native.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.modules.base_module import BaseModule
 >>>>>>>> develop:library/src/getitune/backend/native/models/classification/backbones/vision_transformer.py
 
 if TYPE_CHECKING:

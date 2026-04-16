@@ -9,7 +9,7 @@ from datumaro.experimental import Dataset
 from getitune.data.dataset.instance_segmentation import InstanceSegDataset
 
 
-class TestOTXInstanceSegDataset:
+class TestInstanceSegDataset:
     def setup_method(self):
         # Mock Datumaro experimental Dataset subset
         self.mock_dm_subset = Mock(spec=Dataset)

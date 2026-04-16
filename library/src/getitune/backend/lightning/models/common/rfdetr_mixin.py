@@ -27,13 +27,13 @@ from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
 ========
-from getitune.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
-from getitune.backend.native.models.detection.utils import limit_batch_objects
-from getitune.backend.native.models.utils.utils import load_checkpoint
-from getitune.data.entity.base import OTXBatchLossEntity
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from getitune.types.export import OTXExportFormatType
-from getitune.types.precision import OTXPrecisionType
+from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
+from getitune.backend.lightning.models.detection.utils import limit_batch_objects
+from getitune.backend.lightning.models.utils.utils import load_checkpoint
+from getitune.data.entity.base import BatchLoss
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
+from getitune.types.export import ExportFormat
+from getitune.types.precision import Precision
 >>>>>>>> develop:library/src/getitune/backend/native/models/common/rfdetr_mixin.py
 
 if TYPE_CHECKING:
@@ -119,13 +119,13 @@ class RFDETRMixin:
         self,
         entity: SampleBatch,
     ) -> dict[str, Any]:
-        """Convert Geti Tune batch format to RF-DETR input format.
+        """Convert getitune batch format to RF-DETR input format.
 
         Handles both detection (boxes + labels) and instance segmentation
         (boxes + labels + masks) depending on what the entity contains.
 
         Args:
-            entity: Geti Tune data batch.
+            entity: getitune data batch.
 
         Returns:
             Dict with 'images' and 'targets' for the model.
@@ -184,7 +184,7 @@ class RFDETRMixin:
         outputs: tuple[torch.Tensor, ...] | dict[str, Any],
         inputs: SampleBatch,
     ) -> PredictionBatch | BatchLoss:
-        """Convert model outputs to Geti Tune format.
+        """Convert model outputs to getitune format.
 
         Handles both detection and instance segmentation outputs.
         When the postprocessor returns masks (4th element is not ``None``),
@@ -192,7 +192,7 @@ class RFDETRMixin:
 
         Args:
             outputs: Model outputs (loss dict during training, predictions during inference).
-            inputs: Original Geti Tune data batch.
+            inputs: Original getitune data batch.
 
         Returns:
             ``PredictionBatch`` during inference, ``BatchLoss`` during training.

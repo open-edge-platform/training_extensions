@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Base head for Geti Tune segmentation models."""
+"""Base head for getitune segmentation models."""
 
 from __future__ import annotations
 
@@ -16,8 +16,8 @@ from torch import nn
 from getitune.backend.lightning.models.segmentation.modules import resize
 from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http
 ========
-from getitune.backend.native.models.segmentation.modules import resize
-from getitune.backend.native.models.utils.utils import load_checkpoint_to_model, load_from_http
+from getitune.backend.lightning.models.segmentation.modules import resize
+from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http
 >>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/heads/base_segm_head.py
 
 

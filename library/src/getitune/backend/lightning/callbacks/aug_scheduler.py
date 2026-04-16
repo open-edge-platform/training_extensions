@@ -28,11 +28,7 @@ if TYPE_CHECKING:
 
     from lightning.pytorch import LightningModule, Trainer
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/callbacks/aug_scheduler.py
     from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
-========
-    from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
->>>>>>>> develop:library/src/getitune/backend/native/callbacks/aug_scheduler.py
 
 logger = logging.getLogger(__name__)
 
@@ -227,9 +223,6 @@ class AugmentationSchedulerCallback(Callback):
         """Find and cache reference to GPUAugmentationCallback for GPU pipeline swaps."""
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/callbacks/aug_scheduler.py
         from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
-========
-        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
->>>>>>>> develop:library/src/getitune/backend/native/callbacks/aug_scheduler.py
 
         for callback in trainer.callbacks:  # type: ignore[union-attr]
             if isinstance(callback, GPUAugmentationCallback):

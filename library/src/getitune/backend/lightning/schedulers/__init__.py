@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Custom schedulers for the Geti Tune2.0."""
+"""Custom schedulers for the getitune2.0."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ from torch.optim.optimizer import Optimizer
 from getitune.backend.lightning.schedulers.callable import SchedulerCallableSupportAdaptiveBS
 from getitune.backend.lightning.schedulers.warmup_schedulers import LinearWarmupScheduler, LinearWarmupSchedulerCallable
 ========
-from getitune.backend.native.schedulers.callable import SchedulerCallableSupportAdaptiveBS
-from getitune.backend.native.schedulers.warmup_schedulers import LinearWarmupScheduler, LinearWarmupSchedulerCallable
+from getitune.backend.lightning.schedulers.callable import SchedulerCallableSupportAdaptiveBS
+from getitune.backend.lightning.schedulers.warmup_schedulers import LinearWarmupScheduler, LinearWarmupSchedulerCallable
 >>>>>>>> develop:library/src/getitune/backend/native/schedulers/__init__.py
 
 LRSchedulerListCallable = Callable[[Optimizer], list[LRScheduler | ReduceLROnPlateau]]

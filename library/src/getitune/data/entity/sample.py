@@ -1,7 +1,7 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Sample classes for Geti Tune data entities."""
+"""Sample classes for getitune data entities."""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 
 @register_pytree_node
 class BaseSample(_DatumSample):
-    """Base class for Geti Tune data samples."""
+    """Base class for getitune data samples."""
 
     image: torch.Tensor | tv_tensors.Image
     subset: Subset = subset_field()
@@ -68,7 +68,7 @@ class BaseSample(_DatumSample):
 @register_pytree_node
 @register_sample
 class ClassificationSample(BaseSample):
-    """ClassificationSample is a base class for Geti Tune classification items."""
+    """ClassificationSample is a base class for getitune classification items."""
 
     subset: Subset = subset_field()
 
@@ -89,7 +89,7 @@ class ClassificationSample(BaseSample):
 @register_pytree_node
 @register_sample
 class ClassificationMultiLabelSample(BaseSample):
-    """ClassificationMultiLabelSample is a base class for Geti Tune multi label classification items."""
+    """ClassificationMultiLabelSample is a base class for getitune multi label classification items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     label: torch.Tensor = label_field(pl.UInt8(), multi_label=True)
@@ -108,7 +108,7 @@ class ClassificationMultiLabelSample(BaseSample):
 @register_pytree_node
 @register_sample
 class ClassificationHierarchicalSample(BaseSample):
-    """ClassificationHierarchicalSample is a base class for Geti Tune hierarchical classification items."""
+    """ClassificationHierarchicalSample is a base class for getitune hierarchical classification items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
@@ -127,7 +127,7 @@ class ClassificationHierarchicalSample(BaseSample):
 @register_pytree_node
 @register_sample
 class DetectionSample(BaseSample):
-    """DetectionSample is a base class for Geti Tune detection items."""
+    """DetectionSample is a base class for getitune detection items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), format="RGB", channels_first=True)
     label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
@@ -211,7 +211,7 @@ class InstanceSegmentationSample(BaseSample):
 @register_pytree_node
 @register_sample
 class KeypointSample(BaseSample):
-    """KeypointSample is a base class for Geti Tune keypoint detection items."""
+    """KeypointSample is a base class for getitune keypoint detection items."""
 
     subset: Subset = subset_field()
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
@@ -231,7 +231,7 @@ class KeypointSample(BaseSample):
 
 @dataclass
 class SampleBatch:
-    """Geti Tune sample batch implementation.
+    """getitune sample batch implementation.
 
     Attributes:
         images: The batch of images as a BCHW tensor.
@@ -319,7 +319,7 @@ class SampleBatch:
 
 @dataclass
 class PredictionBatch(SampleBatch):
-    """Geti Tune prediction batch implementation.
+    """getitune prediction batch implementation.
 
     Extends SampleBatch with prediction-specific fields.
 
@@ -344,7 +344,7 @@ class PredictionBatch(SampleBatch):
 
 @dataclass
 class Prediction:
-    """Geti Tune prediction data entity for a single sample.
+    """getitune prediction data entity for a single sample.
 
     This is used for storing individual prediction results, e.g., after tile merging.
 

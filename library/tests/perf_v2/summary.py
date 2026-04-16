@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune performance benchmark history summary utilities."""
+"""getitune performance benchmark history summary utilities."""
 
 from __future__ import annotations
 
@@ -269,7 +269,7 @@ def task_high_level_summary(raw_data: pd.DataFrame, task: TaskType, output_root:
 
     metrics = raw_task_data.select_dtypes(include=["number"]).columns.to_list()
 
-    # Group by model instead of just otx_version and task
+    # Group by model instead of just getitune_version and task
     grouped_data = raw_task_data.groupby(["getitune_version", "task", "model"])
     aggregated = grouped_data.agg({metric: ["mean", "std"] for metric in metrics}).reset_index()
 

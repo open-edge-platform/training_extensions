@@ -98,7 +98,7 @@ class TestDefaultCollateFn:
             _default_collate_fn([sample])
 
 
-class TestOTXDataset:
+class TestVisionDataset:
     """Test VisionDataset class."""
 
     def setup_method(self):

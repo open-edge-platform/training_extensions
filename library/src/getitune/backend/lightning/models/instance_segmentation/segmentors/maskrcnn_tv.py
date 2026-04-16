@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/segmentors/maskrcnn_tv.py
     from getitune.data.entity.sample import SampleBatch
 ========
-    from getitune.data.entity.sample import OTXSampleBatch
+    from getitune.data.entity.sample import SampleBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/segmentors/maskrcnn_tv.py
 
 

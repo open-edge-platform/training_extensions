@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/tools/explain/explain_algo.py
     from getitune.backend.lightning.models.utils.utils import InstanceData
 ========
-    from getitune.backend.native.models.utils.utils import InstanceData
+    from getitune.backend.lightning.models.utils.utils import InstanceData
 >>>>>>>> develop:library/src/getitune/backend/native/tools/explain/explain_algo.py
 
 HeadForwardFn = Callable[[FeatureMapType], torch.Tensor]

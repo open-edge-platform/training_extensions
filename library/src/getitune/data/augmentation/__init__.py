@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune Augmentation module.
+"""getitune Augmentation module.
 
 This module provides a two-stage augmentation pipeline:
 - CPU stage: Size-dependent augmentations in Dataset workers (torchvision.transforms.v2)

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class InstanceSegDataset(VisionDataset):
-    """Dataset class for instance segmentation tasks in Geti Tune.
+    """Dataset class for instance segmentation tasks in getitune.
 
     This class handles loading images and their masks.
 
@@ -76,7 +76,7 @@ class InstanceSegDataset(VisionDataset):
 
     @property
     def task_type(self) -> TaskType:
-        """Geti Tune Task Type for the dataset.
+        """getitune Task Type for the dataset.
 
         Returns:
             TaskType: The instance segmentation task type.

@@ -54,7 +54,7 @@ def fxt_tv_model_and_data_entity(
     return None
 
 
-class TestOTXTVModel:
+class TestTVModel:
     def test_create_model(self, fxt_tv_model):
         assert isinstance(fxt_tv_model.model, ImageClassifier)
 

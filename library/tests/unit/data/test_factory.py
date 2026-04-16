@@ -23,7 +23,7 @@ from getitune.data.factory import DatasetFactory, TransformLibFactory
 from getitune.types.task import TaskType
 
 
-class TestOTXDatasetFactory:
+class TestDatasetFactory:
     @pytest.mark.parametrize(
         ("task_type", "dataset_cls", "dm_subset_fxt_name"),
         [

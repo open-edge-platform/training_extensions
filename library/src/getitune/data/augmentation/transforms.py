@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Custom image transforms for Geti Tune augmentation pipeline."""
+"""Custom image transforms for getitune augmentation pipeline."""
 
 from __future__ import annotations
 

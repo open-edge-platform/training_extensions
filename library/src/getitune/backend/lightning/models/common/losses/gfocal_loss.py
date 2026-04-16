@@ -18,7 +18,7 @@ from torch import Tensor, nn
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/losses/gfocal_loss.py
 from getitune.backend.lightning.models.common.losses.utils import weighted_loss
 ========
-from getitune.backend.native.models.common.losses.utils import weighted_loss
+from getitune.backend.lightning.models.common.losses.utils import weighted_loss
 >>>>>>>> develop:library/src/getitune/backend/native/models/common/losses/gfocal_loss.py
 
 

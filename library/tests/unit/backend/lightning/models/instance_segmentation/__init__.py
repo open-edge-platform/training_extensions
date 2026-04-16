@@ -1,3 +1,3 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Unit test of custom algo modules of Geti Tune Instance Segmentation tasks."""
+"""Unit test of custom algo modules of getitune Instance Segmentation tasks."""

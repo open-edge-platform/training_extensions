@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Utility functions for Geti Tune data entities."""
+"""Utility functions for getitune data entities."""
 
 from __future__ import annotations
 
@@ -178,9 +178,9 @@ def with_image_dtype(
 
 
 def register_pytree_node(cls: type[Sample]) -> type[Sample]:
-    """Decorator to register a Geti Tune data entity with PyTorch's PyTree.
+    """Decorator to register a getitune data entity with PyTorch's PyTree.
 
-    This decorator should be applied to every Geti Tune data entity, as TorchVision V2 transforms
+    This decorator should be applied to every getitune data entity, as TorchVision V2 transforms
     use the PyTree to flatten and unflatten the data entity during runtime.
 
     Example:

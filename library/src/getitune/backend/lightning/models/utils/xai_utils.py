@@ -7,7 +7,7 @@
 # For example, `pred_labels: list | None` has no object typing containered in the list.
 # On the other hand, process_saliency_maps should not produce list of dictionaries
 # (`list[dict[str, np.ndarray | torch.Tensor]]`).
-# This is because the output will be assigned to OTXBatchPredEntity.saliency_map,
+# This is because the output will be assigned to PredictionBatch.saliency_map,
 # but this has `list[np.ndarray | torch.Tensor]` typing, so that it makes a mismatch.
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from getitune.config.explain import ExplainConfig
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/utils/xai_utils.py
 from getitune.data.entity.sample import PredictionBatch
 ========
-from getitune.data.entity.sample import OTXPredictionBatch
+from getitune.data.entity.sample import PredictionBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/utils/xai_utils.py
 from getitune.types.explain import TargetExplainGroup
 from getitune.types.label import HLabelInfo, LabelInfoTypes
@@ -211,7 +211,7 @@ def _convert_labels_from_hcls_format(
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/utils/xai_utils.py
     src.getitune.core.data.dataset.classification.py:HlabelClsDataset:_convert_label_to_hlabel_format.
 ========
-    src.getitune.core.data.dataset.classification.py:OTXHlabelClsDataset:_convert_label_to_hlabel_format.
+    src.getitune.core.data.dataset.classification.py:HlabelClsDataset:_convert_label_to_hlabel_format.
 >>>>>>>> develop:library/src/getitune/backend/native/models/utils/xai_utils.py
     """
     pred_labels = []

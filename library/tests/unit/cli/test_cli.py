@@ -13,7 +13,7 @@ from rich.console import Console
 from getitune.cli import CLI, main
 
 
-class TestOTXCLI:
+class TestCLI:
     def test_init(self, mocker) -> None:
         # Test that main function runs with errors -> return 2
         argv = ["getitune"]

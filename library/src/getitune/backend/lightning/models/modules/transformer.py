@@ -18,7 +18,7 @@ from torch import nn
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/modules/transformer.py
 from getitune.backend.lightning.models.modules.base_module import BaseModule, Sequential
 ========
-from getitune.backend.native.models.modules.base_module import BaseModule, Sequential
+from getitune.backend.lightning.models.modules.base_module import BaseModule, Sequential
 >>>>>>>> develop:library/src/getitune/backend/native/models/modules/transformer.py
 
 from .drop import build_dropout

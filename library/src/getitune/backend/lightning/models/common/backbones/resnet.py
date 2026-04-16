@@ -19,9 +19,9 @@ from getitune.backend.lightning.models.common.layers import ResLayer
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
 ========
-from getitune.backend.native.models.common.layers import ResLayer
-from getitune.backend.native.models.modules.base_module import BaseModule
-from getitune.backend.native.models.modules.norm import build_norm_layer
+from getitune.backend.lightning.models.common.layers import ResLayer
+from getitune.backend.lightning.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.modules.norm import build_norm_layer
 >>>>>>>> develop:library/src/getitune/backend/native/models/common/backbones/resnet.py
 
 

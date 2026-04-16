@@ -11,7 +11,7 @@ from getitune.types.export import TaskLevelExportParameters
 from getitune.types.precision import Precision
 
 
-class TestOTXNativeModelExporter:
+class TestLightningModelExporter:
     @pytest.fixture
     def exporter(self, mocker):
         # Create an instance of LightningModelExporter with default params

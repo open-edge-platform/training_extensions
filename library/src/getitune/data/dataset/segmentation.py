@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class SegmentationDataset(VisionDataset):
-    """Geti Tune Dataset for semantic segmentation tasks.
+    """getitune Dataset for semantic segmentation tasks.
 
     This dataset handles semantic segmentation where each pixel in an image is classified
     into one of multiple classes. It processes Datumaro dataset items and converts them
@@ -71,7 +71,7 @@ class SegmentationDataset(VisionDataset):
 
     @property
     def task_type(self) -> TaskType:
-        """Geti Tune Task Type for the dataset.
+        """getitune Task Type for the dataset.
 
         Returns:
             TaskType: The semantic segmentation task type.

@@ -25,11 +25,11 @@ from getitune.backend.lightning.models.segmentation.modules import (
 )
 from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http
 ========
-from getitune.backend.native.models.modules import Conv2dModule, build_activation_layer, build_norm_layer
-from getitune.backend.native.models.segmentation.modules import (
+from getitune.backend.lightning.models.modules import Conv2dModule, build_activation_layer, build_norm_layer
+from getitune.backend.lightning.models.segmentation.modules import (
     channel_shuffle,
 )
-from getitune.backend.native.models.utils.utils import load_checkpoint_to_model, load_from_http
+from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http
 >>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/backbones/litehrnet.py
 
 

@@ -93,7 +93,7 @@ def fxt_getitune_trainer(
 ) -> Callable[[], GetiTuneTrainer]:
     """Create an GetiTuneTrainer instance."""
 
-    def create_otx_trainer() -> GetiTuneTrainer:
+    def create_getitune_trainer() -> GetiTuneTrainer:
         getitune_trainer = GetiTuneTrainer(
             TrainingDependencies(
                 data_dir=tmp_path,
@@ -113,10 +113,10 @@ def fxt_getitune_trainer(
         getitune_trainer._ctx = execution_ctx
         return getitune_trainer
 
-    return create_otx_trainer
+    return create_getitune_trainer
 
 
-class TestOTXTrainerPrepareWeights:
+class TestGetiTuneTrainerPrepareWeights:
     """Tests for the GetiTuneTrainer.prepare_weights method."""
 
     def test_prepare_weights_without_parent_model(
@@ -269,7 +269,7 @@ class TestOTXTrainerPrepareWeights:
         assert excinfo.value.args[0] == f"Parent model weights not found at {expected_weights_path}"
 
 
-class TestOTXTrainerPrepareTrainingConfiguration:
+class TestGetiTuneTrainerPrepareTrainingConfiguration:
     """Tests for the GetiTuneTrainer.prepare_training_configuration method."""
 
     def test_prepare_training_configuration(self, fxt_getitune_trainer: Callable[[], GetiTuneTrainer]) -> None:
@@ -290,8 +290,8 @@ class TestOTXTrainerPrepareTrainingConfiguration:
             algo_level_parameters=MagicMock(spec=AlgoLevelParameters),
         )
         getitune_trainer._training_configuration_service.get_by_model_architecture.return_value = mock_training_config  # type: ignore[attr-defined]
-        mock_otx_training_config = {"key2": "value2"}
-        with patch.object(GetiConfigConverter, "convert", return_value=mock_otx_training_config) as mock_convert:
+        mock_getitune_training_config = {"key2": "value2"}
+        with patch.object(GetiConfigConverter, "convert", return_value=mock_getitune_training_config) as mock_convert:
             # Act
             training_config, getitune_training_config = getitune_trainer.prepare_training_configuration(
                 training_params=training_params, task=Task(task_type=TaskType.DETECTION)
@@ -302,16 +302,16 @@ class TestOTXTrainerPrepareTrainingConfiguration:
             project_id=training_params.project_id,
             model_architecture_id=training_params.model_architecture_id,
         )
-        expected_otx_training_config = mock_training_config.model_dump(mode="json")
-        expected_otx_training_config["hyper_parameters"] = expected_otx_training_config.pop("algo_level_parameters")
-        expected_otx_training_config["model_manifest_id"] = training_params.model_architecture_id
-        expected_otx_training_config["sub_task_type"] = TaskType.DETECTION
-        mock_convert.assert_called_once_with(expected_otx_training_config)
+        expected_getitune_training_config = mock_training_config.model_dump(mode="json")
+        expected_getitune_training_config["hyper_parameters"] = expected_getitune_training_config.pop("algo_level_parameters")
+        expected_getitune_training_config["model_manifest_id"] = training_params.model_architecture_id
+        expected_getitune_training_config["sub_task_type"] = TaskType.DETECTION
+        mock_convert.assert_called_once_with(expected_getitune_training_config)
         assert training_config == mock_training_config
-        assert getitune_training_config == mock_otx_training_config
+        assert getitune_training_config == mock_getitune_training_config
 
 
-class TestOTXTrainerAssignSubsets:
+class TestGetiTuneTrainerAssignSubsets:
     """Tests for the GetiTuneTrainer.assign_subsets method."""
 
     def test_assign_subsets_with_unassigned_items(
@@ -422,7 +422,7 @@ class TestOTXTrainerAssignSubsets:
         assert actual_flag is has_all_subsets_assigned
 
 
-class TestOTXTrainerCreateTrainingDataset:
+class TestGetiTuneTrainerCreateTrainingDataset:
     """Tests for the GetiTuneTrainer.prepare_training_dataset method."""
 
     @pytest.mark.parametrize(
@@ -480,7 +480,7 @@ class TestOTXTrainerCreateTrainingDataset:
         else:
             fxt_dataset_revision_service.get_latest_uptodate_dataset_revision.return_value = None
 
-        # Create a Geti Tune training configuration dict matching the expected structure
+        # Create a getitune training configuration dict matching the expected structure
         getitune_training_config = {
             "data": {
                 "input_size": (640, 640),
@@ -525,14 +525,14 @@ class TestOTXTrainerCreateTrainingDataset:
             mock_dataset_class = Mock()
             mock_dataset_class.__name__ = "DetectionDataset"
 
-            mock_otx_training_dataset = Mock()
-            mock_otx_validation_dataset = Mock()
-            mock_otx_testing_dataset = Mock()
+            mock_getitune_training_dataset = Mock()
+            mock_getitune_validation_dataset = Mock()
+            mock_getitune_testing_dataset = Mock()
 
             mock_dataset_class.side_effect = [
-                mock_otx_training_dataset,
-                mock_otx_validation_dataset,
-                mock_otx_testing_dataset,
+                mock_getitune_training_dataset,
+                mock_getitune_validation_dataset,
+                mock_getitune_testing_dataset,
             ]
 
             with patch(
@@ -607,28 +607,28 @@ class TestOTXTrainerCreateTrainingDataset:
         assert test_call.kwargs["transforms"] == mock_test_transforms
 
         # Verify the returned DatasetInfo
-        assert dataset_info.getitune_training_dataset == mock_otx_training_dataset
-        assert dataset_info.otx_validation_dataset == mock_otx_validation_dataset
-        assert dataset_info.otx_testing_dataset == mock_otx_testing_dataset
+        assert dataset_info.getitune_training_dataset == mock_getitune_training_dataset
+        assert dataset_info.getitune_validation_dataset == mock_getitune_validation_dataset
+        assert dataset_info.getitune_testing_dataset == mock_getitune_testing_dataset
 
         # Verify SubsetConfig objects were created correctly
-        assert dataset_info.otx_training_subset_config.batch_size == 8
-        assert dataset_info.otx_training_subset_config.num_workers == 4
+        assert dataset_info.getitune_training_subset_config.batch_size == 8
+        assert dataset_info.getitune_training_subset_config.num_workers == 4
         # pyrefly: ignore[missing-attribute]
-        assert dataset_info.otx_training_subset_config.transforms == mock_train_transforms
+        assert dataset_info.getitune_training_subset_config.transforms == mock_train_transforms
 
-        assert dataset_info.otx_validation_subset_config.batch_size == 4
-        assert dataset_info.otx_validation_subset_config.num_workers == 2
+        assert dataset_info.getitune_validation_subset_config.batch_size == 4
+        assert dataset_info.getitune_validation_subset_config.num_workers == 2
         # pyrefly: ignore[missing-attribute]
-        assert dataset_info.otx_validation_subset_config.transforms == mock_val_transforms
+        assert dataset_info.getitune_validation_subset_config.transforms == mock_val_transforms
 
-        assert dataset_info.otx_testing_subset_config.batch_size == 2
-        assert dataset_info.otx_testing_subset_config.num_workers == 1
+        assert dataset_info.getitune_testing_subset_config.batch_size == 2
+        assert dataset_info.getitune_testing_subset_config.num_workers == 1
         # pyrefly: ignore[missing-attribute]
-        assert dataset_info.otx_testing_subset_config.transforms == mock_test_transforms
+        assert dataset_info.getitune_testing_subset_config.transforms == mock_test_transforms
 
 
-class TestOTXTrainerPrepareModel:
+class TestGetiTuneTrainerPrepareModel:
     """Tests for the GetiTuneTrainer.prepare_model method."""
 
     def test_prepare_model(
@@ -672,11 +672,11 @@ class TestOTXTrainerPrepareModel:
         )
 
 
-class TestOTXTrainerTrainModel:
+class TestGetiTuneTrainerTrainModel:
     """Tests for the GetiTuneTrainer.train_model method."""
 
     @pytest.mark.parametrize(
-        "geti_device,otx_device",
+        "geti_device,getitune_device",
         [
             (DeviceInfo(type=DeviceType.CPU, name="Intel Core", index=None, memory=None), "cpu"),
             (DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", index=0, memory=123), "xpu"),
@@ -690,7 +690,7 @@ class TestOTXTrainerTrainModel:
         fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
         tmp_path: Path,
         geti_device: DeviceInfo,
-        otx_device: str,
+        getitune_device: str,
         add_precision: bool,
     ):
         """Test successful model training."""
@@ -708,11 +708,11 @@ class TestOTXTrainerTrainModel:
         mock_testing_subset_config = Mock()
 
         mock_dataset_info.getitune_training_dataset = mock_training_dataset
-        mock_dataset_info.otx_validation_dataset = mock_validation_dataset
-        mock_dataset_info.otx_testing_dataset = mock_testing_dataset
-        mock_dataset_info.otx_training_subset_config = mock_training_subset_config
-        mock_dataset_info.otx_validation_subset_config = mock_validation_subset_config
-        mock_dataset_info.otx_testing_subset_config = mock_testing_subset_config
+        mock_dataset_info.getitune_validation_dataset = mock_validation_dataset
+        mock_dataset_info.getitune_testing_dataset = mock_testing_dataset
+        mock_dataset_info.getitune_training_subset_config = mock_training_subset_config
+        mock_dataset_info.getitune_validation_subset_config = mock_validation_subset_config
+        mock_dataset_info.getitune_testing_subset_config = mock_testing_subset_config
 
         # Mock weights path
         weights_path = tmp_path / "weights.pth"
@@ -749,15 +749,15 @@ class TestOTXTrainerTrainModel:
         mock_datamodule.tile_config = None
 
         # Mock LightningModel
-        mock_otx_model = Mock()
+        mock_getitune_model = Mock()
 
         # Mock LightningEngine
-        mock_otx_engine = Mock()
-        mock_otx_engine.work_dir = str(tmp_path / f"getitune-workspace-{model_id}")
-        Path(mock_otx_engine.work_dir).mkdir(parents=True)
+        mock_getitune_engine = Mock()
+        mock_getitune_engine.work_dir = str(tmp_path / f"getitune-workspace-{model_id}")
+        Path(mock_getitune_engine.work_dir).mkdir(parents=True)
 
         # Create expected checkpoint file
-        expected_checkpoint_path = Path(mock_otx_engine.work_dir) / "best_checkpoint.ckpt"
+        expected_checkpoint_path = Path(mock_getitune_engine.work_dir) / "best_checkpoint.ckpt"
         expected_checkpoint_path.touch()
 
         with patch("app.execution.training.getitune_trainer.DataModule.from_vision_datasets") as mock_datamodule_factory:
@@ -769,11 +769,11 @@ class TestOTXTrainerTrainModel:
 
                 # Mock model instantiation
                 mock_model_namespace = Mock()
-                mock_model_namespace.get.return_value = mock_otx_model
+                mock_model_namespace.get.return_value = mock_getitune_model
                 mock_parser.instantiate_classes.return_value = mock_model_namespace
 
                 with patch("app.execution.training.getitune_trainer.LightningEngine") as mock_engine_class:
-                    mock_engine_class.return_value = mock_otx_engine
+                    mock_engine_class.return_value = mock_getitune_engine
 
                     # Act
                     trained_model_path, returned_engine = getitune_trainer.train_model(
@@ -799,15 +799,15 @@ class TestOTXTrainerTrainModel:
         # Verify LightningEngine was initialized
         mock_engine_class.assert_called_once()
         engine_call_kwargs = mock_engine_class.call_args.kwargs
-        assert engine_call_kwargs["model"] == mock_otx_model
+        assert engine_call_kwargs["model"] == mock_getitune_model
         assert engine_call_kwargs["data"] == mock_datamodule
         assert engine_call_kwargs["work_dir"] == getitune_trainer._data_dir / f"getitune-workspace-{model_id}"
-        assert engine_call_kwargs["device"] == otx_device
+        assert engine_call_kwargs["device"] == getitune_device
         assert engine_call_kwargs["checkpoint"] == weights_path
 
         # Verify training was started
-        mock_otx_engine.train.assert_called_once()
-        train_call_kwargs = mock_otx_engine.train.call_args.kwargs
+        mock_getitune_engine.train.assert_called_once()
+        train_call_kwargs = mock_getitune_engine.train.call_args.kwargs
         assert train_call_kwargs["max_epochs"] == 10
         if add_precision:
             assert train_call_kwargs["precision"] == "32"
@@ -821,10 +821,10 @@ class TestOTXTrainerTrainModel:
 
         # Verify return values
         assert trained_model_path == expected_checkpoint_path
-        assert returned_engine == mock_otx_engine
+        assert returned_engine == mock_getitune_engine
 
 
-class TestOTXTrainerExecuteCancellation:
+class TestGetiTuneTrainerExecuteCancellation:
     """Tests for the GetiTuneTrainer.execute method handling CancelledExc."""
 
     def test_execute_cancellation_during_training_deletes_model_revision(
@@ -853,7 +853,7 @@ class TestOTXTrainerExecuteCancellation:
         )
 
         mock_training_config = Mock(spec=TrainingConfiguration)
-        mock_otx_training_config = {"key": "value"}
+        mock_getitune_training_config = {"key": "value"}
         mock_dataset_info = Mock(spec=DatasetInfo)
         mock_dataset_info.revision_id = dataset_revision_id
         mock_weights_path = Path("/fake/weights.pth")
@@ -864,7 +864,7 @@ class TestOTXTrainerExecuteCancellation:
             patch.object(
                 getitune_trainer,
                 "prepare_training_configuration",
-                return_value=(mock_training_config, mock_otx_training_config),
+                return_value=(mock_training_config, mock_getitune_training_config),
             ),
             patch.object(getitune_trainer, "assign_subsets"),
             patch.object(getitune_trainer, "prepare_training_dataset", return_value=mock_dataset_info),
@@ -901,11 +901,11 @@ class TestOTXTrainerExecuteCancellation:
         )
 
         mock_training_config = Mock(spec=TrainingConfiguration)
-        mock_otx_training_config = {"key": "value"}
+        mock_getitune_training_config = {"key": "value"}
         mock_dataset_info = Mock(spec=DatasetInfo)
         mock_dataset_info.revision_id = dataset_revision_id
         mock_weights_path = Path("/fake/weights.pth")
-        mock_otx_engine = Mock()
+        mock_getitune_engine = Mock()
         mock_trained_model_path = Path("/fake/best_checkpoint.ckpt")
 
         with (
@@ -913,12 +913,12 @@ class TestOTXTrainerExecuteCancellation:
             patch.object(
                 getitune_trainer,
                 "prepare_training_configuration",
-                return_value=(mock_training_config, mock_otx_training_config),
+                return_value=(mock_training_config, mock_getitune_training_config),
             ),
             patch.object(getitune_trainer, "assign_subsets"),
             patch.object(getitune_trainer, "prepare_training_dataset", return_value=mock_dataset_info),
             patch.object(getitune_trainer, "prepare_model"),
-            patch.object(getitune_trainer, "train_model", return_value=(mock_trained_model_path, mock_otx_engine)),
+            patch.object(getitune_trainer, "train_model", return_value=(mock_trained_model_path, mock_getitune_engine)),
             patch.object(getitune_trainer, "export_model", side_effect=CancelledExc("Job cancelled")),
             pytest.raises(CancelledExc),
         ):
@@ -949,7 +949,7 @@ class TestOTXTrainerExecuteCancellation:
         )
 
         mock_training_config = Mock(spec=TrainingConfiguration)
-        mock_otx_training_config = {"key": "value"}
+        mock_getitune_training_config = {"key": "value"}
         mock_dataset_info = Mock(spec=DatasetInfo)
         mock_dataset_info.revision_id = dataset_revision_id
         mock_weights_path = Path("/fake/weights.pth")
@@ -959,13 +959,13 @@ class TestOTXTrainerExecuteCancellation:
             patch.object(
                 getitune_trainer,
                 "prepare_training_configuration",
-                return_value=(mock_training_config, mock_otx_training_config),
+                return_value=(mock_training_config, mock_getitune_training_config),
             ),
             patch.object(getitune_trainer, "assign_subsets"),
             patch.object(getitune_trainer, "prepare_training_dataset", return_value=mock_dataset_info),
             patch.object(getitune_trainer, "prepare_model"),
-            patch.object(getitune_trainer, "train_model", side_effect=RuntimeError("Geti Tune crashed")),
-            pytest.raises(RuntimeError, match="Geti Tune crashed"),
+            patch.object(getitune_trainer, "train_model", side_effect=RuntimeError("getitune crashed")),
+            pytest.raises(RuntimeError, match="getitune crashed"),
         ):
             getitune_trainer.execute(params)
 
@@ -976,7 +976,7 @@ class TestOTXTrainerExecuteCancellation:
         assert last_status_call.kwargs.get("training_status") == TrainingStatus.FAILED
 
 
-class TestOTXTrainerEvaluateModel:
+class TestGetiTuneTrainerEvaluateModel:
     """Tests for the GetiTuneTrainer.evaluate_model method."""
 
     @pytest.mark.parametrize(
@@ -1004,8 +1004,8 @@ class TestOTXTrainerEvaluateModel:
         model_id = uuid4()
         model_variant_id = uuid4()
         dataset_revision_id = uuid4()
-        mock_otx_engine = Mock()
-        mock_otx_engine.test.return_value = {
+        mock_getitune_engine = Mock()
+        mock_getitune_engine.test.return_value = {
             "test/accuracy": torch.tensor(0.85),
             "test/precision": torch.tensor(0.82),
             "test/recall": torch.tensor(0.88),
@@ -1024,7 +1024,7 @@ class TestOTXTrainerEvaluateModel:
 
         # Act
         getitune_trainer.evaluate_model(
-            getitune_engine=mock_otx_engine,
+            getitune_engine=mock_getitune_engine,
             model_checkpoint_path=model_checkpoint_path,
             task=training_params.task,
             model_revision_id=model_id,
@@ -1033,7 +1033,7 @@ class TestOTXTrainerEvaluateModel:
         )
 
         # Assert
-        mock_otx_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path, metric=metric_callable)
+        mock_getitune_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path, metric=metric_callable)
         fxt_model_service.set_db_session.assert_called_once()
         actual_call = fxt_model_service.save_evaluation_result.call_args[0][0]
 
@@ -1050,7 +1050,7 @@ class TestOTXTrainerEvaluateModel:
         )
 
 
-class TestOTXTrainerExportModel:
+class TestGetiTuneTrainerExportModel:
     """Tests for the GetiTuneTrainer.export_model method."""
 
     def test_export_model(
@@ -1061,22 +1061,22 @@ class TestOTXTrainerExportModel:
         """Test successful model export to OpenVINO and ONNX format."""
         # Arrange
         getitune_trainer = fxt_getitune_trainer()
-        mock_otx_engine = Mock()
+        mock_getitune_engine = Mock()
         model_checkpoint_path = tmp_path / "best_checkpoint.ckpt"
         model_checkpoint_path.touch()
         expected_ov_export_path = tmp_path / "exported_openvino_model"
         expected_onnx_export_path = tmp_path / "exported_onnx_model"
-        mock_otx_engine.export.side_effect = [expected_ov_export_path, expected_onnx_export_path]
+        mock_getitune_engine.export.side_effect = [expected_ov_export_path, expected_onnx_export_path]
 
         # Act
         exported_paths = getitune_trainer.export_model(
-            getitune_engine=mock_otx_engine,
+            getitune_engine=mock_getitune_engine,
             model_checkpoint_path=model_checkpoint_path,
         )
 
         # Assert
-        assert mock_otx_engine.export.call_count == 2
-        mock_otx_engine.export.assert_has_calls(
+        assert mock_getitune_engine.export.call_count == 2
+        mock_getitune_engine.export.assert_has_calls(
             calls=[
                 call(
                     checkpoint=model_checkpoint_path,
@@ -1094,7 +1094,7 @@ class TestOTXTrainerExportModel:
         assert exported_paths.onnx_model_path == expected_onnx_export_path
 
 
-class TestOTXTrainerStoreModelArtifacts:
+class TestGetiTuneTrainerStoreModelArtifacts:
     """Tests for the GetiTuneTrainer.store_model_artifacts method."""
 
     def test_store_model_artifacts(
@@ -1124,7 +1124,7 @@ class TestOTXTrainerStoreModelArtifacts:
         model_dir = tmp_path / "projects" / str(project_id) / "models" / str(model_id)
         model_dir.mkdir(parents=True)
 
-        # Create Geti Tune work directory with artifacts
+        # Create getitune work directory with artifacts
         getitune_work_dir = tmp_path / f"getitune-workspace-{model_id}"
         getitune_work_dir.mkdir(parents=True)
 
@@ -1191,12 +1191,12 @@ class TestOTXTrainerStoreModelArtifacts:
         assert (model_dir / "metrics" / "metrics.csv").exists()
         assert (model_dir / "metrics" / "metrics.csv").read_text() == "epoch,loss\n1,0.5\n"
 
-        # Check Geti Tune work directory was cleaned up
+        # Check getitune work directory was cleaned up
         assert not getitune_work_dir.exists()
 
 
 # ---------------------------------------------------------------------------
-# Helpers shared across TestOTXTrainerFilterDataset
+# Helpers shared across TestGetiTuneTrainerFilterDataset
 # ---------------------------------------------------------------------------
 
 _IMG_INFO = ImageInfo(width=100, height=100)
@@ -1315,7 +1315,7 @@ def _make_training_config(
     )
 
 
-class TestOTXTrainerFilterDataset:
+class TestGetiTuneTrainerFilterDataset:
     """Unit tests for GetiTuneTrainer._filter_dataset."""
 
     # ------------------------------------------------------------------

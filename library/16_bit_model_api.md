@@ -12,7 +12,7 @@ ModelAPI has **no concept of input dtype or intensity scaling** — it hardcodes
 3. `pad_value` parameter range capped at `[0, 255]`
 
 
-Meanwhile Geti Tune already has a rich `IntensityConfig` system (`ScaleToUnit`, `WindowLevel`, `PercentileClip`, `RangeScale`). The Geti application backend carries duplicate workarounds (`FP32OpenvinoAdapter`, `needs_float32_input`, manual `/255.0` scaling) to bridge the gap.
+Meanwhile getitune already has a rich `IntensityConfig` system (`ScaleToUnit`, `WindowLevel`, `PercentileClip`, `RangeScale`). The Geti application backend carries duplicate workarounds (`FP32OpenvinoAdapter`, `needs_float32_input`, manual `/255.0` scaling) to bridge the gap.
 
   https://github.com/open-edge-platform/training_extensions/blob/fb292b062f0247c7811f71258cd2af12d8a8affa/library/src/getitune/data/augmentation/intensity.py
 
@@ -136,9 +136,9 @@ inputs = self.intensity_fn(inputs)
 
 Add `intensity_mode` and related params. Insert Python-side intensity transform before `InputTransform`.
 
-## Part B: Geti Tune Library Changes
+## Part B: getitune Library Changes
 
-### B1. Embed intensity metadata in Geti Tune exporter rt_info
+### B1. Embed intensity metadata in getitune exporter rt_info
 
 **File:** `library/src/getitune/backend/lightning/exporter/base.py` — `_extend_model_metadata`
 
@@ -230,7 +230,7 @@ When creating a default training config, inspect the project's media `pixel_dtyp
 
 
 
-### C5. Wire intensity config into Geti Tune training launch
+### C5. Wire intensity config into getitune training launch
 
 
 
@@ -238,7 +238,7 @@ When creating a default training config, inspect the project's media `pixel_dtyp
 
 
 
-Map Geti `IntensityConfiguration` → Geti Tune `IntensityConfig` when building the Geti Tune config dict.
+Map Geti `IntensityConfiguration` → getitune `IntensityConfig` when building the getitune config dict.
 
 
 
@@ -281,7 +281,7 @@ Three (`scale_to_unit`, `window`, `range_scale`) are static and embeddable in th
 
 
 
-[Training] Geti → Geti Tune IntensityConfig(mode="range_scale", ...)
+[Training] Geti → getitune IntensityConfig(mode="range_scale", ...)
 
 → RangeScale applied during training
 

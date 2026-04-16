@@ -21,7 +21,7 @@ from torch.nn import init
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/heads/deim_decoder.py
 from getitune.backend.lightning.models.common.layers.transformer_layers import (
 ========
-from getitune.backend.native.models.common.layers.transformer_layers import (
+from getitune.backend.lightning.models.common.layers.transformer_layers import (
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/deim_decoder.py
     LQE,
     MLP,
@@ -37,10 +37,10 @@ from getitune.backend.lightning.models.detection.utils.utils import dfine_distan
 from getitune.backend.lightning.models.modules.norm import RMSNorm
 from getitune.backend.lightning.models.utils.weight_init import bias_init_with_prob
 ========
-from getitune.backend.native.models.common.utils.utils import inverse_sigmoid
-from getitune.backend.native.models.detection.utils.utils import dfine_distance2bbox, dfine_weighting_function
-from getitune.backend.native.models.modules.norm import RMSNorm
-from getitune.backend.native.models.utils.weight_init import bias_init_with_prob
+from getitune.backend.lightning.models.common.utils.utils import inverse_sigmoid
+from getitune.backend.lightning.models.detection.utils.utils import dfine_distance2bbox, dfine_weighting_function
+from getitune.backend.lightning.models.modules.norm import RMSNorm
+from getitune.backend.lightning.models.utils.weight_init import bias_init_with_prob
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/deim_decoder.py
 
 if TYPE_CHECKING:

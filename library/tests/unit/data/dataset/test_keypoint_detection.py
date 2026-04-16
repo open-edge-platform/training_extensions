@@ -19,7 +19,7 @@ from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import KeypointSample
 
 
-class TestOTXKeypointDetectionDataset:
+class TestKeypointDetectionDataset:
     @pytest.fixture
     def fxt_dm_dataset(self) -> Dataset:
         """Build a small keypoint detection dataset with the new DM API."""

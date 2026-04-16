@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for detection model entity used in Geti Tune."""
+"""Class definition for detection model entity used in getitune."""
 
 # type: ignore[override]
 
@@ -31,20 +31,20 @@ from getitune.data.entity.base import ImageInfo, BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.data.entity.tile import TileBatchData
 ========
-from getitune.backend.native.exporter.base import OTXModelExporter
-from getitune.backend.native.exporter.native import OTXNativeModelExporter
-from getitune.backend.native.models.base import (
+from getitune.backend.lightning.exporter.base import ModelExporter
+from getitune.backend.lightning.exporter.native import LightningModelExporter
+from getitune.backend.lightning.models.base import (
     DataInputParams,
     DefaultOptimizerCallable,
     DefaultSchedulerCallable,
-    OTXModel,
+    LightningModel,
 )
-from getitune.backend.native.schedulers import LRSchedulerListCallable
-from getitune.backend.native.tools.tile_merge import SegmentationTileMerge
+from getitune.backend.lightning.schedulers import LRSchedulerListCallable
+from getitune.backend.lightning.tools.tile_merge import SegmentationTileMerge
 from getitune.config.data import TileConfig
-from getitune.data.entity.base import ImageInfo, OTXBatchLossEntity
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from getitune.data.entity.tile import OTXTileBatchDataEntity
+from getitune.data.entity.base import ImageInfo, BatchLoss
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
+from getitune.data.entity.tile import TileBatchData
 >>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/base.py
 from getitune.metrics import MetricInput
 from getitune.metrics.dice import SegmCallable
@@ -53,7 +53,7 @@ from getitune.types.label import LabelInfo, LabelInfoTypes, SegLabelInfo
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/segmentation/base.py
 from getitune.types.task import TaskType
 ========
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 >>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/base.py
 
 if TYPE_CHECKING:
@@ -65,7 +65,7 @@ if TYPE_CHECKING:
 
 
 class LightningSegmentationModel(LightningModel):
-    """Semantic Segmentation model used in Geti Tune.
+    """Semantic Segmentation model used in getitune.
 
     Args:
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.

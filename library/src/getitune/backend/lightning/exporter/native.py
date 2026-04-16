@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for native model exporter used in Geti Tune."""
+"""Class definition for native model exporter used in getitune."""
 
 from __future__ import annotations
 
@@ -22,12 +22,12 @@ from getitune.types.precision import Precision
 if TYPE_CHECKING:
     from getitune.backend.lightning.models.base import DataInputParams, LightningModel
 ========
-from getitune.backend.native.exporter.base import OTXModelExporter
+from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.types.export import TaskLevelExportParameters
-from getitune.types.precision import OTXPrecisionType
+from getitune.types.precision import Precision
 
 if TYPE_CHECKING:
-    from getitune.backend.native.models.base import DataInputParams, OTXModel
+    from getitune.backend.lightning.models.base import DataInputParams, LightningModel
 >>>>>>>> develop:library/src/getitune/backend/native/exporter/native.py
 
 

@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune Device type definition."""
+"""getitune Device type definition."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from enum import Enum
 
 
 class DeviceType(str, Enum):
-    """Geti Tune Device type definition."""
+    """getitune Device type definition."""
 
     # ("cpu", "gpu", "tpu", "ipu", "hpu", "mps", "xpu", "auto")
 

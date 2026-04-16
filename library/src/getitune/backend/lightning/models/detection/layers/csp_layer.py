@@ -20,11 +20,11 @@ from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
 ========
-from getitune.backend.native.models.detection.layers import ChannelAttention
-from getitune.backend.native.models.modules.activation import Swish, build_activation_layer
-from getitune.backend.native.models.modules.base_module import BaseModule
-from getitune.backend.native.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
-from getitune.backend.native.models.modules.norm import build_norm_layer
+from getitune.backend.lightning.models.detection.layers import ChannelAttention
+from getitune.backend.lightning.models.modules.activation import Swish, build_activation_layer
+from getitune.backend.lightning.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
+from getitune.backend.lightning.models.modules.norm import build_norm_layer
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/layers/csp_layer.py
 
 

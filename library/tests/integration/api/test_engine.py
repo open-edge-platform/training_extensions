@@ -1,12 +1,12 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Integration test for the core Geti Tune engine workflow.
+"""Integration test for the core getitune engine workflow.
 
 This single test module replaces the old ``test_engine_api.py`` and
 ``test_geti_interaction.py``.  It is parametrised to cover one
 (small / fast) model architecture per task and exercises the typical
-end-to-end Geti Tune workflow:
+end-to-end getitune workflow:
 
 1. Instantiate ``LightningEngine`` from a recipe config + data root.
 2. Train for 1 epoch.

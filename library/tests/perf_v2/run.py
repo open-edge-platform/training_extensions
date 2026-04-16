@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Geti Tune Benchmark Entry Point."""
+"""getitune Benchmark Entry Point."""
 
 from __future__ import annotations
 

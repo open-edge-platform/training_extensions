@@ -31,7 +31,7 @@ class MockNNModule(torch.nn.Module):
         self.head.bias.data = torch.arange(num_classes, dtype=torch.float32)
 
 
-class TestOTXModel:
+class TestLightningModel:
     def test_init(self, monkeypatch):
         monkeypatch.setattr(LightningModel, "input_size_multiplier", 10, raising=False)
         with pytest.raises(ValueError, match="Input size should be a multiple"):

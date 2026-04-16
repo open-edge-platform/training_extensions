@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for detection model entity used in Geti Tune."""
+"""Class definition for detection model entity used in getitune."""
 
 # type: ignore[override]
 
@@ -32,20 +32,20 @@ from getitune.data.entity.base import ImageInfo, BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.data.entity.tile import TileBatchData
 ========
-from getitune.backend.native.models.base import (
+from getitune.backend.lightning.models.base import (
     DataInputParams,
     DefaultOptimizerCallable,
     DefaultSchedulerCallable,
-    OTXModel,
+    LightningModel,
 )
-from getitune.backend.native.models.utils.utils import InstanceData
-from getitune.backend.native.schedulers import LRSchedulerListCallable
-from getitune.backend.native.tools.explain.explain_algo import feature_vector_fn
-from getitune.backend.native.tools.tile_merge import DetectionTileMerge
+from getitune.backend.lightning.models.utils.utils import InstanceData
+from getitune.backend.lightning.schedulers import LRSchedulerListCallable
+from getitune.backend.lightning.tools.explain.explain_algo import feature_vector_fn
+from getitune.backend.lightning.tools.tile_merge import DetectionTileMerge
 from getitune.config.data import TileConfig
-from getitune.data.entity.base import ImageInfo, OTXBatchLossEntity
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from getitune.data.entity.tile import OTXTileBatchDataEntity
+from getitune.data.entity.base import ImageInfo, BatchLoss
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
+from getitune.data.entity.tile import TileBatchData
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/base.py
 from getitune.metrics import MetricCallable, MetricInput
 from getitune.metrics.fmeasure import FMeasure, MeanAveragePrecisionFMeasureCallable
@@ -54,7 +54,7 @@ from getitune.types.label import LabelInfoTypes
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/base.py
 from getitune.types.task import TaskType
 ========
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/base.py
 
 if TYPE_CHECKING:
@@ -64,12 +64,12 @@ if TYPE_CHECKING:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/base.py
     from getitune.backend.lightning.models.detection.detectors import SingleStageDetector
 ========
-    from getitune.backend.native.models.detection.detectors import SingleStageDetector
+    from getitune.backend.lightning.models.detection.detectors import SingleStageDetector
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/base.py
 
 
 class LightningDetectionModel(LightningModel):
-    """Base class for the detection models used in Geti Tune.
+    """Base class for the detection models used in getitune.
 
     This class is a subclass of LightningModel and provides common functionality for detection models.
     It is not intended to be used directly.
@@ -445,7 +445,7 @@ class LightningDetectionModel(LightningModel):
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/base.py
         from getitune.backend.lightning.tools.explain.explain_algo import feature_vector_fn
 ========
-        from getitune.backend.native.tools.explain.explain_algo import feature_vector_fn
+        from getitune.backend.lightning.tools.explain.explain_algo import feature_vector_fn
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/base.py
 
         if isinstance(inputs, TileBatchData):
@@ -501,8 +501,8 @@ class LightningDetectionModel(LightningModel):
         from getitune.backend.lightning.models.detection.heads.ssd_head import SSDHeadModule
         from getitune.backend.lightning.tools.explain.explain_algo import DetClassProbabilityMap
 ========
-        from getitune.backend.native.models.detection.heads.ssd_head import SSDHeadModule
-        from getitune.backend.native.tools.explain.explain_algo import DetClassProbabilityMap
+        from getitune.backend.lightning.models.detection.heads.ssd_head import SSDHeadModule
+        from getitune.backend.lightning.tools.explain.explain_algo import DetClassProbabilityMap
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/base.py
 
         # SSD-like heads also have background class

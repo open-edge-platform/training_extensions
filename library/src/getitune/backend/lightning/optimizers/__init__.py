@@ -6,7 +6,7 @@
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/optimizers/__init__.py
 from getitune.backend.lightning.optimizers.callable import OptimizerCallableSupportAdaptiveBS
 ========
-from getitune.backend.native.optimizers.callable import OptimizerCallableSupportAdaptiveBS
+from getitune.backend.lightning.optimizers.callable import OptimizerCallableSupportAdaptiveBS
 >>>>>>>> develop:library/src/getitune/backend/native/optimizers/__init__.py
 
 __all__ = ["OptimizerCallableSupportAdaptiveBS"]

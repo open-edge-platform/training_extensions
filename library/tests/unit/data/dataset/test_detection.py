@@ -12,7 +12,7 @@ from datumaro.experimental import Dataset
 from getitune.data.dataset.detection import DetectionDataset
 
 
-class TestOTXDetectionDataset:
+class TestDetectionDataset:
     """Test DetectionDataset class."""
 
     def setup_method(self):

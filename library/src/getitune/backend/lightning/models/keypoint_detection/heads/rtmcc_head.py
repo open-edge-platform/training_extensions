@@ -23,14 +23,14 @@ from getitune.backend.lightning.models.modules.base_module import BaseModule
 if TYPE_CHECKING:
     from getitune.data.entity.sample import SampleBatch
 ========
-from getitune.backend.native.models.keypoint_detection.utils.keypoint_eval import simcc_pck_accuracy
-from getitune.backend.native.models.keypoint_detection.utils.rtmcc_block import RTMCCBlock
-from getitune.backend.native.models.keypoint_detection.utils.scale_norm import ScaleNorm
-from getitune.backend.native.models.keypoint_detection.utils.simcc_label import SimCCLabel
-from getitune.backend.native.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.keypoint_detection.utils.keypoint_eval import simcc_pck_accuracy
+from getitune.backend.lightning.models.keypoint_detection.utils.rtmcc_block import RTMCCBlock
+from getitune.backend.lightning.models.keypoint_detection.utils.scale_norm import ScaleNorm
+from getitune.backend.lightning.models.keypoint_detection.utils.simcc_label import SimCCLabel
+from getitune.backend.lightning.models.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
-    from getitune.data.entity.sample import OTXSampleBatch
+    from getitune.data.entity.sample import SampleBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/keypoint_detection/heads/rtmcc_head.py
 
 
@@ -168,7 +168,7 @@ class RTMCCHead(BaseModule):
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (TorchDataBatch): Entity from Geti Tune dataset.
+            entity (TorchDataBatch): Entity from getitune dataset.
 
         Returns:
             dict: A dictionary of loss components.

@@ -1,7 +1,7 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Mixins for Geti Tune datasets."""
+"""Mixins for getitune datasets."""
 
 from __future__ import annotations
 

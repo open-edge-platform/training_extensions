@@ -18,8 +18,8 @@ from torch import Tensor, nn
 from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.data.entity.sample import SampleBatch
 ========
-from getitune.backend.native.models.utils.utils import InstanceData
-from getitune.data.entity.sample import OTXSampleBatch
+from getitune.backend.lightning.models.utils.utils import InstanceData
+from getitune.data.entity.sample import SampleBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/segmentors/two_stage.py
 
 

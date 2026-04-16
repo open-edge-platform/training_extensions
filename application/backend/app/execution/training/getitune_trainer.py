@@ -20,7 +20,7 @@ from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.data.dataset.base import VisionDataset
 from getitune.data.factory import TransformLibFactory
 from getitune.data.module import DataModule
-from getitune.types.device import DeviceType as OTXDeviceType
+from getitune.types.device import DeviceType as GetiTuneDeviceType
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
 from jsonargparse import ArgumentParser, Namespace
@@ -34,9 +34,9 @@ from app.execution.base import Execution, ExecutionErr, step
 from app.execution.common.geti_config_converter import GetiConfigConverter
 from app.execution.common.getitune_converters import (
     convert_metrics,
-    get_metric_by_task,
     get_getitune_dataset_class_by_task_type,
     get_getitune_task_type_by_task,
+    get_metric_by_task,
 )
 from app.models import (
     DatasetItemAnnotationStatus,
@@ -88,11 +88,11 @@ class TrainingDependencies:
 @dataclass(frozen=True)
 class DatasetInfo:
     getitune_training_dataset: VisionDataset
-    otx_validation_dataset: VisionDataset
-    otx_testing_dataset: VisionDataset
-    otx_training_subset_config: SubsetConfig
-    otx_validation_subset_config: SubsetConfig
-    otx_testing_subset_config: SubsetConfig
+    getitune_validation_dataset: VisionDataset
+    getitune_testing_dataset: VisionDataset
+    getitune_training_subset_config: SubsetConfig
+    getitune_validation_subset_config: SubsetConfig
+    getitune_testing_subset_config: SubsetConfig
     revision_id: UUID
 
 
@@ -103,7 +103,7 @@ class ExportedModels:
 
 
 class GetiTuneTrainer(Execution[TrainingJobParams]):
-    """Geti Tune-specific trainer implementation."""
+    """getitune-specific trainer implementation."""
 
     params_type = TrainingJobParams
 
@@ -203,8 +203,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             )
 
             # Serialize and persist the configuration in the same YAML format adopted by Geti
-            # NOTE: this is a temporary solution to minimize changes in Geti Tune; in the future, after refactoring Geti Tune,
-            # we should update this code to build the configuration directly in the format consumed by Geti Tune
+            # NOTE: this is a temporary solution to minimize changes in getitune;
+            # in the future, after refactoring getitune,
+            # we should update this code to build the configuration directly in the format consumed by getitune
             geti_training_config = training_config.model_dump(exclude_none=True)
             geti_training_config["hyper_parameters"] = geti_training_config.pop("algo_level_parameters")
             geti_training_config["model_manifest_id"] = training_params.model_architecture_id
@@ -215,7 +216,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
                 yaml.dump(geti_training_config, f, default_flow_style=False)
                 logger.info("Persisted training configuration at {}", geti_config_path)
 
-            # Convert the configuration to the format adopted by Geti Tune
+            # Convert the configuration to the format adopted by getitune
             converter = GetiConfigConverter()
             getitune_training_config = converter.convert(geti_training_config)
 
@@ -308,22 +309,22 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
                 dm_subset=dm_training_dataset,
                 transforms=train_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
-            otx_validation_dataset = getitune_dataset_class(
+            getitune_validation_dataset = getitune_dataset_class(
                 dm_subset=dm_validation_dataset,
                 transforms=val_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
-            otx_testing_dataset = getitune_dataset_class(
+            getitune_testing_dataset = getitune_dataset_class(
                 dm_subset=dm_testing_dataset,
                 transforms=test_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
 
             return DatasetInfo(
                 getitune_training_dataset=getitune_training_dataset,
-                otx_validation_dataset=otx_validation_dataset,
-                otx_testing_dataset=otx_testing_dataset,
-                otx_training_subset_config=train_subset_config,
-                otx_validation_subset_config=val_subset_config,
-                otx_testing_subset_config=test_subset_config,
+                getitune_validation_dataset=getitune_validation_dataset,
+                getitune_testing_dataset=getitune_testing_dataset,
+                getitune_training_subset_config=train_subset_config,
+                getitune_validation_subset_config=val_subset_config,
+                getitune_testing_subset_config=test_subset_config,
                 revision_id=dataset_revision_id,
             )
 
@@ -362,7 +363,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         #  after resolving https://github.com/open-edge-platform/training_extensions/issues/5100
         logger.warning(
             "Argument 'weights_path' (value='{}') is not used in model training yet; "
-            "the weights location will be determined internally by Geti Tune",
+            "the weights location will be determined internally by getitune",
             weights_path,
         )
 
@@ -370,11 +371,11 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         logger.info("Preparing the DataModule for training (model_id={})", model_id)
         getitune_datamodule = DataModule.from_vision_datasets(
             train_dataset=dataset_info.getitune_training_dataset,
-            val_dataset=dataset_info.otx_validation_dataset,
-            test_dataset=dataset_info.otx_testing_dataset,
-            train_subset=dataset_info.otx_training_subset_config,
-            val_subset=dataset_info.otx_validation_subset_config,
-            test_subset=dataset_info.otx_testing_subset_config,
+            val_dataset=dataset_info.getitune_validation_dataset,
+            test_dataset=dataset_info.getitune_testing_dataset,
+            train_subset=dataset_info.getitune_training_subset_config,
+            val_subset=dataset_info.getitune_validation_subset_config,
+            test_subset=dataset_info.getitune_testing_subset_config,
         )
 
         # Create the LightningModel according to the training configuration
@@ -394,13 +395,13 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
         # Set up the LightningEngine
         logger.info("Initializing the LightningEngine for training (model_id={})", model_id)
-        otx_device_type = OTXDeviceType.gpu if device.type is DeviceType.CUDA else OTXDeviceType(device.type)
+        getitune_device_type = GetiTuneDeviceType.gpu if device.type is DeviceType.CUDA else GetiTuneDeviceType(device.type)
         getitune_engine = LightningEngine(
             model=getitune_model,
             data=getitune_datamodule,
             checkpoint=weights_path if has_parent_revision else None,
             work_dir=self._data_dir / f"getitune-workspace-{model_id}",
-            device=otx_device_type,
+            device=getitune_device_type,
         )
 
         # Set up the callbacks
@@ -489,7 +490,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
         Args:
             model_dir: The base model directory.
-            getitune_work_dir: The Geti Tune workspace directory to clean up.
+            getitune_work_dir: The getitune workspace directory to clean up.
             trained_model_path: Path to the trained checkpoint inside the workspace.
             exported_model_paths: Paths to exported model files inside the workspace.
             created_variants: Mapping of ModelFormat to variant UUID (from create_model_variants).
@@ -532,15 +533,15 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             shutil.move(metrics_source_path, metrics_dest_path)
             logger.info("Stored training metrics at {}", metrics_dest_path)
 
-        # Cleanup the Geti Tune work directory
+        # Cleanup the getitune work directory
         shutil.rmtree(getitune_work_dir)
-        logger.info("Cleaned up Geti Tune work directory at {}", getitune_work_dir)
+        logger.info("Cleaned up getitune work directory at {}", getitune_work_dir)
 
     def create_model_variants(self, model_revision_id: UUID) -> dict[ModelFormat, UUID]:
         """Create variant records in the database for all exported formats.
 
         This is called before evaluation so that variant IDs are available for
-        associating evaluation results, and before the Geti Tune workspace is cleaned up.
+        associating evaluation results, and before the getitune workspace is cleaned up.
 
         Args:
             model_revision_id: The ID of the model revision for which to create variants for.
@@ -576,7 +577,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         )
 
         weights_path = self.prepare_weights(training_params=params)
-        training_config, getitune_training_config = self.prepare_training_configuration(training_params=params, task=task)
+        training_config, getitune_training_config = self.prepare_training_configuration(
+            training_params=params, task=task
+        )
         self.assign_subsets(training_config=training_config, project_id=project_id)
         dataset_info = self.prepare_training_dataset(
             project_id=project_id,
@@ -603,7 +606,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
                 device=params.device,
                 has_parent_revision=params.parent_model_revision_id is not None,
             )
-            exported_model_paths = self.export_model(getitune_engine=getitune_engine, model_checkpoint_path=trained_model_path)
+            exported_model_paths = self.export_model(
+                getitune_engine=getitune_engine, model_checkpoint_path=trained_model_path
+            )
 
             # Create variant DB records first (no file I/O yet)
             created_variants = self.create_model_variants(model_revision_id=params.model_id)

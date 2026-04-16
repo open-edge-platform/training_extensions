@@ -19,8 +19,8 @@ from torch import Tensor
 from getitune.backend.lightning.models.common.utils.nms import batched_nms, multiclass_nms
 from getitune.backend.lightning.models.common.utils.utils import (
 ========
-from getitune.backend.native.models.common.utils.nms import batched_nms, multiclass_nms
-from getitune.backend.native.models.common.utils.utils import (
+from getitune.backend.lightning.models.common.utils.nms import batched_nms, multiclass_nms
+from getitune.backend.lightning.models.common.utils.utils import (
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/base_head.py
     dynamic_topk,
     filter_scores_and_topk,
@@ -33,10 +33,10 @@ from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.data.entity.sample import SampleBatch
 ========
-from getitune.backend.native.models.detection.utils.utils import unpack_det_entity
-from getitune.backend.native.models.modules.base_module import BaseModule
-from getitune.backend.native.models.utils.utils import InstanceData
-from getitune.data.entity.sample import OTXSampleBatch
+from getitune.backend.lightning.models.detection.utils.utils import unpack_det_entity
+from getitune.backend.lightning.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.utils.utils import InstanceData
+from getitune.data.entity.sample import SampleBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/base_head.py
 
 
@@ -88,7 +88,7 @@ class BaseDenseHead(BaseModule):
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (TorchDataBatch): Entity from Geti Tune dataset.
+            entity (TorchDataBatch): Entity from getitune dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.
@@ -110,7 +110,7 @@ class BaseDenseHead(BaseModule):
         Args:
             x (tuple[Tensor]): Multi-level features from the
                 upstream network, each is a 4D-tensor.
-            entity (TorchDataBatch): Entity from Geti Tune dataset.
+            entity (TorchDataBatch): Entity from getitune dataset.
             rescale (bool, optional): Whether to rescale the results.
                 Defaults to False.
 

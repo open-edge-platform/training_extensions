@@ -18,8 +18,8 @@ from torch.nn import functional
 from getitune.backend.lightning.models.modules.base_module import BaseModule, Sequential
 from getitune.backend.lightning.models.utils.weight_init import trunc_normal_
 ========
-from getitune.backend.native.models.modules.base_module import BaseModule, Sequential
-from getitune.backend.native.models.utils.weight_init import trunc_normal_
+from getitune.backend.lightning.models.modules.base_module import BaseModule, Sequential
+from getitune.backend.lightning.models.utils.weight_init import trunc_normal_
 >>>>>>>> develop:library/src/getitune/backend/native/models/classification/heads/vision_transformer_head.py
 
 

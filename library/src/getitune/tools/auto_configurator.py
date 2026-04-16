@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Auto-Configurator class & util functions for Geti Tune Auto-Configuration."""
+"""Auto-Configurator class & util functions for getitune Auto-Configuration."""
 
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ OVMODEL_PER_TASK = {
 
 
 class AutoConfigurator:
-    """This Class is used to configure the DataModule, LightningModel, Optimizer, and Scheduler with OTX Default.
+    """This Class is used to configure the DataModule, LightningModel, Optimizer, and Scheduler with getitune Default.
 
     Args:
         data_root (PathLike | None, optional): The root directory for data storage. Defaults to None.

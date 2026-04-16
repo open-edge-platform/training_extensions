@@ -16,7 +16,7 @@ from getitune.metrics.dice import SegmCallable
 from getitune.types.label import SegLabelInfo
 
 
-class TestOTXSegmentationModel:
+class TestLightningSegmentationModel:
     @pytest.fixture
     def model(self, label_info, optimizer, scheduler, metric, torch_compile):
         return LightningSegmentationModel(

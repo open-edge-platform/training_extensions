@@ -37,7 +37,7 @@ def test_forward_explain(
     Test forward == forward_explain.
 
     Args:
-        recipe (str): The recipe to use for predicting. (eg. 'classification/otx_mobilenet_v3_large.yaml')
+        recipe (str): The recipe to use for predicting. (eg. 'classification/mobilenet_v3_large.yaml')
         fxt_target_dataset_per_task (dict): A dictionary mapping tasks to target datasets.
         fxt_accelerator (str): The accelerator used for predict.
 
@@ -87,7 +87,7 @@ def test_predict_with_explain(
     Test XAI.
 
     Args:
-        recipe (str): The recipe to use for predicting. (eg. 'classification/otx_mobilenet_v3_large.yaml')
+        recipe (str): The recipe to use for predicting. (eg. 'classification/mobilenet_v3_large.yaml')
         tmp_path (Path): The temporary path for storing the outputs.
         fxt_target_dataset_per_task (dict): A dictionary mapping tasks to target datasets.
         fxt_accelerator (str): The accelerator used for predict.
@@ -102,7 +102,7 @@ def test_predict_with_explain(
     if any(sub in model_name for sub in UNSUPPORTED_MODEL_SUBSTRS):
         pytest.skip(f"{model_name} is not supported.")
 
-    tmp_path = tmp_path / f"otx_xai_{model_name}"
+    tmp_path = tmp_path / f"xai_{model_name}"
     engine = LightningEngine.from_config(
         config_path=recipe,
         data_root=fxt_target_dataset_per_task[task],

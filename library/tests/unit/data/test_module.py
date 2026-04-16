@@ -24,7 +24,7 @@ from getitune.data.module import (
 )
 
 
-class TestOTXDataModule:
+class TestDataModule:
     @pytest.fixture
     def fxt_config(self) -> DictConfig:
         train_subset = MagicMock(spec=SubsetConfig)
@@ -70,7 +70,7 @@ class TestOTXDataModule:
         return mocker.patch("getitune.data.module.import_dataset")
 
     @pytest.fixture
-    def mock_otx_dataset_factory(self, mocker) -> MagicMock:
+    def mock_dataset_factory(self, mocker) -> MagicMock:
         return mocker.patch("getitune.data.module.DatasetFactory")
 
     @pytest.mark.parametrize(
@@ -87,7 +87,7 @@ class TestOTXDataModule:
     def test_init(
         self,
         mock_dm_dataset,
-        mock_otx_dataset_factory,
+        mock_dataset_factory,
         task,
         fxt_config,
     ) -> None:
@@ -109,7 +109,7 @@ class TestOTXDataModule:
         assert module.train_dataloader().batch_size == 4
         assert module.val_dataloader().batch_size == 3
         assert module.test_dataloader().batch_size == 1
-        assert mock_otx_dataset_factory.create.call_count == 3
+        assert mock_dataset_factory.create.call_count == 3
         assert fxt_config.train_subset.input_size == (240, 240)
         assert fxt_config.val_subset.input_size == (240, 240)
         assert fxt_config.test_subset.input_size == (240, 240)
@@ -117,7 +117,7 @@ class TestOTXDataModule:
     def test_init_input_size(
         self,
         mock_dm_dataset,
-        mock_otx_dataset_factory,
+        mock_dataset_factory,
         fxt_config,
     ) -> None:
         mock_subset = MagicMock()
@@ -175,7 +175,7 @@ class TestOTXDataModule:
     def test_hparams_initial_is_loggable(
         self,
         mock_dm_dataset,
-        mock_otx_dataset_factory,
+        mock_dataset_factory,
         fxt_real_tv_cls_config,
         tmpdir,
     ) -> None:
@@ -233,7 +233,7 @@ class TestOTXDataModule:
 
         return _create_mock_dataset
 
-    def test_from_otx_datasets_basic(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
+    def test_from_vision_datasets_basic(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
         """Test from_vision_datasets with minimal configuration."""
         # Create mock datasets with shared label_info
         shared_label_info = MagicMock()
@@ -266,7 +266,7 @@ class TestOTXDataModule:
         assert module.task == TaskType.MULTI_CLASS_CLS
         assert module.input_size == (224, 224)
 
-    def test_from_otx_datasets_with_custom_configs(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
+    def test_from_vision_datasets_with_custom_configs(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
         """Test from_vision_datasets with custom subset configurations."""
         # Create mock datasets
         shared_label_info = MagicMock()
@@ -318,7 +318,7 @@ class TestOTXDataModule:
         # input_size should come from train_config, not inferred from image data
         assert module.input_size == (640, 640)
 
-    def test_from_otx_datasets_without_test(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
+    def test_from_vision_datasets_without_test(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
         """Test from_vision_datasets when test_dataset is None (uses val as test)."""
         # Create mock datasets
         shared_label_info = MagicMock()
@@ -357,7 +357,7 @@ class TestOTXDataModule:
         assert module.task == TaskType.SEMANTIC_SEGMENTATION
         assert module.input_size == (512, 512)
 
-    def test_from_otx_datasets_label_info_mismatch(self, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
+    def test_from_vision_datasets_label_info_mismatch(self, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
         """Test from_vision_datasets raises error when label_info doesn't match."""
         # Create mock datasets with mismatched label_info
         mock_train = fxt_mock_dataset(label_info=MagicMock())
@@ -371,7 +371,7 @@ class TestOTXDataModule:
                 train_subset=fxt_mock_subset_configs["train_subset"],
             )
 
-    def test_from_otx_datasets_with_auto_num_workers(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
+    def test_from_vision_datasets_with_auto_num_workers(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
         """Test from_vision_datasets with auto_num_workers enabled."""
         # Create mock datasets
         shared_label_info = MagicMock()

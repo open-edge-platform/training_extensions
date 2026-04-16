@@ -29,23 +29,23 @@ from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
 ========
-from getitune.backend.native.exporter.base import OTXModelExporter
-from getitune.backend.native.exporter.native import OTXNativeModelExporter
-from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.native.models.common.losses import CrossEntropyLoss, IoULoss, L1Loss
-from getitune.backend.native.models.detection.backbones import CSPDarknet
-from getitune.backend.native.models.detection.base import OTXDetectionModel
-from getitune.backend.native.models.detection.detectors import SingleStageDetector
-from getitune.backend.native.models.detection.heads import YOLOXHead
-from getitune.backend.native.models.detection.losses import YOLOXCriterion
-from getitune.backend.native.models.detection.necks import YOLOXPAFPN
-from getitune.backend.native.models.detection.utils.assigners import SimOTAAssigner
-from getitune.backend.native.models.utils.utils import load_checkpoint
+from getitune.backend.lightning.exporter.base import ModelExporter
+from getitune.backend.lightning.exporter.native import LightningModelExporter
+from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.lightning.models.common.losses import CrossEntropyLoss, IoULoss, L1Loss
+from getitune.backend.lightning.models.detection.backbones import CSPDarknet
+from getitune.backend.lightning.models.detection.base import LightningDetectionModel
+from getitune.backend.lightning.models.detection.detectors import SingleStageDetector
+from getitune.backend.lightning.models.detection.heads import YOLOXHead
+from getitune.backend.lightning.models.detection.losses import YOLOXCriterion
+from getitune.backend.lightning.models.detection.necks import YOLOXPAFPN
+from getitune.backend.lightning.models.detection.utils.assigners import SimOTAAssigner
+from getitune.backend.lightning.models.utils.utils import load_checkpoint
 from getitune.config.data import TileConfig
-from getitune.data.entity.sample import OTXSampleBatch
+from getitune.data.entity.sample import SampleBatch
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from getitune.types.export import OTXExportFormatType
-from getitune.types.precision import OTXPrecisionType
+from getitune.types.export import ExportFormat
+from getitune.types.precision import Precision
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/yolox.py
 
 if TYPE_CHECKING:
@@ -57,7 +57,7 @@ if TYPE_CHECKING:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/yolox.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 ========
-    from getitune.backend.native.schedulers import LRSchedulerListCallable
+    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/yolox.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
@@ -71,7 +71,7 @@ _RAW_UINT8_MODELS: frozenset[str] = frozenset({"yolox_s", "yolox_l", "yolox_x"})
 
 
 class YOLOX(LightningDetectionModel):
-    """Geti Tune Detection model class for YOLOX.
+    """getitune Detection model class for YOLOX.
 
     Attributes:
         pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.

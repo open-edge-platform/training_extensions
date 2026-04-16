@@ -1,6 +1,6 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Unit test of rtmdet_ins_heads of Geti Tune Instance Segmentation tasks."""
+"""Unit test of rtmdet_ins_heads of getitune Instance Segmentation tasks."""
 
 from __future__ import annotations
 

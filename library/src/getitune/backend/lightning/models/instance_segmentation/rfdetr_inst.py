@@ -25,12 +25,12 @@ from getitune.backend.lightning.models.common.rfdetr_mixin import RFDETRMixin
 from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
 from getitune.backend.lightning.models.instance_segmentation.base import LightningInstanceSegModel
 ========
-from getitune.backend.native.exporter.base import OTXModelExporter
-from getitune.backend.native.exporter.native import OTXNativeModelExporter
-from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.native.models.common.rfdetr_mixin import RFDETRMixin
-from getitune.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
-from getitune.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
+from getitune.backend.lightning.exporter.base import ModelExporter
+from getitune.backend.lightning.exporter.native import LightningModelExporter
+from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.lightning.models.common.rfdetr_mixin import RFDETRMixin
+from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
+from getitune.backend.lightning.models.instance_segmentation.base import LightningInstanceSegModel
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/rfdetr_inst.py
 from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
@@ -41,14 +41,14 @@ if TYPE_CHECKING:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/rfdetr_inst.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 ========
-    from getitune.backend.native.schedulers import LRSchedulerListCallable
+    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/rfdetr_inst.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
 
 
 class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inconsistent-inheritance]
-    """Geti Tune Instance Segmentation model class for RF-DETR.
+    """getitune Instance Segmentation model class for RF-DETR.
 
     RF-DETR (Real-time Fast DETR) is a state-of-the-art object detector from Roboflow
     that combines a DINOv2 backbone with a lightweight DETR decoder. This implementation

@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for base model entity used in Geti Tune."""
+"""Class definition for base model entity used in getitune."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ class _FP32OpenvinoAdapter(OpenvinoAdapter):
     """OpenvinoAdapter that forces float32 input tensors.
 
     Sets ``dtype=float`` so ModelAPI builds an f32 input tensor matching
-    the 0-1 normalisation scale used by new OTX exports.  Raises
+    the 0-1 normalisation scale used by new getitune exports.  Raises
     ``ValueError`` if the IR still stores mean/scale in the 0-255 range.
     """
 
@@ -66,7 +66,7 @@ class _FP32OpenvinoAdapter(OpenvinoAdapter):
                 "uint8 (0-255) scale, but _FP32OpenvinoAdapter expects float32 "
                 "[0, 1] inputs with values in 0-1 scale "
                 "(e.g. mean=0.485 0.456 0.406, std=0.229 0.224 0.225). "
-                "Re-export the model with the current OTX version."
+                "Re-export the model with the current getitune version."
             )
             raise ValueError(msg)
         kwargs["dtype"] = float
@@ -258,7 +258,7 @@ class OVModel:
         outputs: list[Result],
         inputs: SampleBatch,
     ) -> PredictionBatch:
-        """Customize the model outputs to Geti Tune format.
+        """Customize the model outputs to getitune format.
 
         Args:
             outputs (list[Result]): The model outputs.
@@ -603,7 +603,7 @@ class OVModel:
             logger.warning(msg)
             return LabelInfo(label_names=label_names, label_groups=[label_names], label_ids=[])
 
-        msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by OTX."
+        msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by getitune."
         raise ValueError(msg)
 
     def get_dummy_input(self, batch_size: int = 1) -> SampleBatch:

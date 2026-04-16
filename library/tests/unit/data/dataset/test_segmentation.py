@@ -10,7 +10,7 @@ from getitune.data.dataset.segmentation import SegmentationDataset
 from getitune.data.entity.sample import SegmentationSample
 
 
-class TestOTXSegmentationDataset:
+class TestSegmentationDataset:
     def setup_method(self):
         # Mock Datumaro experimental Dataset subset
         self.mock_dm_subset = Mock(spec=Dataset)

@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for instance segmentation model entity used in Geti Tune."""
+"""Class definition for instance segmentation model entity used in getitune."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ class OVInstanceSegmentationModel(OVModel):
     """Instance segmentation model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository
-    and create the OTX detection model compatible for OTX testing pipeline.
+    and create the getitune detection model compatible for getitune testing pipeline.
     """
 
     def __init__(
@@ -98,7 +98,7 @@ class OVInstanceSegmentationModel(OVModel):
         else:
             msg = (
                 "Cannot get best_confidence_threshold from OpenVINO IR's rt_info. "
-                "Please check whether this model is trained by OTX or not. "
+                "Please check whether this model is trained by getitune or not. "
                 "Without this information, it can produce a wrong F1 metric score. "
                 "At this time, it will be set as the default value = None."
             )
@@ -110,7 +110,7 @@ class OVInstanceSegmentationModel(OVModel):
         outputs: list[InstanceSegmentationResult],
         inputs: SampleBatch,
     ) -> PredictionBatch:
-        """Customize the model outputs for Geti Tune compatibility.
+        """Customize the model outputs for getitune compatibility.
 
         Args:
             outputs (list[InstanceSegmentationResult]): Model outputs.

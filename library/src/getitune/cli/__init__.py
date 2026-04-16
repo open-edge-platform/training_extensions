@@ -10,9 +10,9 @@ from getitune.cli.cli import CLI
 
 
 def main() -> None:
-    """Entry point for Geti Tune CLI.
+    """Entry point for getitune CLI.
 
-    This function is a single entry point for all Geti Tune CLI related operations:
+    This function is a single entry point for all getitune CLI related operations:
     """
     start = time()
     CLI()

@@ -13,8 +13,8 @@ from torch import Tensor, nn
 from getitune.backend.lightning.models.detection.utils.utils import auto_pad
 from getitune.backend.lightning.models.modules import Conv2dModule
 ========
-from getitune.backend.native.models.detection.utils.utils import auto_pad
-from getitune.backend.native.models.modules import Conv2dModule
+from getitune.backend.lightning.models.detection.utils.utils import auto_pad
+from getitune.backend.lightning.models.modules import Conv2dModule
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/layers/common_layer.py
 
 

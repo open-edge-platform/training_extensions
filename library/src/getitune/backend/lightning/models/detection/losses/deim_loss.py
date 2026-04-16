@@ -15,7 +15,7 @@ from torchvision.ops import box_convert
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/losses/deim_loss.py
 from getitune.backend.lightning.models.common.utils.bbox_overlaps import bbox_overlaps
 ========
-from getitune.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
+from getitune.backend.lightning.models.common.utils.bbox_overlaps import bbox_overlaps
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/losses/deim_loss.py
 
 from .dfine_loss import DFINECriterion

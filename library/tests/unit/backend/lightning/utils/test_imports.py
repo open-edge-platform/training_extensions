@@ -13,8 +13,8 @@ from getitune.backend.lightning.cli.utils import get_getitune_root_path
 def test_get_getitune_root_path(mocker):
     root_path = get_getitune_root_path()
     assert isinstance(root_path, Path)
-    otx_path = inspect.getfile(getitune)
-    assert root_path == Path(otx_path).parent
+    getitune_path = inspect.getfile(getitune)
+    assert root_path == Path(getitune_path).parent
 
     with mocker.patch("importlib.import_module", return_value=None) and pytest.raises(ModuleNotFoundError):
         get_getitune_root_path()

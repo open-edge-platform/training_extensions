@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for detection model entity used in Geti Tune."""
+"""Class definition for detection model entity used in getitune."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ class OVSegmentationModel(OVModel):
     """Semantic segmentation model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository
-    and create the OTX segmentation model compatible for OTX testing pipeline.
+    and create the getitune segmentation model compatible for getitune testing pipeline.
     """
 
     def __init__(
@@ -88,7 +88,7 @@ class OVSegmentationModel(OVModel):
         outputs: list[ImageResultWithSoftPrediction],
         inputs: SampleBatch,
     ) -> PredictionBatch:
-        """Customize the outputs of the model for Geti Tune pipeline.
+        """Customize the outputs of the model for getitune pipeline.
 
         Args:
             outputs (list[ImageResultWithSoftPrediction]): List of model outputs with soft predictions.
@@ -161,5 +161,5 @@ class OVSegmentationModel(OVModel):
             label_info = json.loads(ov_model.get_rt_info(["model_info", "label_info"]).value)
             return SegLabelInfo(**label_info)
 
-        msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by OTX."
+        msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by getitune."
         raise ValueError(msg)

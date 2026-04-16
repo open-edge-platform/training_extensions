@@ -11,7 +11,7 @@ from getitune.data.dataset.classification import MultilabelClsDataset
 from getitune.data.entity.sample import ClassificationMultiLabelSample
 
 
-class TestOTXMultilabelClsDataset:
+class TestMultilabelClsDataset:
     def setup_method(self):
         # Mock Datumaro experimental Dataset subset
         self.mock_dm_subset = Mock(spec=Dataset)

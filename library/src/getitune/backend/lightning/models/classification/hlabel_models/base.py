@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for classification model entity used in Geti Tune."""
+"""Class definition for classification model entity used in getitune."""
 
 from __future__ import annotations
 
@@ -27,18 +27,18 @@ from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 ========
-from getitune.backend.native.exporter.base import OTXModelExporter
-from getitune.backend.native.exporter.native import OTXNativeModelExporter
-from getitune.backend.native.models.base import (
+from getitune.backend.lightning.exporter.base import ModelExporter
+from getitune.backend.lightning.exporter.native import LightningModelExporter
+from getitune.backend.lightning.models.base import (
     DataInputParams,
     DefaultOptimizerCallable,
     DefaultSchedulerCallable,
-    OTXModel,
+    LightningModel,
 )
-from getitune.backend.native.models.classification.classifier import KLHLabelClassifier
-from getitune.backend.native.schedulers import LRSchedulerListCallable
-from getitune.data.entity.base import OTXBatchLossEntity
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.backend.lightning.models.classification.classifier import KLHLabelClassifier
+from getitune.backend.lightning.schedulers import LRSchedulerListCallable
+from getitune.data.entity.base import BatchLoss
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/classification/hlabel_models/base.py
 from getitune.metrics import MetricInput
 from getitune.metrics.accuracy import (
@@ -49,7 +49,7 @@ from getitune.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/hlabel_models/base.py
 from getitune.types.task import TaskType
 ========
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 >>>>>>>> develop:library/src/getitune/backend/native/models/classification/hlabel_models/base.py
 
 if TYPE_CHECKING:
@@ -60,7 +60,7 @@ if TYPE_CHECKING:
 
 
 class LightningHlabelClsModel(LightningModel):
-    """H-label classification models used in Geti Tune.
+    """H-label classification models used in getitune.
 
     Args:
         label_info (HLabelInfo): Information about the hierarchical labels.

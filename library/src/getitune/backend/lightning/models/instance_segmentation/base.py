@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for instance segmentation model entity used in Geti Tune."""
+"""Class definition for instance segmentation model entity used in getitune."""
 
 # type: ignore[override]
 
@@ -37,22 +37,22 @@ from getitune.data.entity.base import ImageInfo, BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.data.entity.tile import TileBatchData
 ========
-from getitune.backend.native.models.base import (
+from getitune.backend.lightning.models.base import (
     DataInputParams,
     DefaultOptimizerCallable,
     DefaultSchedulerCallable,
-    OTXModel,
+    LightningModel,
 )
-from getitune.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv import MaskRCNN
-from getitune.backend.native.models.instance_segmentation.segmentors.two_stage import TwoStageDetector
-from getitune.backend.native.models.utils.utils import InstanceData, load_checkpoint
-from getitune.backend.native.schedulers import LRSchedulerListCallable
-from getitune.backend.native.tools.explain.explain_algo import InstSegExplainAlgo, feature_vector_fn
-from getitune.backend.native.tools.tile_merge import InstanceSegTileMerge
+from getitune.backend.lightning.models.instance_segmentation.segmentors.maskrcnn_tv import MaskRCNN
+from getitune.backend.lightning.models.instance_segmentation.segmentors.two_stage import TwoStageDetector
+from getitune.backend.lightning.models.utils.utils import InstanceData, load_checkpoint
+from getitune.backend.lightning.schedulers import LRSchedulerListCallable
+from getitune.backend.lightning.tools.explain.explain_algo import InstSegExplainAlgo, feature_vector_fn
+from getitune.backend.lightning.tools.tile_merge import InstanceSegTileMerge
 from getitune.config.data import TileConfig
-from getitune.data.entity.base import ImageInfo, OTXBatchLossEntity
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from getitune.data.entity.tile import OTXTileBatchDataEntity
+from getitune.data.entity.base import ImageInfo, BatchLoss
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
+from getitune.data.entity.tile import TileBatchData
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/base.py
 from getitune.data.entity.utils import stack_batch
 from getitune.data.utils.structures.mask.mask_util import encode_rle
@@ -63,7 +63,7 @@ from getitune.types.label import LabelInfoTypes
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/base.py
 from getitune.types.task import TaskType
 ========
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/base.py
 
 if TYPE_CHECKING:
@@ -75,7 +75,7 @@ if TYPE_CHECKING:
 
 
 class LightningInstanceSegModel(LightningModel):
-    """Base class for the Instance Segmentation models used in Geti Tune.
+    """Base class for the Instance Segmentation models used in getitune.
 
     NOTE: LightningInstanceSegModel has many duplicate methods to LightningDetectionModel,
     however, it is not a subclass of LightningDetectionModel because it has different
@@ -529,7 +529,7 @@ class LightningInstanceSegModel(LightningModel):
         entity: SampleBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, Tensor]:
-        """Forward func of the BaseDetector instance, which located in is in ExplainableOTXInstanceSegModel().model."""
+        """Forward func of the BaseDetector instance, which located in is in ExplainableLightningInstanceSegModel().model."""
         _images = cast("torch.Tensor", entity.images)
         x = self.backbone(_images) if isinstance(self, MaskRCNN) else self.extract_feat(_images)
 
@@ -572,8 +572,8 @@ class LightningInstanceSegModel(LightningModel):
         from getitune.backend.lightning.models.instance_segmentation.maskrcnn_tv import MaskRCNNTV
         from getitune.backend.lightning.models.instance_segmentation.rtmdet_inst import RTMDetInst
 ========
-        from getitune.backend.native.models.instance_segmentation.maskrcnn_tv import MaskRCNNTV
-        from getitune.backend.native.models.instance_segmentation.rtmdet_inst import RTMDetInst
+        from getitune.backend.lightning.models.instance_segmentation.maskrcnn_tv import MaskRCNNTV
+        from getitune.backend.lightning.models.instance_segmentation.rtmdet_inst import RTMDetInst
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/base.py
 
         if isinstance(self, MaskRCNNTV):

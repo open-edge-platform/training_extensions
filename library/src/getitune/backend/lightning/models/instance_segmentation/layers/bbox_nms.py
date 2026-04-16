@@ -16,7 +16,7 @@ from torch import Tensor
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/layers/bbox_nms.py
 from getitune.backend.lightning.models.common.utils.nms import batched_nms
 ========
-from getitune.backend.native.models.common.utils.nms import batched_nms
+from getitune.backend.lightning.models.common.utils.nms import batched_nms
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/layers/bbox_nms.py
 
 

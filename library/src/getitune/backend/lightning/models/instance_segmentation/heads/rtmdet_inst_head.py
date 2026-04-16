@@ -26,8 +26,8 @@ from torch import Tensor, nn
 from getitune.backend.lightning.models.common.utils.nms import batched_nms, multiclass_nms
 from getitune.backend.lightning.models.common.utils.utils import (
 ========
-from getitune.backend.native.models.common.utils.nms import batched_nms, multiclass_nms
-from getitune.backend.native.models.common.utils.utils import (
+from getitune.backend.lightning.models.common.utils.nms import batched_nms, multiclass_nms
+from getitune.backend.lightning.models.common.utils.utils import (
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/heads/rtmdet_inst_head.py
     distance2bbox,
     filter_scores_and_topk,
@@ -51,19 +51,19 @@ from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.backend.lightning.models.utils.weight_init import bias_init_with_prob, constant_init, normal_init
 from getitune.data.entity.sample import SampleBatch
 ========
-from getitune.backend.native.models.detection.heads.atss_head import ATSSHeadModule
-from getitune.backend.native.models.detection.utils.prior_generators.utils import anchor_inside_flags
-from getitune.backend.native.models.detection.utils.utils import images_to_levels, unmap
-from getitune.backend.native.models.instance_segmentation.utils.roi_extractors import OTXRoIAlign
-from getitune.backend.native.models.instance_segmentation.utils.utils import unpack_inst_seg_entity
-from getitune.backend.native.models.modules import build_activation_layer
-from getitune.backend.native.models.modules.base_module import BaseModule
-from getitune.backend.native.models.modules.conv_module import Conv2dModule, PatchedConv2d
-from getitune.backend.native.models.modules.norm import build_norm_layer, is_norm
-from getitune.backend.native.models.modules.scale import Scale
-from getitune.backend.native.models.utils.utils import InstanceData
-from getitune.backend.native.models.utils.weight_init import bias_init_with_prob, constant_init, normal_init
-from getitune.data.entity.sample import OTXSampleBatch
+from getitune.backend.lightning.models.detection.heads.atss_head import ATSSHeadModule
+from getitune.backend.lightning.models.detection.utils.prior_generators.utils import anchor_inside_flags
+from getitune.backend.lightning.models.detection.utils.utils import images_to_levels, unmap
+from getitune.backend.lightning.models.instance_segmentation.utils.roi_extractors import CustomRoIAlign
+from getitune.backend.lightning.models.instance_segmentation.utils.utils import unpack_inst_seg_entity
+from getitune.backend.lightning.models.modules import build_activation_layer
+from getitune.backend.lightning.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.modules.conv_module import Conv2dModule, PatchedConv2d
+from getitune.backend.lightning.models.modules.norm import build_norm_layer, is_norm
+from getitune.backend.lightning.models.modules.scale import Scale
+from getitune.backend.lightning.models.utils.utils import InstanceData
+from getitune.backend.lightning.models.utils.weight_init import bias_init_with_prob, constant_init, normal_init
+from getitune.data.entity.sample import SampleBatch
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/heads/rtmdet_inst_head.py
 from getitune.data.utils.structures.bbox.transforms import get_box_wh, scale_boxes
 from getitune.data.utils.structures.mask.mask_util import polygon_to_bitmap
@@ -1006,7 +1006,7 @@ class RTMDetInstHead(RTMDetHead):
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (TorchDataBatch): Entity from Geti Tune dataset.
+            entity (TorchDataBatch): Entity from getitune dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.

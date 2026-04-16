@@ -42,7 +42,7 @@ def ensure_callable(func: Callable[[_T], _V]) -> Callable[[_T], _V]:
 
 @contextmanager
 def mock_modules_for_chkpt() -> Iterator[None]:
-    """Context manager to mock modules for Geti Tune v2.2-2.4 checkpoint loading and restore sys.modules after."""
+    """Context manager to mock modules for getitune v2.2-2.4 checkpoint loading and restore sys.modules after."""
     import sys
     import types
 
@@ -75,7 +75,7 @@ def mock_modules_for_chkpt() -> Iterator[None]:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/utils/utils.py
         sys.modules["getitune.core.model"] = getitune.backend.lightning.models  # type: ignore[attr-defined]
 ========
-        sys.modules["getitune.core.model"] = getitune.backend.native.models  # type: ignore[attr-defined]
+        sys.modules["getitune.core.model"] = getitune.backend.lightning.models  # type: ignore[attr-defined]
 >>>>>>>> develop:library/src/getitune/backend/native/utils/utils.py
 
         yield

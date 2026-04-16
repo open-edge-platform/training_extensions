@@ -21,4 +21,4 @@
    otx                                           2.0.0-cuda                                     8d14caccb29a   8 minutes ago   10.4GB
    ```
 
-`getitune:${GETITUNE_VERSION}-cuda` is a minimal Docker image where Geti Tune is installed with CUDA supports. On the other hand, `getitune:${GETITUNE_VERSION}-cuda-pretrained-ready` includes all the model pre-trained weights that Geti Tune provides in addition to `getitune:${GETITUNE_VERSION}-cuda`.
+`getitune:${GETITUNE_VERSION}-cuda` is a minimal Docker image where getitune is installed with CUDA supports. On the other hand, `getitune:${GETITUNE_VERSION}-cuda-pretrained-ready` includes all the model pre-trained weights that getitune provides in addition to `getitune:${GETITUNE_VERSION}-cuda`.

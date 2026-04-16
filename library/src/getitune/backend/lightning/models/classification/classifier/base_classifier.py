@@ -24,10 +24,10 @@ from getitune.backend.lightning.models.classification.utils.ignored_labels impor
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.tools.explain.explain_algo import ReciproCAM
 ========
-from getitune.backend.native.models.classification.necks.gap import GlobalAveragePooling
-from getitune.backend.native.models.classification.utils.ignored_labels import get_valid_label_mask
-from getitune.backend.native.models.modules.base_module import BaseModule
-from getitune.backend.native.tools.explain.explain_algo import ReciproCAM
+from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.lightning.models.classification.utils.ignored_labels import get_valid_label_mask
+from getitune.backend.lightning.models.modules.base_module import BaseModule
+from getitune.backend.lightning.tools.explain.explain_algo import ReciproCAM
 >>>>>>>> develop:library/src/getitune/backend/native/models/classification/classifier/base_classifier.py
 
 if TYPE_CHECKING:
@@ -187,7 +187,7 @@ class ImageClassifier(BaseModule):
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/classifier/base_classifier.py
         from getitune.backend.lightning.tools.explain.explain_algo import feature_vector_fn
 ========
-        from getitune.backend.native.tools.explain.explain_algo import feature_vector_fn
+        from getitune.backend.lightning.tools.explain.explain_algo import feature_vector_fn
 >>>>>>>> develop:library/src/getitune/backend/native/models/classification/classifier/base_classifier.py
 
         x = self.backbone(images)

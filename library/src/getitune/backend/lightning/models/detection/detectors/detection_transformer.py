@@ -18,9 +18,9 @@ from getitune.backend.lightning.models.detection.losses import DetrCriterion
 from getitune.backend.lightning.models.detection.utils import generate_scales
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 ========
-from getitune.backend.native.models.detection.losses import DetrCriterion
-from getitune.backend.native.models.detection.utils import generate_scales
-from getitune.backend.native.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.detection.losses import DetrCriterion
+from getitune.backend.lightning.models.detection.utils import generate_scales
+from getitune.backend.lightning.models.modules.base_module import BaseModule
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/detectors/detection_transformer.py
 
 
@@ -158,7 +158,7 @@ class DETR(BaseModule):
         """
         logits, boxes = outputs["pred_logits"], outputs["pred_boxes"]
 
-        # convert bbox to xyxy and rescale back to original size (resize in Geti Tune)
+        # convert bbox to xyxy and rescale back to original size (resize in getitune)
         bbox_pred = box_convert(boxes, in_fmt="cxcywh", out_fmt="xyxy")
         if not deploy_mode:
             original_size_tensor = torch.tensor(original_sizes).to(bbox_pred.device)

@@ -13,7 +13,7 @@ from torch import Tensor, nn
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/segmentation/segmentors/base_model.py
 from getitune.backend.lightning.tools.explain.explain_algo import feature_vector_fn
 ========
-from getitune.backend.native.tools.explain.explain_algo import feature_vector_fn
+from getitune.backend.lightning.tools.explain.explain_algo import feature_vector_fn
 >>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/segmentors/base_model.py
 
 if TYPE_CHECKING:

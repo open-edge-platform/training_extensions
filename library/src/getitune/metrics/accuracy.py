@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for Geti Tune accuracy metric used for classification tasks."""
+"""Module for getitune accuracy metric used for classification tasks."""
 
 from __future__ import annotations
 
@@ -71,7 +71,7 @@ class NamedConfusionMatrix(ConfusionMatrix):
 
 
 class AccuracywithLabelGroup(Metric):
-    """Base accuracy class for the Geti Tune classification tasks with lable group.
+    """Base accuracy class for the getitune classification tasks with lable group.
 
     It calculates the accuracy with the label_groups information, not class.
     It means that average will be applied to the results from the each label groups.

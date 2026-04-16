@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune image type definition."""
+"""getitune image type definition."""
 
 from __future__ import annotations
 

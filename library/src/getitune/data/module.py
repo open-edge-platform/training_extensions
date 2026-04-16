@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""LightningDataModule extension for Geti Tune."""
+"""LightningDataModule extension for getitune."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 _MP_CONTEXT = multiprocessing.get_context("spawn")
 
-# Mapping from Geti Tune subset config names to Datumaro experimental Subset enums
+# Mapping from getitune subset config names to Datumaro experimental Subset enums
 _SUBSET_NAME_TO_ENUM: dict[str, Subset] = {
     "train": Subset.TRAINING,
     "val": Subset.VALIDATION,
@@ -48,9 +48,9 @@ _SUBSET_NAME_TO_ENUM: dict[str, Subset] = {
 
 
 class DataModule(LightningDataModule):
-    """LightningDataModule extension for Geti Tune.
+    """LightningDataModule extension for getitune.
 
-    Handles data loading, transformation, and preparation for Geti Tune pipelines.
+    Handles data loading, transformation, and preparation for getitune pipelines.
 
     Args:
         task (TaskType): Task type (e.g., classification, detection).
@@ -172,7 +172,7 @@ class DataModule(LightningDataModule):
                 logger.warning(f"Subset '{name}' is empty in the dataset. Skip it")
                 continue
 
-            otx_dataset = DatasetFactory.create(
+            dataset = DatasetFactory.create(
                 task=self.task,
                 dm_subset=dm_subset,
                 cfg_subset=subset_cfg,
@@ -180,11 +180,11 @@ class DataModule(LightningDataModule):
             )
 
             if self.tile_config.enable_tiler:
-                otx_dataset = TileDatasetFactory.create(
-                    dataset=otx_dataset,
+                dataset = TileDatasetFactory.create(
+                    dataset=dataset,
                     tile_config=self.tile_config,
                 )
-            self.subsets[name] = otx_dataset
+            self.subsets[name] = dataset
             label_infos += [self.subsets[name].label_info]
             logger.info(f"Add name: {name}, self.subsets: {self.subsets}")
 

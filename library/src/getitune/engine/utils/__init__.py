@@ -1,4 +1,4 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Util API for Geti Tune Engine."""
+"""Util API for getitune Engine."""

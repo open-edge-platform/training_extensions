@@ -3,7 +3,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for Geti Tune classification factory."""
+"""Module for getitune classification factory."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Literal, overload
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/factory.py
 from getitune.backend.lightning.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 ========
-from getitune.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.lightning.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 >>>>>>>> develop:library/src/getitune/backend/native/models/classification/factory.py
 from getitune.metrics.accuracy import MultiClassClsMetricCallable
 
@@ -45,8 +45,8 @@ if TYPE_CHECKING:
     from getitune.backend.lightning.models.base import DataInputParams
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 ========
-    from getitune.backend.native.models.base import DataInputParams
-    from getitune.backend.native.schedulers import LRSchedulerListCallable
+    from getitune.backend.lightning.models.base import DataInputParams
+    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 >>>>>>>> develop:library/src/getitune/backend/native/models/classification/factory.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
@@ -226,7 +226,7 @@ class TimmModel:
 
         Note:
         - If you wish to use Vision Transformer (ViT) models, it is recommended to use the `VisionTransformer`
-            implementation provided by Geti Tune for better integration and support.
+            implementation provided by getitune for better integration and support.
 
         Args:
             label_info (LabelInfoTypes): The label information.

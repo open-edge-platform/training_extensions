@@ -29,7 +29,7 @@ class MockClsModel(nn.Module):
         pass
 
 
-class TestOTXMulticlassClsModel:
+class TestLightningMulticlassClsModel:
     @pytest.fixture(autouse=True)
     def mock_model(self, mocker):
         LightningMulticlassClsModel._build_model = mocker.MagicMock(return_value=MockClsModel())
@@ -86,7 +86,7 @@ class TestOTXMulticlassClsModel:
         assert "target" in metric_input
 
 
-class TestOTXMultilabelClsModel:
+class TestLightningMultilabelClsModel:
     @pytest.fixture(autouse=True)
     def mock_model(self, mocker):
         LightningMultilabelClsModel._build_model = mocker.MagicMock(return_value=MockClsModel())
@@ -141,7 +141,7 @@ class TestOTXMultilabelClsModel:
         assert "target" in metric_input
 
 
-class TestOTXHlabelClsModel:
+class TestLightningHlabelClsModel:
     @pytest.fixture(autouse=True)
     def mock_model(self, mocker):
         LightningHlabelClsModel._build_model = mocker.MagicMock(return_value=MockClsModel())

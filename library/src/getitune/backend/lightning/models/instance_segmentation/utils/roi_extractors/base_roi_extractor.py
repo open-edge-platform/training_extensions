@@ -19,7 +19,7 @@ from torchvision.ops import RoIAlign
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/utils/roi_extractors/base_roi_extractor.py
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 ========
-from getitune.backend.native.models.modules.base_module import BaseModule
+from getitune.backend.lightning.models.modules.base_module import BaseModule
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/utils/roi_extractors/base_roi_extractor.py
 
 

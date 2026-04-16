@@ -17,7 +17,7 @@ from torch.nn.modules.utils import _pair
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/utils/prior_generators/anchor_generator.py
 from getitune.backend.lightning.models.common.utils.prior_generators import AnchorGenerator
 ========
-from getitune.backend.native.models.common.utils.prior_generators import AnchorGenerator
+from getitune.backend.lightning.models.common.utils.prior_generators import AnchorGenerator
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/utils/prior_generators/anchor_generator.py
 
 

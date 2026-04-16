@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/utils/coders/distance_point_bbox_coder.py
 from getitune.backend.lightning.models.common.utils.utils import bbox2distance, distance2bbox, distance2bbox_export
 ========
-from getitune.backend.native.models.common.utils.utils import bbox2distance, distance2bbox, distance2bbox_export
+from getitune.backend.lightning.models.common.utils.utils import bbox2distance, distance2bbox, distance2bbox_export
 >>>>>>>> develop:library/src/getitune/backend/native/models/common/utils/coders/distance_point_bbox_coder.py
 
 from .base_bbox_coder import BaseBBoxCoder

@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune Engine."""
+"""getitune Engine."""
 
 from __future__ import annotations
 
@@ -38,18 +38,18 @@ from getitune.config.device import DeviceConfig
 from getitune.config.explain import ExplainConfig
 from getitune.data.module import DataModule
 ========
-from getitune.backend.native.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
-from getitune.backend.native.callbacks.aug_scheduler import AugmentationSchedulerCallback
-from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
-from getitune.backend.native.callbacks.gpu_mem_monitor import GPUMemMonitor
-from getitune.backend.native.callbacks.iteration_timer import IterationTimer
-from getitune.backend.native.callbacks.lr_monitor import SimpleLearningRateMonitor
-from getitune.backend.native.models.base import OTXModel
-from getitune.backend.native.tools import adapt_batch_size
-from getitune.backend.native.utils.cache import TrainerArgumentsCache
+from getitune.backend.lightning.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
+from getitune.backend.lightning.callbacks.aug_scheduler import AugmentationSchedulerCallback
+from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
+from getitune.backend.lightning.callbacks.gpu_mem_monitor import GPUMemMonitor
+from getitune.backend.lightning.callbacks.iteration_timer import IterationTimer
+from getitune.backend.lightning.callbacks.lr_monitor import SimpleLearningRateMonitor
+from getitune.backend.lightning.models.base import LightningModel
+from getitune.backend.lightning.tools import adapt_batch_size
+from getitune.backend.lightning.utils.cache import TrainerArgumentsCache
 from getitune.config.device import DeviceConfig
 from getitune.config.explain import ExplainConfig
-from getitune.data.module import OTXDataModule
+from getitune.data.module import DataModule
 >>>>>>>> develop:library/src/getitune/backend/native/engine.py
 from getitune.engine.engine import Engine
 from getitune.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
@@ -60,9 +60,9 @@ from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
 from getitune.types.task import TaskType
 ========
-from getitune.types.export import OTXExportFormatType
-from getitune.types.precision import OTXPrecisionType
-from getitune.types.task import OTXTaskType
+from getitune.types.export import ExportFormat
+from getitune.types.precision import Precision
+from getitune.types.task import TaskType
 >>>>>>>> develop:library/src/getitune/backend/native/engine.py
 from getitune.utils.device import get_available_device, is_xpu_available
 from getitune.utils.utils import measure_flops
@@ -76,7 +76,7 @@ if TYPE_CHECKING:
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/engine.py
     from getitune.data.dataset.base import VisionDataset
 ========
-    from getitune.data.dataset.base import OTXDataset
+    from getitune.data.dataset.base import VisionDataset
 >>>>>>>> develop:library/src/getitune/backend/native/engine.py
     from getitune.metrics import MetricCallable
     from getitune.types.types import DATA, MODEL
@@ -103,9 +103,9 @@ def override_metric_callable(model: LightningModel, new_metric_callable: MetricC
 
 
 class LightningEngine(Engine):
-    """Geti Tune Engine.
+    """getitune Engine.
 
-    This class defines the Engine for Geti Tune, which governs each step of the Geti Tune workflow.
+    This class defines the Engine for getitune, which governs each step of the getitune workflow.
     """
 
     _EXPORTED_MODEL_BASE_NAME: ClassVar[str] = "exported_model"
@@ -116,8 +116,8 @@ class LightningEngine(Engine):
         model: LightningModel | PathLike | str,
         data: DataModule | PathLike,
 ========
-        model: OTXModel | PathLike | str,
-        data: OTXDataModule | PathLike,
+        model: LightningModel | PathLike | str,
+        data: DataModule | PathLike,
 >>>>>>>> develop:library/src/getitune/backend/native/engine.py
         work_dir: PathLike = "./getitune-workspace",
         checkpoint: PathLike | None = None,
@@ -126,10 +126,10 @@ class LightningEngine(Engine):
         task: TaskType | None = None,
         **kwargs,
     ):
-        """Initializes the Geti Tune Engine.
+        """Initializes the getitune Engine.
 
         Args:
-            model (LightningModel | PathLike): The OTX model for the engine or model config path.
+            model (LightningModel | PathLike): The getitune model for the engine or model config path.
             data (DataModule | PathLike): The data module for the engine
                 or root directory for the data.
             work_dir (PathLike, optional): Working directory for the engine. Defaults to "./getitune-workspace".
@@ -198,7 +198,7 @@ class LightningEngine(Engine):
             self._model.load_state_dict_incrementally(chkpt)
 
     # ------------------------------------------------------------------------ #
-    # General Geti Tune Entry Points
+    # General getitune Entry Points
     # ------------------------------------------------------------------------ #
 
     def train(
@@ -407,7 +407,7 @@ class LightningEngine(Engine):
             msg = "LightningEngine doesn't support validation of exported models. Please, use OVEnging instead."
 
         # NOTE, trainer.test takes only lightning based checkpoint.
-        # So, it can't take the OTX1.x checkpoint.
+        # So, it can't take the getitune 1.x checkpoint.
         if checkpoint is not None:
             ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
             model.load_state_dict(ckpt)
@@ -489,7 +489,7 @@ class LightningEngine(Engine):
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/engine.py
         from getitune.backend.lightning.models.utils.xai_utils import process_saliency_maps_in_pred_entity
 ========
-        from getitune.backend.native.models.utils.xai_utils import process_saliency_maps_in_pred_entity
+        from getitune.backend.lightning.models.utils.xai_utils import process_saliency_maps_in_pred_entity
 >>>>>>>> develop:library/src/getitune/backend/native/engine.py
 
         model = self.model
@@ -820,7 +820,7 @@ class LightningEngine(Engine):
 
         Args:
             model_name (str): The model name.
-            task (TaskType): The type of Geti Tune task.
+            task (TaskType): The type of getitune task.
             data_root (PathLike | None): Root directory for the data.
                 Defaults to None. If data_root is None, use the data_root from the configuration file.
             work_dir (PathLike | None, optional): Working directory for the engine.
@@ -999,7 +999,7 @@ class LightningEngine(Engine):
         return logger
 
     def configure_callbacks(self) -> None:
-        """Sets up the Geti Tune callbacks for the trainer."""
+        """Sets up the getitune callbacks for the trainer."""
         callbacks: list[Callback] = []
         config_callbacks = self._cache.args.get("callbacks", [])
         if config_callbacks is None:
@@ -1231,7 +1231,7 @@ class LightningEngine(Engine):
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/engine.py
             from getitune.backend.lightning.utils.utils import mock_modules_for_chkpt
 ========
-            from getitune.backend.native.utils.utils import mock_modules_for_chkpt
+            from getitune.backend.lightning.utils.utils import mock_modules_for_chkpt
 >>>>>>>> develop:library/src/getitune/backend/native/engine.py
 
             with mock_modules_for_chkpt():

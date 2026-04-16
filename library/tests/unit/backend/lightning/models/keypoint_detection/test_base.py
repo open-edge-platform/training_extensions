@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from getitune.backend.lightning.models.keypoint_detection.base import LightningKeypointDetectionModel
 
 
-class TestOTXKeypointDetectionModel:
+class TestLightningKeypointDetectionModel:
     @pytest.fixture
     def model(self, label_info, optimizer, scheduler, metric, torch_compile) -> LightningKeypointDetectionModel:
         return RTMPose(

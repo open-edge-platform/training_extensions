@@ -126,10 +126,10 @@ def pytest_configure(config):
     task = config.getoption("--task")
     run_category_only = config.getoption("--run-category-only")
 
-    # This assumes have Geti Tune installed in environment.
-    otx_module = importlib.import_module("getitune")
+    # This assumes have getitune installed in environment.
+    getitune_module = importlib.import_module("getitune")
     # Modify RECIPE_PATH based on the task
-    recipe_path = Path(inspect.getfile(otx_module)).parent / "recipe"
+    recipe_path = Path(inspect.getfile(getitune_module)).parent / "recipe"
     task_list = get_task_list(task.lower())
     recipe_dir = [find_recipe_folder(recipe_path, task_type.value.lower()) for task_type in task_list]
 

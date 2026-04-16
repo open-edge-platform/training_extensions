@@ -40,12 +40,12 @@ except ImportError:
 
 
 class CLI:
-    """Geti Tune CLI entrypoint."""
+    """getitune CLI entrypoint."""
 
     datamodule: DataModule
 
     def __init__(self, args: list[str] | None = None, run: bool = True) -> None:
-        """Initialize Geti Tune CLI."""
+        """Initialize getitune CLI."""
         self.console = Console()
         self._subcommand_method_arguments: dict[str, list[str]] = {}
         with patch_update_configs():
@@ -58,7 +58,7 @@ class CLI:
             self.run()
 
     def init_parser(self) -> ArgumentParser:
-        """Initialize the argument parser for the Geti Tune CLI.
+        """Initialize the argument parser for the getitune CLI.
 
         Returns:
             ArgumentParser: The initialized argument parser.
@@ -74,7 +74,7 @@ class CLI:
             "--version",
             action="version",
             version=f"%(prog)s {__version__}",
-            help="Display Geti Tune version number.",
+            help="Display getitune version number.",
         )
         return parser
 
@@ -134,7 +134,7 @@ class CLI:
         )
         parser.add_argument(
             "--disable-infer-num-classes",
-            help="Geti Tune automatically infers num_classes from the given dataset "
+            help="getitune automatically infers num_classes from the given dataset "
             "and applies it to the model initialization."
             "Consequently, there might be a mismatch with the provided model configuration during runtime. "
             "Setting this option to true will disable this behavior.",
@@ -219,7 +219,7 @@ class CLI:
     def add_subcommands(self) -> None:
         """Adds subcommands to the CLI parser.
 
-        This method initializes and configures subcommands for the Geti Tune CLI parser.
+        This method initializes and configures subcommands for the getitune CLI parser.
         It iterates over the available subcommands, adds arguments specific to each subcommand,
         and registers them with the parser.
 
@@ -288,7 +288,7 @@ class CLI:
                       you can use '--pattern efficient'",
                 type=Optional[str],
             )
-            parser_subcommands.add_subcommand("find", find_parser, help="This shows the model provided by Geti Tune.")
+            parser_subcommands.add_subcommand("find", find_parser, help="This shows the model provided by getitune.")
 
     def instantiate_classes(self, instantiate_engine: bool = True) -> None:
         """Instantiate the necessary classes based on the subcommand.

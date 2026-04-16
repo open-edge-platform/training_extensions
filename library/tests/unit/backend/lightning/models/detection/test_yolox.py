@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Test of Geti Tune YOLOX architecture."""
+"""Test of getitune YOLOX architecture."""
 
 import pytest
 import torch
@@ -24,48 +24,48 @@ class TestYOLOX:
         )
 
     def test_init(self) -> None:
-        otx_yolox_l = YOLOX(
+        yolox_l = YOLOX(
             model_name="yolox_l",
             label_info=3,
             data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
-        assert isinstance(otx_yolox_l.model.backbone, CSPDarknetModule)
-        assert isinstance(otx_yolox_l.model.neck, YOLOXPAFPNModule)
-        assert isinstance(otx_yolox_l.model.bbox_head, YOLOXHeadModule)
-        assert otx_yolox_l.data_input_params.input_size == (320, 320)
+        assert isinstance(yolox_l.model.backbone, CSPDarknetModule)
+        assert isinstance(yolox_l.model.neck, YOLOXPAFPNModule)
+        assert isinstance(yolox_l.model.bbox_head, YOLOXHeadModule)
+        assert yolox_l.data_input_params.input_size == (320, 320)
 
-        otx_yolox_tiny = YOLOX(
+        yolox_tiny = YOLOX(
             model_name="yolox_tiny",
             label_info=3,
             data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
-        assert otx_yolox_tiny.data_input_params.input_size == (320, 320)
+        assert yolox_tiny.data_input_params.input_size == (320, 320)
 
-        otx_yolox_tiny = YOLOX(
+        yolox_tiny = YOLOX(
             model_name="yolox_tiny",
             label_info=3,
             data_input_params=DataInputParams((416, 416), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
-        assert otx_yolox_tiny.data_input_params.input_size == (416, 416)
+        assert yolox_tiny.data_input_params.input_size == (416, 416)
 
     def test_exporter(self) -> None:
-        otx_yolox_l = YOLOX(
+        yolox_l = YOLOX(
             model_name="yolox_l",
             label_info=3,
             data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
-        otx_yolox_l_exporter = otx_yolox_l._exporter
-        assert isinstance(otx_yolox_l_exporter, LightningModelExporter)
-        assert otx_yolox_l_exporter.swap_rgb is True
+        yolox_l_exporter = yolox_l._exporter
+        assert isinstance(yolox_l_exporter, LightningModelExporter)
+        assert yolox_l_exporter.swap_rgb is True
 
-        otx_yolox_tiny = YOLOX(
+        yolox_tiny = YOLOX(
             model_name="yolox_tiny",
             label_info=3,
             data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
-        otx_yolox_tiny_exporter = otx_yolox_tiny._exporter
-        assert isinstance(otx_yolox_tiny_exporter, LightningModelExporter)
-        assert otx_yolox_tiny_exporter.swap_rgb is False
+        yolox_tiny_exporter = yolox_tiny._exporter
+        assert isinstance(yolox_tiny_exporter, LightningModelExporter)
+        assert yolox_tiny_exporter.swap_rgb is False
 
     def test_loss(self, fxt_model, fxt_detection_batch):
         output = fxt_model(fxt_detection_batch)

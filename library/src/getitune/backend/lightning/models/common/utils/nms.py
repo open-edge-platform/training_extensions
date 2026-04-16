@@ -24,7 +24,7 @@ from torchvision.ops.boxes import nms as torch_nms
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/utils/nms.py
 from getitune.backend.lightning.models.common.utils.utils import dynamic_topk
 ========
-from getitune.backend.native.models.common.utils.utils import dynamic_topk
+from getitune.backend.lightning.models.common.utils.utils import dynamic_topk
 >>>>>>>> develop:library/src/getitune/backend/native/models/common/utils/nms.py
 
 

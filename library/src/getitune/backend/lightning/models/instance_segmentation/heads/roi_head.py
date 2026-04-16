@@ -23,12 +23,12 @@ from getitune.data.utils.structures.bbox import bbox2roi
 if TYPE_CHECKING:
     from getitune.backend.lightning.models.utils.utils import InstanceData
 ========
-from getitune.backend.native.models.instance_segmentation.utils.utils import empty_instances, unpack_inst_seg_entity
-from getitune.data.entity.sample import OTXSampleBatch
+from getitune.backend.lightning.models.instance_segmentation.utils.utils import empty_instances, unpack_inst_seg_entity
+from getitune.data.entity.sample import SampleBatch
 from getitune.data.utils.structures.bbox import bbox2roi
 
 if TYPE_CHECKING:
-    from getitune.backend.native.models.utils.utils import InstanceData
+    from getitune.backend.lightning.models.utils.utils import InstanceData
 >>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/heads/roi_head.py
 
 
@@ -524,7 +524,7 @@ class RoIHead(nn.Module):
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
             rpn_results_list (list[InstanceData]): List of region proposals.
-            entity (TorchDataBatch): Entity from Geti Tune dataset.
+            entity (TorchDataBatch): Entity from getitune dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.

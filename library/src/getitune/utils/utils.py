@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune utility functions."""
+"""getitune utility functions."""
 
 from __future__ import annotations
 
@@ -143,7 +143,7 @@ def should_pass_label_info(model_cls: type[LightningModel]) -> bool:
     """Determine if label_info should be passed when instantiating the given model class.
 
     Args:
-        model_cls (Type[LightningModel]): OTX model class to instantiate.
+        model_cls (Type[LightningModel]): getitune model class to instantiate.
 
     Returns:
         bool: True if label_info should be passed, False otherwise.
@@ -156,7 +156,7 @@ def can_pass_tile_config(model_cls: type[LightningModel]) -> bool:
     """Determine if tile_config can be passed when instantiating the given model class.
 
     Args:
-        model_cls (Type[LightningModel]): OTX model class to instantiate.
+        model_cls (Type[LightningModel]): getitune model class to instantiate.
 
     Returns:
         bool: True if tile_config can be passed, False otherwise.

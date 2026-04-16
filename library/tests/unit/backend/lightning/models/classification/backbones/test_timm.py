@@ -10,7 +10,7 @@ import torch
 from getitune.backend.lightning.models.classification.backbones.timm import TimmBackbone
 
 
-class TestOTXEfficientNetV2:
+class TestEfficientNetV2:
     def test_forward(self):
         model = TimmBackbone(model_name="tf_efficientnetv2_s.in21k")
         assert model(torch.randn(1, 3, 244, 244))[0].shape == torch.Size([1, 1280, 8, 8])

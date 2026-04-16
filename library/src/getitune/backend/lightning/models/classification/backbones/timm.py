@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Timm Backbone Class for Geti Tune classification.
+"""Timm Backbone Class for getitune classification.
 
 Original papers:
 - 'EfficientNetV2: Smaller Models and Faster Training,' https://arxiv.org/abs/2104.00298,

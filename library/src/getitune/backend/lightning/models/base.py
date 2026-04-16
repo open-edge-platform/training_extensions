@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for base model entity used in Geti Tune."""
+"""Class definition for base model entity used in getitune."""
 
 # mypy: disable-error-code="arg-type"
 
@@ -26,8 +26,8 @@ from getitune import __version__
 from getitune.backend.lightning.optimizers.callable import OptimizerCallableSupportAdaptiveBS
 from getitune.backend.lightning.schedulers import (
 ========
-from getitune.backend.native.optimizers.callable import OptimizerCallableSupportAdaptiveBS
-from getitune.backend.native.schedulers import (
+from getitune.backend.lightning.optimizers.callable import OptimizerCallableSupportAdaptiveBS
+from getitune.backend.lightning.schedulers import (
 >>>>>>>> develop:library/src/getitune/backend/native/models/base.py
     LinearWarmupScheduler,
     LinearWarmupSchedulerCallable,
@@ -37,7 +37,7 @@ from getitune.backend.native.schedulers import (
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/base.py
 from getitune.backend.lightning.utils.utils import (
 ========
-from getitune.backend.native.utils.utils import (
+from getitune.backend.lightning.utils.utils import (
 >>>>>>>> develop:library/src/getitune/backend/native/models/base.py
     ensure_callable,
     is_ckpt_for_finetuning,
@@ -56,15 +56,15 @@ from getitune.types.label import LabelInfo, LabelInfoTypes
 from getitune.types.precision import Precision
 from getitune.types.task import TaskType
 ========
-    OTXBatchLossEntity,
+    BatchLoss,
 )
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from getitune.data.entity.tile import OTXTileBatchDataEntity
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
+from getitune.data.entity.tile import TileBatchData
 from getitune.metrics import MetricInput, NullMetricCallable
-from getitune.types.export import OTXExportFormatType, TaskLevelExportParameters
+from getitune.types.export import ExportFormat, TaskLevelExportParameters
 from getitune.types.label import LabelInfo, LabelInfoTypes
-from getitune.types.precision import OTXPrecisionType
-from getitune.types.task import OTXTaskType
+from getitune.types.precision import Precision
+from getitune.types.task import TaskType
 >>>>>>>> develop:library/src/getitune/backend/native/models/base.py
 
 if TYPE_CHECKING:
@@ -80,9 +80,9 @@ if TYPE_CHECKING:
     from getitune.config.data import IntensityConfig
     from getitune.data.module import DataModule
 ========
-    from getitune.backend.native.exporter.base import OTXModelExporter
+    from getitune.backend.lightning.exporter.base import ModelExporter
     from getitune.config.data import IntensityConfig
-    from getitune.data.module import OTXDataModule
+    from getitune.data.module import DataModule
 >>>>>>>> develop:library/src/getitune/backend/native/models/base.py
     from getitune.metrics import MetricCallable
 
@@ -145,7 +145,7 @@ DefaultSchedulerCallable = _default_scheduler_callable
 
 
 class LightningModel(LightningModule):
-    """Base class for the models used in Geti Tune.
+    """Base class for the models used in getitune.
 
     This class is a subclass of `LightningModule`. It is not intended to be used directly.
 
@@ -443,7 +443,7 @@ class LightningModel(LightningModule):
 
     @property
     def metric(self) -> Metric | MetricCollection:
-        """Metric module for this Geti Tune model."""
+        """Metric module for this getitune model."""
         return self._metric
 
     @abstractmethod
@@ -496,7 +496,7 @@ class LightningModel(LightningModule):
         checkpoint.pop(
             "datamodule_hyper_parameters",
             None,
-        )  # Remove datamodule_hyper_parameters to prevent storing Geti Tune classes
+        )  # Remove datamodule_hyper_parameters to prevent storing getitune classes
 
     def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
         """Callback on loading checkpoint."""
@@ -521,7 +521,7 @@ class LightningModel(LightningModule):
         ckpt_label_info = self._dispatch_label_info(ckpt_label_info)
 
         if not hasattr(ckpt_label_info, "label_ids"):
-            msg = "Loading checkpoint from OTX < 2.2.1, label_ids are assigned automatically"
+            msg = "Loading checkpoint from getitune < 2.2.1, label_ids are assigned automatically"
             logger.info(msg)
             ckpt_label_info.label_ids = [str(i) for i, _ in enumerate(ckpt_label_info.label_names)]
 
@@ -549,7 +549,7 @@ class LightningModel(LightningModule):
     def load_state_dict(self, ckpt: dict[str, Any], *args, **kwargs) -> None:
         """Load state dictionary from checkpoint state dictionary.
 
-        It successfully loads the checkpoint from OTX v1.x and for finetune and for resume.
+        It successfully loads the checkpoint from getitune v1.x and for finetune and for resume.
 
         If checkpoint's label_info and LightningModel's label_info are different,
         load_state_pre_hook for smart weight loading will be registered.
@@ -630,7 +630,7 @@ class LightningModel(LightningModule):
         """Create a PyTorch model for this class."""
 
     def _customize_inputs(self, inputs: SampleBatch) -> dict[str, Any]:
-        """Customize Geti Tune input batch data entity if needed for your model."""
+        """Customize getitune input batch data entity if needed for your model."""
         raise NotImplementedError
 
     def _customize_outputs(
@@ -638,7 +638,7 @@ class LightningModel(LightningModule):
         outputs: Any,  # noqa: ANN401
         inputs: SampleBatch,
     ) -> PredictionBatch | BatchLoss:
-        """Customize Geti Tune output batch data entity if needed for model."""
+        """Customize getitune output batch data entity if needed for model."""
         raise NotImplementedError
 
     def forward(
@@ -678,7 +678,7 @@ class LightningModel(LightningModule):
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/base.py
             "If it wants to use `getitune.core.exporter.native.LightningModelExporter`."
 ========
-            "If it wants to use `getitune.core.exporter.native.OTXNativeModelExporter`."
+            "If it wants to use `getitune.core.exporter.native.LightningModelExporter`."
 >>>>>>>> develop:library/src/getitune/backend/native/models/base.py
         )
         raise NotImplementedError(msg)
@@ -844,7 +844,7 @@ class LightningModel(LightningModule):
 <<<<<<<< HEAD:library/src/getitune/backend/lightning/models/base.py
             "To export this LightningModel, you should implement an appropriate exporter for it. "
 ========
-            "To export this OTXModel, you should implement an appropriate exporter for it. "
+            "To export this LightningModel, you should implement an appropriate exporter for it. "
 >>>>>>>> develop:library/src/getitune/backend/native/models/base.py
             "You can try to reuse ones provided in `getitune.core.exporter.*`."
         )

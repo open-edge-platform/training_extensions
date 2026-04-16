@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for Geti Tune Dice metric used for the Geti Tune semantic segmentation task."""
+"""Module for getitune Dice metric used for the getitune semantic segmentation task."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ def _segm_callable(label_info: SegLabelInfo) -> MetricCollection:
 
 
 class DiceMetric(_DiceScore):
-    """Dice metric used for the Geti Tune semantic segmentation task."""
+    """Dice metric used for the getitune semantic segmentation task."""
 
     def __init__(
         self,

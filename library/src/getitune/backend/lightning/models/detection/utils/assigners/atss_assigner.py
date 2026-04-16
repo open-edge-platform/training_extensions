@@ -23,11 +23,11 @@ from getitune.backend.lightning.models.common.utils.structures import AssignResu
 if TYPE_CHECKING:
     from getitune.backend.lightning.models.utils.utils import InstanceData
 ========
-from getitune.backend.native.models.common.utils.assigners.iou2d_calculator import BboxOverlaps2D
-from getitune.backend.native.models.common.utils.structures import AssignResult
+from getitune.backend.lightning.models.common.utils.assigners.iou2d_calculator import BboxOverlaps2D
+from getitune.backend.lightning.models.common.utils.structures import AssignResult
 
 if TYPE_CHECKING:
-    from getitune.backend.native.models.utils.utils import InstanceData
+    from getitune.backend.lightning.models.utils.utils import InstanceData
 >>>>>>>> develop:library/src/getitune/backend/native/models/detection/utils/assigners/atss_assigner.py
 
 

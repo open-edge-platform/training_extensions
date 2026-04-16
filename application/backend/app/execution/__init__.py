@@ -8,10 +8,10 @@ from .training import GetiTuneTrainer, TrainingDependencies
 
 __all__ = [
     "ExportDataset",
-    "ImportDatasetAsNewProject",
-    "ImportDatasetToProject",
     "GetiTuneQuantizer",
     "GetiTuneTrainer",
+    "ImportDatasetAsNewProject",
+    "ImportDatasetToProject",
     "PrepareDataset",
     "QuantizationDependencies",
     "TrainingDependencies",

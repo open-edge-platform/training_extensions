@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module reserved for definitions used in Geti Tune."""
+"""Module reserved for definitions used in getitune."""
 
 import os
 from pathlib import Path

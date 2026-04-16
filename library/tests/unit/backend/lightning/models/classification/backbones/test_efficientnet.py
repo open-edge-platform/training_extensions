@@ -8,7 +8,7 @@ import torch
 from getitune.backend.lightning.models.classification.backbones.efficientnet import EfficientNetBackbone
 
 
-class TestOTXEfficientNet:
+class TestEfficientNet:
     @pytest.mark.parametrize(
         "model_name",
         [
