@@ -7,7 +7,6 @@ import { useGetDatasetRevisions } from 'hooks/use-get-dataset-revisions.hook';
 
 import {
     DatasetRevision,
-    DeviceType,
     Model,
     ModelArchitectureWithPerformanceCategory,
     TrainingConfiguration,

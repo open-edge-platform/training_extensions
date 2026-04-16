@@ -15,7 +15,7 @@ const createTrainingDeviceKey = (trainingDevice: TrainingDevice): string => {
 };
 
 const formatTrainingDeviceMemory = (bytes: number): string => {
-    return `${Math.ceil(bytes / 1000 ** 3)} GB`;
+    return `${Math.ceil(bytes / 1024 ** 3)} GB`;
 };
 
 const createTrainingDeviceName = (trainingDevice: TrainingDevice): string => {
