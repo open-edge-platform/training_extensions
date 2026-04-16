@@ -31,4 +31,16 @@ describe('formatCompactDuration', () => {
     it('formats multiple hours as HH:mm:ss', () => {
         expect(formatCompactDuration(7384)).toBe('02:03:04');
     });
+
+    it('formats 24 hours as HH:mm:ss', () => {
+        expect(formatCompactDuration(86400)).toBe('24:00:00');
+    });
+
+    it('formats 100 hours as HH:mm:ss', () => {
+        expect(formatCompactDuration(360000)).toBe('100:00:00');
+    });
+
+    it('floors fractional seconds before formatting', () => {
+        expect(formatCompactDuration(3661.9)).toBe('01:01:01');
+    });
 });
