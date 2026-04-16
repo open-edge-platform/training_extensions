@@ -4,8 +4,8 @@
 import { Flex } from '@geti/ui';
 
 import type { Media, MediaVideo } from '../../constants/shared-types';
-import { formatDurationText } from '../../features/annotator/video-player/video-toolbar/time-utils';
 import { isVideo } from '../../shared/media-item-utils';
+import { formatCompactDuration } from './util';
 
 import classes from './media-thumbnail.module.scss';
 
@@ -31,7 +31,7 @@ const VideoIndicator = ({ duration }: VideoIndicatorProps) => {
             alignItems={'center'}
             UNSAFE_className={classes.videoIndicator}
         >
-            {formatDurationText(duration)}
+            {formatCompactDuration(duration)}
         </Flex>
     );
 };
