@@ -11,12 +11,8 @@ import { InferenceDevices } from './inference-devices.component';
 
 const ConfigurationItem = ({ children }: { children: ReactNode }) => {
     return (
-        <View position={'relative'} height={'100%'}>
-            <Suspense
-                fallback={<Loading style={{ backgroundColor: 'transparent' }} marginTop={'size-200'} size={'M'} />}
-            >
-                {children}
-            </Suspense>
+        <View position={'relative'} minHeight={'size-800'}>
+            <Suspense fallback={<Loading mode={'inline'} size={'M'} />}>{children}</Suspense>
         </View>
     );
 };
@@ -28,7 +24,7 @@ export const PipelineConfiguration = () => {
             <Suspense fallback={<Loading />}>
                 <InferenceDevices />
             </Suspense>
-            <Tabs aria-label={'Pipeline configuration tabs'} minHeight={0}>
+            <Tabs aria-label={'Pipeline configuration tabs'} flex={1} minHeight={0}>
                 <TabList marginBottom={'size-200'}>
                     <Item key='sources' textValue='Sources'>
                         <Text>Input</Text>
@@ -37,13 +33,7 @@ export const PipelineConfiguration = () => {
                         <Text>Output</Text>
                     </Item>
                 </TabList>
-                <TabPanels
-                    UNSAFE_style={{
-                        // --spectrum-global-dimension-size-700 = to all elements above the panels
-                        maxHeight: 'calc(100% - var(--spectrum-global-dimension-size-700))',
-                        overflowY: 'auto',
-                    }}
-                >
+                <TabPanels flex={1} minHeight={0} UNSAFE_style={{ overflowY: 'auto' }}>
                     <Item key='sources'>
                         <ConfigurationItem>
                             <SourceActions />

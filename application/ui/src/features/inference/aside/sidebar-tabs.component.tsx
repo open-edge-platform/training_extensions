@@ -25,20 +25,15 @@ type TabProps = {
 };
 
 const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
-    const [tab, setTab] = useState<string>(selectedTab);
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [tab, setTab] = useState<string | null>(selectedTab);
 
+    const isExpanded = tab !== null;
     const gridTemplateColumns = isExpanded ? ['clamp(size-4600, 35vw, 40rem)', 'size-600'] : ['0px', 'size-600'];
 
     const content = tabs.find(({ label }) => label === tab)?.content;
 
     const handleSetTab = (label: string) => {
-        if (label === tab) {
-            setIsExpanded((prev) => !prev);
-        } else {
-            setTab(label);
-            setIsExpanded(true);
-        }
+        setTab((prev) => (prev === label ? null : label));
     };
 
     return (
