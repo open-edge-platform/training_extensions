@@ -459,6 +459,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [1.0, 3.0],
                                         "default_value": [1.0, 4.0],
                                         "value_type": "float_range",
+                                        "min_value": 1.0,
+                                        "max_value": 16.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -658,6 +660,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.6, 1.4],
                                         "default_value": [0.5, 1.5],
                                         "value_type": "float_range",
+                                        "min_value": 0.0,
+                                        "max_value": 10.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -780,6 +784,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.9, 1.1],
                                         "default_value": [0.8, 1.2],
                                         "value_type": "float_range",
+                                        "min_value": 0.0,
+                                        "max_value": 5.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -795,6 +801,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.85, 1.15],
                                         "default_value": [0.75, 1.25],
                                         "value_type": "float_range",
+                                        "min_value": 0.0,
+                                        "max_value": 5.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -810,6 +818,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.8, 1.2],
                                         "default_value": [0.9, 1.1],
                                         "value_type": "float_range",
+                                        "min_value": 0.0,
+                                        "max_value": 5.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -824,6 +834,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [-0.05, 0.05],
                                         "default_value": [-0.1, 0.1],
                                         "value_type": "float_range",
+                                        "min_value": -0.5,
+                                        "max_value": 0.5,
                                         "depends_on": None,
                                     },
                                     {
@@ -879,6 +891,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.03, 0.25],
                                         "default_value": [0.02, 0.33],
                                         "value_type": "float_range",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -893,6 +907,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.5, 2.0],
                                         "default_value": [0.3, 3.3],
                                         "value_type": "float_range",
+                                        "min_value": 0.0,
+                                        "max_value": 10.0,
                                         "depends_on": None,
                                     },
                                     {

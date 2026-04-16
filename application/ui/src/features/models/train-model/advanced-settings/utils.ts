@@ -98,43 +98,59 @@ export const isBoolEnableParameterGroup = (
     );
 };
 
+/**
+ * Filters a list of training configuration parameters based on their `depends_on` conditions.
+ *
+ * For each parameter that declares a `depends_on` mapping, this function looks for the
+ * referenced parameter at the same depth. A parameter is included in the output only if:
+ * - It has no `depends_on` declaration, OR
+ * - Its dependency parameter cannot be found (or is a group, not a leaf parameter), OR
+ * - The dependency parameter's current value satisfies the condition specified in `depends_on`
+ *   (either an exact match or inclusion in an allowed-values array).
+ *
+ * Parameter groups without a `depends_on` are recursively processed so that their nested
+ * parameters are also filtered.
+ *
+ * @param parameters - The flat or nested list of {@link TrainingConfigurationParameter} objects to filter.
+ * @returns A new array containing only the parameters (and recursively filtered groups) that
+ *          satisfy their dependency conditions.
+ */
 export const filterDependentParameters = (
     parameters: TrainingConfigurationParameter[]
 ): TrainingConfigurationParameter[] => {
-    return parameters
-        .reduce<TrainingConfigurationParameter[][]>((acc, curr) => {
-            if (isParameter(curr) && curr.depends_on == null) {
-                const parametersDependingOnCurr = parameters.filter((parameter) => {
-                    if (parameter.depends_on == null) return false;
+    return parameters.reduce<TrainingConfigurationParameter[]>((acc, curr, _idx, parametersOnTheSameDepth) => {
+        if (curr.depends_on != null) {
+            const dependentParameter = parametersOnTheSameDepth.find(
+                (parameter) => curr.depends_on != null && curr.depends_on[parameter.key] != null
+            );
 
-                    const dependsOnValue = parameter.depends_on[curr.key];
-
-                    if (Array.isArray(dependsOnValue)) {
-                        return dependsOnValue.includes(curr.value);
-                    }
-
-                    return dependsOnValue === curr.value;
-                });
-
-                acc.push([curr, ...parametersDependingOnCurr]);
+            if (dependentParameter === undefined || !isParameter(dependentParameter)) {
+                acc.push(curr);
                 return acc;
             }
 
-            if (curr.depends_on != null) {
-                return acc;
+            const dependsOnValue = curr.depends_on[dependentParameter.key];
+            const shouldBeVisible = Array.isArray(dependsOnValue)
+                ? dependsOnValue.includes(dependentParameter.value)
+                : dependsOnValue === dependentParameter.value;
+
+            if (shouldBeVisible) {
+                acc.push(curr);
             }
-
-            if (isParameterGroup(curr)) {
-                const groupedParameters = filterDependentParameters(curr.parameters);
-
-                acc.push([{ ...curr, parameters: groupedParameters }]);
-
-                return acc;
-            }
-
-            acc.push([curr]);
 
             return acc;
-        }, [])
-        .flatMap((group) => group);
+        }
+
+        if (isParameterGroup(curr)) {
+            const groupedParameters = filterDependentParameters(curr.parameters);
+
+            acc.push({ ...curr, parameters: groupedParameters });
+
+            return acc;
+        }
+
+        acc.push(curr);
+
+        return acc;
+    }, []);
 };

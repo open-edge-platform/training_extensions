@@ -48,7 +48,7 @@ describe('LoadingImportDataset', () => {
         );
     };
 
-    it('renders failed job state and displays job message and error', async () => {
+    it('displays job message, error, and does not delete entry when job fails', async () => {
         const job = getMockedPrepareImportDatasetJob({
             status: 'FAILED',
             message: 'Import failed due to validation error',
@@ -66,7 +66,7 @@ describe('LoadingImportDataset', () => {
         expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
     });
 
-    it('renders active job state when job is running', async () => {
+    it('displays file processing message and progress percentage when job is running', async () => {
         const fileName = 'dataset.zip';
         const job = getMockedPrepareImportDatasetJob({
             status: 'RUNNING',
@@ -80,7 +80,7 @@ describe('LoadingImportDataset', () => {
         expect(await screen.findByText('56%')).toBeVisible();
     });
 
-    it('renders confirmation toast when job is done', async () => {
+    it('calls onSuccess, deletes entry, and shows success message when job is done', async () => {
         const fileName = 'dataset.zip';
         const job = getMockedPrepareImportDatasetJob({ status: 'DONE' });
 
@@ -96,7 +96,7 @@ describe('LoadingImportDataset', () => {
         });
     });
 
-    it('renders failed state when job status query fails with error', async () => {
+    it('deletes entry without calling onSuccess when job query fails', async () => {
         const mockedOnSuccess = vi.fn();
         const mockedDeleteImportEntry = vi.fn();
 
@@ -112,7 +112,7 @@ describe('LoadingImportDataset', () => {
         await userEvent.click(screen.getByText('Technical details'));
 
         expect(await screen.findByText('Job not found')).toBeVisible();
+        expect(mockedDeleteImportEntry).toHaveBeenCalled();
         expect(mockedOnSuccess).not.toHaveBeenCalled();
-        expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
     });
 });

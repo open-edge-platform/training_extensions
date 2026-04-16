@@ -1,42 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useEffect, useRef, type Dispatch, type RefObject, type SetStateAction } from 'react';
-
-import { View } from '@geti/ui';
+import { useCallback, useEffect, useRef, useState, type SyntheticEvent } from 'react';
 
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import { useWebRTCConnection } from './web-rtc-connection-provider';
-
-const useSetTargetSizeBasedOnVideo = (
-    setSize: Dispatch<SetStateAction<{ width: number; height: number }>>,
-    videoRef: RefObject<HTMLVideoElement | null>
-) => {
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        const onLoaded = () => {
-            if (video.videoWidth && video.videoHeight) {
-                setSize({ width: video.videoWidth, height: video.videoHeight });
-            }
-        };
-
-        const resizeObserver = new ResizeObserver(() => {
-            if (video.videoWidth && video.videoHeight) {
-                setSize({ width: video.videoWidth, height: video.videoHeight });
-            }
-        });
-
-        video.addEventListener('loadedmetadata', onLoaded);
-        resizeObserver.observe(video);
-
-        return () => {
-            video.removeEventListener('loadedmetadata', onLoaded);
-            resizeObserver.disconnect();
-        };
-    }, [setSize, videoRef]);
-};
 
 const useStreamToVideo = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -58,63 +26,51 @@ const useStreamToVideo = () => {
         if (videoOutput && videoOutput.srcObject !== stream) {
             videoOutput.srcObject = stream;
         }
-    }, [videoRef, webRTCConnectionRef]);
+    }, [webRTCConnectionRef]);
 
     useEffect(() => {
-        if (status === 'connected') {
-            connect();
-        }
-    }, [status, connect]);
+        if (status !== 'connected') return;
 
-    useEffect(() => {
-        const webrtcConnection = webRTCConnectionRef.current;
-        const peerConnection = webrtcConnection?.getPeerConnection();
+        const peerConnection = webRTCConnectionRef.current?.getPeerConnection();
+        if (!peerConnection) return;
 
-        if (!peerConnection) {
-            return;
-        }
-
+        connect();
         peerConnection.addEventListener('track', connect);
 
         return () => {
             peerConnection.removeEventListener('track', connect);
         };
-    }, [webRTCConnectionRef, connect]);
+    }, [status, webRTCConnectionRef, connect]);
 
     return videoRef;
 };
 
-export const Stream = ({
-    size,
-    setSize,
-}: {
-    size: { width: number; height: number };
-    setSize: Dispatch<SetStateAction<{ width: number; height: number }>>;
-}) => {
+const DEFAULT_VIDEO_SIZE = { width: 1280, height: 720 };
+
+export const Stream = () => {
     const videoRef = useStreamToVideo();
+    const [videoSize, setVideoSize] = useState(DEFAULT_VIDEO_SIZE);
 
-    useSetTargetSizeBasedOnVideo(setSize, videoRef);
+    const onLoadedMetadata = (e: SyntheticEvent<HTMLVideoElement>) => {
+        const { videoWidth, videoHeight } = e.currentTarget;
 
-    const { status } = useWebRTCConnection();
+        if (videoWidth && videoHeight) {
+            setVideoSize({ width: videoWidth, height: videoHeight });
+        }
+    };
 
     return (
-        <ZoomTransform target={size}>
-            <View gridArea={'innercanvas'}>
-                {status === 'connected' && (
-                    // eslint-disable-next-line jsx-a11y/media-has-caption
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        width={size.width}
-                        height={size.height}
-                        controls={false}
-                        style={{
-                            background: 'var(--spectrum-global-color-gray-200)',
-                        }}
-                    />
-                )}
-            </View>
+        <ZoomTransform target={videoSize}>
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                controls={false}
+                width={videoSize.width}
+                height={videoSize.height}
+                onLoadedMetadata={onLoadedMetadata}
+            />
         </ZoomTransform>
     );
 };

@@ -42,6 +42,6 @@ describe('MediaThumbnail', () => {
             />
         );
 
-        expect(screen.getByText('00:01:00')).toBeInTheDocument();
+        expect(screen.getByText('01:00')).toBeInTheDocument();
     });
 });
