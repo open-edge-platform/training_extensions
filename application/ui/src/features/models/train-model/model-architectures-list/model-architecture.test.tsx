@@ -184,7 +184,7 @@ describe('ModelArchitecture', () => {
             renderDetailedModelArchitecture({ modelArchitecture: detectionArchitecture });
 
             expect(screen.getByText(`Gigaflops: ${detectionArchitecture.stats.gigaflops}`)).toBeVisible();
-            expect(screen.getByText('mAP: 55.3%')).toBeVisible();
+            expect(screen.getByText('mAP on COCO: 55.3%')).toBeVisible();
         });
 
         it('hides the performance category badge when using DetailedParameters', () => {
@@ -216,7 +216,7 @@ describe('ModelArchitecture', () => {
 
             renderDetailedModelArchitecture({ modelArchitecture: classificationArchitecture });
 
-            expect(screen.getByText('Top-1 Acc: 76.2%')).toBeVisible();
+            expect(screen.getByText('Top-1 Acc on ImageNet: 76.2%')).toBeVisible();
         });
     });
 });
