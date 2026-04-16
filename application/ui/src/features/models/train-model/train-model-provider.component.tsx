@@ -31,7 +31,7 @@ export type TrainModelContextProps = {
 
     trainingDevices: TrainingDevice[];
     selectedTrainingDevice: string | null;
-    onSelectTrainingDevice: (deviceType: string | null) => void;
+    onSelectTrainingDevice: (deviceKey: string | null) => void;
 
     datasetRevisions: DatasetRevisionWithValue[];
     selectedDatasetRevisionId: string | null;

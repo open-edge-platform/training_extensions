@@ -28,7 +28,8 @@ const gpuDeviceWithIndex = getMockedTrainingDevice({
 
 const mockTrainingDevices = [cpuDevice, gpuDevice, gpuDeviceWithIndex];
 
-vi.mock('../train-model-provider.component', () => ({
+vi.mock('../train-model-provider.component', async (importOriginal) => ({
+    ...(await importOriginal()),
     useTrainModelState: () => ({
         trainingDevices: mockTrainingDevices,
         onSelectTrainingDevice: mockOnSelectTrainingDevice,

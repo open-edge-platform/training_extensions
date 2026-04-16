@@ -11,7 +11,7 @@ const formatTrainingDeviceMemory = (bytes: number): string => {
 };
 
 const createTrainingDeviceName = (trainingDevice: TrainingDevice): string => {
-    let name: string = trainingDevice.name;
+    let name = trainingDevice.name;
 
     if (trainingDevice.memory != null) {
         const memory = formatTrainingDeviceMemory(trainingDevice.memory);
