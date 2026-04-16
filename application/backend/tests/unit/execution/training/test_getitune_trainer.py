@@ -13,6 +13,7 @@ import torch
 from datumaro.experimental import Dataset, LazyImage
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, Subset
+from getitune import TaskType as GetiTuneTaskType
 from getitune.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from getitune.metrics.types import MetricCallable
@@ -301,12 +302,12 @@ class TestGetiTuneTrainerPrepareTrainingConfiguration:
             project_id=training_params.project_id,
             model_architecture_id=training_params.model_architecture_id,
         )
-        expected_getitune_training_config = mock_training_config.model_dump(mode="json")
+        expected_getitune_training_config = mock_training_config.model_dump(exclude_none=True)
         expected_getitune_training_config["hyper_parameters"] = expected_getitune_training_config.pop(
             "algo_level_parameters"
         )
         expected_getitune_training_config["model_manifest_id"] = training_params.model_architecture_id
-        expected_getitune_training_config["sub_task_type"] = TaskType.DETECTION
+        expected_getitune_training_config["sub_task_type"] = GetiTuneTaskType.DETECTION
         mock_convert.assert_called_once_with(expected_getitune_training_config)
         assert training_config == mock_training_config
         assert getitune_training_config == mock_getitune_training_config
