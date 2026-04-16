@@ -101,41 +101,39 @@ export const isBoolEnableParameterGroup = (
 export const filterDependentParameters = (
     parameters: TrainingConfigurationParameter[]
 ): TrainingConfigurationParameter[] => {
-    return parameters
-        .reduce<TrainingConfigurationParameter[][]>((acc, curr, _idx, parametersOnTheDepth) => {
-            if (curr.depends_on != null) {
-                const dependentParameter = parametersOnTheDepth.find(
-                    (parameter) => curr.depends_on != null && curr.depends_on[parameter.key] != null
-                );
+    return parameters.reduce<TrainingConfigurationParameter[]>((acc, curr, _idx, parametersOnTheDepth) => {
+        if (curr.depends_on != null) {
+            const dependentParameter = parametersOnTheDepth.find(
+                (parameter) => curr.depends_on != null && curr.depends_on[parameter.key] != null
+            );
 
-                if (dependentParameter === undefined || !isParameter(dependentParameter)) {
-                    acc.push([curr]);
-                    return acc;
-                }
-
-                const dependsOnValue = curr.depends_on[dependentParameter.key];
-                const shouldBeVisible = Array.isArray(dependsOnValue)
-                    ? dependsOnValue.includes(dependentParameter.value)
-                    : dependsOnValue === dependentParameter.value;
-
-                if (shouldBeVisible) {
-                    acc.push([curr]);
-                }
-
+            if (dependentParameter === undefined || !isParameter(dependentParameter)) {
+                acc.push(curr);
                 return acc;
             }
 
-            if (isParameterGroup(curr)) {
-                const groupedParameters = filterDependentParameters(curr.parameters);
+            const dependsOnValue = curr.depends_on[dependentParameter.key];
+            const shouldBeVisible = Array.isArray(dependsOnValue)
+                ? dependsOnValue.includes(dependentParameter.value)
+                : dependsOnValue === dependentParameter.value;
 
-                acc.push([{ ...curr, parameters: groupedParameters }]);
-
-                return acc;
+            if (shouldBeVisible) {
+                acc.push(curr);
             }
-
-            acc.push([curr]);
 
             return acc;
-        }, [])
-        .flatMap((group) => group);
+        }
+
+        if (isParameterGroup(curr)) {
+            const groupedParameters = filterDependentParameters(curr.parameters);
+
+            acc.push({ ...curr, parameters: groupedParameters });
+
+            return acc;
+        }
+
+        acc.push(curr);
+
+        return acc;
+    }, []);
 };
