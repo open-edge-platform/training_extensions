@@ -172,7 +172,7 @@ class DataModule(LightningDataModule):
                 logger.warning(f"Subset '{name}' is empty in the dataset. Skip it")
                 continue
 
-            dataset = DatasetFactory.create(
+            subset_dataset = DatasetFactory.create(
                 task=self.task,
                 dm_subset=dm_subset,
                 cfg_subset=subset_cfg,
@@ -180,11 +180,11 @@ class DataModule(LightningDataModule):
             )
 
             if self.tile_config.enable_tiler:
-                dataset = TileDatasetFactory.create(
-                    dataset=dataset,
+                subset_dataset = TileDatasetFactory.create(
+                    dataset=subset_dataset,
                     tile_config=self.tile_config,
                 )
-            self.subsets[name] = dataset
+            self.subsets[name] = subset_dataset
             label_infos += [self.subsets[name].label_info]
             logger.info(f"Add name: {name}, self.subsets: {self.subsets}")
 
