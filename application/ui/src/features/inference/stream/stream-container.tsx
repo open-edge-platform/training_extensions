@@ -43,54 +43,52 @@ export const StreamContainer = () => {
     return (
         <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
             <div className={classes.canvasContainer} onClick={handleClick}>
-                <View height={'100%'} position='relative'>
-                    {isStopped && (
-                        <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                            <Flex
-                                UNSAFE_className={clsx(classes.playPauseButton, {
-                                    [classes.playButtonDisabled]: !isPipelineRunning,
-                                })}
-                                justifyContent={'center'}
-                                alignItems={'center'}
-                            >
-                                <Play
+                {isStopped && (
+                    <Flex justifyContent={'center'} alignItems={'center'} UNSAFE_className={classes.backdrop}>
+                        <Flex
+                            justifyContent={'center'}
+                            alignItems={'center'}
+                            UNSAFE_className={clsx(classes.playPauseButtonWrapper, {
+                                [classes.playButtonDisabled]: !isPipelineRunning,
+                            })}
+                        >
+                            <Play
+                                color={'currentColor'}
+                                width={dimensionValue('size-400')}
+                                height={dimensionValue('size-400')}
+                                aria-label={isPipelineRunning ? 'Start stream' : 'Enable pipeline to start stream'}
+                                aria-disabled={!isPipelineRunning}
+                            />
+                            <Text UNSAFE_style={{ paddingRight: dimensionValue('size-100') }}>Start stream</Text>
+                        </Flex>
+                    </Flex>
+                )}
+
+                {isConnecting && (
+                    <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
+                        <Loading mode='inline' />
+                    </Flex>
+                )}
+
+                {isConnected && (
+                    <>
+                        {!isPaused && <Stream />}
+                        <Flex
+                            alignItems='center'
+                            justifyContent='center'
+                            UNSAFE_className={clsx(classes.pauseFlash, { [classes.pauseFlashActive]: isPaused })}
+                        >
+                            <Flex UNSAFE_className={clsx(classes.playPauseButtonWrapper, classes.pauseFlashButton)}>
+                                <Pause
                                     color={'currentColor'}
                                     width={dimensionValue('size-400')}
                                     height={dimensionValue('size-400')}
-                                    aria-label={isPipelineRunning ? 'Start stream' : 'Enable pipeline to start stream'}
-                                    aria-disabled={!isPipelineRunning}
+                                    aria-label={'Stream stopped'}
                                 />
-                                <Text>Start stream</Text>
                             </Flex>
                         </Flex>
-                    )}
-
-                    {isConnecting && (
-                        <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                            <Loading mode='inline' />
-                        </Flex>
-                    )}
-
-                    {isConnected && (
-                        <>
-                            {!isPaused && <Stream />}
-                            <Flex
-                                alignItems='center'
-                                justifyContent='center'
-                                UNSAFE_className={clsx(classes.pauseFlash, { [classes.pauseFlashActive]: isPaused })}
-                            >
-                                <Flex UNSAFE_className={clsx(classes.playPauseButton, classes.pauseFlashButton)}>
-                                    <Pause
-                                        color={'currentColor'}
-                                        width={dimensionValue('size-400')}
-                                        height={dimensionValue('size-400')}
-                                        aria-label={'Stream stopped'}
-                                    />
-                                </Flex>
-                            </Flex>
-                        </>
-                    )}
-                </View>
+                    </>
+                )}
             </div>
         </View>
     );
