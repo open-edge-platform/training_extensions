@@ -4,15 +4,7 @@
 import { Item, Picker } from '@geti/ui';
 
 import type { TrainingDevice } from '../../../../constants/shared-types';
-import { useTrainModelState } from '../train-model-provider.component';
-
-const createTrainingDeviceKey = (trainingDevice: TrainingDevice): string => {
-    if (trainingDevice.index == null) {
-        return trainingDevice.type;
-    }
-
-    return `${trainingDevice.type}-${trainingDevice.index}`;
-};
+import { createTrainingDeviceKey, useTrainModelState } from '../train-model-provider.component';
 
 const formatTrainingDeviceMemory = (bytes: number): string => {
     return `${Math.ceil(bytes / 1024 ** 3)} GB`;
