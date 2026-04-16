@@ -30,8 +30,8 @@ export const ImportJobsList = () => {
     const labelMappingImportsQueue = labelMappingImports.reverse();
     const taskTypeSelectionImportsQueue = taskTypeSelectionImports.reverse();
 
-    const handleImportSuccess = () => {
-        queryClient.invalidateQueries({
+    const handleImportSuccess = async () => {
+        await queryClient.invalidateQueries({
             queryKey: getQueryKey(['get', '/api/projects']),
         });
     };

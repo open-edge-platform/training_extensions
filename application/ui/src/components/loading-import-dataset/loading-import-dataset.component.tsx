@@ -33,8 +33,8 @@ export const LoadingImportDataset = ({
         jobId,
         onSuccess: async () => {
             deleteEntry();
-            await onSuccess();
             deleteStagedFileMutation.mutate();
+            await onSuccess();
 
             toast({
                 message: `Dataset ${fileName} ${formatBytes(size)} imported successfully.`,
