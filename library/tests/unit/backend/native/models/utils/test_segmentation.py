@@ -5,12 +5,12 @@
 
 import torch
 
-from otx.backend.native.models.segmentation.modules import (
+from getitune.backend.native.models.segmentation.modules import (
     IterativeAggregator,
     channel_shuffle,
     normalize,
 )
-from otx.backend.native.models.segmentation.modules.blocks import OnnxLpNormalization
+from getitune.backend.native.models.segmentation.modules.blocks import OnnxLpNormalization
 
 
 def test_channel_shuffle():

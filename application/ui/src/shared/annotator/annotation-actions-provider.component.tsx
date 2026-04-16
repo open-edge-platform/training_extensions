@@ -3,12 +3,13 @@
 
 import { createContext, ReactNode, useContext, useMemo, useRef } from 'react';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEqual } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../api/client';
-import type { AnnotationDTO, Label, Media } from '../../constants/shared-types';
+import type { AnnotationDTO, DatasetSubset, Label, Media } from '../../constants/shared-types';
 import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
 import { isVideoFrame } from '../media-item-utils';
@@ -16,21 +17,22 @@ import type { Annotation, Shape } from '../types';
 import { mapLocalAnnotationsToServer, mapServerAnnotationsToLocal } from './annotation-mappers';
 import type { AnnotatorMode } from './annotator-mode';
 import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
+import { incrementCachedAnnotatedFrameCount } from './util';
 
-interface AnnotationsContextValue {
+type AnnotationsContextValue = {
     annotations: Annotation[];
     canSubmit: boolean;
     addAnnotations: (shapes: Shape[], labels: Label[]) => string[];
     addAnnotationWithEmptyLabel: (label: Label) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[], labels?: Label[]) => void;
-    submitAnnotations: () => Promise<void>;
+    submitAnnotations: (subset: DatasetSubset) => Promise<void>;
     resetAnnotations: () => void;
     replaceAnnotations: (annotations: Annotation[]) => void;
     isUserReviewed: boolean;
     isSaving: boolean;
     isReadOnlyMode: boolean;
-}
+};
 
 const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
 
@@ -58,6 +60,7 @@ export const AnnotationActionsProvider = ({
     isReadOnly = false,
 }: AnnotationActionsProviderProps) => {
     const projectId = useProjectIdentifier();
+    const queryClient = useQueryClient();
     const saveMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media/{media_id}/annotations', {
         meta: {
             invalidateQueries: [
@@ -75,9 +78,7 @@ export const AnnotationActionsProvider = ({
                 [
                     'get',
                     '/api/projects/{project_id}/dataset/media/{media_id}/frames',
-                    {
-                        params: { path: { project_id: projectId, media_id: mediaItem.id } },
-                    },
+                    { params: { path: { project_id: projectId, media_id: mediaItem.id } } },
                 ],
             ],
         },
@@ -156,37 +157,43 @@ export const AnnotationActionsProvider = ({
         setAnnotations(() => newAnnotations);
     };
 
-    const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
+    const saveAnnotations = async (annotationsDTO: AnnotationDTO[], subset?: DatasetSubset) => {
         const query = isVideoFrame(mediaItem)
             ? {
                   frame_index: mediaItem.frame_number,
               }
             : undefined;
 
-        await saveMutation.mutateAsync({
-            params: { path: { media_id: mediaItem.id, project_id: projectId }, query },
-            body: { annotations: annotationsDTO },
-        });
+        await saveMutation
+            .mutateAsync({
+                params: { path: { media_id: mediaItem.id, project_id: projectId }, query },
+                body: { annotations: annotationsDTO, subset: subset ?? undefined },
+            })
+            .then(() => {
+                if (isVideoFrame(mediaItem)) {
+                    incrementCachedAnnotatedFrameCount(queryClient, mediaItem);
+                }
+            });
 
         undoRedoActions.reset(mapServerAnnotationsToLocal(annotationsDTO, projectLabels));
     };
 
-    const submitPredictions = async () => {
+    const submitPredictions = async (subset: DatasetSubset) => {
         const serverFormattedAnnotationsWithoutConfidences: AnnotationDTO[] = mapLocalAnnotationsToServer(
             predictions
         ).map(({ confidences, ...restOfAnnotation }) => restOfAnnotation);
 
-        await saveAnnotations(serverFormattedAnnotationsWithoutConfidences);
+        await saveAnnotations(serverFormattedAnnotationsWithoutConfidences, subset);
     };
 
-    const submitAnnotations = async () => {
+    const submitAnnotations = async (subset: DatasetSubset) => {
         if (mode === 'prediction') {
-            await submitPredictions();
+            await submitPredictions(subset);
         } else {
             const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
             const serverAnnotations = mapLocalAnnotationsToServer(filteredAnnotations);
 
-            await saveAnnotations(serverAnnotations);
+            await saveAnnotations(serverAnnotations, subset);
         }
     };
 

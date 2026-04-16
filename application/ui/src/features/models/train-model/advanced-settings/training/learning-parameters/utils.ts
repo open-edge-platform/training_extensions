@@ -7,14 +7,9 @@ import {
     TrainingConfiguration,
     TrainingConfigurationParameter,
 } from '../../../../../../constants/shared-types';
-import {
-    findGroupByKey,
-    isParameter,
-    isParameterGroup,
-} from '../../../../model-listing/model-training-parameters/utils';
+import { findGroupByKey, isParameter } from '../../../../model-listing/model-training-parameters/utils';
 import { isEnumNumberParameter } from '../../utils';
 
-export type LearningConfigurationParameters = TrainingConfigurationParameter;
 export type LearningConfigurationGroup = ConfigurableParameterGroup;
 
 export const getLearningParameters = (
@@ -43,35 +38,3 @@ export const getInputSizeWidthParameter = (
 export const getInputSizeHeightParameter = (
     parameters: TrainingConfigurationParameter[]
 ): NumberEnumConfigurableParameter | undefined => parameters.find(isInputSizeHeightParameter);
-
-export const filterDependentParameters = (
-    parameters: LearningConfigurationParameters[]
-): LearningConfigurationParameters[] => {
-    return parameters
-        .reduce<LearningConfigurationParameters[][]>((acc, curr) => {
-            if (isParameter(curr) && curr.depends_on == null) {
-                const parametersDependingOnCurr = parameters.filter((parameter) => {
-                    return (
-                        isParameter(parameter) &&
-                        parameter.depends_on != null &&
-                        parameter.depends_on[curr.key] === curr.value
-                    );
-                });
-
-                return [...acc, [curr, ...parametersDependingOnCurr]];
-            }
-
-            if (isParameter(curr) && curr.depends_on != null) {
-                return acc;
-            }
-
-            if (isParameterGroup(curr)) {
-                const groupedParameters = filterDependentParameters(curr.parameters);
-
-                return [...acc, [{ ...curr, parameters: groupedParameters }]];
-            }
-
-            return [...acc, [curr]];
-        }, [])
-        .flatMap((group) => group);
-};

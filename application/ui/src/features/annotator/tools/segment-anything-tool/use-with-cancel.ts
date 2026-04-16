@@ -14,11 +14,17 @@ export const useWithCancel = (fn: (points: InteractiveAnnotationPoint[]) => Prom
             // Cancel any ongoing request
             abortController.current?.abort();
 
-            abortController.current = new AbortController();
+            // Create a new controller for THIS call and capture its signal in a local
+            // variable BEFORE awaiting anything. Any future cancel() call will replace
+            // abortController.current, but `controller.signal` here is a closed-over reference to
+            // the abortController for THIS specific invocation and will correctly reflect
+            // whether it was aborted — even after the ref has been replaced.
+            const controller = new AbortController();
+            abortController.current = controller;
 
             const result = await fn(...args);
 
-            if (abortController.current.signal.aborted) {
+            if (controller.signal.aborted) {
                 throw new DOMException('Request aborted', 'AbortError');
             }
 
@@ -30,7 +36,7 @@ export const useWithCancel = (fn: (points: InteractiveAnnotationPoint[]) => Prom
     const cancel = useCallback(() => {
         abortController.current?.abort();
         abortController.current = null;
-    }, [abortController]);
+    }, []);
 
     useEffect(() => {
         return () => {

@@ -127,6 +127,8 @@ export const getMockedTrainingConfiguration = (): TrainingConfigurationParameter
                                 value: [0.1, 2],
                                 default_value: [0.1, 2],
                                 value_type: 'float_range',
+                                min_value: 0,
+                                max_value: 10,
                             },
                             {
                                 type: 'parameter',

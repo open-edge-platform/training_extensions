@@ -43,7 +43,7 @@ export const useGroupedModels = (models: Model[] | undefined, options: UseGroupe
             : filterOutFailedModels(filteredByTraining);
         const filteredBySearch = filterBySearch(filteredByFailedModels, searchBy);
         const grouped = groupModels(filteredBySearch, groupBy, datasetRevisions);
-        const sorted = sortGroupedModels(grouped, sortBy);
+        const sorted = sortGroupedModels(grouped, sortBy, datasetRevisions);
         const pinned = pinModel(sorted, pinActive ? activeModel?.id : undefined);
 
         return removeEmpty(pinned);

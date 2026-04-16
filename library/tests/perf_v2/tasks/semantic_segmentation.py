@@ -13,7 +13,7 @@ from tests.perf_v2.utils import (
     ModelInfo,
 )
 
-from otx.types.task import OTXTaskType
+from getitune.types.task import OTXTaskType
 
 TASK_TYPE = OTXTaskType.SEMANTIC_SEGMENTATION
 

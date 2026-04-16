@@ -205,6 +205,39 @@ class SystemService:
         return DeviceType(device_type.lower()), device_index
 
     @staticmethod
+    def supports_int8(device_info: DeviceInfo) -> bool:
+        """
+        Check if the given device supports INT8 inference using OpenVINO.
+
+        For CPU devices, INT8 is always supported.
+        For GPU devices, the check is done via OpenVINO's OPTIMIZATION_CAPABILITIES property.
+
+        Args:
+            device_info: The device to check.
+
+        Returns:
+            bool: True if the device supports INT8 inference, False otherwise.
+        """
+        if device_info.type == DeviceType.CPU:
+            return True
+        if device_info.type == DeviceType.CUDA:
+            return False
+        try:
+            from model_api.adapters import create_core
+
+            core = create_core()
+            ov_device = device_info.as_openvino
+            capabilities = core.get_property(device_name=ov_device, property="OPTIMIZATION_CAPABILITIES")
+            return "INT8" in capabilities
+        except Exception:
+            logger.exception(
+                "Failed to query INT8 support for device '{}' (OpenVINO device '{}'). Assuming not supported.",
+                device_info,
+                device_info.as_openvino,
+            )
+            return False
+
+    @staticmethod
     def get_camera_devices() -> list[CameraInfo]:
         """
         Get available camera devices.

@@ -17,7 +17,7 @@ concurrency:
 jobs:
   check_paths:
     name: Check which language should be analyzed by CodeQL
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     if: github.event_name == 'pull_request'
     outputs:
       run_python: "${{ steps.prepare_outputs.outputs.run_python }}"
@@ -84,7 +84,7 @@ jobs:
 
   analyze:
     name: Analyze (${{ matrix.language }})
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     permissions:
       security-events: write # required to publish sarif
     needs: check_paths
@@ -106,7 +106,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@c793b717bc78562f491db7b0e93a3a178b099162 # v4.32.5
+        uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
         if: ${{ matrix.run == 'true' }}
         with:
           languages: ${{ matrix.language }}
@@ -114,7 +114,7 @@ jobs:
           queries: security-extended
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@c793b717bc78562f491db7b0e93a3a178b099162 # v4.32.5
+        uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
         if: ${{ matrix.run == 'true' }}
         with:
           category: "/language:${{matrix.language}}"

@@ -6,12 +6,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from otx.backend.native.engine import OTXEngine
-from otx.backend.native.models.base import OTXModel
-from otx.backend.openvino.engine import OVEngine
-from otx.backend.openvino.models.base import OVModel
-from otx.data.module import OTXDataModule
-from otx.engine import Engine, create_engine
+from getitune.backend.native.engine import OTXEngine
+from getitune.backend.native.models.base import OTXModel
+from getitune.backend.openvino.engine import OVEngine
+from getitune.backend.openvino.models.base import OVModel
+from getitune.data.module import OTXDataModule
+from getitune.engine import Engine, create_engine
 
 
 class TestCreateEngine:
@@ -22,7 +22,7 @@ class TestCreateEngine:
         mock_engine_cls.is_supported.return_value = True
         return mock_engine_cls
 
-    @patch("otx.engine.Engine.__subclasses__", autospec=True)
+    @patch("getitune.engine.Engine.__subclasses__", autospec=True)
     def test_create_engine(self, mock___subclasses__, mock_engine_subclass):
         """Test create_engine with arbitrary Engine."""
         mock___subclasses__.return_value = [mock_engine_subclass]
@@ -51,7 +51,7 @@ class TestCreateEngine:
     def test_create_native_engine(self, mocker):
         mock_model = MagicMock(spec=OTXModel)
         mock_data = MagicMock(spec=OTXDataModule)
-        mock_engine_init = mocker.patch("otx.backend.native.engine.OTXEngine.__init__", return_value=None)
+        mock_engine_init = mocker.patch("getitune.backend.native.engine.OTXEngine.__init__", return_value=None)
 
         # test OTXEngine creation with OTXModel
         engine_instance = create_engine(mock_model, mock_data)
@@ -73,7 +73,7 @@ class TestCreateEngine:
         # tests OpenVINO Engine creation with OVModel
         mock_model = MagicMock(spec=OVModel)
         mock_data = MagicMock(spec=OTXDataModule)
-        mock_engine_init = mocker.patch("otx.backend.openvino.engine.OVEngine.__init__", return_value=None)
+        mock_engine_init = mocker.patch("getitune.backend.openvino.engine.OVEngine.__init__", return_value=None)
         engine_instance = create_engine(mock_model, mock_data)
         assert isinstance(engine_instance, OVEngine)
         mock_engine_init.assert_called_once_with(model=mock_model, data=mock_data)

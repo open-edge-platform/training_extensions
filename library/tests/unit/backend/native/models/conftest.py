@@ -7,8 +7,8 @@ import gc
 import pytest
 import torch
 
-from otx.config import register_configs
-from otx.utils.device import is_xpu_available
+from getitune.config import register_configs
+from getitune.utils.device import is_xpu_available
 
 
 @pytest.fixture(scope="session", autouse=True)

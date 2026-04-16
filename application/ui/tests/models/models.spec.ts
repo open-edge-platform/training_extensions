@@ -265,9 +265,38 @@ test.describe('Models', () => {
 
         await modelsPage.openModelMenu();
         await modelsPage.clickDeleteAction();
-        await modelsPage.confirmDelete();
+        await modelsPage.confirmDeleteModel();
 
         await expect(modelsPage.getModelByName('YOLOX Model v1')).toBeHidden();
+    });
+
+    test('can delete model weights', async ({ modelsPage, network }) => {
+        await modelsPage.goto();
+
+        await expect(modelsPage.getModelByName('YOLOX Model v1')).toBeVisible();
+
+        network.use(
+            http.delete('/api/projects/{project_id}/models/{model_id}', () => {
+                return HttpResponse.json(null, { status: 204 });
+            }),
+            http.get('/api/projects/{project_id}/models', () => {
+                return HttpResponse.json([
+                    getMockedModel({ ...mockedModels[0], files_deleted: true }),
+                    ...mockedModels.slice(1),
+                ]);
+            })
+        );
+
+        await modelsPage.openModelMenu();
+        await modelsPage.clickDeleteWeightsAction();
+        await modelsPage.confirmDeleteWeights();
+
+        // Model record is preserved
+        await expect(modelsPage.getModelByName('YOLOX Model v1')).toBeVisible();
+
+        // But variants are no longer available
+        await modelsPage.expandModel('YOLOX Model v1');
+        await expect(modelsPage.getModelDisclosure('model-1').getByText('No available model variants.')).toBeVisible();
     });
 
     test('can set a model as active', async ({ modelsPage, network }) => {
@@ -350,7 +379,7 @@ test.describe('Models', () => {
 
         await modelsPage.openDatasetMenu();
         await modelsPage.clickDeleteDatasetAction();
-        await modelsPage.confirmDelete();
+        await modelsPage.confirmDeleteDataset();
 
         await expect(modelsPage.getThreeSectionRange('dataset-1')).toBeHidden();
         await expect(modelsPage.getThreeSectionRange('dataset-2')).toBeVisible();

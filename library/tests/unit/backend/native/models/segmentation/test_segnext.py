@@ -4,8 +4,8 @@
 
 import pytest
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.segmentation.segnext import SegNext
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.segmentation.segnext import SegNext
 
 
 class TestSegNext:

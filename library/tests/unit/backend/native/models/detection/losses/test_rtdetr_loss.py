@@ -6,7 +6,7 @@
 import pytest
 import torch
 
-from otx.backend.native.models.detection.losses.rtdetr_loss import DetrCriterion
+from getitune.backend.native.models.detection.losses.rtdetr_loss import DetrCriterion
 
 
 class TestDetrCriterion:

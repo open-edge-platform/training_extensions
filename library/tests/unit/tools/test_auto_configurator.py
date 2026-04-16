@@ -6,16 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from otx.backend.native.models.base import DataInputParams, OTXModel
-from otx.data.module import OTXDataModule
-from otx.tools import auto_configurator as target_file
-from otx.tools.auto_configurator import (
+from getitune.backend.native.models.base import DataInputParams, OTXModel
+from getitune.data.module import OTXDataModule
+from getitune.tools.auto_configurator import (
     DEFAULT_CONFIG_PER_TASK,
     AutoConfigurator,
 )
-from otx.types.label import LabelInfo, SegLabelInfo
-from otx.types.task import OTXTaskType
-from otx.utils.utils import should_pass_label_info
+from getitune.types.label import LabelInfo, SegLabelInfo
+from getitune.types.task import OTXTaskType
+from getitune.utils.utils import should_pass_label_info
 
 
 @pytest.fixture
@@ -42,7 +41,7 @@ class TestAutoConfigurator:
         assert auto_configurator.task == "MULTI_CLASS_CLS"
 
         # instantiate with model_config_path
-        model_config_path = "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
+        model_config_path = "src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
         auto_configurator = AutoConfigurator(data_root=None, task=None, model=model_config_path)
         assert auto_configurator.task == "MULTI_CLASS_CLS"
 
@@ -80,7 +79,7 @@ class TestAutoConfigurator:
         # new_config
         model_name = "deit_tiny"
         new_config = auto_configurator._load_default_config(
-            config_path="src/otx/recipe/classification/multi_class_cls/deit_tiny.yaml",
+            config_path="src/getitune/recipe/classification/multi_class_cls/deit_tiny.yaml",
         )
         new_path = str(target_config).split("/")
         new_path[-1] = f"{model_name}.yaml"
@@ -107,19 +106,6 @@ class TestAutoConfigurator:
         datamodule = auto_configurator.get_datamodule()
         assert isinstance(datamodule, OTXDataModule)
         assert datamodule.task == task
-
-    def test_get_datamodule_set_input_size_multiplier(self, mocker) -> None:
-        mock_otxdatamodule = mocker.patch.object(target_file, "OTXDataModule")
-        auto_configurator = AutoConfigurator(
-            data_root="tests/assets/detection_coco",
-            task=OTXTaskType.DETECTION,
-            model="yolox_tiny",
-        )
-        auto_configurator.config["data"]["input_size"] = "auto"
-
-        auto_configurator.get_datamodule()
-
-        assert mock_otxdatamodule.call_args.kwargs["input_size_multiplier"] == 32
 
     def test_get_model(self, fxt_task: OTXTaskType, fxt_data_root_per_task_type) -> None:
         if fxt_task is OTXTaskType.H_LABEL_CLS:
@@ -167,7 +153,9 @@ class TestAutoConfigurator:
         assert any("Resize" in aug.get("class_path", "") for aug in datamodule.test_subset.augmentations_cpu)
 
         updated_datamodule = auto_configurator.update_ov_subset_pipeline(datamodule, subset="test")
-        assert updated_datamodule.test_subset.augmentations_cpu == [{"class_path": "torchvision.transforms.v2.ToImage"}]
+        # OV recipes now use Resize (preprocessing moved from ModelAPI to OTX)
+        assert len(updated_datamodule.test_subset.augmentations_cpu) == 1
+        assert "Resize" in updated_datamodule.test_subset.augmentations_cpu[0]["class_path"]
         assert not updated_datamodule.tile_config.enable_tiler
 
     def test_update_ov_subset_pipeline_from_pre_constructed_datasets(self) -> None:
@@ -190,9 +178,8 @@ class TestAutoConfigurator:
 
         # This should NOT raise ValueError about dataset format detection
         updated_datamodule = auto_configurator.update_ov_subset_pipeline(pre_constructed_datamodule, subset="train")
-        assert updated_datamodule.train_subset.augmentations_cpu == [
-            {"class_path": "torchvision.transforms.v2.ToImage"}
-        ]
+        assert len(updated_datamodule.train_subset.augmentations_cpu) == 1
+        assert "Resize" in updated_datamodule.train_subset.augmentations_cpu[0]["class_path"]
         assert not updated_datamodule.tile_config.enable_tiler
         # Verify subsets are preserved
         assert "train" in updated_datamodule.subsets

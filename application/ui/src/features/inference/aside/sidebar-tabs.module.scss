@@ -7,8 +7,9 @@
 }
 
 .sidebarContent {
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     will-change: opacity, filter;
     opacity: 0;
     filter: blur(6px);

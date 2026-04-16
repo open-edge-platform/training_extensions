@@ -5,15 +5,14 @@
 
 from __future__ import annotations
 
-from functools import partial
 from unittest.mock import Mock, patch
 
 import pytest
 import torch
 from datumaro.experimental import Dataset
 
-from otx.data.dataset.base import OTXDataset, _default_collate_fn
-from otx.data.entity.sample import OTXSample, OTXSampleBatch
+from getitune.data.dataset.base import OTXDataset, _default_collate_fn
+from getitune.data.entity.sample import OTXSample, OTXSampleBatch
 
 
 class TestDefaultCollateFn:
@@ -254,13 +253,11 @@ class TestOTXDataset:
             assert dataset._apply_transforms.call_count == 2
 
     def test_collate_fn_property(self):
-        """Test collate_fn property returns a partial wrapping _default_collate_fn."""
+        """Test collate_fn property returns _default_collate_fn."""
         dataset = OTXDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
         )
 
         collate = dataset.collate_fn
-        assert isinstance(collate, partial)
-        assert collate.func is _default_collate_fn
-        assert collate.keywords.get("stack_images") is True
+        assert collate is _default_collate_fn

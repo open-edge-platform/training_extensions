@@ -4,6 +4,7 @@
 from .inference_server import (
     BatchInferenceInput,
     BatchInferenceResult,
+    InferenceBusyError,
     InferenceModel,
     InferenceServer,
     InferenceState,
@@ -13,6 +14,7 @@ from .inference_server import (
 __all__ = [
     "BatchInferenceInput",
     "BatchInferenceResult",
+    "InferenceBusyError",
     "InferenceModel",
     "InferenceServer",
     "InferenceState",

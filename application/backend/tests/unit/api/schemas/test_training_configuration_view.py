@@ -108,7 +108,7 @@ def fxt_training_configuration() -> TrainingConfiguration:
                     mixup=Mixup(
                         enable=True,
                         probability=0.6,
-                        mix_ratio=0.4,
+                        alpha=2.0,
                     ),
                 )
             ),
@@ -194,7 +194,7 @@ def fxt_default_training_configuration() -> TrainingConfiguration:
                     mixup=Mixup(
                         enable=False,
                         probability=1.0,
-                        mix_ratio=0.5,
+                        alpha=1.5,
                     ),
                 )
             ),
@@ -459,6 +459,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [1.0, 3.0],
                                         "default_value": [1.0, 4.0],
                                         "value_type": "float_range",
+                                        "min_value": 1.0,
+                                        "max_value": 16.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -658,6 +660,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.6, 1.4],
                                         "default_value": [0.5, 1.5],
                                         "value_type": "float_range",
+                                        "min_value": 0.0,
+                                        "max_value": 10.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -729,18 +733,19 @@ def fxt_training_configuration_view_json() -> dict:
                                     },
                                     {
                                         "type": "parameter",
-                                        "key": "mix_ratio",
-                                        "name": "Mix ratio",
+                                        "key": "alpha",
+                                        "name": "Alpha",
                                         "description": (
-                                            "Blending ratio between the two images. "
-                                            "A value of 0.5 means equal blending of both images. "
-                                            "Lower values give more weight to the original image."
+                                            "Controls how two images are blended together. "
+                                            "Low values (e.g. 0.5) produce uneven blending where one image dominates. "
+                                            "A value of 1.0 gives any blend ratio equal chance. "
+                                            "Higher values (e.g. 1.5-3.0) favour an equal 50/50 mix of both images."
                                         ),
-                                        "value": 0.4,
-                                        "default_value": 0.5,
+                                        "value": 2.0,
+                                        "default_value": 1.5,
                                         "value_type": "float",
-                                        "min_value": 0.0,
-                                        "max_value": 1.0,
+                                        "min_value": 0.1,
+                                        "max_value": 10.0,
                                         "allowed_values": None,
                                         "depends_on": None,
                                     },
@@ -779,6 +784,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.9, 1.1],
                                         "default_value": [0.8, 1.2],
                                         "value_type": "float_range",
+                                        "min_value": 0.0,
+                                        "max_value": 5.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -794,6 +801,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.85, 1.15],
                                         "default_value": [0.75, 1.25],
                                         "value_type": "float_range",
+                                        "min_value": 0.0,
+                                        "max_value": 5.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -809,6 +818,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.8, 1.2],
                                         "default_value": [0.9, 1.1],
                                         "value_type": "float_range",
+                                        "min_value": 0.0,
+                                        "max_value": 5.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -823,6 +834,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [-0.05, 0.05],
                                         "default_value": [-0.1, 0.1],
                                         "value_type": "float_range",
+                                        "min_value": -0.5,
+                                        "max_value": 0.5,
                                         "depends_on": None,
                                     },
                                     {
@@ -878,6 +891,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.03, 0.25],
                                         "default_value": [0.02, 0.33],
                                         "value_type": "float_range",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -892,6 +907,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.5, 2.0],
                                         "default_value": [0.3, 3.3],
                                         "value_type": "float_range",
+                                        "min_value": 0.0,
+                                        "max_value": 10.0,
                                         "depends_on": None,
                                     },
                                     {
@@ -1394,6 +1411,107 @@ def fxt_training_configuration_view_json() -> dict:
     }
 
 
+@pytest.fixture
+def fxt_training_configuration_with_deim() -> TrainingConfiguration:
+    """Create a training configuration with deim_framework=True."""
+    return TrainingConfiguration(
+        task_level_parameters=TaskLevelParameters(
+            dataset_preparation=TaskLevelDatasetPreparationParameters(
+                subset_split=SubsetSplit(training=75, validation=15, test=10),
+                filtering=Filtering(
+                    min_annotation_pixels=MinAnnotationPixels(enable=True, value=20),
+                    min_annotation_objects=MinAnnotationObjects(enable=False, value=1),
+                    max_annotation_objects=MaxAnnotationObjects(enable=False, value=50),
+                ),
+            ),
+        ),
+        algo_level_parameters=AlgoLevelParameters(
+            dataset_preparation=AlgoLevelDatasetPreparationParameters(
+                augmentation=AugmentationParameters(
+                    deim_framework=True,
+                    random_zoom_out=RandomZoomOut(
+                        enable=True,
+                        fill=128,
+                        side_range=(1.0, 3.0),
+                        probability=0.4,
+                    ),
+                    iou_random_crop=RandomIOUCrop(
+                        enable=True,
+                        probability=0.9,
+                        min_scale=0.4,
+                        max_scale=0.9,
+                    ),
+                )
+            ),
+            training=AlgoLevelTrainingParameters(
+                max_epochs=120,
+                batch_size=8,
+                early_stopping=EarlyStopping(enable=True, patience=5),
+                learning_rate=0.001,
+                weight_decay=0.01,
+                scheduler=SchedulerParameters(
+                    type=SchedulerType.COSINE_ANNEALING,
+                    warmup=LrLinearWarmupParameters(enable=True, epochs=3),
+                    factor=0.5,
+                    patience=7,
+                    min_lr=1e-5,
+                ),
+                gradient_accumulation=GradientAccumulationParameters(enable=True, batches=4),
+                gradient_clip=GradientClipParameters(enable=True, max_grad_norm=2.0),
+                input_size_width=256,
+                input_size_height=256,
+                allowed_values_input_size=[128, 256, 512],
+            ),
+        ),
+    )
+
+
+@pytest.fixture
+def fxt_default_training_configuration_with_deim() -> TrainingConfiguration:
+    """Create a default training configuration with deim_framework=False."""
+    return TrainingConfiguration(
+        task_level_parameters=TaskLevelParameters(),
+        algo_level_parameters=AlgoLevelParameters(
+            dataset_preparation=AlgoLevelDatasetPreparationParameters(
+                augmentation=AugmentationParameters(
+                    deim_framework=False,
+                    random_zoom_out=RandomZoomOut(
+                        enable=False,
+                        fill=0,
+                        side_range=(1.0, 4.0),
+                        probability=0.5,
+                    ),
+                    iou_random_crop=RandomIOUCrop(
+                        enable=False,
+                        probability=1.0,
+                        min_scale=0.3,
+                        max_scale=1.0,
+                    ),
+                )
+            ),
+            training=AlgoLevelTrainingParameters(
+                max_epochs=250,
+                batch_size=4,
+                early_stopping=EarlyStopping(enable=False, patience=1),
+                learning_rate=0.0015,
+                weight_decay=1e-4,
+                scheduler=SchedulerParameters(
+                    type=SchedulerType.REDUCE_LR_ON_PLATEAU,
+                    warmup=LrLinearWarmupParameters(enable=False, epochs=5),
+                    factor=0.1,
+                    patience=10,
+                    min_lr=1e-6,
+                ),
+                gradient_accumulation=GradientAccumulationParameters(enable=False, batches=1),
+                gradient_clip=GradientClipParameters(enable=False, max_grad_norm=1.0),
+                input_size_width=512,
+                input_size_height=512,
+                allowed_values_input_size=[128, 256, 512],
+            ),
+        ),
+    )
+
+
 class TestTrainingConfigurationView:
     def test_from_training_configuration(
         self, fxt_training_configuration, fxt_default_training_configuration, fxt_training_configuration_view_json
@@ -1403,3 +1521,97 @@ class TestTrainingConfigurationView:
         )
 
         assert view.model_dump(mode="json") == fxt_training_configuration_view_json
+
+    def test_from_training_configuration_with_deim_framework(
+        self,
+        fxt_training_configuration_with_deim,
+        fxt_default_training_configuration_with_deim,
+    ):
+        """Test that bool | None fields like deim_framework are correctly handled."""
+        view = TrainingConfigurationView.from_training_configuration(
+            fxt_training_configuration_with_deim, fxt_default_training_configuration_with_deim
+        )
+        result = view.model_dump(mode="json")
+
+        # Find the augmentation group within dataset_preparation
+        dataset_prep = result["parameters"][0]
+        assert dataset_prep["key"] == "dataset_preparation"
+
+        augmentation_group = None
+        for param in dataset_prep["parameters"]:
+            if param["key"] == "augmentation":
+                augmentation_group = param
+                break
+        assert augmentation_group is not None
+
+        # Find the deim_framework parameter in the augmentation group
+        deim_param = None
+        for param in augmentation_group["parameters"]:
+            if param.get("key") == "deim_framework":
+                deim_param = param
+                break
+        assert deim_param is not None, "deim_framework parameter should be present when set to True"
+
+        # Verify it is correctly typed as bool, not str
+        assert deim_param["value_type"] == "bool"
+        assert deim_param["value"] is True
+        assert deim_param["default_value"] is False
+        assert deim_param["type"] == "parameter"
+        assert deim_param["name"] == "DEIM framework"
+
+    def test_from_training_configuration_with_deim_framework_false(
+        self,
+        fxt_default_training_configuration_with_deim,
+    ):
+        """Test that deim_framework=False is also correctly handled as bool."""
+        # Use the default config (deim_framework=False) as both config and default
+        view = TrainingConfigurationView.from_training_configuration(
+            fxt_default_training_configuration_with_deim, fxt_default_training_configuration_with_deim
+        )
+        result = view.model_dump(mode="json")
+
+        dataset_prep = result["parameters"][0]
+        augmentation_group = None
+        for param in dataset_prep["parameters"]:
+            if param["key"] == "augmentation":
+                augmentation_group = param
+                break
+        assert augmentation_group is not None
+
+        deim_param = None
+        for param in augmentation_group["parameters"]:
+            if param.get("key") == "deim_framework":
+                deim_param = param
+                break
+        assert deim_param is not None, "deim_framework parameter should be present when set to False"
+
+        assert deim_param["value_type"] == "bool"
+        assert deim_param["value"] is False
+        assert deim_param["default_value"] is False
+
+    def test_from_training_configuration_deim_framework_none_is_excluded(
+        self,
+        fxt_training_configuration,
+        fxt_default_training_configuration,
+    ):
+        """Test that deim_framework=None (default) is excluded from the view."""
+        view = TrainingConfigurationView.from_training_configuration(
+            fxt_training_configuration, fxt_default_training_configuration
+        )
+        result = view.model_dump(mode="json")
+
+        dataset_prep = result["parameters"][0]
+        augmentation_group = None
+        for param in dataset_prep["parameters"]:
+            if param["key"] == "augmentation":
+                augmentation_group = param
+                break
+        assert augmentation_group is not None
+
+        # deim_framework should NOT be present when it's None
+        deim_param = None
+        for param in augmentation_group["parameters"]:
+            if param.get("key") == "deim_framework":
+                deim_param = param
+                break
+        assert deim_param is None, "deim_framework parameter should be excluded when value is None"

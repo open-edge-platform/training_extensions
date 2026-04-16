@@ -10,8 +10,8 @@ import logging
 import pytest
 import torch
 
-from otx.backend.native.models.detection.rfdetr import RFDETR
-from otx.backend.native.models.detection.utils.rfdetr_batch_utils import (
+from getitune.backend.native.models.detection.rfdetr import RFDETR
+from getitune.backend.native.models.detection.utils.rfdetr_batch_utils import (
     _cap_per_image,
     _get_largest_indices,
     _proportional_limit,
@@ -19,7 +19,7 @@ from otx.backend.native.models.detection.utils.rfdetr_batch_utils import (
     _subset_target,
     limit_batch_objects,
 )
-from otx.data.entity import OTXPredictionBatch as OTXPredBatch
+from getitune.data.entity import OTXPredictionBatch as OTXPredBatch
 
 
 class TestRFDETRBatchLimitingUtils:

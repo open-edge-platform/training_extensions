@@ -82,6 +82,10 @@ export class ModelsPage {
         return this.page.getByTestId('model-name').filter({ hasText: name });
     }
 
+    getModelDisclosure(modelId: string) {
+        return this.page.getByTestId(`model-disclosure-${modelId}`);
+    }
+
     async expandModel(name: string) {
         await this.getModelByName(name).click();
     }
@@ -95,7 +99,11 @@ export class ModelsPage {
     }
 
     async clickDeleteAction() {
-        await this.page.getByRole('menuitem', { name: 'Delete' }).click();
+        await this.page.getByRole('menuitem', { name: 'Delete model' }).click();
+    }
+
+    async clickDeleteWeightsAction() {
+        await this.page.getByRole('menuitem', { name: 'Delete weights' }).click();
     }
 
     async clickSetActiveAction() {
@@ -109,8 +117,16 @@ export class ModelsPage {
         await textbox.press('Enter');
     }
 
-    async confirmDelete() {
-        await this.page.getByRole('button', { name: 'Delete' }).click();
+    async confirmDeleteModel() {
+        await this.page.getByRole('button', { name: 'Delete model', exact: true }).click();
+    }
+
+    async confirmDeleteWeights() {
+        await this.page.getByRole('button', { name: 'Delete weights' }).click();
+    }
+
+    async confirmDeleteDataset() {
+        await this.page.getByRole('button', { name: 'Delete', exact: true }).click();
     }
 
     async getModelNamesInOrder() {

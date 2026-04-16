@@ -214,7 +214,6 @@ class ModelService(BaseSessionManagedService):
             model_rev_repo.update(model_rev_db)
         return ModelRevision.model_validate(model_rev_db)
 
-    @parent_process_only
     def delete_model(self, project_id: UUID, model_id: UUID) -> None:
         """
         Delete a model.

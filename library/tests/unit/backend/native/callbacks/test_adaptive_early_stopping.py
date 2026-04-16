@@ -8,7 +8,7 @@ import pytest
 import torch
 from lightning.pytorch.trainer.states import TrainerFn
 
-from otx.backend.native.callbacks.adaptive_early_stopping import EarlyStoppingWithWarmup
+from getitune.backend.native.callbacks.adaptive_early_stopping import EarlyStoppingWithWarmup
 
 
 class TestEarlyStoppingWithWarmup:

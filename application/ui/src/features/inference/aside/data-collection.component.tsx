@@ -85,9 +85,6 @@ export const DataCollection = () => {
 
     return (
         <Flex direction={'column'} minHeight={0} height={'100%'}>
-            <Flex alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
-                <Heading level={4}>Data collection</Heading>
-            </Flex>
             <Flex direction={'column'} flex={1} UNSAFE_style={{ overflow: 'hidden auto' }}>
                 <Heading level={3} margin={0}>
                     Max dataset size
@@ -116,6 +113,7 @@ export const DataCollection = () => {
                 <Text marginY={'size-100'}>Capture frames while the stream is running</Text>
 
                 <Switch
+                    isEmphasized
                     isSelected={ratePolicy?.enabled ?? false}
                     onChange={(enabled) => updatePolicies({ rateEnabled: enabled })}
                     marginBottom={'size-200'}
@@ -159,6 +157,7 @@ export const DataCollection = () => {
                 <Text marginY={'size-100'}>Capture frames when confidence is below threshold</Text>
 
                 <Switch
+                    isEmphasized
                     isSelected={confidencePolicy?.enabled ?? false}
                     onChange={(enabled) => updatePolicies({ confidenceEnabled: enabled })}
                     isDisabled={isUpdating}
@@ -167,6 +166,7 @@ export const DataCollection = () => {
                 </Switch>
 
                 <Slider
+                    isFilled
                     step={0.01}
                     minValue={0}
                     maxValue={1}

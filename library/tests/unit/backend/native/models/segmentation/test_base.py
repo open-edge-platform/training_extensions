@@ -8,12 +8,12 @@ from __future__ import annotations
 import pytest
 import torch
 
-from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.segmentation.base import OTXSegmentationModel
-from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from otx.metrics.dice import SegmCallable
-from otx.types.label import SegLabelInfo
+from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.native.models.segmentation.base import OTXSegmentationModel
+from getitune.data.entity.base import OTXBatchLossEntity
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.metrics.dice import SegmCallable
+from getitune.types.label import SegLabelInfo
 
 
 class TestOTXSegmentationModel:

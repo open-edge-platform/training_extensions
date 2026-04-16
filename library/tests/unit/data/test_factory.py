@@ -9,18 +9,18 @@ import polars as pl
 import pytest
 from datumaro.experimental import Dataset
 
-from otx.config.data import SubsetConfig
-from otx.data.dataset.classification import (
+from getitune.config.data import SubsetConfig
+from getitune.data.dataset.classification import (
     HLabelInfo,
     OTXHlabelClsDataset,
     OTXMulticlassClsDataset,
     OTXMultilabelClsDataset,
 )
-from otx.data.dataset.detection import OTXDetectionDataset
-from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
-from otx.data.dataset.segmentation import OTXSegmentationDataset
-from otx.data.factory import OTXDatasetFactory, TransformLibFactory
-from otx.types.task import OTXTaskType
+from getitune.data.dataset.detection import OTXDetectionDataset
+from getitune.data.dataset.instance_segmentation import OTXInstanceSegDataset
+from getitune.data.dataset.segmentation import OTXSegmentationDataset
+from getitune.data.factory import OTXDatasetFactory, TransformLibFactory
+from getitune.types.task import OTXTaskType
 
 
 class TestOTXDatasetFactory:

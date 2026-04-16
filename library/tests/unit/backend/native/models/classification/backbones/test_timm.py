@@ -7,7 +7,7 @@ from pathlib import Path
 
 import torch
 
-from otx.backend.native.models.classification.backbones.timm import TimmBackbone
+from getitune.backend.native.models.classification.backbones.timm import TimmBackbone
 
 
 class TestOTXEfficientNetV2:

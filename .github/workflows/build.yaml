@@ -21,7 +21,7 @@ jobs:
   # If PR or merge_group -> run only if files in specified paths changed
   check_paths:
     name: Check if workflow should run
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
@@ -43,7 +43,7 @@ jobs:
 
   build:
     name: Build and push docker image (${{ matrix.device }})
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
     strategy:
@@ -68,7 +68,7 @@ jobs:
           echo "short_sha=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
 
       - name: Login to GHCR
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -76,7 +76,7 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
           images: ghcr.io/open-edge-platform/geti-${{ matrix.device }}
           tags: |
@@ -113,7 +113,7 @@ jobs:
 
       - name: Sign container image
         if: github.event_name != 'pull_request'
-        uses: open-edge-platform/geti-ci/actions/sign-image@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
+        uses: open-edge-platform/geti-ci/actions/sign-image@7e686c1248b3939f8ee8e04e2612da727e379d91
         with:
           image-uri: ${{ steps.primary-tag.outputs.tag }}
 
@@ -250,7 +250,7 @@ jobs:
     needs:
       - check_paths
       - build
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
     if: always() && !cancelled()

@@ -1,28 +1,16 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
 import { expect } from '@playwright/test';
-import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedMediaImage } from 'mocks/mock-media';
 import { getMockedModel } from 'mocks/mock-model';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
-import { AnnotationDTO, PredictionDTO } from '../../src/constants/shared-types';
+import { AnnotationDTO, DatasetSubset, PredictionDTO } from '../../src/constants/shared-types';
 import { Polygon } from '../../src/shared/types';
 import { http, test } from '../fixtures';
-
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
-const candyPngPath = path.resolve(dirname, '../assets/candy.png');
-const candyPngBuffer = fs.readFileSync(candyPngPath);
-
-const redLabel = getMockedLabel({ id: 'red-label', name: 'red-label', color: '#ad2323' });
-const blueLabel = getMockedLabel({ id: 'blue-label', name: 'blue-label', color: '#2424a0' });
+import { blueLabel, candyBinaryHandler, redLabel } from './annotator-fixtures';
 
 const mockedDetectionProject = getMockedProject({
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -39,15 +27,12 @@ test.describe('Annotator', () => {
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(mockedDetectionProject);
             }),
-            http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
-                return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
-                    headers: { 'Content-Type': 'image/png' },
-                });
-            }),
+            candyBinaryHandler,
             http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
                 return HttpResponse.json({
                     annotations: [],
                     user_reviewed: true,
+                    subset: 'training',
                 });
             })
         );
@@ -229,6 +214,7 @@ test.describe('Annotator', () => {
                 return HttpResponse.json({
                     annotations: [],
                     user_reviewed: true,
+                    subset: 'training',
                 });
             })
         );
@@ -240,8 +226,7 @@ test.describe('Annotator', () => {
         });
 
         await test.step('Navigate to second media item by clicking in sidebar', async () => {
-            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
-            await sidebarItems.getByRole('img', { name: 'item-2.jpg' }).click();
+            await annotatorPage.selectMediaItem('item-2.jpg');
 
             await expect(annotatorPage.getAnnotationsList()).toBeVisible();
         });
@@ -254,8 +239,7 @@ test.describe('Annotator', () => {
         });
 
         await test.step('Navigate back to first media item', async () => {
-            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
-            await sidebarItems.getByRole('img', { name: 'item-1.jpg' }).click();
+            await annotatorPage.selectMediaItem('item-1.jpg');
 
             await expect(annotatorPage.getAnnotationsList()).toBeVisible();
         });
@@ -285,7 +269,7 @@ test.describe('Annotator', () => {
         });
     });
 
-    test('Annotations reset correctly when switching media items', async ({ page, annotatorPage, network }) => {
+    test('Annotations reset correctly when switching media items', async ({ annotatorPage, network }) => {
         const mediaItems = [
             getMockedMediaImage({ id: 'media-reset-1', name: 'item-1.jpg', width: 1920, height: 1080 }),
             getMockedMediaImage({ id: 'media-reset-2', name: 'item-2.jpg', width: 1920, height: 1080 }),
@@ -323,6 +307,7 @@ test.describe('Annotator', () => {
                 return HttpResponse.json({
                     annotations: mediaAnnotations[params.media_id] ?? [],
                     user_reviewed: true,
+                    subset: 'training',
                 });
             })
         );
@@ -336,16 +321,14 @@ test.describe('Annotator', () => {
         });
 
         await test.step('Switching to media 2 clears media 1 annotations', async () => {
-            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
-            await sidebarItems.getByRole('img', { name: 'item-2.jpg' }).click();
+            await annotatorPage.selectMediaItem('item-2.jpg');
 
             await expect(annotatorPage.getAnnotationsList()).toBeVisible();
             expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
         });
 
         await test.step('Switching back restores media 1 annotations', async () => {
-            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
-            await sidebarItems.getByRole('img', { name: 'item-1.jpg' }).click();
+            await annotatorPage.selectMediaItem('item-1.jpg');
 
             await expect(annotatorPage.getAnnotationsList()).toBeVisible();
             expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
@@ -390,6 +373,7 @@ test.describe('Annotator', () => {
                 return HttpResponse.json({
                     annotations: mediaAnnotations[params.media_id] ?? [],
                     user_reviewed: true,
+                    subset: 'training',
                 });
             })
         );
@@ -405,12 +389,11 @@ test.describe('Annotator', () => {
         });
 
         await test.step('Switch to media 2 and back to media 1 resets selection', async () => {
-            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
-            await sidebarItems.getByRole('img', { name: 'item-2.jpg' }).click();
+            await annotatorPage.selectMediaItem('item-2.jpg');
             await expect(annotatorPage.getAnnotationsList()).toBeVisible();
             expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
 
-            await sidebarItems.getByRole('img', { name: 'item-1.jpg' }).click();
+            await annotatorPage.selectMediaItem('item-1.jpg');
             await expect(annotatorPage.getAnnotationsList()).toBeVisible();
 
             expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
@@ -442,6 +425,7 @@ test.describe('Annotator', () => {
                 return HttpResponse.json({
                     annotations: [],
                     user_reviewed: true,
+                    subset: 'training',
                 });
             })
         );
@@ -456,8 +440,7 @@ test.describe('Annotator', () => {
         });
 
         await test.step('Switching media keeps selected label active', async () => {
-            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
-            await sidebarItems.getByRole('img', { name: 'item-2.jpg' }).click();
+            await annotatorPage.selectMediaItem('item-2.jpg');
 
             await expect(page.getByRole('button', { name: `Label ${blueLabel.name}` })).toHaveAttribute(
                 'aria-pressed',
@@ -512,6 +495,7 @@ test.describe('Annotator', () => {
                     return HttpResponse.json({
                         annotations: [],
                         user_reviewed: true,
+                        subset: 'training',
                     });
                 }),
                 http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
@@ -604,6 +588,7 @@ test.describe('Annotator', () => {
                             },
                         ],
                         user_reviewed: true,
+                        subset: 'training',
                     });
                 }),
                 http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
@@ -624,6 +609,42 @@ test.describe('Annotator', () => {
 
             await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
             await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'false');
+        });
+
+        test('Displays "No object" when media:predict returns empty predictions', async ({
+            page,
+            annotatorPage,
+            network,
+        }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([getMockedModel()]);
+                }),
+                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
+                    return HttpResponse.json(
+                        {
+                            // @ts-expect-error We care only about mocking detail
+                            detail: 'Media has not been annotated yet',
+                        },
+                        { status: 404 }
+                    );
+                }),
+                http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+                    return HttpResponse.json({
+                        predictions: [
+                            {
+                                media: { id: '123' },
+                                prediction: [],
+                            },
+                        ],
+                    });
+                })
+            );
+
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
+
+            await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
+            await expect(page.getByLabel('label No object background')).toHaveCount(1);
         });
 
         test('Automatically switches to prediction mode only when there are no annotations and there are predictions', async ({
@@ -661,6 +682,87 @@ test.describe('Annotator', () => {
 
             await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'false');
             await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
+        });
+    });
+
+    test('Assigns subset to media', async ({ annotatorPage, boundingBoxTool, network }) => {
+        const mediaItems = [
+            getMockedMediaImage({ id: 'media-1', name: 'item-1.jpg', width: 1920, height: 1080 }),
+            getMockedMediaImage({ id: 'media-2', name: 'item-2.jpg', width: 1920, height: 1080 }),
+        ];
+        let subsetPayload: DatasetSubset | null = 'unassigned';
+
+        const annotationsResponsePerMedia: Record<
+            string,
+            { annotations: AnnotationDTO[]; user_reviewed: boolean; subset: DatasetSubset }
+        > = {
+            [mediaItems[0].id]: {
+                annotations: [],
+                user_reviewed: false,
+                subset: 'unassigned',
+            },
+            [mediaItems[1].id]: {
+                annotations: [],
+                user_reviewed: false,
+                subset: 'validation',
+            },
+        };
+
+        network.use(
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async ({ params }) => {
+                return HttpResponse.json(annotationsResponsePerMedia[params.media_id]);
+            }),
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: mediaItems,
+                    pagination: {
+                        offset: 0,
+                        limit: 10,
+                        count: mediaItems.length,
+                        total: mediaItems.length,
+                    },
+                });
+            }),
+            http.post(
+                '/api/projects/{project_id}/dataset/media/{media_id}/annotations',
+                async ({ request, params }) => {
+                    const payload = await request.json();
+                    subsetPayload = payload.subset ?? null;
+                    annotationsResponsePerMedia[params.media_id].subset = payload.subset ?? 'unassigned';
+                    annotationsResponsePerMedia[params.media_id].annotations = payload.annotations;
+
+                    return HttpResponse.json({});
+                }
+            )
+        );
+
+        await annotatorPage.goto(mockedDetectionProject.id, mediaItems[0].id);
+
+        await test.step('Draw an annotation', async () => {
+            await boundingBoxTool.selectTool();
+            await boundingBoxTool.drawBoundingBox({ x: 100, y: 100, width: 150, height: 150 });
+        });
+
+        await test.step('Select subset', async () => {
+            await annotatorPage.selectSubset('training');
+        });
+
+        await test.step('Submit annotations and subset', async () => {
+            await annotatorPage.submit();
+
+            expect(subsetPayload).toBe('training');
+        });
+
+        await test.step('Navigate to the next media item by clicking in sidebar', async () => {
+            await annotatorPage.selectMediaItem(mediaItems[1].name);
+
+            await expect(annotatorPage.getSelectedSubset()).toHaveText('Validation');
+        });
+
+        await test.step('Navigate to the previous media item by clicking in sidebar', async () => {
+            await annotatorPage.selectMediaItem(mediaItems[0].name);
+
+            await expect(annotatorPage.getSelectedSubset()).toHaveText('Training');
         });
     });
 });

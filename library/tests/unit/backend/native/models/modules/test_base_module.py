@@ -9,7 +9,7 @@ import torch
 from torch import nn
 from torch.nn.init import constant_
 
-from otx.backend.native.models.modules.base_module import BaseModule, ModuleDict, ModuleList, Sequential
+from getitune.backend.native.models.modules.base_module import BaseModule, ModuleDict, ModuleList, Sequential
 
 
 class FooConv1d(BaseModule):

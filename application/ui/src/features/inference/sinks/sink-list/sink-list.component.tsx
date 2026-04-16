@@ -71,7 +71,6 @@ export const SinkList = ({ sinks, onAddSink, onEditSink }: SinksListProps) => {
     return (
         <Flex
             gap={'size-200'}
-            maxHeight={'60vh'}
             direction={'column'}
             UNSAFE_style={{ overflow: 'auto', padding: dimensionValue('size-10') }}
         >

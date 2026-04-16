@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useQuery } from '@tanstack/react-query';
+import { usePrefetchQuery, useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { VideoFramePrediction } from '../../../../constants/shared-types';
@@ -10,16 +10,19 @@ import { usePredictionSetup } from '../../predictions-setup-provider.component';
 import { useVideoPlayer } from '../video-player-provider.component';
 import { getVideoFrameRangeIndexes } from './utils';
 
-export const useVideoFramesPredictions = <T>({
+export const PREDICTION_CHUNK_SIZE = 10;
+export const PREDICTION_FRAME_SKIP = 5;
+
+const useVideoFramesPredictionsQueryOptions = ({
     frameNumber,
     frameSkip,
-    selector,
     rangeStride,
+    chunkSize,
 }: {
     frameNumber: number;
     frameSkip: number;
     rangeStride?: number;
-    selector: (data: VideoFramePrediction[]) => T;
+    chunkSize?: number;
 }) => {
     const projectId = useProjectIdentifier();
     const { videoFrame } = useVideoPlayer();
@@ -29,17 +32,57 @@ export const useVideoFramesPredictions = <T>({
         frames: videoFrame.frame_count - 1,
         frameSkip,
         frameNumber,
+        chunkSize,
     });
 
-    return useQuery({
-        ...mediaPredictionsQueryOptions({
-            projectId,
-            modelId: selectedModelId,
-            mediaId: videoFrame.id,
-            range: { stride: rangeStride ?? frameSkip, start_frame: startFrameIndex, end_frame: endFrameIndex },
-        }),
-        select: selector,
-        refetchOnMount: false,
-        staleTime: Infinity,
+    return mediaPredictionsQueryOptions({
+        projectId,
+        modelId: selectedModelId,
+        mediaId: videoFrame.id,
+        range: { stride: rangeStride ?? frameSkip, start_frame: startFrameIndex, end_frame: endFrameIndex },
     });
+};
+
+export const usePrefetchVideoFramesPredictions = ({
+    frameNumber,
+    frameSkip,
+    rangeStride,
+    chunkSize,
+}: {
+    frameNumber: number;
+    frameSkip: number;
+    rangeStride?: number;
+    chunkSize?: number;
+}) => {
+    const queryOptions = useVideoFramesPredictionsQueryOptions({
+        frameSkip,
+        frameNumber,
+        chunkSize,
+        rangeStride,
+    });
+
+    return usePrefetchQuery(queryOptions);
+};
+
+export const useVideoFramesPredictions = <T>({
+    frameNumber,
+    frameSkip,
+    selector,
+    rangeStride,
+    chunkSize,
+}: {
+    frameNumber: number;
+    frameSkip: number;
+    rangeStride?: number;
+    selector: (data: VideoFramePrediction[]) => T;
+    chunkSize?: number;
+}) => {
+    const queryOptions = useVideoFramesPredictionsQueryOptions({
+        frameSkip,
+        frameNumber,
+        chunkSize,
+        rangeStride,
+    });
+
+    return useQuery({ ...queryOptions, select: selector, refetchOnMount: false, staleTime: Infinity });
 };

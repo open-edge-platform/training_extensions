@@ -5,10 +5,10 @@ import onnx
 import pytest
 import torch
 
-from otx.backend.native.exporter.native import OTXNativeModelExporter
-from otx.backend.native.models.base import DataInputParams
-from otx.types.export import TaskLevelExportParameters
-from otx.types.precision import OTXPrecisionType
+from getitune.backend.native.exporter.native import OTXNativeModelExporter
+from getitune.backend.native.models.base import DataInputParams
+from getitune.types.export import TaskLevelExportParameters
+from getitune.types.precision import OTXPrecisionType
 
 
 class TestOTXNativeModelExporter:

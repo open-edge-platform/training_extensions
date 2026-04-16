@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { EncodingOutput } from '@geti/smart-tools/segment-anything';
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import { queryOptions, skipToken, useQuery } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
 import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -71,7 +71,7 @@ export const segmentAnythingEncodingQueryOptions = (
                 throw new Error('Model not yet initialized');
             }
 
-            return model.processEncoder(image);
+            return executeWithTimeout(model.processEncoder(image), 'SAM encoder', SAM_TIMEOUT_MS);
         },
         staleTime: Infinity,
         gcTime: 3600 * 15,
@@ -93,22 +93,16 @@ const useEncodingQuery = (
 ) => {
     const isEnabled = model !== undefined && mediaItem !== undefined && image !== undefined && isImageReady;
 
-    return useQuery({
-        queryKey:
-            mediaItem === undefined
-                ? ['segment-anything-model', 'encoding', 'disabled']
-                : getSegmentAnythingEncodingQueryKey(mediaItem),
-        queryFn: async () => {
-            if (model === undefined || image === undefined) {
-                throw new Error('Model not yet initialized');
-            }
-
-            return executeWithTimeout(model.processEncoder(image), 'SAM encoder', SAM_TIMEOUT_MS);
-        },
-        staleTime: Infinity,
-        gcTime: 3600 * 15,
-        enabled: isEnabled,
-    });
+    return useQuery(
+        mediaItem !== undefined && image !== undefined
+            ? segmentAnythingEncodingQueryOptions(mediaItem, model, image, isEnabled)
+            : {
+                  queryKey: ['segment-anything-model', 'encoding', 'disabled'] as const,
+                  queryFn: skipToken,
+                  staleTime: Infinity,
+                  gcTime: 3600 * 15,
+              }
+    );
 };
 
 const useDecoderOutputType = () => {

@@ -45,7 +45,7 @@ export const ModelsTableHeader = () => {
             <ColumnHeader label='Trained' isSorted={sortBy === 'trained'} />
             <ColumnHeader
                 label={groupBy === 'architecture' ? 'Dataset' : 'Architecture'}
-                isSorted={sortBy === 'architecture'}
+                isSorted={sortBy === 'architecture' || sortBy === 'dataset'}
             />
             <ColumnHeader label='Total size' isSorted={sortBy === 'size'} />
             <ColumnHeader label={performanceColumnName} isSorted={sortBy === 'score'} />

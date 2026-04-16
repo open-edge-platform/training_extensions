@@ -6,7 +6,11 @@ import { useProjectLabelsWithEmptyLabel } from '../../../shared/annotator/labels
 import { Annotation } from '../../../shared/types';
 import { DEFAULT_ANNOTATION_STYLES } from '../utils';
 import { useVideoFramesAnnotations } from '../video-player/api/use-video-frames-annotations';
-import { useVideoFramesPredictions } from '../video-player/api/use-video-frames-predictions';
+import {
+    PREDICTION_CHUNK_SIZE,
+    PREDICTION_FRAME_SKIP,
+    useVideoFramesPredictions,
+} from '../video-player/api/use-video-frames-predictions';
 import { useVideoPlayer } from '../video-player/video-player-provider.component';
 import { AnnotationShapeRenderer } from './annotation-shape-renderer.component';
 
@@ -67,19 +71,35 @@ export const VideoAnnotations = () => {
 };
 
 export const VideoPredictions = () => {
-    const { step, videoFrame } = useVideoPlayer();
+    const { videoFrame } = useVideoPlayer();
 
     const labels = useProjectLabelsWithEmptyLabel();
     const { data: predictions = [] } = useVideoFramesPredictions({
         frameNumber: videoFrame.frame_number,
-        frameSkip: step,
+        frameSkip: PREDICTION_FRAME_SKIP,
+        chunkSize: PREDICTION_CHUNK_SIZE,
         selector: (data) => {
-            const framePredictions =
-                data.find((prediction) => {
-                    return prediction.media.frame_index === videoFrame.frame_number;
-                })?.prediction ?? [];
+            const idxToPredictionsMap = new Map(data.map((frame) => [frame.media.frame_index, frame.prediction]));
 
-            return mapServerAnnotationsToLocal(framePredictions, labels);
+            if (idxToPredictionsMap.has(videoFrame.frame_number)) {
+                return mapServerAnnotationsToLocal(idxToPredictionsMap.get(videoFrame.frame_number) ?? [], labels);
+            }
+
+            for (let i = 0; i < PREDICTION_CHUNK_SIZE; i++) {
+                if (idxToPredictionsMap.has(videoFrame.frame_number + i)) {
+                    return mapServerAnnotationsToLocal(
+                        idxToPredictionsMap.get(videoFrame.frame_number + i) ?? [],
+                        labels
+                    );
+                } else if (idxToPredictionsMap.has(videoFrame.frame_number - i)) {
+                    return mapServerAnnotationsToLocal(
+                        idxToPredictionsMap.get(videoFrame.frame_number - i) ?? [],
+                        labels
+                    );
+                }
+            }
+
+            return mapServerAnnotationsToLocal([], labels);
         },
     });
 

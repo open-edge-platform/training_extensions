@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../api/client';
-import { DatasetItemAnnotationStatus, DatasetSubset, Media, MediaDTO } from '../constants/shared-types';
+import { DatasetItemAnnotationStatus, DatasetSubset, Media, MediaDTO, Pagination } from '../constants/shared-types';
 
 const DATASET_ITEMS_LIMIT = 20;
 
@@ -23,6 +23,7 @@ const getMediaEntities = (items: MediaDTO[]): Media[] => {
             return {
                 duration: 0,
                 frame_count: 0,
+                annotated_frame_count: 0,
                 fps: 0,
                 frame_number: 0,
                 frame_stride: 0,
@@ -58,19 +59,10 @@ export const useGetDatasetMediaItems = (options?: UseGetDatasetMediaItemsOptions
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } = $api.useInfiniteQuery(
         'get',
         '/api/projects/{project_id}/dataset/media',
-        {
-            params: {
-                query,
-                path: { project_id },
-            },
-        },
+        { params: { query, path: { project_id } } },
         {
             pageParamName: 'offset',
-            getNextPageParam: ({
-                pagination,
-            }: {
-                pagination: { offset: number; limit: number; count: number; total: number };
-            }) => {
+            getNextPageParam: ({ pagination }: { pagination: Pagination }) => {
                 const total = pagination.offset + pagination.count;
 
                 if (total >= pagination.total) {

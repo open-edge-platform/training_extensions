@@ -130,15 +130,10 @@ test.describe('Import dataset as new project', () => {
         await test.step('Verify import job progress', async () => {
             await expect(importDatasetPage.getImportStatusText(DATASET_FILENAME, 'processing')).toBeVisible();
             await expect(page.getByText(String(importingJob.message))).toBeVisible();
-
-            await expect(importDatasetPage.getImportStatusText(DATASET_FILENAME, 'success')).toBeVisible();
-            await expect(page.getByText('Ready')).toBeVisible();
         });
 
-        await test.step('Close removes the staged dataset', async () => {
-            await importDatasetPage.closeImportStatus();
-
-            await expect(importDatasetPage.getImportStatusText(DATASET_FILENAME, 'success')).toBeHidden();
+        await test.step('Show success toast and removes the staged dataset', async () => {
+            await expect(page.getByText(`Dataset ${DATASET_FILENAME} 16 B`)).toBeVisible();
             await expect.poll(() => getDeletedId()).toBe(STAGED_DATASET_ID);
         });
     });
@@ -258,6 +253,7 @@ test.describe('Import dataset as new project', () => {
 
         await test.step('Prepare job fails and dialog closes', async () => {
             await expect(importDatasetPage.getDialog()).toBeHidden();
+            await page.getByLabel('Technical details of the job failure').click();
             await expect(page.getByText(errorData.error, { exact: true })).toBeVisible();
             await expect(page.getByText(errorData.message, { exact: true })).toBeVisible();
         });
@@ -316,6 +312,7 @@ test.describe('Import dataset as new project', () => {
         });
 
         await test.step('Verify error notification is shown', async () => {
+            await page.getByLabel('Technical details of the job failure').click();
             await expect(page.getByText(errorData.error, { exact: true })).toBeVisible();
             await expect(page.getByText(errorData.message, { exact: true })).toBeVisible();
         });

@@ -5,13 +5,13 @@
 import pytest
 import torch
 
-from otx.backend.native.exporter.native import OTXNativeModelExporter
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.detection.backbones.csp_darknet import CSPDarknetModule
-from otx.backend.native.models.detection.heads.yolox_head import YOLOXHeadModule
-from otx.backend.native.models.detection.necks.yolox_pafpn import YOLOXPAFPNModule
-from otx.backend.native.models.detection.yolox import YOLOX
-from otx.data.entity.sample import OTXPredictionBatch
+from getitune.backend.native.exporter.native import OTXNativeModelExporter
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.detection.backbones.csp_darknet import CSPDarknetModule
+from getitune.backend.native.models.detection.heads.yolox_head import YOLOXHeadModule
+from getitune.backend.native.models.detection.necks.yolox_pafpn import YOLOXPAFPNModule
+from getitune.backend.native.models.detection.yolox import YOLOX
+from getitune.data.entity.sample import OTXPredictionBatch
 
 
 class TestYOLOX:

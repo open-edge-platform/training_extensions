@@ -8,10 +8,10 @@ from uuid import UUID, uuid4
 
 import pytest
 import torch
-from otx.backend.openvino.engine import OVEngine
-from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
-from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
-from otx.metrics.types import MetricCallable
+from getitune.backend.openvino.engine import OVEngine
+from getitune.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
+from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
+from getitune.metrics.types import MetricCallable
 
 from app.core.run import ExecutionContext
 from app.execution.quantization.otx_quantizer import OTXQuantizer, QuantizationDependencies
@@ -352,7 +352,7 @@ class TestOTXQuantizerInitializeEngine:
         mock_engine_cls.assert_called_once_with(
             model=expected_xml,
             data=mock_datamodule,
-            work_dir=f"./otx-quantize-workspace-{fxt_quantization_params.model_id}",
+            work_dir=quantizer._data_dir / f"getitune-quantize-workspace-{fxt_quantization_params.model_id}",
         )
         assert engine is not None
 
@@ -477,7 +477,7 @@ class TestOTXQuantizerStoreArtifacts:
         variant_id = uuid4()
 
         # Create quantized model files in a fake OTX work dir
-        otx_work_dir = tmp_path / "otx-workspace"
+        otx_work_dir = tmp_path / "getitune-workspace"
         otx_work_dir.mkdir()
         quantized_xml = otx_work_dir / "optimized_model.xml"
         quantized_bin = otx_work_dir / "optimized_model.bin"
@@ -517,7 +517,7 @@ class TestOTXQuantizerStoreArtifacts:
         quantizer = fxt_otx_quantizer()
         variant_id = uuid4()
 
-        otx_work_dir = tmp_path / "otx-workspace"
+        otx_work_dir = tmp_path / "getitune-workspace"
         otx_work_dir.mkdir()
         quantized_xml = otx_work_dir / "optimized_model.xml"
         quantized_xml.write_text("<quantized/>")
@@ -606,7 +606,7 @@ class TestOTXQuantizerExecute:
         fxt_model_service.create_variant.return_value = created_variant
 
         # Create dummy quantized model that OVEngine.optimize would produce
-        otx_work_dir = tmp_path / f"otx-quantize-workspace-{model_id}"
+        otx_work_dir = tmp_path / f"getitune-quantize-workspace-{model_id}"
         otx_work_dir.mkdir(parents=True)
         quantized_xml = otx_work_dir / "optimized_model.xml"
         quantized_bin = otx_work_dir / "optimized_model.bin"
@@ -714,7 +714,7 @@ class TestOTXQuantizerExecute:
         )
         fxt_model_service.create_variant.return_value = created_variant
 
-        otx_work_dir = tmp_path / f"otx-quantize-workspace-{model_id}"
+        otx_work_dir = tmp_path / f"getitune-quantize-workspace-{model_id}"
         otx_work_dir.mkdir(parents=True)
         quantized_xml = otx_work_dir / "optimized_model.xml"
         quantized_xml.write_text("<q/>")
@@ -782,7 +782,7 @@ class TestOTXQuantizerExecute:
         project.task = Task(task_type=TaskType.DETECTION)
         fxt_project_service.get_project_by_id.return_value = project
 
-        otx_work_dir = tmp_path / f"otx-quantize-workspace-{model_id}"
+        otx_work_dir = tmp_path / f"getitune-quantize-workspace-{model_id}"
         otx_work_dir.mkdir(parents=True)
         (otx_work_dir / "some_temp_file.txt").write_text("temp")
 

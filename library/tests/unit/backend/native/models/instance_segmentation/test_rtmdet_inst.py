@@ -4,9 +4,9 @@
 
 import torch
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.instance_segmentation.rtmdet_inst import RTMDetInst
-from otx.data.entity.sample import OTXPredictionBatch
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.instance_segmentation.rtmdet_inst import RTMDetInst
+from getitune.data.entity.sample import OTXPredictionBatch
 
 
 class TestRTMDetInst:

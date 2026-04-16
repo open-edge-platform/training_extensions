@@ -36,7 +36,7 @@ from datumaro.experimental.fields import Subset
 from datumaro.experimental.fields.images import ImageField
 from torchvision import tv_tensors
 
-from otx.data.entity.sample import ClassificationSample
+from getitune.data.entity.sample import ClassificationSample
 
 CLASS_NAMES: tuple[str, ...] = ("circle", "square")
 SAMPLES_PER_CLASS_TRAIN: int = 4

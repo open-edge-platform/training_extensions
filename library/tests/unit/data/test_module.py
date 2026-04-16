@@ -12,12 +12,12 @@ from lightning.pytorch.loggers import CSVLogger
 from omegaconf import DictConfig, OmegaConf
 from torchvision.transforms.v2 import Normalize
 
-from otx.config.data import (
+from getitune.config.data import (
     SubsetConfig,
     TileConfig,
 )
-from otx.data import module as target_file
-from otx.data.module import (
+from getitune.data import module as target_file
+from getitune.data.module import (
     DeviceType,
     OTXDataModule,
     OTXTaskType,
@@ -67,11 +67,11 @@ class TestOTXDataModule:
 
     @pytest.fixture
     def mock_dm_dataset(self, mocker) -> MagicMock:
-        return mocker.patch("otx.data.module.import_dataset")
+        return mocker.patch("getitune.data.module.import_dataset")
 
     @pytest.fixture
     def mock_otx_dataset_factory(self, mocker) -> MagicMock:
-        return mocker.patch("otx.data.module.OTXDatasetFactory")
+        return mocker.patch("getitune.data.module.OTXDatasetFactory")
 
     @pytest.mark.parametrize(
         "task",
@@ -147,7 +147,7 @@ class TestOTXDataModule:
 
     @pytest.fixture
     def fxt_real_tv_cls_config(self) -> DictConfig:
-        cfg_path = files("otx") / "recipe" / "_base_" / "data" / "classification.yaml"
+        cfg_path = files("getitune") / "recipe" / "_base_" / "data" / "classification.yaml"
         cfg = OmegaConf.load(cfg_path)
         assert isinstance(cfg, DictConfig)
         OmegaConf.set_struct(cfg, False)
@@ -201,6 +201,7 @@ class TestOTXDataModule:
         mock_config.num_workers = 2
         mock_config.sampler = DictConfig({"class_path": "torch.utils.data.RandomSampler"})
         mock_config.transforms = []
+        mock_config.input_size = (224, 224)
 
         return {
             "train_subset": deepcopy(mock_config),
@@ -246,11 +247,15 @@ class TestOTXDataModule:
             return_value=fxt_mock_subset_configs,
         )
 
+        # from_otx_datasets requires train_subset with input_size
+        train_subset = fxt_mock_subset_configs["train_subset"]
+
         # Create module from datasets
         module = OTXDataModule.from_otx_datasets(
             train_dataset=mock_train,
             val_dataset=mock_val,
             test_dataset=mock_test,
+            train_subset=train_subset,
         )
 
         # Assertions
@@ -276,18 +281,20 @@ class TestOTXDataModule:
             label_info=shared_label_info,
         )
 
-        # Create custom configs
+        # Create custom configs with explicit input_size (as the Geti application does)
         train_config = MagicMock(spec=SubsetConfig)
         train_config.batch_size = 16
         train_config.num_workers = 4
         train_config.sampler = DictConfig({"class_path": "torch.utils.data.RandomSampler"})
         train_config.transforms = []
+        train_config.input_size = (640, 640)
 
         val_config = MagicMock(spec=SubsetConfig)
         val_config.batch_size = 8
         val_config.num_workers = 2
         val_config.sampler = DictConfig({"class_path": "torch.utils.data.RandomSampler"})
         val_config.transforms = []
+        val_config.input_size = (640, 640)
 
         mocker.patch.object(
             OTXDataModule,
@@ -308,6 +315,8 @@ class TestOTXDataModule:
         assert module.val_subset == val_config
         assert module.test_subset == fxt_mock_subset_configs["test_subset"]
         assert module.task == OTXTaskType.DETECTION
+        # input_size should come from train_config, not inferred from image data
+        assert module.input_size == (640, 640)
 
     def test_from_otx_datasets_without_test(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
         """Test from_otx_datasets when test_dataset is None (uses val as test)."""
@@ -324,6 +333,9 @@ class TestOTXDataModule:
             label_info=shared_label_info,
         )
 
+        train_subset = fxt_mock_subset_configs["train_subset"]
+        train_subset.input_size = (512, 512)
+
         mocker.patch.object(
             OTXDataModule,
             "get_default_subset_configs",
@@ -335,6 +347,7 @@ class TestOTXDataModule:
             train_dataset=mock_train,
             val_dataset=mock_val,
             test_dataset=None,  # Explicitly None
+            train_subset=train_subset,
         )
 
         # Assertions - test should use val dataset
@@ -342,8 +355,9 @@ class TestOTXDataModule:
         assert module.subsets["val"] == mock_val
         assert module.subsets["test"] == mock_val  # Should be val dataset
         assert module.task == OTXTaskType.SEMANTIC_SEGMENTATION
+        assert module.input_size == (512, 512)
 
-    def test_from_otx_datasets_label_info_mismatch(self, fxt_mock_dataset) -> None:
+    def test_from_otx_datasets_label_info_mismatch(self, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
         """Test from_otx_datasets raises error when label_info doesn't match."""
         # Create mock datasets with mismatched label_info
         mock_train = fxt_mock_dataset(label_info=MagicMock())
@@ -354,6 +368,7 @@ class TestOTXDataModule:
             OTXDataModule.from_otx_datasets(
                 train_dataset=mock_train,
                 val_dataset=mock_val,
+                train_subset=fxt_mock_subset_configs["train_subset"],
             )
 
     def test_from_otx_datasets_with_auto_num_workers(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
@@ -371,6 +386,9 @@ class TestOTXDataModule:
             label_info=shared_label_info,
         )
 
+        train_subset = fxt_mock_subset_configs["train_subset"]
+        train_subset.input_size = (640, 640)
+
         mocker.patch.object(
             OTXDataModule,
             "get_default_subset_configs",
@@ -382,11 +400,13 @@ class TestOTXDataModule:
             train_dataset=mock_train,
             val_dataset=mock_val,
             auto_num_workers=True,
+            train_subset=train_subset,
         )
 
         # Assertions
         assert module.auto_num_workers is True
         assert module.device == DeviceType.auto  # Default value
+        assert module.input_size == (640, 640)
 
     @pytest.mark.parametrize(
         ("transforms_source", "expected"),
@@ -401,7 +421,7 @@ class TestOTXDataModule:
     )
     def test_extract_normalization_params(self, transforms_source, expected) -> None:
         """Test CPUAugmentationPipeline._extract_normalization_params."""
-        from otx.data.augmentation.pipeline import CPUAugmentationPipeline
+        from getitune.data.augmentation.pipeline import CPUAugmentationPipeline
 
         pipeline = CPUAugmentationPipeline(augmentations=transforms_source)
         result = (pipeline.mean, pipeline.std)

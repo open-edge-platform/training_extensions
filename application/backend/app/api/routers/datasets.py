@@ -4,16 +4,16 @@ from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.dependencies import get_dataset_service, get_project
 from app.api.schemas.dataset import DatasetStatisticsView
-from app.api.schemas.dataset_item import DatasetItemAssignSubset, DatasetItemsWithPagination, DatasetItemView
+from app.api.schemas.dataset_item import DatasetItemsWithPagination, DatasetItemView
 from app.api.validators import DatasetItemID, ProjectID
 from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
 from app.services import DatasetService
-from app.services.dataset_service import DatasetItemFilters, SubsetAlreadyAssignedError
+from app.services.dataset_service import DatasetItemFilters
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset", tags=["Datasets"])
 
@@ -107,30 +107,3 @@ def get_dataset_statistics(
     """Get statistics about the number of media and annotations in a dataset"""
     dataset_statistics = dataset_service.get_dataset_statistics(project_id=project_id)
     return DatasetStatisticsView.model_validate(dataset_statistics, from_attributes=True)
-
-
-@router.patch(
-    "/items/{dataset_item_id}/subset",
-    status_code=status.HTTP_200_OK,
-    responses={
-        status.HTTP_200_OK: {"description": "Dataset item subset is assigned"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
-        status.HTTP_409_CONFLICT: {"description": "Dataset item already has a subset assigned"},
-        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid subset"},
-    },
-)
-def assign_dataset_item_subset(
-    project: Annotated[Project, Depends(get_project)],
-    dataset_item_id: DatasetItemID,
-    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
-    subset_config: Annotated[DatasetItemAssignSubset, Body()],
-) -> DatasetItemView:
-    """Assign dataset item subset"""
-    try:
-        dataset_item = dataset_service.assign_dataset_item_subset(
-            project_id=project.id, dataset_item_id=dataset_item_id, subset=subset_config.subset
-        )
-        return DatasetItemView.model_validate(dataset_item, from_attributes=True)
-    except SubsetAlreadyAssignedError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

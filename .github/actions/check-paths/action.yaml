@@ -9,26 +9,41 @@ inputs:
 outputs:
   run:
     description: Whether the workflow should run (true/false)
-    value: ${{ steps.run_workflow.outputs.run }}
+    value: ${{ steps.should_check_paths.outputs.run || steps.run_workflow.outputs.run }}
 
 runs:
   using: composite
   steps:
-    - name: Get all paths that should trigger the workflow
-      id: changed-files-yaml
-      uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v47.0.5
-      with:
-        files_yaml: ${{ inputs.files_yaml }}
-
-    - name: Set run flag
-      id: run_workflow
+    - name: Check if we should skip path checking
+      id: should_check_paths
       shell: bash
       env:
         EVENT_NAME: ${{ github.event_name }}
+      run: |
+        # Always run for push, workflow_dispatch, workflow_call, and schedule
+        if [[ "$EVENT_NAME" =~ ^(push|workflow_dispatch|workflow_call|schedule)$ ]]; then
+          echo "skip_path_check=true" >> "$GITHUB_OUTPUT"
+          echo "run=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "skip_path_check=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Get all paths that should trigger the workflow
+      id: changed-files-yaml
+      if: steps.should_check_paths.outputs.skip_path_check != 'true'
+      uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v47.0.5
+      with:
+        files_yaml: ${{ inputs.files_yaml }}
+        output_renamed_files_as_deleted_and_added: true
+
+    - name: Set run flag based on changed files
+      id: run_workflow
+      if: steps.should_check_paths.outputs.skip_path_check != 'true'
+      shell: bash
+      env:
         TEST_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.test_any_changed }}
       run: |
-        if [[ "$EVENT_NAME" =~ ^(push|workflow_dispatch|workflow_call)$ ]] || \
-           [ "$TEST_ANY_CHANGED" = "true" ]; then
+        if [ "$TEST_ANY_CHANGED" = "true" ]; then
           echo "run=true" >> "$GITHUB_OUTPUT"
         else
           echo "run=false" >> "$GITHUB_OUTPUT"

@@ -1,6 +1,7 @@
 #  Copyright (C) 2026 Intel Corporation
 #  SPDX-License-Identifier: Apache-2.0
 
+import types
 from enum import StrEnum
 from typing import Annotated, Any, Literal, Union, cast, get_args, get_origin
 
@@ -87,6 +88,8 @@ class FloatRangeParameterView(_BaseConfigurableParameterView):
     value_type: Literal["float_range"] = "float_range"
     value: tuple[float, float] = Field(title="Actual value of the parameter")
     default_value: tuple[float, float] = Field(title="Default value of the parameter")
+    min_value: float = Field(title="Minimum value for range elements.")
+    max_value: float = Field(title="Maximum value for range elements.")
 
 
 def _parameter_view_discriminator(v: dict | _BaseConfigurableParameterView) -> str:
@@ -171,19 +174,34 @@ class TrainingConfigurationView(BaseModel):
         return min_value, max_value
 
     @classmethod
+    def _extract_range_bounds(cls, field_info: FieldInfo) -> tuple[float, float]:
+        """Extract min_value/max_value bounds for float_range fields from json_schema_extra."""
+        if not isinstance(field_info.json_schema_extra, dict):
+            raise ValueError(
+                f"Field '{field_info.title}' must have a json_schema_extra to define min and max range parameters"
+            )
+        min_value = field_info.json_schema_extra["min_value"]
+        max_value = field_info.json_schema_extra["max_value"]
+        if not isinstance(min_value, float) or not isinstance(max_value, float):
+            raise ValueError(
+                f"Field '{field_info.title}' must have float min and max in json_schema_extra for range parameters"
+            )
+        return min_value, max_value
+
+    @classmethod
     def _get_value_type(cls, field_info: FieldInfo) -> Literal["bool", "int", "float", "str", "float_range"]:  # noqa: C901, PLR0911
         """Determine the value type from field annotation."""
         annotation = field_info.annotation
 
         # Handle Optional/Union types by extracting the non-None type
-        if hasattr(annotation, "__origin__"):
-            origin = get_origin(annotation)
-            if origin is Union:
-                args = [arg for arg in get_args(annotation) if arg is not type(None)]
-                if args:
-                    annotation = args[0]
-                    origin = get_origin(annotation)
+        origin = get_origin(annotation)
+        if origin is Union or origin is types.UnionType:
+            args = [arg for arg in get_args(annotation) if arg is not type(None)]
+            if args:
+                annotation = args[0]
+                origin = get_origin(annotation)
 
+        if hasattr(annotation, "__origin__") or origin is not None:
             # Detect Literal[StrEnum member] -> treat as str
             if cls._get_literal_strenum_class(annotation) is not None:  # pyrefly: ignore[bad-argument-type]
                 return "str"
@@ -294,7 +312,8 @@ class TrainingConfigurationView(BaseModel):
         if value_type == "bool":
             return BoolParameterView(**common_kwargs)  # type: ignore
         if value_type == "float_range":
-            return FloatRangeParameterView(**common_kwargs, allowed_values=allowed_values)  # type: ignore
+            min_value, max_value = cls._extract_range_bounds(field_info)
+            return FloatRangeParameterView(**common_kwargs, min_value=min_value, max_value=max_value)  # type: ignore
         return StringParameterView(**common_kwargs, allowed_values=allowed_values)  # type: ignore
 
     @classmethod
@@ -724,7 +743,8 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.5, 1.5],
                                                 "default_value": [0.5, 1.5],
                                                 "value_type": "float_range",
-                                                "allowed_values": None,
+                                                "min_value": 0.0,
+                                                "max_value": 10.0,
                                             },
                                             {
                                                 "type": "parameter",
@@ -845,7 +865,8 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.875, 1.125],
                                                 "default_value": [0.875, 1.125],
                                                 "value_type": "float_range",
-                                                "allowed_values": None,
+                                                "min_value": 0.0,
+                                                "max_value": 5.0,
                                             },
                                             {
                                                 "type": "parameter",
@@ -860,7 +881,8 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.5, 1.5],
                                                 "default_value": [0.5, 1.5],
                                                 "value_type": "float_range",
-                                                "allowed_values": None,
+                                                "min_value": 0.0,
+                                                "max_value": 5.0,
                                             },
                                             {
                                                 "type": "parameter",
@@ -875,7 +897,8 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.5, 1.5],
                                                 "default_value": [0.5, 1.5],
                                                 "value_type": "float_range",
-                                                "allowed_values": None,
+                                                "min_value": 0.0,
+                                                "max_value": 5.0,
                                             },
                                             {
                                                 "type": "parameter",
@@ -890,7 +913,8 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [-0.05, 0.05],
                                                 "default_value": [-0.05, 0.05],
                                                 "value_type": "float_range",
-                                                "allowed_values": None,
+                                                "min_value": -0.5,
+                                                "max_value": 0.5,
                                             },
                                             {
                                                 "type": "parameter",
@@ -951,7 +975,8 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.1, 2.0],
                                                 "default_value": [0.1, 2.0],
                                                 "value_type": "float_range",
-                                                "allowed_values": None,
+                                                "min_value": 0.0,
+                                                "max_value": 10.0,
                                             },
                                             {
                                                 "type": "parameter",

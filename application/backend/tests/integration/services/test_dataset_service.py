@@ -908,24 +908,39 @@ class TestDatasetServiceIntegration:
         fxt_project_with_pipeline: tuple[Project, Pipeline],
         fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
+        db_session: Session,
     ):
         """Test setting a dataset item annotation for a non-existent dataset item."""
         _, pipeline = fxt_project_with_pipeline
         project, db_dataset_items = fxt_project_with_dataset_items
-        non_existent_id = uuid4()
         annotations = fxt_annotations(project.task.labels[0].id)
+
+        # Create a media record with no corresponding dataset item so the media
+        # lookup succeeds but the dataset item update fails.
+        orphan_media = MediaDB(
+            type="image",
+            name="orphan",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            project_id=str(project.id),
+        )
+        db_session.add(orphan_media)
+        db_session.flush()
+        orphan_media_id = UUID(orphan_media.id)
 
         with pytest.raises(ResourceNotFoundError) as excinfo:
             fxt_dataset_service.set_dataset_item_annotations(
                 project=project,
-                dataset_item_id=non_existent_id,
+                dataset_item_id=orphan_media_id,
                 annotations=annotations,
                 user_reviewed=True,
                 prediction_model_id=pipeline.model_id,
             )
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
-        assert excinfo.value.resource_id == str(non_existent_id)
+        assert excinfo.value.resource_id == str(orphan_media_id)
 
     def test_delete_dataset_item_annotations(
         self,
@@ -985,16 +1000,14 @@ class TestDatasetServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
         assert excinfo.value.resource_id == str(non_existent_id)
 
-    @pytest.mark.parametrize(
-        "subset", [DatasetItemSubset.TRAINING, DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION]
-    )
+    @pytest.mark.parametrize("subset", [DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION])
     def test_assign_dataset_item_subset_already_assigned(
         self,
         fxt_dataset_service: DatasetService,
         fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         subset,
     ):
-        """Test assigning a subset to a dataset item."""
+        """Test assigning a different subset to a dataset item that already has one raises an error."""
         project, db_dataset_items = fxt_project_with_dataset_items
 
         with pytest.raises(SubsetAlreadyAssignedError):
@@ -1003,6 +1016,24 @@ class TestDatasetServiceIntegration:
                 dataset_item_id=UUID(db_dataset_items[2].id),
                 subset=subset,
             )
+
+    def test_assign_dataset_item_subset_same_subset_is_noop(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
+    ):
+        """Test assigning the same subset that is already assigned does not raise an error."""
+        project, db_dataset_items = fxt_project_with_dataset_items
+
+        # db_dataset_items[2] already has "training" subset
+        returned_dataset_item = fxt_dataset_service.assign_dataset_item_subset(
+            project_id=project.id,
+            dataset_item_id=UUID(db_dataset_items[2].id),
+            subset=DatasetItemSubset.TRAINING,
+        )
+
+        assert str(returned_dataset_item.id) == db_dataset_items[2].id
+        assert returned_dataset_item.subset == DatasetItemSubset.TRAINING
 
     @pytest.mark.parametrize(
         "subset", [DatasetItemSubset.TRAINING, DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION]

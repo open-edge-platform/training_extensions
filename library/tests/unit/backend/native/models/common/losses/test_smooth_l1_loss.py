@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from otx.backend.native.models.common.losses import L1Loss
+from getitune.backend.native.models.common.losses import L1Loss
 
 
 class TestL1Loss:

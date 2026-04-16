@@ -287,7 +287,8 @@ const ParameterField = ({ parameter, onChange, isDisabled }: ParameterFieldProps
         return (
             <RangeParameterField
                 value={parameter.value}
-                defaultValue={parameter.default_value}
+                maxValue={parameter.max_value}
+                minValue={parameter.min_value}
                 onChange={handleChange}
                 isDisabled={isDisabled}
                 name={parameter.name}
@@ -387,7 +388,7 @@ export const ParametersEnableGroup = ({
     return (
         <ParametersContainer
             key={parameters.key}
-            rowGap={configurableParameters.length > 0 ? 'size-150' : 'size-0'}
+            rowGap={configurableParameters.length > 0 ? 'size-100' : 'size-0'}
             isReadOnly={isReadOnly}
             id={createTestId(parentGroupKeys, parameters.key)}
         >

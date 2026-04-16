@@ -16,8 +16,8 @@ import torchvision.transforms.v2 as tvt_v2
 from torch import nn
 from torchvision import tv_tensors
 
-from otx.config.data import IntensityConfig, SubsetConfig
-from otx.data.augmentation.pipeline import (
+from getitune.config.data import IntensityConfig, SubsetConfig
+from getitune.data.augmentation.pipeline import (
     CPUAugmentationPipeline,
     GPUAugmentationPipeline,
     _configure_input_size,
@@ -203,7 +203,7 @@ class TestCPUAugmentationPipelineFromConfig:
         # intensity transform (wrapped) + 1 user augmentation
         assert len(pipeline.augmentations) == 2
         # First transform should be an _IntensityAdapter wrapping ScaleToUnit
-        from otx.data.augmentation.intensity import ScaleToUnit
+        from getitune.data.augmentation.intensity import ScaleToUnit
 
         assert isinstance(pipeline.augmentations[0], _IntensityAdapter)
         # The inner nn.Sequential should contain ScaleToUnit
@@ -240,7 +240,7 @@ class TestCPUAugmentationPipelineFromConfig:
             input_size=None,
         )
         pipeline = CPUAugmentationPipeline.from_config(config)
-        from otx.data.augmentation.intensity import RangeScale
+        from getitune.data.augmentation.intensity import RangeScale
 
         assert len(pipeline.augmentations) == 1
         assert isinstance(pipeline.augmentations[0], _IntensityAdapter)
@@ -485,6 +485,38 @@ class TestGPUAugmentationPipelineInit:
         pipeline = GPUAugmentationPipeline([], data_keys=["input", "bbox_xyxy", "mask"])
         assert pipeline.data_keys == ["input", "bbox_xyxy", "mask"]
 
+    def test_has_geometric_augs_with_flip(self):
+        """Pipeline with RandomHorizontalFlip should flag geometric augs."""
+        pipeline = GPUAugmentationPipeline([kornia_aug.RandomHorizontalFlip(p=0.5)])
+        assert pipeline._has_geometric_augs is True
+
+    def test_has_geometric_augs_with_affine(self):
+        """Pipeline with RandomAffine should flag geometric augs."""
+        pipeline = GPUAugmentationPipeline([kornia_aug.RandomAffine(degrees=10)])
+        assert pipeline._has_geometric_augs is True
+
+    def test_no_geometric_augs_with_normalize_only(self):
+        """Pipeline with only Normalize should NOT flag geometric augs."""
+        pipeline = GPUAugmentationPipeline(
+            [kornia_aug.Normalize(mean=torch.tensor([0.5, 0.5, 0.5]), std=torch.tensor([0.5, 0.5, 0.5]))]
+        )
+        assert pipeline._has_geometric_augs is False
+
+    def test_no_geometric_augs_empty(self):
+        """Empty pipeline should NOT flag geometric augs."""
+        pipeline = GPUAugmentationPipeline([])
+        assert pipeline._has_geometric_augs is False
+
+    def test_has_geometric_augs_mixed(self):
+        """Pipeline with geometric + intensity should flag geometric augs."""
+        pipeline = GPUAugmentationPipeline(
+            [
+                kornia_aug.RandomHorizontalFlip(p=0.5),
+                kornia_aug.Normalize(mean=torch.tensor([0.5, 0.5, 0.5]), std=torch.tensor([0.5, 0.5, 0.5])),
+            ]
+        )
+        assert pipeline._has_geometric_augs is True
+
 
 class TestGPUAugmentationPipelineNormalization:
     """Tests for normalization parameter extraction."""
@@ -668,6 +700,110 @@ class TestGPUAugmentationPipelineForward:
         r = repr(pipeline)
         assert "mean=" in r
         assert "std=" in r
+
+    def test_normalize_only_preserves_out_of_bounds_bboxes(self):
+        """Critical regression test: Normalize-only pipeline must not clip/filter bboxes.
+
+        When resize_targets=False is used during validation, bboxes stay in original
+        image coordinates (e.g., 2048x1365) while images are resized (e.g., 800x992).
+        A Normalize-only GPU pipeline must preserve these bboxes untouched.
+        """
+        pipeline = GPUAugmentationPipeline(
+            [kornia_aug.Normalize(mean=torch.tensor([0.485, 0.456, 0.406]), std=torch.tensor([0.229, 0.224, 0.225]))],
+            data_keys=["input", "bbox_xyxy", "label"],
+        )
+        # Small resized images (800x992) but bboxes in original space (2048x1365)
+        images = _make_batched_images(2, h=800, w=992)
+        bboxes = [
+            torch.tensor([[1000.0, 500.0, 1500.0, 800.0], [100.0, 100.0, 300.0, 300.0]]),  # x>992 for first box
+            torch.tensor([[500.0, 1000.0, 900.0, 1365.0]]),  # y>800 for this box
+        ]
+        labels = [torch.tensor([0, 1]), torch.tensor([2])]
+
+        result = pipeline(images, bboxes=bboxes, labels=labels)
+
+        # ALL bboxes must survive (no clipping or filtering)
+        assert result["bboxes"] is not None
+        assert len(result["bboxes"][0]) == 2, "First sample lost bboxes during normalize-only pipeline"
+        assert len(result["bboxes"][1]) == 1, "Second sample lost bboxes during normalize-only pipeline"
+        # Bbox coordinates must be unchanged
+        assert torch.allclose(result["bboxes"][0], bboxes[0])
+        assert torch.allclose(result["bboxes"][1], bboxes[1])
+        # Labels must also survive
+        assert result["labels"] is not None
+        assert len(result["labels"][0]) == 2
+        assert len(result["labels"][1]) == 1
+
+    def test_geometric_pipeline_does_sanitize_bboxes(self):
+        """Geometric augmentations (flip) should still sanitize bboxes."""
+        pipeline = GPUAugmentationPipeline(
+            [
+                kornia_aug.RandomHorizontalFlip(p=0.0),  # no actual flip, but it IS geometric
+                kornia_aug.Normalize(mean=torch.tensor([0.5, 0.5, 0.5]), std=torch.tensor([0.5, 0.5, 0.5])),
+            ],
+            data_keys=["input", "bbox_xyxy", "label"],
+        )
+        images = _make_batched_images(1, h=32, w=32)
+        # Box fully outside image bounds → should be sanitized away
+        bboxes = [torch.tensor([[100.0, 100.0, 200.0, 200.0]])]
+        labels = [torch.tensor([0])]
+
+        result = pipeline(images, bboxes=bboxes, labels=labels)
+        # The degenerate box (after clipping to 32x32) should be filtered
+        assert result["bboxes"] is not None
+        assert len(result["bboxes"][0]) == 0
+
+    def test_sanitize_annotations_false_preserves_out_of_bounds_bboxes(self):
+        """sanitize_annotations=False must preserve bboxes even with geometric augmentations.
+
+        This models the val/test pipeline case: the callback passes
+        sanitize_annotations=False so that GT bboxes in original image coordinates
+        are never clipped to the smaller network input dimensions.
+        """
+        pipeline = GPUAugmentationPipeline(
+            [
+                kornia_aug.RandomHorizontalFlip(p=0.0),  # geometric, but sanitize disabled
+                kornia_aug.Normalize(mean=torch.tensor([0.5, 0.5, 0.5]), std=torch.tensor([0.5, 0.5, 0.5])),
+            ],
+            data_keys=["input", "bbox_xyxy", "label"],
+            sanitize_annotations=False,
+        )
+        images = _make_batched_images(1, h=32, w=32)
+        # Bboxes in original (large) image space -- all beyond 32x32 bounds
+        bboxes = [torch.tensor([[100.0, 100.0, 200.0, 200.0], [10.0, 10.0, 20.0, 20.0]])]
+        labels = [torch.tensor([0, 1])]
+
+        result = pipeline(images, bboxes=bboxes, labels=labels)
+        # Both bboxes must survive unchanged
+        assert result["bboxes"] is not None
+        assert len(result["bboxes"][0]) == 2, "sanitize_annotations=False must not filter bboxes"
+
+    def test_sanitize_annotations_default_is_true(self):
+        """Default value of sanitize_annotations should be True."""
+        pipeline = GPUAugmentationPipeline([kornia_aug.RandomHorizontalFlip(p=0.5)])
+        assert pipeline._sanitize_annotations_enabled is True
+
+    def test_sanitize_annotations_false_stored(self):
+        """sanitize_annotations=False is stored correctly."""
+        pipeline = GPUAugmentationPipeline([kornia_aug.RandomHorizontalFlip(p=0.5)], sanitize_annotations=False)
+        assert pipeline._sanitize_annotations_enabled is False
+
+    def test_from_config_sanitize_annotations_false(self):
+        """from_config forwards sanitize_annotations=False to the instance."""
+        config = SubsetConfig(
+            augmentations_gpu=[
+                {"class_path": "kornia.augmentation.RandomHorizontalFlip", "init_args": {"p": 0.5}},
+            ],
+            input_size=None,
+        )
+        pipeline = GPUAugmentationPipeline.from_config(config, sanitize_annotations=False)
+        assert pipeline._sanitize_annotations_enabled is False
+
+    def test_from_config_empty_sanitize_annotations_false(self):
+        """from_config with empty augmentations also respects sanitize_annotations=False."""
+        config = SubsetConfig(augmentations_gpu=[], input_size=None)
+        pipeline = GPUAugmentationPipeline.from_config(config, sanitize_annotations=False)
+        assert pipeline._sanitize_annotations_enabled is False
 
 
 # ===================================================================
@@ -907,7 +1043,7 @@ class TestGPUAugmentationCallback:
 
     def _make_callback(self, train_augs=None, val_augs=None, test_augs=None):  # noqa: ANN202
         """Create a GPUAugmentationCallback with optional configs."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         train_config = SubsetConfig(augmentations_gpu=train_augs or [])
         val_config = SubsetConfig(augmentations_gpu=val_augs or [])
@@ -919,7 +1055,7 @@ class TestGPUAugmentationCallback:
         )
 
     def test_init_defaults(self):
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
         assert callback.train_config is None
@@ -931,8 +1067,8 @@ class TestGPUAugmentationCallback:
 
     def test_setup_creates_pipelines(self):
         """setup() should create train and val pipelines."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
-        from otx.types.task import OTXTaskType
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.types.task import OTXTaskType
 
         train_config = SubsetConfig(
             augmentations_gpu=[
@@ -965,8 +1101,8 @@ class TestGPUAugmentationCallback:
 
     def test_setup_updates_model_normalization(self):
         """setup() should update model's mean/std from GPU pipeline."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
-        from otx.types.task import OTXTaskType
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.types.task import OTXTaskType
 
         val_config = SubsetConfig(
             augmentations_gpu=[
@@ -997,7 +1133,7 @@ class TestGPUAugmentationCallback:
 
     def test_on_train_batch_start_no_pipeline(self):
         """If no train pipeline, on_train_batch_start should be a no-op."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
         batch = MagicMock()
@@ -1006,7 +1142,7 @@ class TestGPUAugmentationCallback:
 
     def test_on_val_batch_start_disabled(self):
         """If no val pipeline, validation batches should not be augmented."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
         # _val_pipeline is None by default
@@ -1018,7 +1154,7 @@ class TestGPUAugmentationCallback:
 
     def test_on_test_batch_start_disabled(self):
         """If no test pipeline, test batches should not be augmented."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
         # _test_pipeline is None by default
@@ -1028,7 +1164,7 @@ class TestGPUAugmentationCallback:
 
     def test_test_config_fallback_to_val(self):
         """If test_config is None, it should fall back to val_config."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         val_config = SubsetConfig(augmentations_gpu=[])
         callback = GPUAugmentationCallback(val_config=val_config, test_config=None)
@@ -1036,8 +1172,8 @@ class TestGPUAugmentationCallback:
 
     def test_data_keys_per_task(self):
         """Verify correct data_keys are used for different task types."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
-        from otx.types.task import OTXTaskType
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.types.task import OTXTaskType
 
         expected_keys = {
             OTXTaskType.DETECTION: ["input", "bbox_xyxy", "label"],

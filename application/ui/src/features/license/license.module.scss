@@ -1,0 +1,17 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+.list {
+    list-style-type: disc;
+    padding-inline-start: var(--spectrum-global-dimension-size-500);
+    margin-block: var(--spectrum-global-dimension-size-100);
+}
+
+.licenseBackground {
+    background-color: var(--spectrum-global-color-gray-100);
+    background-image: url('../../assets/background.webp');
+    background-blend-mode: luminosity;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}

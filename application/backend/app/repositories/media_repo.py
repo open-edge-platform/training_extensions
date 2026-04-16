@@ -149,3 +149,16 @@ class MediaRepository:
             )
         )
         return [(dataset_item, media) for (dataset_item, media) in self.db.execute(stmt).all()]
+
+    def count_annotated_video_frames_by_video_id(self, video_id: str) -> int:
+        stmt = (
+            select(func.count(MediaDB.id))
+            .select_from(MediaDB)
+            .join(DatasetItemDB, DatasetItemDB.id == MediaDB.id)
+            .where(
+                MediaDB.project_id == self.project_id,
+                MediaDB.video_id == video_id,
+                DatasetItemDB.annotation_data.is_not(None),
+            )
+        )
+        return self.db.scalar(stmt) or 0

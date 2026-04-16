@@ -15,11 +15,11 @@ from lightning.pytorch.cli import ReduceLROnPlateau
 from omegaconf import OmegaConf
 from torch.optim import Optimizer
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.detection.atss import ATSS
-from otx.backend.native.tools.explain.explain_algo import feature_vector_fn
-from otx.metrics.fmeasure import FMeasureCallable
-from otx.types.export import TaskLevelExportParameters
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.detection.atss import ATSS
+from getitune.backend.native.tools.explain.explain_algo import feature_vector_fn
+from getitune.metrics.fmeasure import FMeasureCallable
+from getitune.types.export import TaskLevelExportParameters
 
 if TYPE_CHECKING:
     from omegaconf.dictconfig import DictConfig
@@ -43,7 +43,7 @@ class TestOTXDetectionModel:
 
     @pytest.fixture
     def config(self) -> DictConfig:
-        cfg_path = files("otx") / "algo" / "detection" / "mmconfigs" / "yolox_tiny.yaml"
+        cfg_path = files("getitune") / "algo" / "detection" / "mmconfigs" / "yolox_tiny.yaml"
         return OmegaConf.load(cfg_path)
 
     @pytest.fixture

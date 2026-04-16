@@ -8,9 +8,9 @@ from __future__ import annotations
 import pytest
 import torch
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.detection.deim import DEIMDFine
-from otx.data.entity.sample import OTXPredictionBatch
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.detection.deim import DEIMDFine
+from getitune.data.entity.sample import OTXPredictionBatch
 
 
 class TestDEIMDFine:

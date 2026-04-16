@@ -34,7 +34,7 @@ from datumaro.experimental.fields import Subset
 from pycocotools.coco import COCO
 from torchvision import tv_tensors
 
-from otx.data.entity.sample import KeypointSample
+from getitune.data.entity.sample import KeypointSample
 
 COCO_ANNOTATIONS_URL = "https://images.cocodataset.org/annotations/annotations_trainval2017.zip"
 COCO_VAL_IMAGES_URL = "https://images.cocodataset.org/val2017/{filename}"

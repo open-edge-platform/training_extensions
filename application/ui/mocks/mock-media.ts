@@ -25,6 +25,7 @@ export const getMockedVideo = (props: Partial<MediaVideo> = {}): MediaVideo => (
     name: 'video',
     format: 'mp4',
     frame_count: 400,
+    annotated_frame_count: 100,
     source_id: undefined,
     ...props,
 });
@@ -40,6 +41,7 @@ export const getMockedVideoFrame = (props: Partial<MediaVideoFrame> = {}): Media
     fps: 60,
     duration: 10,
     frame_count: 10,
+    annotated_frame_count: 5,
     frame_stride: 1,
     frame_number: 0,
     ...props,

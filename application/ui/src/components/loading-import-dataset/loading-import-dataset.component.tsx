@@ -1,19 +1,21 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { toast } from '@geti/ui';
 import { useImportJobStatus } from 'hooks/api/jobs/use-import-job-status.hook';
-import { isJobDone, isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
+import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
+import { isInvalidJob, isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
 
+import { formatBytes } from '../../shared/util';
 import { ImportActiveJob } from '../import-card-status/import-active-job/import-active-job.component';
 import { ImportFailedJob } from '../import-card-status/import-failed-job/import-failed-job.component';
-import { ImportJobDone } from '../import-card-status/import-job-done/import-job-done.component';
 
 type LoadingImportDatasetProps = {
     jobId: string;
     size: number;
     fileName: string;
     stagedDatasetId: string;
-    onSuccess: () => void;
+    onSuccess: () => Promise<void> | void;
     deleteEntry: () => void;
 };
 
@@ -25,7 +27,27 @@ export const LoadingImportDataset = ({
     onSuccess,
     deleteEntry,
 }: LoadingImportDatasetProps) => {
-    const { error, isError, data: job } = useImportJobStatus({ jobId, onSuccess });
+    const deleteStagedFileMutation = useDeleteStagedDataset({ stagedDatasetId });
+
+    const { data: job, ...response } = useImportJobStatus({
+        jobId,
+        onSuccess: async () => {
+            deleteEntry();
+            deleteStagedFileMutation.mutate();
+            await onSuccess();
+
+            toast({
+                message: `Dataset ${fileName} ${formatBytes(size)} imported successfully.`,
+                type: 'success',
+            });
+        },
+        onError: (error) => {
+            if (isInvalidJob(error)) {
+                deleteEntry();
+                deleteStagedFileMutation.mutate();
+            }
+        },
+    });
 
     const isRunningOrPending = isJobRunning(job) || isJobPending(job);
 
@@ -42,11 +64,11 @@ export const LoadingImportDataset = ({
                 />
             )}
 
-            {isError && (
+            {response.isError && (
                 <ImportFailedJob
                     size={size}
                     fileName={fileName}
-                    error={`${error?.detail ?? 'Unknown error'}`}
+                    error={`${response.error?.detail ?? 'Unknown error'}`}
                     message={'An error occurred during import.'}
                     stagedDatasetId={stagedDatasetId}
                     deleteEntry={deleteEntry}
@@ -56,15 +78,6 @@ export const LoadingImportDataset = ({
             {isRunningOrPending && (
                 <ImportActiveJob
                     job={job}
-                    size={size}
-                    fileName={fileName}
-                    stagedDatasetId={stagedDatasetId}
-                    deleteEntry={deleteEntry}
-                />
-            )}
-
-            {isJobDone(job) && (
-                <ImportJobDone
                     size={size}
                     fileName={fileName}
                     stagedDatasetId={stagedDatasetId}

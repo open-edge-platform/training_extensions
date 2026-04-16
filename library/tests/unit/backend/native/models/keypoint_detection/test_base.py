@@ -10,15 +10,15 @@ from typing import TYPE_CHECKING
 import pytest
 import torch
 
-from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.keypoint_detection.rtmpose import RTMPose
-from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from otx.metrics.pck import PCKMeasureCallable
-from otx.types.label import LabelInfo
+from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.native.models.keypoint_detection.rtmpose import RTMPose
+from getitune.data.entity.base import OTXBatchLossEntity
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.metrics.pck import PCKMeasureCallable
+from getitune.types.label import LabelInfo
 
 if TYPE_CHECKING:
-    from otx.backend.native.models.keypoint_detection.base import OTXKeypointDetectionModel
+    from getitune.backend.native.models.keypoint_detection.base import OTXKeypointDetectionModel
 
 
 class TestOTXKeypointDetectionModel:

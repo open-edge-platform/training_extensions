@@ -10,7 +10,7 @@ permissions: {} # No permissions by default
 jobs:
   build:
     name: Build & publish package
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     environment: pypi
     permissions:
       contents: write # required by svenstaro/upload-release-action
@@ -32,7 +32,7 @@ jobs:
       - name: Build sdist
         run: python -m build --sdist library/
 
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: artifact-sdist
           path: library/dist/*.tar.gz
@@ -40,7 +40,7 @@ jobs:
       - name: Build wheel
         run: python -m build --wheel library/
 
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: artifact-wheel
           path: library/dist/*.whl
@@ -55,7 +55,7 @@ jobs:
 
       - name: Upload package distributions to GitHub
         if: ${{ steps.check-tag.outputs.match != '' }}
-        uses: svenstaro/upload-release-action@b98a3b12e86552593f3e4e577ca8a62aa2f3f22b # v2
+        uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: library/dist/*
@@ -65,11 +65,11 @@ jobs:
 
       - name: Publish package distributions to PyPI
         if: ${{ steps.check-tag.outputs.match != '' }}
-        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
 
       - name: Publish package distributions to TestPyPI
         if: ${{ steps.check-tag.outputs.match == '' }}
-        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
         with:
           repository-url: https://test.pypi.org/legacy/
           verbose: true

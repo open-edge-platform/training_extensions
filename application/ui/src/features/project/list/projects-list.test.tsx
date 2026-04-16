@@ -85,7 +85,7 @@ describe('ProjectList', () => {
             const user = userEvent.setup();
             renderProjectList();
 
-            const picker = await screen.findByRole('button', { name: /sort projects by/i });
+            const picker = await screen.findByRole('button', { name: /sort/i });
             await user.click(picker);
 
             const option = await screen.findByRole('option', { name: 'Name (A-Z)' });
@@ -104,7 +104,7 @@ describe('ProjectList', () => {
             const user = userEvent.setup();
             renderProjectList();
 
-            const picker = await screen.findByRole('button', { name: /sort projects by/i });
+            const picker = await screen.findByRole('button', { name: /sort/i });
             await user.click(picker);
 
             const option = await screen.findByRole('option', { name: 'Name (Z-A)' });
@@ -123,7 +123,7 @@ describe('ProjectList', () => {
             const user = userEvent.setup();
             renderProjectList();
 
-            const picker = await screen.findByRole('button', { name: /sort projects by/i });
+            const picker = await screen.findByRole('button', { name: /sort/i });
             await user.click(picker);
 
             const option = await screen.findByRole('option', { name: 'Created date (oldest)' });
@@ -163,7 +163,7 @@ describe('ProjectList', () => {
 
             expect(await screen.findByRole('button', { name: /create project/i })).toBeInTheDocument();
             expect(screen.queryByRole('link')).not.toBeInTheDocument();
-            expect(screen.queryByRole('button', { name: /sort projects by/i })).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: /sort/i })).not.toBeInTheDocument();
         });
     });
 

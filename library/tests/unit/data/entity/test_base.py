@@ -6,7 +6,7 @@ import pytest
 import torch
 import torchvision.transforms.v2 as tvt
 
-from otx.data.entity.sample import ClassificationSample
+from getitune.data.entity.sample import ClassificationSample
 
 
 class TestImageInfo:

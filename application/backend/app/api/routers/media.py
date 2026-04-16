@@ -34,7 +34,8 @@ from app.models import BatchInferenceResult, DatasetItemAnnotationStatus, Datase
 from app.models.media import ImageFormat, MediaListPredictionRequest, MediaType, NotAnnotatedVideoFrame, VideoFormat
 from app.services import DatasetService, MediaPredictionService, MediaService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.dataset_service import AnnotationValidationError
+from app.services.dataset_service import AnnotationValidationError, SubsetAlreadyAssignedError
+from app.services.inference import InferenceBusyError
 from app.services.media_prediction_service import BinaryNotFoundError, VideoRangeError
 from app.services.media_service import ImageMetadata, InvalidImageError, MediaFilters
 
@@ -307,6 +308,7 @@ def list_video_frames(
                 annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
                 prediction_model_id=dataset_item.prediction_model_id,
                 user_reviewed=dataset_item.user_reviewed,
+                subset=dataset_item.subset,
             ),
         )
         for (dataset_item, video_frame) in annotated_video_frames
@@ -420,6 +422,7 @@ def bulk_delete_media(
         status.HTTP_201_CREATED: {"description": "Annotation created or updated", "model": MediaAnnotations},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or invalid annotation content"},
         status.HTTP_404_NOT_FOUND: {"description": "Media, dataset item or project not found"},
+        status.HTTP_409_CONFLICT: {"description": "Dataset item already has a subset assigned"},
     },
 )
 def set_media_annotations(
@@ -456,14 +459,24 @@ def set_media_annotations(
             user_reviewed=True,
             prediction_model_id=None,
         )
-        return MediaAnnotations(
-            media_id=media.id,
-            annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
-            prediction_model_id=dataset_item.prediction_model_id,
-            user_reviewed=dataset_item.user_reviewed,
-        )
     except AnnotationValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    if media_annotations.subset is not None:
+        try:
+            dataset_item = dataset_service.assign_dataset_item_subset(
+                project_id=project.id, dataset_item_id=dataset_item_id, subset=media_annotations.subset
+            )
+        except SubsetAlreadyAssignedError as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+    return MediaAnnotations(
+        media_id=media.id,
+        annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
+        prediction_model_id=dataset_item.prediction_model_id,
+        user_reviewed=dataset_item.user_reviewed,
+        subset=dataset_item.subset,
+    )
 
 
 @router.get(
@@ -497,6 +510,7 @@ def get_media_annotations(
         annotations=dataset_item.annotation_data,
         prediction_model_id=dataset_item.prediction_model_id,
         user_reviewed=dataset_item.user_reviewed,
+        subset=dataset_item.subset,
     )
 
 
@@ -535,6 +549,9 @@ def delete_media_annotation(
             "or media inference limit exceeded"
         },
         status.HTTP_404_NOT_FOUND: {"description": "Media, dataset item or project not found"},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "description": "Inference server is busy with another request, try again later"
+        },
     },
 )
 def media_predict(
@@ -571,5 +588,7 @@ def media_predict(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except BinaryNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except InferenceBusyError as e:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

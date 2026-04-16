@@ -7,8 +7,8 @@ from __future__ import annotations
 import openvino as ov
 import pytest
 
-from otx.types.export import TaskLevelExportParameters
-from otx.types.label import LabelInfo
+from getitune.types.export import TaskLevelExportParameters
+from getitune.types.label import LabelInfo
 
 
 @pytest.fixture(autouse=True)

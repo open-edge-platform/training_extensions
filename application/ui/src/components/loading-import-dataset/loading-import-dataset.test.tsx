@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen, waitFor } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
 import { getMockedPrepareImportDatasetJob } from 'mocks/mock-job';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
@@ -9,6 +10,7 @@ import { render } from 'test-utils/render';
 import { http } from '../../api/utils';
 import { Job } from '../../constants/shared-types';
 import { server } from '../../msw-node-setup';
+import { formatBytes } from '../../shared/util';
 import { LoadingImportDataset } from './loading-import-dataset.component';
 
 const stagedDatasetId = 'staged-dataset-123';
@@ -27,7 +29,12 @@ describe('LoadingImportDataset', () => {
         onSuccess: () => void;
         deleteEntry: () => void;
     }) => {
-        server.use(http.get('/api/jobs/{job_id}', () => HttpResponse.json(job, { status })));
+        server.use(
+            http.get('/api/jobs/{job_id}', () => HttpResponse.json(job, { status })),
+            http.delete('/api/staged_datasets/{staged_dataset_id}', () => {
+                return HttpResponse.json(null, { status: 204 });
+            })
+        );
 
         return render(
             <LoadingImportDataset
@@ -41,7 +48,7 @@ describe('LoadingImportDataset', () => {
         );
     };
 
-    it('renders failed job state and displays job message and error', async () => {
+    it('displays job message, error, and does not delete entry when job fails', async () => {
         const job = getMockedPrepareImportDatasetJob({
             status: 'FAILED',
             message: 'Import failed due to validation error',
@@ -52,11 +59,14 @@ describe('LoadingImportDataset', () => {
         renderApp({ job, onSuccess: vi.fn(), deleteEntry: mockedDeleteImportEntry });
 
         expect(await screen.findByText('Import failed due to validation error')).toBeVisible();
+
+        await userEvent.click(screen.getByText('Technical details'));
+
         expect(await screen.findByText('Dataset validation failed: missing required fields')).toBeVisible();
         expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
     });
 
-    it('renders active job state when job is running', async () => {
+    it('displays file processing message and progress percentage when job is running', async () => {
         const fileName = 'dataset.zip';
         const job = getMockedPrepareImportDatasetJob({
             status: 'RUNNING',
@@ -70,7 +80,7 @@ describe('LoadingImportDataset', () => {
         expect(await screen.findByText('56%')).toBeVisible();
     });
 
-    it('renders completed import state and calls onSuccess when job is done', async () => {
+    it('calls onSuccess, deletes entry, and shows success message when job is done', async () => {
         const fileName = 'dataset.zip';
         const job = getMockedPrepareImportDatasetJob({ status: 'DONE' });
 
@@ -78,15 +88,15 @@ describe('LoadingImportDataset', () => {
         const mockedDeleteImportEntry = vi.fn();
         renderApp({ job, fileName, onSuccess: mockedOnSuccess, deleteEntry: mockedDeleteImportEntry });
 
-        expect(await screen.findByText(`${fileName} file has been imported successfully`)).toBeVisible();
-
         await waitFor(() => {
             expect(mockedOnSuccess).toHaveBeenCalled();
-            expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
+            expect(mockedDeleteImportEntry).toHaveBeenCalled();
+
+            expect(screen.getByText(`Dataset ${fileName} ${formatBytes(0)} imported successfully.`)).toBeVisible();
         });
     });
 
-    it('renders failed state when job status query fails with error', async () => {
+    it('deletes entry without calling onSuccess when job query fails', async () => {
         const mockedOnSuccess = vi.fn();
         const mockedDeleteImportEntry = vi.fn();
 
@@ -98,8 +108,11 @@ describe('LoadingImportDataset', () => {
         });
 
         expect(await screen.findByText('An error occurred during import.')).toBeVisible();
+
+        await userEvent.click(screen.getByText('Technical details'));
+
         expect(await screen.findByText('Job not found')).toBeVisible();
+        expect(mockedDeleteImportEntry).toHaveBeenCalled();
         expect(mockedOnSuccess).not.toHaveBeenCalled();
-        expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
     });
 });

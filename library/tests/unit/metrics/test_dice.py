@@ -10,8 +10,8 @@ from torchmetrics.classification.jaccard import MulticlassJaccardIndex
 from torchmetrics.collections import MetricCollection
 from torchmetrics.segmentation.dice import DiceScore
 
-from otx.metrics.dice import OTXDice, SegmCallable
-from otx.types.label import SegLabelInfo
+from getitune.metrics.dice import OTXDice, SegmCallable
+from getitune.types.label import SegLabelInfo
 
 
 class TestOTXDice:

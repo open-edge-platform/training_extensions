@@ -1,25 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
 import { expect } from '@playwright/test';
-import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedVideoFrame } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
 import { AnnotationDTO } from '../../src/constants/shared-types';
 import { http, test } from '../fixtures';
-
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
-const candyPngPath = path.resolve(dirname, '../assets/candy.png');
-const candyPngBuffer = fs.readFileSync(candyPngPath);
-
-const redLabel = getMockedLabel({ id: 'red-label', name: 'red-label', color: '#ad2323' });
+import { candyBinaryHandler, redLabel } from './annotator-fixtures';
 
 const mockedDetectionProject = getMockedProject({
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -103,17 +92,14 @@ test.describe('Annotator video player', () => {
                     pagination: { offset: 0, limit: 20, count: 1, total: 1 },
                 });
             }),
-            http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
-                return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
-                    headers: { 'Content-Type': 'image/png' },
-                });
-            }),
+            candyBinaryHandler,
             http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', ({ request }) => {
                 const frameIndex = Number(new URL(request.url).searchParams.get('frame_index') ?? '0');
 
                 return HttpResponse.json({
                     annotations: frameAnnotations[frameIndex] ?? [],
                     user_reviewed: true,
+                    subset: 'training',
                 });
             }),
             http.get('/api/projects/{project_id}/dataset/media/{media_id}/frames', () => {
@@ -123,6 +109,7 @@ test.describe('Annotator video player', () => {
                         frame_index: Number(frameIndex),
                         annotation_data: {
                             annotations,
+                            subset: 'training' as const,
                             user_reviewed: true,
                         },
                     }))
@@ -136,7 +123,10 @@ test.describe('Annotator video player', () => {
                 frameAnnotations[frameIndex] = body.annotations;
                 submittedFrameRequests.push({ frameIndex, annotations: body.annotations });
 
-                return HttpResponse.json({ annotations: body.annotations, user_reviewed: true }, { status: 201 });
+                return HttpResponse.json(
+                    { annotations: body.annotations, user_reviewed: true, subset: 'training' },
+                    { status: 201 }
+                );
             })
         );
     });

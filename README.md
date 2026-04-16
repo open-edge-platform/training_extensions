@@ -9,7 +9,7 @@
 [Documentation](https://open-edge-platform.github.io/training_extensions/latest/index.html) •
 [License](#license)
 
-[![PyPI](https://img.shields.io/pypi/v/otx)](https://pypi.org/project/otx)
+[![PyPI](https://img.shields.io/pypi/v/getitune)](https://pypi.org/project/getitune)
 
 <!-- markdownlint-disable MD042 -->
 
@@ -24,7 +24,7 @@
 [![Pre-Merge Test](https://github.com/open-edge-platform/training_extensions/actions/workflows/pre_merge.yaml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/pre_merge.yaml)
 [![Build Docs](https://github.com/open-edge-platform/training_extensions/actions/workflows/docs.yaml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/docs.yaml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Downloads](https://static.pepy.tech/personalized-badge/otx?period=total&units=international_system&left_color=grey&right_color=green&left_text=PyPI%20Downloads)](https://pepy.tech/project/otx)
+[![Downloads](https://static.pepy.tech/personalized-badge/getitune?period=total&units=international_system&left_color=grey&right_color=green&left_text=PyPI%20Downloads)](https://pepy.tech/project/getitune)
 
 ---
 
@@ -73,17 +73,17 @@ If you want to make changes to the library, then a local installation is recomme
 
 <details>
 <summary>Install from PyPI</summary>
-Installing the library with pip or uv is the easiest way to get started with otx.
+Installing the library with pip or uv is the easiest way to get started with getitune.
 
 ```bash
 # Without GPU support (CPU only)
-pip install otx[cpu]
+pip install getitune[cpu]
 
 # With Intel GPU support (XPU)
-pip install otx[xpu]
+pip install getitune[xpu]
 
 # With NVIDIA GPU support (CUDA)
-pip install otx[cuda]
+pip install getitune[cuda]
 ```
 
 </details>
@@ -116,14 +116,14 @@ For the CLI, the commands below provide subcommands, how to use each subcommand,
 
 ```bash
 # See available subcommands
-otx --help
+getitune --help
 
 # Print help messages from the train subcommand
-otx train --help
+getitune train --help
 
 # Print help messages for more details
-otx train --help -v   # Print required parameters
-otx train --help -vv  # Print all configurable parameters
+getitune train --help -v   # Print required parameters
+getitune train --help -vv  # Print all configurable parameters
 ```
 
 You can find details with examples in the [CLI Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/cli_commands.html). and [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html).
@@ -134,21 +134,21 @@ Below is how to train with auto-configuration, which is provided to users with d
 <summary>API Usage</summary>
 
 ```python
-from otx.engine import create_engine
+from getitune.engine import create_engine
 
 # get all the available recipes for all tasks
-from otx.backend.native.cli.utils import list_models
+from getitune.backend.native.cli.utils import list_models
 model_lists = list_models(print_table=True)
 
-# instantiate native otx engine with atss model for object detection
-engine = create_engine(data="path/to/dataset/root", model="src/otx/recipe/detection/atss_mobilenetv2.yaml")
+# instantiate native getitune engine with atss model for object detection
+engine = create_engine(data="path/to/dataset/root", model="src/getitune/recipe/detection/atss_mobilenetv2.yaml")
 engine.train()
 engine.test()
 exported_path = engine.export()
 
-# by default all artifacts are stored in "./otx-workspace" directory.
+# by default all artifacts are stored in "./getitune-workspace" directory.
 # working directory can be specified
-engine = create_engine(data="path/to/dataset/root", model="src/otx/recipe/detection/atss_mobilenetv2.yaml", work_dir="my_workdir")
+engine = create_engine(data="path/to/dataset/root", model="src/getitune/recipe/detection/atss_mobilenetv2.yaml", work_dir="my_workdir")
 
 
 # openvino backend is used to validate and optimize exported OpenVINO IR models
@@ -167,23 +167,23 @@ For more examples, see documentation: [API Quick-Guide](https://open-edge-platfo
 
 ```bash
 # get all recipes list
-otx find
+getitune find
 
-# otx train
-otx train --config src/otx/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd
+# getitune train
+getitune train --config src/getitune/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd
 
-# by default, working directory is "./otx-workspace". It can be specified with "--work_dir" parameter
-otx test --config src/otx/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd --checkpoint otx-workspace/.latest/train/best_checkpoint.ckpt
-otx export --config src/otx/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd --checkpoint otx-workspace/.latest/train/best_checkpoint.ckpt
+# by default, working directory is "./getitune-workspace". It can be specified with "--work_dir" parameter
+getitune test --config src/getitune/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd --checkpoint getitune-workspace/.latest/train/best_checkpoint.ckpt
+getitune export --config src/getitune/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd --checkpoint getitune-workspace/.latest/train/best_checkpoint.ckpt
 
 # or using work_dir
-otx test --work_dir otx-workspace/.latest/train
-otx export --work_dir otx-workspace/.latest/train
+getitune test --work_dir getitune-workspace/.latest/train
+getitune export --work_dir getitune-workspace/.latest/train
 
 # directly from working directory
-cd otx-workspace
-otx test
-otx export
+cd getitune-workspace
+getitune test
+getitune export
 
 ```
 

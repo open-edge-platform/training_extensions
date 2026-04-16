@@ -18,13 +18,15 @@ import { RenameModelDialog } from '../model-row/rename-model-dialog.component';
 const MODEL_ACTIONS = {
     ACTIVATE: 'activate',
     RENAME: 'rename',
-    DELETE: 'delete',
+    DELETE_MODEL: 'delete_model',
+    DELETE_WEIGHTS: 'delete_weights',
     VIEW_LOGS: 'view_logs',
 };
 
 enum DIALOG_TYPES {
     RENAME = 'rename',
-    DELETE = 'delete',
+    DELETE_MODEL = 'delete_model',
+    DELETE_WEIGHTS = 'delete_weights',
     LOGS = 'logs',
 }
 type ModelActionsProps = {
@@ -50,8 +52,10 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
                 params: { path: { project_id: projectId } },
                 body: { model_id: model.id },
             });
-        } else if (key === MODEL_ACTIONS.DELETE) {
-            setIsDialogOpen(DIALOG_TYPES.DELETE);
+        } else if (key === MODEL_ACTIONS.DELETE_MODEL) {
+            setIsDialogOpen(DIALOG_TYPES.DELETE_MODEL);
+        } else if (key === MODEL_ACTIONS.DELETE_WEIGHTS) {
+            setIsDialogOpen(DIALOG_TYPES.DELETE_WEIGHTS);
         } else if (key === MODEL_ACTIONS.RENAME) {
             setIsDialogOpen(DIALOG_TYPES.RENAME);
         } else if (key === MODEL_ACTIONS.VIEW_LOGS) {
@@ -73,14 +77,21 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
         );
     };
 
-    const handleDelete = () => {
-        deleteModelMutation.mutate({
-            params: {
-                path: { project_id: projectId, model_id: model.id },
-                query: { files_only: true },
+    const handleDeleteModel = (filesOnly: boolean) => {
+        deleteModelMutation.mutate(
+            {
+                params: {
+                    path: { project_id: projectId, model_id: model.id },
+                    query: { files_only: filesOnly },
+                },
             },
-        });
+            {
+                onSuccess: () => setIsDialogOpen(null),
+            }
+        );
     };
+
+    const modelName = model.name ?? 'Unnamed Model';
 
     return (
         <>
@@ -91,8 +102,9 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
                 <Menu onAction={handleAction} aria-label={'Model actions menu'} disabledKeys={disabledKeys}>
                     <Item key={MODEL_ACTIONS.ACTIVATE}>Set as active</Item>
                     <Item key={MODEL_ACTIONS.RENAME}>Rename</Item>
+                    <Item key={MODEL_ACTIONS.DELETE_WEIGHTS}>Delete weights</Item>
+                    <Item key={MODEL_ACTIONS.DELETE_MODEL}>Delete model</Item>
                     <Item key={MODEL_ACTIONS.VIEW_LOGS}>View training logs</Item>
-                    <Item key={MODEL_ACTIONS.DELETE}>Delete</Item>
                 </Menu>
             </MenuTrigger>
 
@@ -107,15 +119,30 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
                 )}
             </DialogContainer>
             <DialogContainer onDismiss={() => setIsDialogOpen(null)}>
-                {isDialogOpen === DIALOG_TYPES.DELETE && (
+                {isDialogOpen === DIALOG_TYPES.DELETE_WEIGHTS && (
                     <AlertDialog
-                        title='Delete model files'
+                        title='Delete weights'
                         variant='destructive'
-                        primaryActionLabel='Delete files'
-                        onPrimaryAction={handleDelete}
+                        primaryActionLabel='Delete weights'
+                        onPrimaryAction={() => handleDeleteModel(true)}
+                        isPrimaryActionDisabled={deleteModelMutation.isPending}
                         cancelLabel='Cancel'
                     >
-                        {`Are you sure you want to delete files for model "${model.name ?? 'Unnamed Model'}"?`}
+                        {`Are you sure you want to delete the weights for model "${modelName}"?`}
+                    </AlertDialog>
+                )}
+            </DialogContainer>
+            <DialogContainer onDismiss={() => setIsDialogOpen(null)}>
+                {isDialogOpen === DIALOG_TYPES.DELETE_MODEL && (
+                    <AlertDialog
+                        title='Delete model'
+                        variant='destructive'
+                        primaryActionLabel='Delete model'
+                        onPrimaryAction={() => handleDeleteModel(false)}
+                        isPrimaryActionDisabled={deleteModelMutation.isPending}
+                        cancelLabel='Cancel'
+                    >
+                        {`Are you sure you want to delete model "${modelName}"? This action cannot be undone.`}
                     </AlertDialog>
                 )}
             </DialogContainer>

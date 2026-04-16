@@ -13,24 +13,25 @@ import polars as pl
 import yaml
 from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
+from getitune import OTXTaskType
+from getitune.backend.native.engine import OTXEngine
+from getitune.backend.native.models.base import DataInputParams, OTXModel
+from getitune.config.data import SamplerConfig, SubsetConfig
+from getitune.data.dataset.base import OTXDataset
+from getitune.data.factory import TransformLibFactory
+from getitune.data.module import OTXDataModule
+from getitune.types.device import DeviceType as OTXDeviceType
+from getitune.types.export import OTXExportFormatType
+from getitune.types.precision import OTXPrecisionType
 from jsonargparse import ArgumentParser, Namespace
 from lightning import Callback
 from loguru import logger
-from otx import OTXTaskType
-from otx.backend.native.engine import OTXEngine
-from otx.backend.native.models.base import DataInputParams, OTXModel
-from otx.config.data import SamplerConfig, SubsetConfig
-from otx.data.dataset.base import OTXDataset
-from otx.data.factory import TransformLibFactory
-from otx.data.module import OTXDataModule
-from otx.tools.converter import GetiConfigConverter
-from otx.types.device import DeviceType as OTXDeviceType
-from otx.types.export import OTXExportFormatType
-from otx.types.precision import OTXPrecisionType
 from sqlalchemy.orm import Session
 
+from app.core.jobs.exec.exceptions import CancelledExc
 from app.datumaro_converter import SampleMode
-from app.execution.base import Execution, step
+from app.execution.base import Execution, ExecutionErr, step
+from app.execution.common.geti_config_converter import GetiConfigConverter
 from app.execution.common.otx_converters import (
     convert_metrics,
     get_metric_by_task,
@@ -143,6 +144,11 @@ class OTXTrainer(Execution[TrainingJobParams]):
             parent_variants = self._model_service.get_model_variants(
                 project_id=project_id, model_id=parent_model_revision_id
             )
+            if not parent_variants:
+                raise ExecutionErr(
+                    "Can't start training - the parent revision has no variants (it may have failed). "
+                    "Review the previous revision and retry."
+                )
             parent_pytorch_variant = next(v for v in parent_variants if v.format == ModelFormat.PYTORCH)
             weights_path = self.__build_model_weights_path(
                 self._data_dir, project_id, parent_model_revision_id, parent_pytorch_variant.id
@@ -393,7 +399,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
             model=otx_model,
             data=otx_datamodule,
             checkpoint=weights_path if has_parent_revision else None,
-            work_dir=f"./otx-workspace-{model_id}",
+            work_dir=self._data_dir / f"getitune-workspace-{model_id}",
             device=otx_device_type,
         )
 
@@ -410,13 +416,15 @@ class OTXTrainer(Execution[TrainingJobParams]):
 
         # Start training
         logger.info("Starting the training loop (model_id={})", model_id)
-        train_kwargs = {"devices": [device.index]} if device.type is not DeviceType.CPU and device.index else {}
-        otx_engine.train(
-            max_epochs=training_config["max_epochs"],
-            precision=training_config["precision"],
-            callbacks=callbacks_list,
-            **train_kwargs,  # pyrefly: ignore[bad-argument-type]
-        )
+        train_kwargs = {
+            "max_epochs": training_config["max_epochs"],
+            "callbacks": callbacks_list,
+        }
+        if device.type is not DeviceType.CPU and device.index:
+            train_kwargs["devices"] = [device.index]
+        if "precision" in training_config:
+            train_kwargs["precision"] = training_config["precision"]
+        otx_engine.train(**train_kwargs)  # pyrefly: ignore[bad-argument-type]
         trained_model_path = Path(otx_engine.work_dir) / "best_checkpoint.ckpt"
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)
         return trained_model_path, otx_engine
@@ -625,6 +633,17 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 status=TrainingStatus.SUCCESSFUL,
                 training_finished_at=training_finish_time,
             )
+        except CancelledExc:
+            try:
+                self.__delete_model_revision(project_id=project_id, model_id=params.model_id)
+            except Exception as cleanup_exc:
+                logger.error(
+                    "Failed to delete model revision during cancellation (project_id={}, model_id={}): {}",
+                    project_id,
+                    params.model_id,
+                    cleanup_exc,
+                )
+            raise
         except Exception:
             training_finish_time = datetime.now(UTC)
             self.__update_model_revision_training_status(
@@ -756,3 +775,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 training_started_at=training_started_at,
                 training_finished_at=training_finished_at,
             )
+
+    def __delete_model_revision(self, project_id: UUID, model_id: UUID):
+        with self._db_session_factory() as db:
+            self._model_service.set_db_session(db)
+            self._model_service.delete_model(project_id=project_id, model_id=model_id)

@@ -7,8 +7,8 @@ import signal
 from contextlib import contextmanager
 from copy import copy
 
-from otx.utils import signal as target_file
-from otx.utils.signal import append_main_proc_signal_handler, append_signal_handler
+from getitune.utils import signal as target_file
+from getitune.utils.signal import append_main_proc_signal_handler, append_signal_handler
 
 
 @contextmanager
