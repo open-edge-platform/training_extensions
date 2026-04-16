@@ -101,9 +101,9 @@ export const isBoolEnableParameterGroup = (
 export const filterDependentParameters = (
     parameters: TrainingConfigurationParameter[]
 ): TrainingConfigurationParameter[] => {
-    return parameters.reduce<TrainingConfigurationParameter[]>((acc, curr, _idx, parametersOnTheDepth) => {
+    return parameters.reduce<TrainingConfigurationParameter[]>((acc, curr, _idx, parametersOnTheSameDepth) => {
         if (curr.depends_on != null) {
-            const dependentParameter = parametersOnTheDepth.find(
+            const dependentParameter = parametersOnTheSameDepth.find(
                 (parameter) => curr.depends_on != null && curr.depends_on[parameter.key] != null
             );
 
