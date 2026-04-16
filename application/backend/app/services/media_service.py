@@ -19,7 +19,7 @@ from app.db.schema import MediaDB
 from app.models import DatasetItem, DatasetItemAnnotationStatus, Media, MediaType, Project, Video, VideoFrame
 from app.models.media import ImageFormat, MediaAdapter, VideoFormat
 from app.repositories import MediaRepository
-from app.services.video import extract_video_frame, extract_video_frames, get_video_metadata
+from app.services.video import IVideoService
 from app.utils.images import convert_to_jpeg_compatible, crop_to_thumbnail
 
 from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
@@ -68,9 +68,15 @@ class ImageMetadata:
 
 
 class MediaService(BaseSessionManagedService):
-    def __init__(self, data_dir: Path, db_session: Session | None = None) -> None:
+    def __init__(
+        self,
+        data_dir: Path,
+        video_service: IVideoService,
+        db_session: Session | None = None,
+    ) -> None:
         super().__init__(db_session)
         self.projects_dir = data_dir / "projects"
+        self._video_service = video_service
 
     @staticmethod
     def _read_image_from_ndarray(data: np.ndarray) -> Image.Image:
@@ -167,7 +173,7 @@ class MediaService(BaseSessionManagedService):
                 f.write(chunk)
 
         try:
-            video_metadata = get_video_metadata(video_path=binary_path)
+            video_metadata = self._video_service.get_video_metadata(video_path=binary_path)
             media = MediaDB(
                 id=str(media_id),
                 project_id=str(project_id),
@@ -182,7 +188,7 @@ class MediaService(BaseSessionManagedService):
                 source_id=str(source_id) if source_id is not None else None,
             )
 
-            video_frame = MediaService._get_frame_binary_from_video_file(
+            video_frame = self._get_frame_binary_from_video_file(
                 video_path=binary_path, frame_index=video_metadata.frame_count // 2
             )
             MediaService._generate_and_save_thumbnail(image=video_frame, path=dataset_dir / f"{media_id}-thumb.jpg")
@@ -328,15 +334,14 @@ class MediaService(BaseSessionManagedService):
             Dictionary mapping frame index to numpy array (RGB format).
         """
         video_path = self.get_media_binary_path(project_id=project.id, media=video)
-        return extract_video_frames(video_path=video_path, frame_indexes=frame_indexes)
+        return self._video_service.extract_frames(video_path=video_path, frame_indexes=frame_indexes)
 
     def get_frame_thumbnail(self, project: Project, video: Video, frame_index: int) -> Image.Image:
         video_frame = self.get_frame_binary(project=project, video=video, frame_index=frame_index)
         return MediaService._crop_image_to_thumbnail(video_frame)
 
-    @staticmethod
-    def _get_frame_binary_from_video_file(video_path: Path, frame_index: int) -> Image.Image:
-        video_frame_numpy = extract_video_frame(video_path=video_path, frame_index=frame_index)
+    def _get_frame_binary_from_video_file(self, video_path: Path, frame_index: int) -> Image.Image:
+        video_frame_numpy = self._video_service.extract_frame(video_path=video_path, frame_index=frame_index)
         return MediaService._read_image_from_ndarray(video_frame_numpy)
 
     def save_video_frame(

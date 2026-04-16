@@ -86,6 +86,28 @@ class Settings(BaseSettings):
         description="Time to live for a model loaded for inference, before unloading",
     )
 
+    # Video
+    video_cache_enabled: bool = Field(
+        default=True,
+        alias="GETI_VIDEO_CACHE_ENABLED",
+        description="Whether to enable video frame caching for faster repeated access",
+    )
+    video_cache_ttl: float = Field(
+        default=30.0,
+        alias="GETI_VIDEO_CACHE_TTL",
+        description="Time-to-live in seconds for cached video handles before eviction",
+    )
+    video_cache_cleanup_interval: float = Field(
+        default=5.0,
+        alias="GETI_VIDEO_CACHE_CLEANUP_INTERVAL",
+        description="Interval in seconds between cache cleanup sweeps",
+    )
+    video_cache_max_frames_per_video: int = Field(
+        default=100,
+        alias="GETI_VIDEO_CACHE_MAX_FRAMES_PER_VIDEO",
+        description="Maximum number of decoded frames cached per video",
+    )
+
     @property
     def ice_servers(self) -> list[dict]:
         """Compute ICE servers from coturn and STUN configuration."""

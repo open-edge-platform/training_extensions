@@ -36,6 +36,7 @@ from app.services.event.event_bus import EventBus
 from app.services.inference import InferenceServer
 from app.services.license_service import LicenseService
 from app.services.training_configuration_service import TrainingConfigurationService
+from app.services.video import IVideoService
 from app.webrtc.manager import WebRTCManager
 
 
@@ -117,6 +118,11 @@ def get_inference_server(request: Request) -> InferenceServer:
     return request.app.state.inference_server
 
 
+def get_video_service(request: Request) -> IVideoService:
+    """Provides the IVideoService instance from application state."""
+    return request.app.state.video_service
+
+
 def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> MetricsService:
     """Provides a MetricsService instance for collecting and retrieving metrics."""
     return MetricsService(scheduler.shm_metrics.name, scheduler.shm_metrics_lock)
@@ -193,10 +199,11 @@ def get_project_service(
 
 def get_media_service(
     data_dir: Annotated[Path, Depends(get_data_dir)],
+    video_service: Annotated[IVideoService, Depends(get_video_service)],
     db: Annotated[Session, Depends(get_db)],
 ) -> MediaService:
     """Provides a MediaService instance."""
-    return MediaService(data_dir=data_dir, db_session=db)
+    return MediaService(data_dir=data_dir, video_service=video_service, db_session=db)
 
 
 def get_dataset_service(
