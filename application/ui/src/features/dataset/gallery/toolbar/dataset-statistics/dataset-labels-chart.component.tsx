@@ -25,6 +25,9 @@ type DatasetLabelsChartProps = {
     }[];
 };
 
+const MIN_ROW_HEIGHT = 24;
+const MIN_CHART_HEIGHT = 192;
+
 const getAxisTicks = (total: number): number[] => {
     const TICK_SPACING = 20;
 
@@ -34,13 +37,7 @@ const getAxisTicks = (total: number): number[] => {
 };
 
 const ItemLabel = (props: LabelProps) => {
-    const minBarHeight = 20;
-    const height = Number(props?.height ?? 0);
-
-    if (props.value === 0 || height <= minBarHeight) {
-        return null;
-    }
-    return <Label {...props} fill={'white'} />;
+    return props.value === 0 ? null : <Label {...props} fill={'white'} />;
 };
 
 export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLabelsChartProps) => {
@@ -56,7 +53,11 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
     });
 
     return (
-        <ResponsiveContainer width='100%' height={'100%'} minHeight={dimensionValue('size-2400')}>
+        <ResponsiveContainer
+            width='100%'
+            height='100%'
+            minHeight={Math.max(projectLabels.length * MIN_ROW_HEIGHT, MIN_CHART_HEIGHT)}
+        >
             <BarChart
                 data={chartData}
                 layout='vertical'
@@ -78,6 +79,7 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
                     type='category'
                     dataKey='label'
                     width={140}
+                    interval={0}
                     tick={{ fill: 'var(--spectrum-global-color-gray-800)', fontSize: dimensionValue('size-200') }}
                     axisLine={{ stroke: 'var(--spectrum-global-color-gray-600)', strokeWidth: 1 }}
                     tickLine={false}
