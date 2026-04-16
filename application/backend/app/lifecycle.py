@@ -51,7 +51,7 @@ from app.webrtc import SDPHandler, WebRTCManager, WebRTCSettings
 
 
 def setup_job_controller(
-    data_dir: Path, staged_datasets_dir: Path | None, max_parallel_jobs: int
+    data_dir: Path, staged_datasets_dir: Path | None, max_parallel_jobs: int, av_options: dict[str, str] | None = None
 ) -> tuple[JobQueue, JobController]:
     """
     Initializes and configures the job queue and job controller for managing parallel job execution.
@@ -75,7 +75,7 @@ def setup_job_controller(
     label_service = LabelService()
     dataset_service = DatasetService(
         label_service=label_service,
-        media_service=MediaService(data_dir=data_dir, video_service=VideoService()),
+        media_service=MediaService(data_dir=data_dir, video_service=VideoService(av_options=av_options)),
     )
     project_service = ProjectService(
         data_dir=data_dir,
@@ -138,7 +138,7 @@ def setup_job_controller(
             staged_datasets_dir=staged_datasets_dir,
             dataset_service=dataset_service,
             label_service=label_service,
-            media_service=MediaService(data_dir=data_dir, video_service=VideoService()),
+            media_service=MediaService(data_dir=data_dir, video_service=VideoService(av_options=av_options)),
             db_session_factory=get_db_session,
         ),
     )
@@ -150,7 +150,7 @@ def setup_job_controller(
             project_service=project_service,
             dataset_service=dataset_service,
             label_service=label_service,
-            media_service=MediaService(data_dir=data_dir, video_service=VideoService()),
+            media_service=MediaService(data_dir=data_dir, video_service=VideoService(av_options=av_options)),
             db_session_factory=get_db_session,
         ),
     )
@@ -204,10 +204,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
             ttl=settings.video_cache_ttl,
             cleanup_interval=settings.video_cache_cleanup_interval,
             max_cached_frames_per_video=settings.video_cache_max_frames_per_video,
-            video_service=VideoService(),
+            video_service=VideoService(av_options=settings.video_demuxer_options),
         )
     else:
-        video_service = VideoService()
+        video_service = VideoService(av_options=settings.video_demuxer_options)
     app.state.video_service = video_service
 
     # Initialize Scheduler
@@ -230,6 +230,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         data_dir=settings.data_dir,
         staged_datasets_dir=settings.staged_datasets_dir,
         max_parallel_jobs=settings.gpu_slots,
+        av_options=settings.video_demuxer_options,
     )
     app.state.job_queue = job_queue
 

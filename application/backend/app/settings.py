@@ -107,6 +107,12 @@ class Settings(BaseSettings):
         alias="GETI_VIDEO_CACHE_MAX_FRAMES_PER_VIDEO",
         description="Maximum number of decoded frames cached per video",
     )
+    video_demuxer_options: dict[str, str] = Field(
+        default_factory=dict,
+        alias="GETI_VIDEO_DEMUXER_OPTIONS",
+        description="FFmpeg demuxer options passed to av.open() as a JSON-encoded dict, "
+        'e.g. \'{"analyzeduration": "5000000"}\'',
+    )
 
     @property
     def ice_servers(self) -> list[dict]:

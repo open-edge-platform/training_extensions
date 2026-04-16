@@ -5,7 +5,7 @@ import threading
 import time
 from pathlib import Path
 
-import cv2
+import av
 import numpy as np
 import pytest
 
@@ -13,18 +13,41 @@ from app.services.video.video_frame_cache import CacheableVideoService
 from app.services.video.video_service import VideoService
 
 
+def _create_test_video(
+    path: Path, num_frames: int = 20, width: int = 64, height: int = 48, fps: int = 30, fill_fn=None
+) -> None:
+    """Create a small test MP4 video using PyAV.
+
+    Args:
+        path: Output file path.
+        num_frames: Number of frames to write.
+        width: Frame width.
+        height: Frame height.
+        fps: Frames per second.
+        fill_fn: Optional callable(frame_index) -> fill_value for np.full.
+    """
+    container = av.open(str(path), mode="w")
+    stream = container.add_stream("mpeg4", rate=fps)
+    stream.width = width
+    stream.height = height
+    stream.pix_fmt = "yuv420p"
+    for i in range(num_frames):
+        fill = fill_fn(i) if fill_fn else i * 12
+        arr = np.full((height, width, 3), fill_value=fill, dtype=np.uint8)
+        frame = av.VideoFrame.from_ndarray(arr, format="rgb24")
+        frame.pts = i
+        for packet in stream.encode(frame):
+            container.mux(packet)
+    for packet in stream.encode():
+        container.mux(packet)
+    container.close()
+
+
 @pytest.fixture
 def video_path(tmp_path) -> Path:
     """Create a small test video with 20 frames."""
     path = tmp_path / "test_video.mp4"
-    width, height, fps = 64, 48, 30
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore[attr-defined]
-    writer = cv2.VideoWriter(str(path), fourcc, fps, (width, height))
-    for i in range(20):
-        # Each frame has a unique solid color based on index
-        frame = np.full((height, width, 3), fill_value=i * 12, dtype=np.uint8)
-        writer.write(frame)
-    writer.release()
+    _create_test_video(path)
     return path
 
 
@@ -244,12 +267,7 @@ class TestCacheableVideoService:
         videos = []
         for i in range(3):
             path = tmp_path / f"video_{i}.mp4"
-            fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore[attr-defined]
-            writer = cv2.VideoWriter(str(path), fourcc, 30, (64, 48))
-            for j in range(10):
-                frame = np.full((48, 64, 3), fill_value=(i + 1) * (j + 1), dtype=np.uint8)
-                writer.write(frame)
-            writer.release()
+            _create_test_video(path, num_frames=10, fill_fn=lambda j, _i=i: (_i + 1) * (j + 1))
             videos.append(path)
 
         cache = CacheableVideoService(
@@ -376,12 +394,7 @@ class TestCacheableVideoService:
         videos = []
         for i in range(2):
             path = tmp_path / f"video_{i}.mp4"
-            fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore[attr-defined]
-            writer = cv2.VideoWriter(str(path), fourcc, 30, (64, 48))
-            for j in range(10):
-                frame = np.full((48, 64, 3), fill_value=(i + 1) * (j + 1), dtype=np.uint8)
-                writer.write(frame)
-            writer.release()
+            _create_test_video(path, num_frames=10, fill_fn=lambda j, _i=i: (_i + 1) * (j + 1))
             videos.append(path)
 
         # Allow 5 frames per video

@@ -8,19 +8,20 @@ from queue import Empty, SimpleQueue
 from threading import Event, Lock, Thread
 from time import monotonic
 
-import cv2
+import av
 import numpy as np
 from loguru import logger
 
 from .interface import IVideoService, VideoMetadata
-from .video_service import VideoService
+from .video_service import VideoService, _decode_group, _group_consecutive
 
 
 @dataclass
 class _CacheEntry:
-    """Internal cache entry holding a video capture handle and decoded frames with per-video LRU eviction."""
+    """Internal cache entry holding a video container handle and decoded frames with per-video LRU eviction."""
 
-    cap: cv2.VideoCapture
+    container: av.container.InputContainer
+    stream: av.video.stream.VideoStream
     max_frames: int
     frames: dict[int, np.ndarray] = field(default_factory=dict)
     lru_order: OrderedDict[int, None] = field(default_factory=OrderedDict)
@@ -61,11 +62,12 @@ class CacheableVideoService(IVideoService):
     handles.
 
     Features:
-    - Keeps cv2.VideoCapture handles open and reuses them across calls.
+    - Keeps PyAV container handles open and reuses them across calls.
     - Caches decoded frames in memory per video, up to a configurable max count.
     - TTL is renewed on each access; expired entries are cleaned up by a background thread.
     - After serving a request, a single background worker pre-fetches the next batch of frames.
     - Enforces a per-video max cached frame count with LRU eviction.
+    - Consecutive missing frames are decoded in a single seek+decode pass for speed.
     """
 
     def __init__(
@@ -85,6 +87,7 @@ class CacheableVideoService(IVideoService):
             video_service: ``VideoService`` instance used for metadata retrieval.
         """
         self._video_service = video_service
+        self._av_options = video_service._av_options
         self._ttl = ttl
         self._cleanup_interval = cleanup_interval
         self._max_cached_frames_per_video = max_cached_frames_per_video
@@ -132,7 +135,7 @@ class CacheableVideoService(IVideoService):
     def extract_frames(self, video_path: Path, frame_indexes: list[int]) -> dict[int, np.ndarray]:
         """
         Extract video frames, using cached frames when available.
-        Missing frames are read from the video file and cached.
+        Missing frames are decoded in grouped batches (single seek per group).
         After returning, a prefetch task is submitted to the background worker.
 
         Args:
@@ -152,22 +155,21 @@ class CacheableVideoService(IVideoService):
         result: dict[int, np.ndarray] = {}
         with entry.lock:
             # Touch already-cached requested frames so they are not evicted by LRU
-            # when new frames are added below.
             cached_indexes = [idx for idx in frame_indexes if idx in entry.frames]
             entry.touch_frames(cached_indexes)
 
-            # Determine which frames are missing from cache (under lock to avoid races with prefetch)
+            # Determine which frames are missing from cache
             missing_indexes = sorted({idx for idx in frame_indexes if idx not in entry.frames})
 
-            # Read missing frames from video
-            for frame_index in missing_indexes:
-                if frame_index in entry.frames:
-                    continue  # another thread may have added it before we acquired the lock
-                entry.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
-                read_success, frame = entry.cap.read()
-                if not read_success:
-                    raise RuntimeError(f"Cannot read frame at {frame_index} index from video: {video_path}")
-                entry.add_frame(frame_index, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            if missing_indexes:
+                # Decode missing frames in grouped batches (one seek per group)
+                time_base = float(entry.stream.time_base)
+                avg_rate = float(entry.stream.average_rate)
+                decoded: dict[int, np.ndarray] = {}
+                for group in _group_consecutive(missing_indexes):
+                    _decode_group(entry.container, entry.stream, group, decoded, time_base, avg_rate)
+                for idx, frame in decoded.items():
+                    entry.add_frame(idx, frame)
 
             # Build result from cache
             for idx in frame_indexes:
@@ -176,7 +178,7 @@ class CacheableVideoService(IVideoService):
                     raise RuntimeError(f"Cannot read frame at {idx} index from video: {video_path}")
                 result[idx] = frame
 
-        # Submit prefetch task to the background worker (replaces any pending task)
+        # Submit prefetch task to the background worker
         sorted_requested = sorted(set(frame_indexes))
         prefetch_start = sorted_requested[-1] + 1
         prefetch_count = len(sorted_requested)
@@ -185,7 +187,7 @@ class CacheableVideoService(IVideoService):
         return result
 
     def close(self) -> None:
-        """Stop background threads and release all video capture handles."""
+        """Stop background threads and release all video container handles."""
         self._stop_event.set()
         self._prefetch_thread.join(timeout=5)
         self._cleanup_thread.join(timeout=5)
@@ -194,20 +196,23 @@ class CacheableVideoService(IVideoService):
             self._entries.clear()
         for entry in entries:
             with entry.lock:
-                entry.cap.release()
+                entry.container.close()
         logger.debug("CacheableVideoService closed, all handles released")
 
     def _get_or_create_entry(self, path_key: str) -> _CacheEntry:
-        """Get an existing cache entry or create a new one with an open VideoCapture."""
+        """Get an existing cache entry or create a new one with an open PyAV container."""
         with self._dict_lock:
             entry = self._entries.get(path_key)
             if entry is not None:
                 return entry
 
-            cap = cv2.VideoCapture(path_key)
-            if not cap.isOpened():
+            try:
+                container = av.open(path_key, options=self._av_options)
+                stream = container.streams.video[0]
+                stream.thread_type = "AUTO"
+            except Exception:
                 raise RuntimeError(f"Cannot open video: {path_key}")
-            entry = _CacheEntry(cap=cap, max_frames=self._max_cached_frames_per_video)
+            entry = _CacheEntry(container=container, stream=stream, max_frames=self._max_cached_frames_per_video)
             self._entries[path_key] = entry
             logger.debug("CacheableVideoService: opened video {}", path_key)
             return entry
@@ -216,8 +221,7 @@ class CacheableVideoService(IVideoService):
         """Single background worker that processes prefetch tasks from the queue.
 
         When a new task arrives, any previously queued tasks are discarded so that
-        only the most recent prefetch request is executed.  This avoids wasting
-        time on stale pre-fetches when the caller has already moved on.
+        only the most recent prefetch request is executed.
         """
         while not self._stop_event.is_set():
             try:
@@ -236,29 +240,33 @@ class CacheableVideoService(IVideoService):
             self._prefetch(path_key, start_index, count)
 
     def _prefetch(self, path_key: str, start_index: int, count: int) -> None:
-        """Pre-fetch consecutive frames starting at start_index.
+        """Pre-fetch a batch of consecutive frames starting at *start_index*.
 
-        The lock is acquired per-frame rather than for the entire batch so that
-        concurrent ``extract_frames`` calls are not blocked for the full
-        prefetch duration.
+        Decodes in a single seek+decode pass for efficiency. The lock is held
+        for the entire batch to avoid interleaved seeks with the main thread.
         """
         with self._dict_lock:
             entry = self._entries.get(path_key)
         if entry is None:
             return
 
-        for i in range(count):
-            if self._stop_event.is_set():
+        # Build list of frame indexes that are not yet cached
+        prefetch_indexes = list(range(start_index, start_index + count))
+
+        with entry.lock:
+            missing = [idx for idx in prefetch_indexes if idx not in entry.frames]
+            if not missing:
                 return
-            frame_index = start_index + i
-            with entry.lock:
-                if frame_index in entry.frames:
-                    continue
-                entry.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
-                read_success, frame = entry.cap.read()
-                if not read_success:
-                    break
-                entry.add_frame(frame_index, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+
+            time_base = float(entry.stream.time_base)
+            avg_rate = float(entry.stream.average_rate)
+            decoded: dict[int, np.ndarray] = {}
+            for group in _group_consecutive(missing):
+                if self._stop_event.is_set():
+                    return
+                _decode_group(entry.container, entry.stream, group, decoded, time_base, avg_rate)
+            for idx, frame in decoded.items():
+                entry.add_frame(idx, frame)
 
         entry.last_access = monotonic()
 
@@ -277,7 +285,7 @@ class CacheableVideoService(IVideoService):
             expired_keys = [key for key, entry in self._entries.items() if (now - entry.last_access) >= self._ttl]
             for key in expired_keys:
                 entry = self._entries.pop(key)
-                entry.cap.release()
+                entry.container.close()
                 logger.debug(
                     "CacheableVideoService: evicted expired video {} ({} cached frames)", key, len(entry.frames)
                 )
