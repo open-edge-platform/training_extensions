@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from otx.benchmark.catalog import DatasetCatalog, provision_datasets
 from otx.benchmark.experiment import (
@@ -46,7 +46,7 @@ _EVAL_UPTO_GATES: dict[str, set[str]] = {
     "optimize": {"train", "test/torch", "export", "test/export", "optimize", "test/optimize"},
 }
 
-_MAX_ATTEMPTS = 2
+_MAX_ATTEMPTS = 3
 
 
 # ---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ class RunConfig:
     data_root: Path
     output_root: Path
     accelerator: str = "gpu"
-    deterministic: bool = True
+    deterministic: bool | str = True  # True, False, or "warn" (PyTorch semantics)
     max_epochs: int | None = None
     num_seeds: int | None = None  # override manifest default
     eval_upto: str | None = None  # override manifest default
@@ -315,6 +315,17 @@ class BenchmarkRunner:
 
     # -- single experiment -------------------------------------------------
 
+    @staticmethod
+    def _is_deterministic_error(exc: BaseException) -> bool:
+        """Check if the exception is due to a missing deterministic implementation."""
+        return isinstance(exc, RuntimeError) and "does not have a deterministic implementation" in str(exc)
+
+    # Deterministic fallback chain: True → "warn" → False
+    _DETERMINISTIC_FALLBACKS: ClassVar[dict[bool | str, bool | str]] = {
+        True: "warn",
+        "warn": False,
+    }
+
     def _run_single(
         self,
         experiment: Experiment,
@@ -324,20 +335,36 @@ class BenchmarkRunner:
     ) -> ExperimentResult:
         """Run one ``(experiment, seed)`` with retry logic."""
         last_exc: BaseException | None = None
+        deterministic: bool | str = self.config.deterministic
 
         for attempt in range(1, _MAX_ATTEMPTS + 1):
             try:
-                return self._execute(experiment, seed, data_path, allowed_phases)
+                return self._execute(experiment, seed, data_path, allowed_phases, deterministic=deterministic)
             except Exception as exc:  # noqa: PERF203
                 last_exc = exc
                 if attempt < _MAX_ATTEMPTS:
-                    logger.warning(
-                        "  seed=%d attempt %d/%d failed, retrying: %s",
-                        seed,
-                        attempt,
-                        _MAX_ATTEMPTS,
-                        exc,
-                    )
+                    # If the failure is due to a missing deterministic kernel,
+                    # relax the deterministic setting one level for the retry.
+                    fallback = self._DETERMINISTIC_FALLBACKS.get(deterministic)
+                    if self._is_deterministic_error(exc) and fallback is not None:
+                        logger.warning(
+                            "  seed=%d attempt %d/%d failed due to non-deterministic op; "
+                            "retrying with deterministic=%r: %s",
+                            seed,
+                            attempt,
+                            _MAX_ATTEMPTS,
+                            fallback,
+                            exc,
+                        )
+                        deterministic = fallback
+                    else:
+                        logger.warning(
+                            "  seed=%d attempt %d/%d failed, retrying: %s",
+                            seed,
+                            attempt,
+                            _MAX_ATTEMPTS,
+                            exc,
+                        )
                 else:
                     logger.exception(
                         "  seed=%d failed after %d attempts",
@@ -360,8 +387,13 @@ class BenchmarkRunner:
         seed: int,
         data_path: Path,
         allowed_phases: set[str],
+        *,
+        deterministic: bool | str | None = None,
     ) -> ExperimentResult:
         """Actually run the phases for one seed."""
+        if deterministic is None:
+            deterministic = self.config.deterministic
+
         seed_dir = self.config.output_root / experiment.run_id / str(seed)
 
         # Resume check
@@ -393,7 +425,7 @@ class BenchmarkRunner:
             scenario_overrides=merged_overrides,
             train_kwargs=merged_train_kwargs,
             seed=seed,
-            deterministic=self.config.deterministic,
+            deterministic=deterministic,
             max_epochs=self.config.max_epochs,
         )
 

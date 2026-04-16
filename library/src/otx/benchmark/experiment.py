@@ -240,7 +240,7 @@ class ExperimentExecutor:
         scenario_overrides: dict[str, Any] | None = None,
         train_kwargs: dict[str, Any] | None = None,
         seed: int = 0,
-        deterministic: bool = True,
+        deterministic: bool | str = True,
         max_epochs: int | None = None,
     ) -> None:
         self.recipe_path = recipe_path
