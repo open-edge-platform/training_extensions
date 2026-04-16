@@ -3,10 +3,9 @@
 
 import { Suspense } from 'react';
 
-import { Flex, Loading, View } from '@geti/ui';
+import { Flex, View } from '@geti/ui';
 
 import { ActiveModel } from './active-model.component';
-import { InferenceDevices } from './inference-devices.component';
 import { TogglePipelineButton } from './toggle-pipeline-button.component';
 
 export const Header = () => {
@@ -23,10 +22,6 @@ export const Header = () => {
             <Flex height='100%' gap='size-200' alignItems={'center'}>
                 <Suspense fallback={'Model: ...'}>
                     <ActiveModel />
-                </Suspense>
-
-                <Suspense fallback={<Loading />}>
-                    <InferenceDevices />
                 </Suspense>
 
                 <Flex marginStart='auto' gap={'size-100'}>

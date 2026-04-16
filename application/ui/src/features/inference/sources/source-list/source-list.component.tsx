@@ -69,7 +69,6 @@ export const SourcesList = ({ sources, onAddSource, onEditSource }: SourcesListP
     return (
         <Flex
             gap={'size-200'}
-            maxHeight={'60vh'}
             direction={'column'}
             UNSAFE_style={{ overflow: 'auto', padding: dimensionValue('size-10') }}
         >
