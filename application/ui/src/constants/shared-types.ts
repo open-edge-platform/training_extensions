@@ -61,10 +61,7 @@ export type Media = MediaImage | MediaVideo | MediaVideoFrame;
 export type MediaItemState = 'accepted' | 'rejected';
 
 export type DeviceType = components['schemas']['DeviceType'];
-export type TrainingDevice = {
-    type: DeviceType;
-    name: string;
-};
+export type TrainingDevice = components['schemas']['DeviceInfoView'];
 
 export type DatasetSubset = components['schemas']['DatasetItemSubset'];
 export type DatasetItem = components['schemas']['DatasetItemView'];

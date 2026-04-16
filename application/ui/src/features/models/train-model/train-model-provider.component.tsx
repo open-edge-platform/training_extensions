@@ -3,6 +3,8 @@
 
 import { createContext, Dispatch, ReactNode, SetStateAction, use, useMemo, useState } from 'react';
 
+import { useGetDatasetRevisions } from 'hooks/use-get-dataset-revisions.hook';
+
 import {
     DatasetRevision,
     DeviceType,
@@ -11,7 +13,6 @@ import {
     TrainingConfiguration,
     TrainingDevice,
 } from '../../../constants/shared-types';
-import { useGetDatasetRevisions } from '../../../hooks/use-get-dataset-revisions.hook';
 import { useGetActiveModel } from '../hooks/api/use-get-active-model.hook';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
 import { useGetSuccessfulModels } from '../hooks/api/use-get-models.hook';
@@ -30,8 +31,8 @@ export type TrainModelContextProps = {
     onSelectModelArchitectureId: (id: string | null) => void;
 
     trainingDevices: TrainingDevice[];
-    selectedTrainingDevice: DeviceType | null;
-    onSelectTrainingDevice: (deviceType: DeviceType | null) => void;
+    selectedTrainingDevice: string | null;
+    onSelectTrainingDevice: (deviceType: string | null) => void;
 
     datasetRevisions: DatasetRevisionWithValue[];
     selectedDatasetRevisionId: string | null;
@@ -101,6 +102,14 @@ const getDefaultModelRevisionIdForArchitecture = (
     return firstRevision?.id ?? revisionsForArchitecture.at(0)?.id ?? null;
 };
 
+export const createTrainingDeviceKey = (trainingDevice: TrainingDevice): string => {
+    if (trainingDevice.index == null) {
+        return trainingDevice.type;
+    }
+
+    return `${trainingDevice.type}-${trainingDevice.index}`;
+};
+
 export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     const { modelArchitectures } = useGetTaskModelArchitectures();
     const { data: trainingDevices } = useGetTrainingDevices();
@@ -116,8 +125,8 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
         activeModelArchitecture?.id ?? null
     );
 
-    const [selectedTrainingDevice, setSelectedTrainingDevice] = useState<DeviceType | null>(
-        trainingDevices?.at(0)?.type ?? null
+    const [selectedTrainingDevice, setSelectedTrainingDevice] = useState<string | null>(
+        trainingDevices.at(0) ? createTrainingDeviceKey(trainingDevices[0]) : null
     );
     const [selectedDatasetRevisionId, setSelectedDatasetRevisionId] = useState<string | null>(
         datasetRevisions?.at(0)?.id ?? null
