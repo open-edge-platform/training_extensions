@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from getitune.types.task import TaskType
 
 from .augmentation.pipeline import CPUAugmentationPipeline
-from .dataset.base import VisionDataset, Transforms
+from .dataset.base import Transforms, VisionDataset
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset

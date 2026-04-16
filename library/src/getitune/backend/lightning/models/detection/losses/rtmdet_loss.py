@@ -9,11 +9,7 @@ from __future__ import annotations
 
 from torch import Tensor, nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/losses/rtmdet_loss.py
 from getitune.backend.lightning.models.common.utils.utils import multi_apply, reduce_mean
-========
-from getitune.backend.lightning.models.common.utils.utils import multi_apply, reduce_mean
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/losses/rtmdet_loss.py
 
 
 class RTMDetCriterion(nn.Module):

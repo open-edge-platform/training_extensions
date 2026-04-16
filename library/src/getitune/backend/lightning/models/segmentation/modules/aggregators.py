@@ -11,13 +11,8 @@ import torch
 from torch import nn
 from torch.nn import functional as f
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/segmentation/modules/aggregators.py
 from getitune.backend.lightning.models.modules import Conv2dModule, DepthwiseSeparableConvModule, build_activation_layer
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
-========
-from getitune.backend.lightning.models.modules import Conv2dModule, DepthwiseSeparableConvModule, build_activation_layer
-from getitune.backend.lightning.models.modules.norm import build_norm_layer
->>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/modules/aggregators.py
 
 from .utils import normalize
 

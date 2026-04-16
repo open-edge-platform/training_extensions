@@ -11,7 +11,7 @@ import torch
 from torch.nn import functional
 
 from getitune import HLabelInfo, LabelInfo
-from getitune.data.dataset.base import VisionDataset, Transforms
+from getitune.data.dataset.base import Transforms, VisionDataset
 from getitune.data.entity.sample import (
     ClassificationHierarchicalSample,
     ClassificationMultiLabelSample,
@@ -93,7 +93,7 @@ class MulticlassClsDataset(VisionDataset):
 
     @property
     def task_type(self) -> TaskType:
-        """getitune Task Type for the dataset.
+        """Getitune Task Type for the dataset.
 
         Returns:
             TaskType: The multi-class classification task type.
@@ -194,7 +194,7 @@ class MultilabelClsDataset(VisionDataset):
 
     @property
     def task_type(self) -> TaskType:
-        """getitune Task Type for the dataset.
+        """Getitune Task Type for the dataset.
 
         Returns:
             TaskType: The multi-label classification task type.
@@ -345,7 +345,7 @@ class HlabelClsDataset(VisionDataset):
 
     @property
     def task_type(self) -> TaskType:
-        """getitune Task Type for the dataset.
+        """Getitune Task Type for the dataset.
 
         Returns:
             TaskType: The hierarchical label classification task type.

@@ -395,7 +395,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
         # Set up the LightningEngine
         logger.info("Initializing the LightningEngine for training (model_id={})", model_id)
-        getitune_device_type = GetiTuneDeviceType.gpu if device.type is DeviceType.CUDA else GetiTuneDeviceType(device.type)
+        getitune_device_type = (
+            GetiTuneDeviceType.gpu if device.type is DeviceType.CUDA else GetiTuneDeviceType(device.type)
+        )
         getitune_engine = LightningEngine(
             model=getitune_model,
             data=getitune_datamodule,

@@ -20,13 +20,8 @@ from torch import Tensor, nn
 from torch.autograd import Function
 from torchvision.ops import box_convert
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/utils/utils.py
 from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.data.entity.sample import SampleBatch
-========
-from getitune.backend.lightning.models.utils.utils import InstanceData
-from getitune.data.entity.sample import SampleBatch
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/utils/utils.py
 
 
 def images_to_levels(target: list[Tensor], num_levels: list[int]) -> list[Tensor]:

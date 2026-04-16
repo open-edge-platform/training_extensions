@@ -35,7 +35,9 @@ class TestLightningModel:
     def test_init(self, monkeypatch):
         monkeypatch.setattr(LightningModel, "input_size_multiplier", 10, raising=False)
         with pytest.raises(ValueError, match="Input size should be a multiple"):
-            LightningModel(label_info=2, data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+            LightningModel(
+                label_info=2, data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+            )
 
     def test_training_step_none_loss(self, mocker: MockerFixture) -> None:
         mock_trainer = mocker.create_autospec(spec=Trainer)

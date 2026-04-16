@@ -9,13 +9,8 @@ Reference : https://github.com/WongKinYiu/YOLO
 import torch
 from torch import Tensor, nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/layers/common_layer.py
 from getitune.backend.lightning.models.detection.utils.utils import auto_pad
 from getitune.backend.lightning.models.modules import Conv2dModule
-========
-from getitune.backend.lightning.models.detection.utils.utils import auto_pad
-from getitune.backend.lightning.models.modules import Conv2dModule
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/layers/common_layer.py
 
 
 class Concat(nn.Module):

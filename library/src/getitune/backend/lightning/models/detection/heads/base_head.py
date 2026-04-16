@@ -15,29 +15,17 @@ import copy
 import torch
 from torch import Tensor
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/heads/base_head.py
 from getitune.backend.lightning.models.common.utils.nms import batched_nms, multiclass_nms
 from getitune.backend.lightning.models.common.utils.utils import (
-========
-from getitune.backend.lightning.models.common.utils.nms import batched_nms, multiclass_nms
-from getitune.backend.lightning.models.common.utils.utils import (
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/base_head.py
     dynamic_topk,
     filter_scores_and_topk,
     gather_topk,
     select_single_mlvl,
 )
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/heads/base_head.py
 from getitune.backend.lightning.models.detection.utils.utils import unpack_det_entity
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.data.entity.sample import SampleBatch
-========
-from getitune.backend.lightning.models.detection.utils.utils import unpack_det_entity
-from getitune.backend.lightning.models.modules.base_module import BaseModule
-from getitune.backend.lightning.models.utils.utils import InstanceData
-from getitune.data.entity.sample import SampleBatch
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/base_head.py
 
 
 class BaseDenseHead(BaseModule):

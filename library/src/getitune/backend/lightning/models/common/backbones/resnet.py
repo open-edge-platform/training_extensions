@@ -14,15 +14,9 @@ import torch.utils.checkpoint as cp
 from torch import nn
 from torch.nn.modules.batchnorm import _BatchNorm
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/backbones/resnet.py
 from getitune.backend.lightning.models.common.layers import ResLayer
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
-========
-from getitune.backend.lightning.models.common.layers import ResLayer
-from getitune.backend.lightning.models.modules.base_module import BaseModule
-from getitune.backend.lightning.models.modules.norm import build_norm_layer
->>>>>>>> develop:library/src/getitune/backend/native/models/common/backbones/resnet.py
 
 
 class Bottleneck(BaseModule):

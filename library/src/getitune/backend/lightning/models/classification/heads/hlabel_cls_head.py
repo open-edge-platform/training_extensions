@@ -10,13 +10,8 @@ from typing import Callable, Sequence
 import torch
 from torch import nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/heads/hlabel_cls_head.py
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.utils.weight_init import constant_init, normal_init
-========
-from getitune.backend.lightning.models.modules.base_module import BaseModule
-from getitune.backend.lightning.models.utils.weight_init import constant_init, normal_init
->>>>>>>> develop:library/src/getitune/backend/native/models/classification/heads/hlabel_cls_head.py
 
 
 class HierarchicalClsHead(BaseModule):

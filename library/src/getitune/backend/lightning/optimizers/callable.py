@@ -33,11 +33,7 @@ class OptimizerCallableSupportAdaptiveBS:
 
         ```python
         from torch.optim import SGD
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/optimizers/callable.py
         from getitune.backend.lightning.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
-========
-        from getitune.backend.lightning.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
->>>>>>>> develop:library/src/getitune/backend/native/optimizers/callable.py
 
         model = MobileNetV3ForMulticlassCls(
             num_classes=3,
@@ -55,11 +51,7 @@ class OptimizerCallableSupportAdaptiveBS:
         It can be created from the string class import path such as
 
         ```python
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/optimizers/callable.py
         from getitune.backend.lightning.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
-========
-        from getitune.backend.lightning.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
->>>>>>>> develop:library/src/getitune/backend/native/optimizers/callable.py
 
         model = MobileNetV3ForMulticlassCls(
             num_classes=3,

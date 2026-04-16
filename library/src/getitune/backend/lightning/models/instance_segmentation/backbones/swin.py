@@ -22,19 +22,11 @@ import torch.utils.checkpoint as cp
 from timm.layers import DropPath, to_2tuple
 from torch import Tensor, nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/backbones/swin.py
 from getitune.backend.lightning.models.modules.base_module import BaseModule, ModuleList
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
 from getitune.backend.lightning.models.modules.transformer import FFN, PatchEmbed, PatchMerging
 from getitune.backend.lightning.models.utils.utils import load_from_http
 from getitune.backend.lightning.models.utils.weight_init import constant_init, trunc_normal_, trunc_normal_init
-========
-from getitune.backend.lightning.models.modules.base_module import BaseModule, ModuleList
-from getitune.backend.lightning.models.modules.norm import build_norm_layer
-from getitune.backend.lightning.models.modules.transformer import FFN, PatchEmbed, PatchMerging
-from getitune.backend.lightning.models.utils.utils import load_from_http
-from getitune.backend.lightning.models.utils.weight_init import constant_init, trunc_normal_, trunc_normal_init
->>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/backbones/swin.py
 
 # ruff: noqa: PLR0913
 

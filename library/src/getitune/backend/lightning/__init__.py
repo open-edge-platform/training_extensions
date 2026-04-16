@@ -1,9 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Native backend."""
+"""Lightning backend."""
 
-from .lightning import accelerators, strategies
+from . import accelerators, strategies
 
 __all__ = [
     "accelerators",

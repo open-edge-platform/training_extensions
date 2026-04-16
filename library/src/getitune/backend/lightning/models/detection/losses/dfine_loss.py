@@ -12,15 +12,9 @@ import torch.nn.functional as f
 from torch import Tensor, nn
 from torchvision.ops import box_convert
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/losses/dfine_loss.py
 from getitune.backend.lightning.models.common.utils.assigners.hungarian_matcher import HungarianMatcher
 from getitune.backend.lightning.models.common.utils.bbox_overlaps import bbox_overlaps
 from getitune.backend.lightning.models.detection.utils.utils import dfine_bbox2distance
-========
-from getitune.backend.lightning.models.common.utils.assigners.hungarian_matcher import HungarianMatcher
-from getitune.backend.lightning.models.common.utils.bbox_overlaps import bbox_overlaps
-from getitune.backend.lightning.models.detection.utils.utils import dfine_bbox2distance
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/losses/dfine_loss.py
 
 
 class DFINECriterion(nn.Module):

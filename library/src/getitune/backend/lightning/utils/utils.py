@@ -72,11 +72,7 @@ def mock_modules_for_chkpt() -> Iterator[None]:
         sys.modules["getitune.core.types"] = getitune.types
         sys.modules["getitune.core.types.task"] = getitune.types.task
         sys.modules["getitune.core.types.label"] = getitune.types.label
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/utils/utils.py
         sys.modules["getitune.core.model"] = getitune.backend.lightning.models  # type: ignore[attr-defined]
-========
-        sys.modules["getitune.core.model"] = getitune.backend.lightning.models  # type: ignore[attr-defined]
->>>>>>>> develop:library/src/getitune/backend/native/utils/utils.py
 
         yield
     finally:

@@ -15,11 +15,7 @@ import torch.nn.functional as f
 from torch import Tensor, nn
 from torch.nn import init
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/heads/dfine_decoder.py
 from getitune.backend.lightning.models.common.layers.transformer_layers import (
-========
-from getitune.backend.lightning.models.common.layers.transformer_layers import (
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/dfine_decoder.py
     LQE,
     MLP,
     Gate,
@@ -27,15 +23,9 @@ from getitune.backend.lightning.models.common.layers.transformer_layers import (
     MSDeformableAttentionV2,
     get_contrastive_denoising_training_group,
 )
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/heads/dfine_decoder.py
 from getitune.backend.lightning.models.common.utils.utils import inverse_sigmoid
 from getitune.backend.lightning.models.detection.utils.utils import dfine_distance2bbox, dfine_weighting_function
 from getitune.backend.lightning.models.utils.weight_init import bias_init_with_prob
-========
-from getitune.backend.lightning.models.common.utils.utils import inverse_sigmoid
-from getitune.backend.lightning.models.detection.utils.utils import dfine_distance2bbox, dfine_weighting_function
-from getitune.backend.lightning.models.utils.weight_init import bias_init_with_prob
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/dfine_decoder.py
 
 
 class TransformerDecoderLayer(nn.Module):

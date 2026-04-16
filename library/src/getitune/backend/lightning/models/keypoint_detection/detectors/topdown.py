@@ -9,11 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/keypoint_detection/detectors/topdown.py
 from getitune.backend.lightning.models.modules.base_module import BaseModule
-========
-from getitune.backend.lightning.models.modules.base_module import BaseModule
->>>>>>>> develop:library/src/getitune/backend/native/models/keypoint_detection/detectors/topdown.py
 
 if TYPE_CHECKING:
     import numpy as np

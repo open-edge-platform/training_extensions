@@ -16,11 +16,7 @@ from typing import TYPE_CHECKING
 import torch
 from torch import nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/losses/focal_loss.py
 from getitune.backend.lightning.models.common.losses.utils import weight_reduce_loss
-========
-from getitune.backend.lightning.models.common.losses.utils import weight_reduce_loss
->>>>>>>> develop:library/src/getitune/backend/native/models/common/losses/focal_loss.py
 
 if TYPE_CHECKING:
     from torch import Tensor

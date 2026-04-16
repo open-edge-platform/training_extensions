@@ -15,32 +15,19 @@ from typing import TYPE_CHECKING, ClassVar, Literal
 from rfdetr import RFDETRBase, RFDETRLarge, RFDETRMedium, RFDETRNano, RFDETRSmall
 from torch.export import Dim
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/rfdetr.py
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from getitune.backend.lightning.models.common.rfdetr_mixin import RFDETRMixin
 from getitune.backend.lightning.models.detection.base import LightningDetectionModel
 from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
-========
-from getitune.backend.lightning.exporter.base import ModelExporter
-from getitune.backend.lightning.exporter.native import LightningModelExporter
-from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.lightning.models.common.rfdetr_mixin import RFDETRMixin
-from getitune.backend.lightning.models.detection.base import LightningDetectionModel
-from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/rfdetr.py
 from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/rfdetr.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
-========
-    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/rfdetr.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
 

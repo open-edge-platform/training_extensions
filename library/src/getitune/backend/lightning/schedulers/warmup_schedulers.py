@@ -9,11 +9,7 @@ from typing import TYPE_CHECKING, Literal
 
 from torch.optim.lr_scheduler import LambdaLR, LRScheduler
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/schedulers/warmup_schedulers.py
 from getitune.backend.lightning.schedulers.callable import SchedulerCallableSupportAdaptiveBS
-========
-from getitune.backend.lightning.schedulers.callable import SchedulerCallableSupportAdaptiveBS
->>>>>>>> develop:library/src/getitune/backend/native/schedulers/warmup_schedulers.py
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, ReduceLROnPlateau

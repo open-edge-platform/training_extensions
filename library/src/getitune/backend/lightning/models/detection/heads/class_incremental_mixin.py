@@ -10,19 +10,11 @@ from typing import TYPE_CHECKING
 import torch
 from torch import Tensor
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/heads/class_incremental_mixin.py
 from getitune.backend.lightning.models.common.utils.utils import multi_apply
 from getitune.backend.lightning.models.detection.utils.utils import images_to_levels
 
 if TYPE_CHECKING:
     from getitune.backend.lightning.models.utils.utils import InstanceData
-========
-from getitune.backend.lightning.models.common.utils.utils import multi_apply
-from getitune.backend.lightning.models.detection.utils.utils import images_to_levels
-
-if TYPE_CHECKING:
-    from getitune.backend.lightning.models.utils.utils import InstanceData
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/class_incremental_mixin.py
 
 
 class ClassIncrementalMixin:

@@ -20,17 +20,10 @@ import torch
 import torch.nn.init
 from torch import Tensor, nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/backbones/dinov3.py
 from getitune.backend.lightning.models.classification.utils.swiglu_ffn import SwiGLUFFNV2
 from getitune.backend.lightning.models.common.layers.position_embed import RopePositionEmbedding
 from getitune.backend.lightning.models.common.layers.transformer_layers import MLP2L, LayerScale, SelfAttentionBlock
 from getitune.backend.lightning.models.modules.transformer import UnflattenPatchEmbed as PatchEmbed
-========
-from getitune.backend.lightning.models.classification.utils.swiglu_ffn import SwiGLUFFNV2
-from getitune.backend.lightning.models.common.layers.position_embed import RopePositionEmbedding
-from getitune.backend.lightning.models.common.layers.transformer_layers import MLP2L, LayerScale, SelfAttentionBlock
-from getitune.backend.lightning.models.modules.transformer import UnflattenPatchEmbed as PatchEmbed
->>>>>>>> develop:library/src/getitune/backend/native/models/common/backbones/dinov3.py
 
 
 def named_apply(

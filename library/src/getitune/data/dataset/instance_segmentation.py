@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from getitune import LabelInfo
-from getitune.data.dataset.base import VisionDataset, Transforms
+from getitune.data.dataset.base import Transforms, VisionDataset
 from getitune.data.entity.sample import InstanceSegmentationSample
 from getitune.data.entity.utils import with_image_dtype
 from getitune.types import TaskType
@@ -76,7 +76,7 @@ class InstanceSegDataset(VisionDataset):
 
     @property
     def task_type(self) -> TaskType:
-        """getitune Task Type for the dataset.
+        """Getitune Task Type for the dataset.
 
         Returns:
             TaskType: The instance segmentation task type.

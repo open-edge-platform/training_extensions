@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, ClassVar, Literal
 
 from torch import nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/rtmdet_inst.py
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
@@ -27,24 +26,6 @@ from getitune.backend.lightning.models.instance_segmentation.losses import DiceL
 from getitune.backend.lightning.models.instance_segmentation.necks import CSPNeXtPAFPN
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
 from getitune.backend.lightning.models.utils.utils import load_checkpoint
-========
-from getitune.backend.lightning.exporter.base import ModelExporter
-from getitune.backend.lightning.exporter.native import LightningModelExporter
-from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.lightning.models.common.losses import GIoULoss, QualityFocalLoss
-from getitune.backend.lightning.models.common.utils.assigners import DynamicSoftLabelAssigner
-from getitune.backend.lightning.models.common.utils.coders import DistancePointBBoxCoder
-from getitune.backend.lightning.models.common.utils.prior_generators import MlvlPointGenerator
-from getitune.backend.lightning.models.common.utils.samplers import PseudoSampler
-from getitune.backend.lightning.models.detection.backbones import CSPNeXt
-from getitune.backend.lightning.models.detection.detectors import SingleStageDetector
-from getitune.backend.lightning.models.instance_segmentation.base import LightningInstanceSegModel
-from getitune.backend.lightning.models.instance_segmentation.heads import RTMDetInstSepBNHead
-from getitune.backend.lightning.models.instance_segmentation.losses import DiceLoss, RTMDetInstCriterion
-from getitune.backend.lightning.models.instance_segmentation.necks import CSPNeXtPAFPN
-from getitune.backend.lightning.models.modules.norm import build_norm_layer
-from getitune.backend.lightning.models.utils.utils import load_checkpoint
->>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/rtmdet_inst.py
 from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 
@@ -52,11 +33,7 @@ if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import Tensor
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/rtmdet_inst.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
-========
-    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
->>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/rtmdet_inst.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
 

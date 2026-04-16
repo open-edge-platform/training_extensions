@@ -8,11 +8,7 @@ import numpy as np
 import torch
 from torchvision import tv_tensors
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/rotated_det.py
 from getitune.data.entity.sample import PredictionBatch
-========
-from getitune.data.entity.sample import PredictionBatch
->>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/rotated_det.py
 
 
 def get_polygon_area(points: np.ndarray) -> float:

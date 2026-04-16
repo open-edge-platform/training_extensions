@@ -13,13 +13,8 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/keypoint_detection/utils/rtmcc_block.py
 from getitune.backend.lightning.models.keypoint_detection.utils.scale_norm import ScaleNorm
 from getitune.backend.lightning.models.modules.drop import DropPath
-========
-from getitune.backend.lightning.models.keypoint_detection.utils.scale_norm import ScaleNorm
-from getitune.backend.lightning.models.modules.drop import DropPath
->>>>>>>> develop:library/src/getitune/backend/native/models/keypoint_detection/utils/rtmcc_block.py
 
 
 def rope(x: torch.Tensor, dim: int | list[int]) -> torch.Tensor:

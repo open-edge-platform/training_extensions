@@ -11,8 +11,8 @@ from datumaro.experimental import Dataset
 
 from getitune.config.data import SubsetConfig
 from getitune.data.dataset.classification import (
-    HLabelInfo,
     HlabelClsDataset,
+    HLabelInfo,
     MulticlassClsDataset,
     MultilabelClsDataset,
 )

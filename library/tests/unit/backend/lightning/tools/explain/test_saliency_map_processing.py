@@ -5,7 +5,10 @@ import numpy as np
 import pytest
 import torch
 
-from getitune.backend.lightning.models.utils.xai_utils import process_saliency_maps, process_saliency_maps_in_pred_entity
+from getitune.backend.lightning.models.utils.xai_utils import (
+    process_saliency_maps,
+    process_saliency_maps_in_pred_entity,
+)
 from getitune.config.explain import ExplainConfig
 from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import PredictionBatch

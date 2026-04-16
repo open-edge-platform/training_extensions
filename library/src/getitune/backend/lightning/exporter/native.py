@@ -14,21 +14,12 @@ import onnx
 import openvino
 import torch
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/exporter/native.py
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.types.export import TaskLevelExportParameters
 from getitune.types.precision import Precision
 
 if TYPE_CHECKING:
     from getitune.backend.lightning.models.base import DataInputParams, LightningModel
-========
-from getitune.backend.lightning.exporter.base import ModelExporter
-from getitune.types.export import TaskLevelExportParameters
-from getitune.types.precision import Precision
-
-if TYPE_CHECKING:
-    from getitune.backend.lightning.models.base import DataInputParams, LightningModel
->>>>>>>> develop:library/src/getitune/backend/native/exporter/native.py
 
 
 class LightningModelExporter(ModelExporter):

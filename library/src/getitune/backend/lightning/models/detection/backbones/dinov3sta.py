@@ -20,13 +20,8 @@ import torch.distributed as dist
 import torch.nn.functional as f
 from torch import Tensor, nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/backbones/dinov3sta.py
 from getitune.backend.lightning.models.common.backbones.dinov3 import DinoVisionTransformer
 from getitune.backend.lightning.models.detection.backbones.vit_tiny import VisionTransformer
-========
-from getitune.backend.lightning.models.common.backbones.dinov3 import DinoVisionTransformer
-from getitune.backend.lightning.models.detection.backbones.vit_tiny import VisionTransformer
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/backbones/dinov3sta.py
 
 logger = logging.getLogger(__name__)
 

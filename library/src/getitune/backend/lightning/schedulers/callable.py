@@ -35,11 +35,7 @@ class SchedulerCallableSupportAdaptiveBS:
 
         ```python
         from torch.optim.lr_scheduler import StepLR
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/schedulers/callable.py
         from getitune.backend.lightning.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
-========
-        from getitune.backend.lightning.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
->>>>>>>> develop:library/src/getitune/backend/native/schedulers/callable.py
 
         model = MobileNetV3ForMulticlassCls(
             num_classes=3,
@@ -56,11 +52,7 @@ class SchedulerCallableSupportAdaptiveBS:
         It can be created from the string class import path such as
 
         ```python
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/schedulers/callable.py
         from getitune.backend.lightning.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
-========
-        from getitune.backend.lightning.models.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls
->>>>>>>> develop:library/src/getitune/backend/native/schedulers/callable.py
 
         model = MobileNetV3ForMulticlassCls(
             num_classes=3,

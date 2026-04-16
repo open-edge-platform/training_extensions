@@ -17,32 +17,19 @@ from rfdetr import (
 )
 from torch.export import Dim
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/rfdetr_inst.py
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from getitune.backend.lightning.models.common.rfdetr_mixin import RFDETRMixin
 from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
 from getitune.backend.lightning.models.instance_segmentation.base import LightningInstanceSegModel
-========
-from getitune.backend.lightning.exporter.base import ModelExporter
-from getitune.backend.lightning.exporter.native import LightningModelExporter
-from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.lightning.models.common.rfdetr_mixin import RFDETRMixin
-from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
-from getitune.backend.lightning.models.instance_segmentation.base import LightningInstanceSegModel
->>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/rfdetr_inst.py
 from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/rfdetr_inst.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
-========
-    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
->>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/rfdetr_inst.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
 

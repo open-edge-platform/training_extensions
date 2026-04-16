@@ -16,7 +16,11 @@ from getitune.backend.lightning.models.classification.heads import (
     HierarchicalLinearClsHead,
     HierarchicalNonLinearClsHead,
 )
-from getitune.backend.lightning.models.classification.heads.hlabel_cls_head import CBAM, ChannelAttention, SpatialAttention
+from getitune.backend.lightning.models.classification.heads.hlabel_cls_head import (
+    CBAM,
+    ChannelAttention,
+    SpatialAttention,
+)
 from getitune.backend.lightning.models.classification.losses import AsymmetricAngularLossWithIgnore
 from getitune.data.entity.base import ImageInfo
 

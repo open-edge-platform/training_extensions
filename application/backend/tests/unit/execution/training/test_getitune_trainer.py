@@ -18,7 +18,6 @@ from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from getitune.metrics.types import MetricCallable
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
-from getitune.types.task import TaskType
 
 from app.core.jobs.exec.exceptions import CancelledExc
 from app.core.run import ExecutionContext
@@ -303,7 +302,9 @@ class TestGetiTuneTrainerPrepareTrainingConfiguration:
             model_architecture_id=training_params.model_architecture_id,
         )
         expected_getitune_training_config = mock_training_config.model_dump(mode="json")
-        expected_getitune_training_config["hyper_parameters"] = expected_getitune_training_config.pop("algo_level_parameters")
+        expected_getitune_training_config["hyper_parameters"] = expected_getitune_training_config.pop(
+            "algo_level_parameters"
+        )
         expected_getitune_training_config["model_manifest_id"] = training_params.model_architecture_id
         expected_getitune_training_config["sub_task_type"] = TaskType.DETECTION
         mock_convert.assert_called_once_with(expected_getitune_training_config)
@@ -760,7 +761,9 @@ class TestGetiTuneTrainerTrainModel:
         expected_checkpoint_path = Path(mock_getitune_engine.work_dir) / "best_checkpoint.ckpt"
         expected_checkpoint_path.touch()
 
-        with patch("app.execution.training.getitune_trainer.DataModule.from_vision_datasets") as mock_datamodule_factory:
+        with patch(
+            "app.execution.training.getitune_trainer.DataModule.from_vision_datasets"
+        ) as mock_datamodule_factory:
             mock_datamodule_factory.return_value = mock_datamodule
 
             with patch("app.execution.training.getitune_trainer.ArgumentParser") as mock_parser_class:
@@ -1322,7 +1325,9 @@ class TestGetiTuneTrainerFilterDataset:
     # Filtering disabled
     # ------------------------------------------------------------------
 
-    def test_returns_original_dataset_when_filtering_disabled(self, fxt_getitune_trainer: Callable[[], GetiTuneTrainer]) -> None:
+    def test_returns_original_dataset_when_filtering_disabled(
+        self, fxt_getitune_trainer: Callable[[], GetiTuneTrainer]
+    ) -> None:
         """When both min and max are disabled the exact same dataset object is returned."""
         task = Task(task_type=TaskType.DETECTION)
         dataset = _make_detection_dataset(1, 3, 5)
@@ -1336,7 +1341,9 @@ class TestGetiTuneTrainerFilterDataset:
     # Detection - bboxes field
     # ------------------------------------------------------------------
 
-    def test_detection_min_filter_removes_empty_samples(self, fxt_getitune_trainer: Callable[[], GetiTuneTrainer]) -> None:
+    def test_detection_min_filter_removes_empty_samples(
+        self, fxt_getitune_trainer: Callable[[], GetiTuneTrainer]
+    ) -> None:
         """Samples with 0 bboxes are removed when min=1 is enabled."""
         task = Task(task_type=TaskType.DETECTION)
         dataset = _make_detection_dataset(0, 1, 2, 3)
@@ -1346,7 +1353,9 @@ class TestGetiTuneTrainerFilterDataset:
 
         assert len(result.df) == 3
 
-    def test_detection_max_filter_removes_crowded_samples(self, fxt_getitune_trainer: Callable[[], GetiTuneTrainer]) -> None:
+    def test_detection_max_filter_removes_crowded_samples(
+        self, fxt_getitune_trainer: Callable[[], GetiTuneTrainer]
+    ) -> None:
         """Samples exceeding the max bbox count are removed."""
         task = Task(task_type=TaskType.DETECTION)
         dataset = _make_detection_dataset(1, 2, 3, 4, 5)
@@ -1356,7 +1365,9 @@ class TestGetiTuneTrainerFilterDataset:
 
         assert len(result.df) == 3  # 1, 2, 3 bboxes pass; 4, 5 are removed
 
-    def test_detection_min_and_max_filter_keeps_only_range(self, fxt_getitune_trainer: Callable[[], GetiTuneTrainer]) -> None:
+    def test_detection_min_and_max_filter_keeps_only_range(
+        self, fxt_getitune_trainer: Callable[[], GetiTuneTrainer]
+    ) -> None:
         """Both min and max enabled: only samples within [min, max] survive."""
         task = Task(task_type=TaskType.DETECTION)
         dataset = _make_detection_dataset(0, 1, 2, 3, 4, 5)
@@ -1417,7 +1428,9 @@ class TestGetiTuneTrainerFilterDataset:
     # Multiclass classification - scalar label field
     # ------------------------------------------------------------------
 
-    def test_multiclass_min_filter_removes_unlabelled_samples(self, fxt_getitune_trainer: Callable[[], GetiTuneTrainer]) -> None:
+    def test_multiclass_min_filter_removes_unlabelled_samples(
+        self, fxt_getitune_trainer: Callable[[], GetiTuneTrainer]
+    ) -> None:
         """Samples without a label (None) are removed when min is enabled."""
         task = Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=True)
         dataset = _make_multiclass_dataset(None, 0, 1, None, 2)

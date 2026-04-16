@@ -18,7 +18,6 @@ from torchvision.models.detection.mask_rcnn import (
     MaskRCNNPredictor,
 )
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/maskrcnn_tv.py
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
@@ -26,15 +25,6 @@ from getitune.backend.lightning.models.instance_segmentation.base import Lightni
 from getitune.backend.lightning.models.instance_segmentation.heads import TVRoIHeads
 from getitune.backend.lightning.models.instance_segmentation.rotated_det import RotatedPredictMixin
 from getitune.backend.lightning.models.instance_segmentation.segmentors.maskrcnn_tv import (
-========
-from getitune.backend.lightning.exporter.base import ModelExporter
-from getitune.backend.lightning.exporter.native import LightningModelExporter
-from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.lightning.models.instance_segmentation.base import LightningInstanceSegModel
-from getitune.backend.lightning.models.instance_segmentation.heads import TVRoIHeads
-from getitune.backend.lightning.models.instance_segmentation.rotated_det import RotatedPredictMixin
-from getitune.backend.lightning.models.instance_segmentation.segmentors.maskrcnn_tv import (
->>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/maskrcnn_tv.py
     FastRCNNConvFCHead,
     MaskRCNN,
     MaskRCNNBackbone,
@@ -42,13 +32,8 @@ from getitune.backend.lightning.models.instance_segmentation.segmentors.maskrcnn
     RPNHead,
 )
 from getitune.config.data import TileConfig
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/maskrcnn_tv.py
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
-========
-from getitune.data.entity.base import BatchLoss
-from getitune.data.entity.sample import PredictionBatch, SampleBatch
->>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/maskrcnn_tv.py
 from getitune.data.entity.utils import stack_batch
 from getitune.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 
@@ -56,11 +41,7 @@ if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/maskrcnn_tv.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
-========
-    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
->>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/maskrcnn_tv.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
 

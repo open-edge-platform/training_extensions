@@ -17,7 +17,6 @@ import torch
 import torch.nn.functional
 from torch import Tensor, nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/heads/rpn_head.py
 from getitune.backend.lightning.models.common.utils.nms import batched_nms, multiclass_nms
 from getitune.backend.lightning.models.common.utils.utils import dynamic_topk, gather_topk
 from getitune.backend.lightning.models.detection.heads.anchor_head import AnchorHead
@@ -33,23 +32,6 @@ if TYPE_CHECKING:
     from getitune.backend.lightning.models.common.utils.coders import DeltaXYWHBBoxCoder
     from getitune.backend.lightning.models.common.utils.prior_generators import AnchorGenerator
     from getitune.backend.lightning.models.common.utils.samplers.base_sampler import BaseSampler
-========
-from getitune.backend.lightning.models.common.utils.nms import batched_nms, multiclass_nms
-from getitune.backend.lightning.models.common.utils.utils import dynamic_topk, gather_topk
-from getitune.backend.lightning.models.detection.heads.anchor_head import AnchorHead
-from getitune.backend.lightning.models.instance_segmentation.utils.utils import unpack_inst_seg_entity
-from getitune.backend.lightning.models.modules import build_activation_layer
-from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
-from getitune.backend.lightning.models.utils.utils import InstanceData
-from getitune.data.entity.sample import SampleBatch
-from getitune.data.utils.structures.bbox import empty_box_as, get_box_wh
-
-if TYPE_CHECKING:
-    from getitune.backend.lightning.models.common.utils.assigners import MaxIoUAssigner
-    from getitune.backend.lightning.models.common.utils.coders import DeltaXYWHBBoxCoder
-    from getitune.backend.lightning.models.common.utils.prior_generators import AnchorGenerator
-    from getitune.backend.lightning.models.common.utils.samplers.base_sampler import BaseSampler
->>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/heads/rpn_head.py
 
 # ruff: noqa: PLW2901
 

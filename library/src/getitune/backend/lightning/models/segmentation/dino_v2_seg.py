@@ -12,21 +12,12 @@ from urllib.parse import urlparse
 
 from torch.hub import download_url_to_file
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/segmentation/dino_v2_seg.py
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from getitune.backend.lightning.models.classification.backbones.vision_transformer import VisionTransformerBackbone
 from getitune.backend.lightning.models.segmentation.base import LightningSegmentationModel
 from getitune.backend.lightning.models.segmentation.heads import FCNHead
 from getitune.backend.lightning.models.segmentation.losses import CrossEntropyLossWithIgnore
 from getitune.backend.lightning.models.segmentation.segmentors import BaseSegmentationModel
-========
-from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.lightning.models.classification.backbones.vision_transformer import VisionTransformerBackbone
-from getitune.backend.lightning.models.segmentation.base import LightningSegmentationModel
-from getitune.backend.lightning.models.segmentation.heads import FCNHead
-from getitune.backend.lightning.models.segmentation.losses import CrossEntropyLossWithIgnore
-from getitune.backend.lightning.models.segmentation.segmentors import BaseSegmentationModel
->>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/dino_v2_seg.py
 from getitune.config.data import TileConfig
 from getitune.metrics.dice import SegmCallable
 
@@ -34,11 +25,7 @@ if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/segmentation/dino_v2_seg.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
-========
-    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
->>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/dino_v2_seg.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
 

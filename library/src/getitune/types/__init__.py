@@ -14,12 +14,10 @@ from getitune.types.task import TaskType
 
 __all__ = [
     "HLabelInfo",
-    # label_info
     "LabelInfo",
     "NullLabelInfo",
-    # task_type
-    "TaskType",
     "SegLabelInfo",
+    "TaskType",
 ]
 
 PathLike: TypeAlias = Union[str, Path, os.PathLike]

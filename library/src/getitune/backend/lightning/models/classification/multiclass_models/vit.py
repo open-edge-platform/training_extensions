@@ -15,7 +15,6 @@ import torch
 from torch import nn
 from torch.hub import download_url_to_file
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/multiclass_models/vit.py
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from getitune.backend.lightning.models.classification.backbones.vision_transformer import VisionTransformerBackbone
 from getitune.backend.lightning.models.classification.classifier import ImageClassifier
@@ -28,20 +27,6 @@ from getitune.backend.lightning.models.classification.multiclass_models.base imp
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.backend.lightning.tools.explain.explain_algo import ViTReciproCAM, feature_vector_fn
 from getitune.data.entity import PredictionBatch, SampleBatch
-========
-from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.lightning.models.classification.backbones.vision_transformer import VisionTransformerBackbone
-from getitune.backend.lightning.models.classification.classifier import ImageClassifier
-from getitune.backend.lightning.models.classification.heads import (
-    VisionTransformerClsHead,
-)
-from getitune.backend.lightning.models.classification.multiclass_models.base import (
-    LightningMulticlassClsModel,
-)
-from getitune.backend.lightning.schedulers import LRSchedulerListCallable
-from getitune.backend.lightning.tools.explain.explain_algo import ViTReciproCAM, feature_vector_fn
-from getitune.data.entity import PredictionBatch, SampleBatch
->>>>>>>> develop:library/src/getitune/backend/native/models/classification/multiclass_models/vit.py
 from getitune.metrics.accuracy import MultiClassClsMetricCallable
 from getitune.types.label import LabelInfoTypes
 

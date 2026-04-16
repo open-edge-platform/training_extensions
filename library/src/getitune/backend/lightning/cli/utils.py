@@ -11,11 +11,7 @@ import inspect
 import textwrap
 from pathlib import Path
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/cli/utils.py
 from getitune.types.task import TaskType
-========
-from getitune.types.task import TaskType
->>>>>>>> develop:library/src/getitune/backend/native/cli/utils.py
 
 
 def get_getitune_root_path() -> Path:
@@ -27,15 +23,9 @@ def get_getitune_root_path() -> Path:
     Raises:
         ModuleNotFoundError: If the getitune module is not found.
     """
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/cli/utils.py
     getitune_module = importlib.import_module("getitune")
     if getitune_module:
         file_path = inspect.getfile(getitune_module)
-========
-    getitune_module = importlib.import_module("getitune")
-    if getitune_module:
-        file_path = inspect.getfile(getitune_module)
->>>>>>>> develop:library/src/getitune/backend/native/cli/utils.py
         return Path(file_path).parent
     msg = "Cannot find getitune."
     raise ModuleNotFoundError(msg)

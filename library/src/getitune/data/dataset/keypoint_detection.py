@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import torch
 
-from getitune.data.dataset.base import VisionDataset, Transforms
+from getitune.data.dataset.base import Transforms, VisionDataset
 from getitune.data.entity.sample import KeypointSample
 from getitune.data.entity.utils import with_image_dtype
 from getitune.types import TaskType
@@ -71,7 +71,7 @@ class KeypointDetectionDataset(VisionDataset):
 
     @property
     def task_type(self) -> TaskType:
-        """getitune Task Type for the dataset.
+        """Getitune Task Type for the dataset.
 
         Returns:
             TaskType: The keypoint detection task type.

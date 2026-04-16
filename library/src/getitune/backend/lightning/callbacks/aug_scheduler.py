@@ -221,7 +221,6 @@ class AugmentationSchedulerCallback(Callback):
 
     def setup(self, trainer: Trainer, pl_module: LightningModule, stage: str) -> None:
         """Find and cache reference to GPUAugmentationCallback for GPU pipeline swaps."""
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/callbacks/aug_scheduler.py
         from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         for callback in trainer.callbacks:  # type: ignore[union-attr]

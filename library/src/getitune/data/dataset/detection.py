@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from getitune import TaskType
-from getitune.data.dataset.base import VisionDataset, Transforms
+from getitune.data.dataset.base import Transforms, VisionDataset
 from getitune.data.dataset.mixins import DataAugSwitchMixin
 from getitune.data.entity.sample import DetectionSample
 from getitune.data.entity.utils import with_image_dtype
@@ -88,7 +88,7 @@ class DetectionDataset(VisionDataset, DataAugSwitchMixin):
 
     @property
     def task_type(self) -> TaskType:
-        """getitune Task Type for the dataset.
+        """Getitune Task Type for the dataset.
 
         Returns:
             TaskType: The object detection task type.

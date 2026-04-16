@@ -10,15 +10,11 @@ from typing import TYPE_CHECKING
 
 import torch
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/classifier/h_label_classifier.py
 from getitune.backend.lightning.models.classification.heads.hlabel_cls_head import HierarchicalClsHead
-from getitune.backend.lightning.models.classification.losses.tree_path_kl_divergence_loss import TreePathKLDivergenceLoss
+from getitune.backend.lightning.models.classification.losses.tree_path_kl_divergence_loss import (
+    TreePathKLDivergenceLoss,
+)
 from getitune.backend.lightning.models.classification.utils.ignored_labels import get_valid_label_mask
-========
-from getitune.backend.lightning.models.classification.heads.hlabel_cls_head import HierarchicalClsHead
-from getitune.backend.lightning.models.classification.losses.tree_path_kl_divergence_loss import TreePathKLDivergenceLoss
-from getitune.backend.lightning.models.classification.utils.ignored_labels import get_valid_label_mask
->>>>>>>> develop:library/src/getitune/backend/native/models/classification/classifier/h_label_classifier.py
 
 from .base_classifier import ImageClassifier
 
@@ -123,11 +119,7 @@ class HLabelClassifier(ImageClassifier):
 
     @torch.no_grad()
     def _forward_explain(self, images: torch.Tensor) -> dict[str, torch.Tensor | list[torch.Tensor]]:
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/classifier/h_label_classifier.py
         from getitune.backend.lightning.tools.explain.explain_algo import feature_vector_fn
-========
-        from getitune.backend.lightning.tools.explain.explain_algo import feature_vector_fn
->>>>>>>> develop:library/src/getitune/backend/native/models/classification/classifier/h_label_classifier.py
 
         x = self.backbone(images)
         backbone_feat = x

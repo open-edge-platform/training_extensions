@@ -232,5 +232,5 @@ class VisionDataset(TorchDataset):
 
     @property
     def task_type(self) -> TaskType | None:
-        """getitune Task Type for the dataset. Can be None if no task is defined."""
+        """Getitune Task Type for the dataset. Can be None if no task is defined."""
         return None

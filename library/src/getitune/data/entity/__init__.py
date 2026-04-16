@@ -5,9 +5,9 @@
 
 from .base import ImageInfo, ImageType
 from .sample import (
+    BaseSample,
     Prediction,
     PredictionBatch,
-    BaseSample,
     SampleBatch,
 )
 from .tile import (
@@ -19,11 +19,11 @@ from .tile import (
 )
 
 __all__ = [
+    "BaseSample",
     "ImageInfo",
     "ImageType",
     "Prediction",
     "PredictionBatch",
-    "BaseSample",
     "SampleBatch",
     "TileBatchDetDataEntity",
     "TileBatchInstSegDataEntity",

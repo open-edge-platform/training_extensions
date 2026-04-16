@@ -15,21 +15,12 @@ from typing import TYPE_CHECKING, Any
 import torch
 from torch import Tensor, nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/heads/roi_head.py
 from getitune.backend.lightning.models.instance_segmentation.utils.utils import empty_instances, unpack_inst_seg_entity
 from getitune.data.entity.sample import SampleBatch
 from getitune.data.utils.structures.bbox import bbox2roi
 
 if TYPE_CHECKING:
     from getitune.backend.lightning.models.utils.utils import InstanceData
-========
-from getitune.backend.lightning.models.instance_segmentation.utils.utils import empty_instances, unpack_inst_seg_entity
-from getitune.data.entity.sample import SampleBatch
-from getitune.data.utils.structures.bbox import bbox2roi
-
-if TYPE_CHECKING:
-    from getitune.backend.lightning.models.utils.utils import InstanceData
->>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/heads/roi_head.py
 
 
 class RoIHead(nn.Module):

@@ -15,19 +15,11 @@ from typing import Any, ClassVar
 import torch
 from torch import Tensor, nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/heads/ssd_head.py
 from getitune.backend.lightning.models.common.utils.coders import BaseBBoxCoder
 from getitune.backend.lightning.models.common.utils.prior_generators import BasePriorGenerator
 from getitune.backend.lightning.models.common.utils.samplers import PseudoSampler
 from getitune.backend.lightning.models.detection.heads.anchor_head import AnchorHead
 from getitune.data.entity.sample import SampleBatch
-========
-from getitune.backend.lightning.models.common.utils.coders import BaseBBoxCoder
-from getitune.backend.lightning.models.common.utils.prior_generators import BasePriorGenerator
-from getitune.backend.lightning.models.common.utils.samplers import PseudoSampler
-from getitune.backend.lightning.models.detection.heads.anchor_head import AnchorHead
-from getitune.data.entity.sample import SampleBatch
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/ssd_head.py
 
 
 class SSDHeadModule(AnchorHead):

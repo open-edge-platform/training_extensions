@@ -93,7 +93,9 @@ class TestLiteHRNetModule:
 
     @pytest.fixture
     def mock_load_checkpoint_to_model(self, mocker) -> MagicMock:
-        return mocker.patch("getitune.backend.lightning.models.segmentation.backbones.litehrnet.load_checkpoint_to_model")
+        return mocker.patch(
+            "getitune.backend.lightning.models.segmentation.backbones.litehrnet.load_checkpoint_to_model"
+        )
 
     @pytest.fixture
     def pretrained_weight(self, tmp_path) -> str:

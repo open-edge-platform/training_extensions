@@ -11,15 +11,9 @@ from typing import Callable
 import torch
 from torch import Tensor
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/utils/utils.py
 from getitune.backend.lightning.models.common.utils.utils import sample_point
 from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.data.entity.sample import SampleBatch
-========
-from getitune.backend.lightning.models.common.utils.utils import sample_point
-from getitune.backend.lightning.models.utils.utils import InstanceData
-from getitune.data.entity.sample import SampleBatch
->>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/utils/utils.py
 
 
 def unpack_inst_seg_entity(entity: SampleBatch) -> tuple:

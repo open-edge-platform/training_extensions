@@ -16,17 +16,10 @@ from typing import Any, Callable, ClassVar
 
 from torch import Tensor, nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/necks/fpn.py
 from getitune.backend.lightning.models.modules import build_activation_layer
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
-========
-from getitune.backend.lightning.models.modules import build_activation_layer
-from getitune.backend.lightning.models.modules.base_module import BaseModule
-from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
-from getitune.backend.lightning.models.modules.norm import build_norm_layer
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/necks/fpn.py
 
 
 class FPNModule(BaseModule):

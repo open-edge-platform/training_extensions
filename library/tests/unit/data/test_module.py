@@ -18,8 +18,8 @@ from getitune.config.data import (
 )
 from getitune.data import module as target_file
 from getitune.data.module import (
-    DeviceType,
     DataModule,
+    DeviceType,
     TaskType,
 )
 
@@ -371,7 +371,9 @@ class TestDataModule:
                 train_subset=fxt_mock_subset_configs["train_subset"],
             )
 
-    def test_from_vision_datasets_with_auto_num_workers(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
+    def test_from_vision_datasets_with_auto_num_workers(
+        self, mocker, fxt_mock_subset_configs, fxt_mock_dataset
+    ) -> None:
         """Test from_vision_datasets with auto_num_workers enabled."""
         # Create mock datasets
         shared_label_info = MagicMock()

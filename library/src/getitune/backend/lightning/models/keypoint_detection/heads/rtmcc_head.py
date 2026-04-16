@@ -13,7 +13,6 @@ import numpy as np
 import torch
 from torch import Tensor, nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/keypoint_detection/heads/rtmcc_head.py
 from getitune.backend.lightning.models.keypoint_detection.utils.keypoint_eval import simcc_pck_accuracy
 from getitune.backend.lightning.models.keypoint_detection.utils.rtmcc_block import RTMCCBlock
 from getitune.backend.lightning.models.keypoint_detection.utils.scale_norm import ScaleNorm
@@ -22,16 +21,6 @@ from getitune.backend.lightning.models.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
     from getitune.data.entity.sample import SampleBatch
-========
-from getitune.backend.lightning.models.keypoint_detection.utils.keypoint_eval import simcc_pck_accuracy
-from getitune.backend.lightning.models.keypoint_detection.utils.rtmcc_block import RTMCCBlock
-from getitune.backend.lightning.models.keypoint_detection.utils.scale_norm import ScaleNorm
-from getitune.backend.lightning.models.keypoint_detection.utils.simcc_label import SimCCLabel
-from getitune.backend.lightning.models.modules.base_module import BaseModule
-
-if TYPE_CHECKING:
-    from getitune.data.entity.sample import SampleBatch
->>>>>>>> develop:library/src/getitune/backend/native/models/keypoint_detection/heads/rtmcc_head.py
 
 
 class RTMCCHead(BaseModule):

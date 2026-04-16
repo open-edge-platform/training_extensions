@@ -11,13 +11,8 @@ from lightning.pytorch.cli import ReduceLROnPlateau
 from torch.optim.lr_scheduler import LRScheduler
 from torch.optim.optimizer import Optimizer
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/schedulers/__init__.py
 from getitune.backend.lightning.schedulers.callable import SchedulerCallableSupportAdaptiveBS
 from getitune.backend.lightning.schedulers.warmup_schedulers import LinearWarmupScheduler, LinearWarmupSchedulerCallable
-========
-from getitune.backend.lightning.schedulers.callable import SchedulerCallableSupportAdaptiveBS
-from getitune.backend.lightning.schedulers.warmup_schedulers import LinearWarmupScheduler, LinearWarmupSchedulerCallable
->>>>>>>> develop:library/src/getitune/backend/native/schedulers/__init__.py
 
 LRSchedulerListCallable = Callable[[Optimizer], list[LRScheduler | ReduceLROnPlateau]]
 

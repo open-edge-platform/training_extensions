@@ -9,13 +9,8 @@ import logging as log
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Literal
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/exporter/base.py
 from getitune.types.export import ExportFormat, TaskLevelExportParameters
 from getitune.types.precision import Precision
-========
-from getitune.types.export import ExportFormat, TaskLevelExportParameters
-from getitune.types.precision import Precision
->>>>>>>> develop:library/src/getitune/backend/native/exporter/base.py
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -23,11 +18,7 @@ if TYPE_CHECKING:
     import onnx
     import openvino
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/exporter/base.py
     from getitune.backend.lightning.models.base import DataInputParams, LightningModel
-========
-    from getitune.backend.lightning.models.base import DataInputParams, LightningModel
->>>>>>>> develop:library/src/getitune/backend/native/exporter/base.py
 
 
 class ModelExporter:

@@ -38,7 +38,7 @@ class TileDataEntity:
 
     @property
     def task(self) -> TaskType:
-        """getitune Task type definition."""
+        """Getitune Task type definition."""
         raise NotImplementedError
 
 
@@ -56,7 +56,7 @@ class TileDetDataEntity(TileDataEntity):
 
     @property
     def task(self) -> TaskType:
-        """getitune Task type definition."""
+        """Getitune Task type definition."""
         return TaskType.DETECTION
 
 
@@ -167,7 +167,7 @@ class TileInstSegDataEntity(TileDataEntity):
 
     @property
     def task(self) -> TaskType:
-        """getitune Task type definition."""
+        """Getitune Task type definition."""
         return TaskType.INSTANCE_SEGMENTATION
 
 
@@ -248,7 +248,7 @@ class TileSegDataEntity(TileDataEntity):
 
     @property
     def task(self) -> TaskType:
-        """getitune Task type definition."""
+        """Getitune Task type definition."""
         return TaskType.SEMANTIC_SEGMENTATION
 
 

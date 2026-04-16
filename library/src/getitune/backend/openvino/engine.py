@@ -23,7 +23,7 @@ from getitune.data.entity.sample import SampleBatch
 from getitune.data.module import DataModule
 from getitune.engine import Engine
 from getitune.tools.auto_configurator import AutoConfigurator
-from getitune.types import TaskType, PathLike
+from getitune.types import PathLike, TaskType
 
 if TYPE_CHECKING:
     from getitune.metrics import MetricCallable
@@ -159,8 +159,8 @@ class OVEngine(Engine):
                 create a datamodule based on the data root and model.
             checkpoint (PathLike | None, optional): Path to the checkpoint file to load the model from.
                 Defaults to None.
-            metric (MetricCallable | None, optional): If provided, overrides `LightningModel.metric_callable` with the given
-                metric callable for evaluation.
+            metric (MetricCallable | None, optional): If provided, overrides
+                `LightningModel.metric_callable` with the given metric callable for evaluation.
 
         Returns:
             METRICS: The computed metrics after testing the model on the provided data.

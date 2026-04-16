@@ -13,7 +13,6 @@ from torch.utils.data import Sampler
 
 if TYPE_CHECKING:
     from getitune.data.dataset.base import VisionDataset
-    from getitune.data.dataset.base import VisionDataset
 
 
 class BalancedSampler(Sampler):

@@ -14,21 +14,13 @@ from typing import TYPE_CHECKING, Any
 from lightning import Callback
 from torch.cuda import is_available as is_cuda_available
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/tools/adaptive_bs/runner.py
 from getitune.backend.lightning.callbacks import BatchSizeFinder
-========
-from getitune.backend.lightning.callbacks import BatchSizeFinder
->>>>>>>> develop:library/src/getitune/backend/native/tools/adaptive_bs/runner.py
 from getitune.utils.device import is_xpu_available
 
 from .algorithm import BsSearchAlgo
 
 if TYPE_CHECKING:
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/tools/adaptive_bs/runner.py
     from getitune.backend.lightning.engine import LightningEngine
-========
-    from getitune.backend.lightning.engine import LightningEngine
->>>>>>>> develop:library/src/getitune/backend/native/tools/adaptive_bs/runner.py
 
 logger = logging.getLogger(__name__)
 

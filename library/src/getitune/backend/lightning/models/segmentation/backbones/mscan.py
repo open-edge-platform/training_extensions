@@ -13,15 +13,9 @@ import torch
 from torch import nn
 from torch.nn import SyncBatchNorm
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/segmentation/backbones/mscan.py
 from getitune.backend.lightning.models.modules import build_norm_layer
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http
-========
-from getitune.backend.lightning.models.modules import build_norm_layer
-from getitune.backend.lightning.models.modules.base_module import BaseModule
-from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http
->>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/backbones/mscan.py
 
 if TYPE_CHECKING:
     from torch import Tensor

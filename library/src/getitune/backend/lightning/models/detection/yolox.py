@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
 
 from torch.export import Dim
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/yolox.py
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
@@ -28,25 +27,6 @@ from getitune.data.entity.sample import SampleBatch
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
-========
-from getitune.backend.lightning.exporter.base import ModelExporter
-from getitune.backend.lightning.exporter.native import LightningModelExporter
-from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.lightning.models.common.losses import CrossEntropyLoss, IoULoss, L1Loss
-from getitune.backend.lightning.models.detection.backbones import CSPDarknet
-from getitune.backend.lightning.models.detection.base import LightningDetectionModel
-from getitune.backend.lightning.models.detection.detectors import SingleStageDetector
-from getitune.backend.lightning.models.detection.heads import YOLOXHead
-from getitune.backend.lightning.models.detection.losses import YOLOXCriterion
-from getitune.backend.lightning.models.detection.necks import YOLOXPAFPN
-from getitune.backend.lightning.models.detection.utils.assigners import SimOTAAssigner
-from getitune.backend.lightning.models.utils.utils import load_checkpoint
-from getitune.config.data import TileConfig
-from getitune.data.entity.sample import SampleBatch
-from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from getitune.types.export import ExportFormat
-from getitune.types.precision import Precision
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/yolox.py
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -54,11 +34,7 @@ if TYPE_CHECKING:
     import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/yolox.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
-========
-    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/yolox.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
 

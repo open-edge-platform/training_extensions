@@ -8,7 +8,7 @@ from torch import nn
 
 from getitune.backend.lightning.models.base import DataInputParams
 from getitune.backend.lightning.models.detection.rtdetr import RTDETR
-from getitune.data.entity.base import ImageInfo, BatchLoss
+from getitune.data.entity.base import BatchLoss, ImageInfo
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.types import LabelInfo
 

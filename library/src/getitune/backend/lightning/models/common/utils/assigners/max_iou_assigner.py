@@ -16,19 +16,11 @@ from typing import TYPE_CHECKING, Callable
 import torch
 from torch import Tensor
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/utils/assigners/max_iou_assigner.py
 from getitune.backend.lightning.models.common.utils.assigners import BboxOverlaps2D
 from getitune.backend.lightning.models.common.utils.structures import AssignResult
 
 if TYPE_CHECKING:
     from getitune.backend.lightning.models.utils.utils import InstanceData
-========
-from getitune.backend.lightning.models.common.utils.assigners import BboxOverlaps2D
-from getitune.backend.lightning.models.common.utils.structures import AssignResult
-
-if TYPE_CHECKING:
-    from getitune.backend.lightning.models.utils.utils import InstanceData
->>>>>>>> develop:library/src/getitune/backend/native/models/common/utils/assigners/max_iou_assigner.py
 
 
 class MaxIoUAssigner:

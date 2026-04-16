@@ -16,11 +16,7 @@ import torch
 import torch.nn.functional as f
 from torch import Tensor, nn
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/backbones/hgnetv2.py
 from getitune.backend.lightning.models.modules.norm import FrozenBatchNorm2d
-========
-from getitune.backend.lightning.models.modules.norm import FrozenBatchNorm2d
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/backbones/hgnetv2.py
 
 # Constants for initialization
 kaiming_normal_ = nn.init.kaiming_normal_

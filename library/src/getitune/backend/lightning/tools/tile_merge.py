@@ -16,17 +16,10 @@ from packaging import version
 from torchvision import tv_tensors
 from torchvision.ops import batched_nms
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/tools/tile_merge.py
 from getitune.backend.lightning.tools.explain.explain_algo import InstSegExplainAlgo
 from getitune.config.data import TileConfig
 from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import Prediction, PredictionBatch
-========
-from getitune.backend.lightning.tools.explain.explain_algo import InstSegExplainAlgo
-from getitune.config.data import TileConfig
-from getitune.data.entity.base import ImageInfo
-from getitune.data.entity.sample import Prediction, PredictionBatch
->>>>>>>> develop:library/src/getitune/backend/native/tools/tile_merge.py
 
 if TYPE_CHECKING:
     from datumaro.experimental.fields import TileInfo

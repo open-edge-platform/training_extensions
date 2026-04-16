@@ -19,11 +19,7 @@ import numpy as np
 import torch
 
 from getitune.config.explain import ExplainConfig
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/utils/xai_utils.py
 from getitune.data.entity.sample import PredictionBatch
-========
-from getitune.data.entity.sample import PredictionBatch
->>>>>>>> develop:library/src/getitune/backend/native/models/utils/xai_utils.py
 from getitune.types.explain import TargetExplainGroup
 from getitune.types.label import HLabelInfo, LabelInfoTypes
 
@@ -208,11 +204,7 @@ def _convert_labels_from_hcls_format(
     """Convert the labels indexes from H-label classification label format: [0, 0, 1].
 
     Based on the information from
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/utils/xai_utils.py
     src.getitune.core.data.dataset.classification.py:HlabelClsDataset:_convert_label_to_hlabel_format.
-========
-    src.getitune.core.data.dataset.classification.py:HlabelClsDataset:_convert_label_to_hlabel_format.
->>>>>>>> develop:library/src/getitune/backend/native/models/utils/xai_utils.py
     """
     pred_labels = []
     for i in range(label_info.num_multiclass_heads):

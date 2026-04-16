@@ -15,7 +15,6 @@ from torch.export import Dim
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxFormat
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/rtdetr.py
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
@@ -28,30 +27,12 @@ from getitune.backend.lightning.models.utils.utils import load_checkpoint
 from getitune.config.data import TileConfig
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
-========
-from getitune.backend.lightning.exporter.base import ModelExporter
-from getitune.backend.lightning.exporter.native import LightningModelExporter
-from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from getitune.backend.lightning.models.detection.backbones import PResNet
-from getitune.backend.lightning.models.detection.base import LightningDetectionModel
-from getitune.backend.lightning.models.detection.detectors import DETR
-from getitune.backend.lightning.models.detection.heads import RTDETRTransformer
-from getitune.backend.lightning.models.detection.necks import HybridEncoder
-from getitune.backend.lightning.models.utils.utils import load_checkpoint
-from getitune.config.data import TileConfig
-from getitune.data.entity.base import BatchLoss
-from getitune.data.entity.sample import PredictionBatch, SampleBatch
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/rtdetr.py
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/rtdetr.py
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
-========
-    from getitune.backend.lightning.schedulers import LRSchedulerListCallable
->>>>>>>> develop:library/src/getitune/backend/native/models/detection/rtdetr.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
 

@@ -14,13 +14,8 @@ from pytorchcv.models.common.model_store import download_model
 from torch import distributed, nn
 from torch.nn.modules.batchnorm import _BatchNorm
 
-<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/backbones/pytorchcv_backbones.py
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
 from getitune.backend.lightning.models.utils.utils import get_dist_info
-========
-from getitune.backend.lightning.models.modules.norm import build_norm_layer
-from getitune.backend.lightning.models.utils.utils import get_dist_info
->>>>>>>> develop:library/src/getitune/backend/native/models/common/backbones/pytorchcv_backbones.py
 
 # ruff: noqa: SLF001
 
