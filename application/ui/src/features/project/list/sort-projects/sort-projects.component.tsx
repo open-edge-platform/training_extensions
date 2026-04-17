@@ -27,8 +27,8 @@ type SortProjectsProps = {
 };
 
 export const SORT_BY_HANDLERS: Record<SortBy, (projects: Project[]) => Project[]> = {
-    'name-ascending': (projects) => orderBy(projects, (project) => project.name, 'asc'),
-    'name-descending': (projects) => orderBy(projects, (project) => project.name, 'desc'),
+    'name-ascending': (projects) => orderBy(projects, (project) => project.name.toLocaleLowerCase(), 'asc'),
+    'name-descending': (projects) => orderBy(projects, (project) => project.name.toLocaleLowerCase(), 'desc'),
     'createdAt-ascending': (projects) => orderBy(projects, (project) => project.created_at, 'asc'),
     'createdAt-descending': (projects) => orderBy(projects, (project) => project.created_at, 'desc'),
 };
