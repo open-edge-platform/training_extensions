@@ -39,7 +39,14 @@ const ProjectGrid = () => {
                 <NewProjectMenu />
 
                 {sortedProjects.map((item, index) => (
-                    <ProjectCard key={item.id} item={item} prioritizeImage={index === 0} />
+                    <ProjectCard
+                        key={item.id}
+                        item={item}
+                        prioritizeImage={index === 0}
+                        projectsNames={projects.data
+                            .filter((project) => project.id !== item.id)
+                            .map((project) => project.name)}
+                    />
                 ))}
             </Grid>
         </Flex>

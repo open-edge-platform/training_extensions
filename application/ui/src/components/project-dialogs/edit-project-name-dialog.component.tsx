@@ -17,6 +17,7 @@ import {
 } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
+import { validateProjectName } from '../../features/project/create/validator';
 import { usePatchProject } from '../../hooks/api/project.hook';
 
 type EditProjectNameDialogProps = {
@@ -24,17 +25,29 @@ type EditProjectNameDialogProps = {
     isOpen: boolean;
     projectId: string;
     projectName: string;
+    projectsNames: string[];
 };
 
 const PROJECT_NAME_MAX_LENGTH = 100;
 
-export const EditProjectNameDialog = ({ onClose, isOpen, projectId, projectName }: EditProjectNameDialogProps) => {
+export const EditProjectNameDialog = ({
+    onClose,
+    isOpen,
+    projectId,
+    projectName,
+    projectsNames,
+}: EditProjectNameDialogProps) => {
     const patchProjectMutation = usePatchProject();
     const [newProjectName, setNewProjectName] = useState(projectName);
 
     const trimmedProjectName = newProjectName.trim();
     const isNameUnchanged = trimmedProjectName === projectName;
-    const isSaveButtonDisabled = isEmpty(trimmedProjectName) || isNameUnchanged || patchProjectMutation.isPending;
+    const validationErrorMessage = validateProjectName(newProjectName, projectsNames);
+    const isSaveButtonDisabled =
+        isEmpty(trimmedProjectName) ||
+        isNameUnchanged ||
+        patchProjectMutation.isPending ||
+        validationErrorMessage !== undefined;
 
     const editProjectName = (newName: string) => {
         patchProjectMutation.mutate(
@@ -76,9 +89,10 @@ export const EditProjectNameDialog = ({ onClose, isOpen, projectId, projectName 
                                 value={newProjectName}
                                 onChange={setNewProjectName}
                                 width='100%'
-                                id={'edit-project-name-field-id'}
                                 aria-label={'Edit project name field'}
                                 isReadOnly={patchProjectMutation.isPending}
+                                errorMessage={validationErrorMessage}
+                                validationState={validationErrorMessage === undefined ? undefined : 'invalid'}
                             />
                             <ButtonGroup align={'end'} marginTop={'size-350'}>
                                 <Button
