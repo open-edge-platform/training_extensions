@@ -12,7 +12,7 @@ test.describe('Health Check', () => {
                 healthCheckAttempts += 1;
 
                 // Fail the initial call and both retries, succeed on the 3rd attempt
-                if (healthCheckAttempts < 3) {
+                if (healthCheckAttempts < 5) {
                     // @ts-expect-error We want to mock behavior when server is not ready yet
                     return response(500).json({});
                 }
@@ -26,8 +26,8 @@ test.describe('Health Check', () => {
         // Loading is shown during retries
         await expect(page.getByRole('progressbar')).toBeVisible();
 
-        // Once healthy, loading is hidden and error is never shown
-        await expect(page.getByRole('progressbar')).toBeHidden();
+        // With a 5s retry delay, the 3rd attempt succeeds after ~10s, so extend the timeout.
+        await expect(page.getByRole('progressbar')).toBeHidden({ timeout: 20_000 });
         await expect(page.getByRole('heading', { name: 'Server Error' })).toBeHidden();
     });
 
@@ -44,8 +44,9 @@ test.describe('Health Check', () => {
         // Loading is shown while retrying
         await expect(page.getByRole('progressbar')).toBeVisible();
 
-        // Error shown only after all 3 attempts (initial + 2 retries) fail
-        await expect(page.getByRole('heading', { name: 'Server Error' })).toBeVisible();
+        // Error shown only after all 6 attempts (initial + 5 retries) fail.
+        // With a 5s retry delay, this can take ~25s, so we extend the timeout.
+        await expect(page.getByRole('heading', { name: 'Server Error' })).toBeVisible({ timeout: 40_000 });
         await expect(page.getByRole('button', { name: 'Refresh' })).toBeVisible();
         await expect(page.getByRole('progressbar')).toBeHidden();
     });
