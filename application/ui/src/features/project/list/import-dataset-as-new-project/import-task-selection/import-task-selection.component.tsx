@@ -18,7 +18,7 @@ type ImportTaskSelectionProps = {
     stagedDatasetId: string;
 };
 
-const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType) => {
+const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType | undefined) => {
     const { data: projects } = useProjects();
     const { setCurrentStep } = useImportDatasetDialog();
     const { getImportEntry, updateImportEntry } = useImportDatasetAsNewProject();
@@ -29,7 +29,7 @@ const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType) => {
         task_type: importEntry?.project?.task_type ?? defaultTaskType,
     };
 
-    return useActionState<{ name: string; task_type: TaskType }, FormData>(async (_prevState, formData) => {
+    return useActionState<{ name: string; task_type: TaskType | undefined }, FormData>(async (_prevState, formData) => {
         const project = {
             name: String(formData.get('name')).trim(),
             task_type: formData.get('task_type') as TaskType,
@@ -45,7 +45,9 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
     const { data: projects } = useProjects();
     const { data: stagedDataset } = useStagedDatasetSuspense(stagedDatasetId);
 
-    const defaultTaskType = getRecommendedTaskType(stagedDataset?.metadata?.annotation_type);
+    const isGetiFormat = stagedDataset.format === 'geti';
+    const defaultTaskType = isGetiFormat ? getRecommendedTaskType(stagedDataset?.metadata?.annotation_type) : undefined;
+
     const [formState, submitAction] = useFormConfig(stagedDatasetId, defaultTaskType);
     const [name, setName] = useState(formState.name);
 
@@ -76,6 +78,7 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
                     label={'Task type'}
                     aria-label={'Task type'}
                     marginBottom={'size-150'}
+                    placeholder='select an option...'
                     defaultSelectedKey={formState.task_type}
                 >
                     <Item key={'detection'}>
