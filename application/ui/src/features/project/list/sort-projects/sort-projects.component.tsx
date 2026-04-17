@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Item, Picker, Section } from '@geti/ui';
-import { orderBy } from 'lodash-es';
-
-import { Project } from '../../../../constants/shared-types';
 
 import classes from './sort-projects.module.scss';
 
@@ -26,12 +23,7 @@ type SortProjectsProps = {
     onSort: (sortBy: SortBy) => void;
 };
 
-export const SORT_BY_HANDLERS: Record<SortBy, (projects: Project[]) => Project[]> = {
-    'name-ascending': (projects) => orderBy(projects, (project) => project.name.toLocaleLowerCase(), 'asc'),
-    'name-descending': (projects) => orderBy(projects, (project) => project.name.toLocaleLowerCase(), 'desc'),
-    'createdAt-ascending': (projects) => orderBy(projects, (project) => project.created_at, 'asc'),
-    'createdAt-descending': (projects) => orderBy(projects, (project) => project.created_at, 'desc'),
-};
+export { SORT_BY_HANDLERS } from './utils';
 
 export const SortProjects = ({ sortBy, onSort }: SortProjectsProps) => {
     return (
