@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen } from '@testing-library/react';
@@ -35,7 +35,7 @@ describe('ProjectCard', () => {
     });
 
     it('renders all elements correctly', async () => {
-        render(<ProjectCard item={mockProject} />);
+        render(<ProjectCard item={mockProject} projectsNames={[]} />);
 
         expect(await screen.findByRole('heading', { name: 'Test Project' })).toBeInTheDocument();
 
@@ -50,19 +50,19 @@ describe('ProjectCard', () => {
     });
 
     it('shows active tag when pipeline is running', async () => {
-        render(<ProjectCard item={{ ...mockProject, active_pipeline: true }} />);
+        render(<ProjectCard item={{ ...mockProject, active_pipeline: true }} projectsNames={[]} />);
 
         expect(await screen.findByText('Active')).toBeInTheDocument();
     });
 
     it('does not show active tag when pipeline is idle', async () => {
-        render(<ProjectCard item={mockProject} />);
+        render(<ProjectCard item={mockProject} projectsNames={[]} />);
 
         expect(screen.queryByText('Active')).not.toBeInTheDocument();
     });
 
     it('renders as a link to project dataset page', async () => {
-        render(<ProjectCard item={mockProject} />);
+        render(<ProjectCard item={mockProject} projectsNames={[]} />);
 
         const cardLink = await screen.findByRole('link');
         expect(cardLink).toHaveAttribute('href', '/projects/test-project-id/dataset');
@@ -77,7 +77,7 @@ describe('ProjectCard', () => {
             },
         });
 
-        render(<ProjectCard item={singleLabelProject} />);
+        render(<ProjectCard item={singleLabelProject} projectsNames={[]} />);
 
         expect(await screen.findByText('• Labels: Person')).toBeInTheDocument();
     });
@@ -95,7 +95,7 @@ describe('ProjectCard', () => {
             },
         });
 
-        render(<ProjectCard item={multiLabelProject} />);
+        render(<ProjectCard item={multiLabelProject} projectsNames={[]} />);
 
         expect(await screen.findByText('• Labels: Car, Truck, Bus')).toBeInTheDocument();
     });
@@ -109,7 +109,7 @@ describe('ProjectCard', () => {
             },
         });
 
-        render(<ProjectCard item={noLabelsProject} />);
+        render(<ProjectCard item={noLabelsProject} projectsNames={[]} />);
 
         expect(await screen.findByText('• Labels:')).toBeInTheDocument();
     });
@@ -119,7 +119,7 @@ describe('ProjectCard', () => {
             task: { ...mockProject.task, task_type: 'classification', exclusive_labels: true },
         });
 
-        render(<ProjectCard item={classificationProject} />);
+        render(<ProjectCard item={classificationProject} projectsNames={[]} />);
 
         expect(await screen.findByText('Classification')).toBeInTheDocument();
     });
@@ -129,7 +129,7 @@ describe('ProjectCard', () => {
             task: { ...mockProject.task, task_type: 'classification', exclusive_labels: false },
         });
 
-        render(<ProjectCard item={classificationProject} />);
+        render(<ProjectCard item={classificationProject} projectsNames={[]} />);
 
         expect(await screen.findByText('Multi-label classification')).toBeInTheDocument();
     });
