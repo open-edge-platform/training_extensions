@@ -10,7 +10,8 @@ import { isEmpty } from 'lodash-es';
 import { ImportJobsList } from './import-jobs-list/import-jobs-list.component';
 import { NewProjectMenu } from './new-project-menu.component';
 import { ProjectCard } from './project-card.component';
-import { SORT_BY_HANDLERS, SortBy, SortProjects } from './sort-projects/sort-projects.component';
+import { SORT_BY_HANDLERS, SortProjects } from './sort-projects/sort-projects.component';
+import { SortBy } from './sort-projects/utils';
 
 import backgroundStyles from '../project-background.module.scss';
 import classes from './project-list.module.scss';
