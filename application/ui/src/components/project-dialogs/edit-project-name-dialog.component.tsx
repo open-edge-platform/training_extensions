@@ -15,10 +15,10 @@ import {
     TextField,
     toast,
 } from '@geti/ui';
+import { usePatchProject } from 'hooks/api/project.hook';
 import { isEmpty } from 'lodash-es';
 
-import { validateProjectName } from '../../features/project/create/validator';
-import { usePatchProject } from '../../hooks/api/project.hook';
+import { PROJECT_NAME_MAX_LENGTH, validateProjectName } from '../../features/project/validator';
 
 type EditProjectNameDialogProps = {
     onClose: () => void;
@@ -27,8 +27,6 @@ type EditProjectNameDialogProps = {
     projectName: string;
     projectsNames: string[];
 };
-
-const PROJECT_NAME_MAX_LENGTH = 100;
 
 export const EditProjectNameDialog = ({
     onClose,
@@ -83,9 +81,9 @@ export const EditProjectNameDialog = ({
                     <Content>
                         <Form onSubmit={handleEditProjectName}>
                             <TextField
-                                maxLength={PROJECT_NAME_MAX_LENGTH}
                                 //eslint-disable-next-line jsx-a11y/no-autofocus
                                 autoFocus
+                                maxLength={PROJECT_NAME_MAX_LENGTH}
                                 value={newProjectName}
                                 onChange={setNewProjectName}
                                 width='100%'
