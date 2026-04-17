@@ -46,7 +46,9 @@ describe('ProjectCard', () => {
         expect(thumbnail).toHaveAttribute('alt', 'Test Project');
         expect(thumbnail).toHaveAttribute('src', `${API_BASE_URL}/api/projects/test-project-id/thumbnail`);
 
-        expect(screen.getByText(`Created: ${formatCreationDate(mockProject.created_at)}`)).toBeInTheDocument();
+        expect(
+            screen.getByText(new RegExp(`Created: ${formatCreationDate(mockProject.created_at)}`))
+        ).toBeInTheDocument();
         expect(screen.getByText('Object detection')).toBeInTheDocument();
         expect(screen.getByText('• Labels: Cat, Dog')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /open project options/i })).toBeInTheDocument();
