@@ -37,7 +37,7 @@ export const ProjectListItem = ({ project }: ProjectListItemProps) => {
         }
     };
 
-    const projectsNames = projects.filter(({ id }) => id !== project.id).map(({ name }) => name);
+    const projectNames = projects.filter(({ id }) => id !== project.id).map(({ name }) => name);
 
     return (
         <li className={classes.projectListItem} onClick={handleNavigateToProject}>
@@ -58,7 +58,7 @@ export const ProjectListItem = ({ project }: ProjectListItemProps) => {
                     projectName={project.name}
                     isPipelineRunning={project.active_pipeline}
                     onDeleted={handleDeleted}
-                    projectsNames={projectsNames}
+                    projectNames={projectNames}
                 />
             </Flex>
         </li>

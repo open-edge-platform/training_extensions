@@ -24,6 +24,8 @@ const ProjectGrid = () => {
         return SORT_BY_HANDLERS[sortBy](projects.data);
     }, [projects.data, sortBy]);
 
+    const projectNames = projects.data.map((project) => project.name);
+
     return (
         <Flex direction={'column'} gap={'size-100'} height={'100%'}>
             {hasProjects && <SortProjects sortBy={sortBy} onSort={setSortBy} />}
@@ -43,9 +45,7 @@ const ProjectGrid = () => {
                         key={item.id}
                         item={item}
                         prioritizeImage={index === 0}
-                        projectsNames={projects.data
-                            .filter((project) => project.id !== item.id)
-                            .map((project) => project.name)}
+                        projectNames={projectNames.filter((projectName) => projectName !== item.name)}
                     />
                 ))}
             </Grid>

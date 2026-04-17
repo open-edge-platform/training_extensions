@@ -20,7 +20,7 @@ type MenuActionsProps = {
     isPipelineRunning?: boolean;
     actionButtonStyle?: CSSProperties;
     onDeleted?: () => void;
-    projectsNames: string[];
+    projectNames: string[];
 };
 
 export const MenuActions = ({
@@ -29,7 +29,7 @@ export const MenuActions = ({
     isPipelineRunning,
     actionButtonStyle,
     onDeleted,
-    projectsNames,
+    projectNames,
 }: MenuActionsProps) => {
     const [isEnableBlockedDialogOpen, setIsEnableBlockedDialogOpen] = useState(false);
     const deleteProjectDialogState = useOverlayTriggerState({});
@@ -74,7 +74,7 @@ export const MenuActions = ({
             <EditProjectNameDialog
                 projectId={projectId}
                 projectName={projectName}
-                projectsNames={projectsNames}
+                projectNames={projectNames}
                 isOpen={editProjectNameDialogState.isOpen}
                 onClose={editProjectNameDialogState.close}
             />

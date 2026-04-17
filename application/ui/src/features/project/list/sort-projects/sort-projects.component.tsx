@@ -3,20 +3,9 @@
 
 import { Item, Picker, Section } from '@geti/ui';
 
+import { SORT_BY_OPTIONS, SortBy } from './utils';
+
 import classes from './sort-projects.module.scss';
-
-const SORT_BY_OPTIONS = [
-    [
-        { name: 'Name (A-Z)', key: 'name-ascending' },
-        { name: 'Name (Z-A)', key: 'name-descending' },
-    ],
-    [
-        { name: 'Created date (newest)', key: 'createdAt-descending' },
-        { name: 'Created date (oldest)', key: 'createdAt-ascending' },
-    ],
-] as const;
-
-export type SortBy = (typeof SORT_BY_OPTIONS)[number][number]['key'];
 
 type SortProjectsProps = {
     sortBy: SortBy;

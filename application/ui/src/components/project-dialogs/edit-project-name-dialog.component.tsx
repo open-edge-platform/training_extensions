@@ -25,7 +25,7 @@ type EditProjectNameDialogProps = {
     isOpen: boolean;
     projectId: string;
     projectName: string;
-    projectsNames: string[];
+    projectNames: string[];
 };
 
 export const EditProjectNameDialog = ({
@@ -33,14 +33,14 @@ export const EditProjectNameDialog = ({
     isOpen,
     projectId,
     projectName,
-    projectsNames,
+    projectNames,
 }: EditProjectNameDialogProps) => {
     const patchProjectMutation = usePatchProject();
     const [newProjectName, setNewProjectName] = useState(projectName);
 
     const trimmedProjectName = newProjectName.trim();
     const isNameUnchanged = trimmedProjectName === projectName;
-    const validationErrorMessage = validateProjectName(newProjectName, projectsNames);
+    const validationErrorMessage = validateProjectName(newProjectName, projectNames);
     const isSaveButtonDisabled =
         isEmpty(trimmedProjectName) ||
         isNameUnchanged ||

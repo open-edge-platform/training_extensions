@@ -70,10 +70,10 @@ const ProjectThumbnail = ({ project, prioritizeImage }: ProjectThumbnailProps) =
 type ProjectCardProps = {
     item: Project;
     prioritizeImage?: boolean;
-    projectsNames: string[];
+    projectNames: string[];
 };
 
-export const ProjectCard = ({ item, prioritizeImage = false, projectsNames }: ProjectCardProps) => {
+export const ProjectCard = ({ item, prioritizeImage = false, projectNames }: ProjectCardProps) => {
     const isActive = item.active_pipeline;
     const isMultiLabelClassification = isMultiLabelClassificationTask(item.task);
 
@@ -126,7 +126,7 @@ export const ProjectCard = ({ item, prioritizeImage = false, projectsNames }: Pr
             <MenuActions
                 projectId={item.id}
                 projectName={item.name}
-                projectsNames={projectsNames}
+                projectNames={projectNames}
                 isPipelineRunning={item.active_pipeline}
                 actionButtonStyle={{
                     top: dimensionValue(cardPadding),

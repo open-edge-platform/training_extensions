@@ -21,7 +21,7 @@ describe('EditProjectNameDialog', () => {
                 isOpen={true}
                 projectId={projectId}
                 projectName={projectName}
-                projectsNames={[]}
+                projectNames={[]}
             />
         );
 
@@ -38,7 +38,7 @@ describe('EditProjectNameDialog', () => {
                 isOpen={true}
                 projectId={projectId}
                 projectName={projectName}
-                projectsNames={[]}
+                projectNames={[]}
             />
         );
 
@@ -61,7 +61,7 @@ describe('EditProjectNameDialog', () => {
                 isOpen={true}
                 projectId={projectId}
                 projectName={projectName}
-                projectsNames={[]}
+                projectNames={[]}
             />
         );
 
@@ -95,7 +95,7 @@ describe('EditProjectNameDialog', () => {
                 isOpen={true}
                 projectId={projectId}
                 projectName={projectName}
-                projectsNames={[]}
+                projectNames={[]}
             />
         );
 
@@ -117,7 +117,7 @@ describe('EditProjectNameDialog', () => {
                 isOpen={true}
                 projectId={projectId}
                 projectName={projectName}
-                projectsNames={[existingName, 'Yet Another Project']}
+                projectNames={[existingName, 'Yet Another Project']}
             />
         );
 
@@ -137,7 +137,7 @@ describe('EditProjectNameDialog', () => {
                 isOpen={true}
                 projectId={projectId}
                 projectName={projectName}
-                projectsNames={[existingName]}
+                projectNames={[existingName]}
             />
         );
 
@@ -154,7 +154,7 @@ describe('EditProjectNameDialog', () => {
                 isOpen={true}
                 projectId={projectId}
                 projectName={projectName}
-                projectsNames={['Taken Name']}
+                projectNames={['Taken Name']}
             />
         );
 

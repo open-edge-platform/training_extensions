@@ -17,7 +17,7 @@ describe('MenuActions', () => {
                 projectId={projectId}
                 projectName={projectName}
                 actionButtonStyle={actionButtonStyle}
-                projectsNames={[]}
+                projectNames={[]}
             />
         );
 
@@ -35,7 +35,7 @@ describe('MenuActions', () => {
                 projectId={projectId}
                 projectName={projectName}
                 actionButtonStyle={actionButtonStyle}
-                projectsNames={[]}
+                projectNames={[]}
             />
         );
 
@@ -52,7 +52,7 @@ describe('MenuActions', () => {
                 projectName={projectName}
                 actionButtonStyle={actionButtonStyle}
                 isPipelineRunning={false}
-                projectsNames={[]}
+                projectNames={[]}
             />
         );
 
