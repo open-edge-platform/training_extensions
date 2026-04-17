@@ -295,7 +295,7 @@ class BenchmarkTracker:
                 # Log failure info
                 mlflow.set_tag("error", result.error[:250])  # MLflow tag value limit
 
-            logger.debug("Logged MLflow run %s (id=%s)", run_name, run.info.run_id)
+            logger.info("Logged MLflow run %s (id=%s)", run_name, run.info.run_id)
 
         # Adjust the run's end time so the "Duration" column in the MLflow UI
         # reflects the actual experiment wall time, not just the logging time.
