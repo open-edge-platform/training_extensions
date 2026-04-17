@@ -28,7 +28,7 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
     const [tab, setTab] = useState<string | null>(selectedTab);
 
     const isExpanded = tab !== null;
-    const gridTemplateColumns = isExpanded ? ['clamp(size-4600, 35vw, 40rem)', 'size-600'] : ['0px', 'size-600'];
+    const gridTemplateColumns = isExpanded ? ['clamp(size-4600, 30vw, 40rem)', 'size-600'] : ['0px', 'size-600'];
 
     const content = tabs.find(({ label }) => label === tab)?.content;
 

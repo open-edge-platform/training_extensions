@@ -1,4 +1,8 @@
 .list {
     margin-left: var(--spectrum-global-dimension-font-size-200);
     list-style-type: disc;
+
+    li {
+        word-break: break-word;
+    }
 }
