@@ -171,7 +171,11 @@ def _scrape_csv_metrics(csv_path: Path, prefix: str) -> dict[str, float]:
         elif "iter_time" in col:
             trimmed = series.iloc[min(1, len(series) - 1) :]
             metrics[f"{prefix}{col}"] = float(trimmed.mean())
-        elif "epoch" in col or "gpu_mem" in col or "gpu" in col.lower():
+        elif "epoch" in col:
+            # Lightning records ``epoch`` as a 0-indexed counter, so the max
+            # is ``num_epochs - 1``.  Report the human-readable count instead.
+            metrics[f"{prefix}{col}"] = float(series.max()) + 1.0
+        elif "gpu_mem" in col or "gpu" in col.lower():
             metrics[f"{prefix}{col}"] = float(series.max())
     return metrics
 
