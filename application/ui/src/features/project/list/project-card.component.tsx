@@ -101,20 +101,18 @@ export const ProjectCard = ({ item, prioritizeImage = false, projectNames }: Pro
                         </Flex>
 
                         <Flex gap={'size-50'}>
-                            {isActive && <ActiveProjectBadge />}
                             {isMultiLabelClassification ? (
                                 <ProjectTypeBadge type={'Multi-label classification'} />
                             ) : (
                                 <ProjectTypeBadge type={MAP_PROJECT_TYPE_TO_TITLE[item.task.task_type]} />
                             )}
+                            {isActive && <ActiveProjectBadge />}
                         </Flex>
-                        <View marginY={'size-100'}>
-                            <Text UNSAFE_className={classes.projectCreationDate}>
-                                Created: {formatCreationDate(item.created_at)}
-                            </Text>
-                        </View>
 
-                        <Flex gap={'size-100'} direction={'column'}>
+                        <Flex marginTop={'size-100'} gap={'size-100'} direction={'column'}>
+                            <Text UNSAFE_className={classes.projectCreationDate}>
+                                • Created: {formatCreationDate(item.created_at)}
+                            </Text>
                             <Text UNSAFE_className={classes.labelList}>
                                 • Labels: {(item.task.labels ?? []).map((label) => label.name).join(', ')}
                             </Text>
