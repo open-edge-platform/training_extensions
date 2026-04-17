@@ -11,6 +11,7 @@ import { API_BASE_URL } from '../../../api/client';
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
 import { ProjectCard } from './project-card.component';
+import { formatCreationDate } from './util';
 
 describe('ProjectCard', () => {
     const mockProject = getMockedProject({
@@ -24,6 +25,7 @@ describe('ProjectCard', () => {
                 { id: 'label-2', name: 'Dog', color: '#00FF00' },
             ],
         },
+        created_at: '2026-04-17T12:58:10.502Z',
     });
 
     beforeEach(() => {
@@ -44,9 +46,10 @@ describe('ProjectCard', () => {
         expect(thumbnail).toHaveAttribute('alt', 'Test Project');
         expect(thumbnail).toHaveAttribute('src', `${API_BASE_URL}/api/projects/test-project-id/thumbnail`);
 
-        expect(await screen.findByText('Object detection')).toBeInTheDocument();
-        expect(await screen.findByText('• Labels: Cat, Dog')).toBeInTheDocument();
-        expect(await screen.findByRole('button', { name: /open project options/i })).toBeInTheDocument();
+        expect(screen.getByText(`Created: ${formatCreationDate(mockProject.created_at)}`)).toBeInTheDocument();
+        expect(screen.getByText('Object detection')).toBeInTheDocument();
+        expect(screen.getByText('• Labels: Cat, Dog')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /open project options/i })).toBeInTheDocument();
     });
 
     it('shows active tag when pipeline is running', async () => {

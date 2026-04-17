@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
@@ -13,6 +13,7 @@ import { Project, TaskType } from '../../../constants/shared-types';
 import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
 import { isMultiLabelClassificationTask } from '../task-type-guards';
 import { MenuActions } from './menu-actions/menu-actions.component';
+import { formatCreationDate } from './util';
 
 import classes from './project-list.module.scss';
 
@@ -99,7 +100,7 @@ export const ProjectCard = ({ item, prioritizeImage = false, projectsNames }: Pr
                             </Heading>
                         </Flex>
 
-                        <Flex marginBottom={cardPadding} gap={'size-50'}>
+                        <Flex gap={'size-50'}>
                             {isActive && <ActiveProjectBadge />}
                             {isMultiLabelClassification ? (
                                 <ProjectTypeBadge type={'Multi-label classification'} />
@@ -107,6 +108,11 @@ export const ProjectCard = ({ item, prioritizeImage = false, projectsNames }: Pr
                                 <ProjectTypeBadge type={MAP_PROJECT_TYPE_TO_TITLE[item.task.task_type]} />
                             )}
                         </Flex>
+                        <View marginY={'size-100'}>
+                            <Text UNSAFE_className={classes.projectCreationDate}>
+                                Created: {formatCreationDate(item.created_at)}
+                            </Text>
+                        </View>
 
                         <Flex gap={'size-100'} direction={'column'}>
                             <Text UNSAFE_className={classes.labelList}>
