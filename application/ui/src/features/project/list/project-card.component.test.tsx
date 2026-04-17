@@ -44,7 +44,7 @@ describe('ProjectCard', () => {
         expect(thumbnail).toHaveAttribute('alt', 'Test Project');
         expect(thumbnail).toHaveAttribute('src', `${API_BASE_URL}/api/projects/test-project-id/thumbnail`);
 
-        expect(await screen.findByText('Detection')).toBeInTheDocument();
+        expect(await screen.findByText('Object detection')).toBeInTheDocument();
         expect(await screen.findByText('• Labels: Cat, Dog')).toBeInTheDocument();
         expect(await screen.findByRole('button', { name: /open project options/i })).toBeInTheDocument();
     });

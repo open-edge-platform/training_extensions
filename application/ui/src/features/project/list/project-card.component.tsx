@@ -19,7 +19,7 @@ import classes from './project-list.module.scss';
 const cardPadding = 'size-200';
 
 const MAP_PROJECT_TYPE_TO_TITLE: Record<TaskType, string> = {
-    detection: 'Detection',
+    detection: 'Object detection',
     classification: 'Classification',
     instance_segmentation: 'Instance segmentation',
 };

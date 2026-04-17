@@ -82,7 +82,7 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
                     defaultSelectedKey={formState.task_type}
                 >
                     <Item key={'detection'}>
-                        {defaultTaskType === 'detection' ? 'Detection (Recommended)' : 'Detection'}
+                        {defaultTaskType === 'detection' ? 'Object detection (Recommended)' : 'Object detection'}
                     </Item>
                     <Item key={'classification'}>
                         {defaultTaskType === 'classification' ? 'Classification (Recommended)' : 'Classification'}
