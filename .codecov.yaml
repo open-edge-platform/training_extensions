@@ -1,8 +1,4 @@
 ignore:
-  - "lib/**/__init__.py"
-  - "lib/src/otx/recipes"
-  - "lib/src/otx/tools"
-  - "lib/**/exportable_code"
-  - "lib/src/otx/core/data/transform_libs/mm*.py"
-  - "lib/src/otx/core/exporter/mmdeploy.py"
-  - "lib/src/otx/core/model/utils"
+  - "library/**/__init__.py"
+  - "library/src/getitune/recipe"
+  - "library/src/getitune/tools"

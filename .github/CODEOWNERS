@@ -9,7 +9,7 @@
 .github/renovate.json5 @open-edge-platform/geti-ci-maintain
 security.md @open-edge-platform/geti-ci-maintain
 
-# Library (OTX)
+# Library (getitune)
 library/ @open-edge-platform/training_extensions-lib-write
 library/uv.lock @sys-geti @open-edge-platform/training_extensions-lib-write
 
