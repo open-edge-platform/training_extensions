@@ -15,49 +15,49 @@ defaults:
     extended_groups: 4
 
 experiments:
-  #  classification/multi_class_cls:
-  #    models:
-  #      - name: efficientnet_b0
-  #        priority: core
-  #        recipe: classification/multi_class_cls/efficientnet_b0.yaml
-  #
-  #      - name: dino_v2
-  #        priority: core
-  #        recipe: classification/multi_class_cls/dino_v2.yaml
-  #
-  #      - name: deit_tiny
-  #        priority: extended
-  #        recipe: classification/multi_class_cls/deit_tiny.yaml
-  #
-  #      - name: efficientnet_b3
-  #        priority: extended
-  #        recipe: classification/multi_class_cls/efficientnet_b3.yaml
-  #
-  #      - name: efficientnet_v2
-  #        priority: extended
-  #        recipe: classification/multi_class_cls/efficientnet_v2.yaml
-  #
-  #      - name: mobilenet_v3_large
-  #        priority: extended
-  #        recipe: classification/multi_class_cls/mobilenet_v3_large.yaml
-  #
-  #    datasets:
-  #      - allround
-  #
-  #    scenarios:
-  #      - name: tiling
-  #        description: "Train with tiling enabled"
-  #        recipe_suffix: "_tile"
-  #
-  #    criteria:
-  #      accuracy_metric: accuracy
-  #      thresholds:
-  #        "training:val/{metric}": { compare: ">=", margin: 0.10 }
-  #        "torch:test/{metric}": { compare: ">=", margin: 0.10 }
-  #        "export:test/{metric}": { compare: ">=", margin: 0.10 }
-  #        "training:e2e_time": { compare: "<=", margin: 0.10 }
-  #        "training:gpu_mem": { compare: "<=", margin: 0.10 }
-  #        "torch:test/latency": { compare: "<=", margin: 0.15 }
+  classification/multi_class_cls:
+    models:
+      - name: efficientnet_b0
+        priority: core
+        recipe: classification/multi_class_cls/efficientnet_b0.yaml
+
+      - name: dino_v2
+        priority: core
+        recipe: classification/multi_class_cls/dino_v2.yaml
+
+      - name: deit_tiny
+        priority: extended
+        recipe: classification/multi_class_cls/deit_tiny.yaml
+
+      - name: efficientnet_b3
+        priority: extended
+        recipe: classification/multi_class_cls/efficientnet_b3.yaml
+
+      - name: efficientnet_v2
+        priority: extended
+        recipe: classification/multi_class_cls/efficientnet_v2.yaml
+
+      - name: mobilenet_v3_large
+        priority: extended
+        recipe: classification/multi_class_cls/mobilenet_v3_large.yaml
+
+    datasets:
+      - allround
+
+    scenarios:
+      - name: tiling
+        description: "Train with tiling enabled"
+        recipe_suffix: "_tile"
+
+    criteria:
+      accuracy_metric: accuracy
+      thresholds:
+        "training:val/{metric}": { compare: ">=", margin: 0.10 }
+        "torch:test/{metric}": { compare: ">=", margin: 0.10 }
+        "export:test/{metric}": { compare: ">=", margin: 0.10 }
+        "training:e2e_time": { compare: "<=", margin: 0.10 }
+        "training:gpu_mem": { compare: "<=", margin: 0.10 }
+        "torch:test/latency": { compare: "<=", margin: 0.15 }
 
   detection:
     models:
