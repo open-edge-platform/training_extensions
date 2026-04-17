@@ -6,7 +6,9 @@ import { useLocalStorage } from 'usehooks-ts';
 import { useProjectIdentifier } from '../use-project-identifier.hook';
 import { getParsedLocalStorage } from './utils';
 
-const EXPORT_DATASET_KEY = (projectId: string) => `export-dataset-${projectId}`;
+export const EXPORT_DATASET_PREFIX = 'export-dataset-';
+
+const EXPORT_DATASET_KEY = (projectId: string) => `${EXPORT_DATASET_PREFIX}${projectId}`;
 
 type ExportDatasetData = {
     jobId: string;

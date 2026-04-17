@@ -4,7 +4,7 @@
 import { Flex } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
-import { useExportDataset } from '../../../../hooks/localStorage/use-export-dataset.hook';
+import { useExportDataset } from '../../../../hooks/storage/use-export-dataset.hook';
 import { ExportJob } from './export-job/export-job.component';
 
 type ExportJobsListProps = {

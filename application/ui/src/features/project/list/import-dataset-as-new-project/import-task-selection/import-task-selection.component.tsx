@@ -7,7 +7,7 @@ import { Flex, Form, Item, Picker, Text, TextField, View } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
 import { useProjects } from 'hooks/api/project.hook';
 import { useStagedDatasetSuspense } from 'hooks/api/staged-dataset.hook';
-import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-dataset-as-new-project.hook';
+import { useImportDatasetAsNewProject } from 'hooks/storage/use-import-dataset-as-new-project.hook';
 
 import { TaskType } from '../../../../../constants/shared-types';
 import { validateProjectName } from '../../../create/validator';

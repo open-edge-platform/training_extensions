@@ -19,7 +19,7 @@ const getImportEntrySpy = vi.fn();
 const updateImportEntrySpy = vi.fn();
 const setCurrentStepSpy = vi.fn();
 
-vi.mock('hooks/localStorage/use-import-dataset-as-new-project.hook', () => ({
+vi.mock('hooks/storage/use-import-dataset-as-new-project.hook', () => ({
     useImportDatasetAsNewProject: () => ({
         getAllImportEntries: vi.fn(),
         appendImportEntry: vi.fn(),

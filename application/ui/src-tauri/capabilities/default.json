@@ -3,5 +3,5 @@
     "identifier": "default",
     "description": "enables the default permissions",
     "windows": ["main"],
-    "permissions": ["core:default"]
+    "permissions": ["core:default", "core:window:allow-on-close-requested"]
 }
