@@ -261,10 +261,10 @@ class TestModelEntry:
 
 
 class TestExperiment:
-    def test_recipe_path_with_suffix(self) -> None:
-        """Scenario with recipe_suffix should modify the recipe path."""
+    def test_recipe_path(self) -> None:
+        """Experiment.recipe_path should return the model's recipe path."""
         model = ModelEntry(name="yolox_s", recipe="detection/yolox_s.yaml")
-        scenario = Scenario(name="tiling", recipe_suffix="_tile")
+        scenario = Scenario(name="default")
         exp = Experiment(
             task="detection",
             model=model,
@@ -274,7 +274,7 @@ class TestExperiment:
             num_seeds=1,
             criteria=None,  # type: ignore[arg-type]
         )
-        assert str(exp.recipe_path).endswith("detection/yolox_s_tile.yaml")
+        assert str(exp.recipe_path).endswith("detection/yolox_s.yaml")
 
     def test_recipe_path_no_suffix(self) -> None:
         model = ModelEntry(name="yolox_s", recipe="detection/yolox_s.yaml")
@@ -439,10 +439,11 @@ class TestScenarioAdvanced:
         lr_high = next(s for s in det.scenarios if s.name == "lr_high")
         assert lr_high.tag == "configurable"
 
-    def test_scenario_recipe_suffix(self, manifest: BenchmarkManifest) -> None:
+    def test_scenario_recipe_suffix_removed(self, manifest: BenchmarkManifest) -> None:
+        """recipe_suffix was removed; Scenario should no longer expose it."""
         det = manifest.get_task("detection")
         tiling = next(s for s in det.scenarios if s.name == "tiling")
-        assert tiling.recipe_suffix == "_tile"
+        assert not hasattr(tiling, "recipe_suffix")
 
     def test_scenario_dataset_restriction(self, manifest: BenchmarkManifest) -> None:
         det = manifest.get_task("detection")

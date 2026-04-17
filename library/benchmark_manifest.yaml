@@ -41,13 +41,12 @@ experiments:
         priority: extended
         recipe: classification/multi_class_cls/mobilenet_v3_large.yaml
 
+      - name: efficientnet_b0_tile
+        priority: extended
+        recipe: classification/multi_class_cls/efficientnet_b0_tile.yaml
+
     datasets:
       - allround
-
-    scenarios:
-      - name: tiling
-        description: "Train with tiling enabled"
-        recipe_suffix: "_tile"
 
     criteria:
       accuracy_metric: accuracy

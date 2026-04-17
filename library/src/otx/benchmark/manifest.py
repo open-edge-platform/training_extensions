@@ -32,12 +32,11 @@ class Threshold:
 
 @dataclass(frozen=True)
 class Scenario:
-    """A benchmark scenario (default, tiling, or a parameter override)."""
+    """A benchmark scenario (default or a parameter override)."""
 
     name: str
     description: str = ""
     tag: str = ""
-    recipe_suffix: str = ""
     overrides: dict[str, Any] = field(default_factory=dict)
     train_kwargs: dict[str, Any] = field(default_factory=dict)
     datasets: list[str] | None = None  # restrict to these dataset names
@@ -146,11 +145,8 @@ class Experiment:
 
     @property
     def recipe_path(self) -> Path:
-        """Absolute recipe path (with scenario suffix applied)."""
-        base = self.model.recipe_path
-        if self.scenario.recipe_suffix:
-            return base.with_stem(base.stem + self.scenario.recipe_suffix)
-        return base
+        """Absolute recipe path for this experiment."""
+        return self.model.recipe_path
 
 
 # ---------------------------------------------------------------------------
@@ -198,7 +194,6 @@ def _parse_scenario(raw: dict[str, Any]) -> Scenario:
         name=raw["name"],
         description=raw.get("description", ""),
         tag=raw.get("tag", ""),
-        recipe_suffix=raw.get("recipe_suffix", ""),
         overrides=raw.get("overrides", {}),
         train_kwargs=raw.get("train_kwargs", {}),
         datasets=raw.get("datasets"),
