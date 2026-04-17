@@ -14,7 +14,7 @@ const REFETCH_INTERVAL = 5000;
 
 const HealthCheck = ({ children }: { children: ReactNode }) => {
     const { data, isPending, isError } = $api.useQuery('get', '/health', undefined, {
-        retry: 2,
+        retry: 5,
         refetchInterval: (query) => {
             return query.state.data?.status === 'ok' ? false : REFETCH_INTERVAL;
         },
