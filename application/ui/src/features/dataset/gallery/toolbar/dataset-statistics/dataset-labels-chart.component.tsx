@@ -25,7 +25,7 @@ type DatasetLabelsChartProps = {
     }[];
 };
 
-const MIN_ROW_HEIGHT = 24;
+const BAR_SIZE = 36;
 const MIN_CHART_HEIGHT = 192;
 
 const getAxisTicks = (total: number): number[] => {
@@ -56,14 +56,9 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
         <ResponsiveContainer
             width='100%'
             height='100%'
-            minHeight={Math.max(projectLabels.length * MIN_ROW_HEIGHT, MIN_CHART_HEIGHT)}
+            minHeight={Math.max(projectLabels.length * BAR_SIZE, MIN_CHART_HEIGHT)}
         >
-            <BarChart
-                data={chartData}
-                layout='vertical'
-                margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-                barCategoryGap={20}
-            >
+            <BarChart data={chartData} layout='vertical' margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
                 <CartesianGrid stroke='var(--spectrum-global-color-gray-600)' strokeOpacity={0.4} horizontal={false} />
 
                 <XAxis
@@ -85,7 +80,7 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
                     tickLine={false}
                 />
 
-                <Bar dataKey='score' fill='var(--moss)' radius={[4, 4, 4, 4]} barSize={36}>
+                <Bar dataKey='score' fill='var(--moss)' radius={[4, 4, 4, 4]} barSize={BAR_SIZE}>
                     <LabelList content={ItemLabel} position='insideEnd' />
                 </Bar>
 
