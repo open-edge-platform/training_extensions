@@ -1,9 +1,82 @@
 #  Copyright (C) 2026 Intel Corporation
 #  SPDX-License-Identifier: Apache-2.0
 
+from enum import StrEnum
+
 from pydantic import BaseModel, Field, model_validator
 
 from .augmentation import AugmentationParameters
+
+
+class IntensityMappingMode(StrEnum):
+    """Mode for mapping image intensity values before training."""
+
+    SCALE_TO_UNIT = "Unit interval scaling"  # (x / max_value)
+    WINDOW = "Windowing"  # clamp((x - low) / (high - low), 0, 1)
+    RANGE_SCALE = "Clipped scaling"  # clamp(x * factor, min_value, max_value)
+
+
+class IntensityMapping(BaseModel):
+    """Parameters for mapping image intensity values before training.
+
+    Intensity mapping is important when working with images whose pixel range differs from the standard
+    8-bit [0, 255] range, for example 16-bit images commonly found in medical or scientific imaging.
+    """
+
+    mode: IntensityMappingMode = Field(
+        default=IntensityMappingMode.SCALE_TO_UNIT,
+        title="Intensity mapping mode",
+        description=(
+            "Strategy used to transform pixel intensities. "
+            "'Unit interval scaling' divides by max_value, thus mapping the range [0, max_value] to [0, 1]. "
+            "'Windowing' isolates a specific intensity range, mapping a specific window (specified with center and "
+            "width) to [0, 1] and clipping values outside the window. "
+            "'Clipped scaling' multiplies pixel values by a scale factor and clips the result to a specified range "
+            "(min_value, max_value)."
+        ),
+    )
+    max_value: float = Field(
+        default=255.0,
+        ge=0.0,
+        title="Maximum pixel value",
+        description=(
+            "Maximum possible pixel value in the raw image. For 8-bit images use 255, for 16-bit images use 65535."
+        ),
+    )
+    min_value: float = Field(
+        default=0.0,
+        title="Minimum output value",
+        description=("Minimum output value after rescaling the image; Pixel values below this threshold are clipped."),
+        json_schema_extra={"depends_on": {"mode": "Clipped scaling"}},
+    )
+    window_center: float = Field(
+        default=127.5,
+        title="Window center",
+        description=(
+            "Center of the intensity window for 'windowing' mode. "
+            "Together with width, it defines the intensity range that is mapped to [0, 1]."
+        ),
+        json_schema_extra={"depends_on": {"mode": "Windowing"}},
+    )
+    window_width: float = Field(
+        default=255.0,
+        gt=0.0,
+        title="Window width",
+        description=(
+            "Width of the intensity window for 'windowing' mode. "
+            "The effective range is [center - width/2, center + width/2], mapped linearly to [0, 1]."
+        ),
+        json_schema_extra={"depends_on": {"mode": "Windowing"}},
+    )
+    scale_factor: float = Field(
+        default=1.0,
+        gt=0.0,
+        title="Scale factor",
+        description=(
+            "Multiplicative factor applied to pixel values, before clipping the result to [min_value, max_value]."
+        ),
+        json_schema_extra={"depends_on": {"mode": "Clipped scaling"}},
+    )
 
 
 class SubsetSplit(BaseModel):
@@ -124,6 +197,15 @@ class TaskLevelDatasetPreparationParameters(BaseModel):
             "Filtering parameters define criteria for including or excluding annotations from the dataset. "
             "Depending on the scenario, an appropriate filter configuration can speed up the training process and/or "
             "improve the model performance by removing noisy annotations."
+        ),
+    )
+    intensity_mapping: IntensityMapping = Field(
+        default_factory=IntensityMapping,
+        title="Intensity mapping",
+        description=(
+            "Intensity mapping parameters control how raw pixel values are normalised before training. "
+            "This is especially important for images with non-standard bit depths (e.g. 16-bit), where the "
+            "default [0, 255] assumption does not hold."
         ),
     )
 
