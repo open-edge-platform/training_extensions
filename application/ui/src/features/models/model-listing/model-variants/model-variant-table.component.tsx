@@ -1,12 +1,28 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView, toast } from '@geti/ui';
+import {
+    ActionButton,
+    Cell,
+    Column,
+    Content,
+    ContextualHelp,
+    Flex,
+    Heading,
+    Row,
+    TableBody,
+    TableHeader,
+    TableView,
+    Text,
+    toast,
+} from '@geti/ui';
 import { DownloadIcon } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { get } from 'lodash-es';
+import { useNumberFormatter } from 'react-aria';
 
 import { API_BASE_URL } from '../../../../api/client';
-import type { Model, ModelFormat } from '../../../../constants/shared-types';
+import type { Model, ModelFormat, ModelVariant } from '../../../../constants/shared-types';
 import { downloadFile, formatBytes } from '../../../../shared/util';
 import {
     getBaselineVariant,
@@ -22,8 +38,56 @@ type ModelVariantTableProps = {
     format: ModelFormat;
 };
 
+type ModelVariantPrecisionRendererProps = {
+    variant: ModelVariant;
+};
+
+const ModelVariantPrecisionRenderer = ({ variant }: ModelVariantPrecisionRendererProps) => {
+    const numberFormatter = useNumberFormatter({
+        style: 'percent',
+        maximumFractionDigits: 1,
+    });
+
+    if (variant.quantization_info == null) {
+        return <Text>{variant.precision.toUpperCase()}</Text>;
+    }
+
+    const quantizationParameters = {
+        maxDrop: get(variant.quantization_info, 'max_drop', null),
+        maxCalibrationSubsetSize: get(variant.quantization_info, 'max_calibration_subset_size', null),
+    };
+
+    const maxAccuracyDrop = quantizationParameters.maxDrop === null ? null : Number(quantizationParameters.maxDrop);
+    const calibrationDatasetSize =
+        quantizationParameters.maxCalibrationSubsetSize === null
+            ? null
+            : Number(quantizationParameters.maxCalibrationSubsetSize);
+
+    return (
+        <Flex direction={'row'} gap={'size-100'}>
+            <Text>{variant.precision.toUpperCase()}</Text>
+            {(calibrationDatasetSize || maxAccuracyDrop) && (
+                <ContextualHelp variant={'info'} placement={'top'}>
+                    <Heading>Quantized with NNCF PTQ</Heading>
+                    <Content>
+                        <Flex direction={'column'}>
+                            {maxAccuracyDrop !== null && (
+                                <Text>Max accuracy drop: {numberFormatter.format(maxAccuracyDrop)}</Text>
+                            )}
+                            {calibrationDatasetSize != null && (
+                                <Text>Calibration dataset size: {calibrationDatasetSize}</Text>
+                            )}
+                        </Flex>
+                    </Content>
+                </ContextualHelp>
+            )}
+        </Flex>
+    );
+};
+
 export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => {
     const projectId = useProjectIdentifier();
+
     const allVariants = model.variants ?? [];
     const variants = allVariants.filter((variant) => variant.format === format);
     const baselineVariant = getBaselineVariant(variants);
@@ -59,7 +123,9 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
 
                     return (
                         <Row key={variant.id}>
-                            <Cell>{variant.precision.toUpperCase()}</Cell>
+                            <Cell>
+                                <ModelVariantPrecisionRenderer variant={variant} />
+                            </Cell>
                             <Cell>
                                 <ValueWithDelta
                                     value={variant.weights_size}

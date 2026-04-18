@@ -40,18 +40,18 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 FROM backend-base AS cpu-base
 
 # Step 1: Install all third-party dependencies (cache key = uv.lock + pyproject.toml + version only).
-# --no-install-project skips building/installing the local project and its path deps (otx),
+# --no-install-project skips building/installing the local project and its path deps (getitune),
 # so changes to library/ source code do NOT invalidate this (slow) layer.
-# Note: __init__.py is needed because otx uses dynamic versioning (attr = "otx.__version__").
+# Note: __init__.py is needed because getitune uses dynamic versioning (attr = "getitune.__version__").
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library/pyproject.toml,target=/library/pyproject.toml \
-    --mount=type=bind,source=library/src/otx/__init__.py,target=/library/src/otx/__init__.py \
+    --mount=type=bind,source=library/src/getitune/__init__.py,target=/library/src/getitune/__init__.py \
     uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace --extra mqtt --extra cpu
 
-# Step 2: Build and install the local otx package + the project itself.
+# Step 2: Build and install the local getitune package + the project itself.
 # This layer is invalidated by library source changes, but is fast since all
 # third-party deps are already installed from step 1.
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -72,10 +72,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library/pyproject.toml,target=/library/pyproject.toml \
-    --mount=type=bind,source=library/src/otx/__init__.py,target=/library/src/otx/__init__.py \
+    --mount=type=bind,source=library/src/getitune/__init__.py,target=/library/src/getitune/__init__.py \
     uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace --extra mqtt --extra cuda
 
-# Step 2: Build and install the local otx package + the project itself.
+# Step 2: Build and install the local getitune package + the project itself.
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
@@ -94,10 +94,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library/pyproject.toml,target=/library/pyproject.toml \
-    --mount=type=bind,source=library/src/otx/__init__.py,target=/library/src/otx/__init__.py \
+    --mount=type=bind,source=library/src/getitune/__init__.py,target=/library/src/getitune/__init__.py \
     uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace --extra mqtt --extra xpu
 
-# Step 2: Build and install the local otx package + the project itself.
+# Step 2: Build and install the local getitune package + the project itself.
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
@@ -108,7 +108,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ##################
 # Geti UI packages
 ##################
-FROM node:24-alpine3.22@sha256:4f33c7804fa7775b87875f512e25e515692210bfdeafd715eb8bc441c364e2f6 AS geti-ui-packages
+FROM node:24-alpine3.22@sha256:b689d4005875ae167178471a7a622ec2909459a3bbb32277260be1971af7a99f AS geti-ui-packages
 
 WORKDIR /home/application/ui/
 RUN apk add --no-cache git=2.49.1-r0
@@ -118,7 +118,7 @@ RUN npm run clone-geti-ui-packages
 #############
 # Web UI deps
 #############
-FROM node:24-alpine3.22@sha256:4f33c7804fa7775b87875f512e25e515692210bfdeafd715eb8bc441c364e2f6 AS web-ui-base
+FROM node:24-alpine3.22@sha256:b689d4005875ae167178471a7a622ec2909459a3bbb32277260be1971af7a99f AS web-ui-base
 
 WORKDIR /home/application/ui/
 
@@ -158,8 +158,10 @@ ENV DATA_DIR="/application/data"
 ENV LOG_DIR="/application/logs"
 ENV PYTHONPATH=/application/backend
 
-# Create secure non-root user and remove unused package managers to reduce image size
-RUN useradd -l -u ${UID} ${USER_NAME} && \
+# Create secure non-root user, add it to the 'video' group (for /dev/videoN access),
+# and remove unused package managers to reduce image size
+RUN groupadd -f video && \
+    useradd -l -u ${UID} -G video ${USER_NAME} && \
     pip uninstall -y setuptools pip wheel && \
     rm -rf /root/.cache/pip
 
@@ -169,6 +171,7 @@ RUN mkdir -p ${LOG_DIR} && chown ${UID}:${UID} ${LOG_DIR}
 
 # Common system deps (CPU/GPU/XPU all need these)
 # TODO: remove 'git' once all dependencies are available on PyPI
+# libv4l-dev: V4L2 userspace libraries required by OpenCV to capture from USB cameras (/dev/videoN)
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get update \
@@ -176,7 +179,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         git=1:2.47.3-0* \
         libgl1=1.7.0-1+b2 \
         libglib2.0-0t64=2.84.4-3~deb13u2 \
-        libglx-mesa0=25.0.7-2
+        libglx-mesa0=25.0.7-2 \
+        libv4l-0t64=1.30.1-1
 
 # Place the venv at the front of PATH so we can call python directly (no uv needed at runtime)
 ENV PATH="/application/backend/.venv/bin:${PATH}"
@@ -208,25 +212,6 @@ COPY --link --from=web-ui /home/application/ui/dist/ ${STATIC_FILES_DIR}
 # Server (CUDA version)
 ######################
 FROM runtime-base AS geti-cuda
-
-USER root
-
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
-    apt-get update  \
-    && apt-get install -y --no-install-recommends wget=1.25.0-2 \
-    && wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian13/x86_64/cuda-keyring_1.1-1_all.deb \
-    && dpkg -i cuda-keyring_1.1-1_all.deb \
-    && rm -rf cuda-keyring_1.1-1_all.deb \
-    && apt-get remove -y wget
-
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
-    apt-get update \
-    && apt-get install -y --no-install-recommends \
-      nvidia-open=590.48.01-1
-
-USER ${USER_NAME}
 
 COPY --from=cuda-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 

@@ -13,19 +13,19 @@ import polars as pl
 import yaml
 from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
+from getitune import OTXTaskType
+from getitune.backend.native.engine import OTXEngine
+from getitune.backend.native.models.base import DataInputParams, OTXModel
+from getitune.config.data import SamplerConfig, SubsetConfig
+from getitune.data.dataset.base import OTXDataset
+from getitune.data.factory import TransformLibFactory
+from getitune.data.module import OTXDataModule
+from getitune.types.device import DeviceType as OTXDeviceType
+from getitune.types.export import OTXExportFormatType
+from getitune.types.precision import OTXPrecisionType
 from jsonargparse import ArgumentParser, Namespace
 from lightning import Callback
 from loguru import logger
-from otx import OTXTaskType
-from otx.backend.native.engine import OTXEngine
-from otx.backend.native.models.base import DataInputParams, OTXModel
-from otx.config.data import SamplerConfig, SubsetConfig
-from otx.data.dataset.base import OTXDataset
-from otx.data.factory import TransformLibFactory
-from otx.data.module import OTXDataModule
-from otx.types.device import DeviceType as OTXDeviceType
-from otx.types.export import OTXExportFormatType
-from otx.types.precision import OTXPrecisionType
 from sqlalchemy.orm import Session
 
 from app.core.jobs.exec.exceptions import CancelledExc
@@ -399,7 +399,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
             model=otx_model,
             data=otx_datamodule,
             checkpoint=weights_path if has_parent_revision else None,
-            work_dir=self._data_dir / f"otx-workspace-{model_id}",
+            work_dir=self._data_dir / f"getitune-workspace-{model_id}",
             device=otx_device_type,
         )
 

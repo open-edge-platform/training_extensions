@@ -10,9 +10,9 @@ import torch
 from omegaconf import DictConfig
 from torchvision import tv_tensors
 
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.sample import OTXSampleBatch
-from otx.types.label import HLabelInfo
+from getitune.data.entity.base import ImageInfo
+from getitune.data.entity.sample import OTXSampleBatch
+from getitune.types.label import HLabelInfo
 
 
 @pytest.fixture

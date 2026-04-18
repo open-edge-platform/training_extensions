@@ -5,10 +5,10 @@
 import torch
 from torch.nn import BatchNorm2d, Conv2d
 
-from otx.backend.native.models.detection.layers import ChannelAttention
-from otx.backend.native.models.detection.layers.csp_layer import CSPLayer, CSPNeXtBlock, DarknetBottleneck
-from otx.backend.native.models.modules.activation import Swish
-from otx.backend.native.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
+from getitune.backend.native.models.detection.layers import ChannelAttention
+from getitune.backend.native.models.detection.layers.csp_layer import CSPLayer, CSPNeXtBlock, DarknetBottleneck
+from getitune.backend.native.models.modules.activation import Swish
+from getitune.backend.native.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
 
 
 class TestCSPLayer:

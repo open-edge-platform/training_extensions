@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedModelArchitecture } from '../../../../../mocks/mock-model';
-import { getRecommendedModelArchitecturesWithActiveArchitecture } from './utils';
+import { getAccuracyMetric, getRecommendedModelArchitecturesWithActiveArchitecture } from './utils';
 
 describe('getRecommendedModelArchitecturesWithActiveArchitecture', () => {
     it('returns recommended architectures when performanceCategory is defined', () => {
@@ -129,5 +129,87 @@ describe('getRecommendedModelArchitecturesWithActiveArchitecture', () => {
         expect(result[0].id).toBe('arch-1');
         expect(result[1].id).toBe('arch-2');
         expect(result[2].id).toBe('arch-3');
+    });
+});
+
+describe('getAccuracyMetric', () => {
+    it('returns Top-1 Acc for classification tasks', () => {
+        const modelArchitecture = getMockedModelArchitecture({
+            task: 'classification',
+            stats: {
+                gigaflops: 1,
+                trainable_parameters: 5,
+                benchmark_metrics: {
+                    imagenet_top1_accuracy: 76.2,
+                    imagenet_top5_accuracy: 95.3,
+                    coco_map_50_95: null,
+                    coco_map_50: null,
+                },
+            },
+        });
+
+        const result = getAccuracyMetric(modelArchitecture);
+
+        expect(result).toEqual({ label: 'Top-1 Acc on ImageNet', value: 76.2 });
+    });
+
+    it('returns mAP (50-95) for detection tasks', () => {
+        const modelArchitecture = getMockedModelArchitecture({
+            task: 'detection',
+            stats: {
+                gigaflops: 91,
+                trainable_parameters: 31,
+                benchmark_metrics: {
+                    imagenet_top1_accuracy: null,
+                    imagenet_top5_accuracy: null,
+                    coco_map_50_95: 55.3,
+                    coco_map_50: 72.1,
+                },
+            },
+        });
+
+        const result = getAccuracyMetric(modelArchitecture);
+
+        expect(result).toEqual({ label: 'mAP on COCO', value: 55.3 });
+    });
+
+    it('falls back to coco_map_50 when coco_map_50_95 is null', () => {
+        const modelArchitecture = getMockedModelArchitecture({
+            task: 'detection',
+            stats: {
+                gigaflops: 91,
+                trainable_parameters: 31,
+                benchmark_metrics: {
+                    imagenet_top1_accuracy: null,
+                    imagenet_top5_accuracy: null,
+                    coco_map_50_95: null,
+                    coco_map_50: 72.1,
+                },
+            },
+        });
+
+        const result = getAccuracyMetric(modelArchitecture);
+
+        expect(result).toEqual({ label: 'mAP50 on COCO', value: 72.1 });
+    });
+
+    it('returns undefined when no accuracy metrics are available', () => {
+        const modelArchitecture = getMockedModelArchitecture({
+            task: 'detection',
+            stats: {
+                gigaflops: 91,
+                trainable_parameters: 31,
+                benchmark_metrics: {
+                    imagenet_top1_accuracy: null,
+                    imagenet_top5_accuracy: null,
+                    coco_map_50_95: null,
+                    coco_map_50: null,
+                },
+            },
+        });
+
+        const result = getAccuracyMetric(modelArchitecture);
+
+        expect(result).toBeUndefined();
     });
 });

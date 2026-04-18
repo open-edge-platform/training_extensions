@@ -3,9 +3,28 @@
 
 """System schemas"""
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from app.models.system import DeviceType
+
+PlatformType = Literal["linux", "windows", "macos"]
+
+
+class SystemInfoView(BaseModel):
+    """System information including license status and platform."""
+
+    license_accepted: bool = Field(..., description="Whether the license has been accepted for the current version")
+    platform: PlatformType = Field(..., description="Operating system platform")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {"license_accepted": True, "platform": "linux"},
+            ]
+        }
+    }
 
 
 class DeviceInfoView(BaseModel):

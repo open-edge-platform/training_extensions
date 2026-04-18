@@ -10,7 +10,7 @@ import {
     FileUploadedResponse,
     ImportUploadFile,
 } from '../../../../components/import-upload-file/import-upload-file.component';
-import { useImportDatasetAsNewProject } from '../../../../hooks/localStorage/use-import-dataset-as-new-project.hook';
+import { useImportDatasetAsNewProject } from '../../../../hooks/storage/use-import-dataset-as-new-project.hook';
 import { isNonEmptyString } from '../../../../shared/util';
 import { useImportDatasetDialog } from '../../providers/import-dataset-dialog-provider.component';
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
@@ -52,7 +52,7 @@ export const ImportDatasetAsNewProject = ({ dialogState }: ImportDatasetAsNewPro
 
                         <ImportErrorBoundary>
                             <Suspense fallback={<ImportLoadingCard />}>
-                                <View flex={'1'} width={'100%'} backgroundColor={'gray-50'}>
+                                <View flex={'1'} width={'100%'} minHeight={'size-6000'} backgroundColor={'gray-50'}>
                                     {currentStep === 'uploading' && (
                                         <ImportUploadFile
                                             formatOptions='Geti, Datumaro, COCO, YOLO, VOC'

@@ -3,7 +3,16 @@
 
 import { useRef, useState } from 'react';
 
-import { ActionButton, AlertDialog, CustomPopover, DialogContainer, FocusableRefValue, Text } from '@geti/ui';
+import {
+    ActionButton,
+    AlertDialog,
+    CustomPopover,
+    DialogContainer,
+    FocusableRefValue,
+    Text,
+    Tooltip,
+    TooltipTrigger,
+} from '@geti/ui';
 import { Add, Edit } from '@geti/ui/icons';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 
@@ -52,14 +61,20 @@ export const LabelsEditorPopover = ({
     return (
         <>
             {hasLabels ? (
-                <ActionButton ref={triggerRef} isQuiet aria-label='Edit labels' onPress={popoverState.open}>
-                    <Edit />
-                </ActionButton>
+                <TooltipTrigger>
+                    <ActionButton ref={triggerRef} isQuiet aria-label='Edit labels' onPress={popoverState.open}>
+                        <Edit />
+                    </ActionButton>
+                    <Tooltip>Edit labels</Tooltip>
+                </TooltipTrigger>
             ) : (
-                <ActionButton ref={triggerRef} isQuiet aria-label='Create label' onPress={popoverState.open}>
-                    <Add />
-                    <Text>Create label</Text>
-                </ActionButton>
+                <TooltipTrigger>
+                    <ActionButton ref={triggerRef} isQuiet aria-label='Create label' onPress={popoverState.open}>
+                        <Add />
+                        <Text>Create label</Text>
+                    </ActionButton>
+                    <Tooltip>Create label</Tooltip>
+                </TooltipTrigger>
             )}
             {popoverState.isOpen && (
                 <CustomPopover ref={triggerRef} state={popoverState} placement='bottom end'>

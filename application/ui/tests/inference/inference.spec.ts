@@ -68,7 +68,7 @@ test('Inference', async ({ streamPage, page, network }) => {
     await test.step('toggles pipeline', async () => {
         await page.goto('/projects/id-1/inference');
 
-        await expect(page.getByRole('button', { name: 'Enable Pipeline' })).toBeEnabled();
+        await expect(page.getByRole('switch', { name: /Enable pipeline/i })).toBeEnabled();
 
         network.use(
             http.post('/api/projects/{project_id}/pipeline:enable', () => {
@@ -79,9 +79,9 @@ test('Inference', async ({ streamPage, page, network }) => {
             })
         );
 
-        await page.getByRole('button', { name: 'Enable Pipeline' }).click();
+        await page.getByRole('switch', { name: /Enable pipeline/i }).click();
 
-        await expect(page.getByRole('button', { name: 'Disable Pipeline' })).toBeEnabled();
+        await expect(page.getByRole('switch', { name: 'Disable Pipeline' })).toBeEnabled();
         network.use(
             http.post('/api/projects/{project_id}/pipeline:disable', () => {
                 return HttpResponse.json(null, { status: 204 });
@@ -91,9 +91,9 @@ test('Inference', async ({ streamPage, page, network }) => {
             })
         );
 
-        await page.getByRole('button', { name: 'Disable Pipeline' }).click();
+        await page.getByRole('switch', { name: 'Disable Pipeline' }).click();
 
-        await expect(page.getByRole('button', { name: 'Enable Pipeline' })).toBeEnabled();
+        await expect(page.getByRole('switch', { name: /Enable pipeline/i })).toBeEnabled();
     });
 
     await test.step('updates data collection policy', async () => {
@@ -283,7 +283,6 @@ test('Inference', async ({ streamPage, page, network }) => {
         );
         await page.goto('/projects/id-1/inference');
 
-        await page.getByRole('button', { name: 'Pipeline configuration' }).click();
         await page.getByRole('button', { name: 'Add new source' }).click();
         await page.getByRole('button', { name: 'USB Camera' }).click();
 
@@ -307,16 +306,11 @@ test('Inference', async ({ streamPage, page, network }) => {
 
         await page.getByRole('button', { name: 'Add & Connect' }).click();
 
-        // Click outside the dialog to close it
-        await page.click('body', { position: { x: 10, y: 10 } });
-
-        await page.getByRole('button', { name: 'Pipeline configuration' }).click();
-
         await expect(page.getByText(usbCamera)).toBeVisible();
         await expect(page.getByText('Device: FaceTime HD Camera')).toBeVisible();
 
         // Go to output tab
-        await page.getByLabel('Dataset import tabs').getByText('Output').click();
+        await page.getByLabel('Pipeline configuration tabs').getByText('Output').click();
 
         await page.getByRole('button', { name: 'Add new sink' }).click();
         await page.getByRole('button', { name: 'Folder' }).click();
@@ -343,12 +337,6 @@ test('Inference', async ({ streamPage, page, network }) => {
         );
 
         await page.getByRole('button', { name: 'Add & Connect' }).click();
-
-        // Click outside the dialog to close it
-        await page.click('body', { position: { x: 10, y: 10 } });
-
-        await page.getByRole('button', { name: 'Pipeline configuration' }).click();
-        await page.getByLabel('Dataset import tabs').getByText('Output').click();
 
         await expect(page.getByText('New Folder')).toBeVisible();
         await expect(page.getByText('Folder path: some/path')).toBeVisible();

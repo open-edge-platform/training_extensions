@@ -3,7 +3,19 @@
 
 import { Suspense } from 'react';
 
-import { ActionButton, Button, ButtonGroup, Content, Dialog, DialogTrigger, Divider, Heading, Loading } from '@geti/ui';
+import {
+    ActionButton,
+    Button,
+    ButtonGroup,
+    Content,
+    Dialog,
+    DialogTrigger,
+    Divider,
+    Heading,
+    Loading,
+    Tooltip,
+    TooltipTrigger,
+} from '@geti/ui';
 import { GraphChart } from '@geti/ui/icons';
 
 import { DatasetStatisticsContent } from './dataset-statistics-content.component';
@@ -11,9 +23,12 @@ import { DatasetStatisticsContent } from './dataset-statistics-content.component
 export const DatasetStatistics = () => {
     return (
         <DialogTrigger>
-            <ActionButton isQuiet aria-label={'dataset statistics'}>
-                <GraphChart />
-            </ActionButton>
+            <TooltipTrigger>
+                <ActionButton isQuiet aria-label={'dataset statistics'}>
+                    <GraphChart />
+                </ActionButton>
+                <Tooltip>Dataset statistics</Tooltip>
+            </TooltipTrigger>
             {(close) => (
                 <Dialog width={{ base: '90vw', L: '70vw' }}>
                     <Heading>Dataset Statistics</Heading>

@@ -4,9 +4,9 @@
 
 import pytest
 
-from otx.backend.native.exporter.base import OTXModelExporter
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.segmentation.dino_v2_seg import DinoV2Seg
+from getitune.backend.native.exporter.base import OTXModelExporter
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.segmentation.dino_v2_seg import DinoV2Seg
 
 
 class TestDinoV2Seg:

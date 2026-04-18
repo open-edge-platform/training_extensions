@@ -59,6 +59,21 @@ describe('ImportFailedJob', () => {
         renderApp(mockImportJob);
 
         expect(await screen.findByText('Import failed due to validation error')).toBeVisible();
+
+        await userEvent.click(screen.getByText('Technical details'));
+
         expect(await screen.findByText('Dataset validation failed: missing required fields')).toBeVisible();
+    });
+
+    it('does not show technical details when there is no error', async () => {
+        const mockImportJob = getMockedPrepareImportDatasetJob({
+            status: 'FAILED',
+            message: 'Import failed due to validation error',
+            error: undefined,
+        });
+        renderApp(mockImportJob);
+
+        expect(await screen.findByText('Import failed due to validation error')).toBeVisible();
+        expect(screen.queryByText('Technical details')).not.toBeInTheDocument();
     });
 });

@@ -7,7 +7,7 @@ from __future__ import annotations
 import torch
 from torch import nn
 
-from otx.backend.native.models.common.backbones.pytorchcv_backbones import (
+from getitune.backend.native.models.common.backbones.pytorchcv_backbones import (
     build_model_including_pytorchcv,
     multioutput_forward,
     replace_activation,
@@ -45,7 +45,7 @@ def test_replace_activation() -> None:
 
 def test_replace_norm(mocker) -> None:
     mocker.patch(
-        "otx.backend.native.models.common.backbones.pytorchcv_backbones.build_norm_layer",
+        "getitune.backend.native.models.common.backbones.pytorchcv_backbones.build_norm_layer",
         return_value=[None, nn.BatchNorm1d(100)],
     )
     cfg = {"type": "BatchNorm1d"}

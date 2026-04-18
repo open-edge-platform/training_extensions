@@ -9,7 +9,7 @@ import sys
 from collections import namedtuple
 from unittest.mock import patch
 
-from otx.cli import main
+from getitune.cli import main
 
 ExportCase2Test = namedtuple("ExportCase2Test", ["export_format", "export_demo_package", "expected_output"])
 

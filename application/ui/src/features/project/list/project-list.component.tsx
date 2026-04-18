@@ -31,7 +31,6 @@ const ProjectGrid = () => {
             <Grid
                 flex={1}
                 gap={'size-300'}
-                marginX={'auto'}
                 autoRows={'size-2000'}
                 justifyContent={'center'}
                 UNSAFE_style={{ overflowY: 'auto' }}

@@ -7,7 +7,7 @@ from torch import nn
 from torch.optim.lr_scheduler import StepLR
 from torch.optim.sgd import SGD
 
-from otx.backend.native.schedulers.warmup_schedulers import LinearWarmupScheduler, LinearWarmupSchedulerCallable
+from getitune.backend.native.schedulers.warmup_schedulers import LinearWarmupScheduler, LinearWarmupSchedulerCallable
 
 
 @pytest.fixture

@@ -8,9 +8,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from otx.backend.native.callbacks.aug_scheduler import DataAugSwitch
-from otx.data.dataset.detection import OTXDetectionDataset
-from otx.data.dataset.mixins import DataAugSwitchMixin
+from getitune.backend.native.callbacks.aug_scheduler import DataAugSwitch
+from getitune.data.dataset.detection import OTXDetectionDataset
+from getitune.data.dataset.mixins import DataAugSwitchMixin
 
 
 class TestOTXDetectionDatasetWithAugSwitch:
@@ -23,7 +23,7 @@ class TestOTXDetectionDatasetWithAugSwitch:
             "no_aug": {
                 "augmentations_cpu": [
                     {
-                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "class_path": "getitune.data.augmentation.transforms.Resize",
                         "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
                     },
                 ],
@@ -32,7 +32,7 @@ class TestOTXDetectionDatasetWithAugSwitch:
                 "augmentations_cpu": [
                     {"class_path": "torchvision.transforms.v2.RandomHorizontalFlip", "init_args": {"p": 0.5}},
                     {
-                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "class_path": "getitune.data.augmentation.transforms.Resize",
                         "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
                     },
                 ],
@@ -41,7 +41,7 @@ class TestOTXDetectionDatasetWithAugSwitch:
                 "augmentations_cpu": [
                     {"class_path": "torchvision.transforms.v2.RandomVerticalFlip", "init_args": {"p": 0.5}},
                     {
-                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "class_path": "getitune.data.augmentation.transforms.Resize",
                         "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
                     },
                 ],
@@ -49,7 +49,7 @@ class TestOTXDetectionDatasetWithAugSwitch:
             "light_aug": {
                 "augmentations_cpu": [
                     {
-                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "class_path": "getitune.data.augmentation.transforms.Resize",
                         "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
                     },
                 ],
@@ -172,7 +172,7 @@ class TestOTXDetectionDatasetWithAugSwitch:
 
     def test_transforms_updated_correctly(self, detection_dataset, data_aug_switch):
         """Test that transforms are updated correctly when epoch changes."""
-        from otx.data.augmentation import CPUAugmentationPipeline
+        from getitune.data.augmentation import CPUAugmentationPipeline
 
         detection_dataset.set_data_aug_switch(data_aug_switch)
 

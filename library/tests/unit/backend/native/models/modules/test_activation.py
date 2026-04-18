@@ -10,7 +10,7 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from otx.backend.native.models.modules.activation import Swish, build_activation_layer
+from getitune.backend.native.models.modules.activation import Swish, build_activation_layer
 
 
 def test_swish():

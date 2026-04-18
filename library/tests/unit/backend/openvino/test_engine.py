@@ -7,9 +7,9 @@ import openvino as ov
 import pytest
 from pytest_mock import MockerFixture
 
-from otx.backend.openvino.engine import OVEngine
-from otx.backend.openvino.models import OVModel, OVMultilabelClassificationModel
-from otx.types.label import NullLabelInfo
+from getitune.backend.openvino.engine import OVEngine
+from getitune.backend.openvino.models import OVModel, OVMultilabelClassificationModel
+from getitune.types.label import NullLabelInfo
 
 
 @pytest.fixture
@@ -37,16 +37,16 @@ class TestEngine:
         assert isinstance(engine.model, OVModel)
 
         # init with xml path, test automatic model creation
-        mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model", return_value=fxt_ov_model)
+        mocker.patch("getitune.backend.openvino.engine.AutoConfigurator.get_ov_model", return_value=fxt_ov_model)
         engine = OVEngine(work_dir=tmp_path, data=data_root, model=f"{tmp_path}/model.xml")
         assert engine.model == fxt_ov_model
 
     def test_test(self, fxt_engine, mocker: MockerFixture) -> None:
         mocker.patch(
-            "otx.backend.openvino.engine.AutoConfigurator.update_ov_subset_pipeline",
+            "getitune.backend.openvino.engine.AutoConfigurator.update_ov_subset_pipeline",
             return_value=fxt_engine.datamodule,
         )
-        mock_get_ov_model = mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model")
+        mock_get_ov_model = mocker.patch("getitune.backend.openvino.engine.AutoConfigurator.get_ov_model")
         fxt_engine._derive_task_from_ir = MagicMock(return_value="MULTI_LABEL_CLS")
         mock_model = MagicMock()
         mock_get_ov_model.return_value = mock_model
@@ -77,15 +77,15 @@ class TestEngine:
     def test_predict(self, fxt_engine, tmp_path, explain, mocker: MockerFixture) -> None:
         checkpoint = f"{tmp_path}/model.xml"
         _ = mocker.patch(
-            "otx.backend.openvino.engine.AutoConfigurator.update_ov_subset_pipeline",
+            "getitune.backend.openvino.engine.AutoConfigurator.update_ov_subset_pipeline",
             return_value=fxt_engine.datamodule,
         )
         mock_process_saliency_maps = mocker.patch(
-            "otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
+            "getitune.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
         )
         fxt_engine._derive_task_from_ir = MagicMock(return_value="MULTI_LABEL_CLS")
         mock_model = MagicMock()
-        mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model", return_value=mock_model)
+        mocker.patch("getitune.backend.openvino.engine.AutoConfigurator.get_ov_model", return_value=mock_model)
         fxt_engine._model = fxt_engine._auto_configurator.get_ov_model("model.xml")
 
         # Mock the dataloader to avoid actual data processing
@@ -113,10 +113,10 @@ class TestEngine:
             fxt_engine.optimize(checkpoint="path/to/model.pth")
 
         mocker.patch(
-            "otx.backend.openvino.engine.AutoConfigurator.update_ov_subset_pipeline",
+            "getitune.backend.openvino.engine.AutoConfigurator.update_ov_subset_pipeline",
             return_value=fxt_engine.datamodule,
         )
-        mock_ov_model = mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model")
+        mock_ov_model = mocker.patch("getitune.backend.openvino.engine.AutoConfigurator.get_ov_model")
         mock_model = MagicMock()
         mock_ov_model.return_value = mock_model
         fxt_engine._derive_task_from_ir = MagicMock(return_value="MULTI_LABEL_CLS")

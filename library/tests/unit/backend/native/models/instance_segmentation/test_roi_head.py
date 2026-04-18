@@ -10,14 +10,14 @@ import pytest
 import torch
 from torchvision import tv_tensors
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, L1Loss
-from otx.backend.native.models.common.utils.coders import DeltaXYWHBBoxCoder
-from otx.backend.native.models.instance_segmentation.losses import ROICriterion
-from otx.backend.native.models.instance_segmentation.maskrcnn import MaskRCNN
-from otx.backend.native.models.utils.utils import InstanceData
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.sample import OTXSampleBatch
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, L1Loss
+from getitune.backend.native.models.common.utils.coders import DeltaXYWHBBoxCoder
+from getitune.backend.native.models.instance_segmentation.losses import ROICriterion
+from getitune.backend.native.models.instance_segmentation.maskrcnn import MaskRCNN
+from getitune.backend.native.models.utils.utils import InstanceData
+from getitune.data.entity.base import ImageInfo
+from getitune.data.entity.sample import OTXSampleBatch
 
 
 @pytest.fixture

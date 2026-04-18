@@ -13,10 +13,10 @@ from typing import Any, Literal
 
 import pandas as pd
 
-from otx.backend.native.cli.utils import RECIPE_PATH
-from otx.backend.native.engine import OTXEngine
-from otx.backend.openvino.engine import OVEngine
-from otx.types.task import OTXTaskType
+from getitune.backend.native.cli.utils import RECIPE_PATH
+from getitune.backend.native.engine import OTXEngine
+from getitune.backend.openvino.engine import OVEngine
+from getitune.types.task import OTXTaskType
 from tests.perf_v2 import CRITERIA_COLLECTIONS, DATASET_COLLECTIONS, MODEL_COLLECTIONS, summary
 from tests.perf_v2.utils import (
     Criterion,

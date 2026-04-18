@@ -6,7 +6,7 @@
 import pytest
 import torch
 
-from otx.backend.native.models.detection.heads.deim_decoder import (
+from getitune.backend.native.models.detection.heads.deim_decoder import (
     DEIMTransformer,
     DEIMTransformerModule,
     TransformerDecoder,

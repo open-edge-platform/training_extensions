@@ -1,0 +1,83 @@
+task: KEYPOINT_DETECTION
+unannotated_items_ratio: 0.0
+input_size:
+  - 512
+  - 512
+
+train_subset:
+  subset_name: train
+  batch_size: 32
+  num_workers: 8
+  augmentations_cpu:
+    - class_path: getitune.data.augmentation.transforms.Resize
+      init_args:
+        size: $(input_size)
+        keep_aspect_ratio: false
+  augmentations_gpu:
+    - class_path: kornia.augmentation.RandomAffine
+      init_args:
+        degrees: 80.0
+        translate: [0.16, 0.16]
+        scale: [0.5, 1.5]
+        p: 1.0
+    - class_path: kornia.augmentation.Normalize
+      init_args:
+        mean:
+          - 0.485
+          - 0.456
+          - 0.406
+        std:
+          - 0.229
+          - 0.224
+          - 0.225
+  sampler:
+    class_path: torch.utils.data.RandomSampler
+    init_args: null
+
+val_subset:
+  subset_name: val
+  batch_size: 32
+  num_workers: 8
+  augmentations_cpu:
+    - class_path: getitune.data.augmentation.transforms.Resize
+      init_args:
+        size: $(input_size)
+        keep_aspect_ratio: false
+  augmentations_gpu:
+    - class_path: kornia.augmentation.Normalize
+      init_args:
+        mean:
+          - 0.485
+          - 0.456
+          - 0.406
+        std:
+          - 0.229
+          - 0.224
+          - 0.225
+  sampler:
+    class_path: torch.utils.data.RandomSampler
+    init_args: null
+
+test_subset:
+  subset_name: test
+  batch_size: 32
+  num_workers: 8
+  augmentations_cpu:
+    - class_path: getitune.data.augmentation.transforms.Resize
+      init_args:
+        size: $(input_size)
+        keep_aspect_ratio: false
+  augmentations_gpu:
+    - class_path: kornia.augmentation.Normalize
+      init_args:
+        mean:
+          - 0.485
+          - 0.456
+          - 0.406
+        std:
+          - 0.229
+          - 0.224
+          - 0.225
+  sampler:
+    class_path: torch.utils.data.RandomSampler
+    init_args: null

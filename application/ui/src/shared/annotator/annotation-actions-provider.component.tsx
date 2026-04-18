@@ -3,6 +3,7 @@
 
 import { createContext, ReactNode, useContext, useMemo, useRef } from 'react';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEqual } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
@@ -16,6 +17,7 @@ import type { Annotation, Shape } from '../types';
 import { mapLocalAnnotationsToServer, mapServerAnnotationsToLocal } from './annotation-mappers';
 import type { AnnotatorMode } from './annotator-mode';
 import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
+import { incrementCachedAnnotatedFrameCount } from './util';
 
 type AnnotationsContextValue = {
     annotations: Annotation[];
@@ -58,6 +60,7 @@ export const AnnotationActionsProvider = ({
     isReadOnly = false,
 }: AnnotationActionsProviderProps) => {
     const projectId = useProjectIdentifier();
+    const queryClient = useQueryClient();
     const saveMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media/{media_id}/annotations', {
         meta: {
             invalidateQueries: [
@@ -75,9 +78,7 @@ export const AnnotationActionsProvider = ({
                 [
                     'get',
                     '/api/projects/{project_id}/dataset/media/{media_id}/frames',
-                    {
-                        params: { path: { project_id: projectId, media_id: mediaItem.id } },
-                    },
+                    { params: { path: { project_id: projectId, media_id: mediaItem.id } } },
                 ],
             ],
         },
@@ -163,10 +164,16 @@ export const AnnotationActionsProvider = ({
               }
             : undefined;
 
-        await saveMutation.mutateAsync({
-            params: { path: { media_id: mediaItem.id, project_id: projectId }, query },
-            body: { annotations: annotationsDTO, subset: subset ?? undefined },
-        });
+        await saveMutation
+            .mutateAsync({
+                params: { path: { media_id: mediaItem.id, project_id: projectId }, query },
+                body: { annotations: annotationsDTO, subset: subset ?? undefined },
+            })
+            .then(() => {
+                if (isVideoFrame(mediaItem)) {
+                    incrementCachedAnnotatedFrameCount(queryClient, mediaItem);
+                }
+            });
 
         undoRedoActions.reset(mapServerAnnotationsToLocal(annotationsDTO, projectLabels));
     };

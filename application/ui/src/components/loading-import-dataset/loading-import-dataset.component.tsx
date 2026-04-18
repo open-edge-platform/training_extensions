@@ -4,7 +4,7 @@
 import { toast } from '@geti/ui';
 import { useImportJobStatus } from 'hooks/api/jobs/use-import-job-status.hook';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
-import { isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
+import { isInvalidJob, isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
 
 import { formatBytes } from '../../shared/util';
 import { ImportActiveJob } from '../import-card-status/import-active-job/import-active-job.component';
@@ -15,7 +15,7 @@ type LoadingImportDatasetProps = {
     size: number;
     fileName: string;
     stagedDatasetId: string;
-    onSuccess: () => void;
+    onSuccess: () => Promise<void> | void;
     deleteEntry: () => void;
 };
 
@@ -27,23 +27,25 @@ export const LoadingImportDataset = ({
     onSuccess,
     deleteEntry,
 }: LoadingImportDatasetProps) => {
-    const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId });
+    const deleteStagedFileMutation = useDeleteStagedDataset({ stagedDatasetId });
 
-    const {
-        error,
-        isError,
-        data: job,
-    } = useImportJobStatus({
+    const { data: job, ...response } = useImportJobStatus({
         jobId,
-        onSuccess: () => {
+        onSuccess: async () => {
             deleteEntry();
-            deleteFileMutation.mutate();
-            onSuccess();
+            deleteStagedFileMutation.mutate();
+            await onSuccess();
 
             toast({
                 message: `Dataset ${fileName} ${formatBytes(size)} imported successfully.`,
                 type: 'success',
             });
+        },
+        onError: (error) => {
+            if (isInvalidJob(error)) {
+                deleteEntry();
+                deleteStagedFileMutation.mutate();
+            }
         },
     });
 
@@ -62,11 +64,11 @@ export const LoadingImportDataset = ({
                 />
             )}
 
-            {isError && (
+            {response.isError && (
                 <ImportFailedJob
                     size={size}
                     fileName={fileName}
-                    error={`${error?.detail ?? 'Unknown error'}`}
+                    error={`${response.error?.detail ?? 'Unknown error'}`}
                     message={'An error occurred during import.'}
                     stagedDatasetId={stagedDatasetId}
                     deleteEntry={deleteEntry}

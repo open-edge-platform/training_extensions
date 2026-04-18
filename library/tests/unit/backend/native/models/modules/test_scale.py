@@ -4,7 +4,7 @@
 # https://github.com/open-mmlab/mmcv/blob/main/tests/test_cnn/test_scale.py
 import torch
 
-from otx.backend.native.models.modules.scale import Scale
+from getitune.backend.native.models.modules.scale import Scale
 
 
 def test_scale():

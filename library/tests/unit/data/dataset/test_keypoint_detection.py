@@ -14,9 +14,9 @@ from torch import Tensor
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import Identity, Transform
 
-from otx.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.sample import KeypointSample
+from getitune.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
+from getitune.data.entity.base import ImageInfo
+from getitune.data.entity.sample import KeypointSample
 
 
 class TestOTXKeypointDetectionDataset:

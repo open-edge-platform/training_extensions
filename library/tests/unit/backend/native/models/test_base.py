@@ -14,12 +14,12 @@ from lightning import Trainer
 from lightning.pytorch.utilities.types import LRSchedulerConfig
 from pytest_mock import MockerFixture
 
-from otx.backend.native.models.base import DataInputParams, OTXModel
-from otx.backend.native.models.classification.hlabel_models.base import OTXHlabelClsModel
-from otx.backend.native.models.classification.multiclass_models.base import OTXMulticlassClsModel
-from otx.backend.native.models.segmentation.base import OTXSegmentationModel
-from otx.backend.native.schedulers.warmup_schedulers import LinearWarmupScheduler
-from otx.types.label import HLabelInfo, LabelInfo, SegLabelInfo
+from getitune.backend.native.models.base import DataInputParams, OTXModel
+from getitune.backend.native.models.classification.hlabel_models.base import OTXHlabelClsModel
+from getitune.backend.native.models.classification.multiclass_models.base import OTXMulticlassClsModel
+from getitune.backend.native.models.segmentation.base import OTXSegmentationModel
+from getitune.backend.native.schedulers.warmup_schedulers import LinearWarmupScheduler
+from getitune.types.label import HLabelInfo, LabelInfo, SegLabelInfo
 
 
 class MockNNModule(torch.nn.Module):

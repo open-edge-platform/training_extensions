@@ -6,14 +6,14 @@ from pathlib import Path
 
 import pytest
 
-import otx
-from otx.backend.native.cli.utils import get_otx_root_path
+import getitune
+from getitune.backend.native.cli.utils import get_otx_root_path
 
 
 def test_get_otx_root_path(mocker):
     root_path = get_otx_root_path()
     assert isinstance(root_path, Path)
-    otx_path = inspect.getfile(otx)
+    otx_path = inspect.getfile(getitune)
     assert root_path == Path(otx_path).parent
 
     with mocker.patch("importlib.import_module", return_value=None) and pytest.raises(ModuleNotFoundError):

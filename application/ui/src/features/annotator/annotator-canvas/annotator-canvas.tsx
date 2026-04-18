@@ -14,8 +14,14 @@ import { Annotations } from '../annotations/annotations.component';
 import { VideoAnnotations, VideoPredictions } from '../annotations/video-annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
 import { ToolManager } from '../tools/tool-manager.component';
+import {
+    PREDICTION_CHUNK_SIZE,
+    PREDICTION_FRAME_SKIP,
+    usePrefetchVideoFramesPredictions,
+} from '../video-player/api/use-video-frames-predictions';
+import { getVideoFrameRangeIndexes } from '../video-player/api/utils';
 import { VideoFrame } from '../video-player/video-frame.component';
-import { useVideoPlayerContext } from '../video-player/video-player-provider.component';
+import { useVideoPlayer, useVideoPlayerContext } from '../video-player/video-player-provider.component';
 
 import classes from './annotator-canvas.module.scss';
 
@@ -73,6 +79,28 @@ const ImageAnnotations = ({ mediaItem }: ImageAnnotationsProps) => {
     );
 };
 
+const PrefetchPredictions = () => {
+    const { videoFrame } = useVideoPlayer();
+    const nextFrameRangeIndexes = getVideoFrameRangeIndexes({
+        frames: videoFrame.frame_count - 1,
+        frameSkip: PREDICTION_FRAME_SKIP,
+        frameNumber: videoFrame.frame_number,
+        chunkSize: PREDICTION_CHUNK_SIZE,
+    });
+    usePrefetchVideoFramesPredictions({
+        frameNumber: videoFrame.frame_number,
+        frameSkip: PREDICTION_FRAME_SKIP,
+        chunkSize: PREDICTION_CHUNK_SIZE,
+    });
+    usePrefetchVideoFramesPredictions({
+        frameNumber: nextFrameRangeIndexes.endFrameIndex + 1,
+        frameSkip: PREDICTION_FRAME_SKIP,
+        chunkSize: PREDICTION_CHUNK_SIZE,
+    });
+
+    return null;
+};
+
 type MediaAnnotationsProps = {
     mediaItem: Media;
     mode: AnnotatorMode;
@@ -85,11 +113,21 @@ const MediaAnnotations = ({ mediaItem, mode }: MediaAnnotationsProps) => {
         if (mode === 'annotation') {
             return <VideoAnnotations />;
         } else if (mode === 'prediction') {
-            return <VideoPredictions />;
+            return (
+                <>
+                    <VideoPredictions />
+                    <PrefetchPredictions />
+                </>
+            );
         }
     }
 
-    return <ImageAnnotations mediaItem={mediaItem} />;
+    return (
+        <>
+            <ImageAnnotations mediaItem={mediaItem} />
+            {isVideoFrame(mediaItem) && mode === 'prediction' && <PrefetchPredictions />}
+        </>
+    );
 };
 
 type AnnotatorCanvasProps = {

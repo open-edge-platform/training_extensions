@@ -5,8 +5,6 @@ import { useState } from 'react';
 
 import { Button, Flex } from '@geti/ui';
 
-import { SortModelArchitectures } from '../sort-model-architectures/sort-model-architectures.component';
-import { SORT_OPTIONS, SortingOptions } from '../sort-model-architectures/utils';
 import { useTrainModelState } from '../train-model-provider.component';
 import { AllModelArchitectures } from './all-model-architectures.component';
 import { RecommendedModelArchitectures } from './recommended-model-architectures.component';
@@ -16,7 +14,6 @@ const SHOW_MORE_THRESHOLD = 4;
 
 export const ModelArchitecturesList = () => {
     const [showMore, setShowMore] = useState<boolean>(false);
-    const [sortBy, setSortBy] = useState<SortingOptions>(SortingOptions.NAME_ASC);
     const { activeModelArchitectureId, modelArchitectures, selectedModelArchitectureId, onSelectModelArchitectureId } =
         useTrainModelState();
 
@@ -29,15 +26,12 @@ export const ModelArchitecturesList = () => {
 
     return (
         <Flex direction={'column'} minHeight={0} gap={'size-300'}>
-            <SortModelArchitectures sortBy={sortBy} onSort={setSortBy} items={SORT_OPTIONS} />
-
             {showMore ? (
                 <AllModelArchitectures
                     activeModelArchitectureId={activeModelArchitectureId}
                     modelArchitectures={modelArchitectures}
                     selectedModelArchitectureId={selectedModelArchitectureId}
                     onSelectedModelArchitectureIdChange={onSelectModelArchitectureId}
-                    sortBy={sortBy}
                 />
             ) : (
                 <RecommendedModelArchitectures

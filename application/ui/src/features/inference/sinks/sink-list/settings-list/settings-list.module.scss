@@ -6,4 +6,8 @@
         list-style-type: circle;
         margin-inline-start: var(--spectrum-global-dimension-font-size-200);
     }
+
+    li {
+        word-break: break-word;
+    }
 }

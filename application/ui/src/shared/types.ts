@@ -24,14 +24,6 @@ export type Annotation = Omit<components['schemas']['DatasetItemAnnotation-Input
     labels: AnnotationLabel[];
 };
 
-// Circle is only used for visual purposes on segment-anything tool
-export type Circle = {
-    readonly type: 'circle';
-    readonly x: number;
-    readonly y: number;
-    readonly r: number;
-};
-
 export type ClipperPoint = {
     X: number;
     Y: number;

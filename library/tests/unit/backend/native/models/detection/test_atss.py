@@ -5,11 +5,11 @@
 import pytest
 import torch
 
-from otx.backend.native.exporter.native import OTXModelExporter
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.detection.atss import ATSS
-from otx.data.entity.sample import OTXPredictionBatch
-from otx.types.export import TaskLevelExportParameters
+from getitune.backend.native.exporter.native import OTXModelExporter
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.detection.atss import ATSS
+from getitune.data.entity.sample import OTXPredictionBatch
+from getitune.types.export import TaskLevelExportParameters
 
 
 class TestATSS:

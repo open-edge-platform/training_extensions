@@ -4,8 +4,8 @@
 import torch
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
-from otx.data.utils.structures.mask.mask_util import encode_rle
-from otx.metrics.mean_ap import MaskRLEMeanAveragePrecision
+from getitune.data.utils.structures.mask.mask_util import encode_rle
+from getitune.metrics.mean_ap import MaskRLEMeanAveragePrecision
 
 
 def test_custom_rle_map_metric(num_masks=50, h=10, w=10):

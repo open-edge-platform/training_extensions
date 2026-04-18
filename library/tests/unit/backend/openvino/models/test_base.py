@@ -11,8 +11,8 @@ import torch
 from model_api.models.result import ClassificationResult
 from pytest_mock import MockerFixture
 
-from otx.backend.openvino.models import OVModel
-from otx.data.entity.sample import OTXSampleBatch
+from getitune.backend.openvino.models import OVModel
+from getitune.data.entity.sample import OTXSampleBatch
 
 
 class TestOVModel:

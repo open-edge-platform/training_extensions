@@ -29,14 +29,14 @@ import numpy as np
 import pytest
 from model_api.models import Model
 
-from otx.backend.native.engine import OTXEngine
-from otx.backend.native.models.base import OTXModel
-from otx.backend.openvino.engine import OVEngine
-from otx.data.module import OTXDataModule
-from otx.engine import create_engine
-from otx.types.export import OTXExportFormatType
-from otx.types.precision import OTXPrecisionType
-from otx.types.task import OTXTaskType
+from getitune.backend.native.engine import OTXEngine
+from getitune.backend.native.models.base import OTXModel
+from getitune.backend.openvino.engine import OVEngine
+from getitune.data.module import OTXDataModule
+from getitune.engine import create_engine
+from getitune.types.export import OTXExportFormatType
+from getitune.types.precision import OTXPrecisionType
+from getitune.types.task import OTXTaskType
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -99,7 +99,7 @@ _TASK_SPECS: list[_TaskSpec] = [
 
 def _resolve_recipe(spec: _TaskSpec) -> str:
     """Return the absolute recipe YAML path for a given task spec."""
-    from otx.tools.auto_configurator import RECIPE_PATH
+    from getitune.tools.auto_configurator import RECIPE_PATH
 
     # Map task enum to the recipe subdirectory
     task_to_subdir = {

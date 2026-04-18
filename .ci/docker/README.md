@@ -83,10 +83,10 @@
          -h|--help           Print this message
    ```
 
-   Below example stops a runner named as `otx-ci-container`
+   Below example stops a runner named as `getitune-ci-container`
 
    ```bash
-   training_extensions$ .ci/docker/stop-runner.sh otx-ci-container <github-token>
+   training_extensions$ .ci/docker/stop-runner.sh getitune-ci-container <github-token>
    ```
 
    > **_Note_**: If there is an action in progress on the actions-runner which you want to stop, this script will be resulted with an error. To perform force stopping the runner, you can stop the docker container using `docker stop` command on the host machine.

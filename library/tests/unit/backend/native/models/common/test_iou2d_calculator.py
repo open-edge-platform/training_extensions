@@ -7,8 +7,8 @@ import numpy as np
 import pytest
 import torch
 
-from otx.backend.native.models.common.utils.assigners.iou2d_calculator import BboxOverlaps2D
-from otx.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
+from getitune.backend.native.models.common.utils.assigners.iou2d_calculator import BboxOverlaps2D
+from getitune.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
 
 RNG = np.random.default_rng(42)
 

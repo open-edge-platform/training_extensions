@@ -8,11 +8,11 @@ import pytest
 import torch
 from lightning import Trainer
 
-from otx.backend.native.exporter.native import OTXModelExporter
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.detection import SSD
-from otx.data.entity.sample import OTXPredictionBatch
-from otx.types.export import TaskLevelExportParameters
+from getitune.backend.native.exporter.native import OTXModelExporter
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.detection import SSD
+from getitune.data.entity.sample import OTXPredictionBatch
+from getitune.types.export import TaskLevelExportParameters
 
 
 class TestSSD:

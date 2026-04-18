@@ -4,7 +4,7 @@
 import torch
 from timm.models.vision_transformer import Attention
 
-from otx.backend.native.models.classification.utils.peft import AttentionWithDoRA, AttentionWithLoRA
+from getitune.backend.native.models.classification.utils.peft import AttentionWithDoRA, AttentionWithLoRA
 
 
 def test_attention_with_lora_forward():

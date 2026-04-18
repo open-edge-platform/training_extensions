@@ -37,7 +37,7 @@ from datumaro.experimental.fields import Subset
 from torchvision import tv_tensors
 from torchvision.datasets import CIFAR10
 
-from otx.data.entity.sample import ClassificationSample
+from getitune.data.entity.sample import ClassificationSample
 
 # CIFAR-10 class names - use a 5-class subset to keep the dataset small
 CIFAR10_CLASSES: tuple[str, ...] = (
