@@ -81,7 +81,7 @@ export default [
         // (e.g. `import { downloadFile } from '../platform/download-file'`)
         // and let the bundler swap the implementation per target.
         files: ['src/**/*.{ts,tsx}'],
-        ignores: ['src/**/*.tauri.{ts,tsx}'],
+        ignores: ['src/platform/**/*.tauri.{ts,tsx}'],
         rules: {
             'no-restricted-imports': [
                 'error',

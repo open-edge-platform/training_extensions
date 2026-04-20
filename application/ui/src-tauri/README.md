@@ -15,13 +15,13 @@ bundler**, not at runtime.
 
 `rsbuild.config.ts` reads `process.env.BUILD_TARGET`. When it equals `"tauri"`,
 the Rspack `resolve.extensions` list is prepended with `.tauri.tsx`,
-`.tauri.ts`, `.tauri.jsx`, `.tauri.js`:
+`.tauri.ts`, `.tauri.jsx`, `.tauri.js`, `.tauri.scss`:
 
 ```ts
 // application/ui/rsbuild.config.ts
 const isTauriBuild = process.env.BUILD_TARGET === 'tauri';
 const platformExtensions = isTauriBuild
-    ? ['.tauri.tsx', '.tauri.ts', '.tauri.jsx', '.tauri.js']
+    ? ['.tauri.tsx', '.tauri.ts', '.tauri.jsx', '.tauri.js', '.tauri.scss']
     : [];
 
 resolve: {
@@ -65,8 +65,11 @@ Rules of thumb when adding a platform-specific behaviour:
 3. **Tauri-only features:** ship a no-op/null-returning module as the default
    and the real implementation in `.tauri.tsx`. Consumers render/call
    unconditionally; the web build tree-shakes the no-op away.
-4. **Tauri-only styles:** same trick with `.scss` / `.tauri.scss` (set up the
-   `.tauri.scss` extension in `resolve.extensions` if/when this is needed).
+4. **Tauri-only styles:** same trick with `.scss` / `.tauri.scss`. The
+   `.tauri.scss` and `.scss` extensions are already in `resolve.extensions`,
+   so an extensionless import (`import './foo'`) resolves to `foo.tauri.scss`
+   on the desktop build and `foo.scss` on the web build. Drop the extension
+   on the import site to opt in to the override.
 5. **No `isTauri()` runtime checks anywhere.** If you find yourself reaching
    for one, add (or split) a capability module instead.
 

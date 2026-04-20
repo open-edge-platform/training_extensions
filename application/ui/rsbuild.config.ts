@@ -15,7 +15,11 @@ const { publicVars } = loadEnv({ prefixes: ['PUBLIC_'] });
 // a `.tauri.*` twin resolve as usual. This keeps Tauri-specific code out of
 // the web graph entirely, and removes the need for runtime `isTauri` checks.
 const isTauriBuild = process.env.BUILD_TARGET === 'tauri';
-const platformExtensions = isTauriBuild ? ['.tauri.tsx', '.tauri.ts', '.tauri.jsx', '.tauri.js'] : [];
+const platformExtensions = isTauriBuild ? ['.tauri.tsx', '.tauri.ts', '.tauri.jsx', '.tauri.js', '.tauri.scss'] : [];
+// `.scss` is appended unconditionally so extensionless SCSS imports (used
+// to opt in to the platform-override mechanism, e.g. `import './foo'`)
+// still resolve to `foo.scss` on the web build.
+const styleExtensions = ['.scss'];
 
 export default defineConfig({
     plugins: [
@@ -77,7 +81,7 @@ export default defineConfig({
             // merge would let it shadow our `.tauri.ts` overrides. Prepend
             // explicitly and dedupe to keep the platform suffixes first.
             const existing = config.resolve?.extensions ?? [];
-            const extensions = Array.from(new Set([...platformExtensions, ...existing]));
+            const extensions = Array.from(new Set([...platformExtensions, ...existing, ...styleExtensions]));
             return {
                 ...config,
                 resolve: { ...config.resolve, extensions },
