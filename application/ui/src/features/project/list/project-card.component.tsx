@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
@@ -13,13 +13,14 @@ import { Project, TaskType } from '../../../constants/shared-types';
 import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
 import { isMultiLabelClassificationTask } from '../task-type-guards';
 import { MenuActions } from './menu-actions/menu-actions.component';
+import { formatCreationDate } from './util';
 
 import classes from './project-list.module.scss';
 
 const cardPadding = 'size-200';
 
 const MAP_PROJECT_TYPE_TO_TITLE: Record<TaskType, string> = {
-    detection: 'Detection',
+    detection: 'Object detection',
     classification: 'Classification',
     instance_segmentation: 'Instance segmentation',
 };
@@ -69,9 +70,10 @@ const ProjectThumbnail = ({ project, prioritizeImage }: ProjectThumbnailProps) =
 type ProjectCardProps = {
     item: Project;
     prioritizeImage?: boolean;
+    projectNames: string[];
 };
 
-export const ProjectCard = ({ item, prioritizeImage = false }: ProjectCardProps) => {
+export const ProjectCard = ({ item, prioritizeImage = false, projectNames }: ProjectCardProps) => {
     const isActive = item.active_pipeline;
     const isMultiLabelClassification = isMultiLabelClassificationTask(item.task);
 
@@ -98,16 +100,19 @@ export const ProjectCard = ({ item, prioritizeImage = false }: ProjectCardProps)
                             </Heading>
                         </Flex>
 
-                        <Flex marginBottom={cardPadding} gap={'size-50'}>
-                            {isActive && <ActiveProjectBadge />}
+                        <Flex gap={'size-50'}>
                             {isMultiLabelClassification ? (
                                 <ProjectTypeBadge type={'Multi-label classification'} />
                             ) : (
                                 <ProjectTypeBadge type={MAP_PROJECT_TYPE_TO_TITLE[item.task.task_type]} />
                             )}
+                            {isActive && <ActiveProjectBadge />}
                         </Flex>
 
-                        <Flex gap={'size-100'} direction={'column'}>
+                        <Flex marginTop={'size-100'} gap={'size-100'} direction={'column'}>
+                            <Text UNSAFE_className={classes.projectCreationDate}>
+                                • Created: {formatCreationDate(item.created_at)}
+                            </Text>
                             <Text UNSAFE_className={classes.labelList}>
                                 • Labels: {(item.task.labels ?? []).map((label) => label.name).join(', ')}
                             </Text>
@@ -119,6 +124,7 @@ export const ProjectCard = ({ item, prioritizeImage = false }: ProjectCardProps)
             <MenuActions
                 projectId={item.id}
                 projectName={item.name}
+                projectNames={projectNames}
                 isPipelineRunning={item.active_pipeline}
                 actionButtonStyle={{
                     top: dimensionValue(cardPadding),

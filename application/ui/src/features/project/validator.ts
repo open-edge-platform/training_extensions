@@ -12,3 +12,5 @@ export const validateProjectName = (name: string, projectNames: string[]): strin
 
     return undefined;
 };
+
+export const PROJECT_NAME_MAX_LENGTH = 100;

@@ -15,26 +15,37 @@ import {
     TextField,
     toast,
 } from '@geti/ui';
+import { usePatchProject } from 'hooks/api/project.hook';
 import { isEmpty } from 'lodash-es';
 
-import { usePatchProject } from '../../hooks/api/project.hook';
+import { PROJECT_NAME_MAX_LENGTH, validateProjectName } from '../../features/project/validator';
 
 type EditProjectNameDialogProps = {
     onClose: () => void;
     isOpen: boolean;
     projectId: string;
     projectName: string;
+    projectNames: string[];
 };
 
-const PROJECT_NAME_MAX_LENGTH = 100;
-
-export const EditProjectNameDialog = ({ onClose, isOpen, projectId, projectName }: EditProjectNameDialogProps) => {
+export const EditProjectNameDialog = ({
+    onClose,
+    isOpen,
+    projectId,
+    projectName,
+    projectNames,
+}: EditProjectNameDialogProps) => {
     const patchProjectMutation = usePatchProject();
     const [newProjectName, setNewProjectName] = useState(projectName);
 
     const trimmedProjectName = newProjectName.trim();
     const isNameUnchanged = trimmedProjectName === projectName;
-    const isSaveButtonDisabled = isEmpty(trimmedProjectName) || isNameUnchanged || patchProjectMutation.isPending;
+    const validationErrorMessage = validateProjectName(newProjectName, projectNames);
+    const isSaveButtonDisabled =
+        isEmpty(trimmedProjectName) ||
+        isNameUnchanged ||
+        patchProjectMutation.isPending ||
+        validationErrorMessage !== undefined;
 
     const editProjectName = (newName: string) => {
         patchProjectMutation.mutate(
@@ -70,15 +81,16 @@ export const EditProjectNameDialog = ({ onClose, isOpen, projectId, projectName 
                     <Content>
                         <Form onSubmit={handleEditProjectName}>
                             <TextField
-                                maxLength={PROJECT_NAME_MAX_LENGTH}
                                 //eslint-disable-next-line jsx-a11y/no-autofocus
                                 autoFocus
+                                maxLength={PROJECT_NAME_MAX_LENGTH}
                                 value={newProjectName}
                                 onChange={setNewProjectName}
                                 width='100%'
-                                id={'edit-project-name-field-id'}
                                 aria-label={'Edit project name field'}
                                 isReadOnly={patchProjectMutation.isPending}
+                                errorMessage={validationErrorMessage}
+                                validationState={validationErrorMessage === undefined ? undefined : 'invalid'}
                             />
                             <ButtonGroup align={'end'} marginTop={'size-350'}>
                                 <Button

@@ -10,8 +10,8 @@ import { useStagedDatasetSuspense } from 'hooks/api/staged-dataset.hook';
 import { useImportDatasetAsNewProject } from 'hooks/storage/use-import-dataset-as-new-project.hook';
 
 import { TaskType } from '../../../../../constants/shared-types';
-import { validateProjectName } from '../../../create/validator';
 import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
+import { validateProjectName } from '../../../validator';
 import { getRecommendedTaskType, TASK_SELECTION_FORM_ID } from './util';
 
 type ImportTaskSelectionProps = {
@@ -82,7 +82,7 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
                     defaultSelectedKey={formState.task_type}
                 >
                     <Item key={'detection'}>
-                        {defaultTaskType === 'detection' ? 'Detection (Recommended)' : 'Detection'}
+                        {defaultTaskType === 'detection' ? 'Object detection (Recommended)' : 'Object detection'}
                     </Item>
                     <Item key={'classification'}>
                         {defaultTaskType === 'classification' ? 'Classification (Recommended)' : 'Classification'}

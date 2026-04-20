@@ -10,7 +10,8 @@ import { isEmpty } from 'lodash-es';
 import { ImportJobsList } from './import-jobs-list/import-jobs-list.component';
 import { NewProjectMenu } from './new-project-menu.component';
 import { ProjectCard } from './project-card.component';
-import { SORT_BY_HANDLERS, SortBy, SortProjects } from './sort-projects/sort-projects.component';
+import { SORT_BY_HANDLERS, SortProjects } from './sort-projects/sort-projects.component';
+import { SortBy } from './sort-projects/utils';
 
 import backgroundStyles from '../project-background.module.scss';
 import classes from './project-list.module.scss';
@@ -23,6 +24,8 @@ const ProjectGrid = () => {
     const sortedProjects = useMemo(() => {
         return SORT_BY_HANDLERS[sortBy](projects.data);
     }, [projects.data, sortBy]);
+
+    const projectNames = projects.data.map((project) => project.name);
 
     return (
         <Flex direction={'column'} gap={'size-100'} height={'100%'}>
@@ -39,7 +42,12 @@ const ProjectGrid = () => {
                 <NewProjectMenu />
 
                 {sortedProjects.map((item, index) => (
-                    <ProjectCard key={item.id} item={item} prioritizeImage={index === 0} />
+                    <ProjectCard
+                        key={item.id}
+                        item={item}
+                        prioritizeImage={index === 0}
+                        projectNames={projectNames.filter((projectName) => projectName !== item.name)}
+                    />
                 ))}
             </Grid>
         </Flex>

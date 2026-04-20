@@ -82,10 +82,12 @@ describe('ImportTaskSelection', () => {
         render(<ImportTaskSelection stagedDatasetId={mockedStagedDatasetId} />);
     };
 
-    it('shows only Detection as recommended for bounding box annotations in geti format', async () => {
+    it('shows only Object detection as recommended for bounding box annotations in geti format', async () => {
         renderApp({ format: 'geti', taskType: 'detection', annotationType: 'bounding_box' });
 
-        expect(await screen.findByRole('button', { name: /Task type/i })).toHaveTextContent('Detection (Recommended)');
+        expect(await screen.findByRole('button', { name: /Task type/i })).toHaveTextContent(
+            'Object detection (Recommended)'
+        );
     });
 
     it('shows only Instance segmentation as recommended for polygon annotations in geti format', async () => {
@@ -94,7 +96,7 @@ describe('ImportTaskSelection', () => {
         expect(await screen.findByRole('button', { name: /Task type/i })).toHaveTextContent(
             'Instance segmentation (Recommended)'
         );
-        expect(screen.getByText('Detection')).toBeVisible();
+        expect(screen.getByText('Object detection')).toBeVisible();
         expect(screen.getByText('Classification')).toBeVisible();
     });
 
