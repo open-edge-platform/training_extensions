@@ -97,7 +97,7 @@ class OTXNativeModelExporter(OTXModelExporter):
             )
         exported_model = self._postprocess_openvino_model(exported_model)
 
-        # Validate the converted model before persisting.  OpenVINO's PT2
+        # Validate the converted model before persisting.  OpenVINO's PyTorch
         # frontend will log a deserialization error on failure and then
         # silently fall back -- leaving us with a zero-op graph that passes
         # through the "Converting to OpenVINO is done." line.  Raise here
