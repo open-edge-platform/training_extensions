@@ -29,7 +29,7 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
     const canSave = (newName: string) => {
         const trimmedName = newName.trim();
 
-        return trimmedName.length > 0 && validateName(trimmedName) !== undefined;
+        return trimmedName.length > 0 && validateName(trimmedName) === undefined;
     };
 
     const isCreateButtonDisabled = !canSave(name);
