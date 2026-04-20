@@ -18,13 +18,17 @@ type LabelEditorPopoverProps = {
     children: ReactNode;
 };
 
+const POPOVER_OFFSET_ALIGNMENT = 8;
+
 const LabelEditorPopover = ({ triggerRef, state, children }: LabelEditorPopoverProps) => {
     return (
         <Popover
+            hideArrow
             triggerRef={triggerRef}
             state={state}
             placement={'bottom end'}
-            UNSAFE_style={{ transform: 'translateY(2%)' }}
+            offset={POPOVER_OFFSET_ALIGNMENT}
+            crossOffset={POPOVER_OFFSET_ALIGNMENT}
         >
             {children}
         </Popover>
