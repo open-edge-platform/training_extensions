@@ -17,7 +17,7 @@ export const Inference = () => {
                 gridTemplateColumns: 'minmax(0, 1fr) auto',
                 height: '100%',
                 overflow: 'hidden',
-                gap: '1px',
+                gap: 'var(--spectrum-global-dimension-size-10)',
             }}
         >
             <Header />

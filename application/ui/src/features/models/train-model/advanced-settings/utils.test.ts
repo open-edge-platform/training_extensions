@@ -370,7 +370,7 @@ describe('filterDependentParameters', () => {
         expect(result).toEqual([param]);
     });
 
-    it('does not include standalone dependent parameters that have no matching parent', () => {
+    it('includes a dependent parameter when the dependency key does not exist in the parameters list', () => {
         const dependent = getMockedConfigurationParameter({
             value_type: 'float',
             key: 'orphan',
@@ -378,6 +378,38 @@ describe('filterDependentParameters', () => {
         });
         const result = filterDependentParameters([dependent]);
 
-        expect(result).toEqual([]);
+        expect(result).toEqual([dependent]);
+    });
+
+    it('excludes a dependent parameter when the dependency exists but values do not match', () => {
+        const parent = getMockedConfigurationParameter({
+            value_type: 'str',
+            key: 'parent_key',
+            value: 'actual_value',
+        });
+        const dependent = getMockedConfigurationParameter({
+            value_type: 'float',
+            key: 'child',
+            depends_on: { parent_key: 'expected_value' },
+        });
+        const result = filterDependentParameters([parent, dependent]);
+
+        expect(result).toEqual([parent]);
+    });
+
+    it('includes a dependent parameter when the dependency exists and values match', () => {
+        const parent = getMockedConfigurationParameter({
+            value_type: 'str',
+            key: 'parent_key',
+            value: 'matching_value',
+        });
+        const dependent = getMockedConfigurationParameter({
+            value_type: 'float',
+            key: 'child',
+            depends_on: { parent_key: 'matching_value' },
+        });
+        const result = filterDependentParameters([parent, dependent]);
+
+        expect(result).toEqual([parent, dependent]);
     });
 });

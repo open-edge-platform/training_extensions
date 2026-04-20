@@ -12,6 +12,13 @@ import { Project } from '../../../constants/shared-types';
 import { server } from '../../../msw-node-setup';
 import { CreateProjectForm } from './create-project-form';
 
+const mockNavigate = vi.hoisted(() => vi.fn());
+
+vi.mock('react-router-dom', async (importOriginal) => ({
+    ...(await importOriginal()),
+    useNavigate: () => mockNavigate,
+}));
+
 const renderCreateProjectForm = (projects: Project[] = []) => render(<CreateProjectForm projects={projects} />);
 
 const selectTask = (taskLabel: string) => {
@@ -29,7 +36,15 @@ const addLabel = async (name: string) => {
 
 const getCreateButton = () => screen.getByRole('button', { name: /create project/i });
 
+const clickGoBack = () => {
+    fireEvent.click(screen.getByRole('button', { name: /go back/i }));
+};
+
 describe('CreateProjectForm', () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
     describe('initial state', () => {
         it('disables create button when no task type is selected', () => {
             renderCreateProjectForm();
@@ -239,6 +254,16 @@ describe('CreateProjectForm', () => {
                     task: { task_type: taskType, exclusive_labels: false },
                 });
             });
+        });
+    });
+
+    describe('navigation', () => {
+        test('navigates back when "Go Back" button is clicked', () => {
+            renderCreateProjectForm();
+
+            clickGoBack();
+
+            expect(mockNavigate).toHaveBeenCalledWith(-1);
         });
     });
 });

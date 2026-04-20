@@ -11,11 +11,11 @@ import {
     type SetStateAction,
 } from 'react';
 
+import { useProject } from 'hooks/api/project.hook';
+
 import type { TaskType } from '../../constants/shared-types';
 import type { ToolType } from '../../features/annotator/tools/interface';
 import { isClassificationTask, isSegmentationTask } from '../../features/project/task-type-guards';
-import { useProject } from '../../hooks/api/project.hook';
-import type { AnnotatorMode } from './annotator-mode';
 
 type ToolContextValue = {
     activeTool: ToolType | null;
@@ -34,11 +34,7 @@ export const useTool = (): ToolContextValue => {
     return context;
 };
 
-const getDefaultTool = (taskType: TaskType | null, mode: AnnotatorMode): ToolType | null => {
-    if (mode === 'prediction') {
-        return null;
-    }
-
+const getDefaultTool = (taskType: TaskType | null): ToolType | null => {
     if (isClassificationTask(taskType)) {
         return null;
     }
@@ -51,19 +47,16 @@ const getDefaultTool = (taskType: TaskType | null, mode: AnnotatorMode): ToolTyp
 };
 
 type ToolProviderProps = {
-    mode: AnnotatorMode;
     children: ReactNode;
 };
 
-export const ToolProvider = ({ mode, children }: ToolProviderProps) => {
+export const ToolProvider = ({ children }: ToolProviderProps) => {
     const { data: selectedProject } = useProject();
-    const [activeTool, setActiveTool] = useState<ToolType | null>(() =>
-        getDefaultTool(selectedProject.task.task_type, mode)
-    );
+    const [activeTool, setActiveTool] = useState<ToolType | null>(() => getDefaultTool(selectedProject.task.task_type));
 
     useEffect(() => {
-        setActiveTool(getDefaultTool(selectedProject.task.task_type, mode));
-    }, [mode, selectedProject.task.task_type]);
+        setActiveTool(getDefaultTool(selectedProject.task.task_type));
+    }, [selectedProject.task.task_type]);
 
     return <ToolContext.Provider value={{ activeTool, setActiveTool }}>{children}</ToolContext.Provider>;
 };

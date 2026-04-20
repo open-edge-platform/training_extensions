@@ -4,21 +4,21 @@
 import { FormEvent, useState } from 'react';
 
 import { Button, ButtonGroup, Divider, Flex, Form, Text, TextField } from '@geti/ui';
-import { Link, useNavigate } from 'react-router-dom';
+import { useCreateProject } from 'hooks/api/project.hook';
+import { useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 
 import { paths } from '../../../constants/paths';
 import type { Label, Project, TaskType } from '../../../constants/shared-types';
-import { useCreateProject } from '../../../hooks/api/project.hook';
 import { LabelSelection } from '../label-selection/label-selection.component';
 import { TASK_OPTIONS, TaskSelection } from '../task-selection/task-selection.component';
 import { isClassificationTask } from '../task-type-guards';
+import { PROJECT_NAME_MAX_LENGTH, validateProjectName } from '../validator';
 import {
     ClassificationTaskSelection,
     ClassificationTaskType,
 } from './classification-label-selection/classification-task-type-selection.component';
 import { generateUniqueProjectName } from './utils';
-import { validateProjectName } from './validator';
 
 import classes from './create-project-form.module.scss';
 
@@ -93,6 +93,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
                 <Flex justifyContent={'center'} marginTop={'size-600'}>
                     <TextField
                         aria-label={'Project name input'}
+                        maxLength={PROJECT_NAME_MAX_LENGTH}
                         isRequired
                         value={name}
                         onChange={setName}
@@ -137,10 +138,8 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
             <Flex direction={'column'} alignItems={'center'} UNSAFE_className={classes.buttonGroup} gap={'size-300'}>
                 <Divider size={'S'} width={'100%'} />
                 <ButtonGroup>
-                    <Button variant={'secondary'}>
-                        <Link className={classes.link} to={paths.project.index({})}>
-                            Go back
-                        </Link>
+                    <Button variant={'secondary'} onPress={() => navigate(-1)}>
+                        Go back
                     </Button>
                     <Button type={'submit'} variant='accent' isDisabled={isCreateProjectDisabled}>
                         Create project

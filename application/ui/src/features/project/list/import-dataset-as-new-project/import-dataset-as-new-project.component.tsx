@@ -10,7 +10,7 @@ import {
     FileUploadedResponse,
     ImportUploadFile,
 } from '../../../../components/import-upload-file/import-upload-file.component';
-import { useImportDatasetAsNewProject } from '../../../../hooks/localStorage/use-import-dataset-as-new-project.hook';
+import { useImportDatasetAsNewProject } from '../../../../hooks/storage/use-import-dataset-as-new-project.hook';
 import { isNonEmptyString } from '../../../../shared/util';
 import { useImportDatasetDialog } from '../../providers/import-dataset-dialog-provider.component';
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
