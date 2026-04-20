@@ -58,9 +58,9 @@ export default [
                         {
                             group: ['@tauri-apps/*'],
                             message:
-                                'Import Tauri plugins only from `*.tauri.{ts,tsx}` files under src/platform/. ' +
-                                'Consumers should import the capability module (e.g. ../platform/download-file) ' +
-                                'so the bundler can swap implementations per build target.',
+                                'Import Tauri plugins only from `*.tauri.{ts,tsx}` files. Consumers should ' +
+                                'import the capability module (e.g. ./download-file) so the bundler can ' +
+                                'swap implementations per build target.',
                         },
                     ],
                 },
@@ -78,13 +78,13 @@ export default [
             ],
             // Forbid `isTauri()` runtime branching. Per-platform behaviour must
             // be selected at build time by the bundler via `*.tauri.{ts,tsx}`
-            // overrides in `src/platform/` — see src-tauri/README.md.
+            // file overrides — see src-tauri/README.md.
             'no-restricted-syntax': [
                 'error',
                 {
                     selector: "CallExpression[callee.name='isTauri']",
                     message:
-                        'Do not branch on `isTauri()` at runtime. Add or split a capability module under src/platform/ instead.',
+                        'Do not branch on `isTauri()` at runtime. Add or split a capability module via a `.tauri.{ts,tsx}` twin instead.',
                 },
             ],
         },
@@ -96,9 +96,10 @@ export default [
         },
     },
     {
-        // Relax the `@tauri-apps/*` import restriction for Tauri platform files.
-        // These files are the bundler's swap targets and must import the plugins.
-        files: ['src/platform/**/*.tauri.{ts,tsx}'],
+        // Relax the `@tauri-apps/*` import restriction for Tauri twin files.
+        // The `.tauri.{ts,tsx}` extension is the contract — these files may
+        // live anywhere under `src/` next to their consumers.
+        files: ['src/**/*.tauri.{ts,tsx}'],
         rules: {
             'no-restricted-imports': [
                 'error',

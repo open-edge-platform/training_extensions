@@ -32,7 +32,7 @@ resolve: {
 A consumer always imports a plain name:
 
 ```ts
-import { downloadFile } from '@/platform/download-file';
+import { downloadFile } from './download-file';
 ```
 
 The bundler resolves that import in extension order:
@@ -49,16 +49,17 @@ cannot bloat the desktop bundle.
 ### Conventions
 
 ```
-src/platform/
-  download-file.ts         ← web (default) implementation
-  download-file.tauri.ts   ← tauri override (fetches via webview and triggers a blob anchor download to Downloads/)
-  …                        ← future capabilities follow the same pair
+src/
+  features/
+    foo/
+      use-bar.ts              ← web (default)
+      use-bar.tauri.ts        ← tauri override
 ```
 
 Rules of thumb when adding a platform-specific behaviour:
 
 1. **Plain file is the default.** It runs in both web and Tauri _unless_
-   shadowed by a `.tauri.*` twin.
+   shadowed by a `.tauri.*` twin sitting next to it.
 2. **`.tauri.*` files may import `@tauri-apps/*`.** Other source files may
    not — this is enforced by the `no-restricted-imports` rule in
    [`../eslint.config.js`](../eslint.config.js).
