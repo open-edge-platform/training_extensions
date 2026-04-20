@@ -304,18 +304,51 @@ class BenchmarkRunner:
         allowed_phases: set[str],
         size_tier_map: dict[str, str],
     ) -> None:
-        """Run all seeds for a single experiment and log them to MLflow."""
+        """Run all seeds for a single experiment, then log them to MLflow.
+
+        Seeds are executed first and their results collected in memory. Only
+        after every seed has completed do we open any MLflow runs and push
+        results. This guarantees that partially-completed experiments never
+        leak into MLflow: either every seed is logged together (with its
+        rollup aggregate), or nothing is.
+        """
         num_seeds = self.config.num_seeds or experiment.num_seeds
         seed_results: list[ExperimentResult] = []
 
-        # Wrap all seeds for this (task, model, dataset, scenario) in a
-        # single rollup parent run so the MLflow UI shows ONE row per
-        # experiment that expands into per-seed children.  Only open a
-        # parent when tracking is enabled AND we'll actually produce
-        # more than one child — otherwise the single-seed case stays
-        # flat (no empty parent row cluttering the table).
+        # Phase 1 — run every seed. No MLflow calls happen here.
+        for seed in range(num_seeds):
+            result = self._run_single(experiment, seed, data_path, allowed_phases)
+            seed_results.append(result)
+            if result.success:
+                self.results.append(result)
+            else:
+                self.failures.append(result)
+
+        # Phase 2 — all seeds are done; now push everything to MLflow.
+        self._log_experiment_results(seed_results, experiment, size_tier_map)
+
+    def _log_experiment_results(
+        self,
+        seed_results: list[ExperimentResult],
+        experiment: Experiment,
+        size_tier_map: dict[str, str],
+    ) -> None:
+        """Push a completed experiment's seed results (and rollup) to MLflow.
+
+        No-op when tracking is disabled or no seeds were produced.
+
+        When more than one seed was run, all per-seed runs are wrapped in a
+        single rollup parent run (with a ``log_aggregate`` summary) so the
+        MLflow UI shows ONE row per experiment that expands into per-seed
+        children. For the single-seed case the run stays flat to avoid an
+        empty parent row cluttering the table.
+        """
+        if self._tracker is None or not seed_results:
+            return
+
+        use_parent = len(seed_results) > 1
         parent_ctx = None
-        if self._tracker is not None and num_seeds > 1:
+        if use_parent:
             try:
                 parent_ctx = self._tracker.start_parent_run(experiment)
                 parent_ctx.__enter__()
@@ -324,16 +357,10 @@ class BenchmarkRunner:
                 parent_ctx = None
 
         try:
-            for seed in range(num_seeds):
-                result = self._run_single(experiment, seed, data_path, allowed_phases)
-                seed_results.append(result)
+            for result in seed_results:
                 self._log_seed_result(result, experiment, size_tier_map, nested=parent_ctx is not None)
-                if result.success:
-                    self.results.append(result)
-                else:
-                    self.failures.append(result)
 
-            if parent_ctx is not None and self._tracker is not None:
+            if parent_ctx is not None:
                 try:
                     self._tracker.log_aggregate(seed_results, experiment)
                 except Exception:
