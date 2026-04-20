@@ -41,7 +41,7 @@ WORKDIR /home/validation
 ## OTX Development Env
 #########################################################
 
-FROM python_base_cuda as otx_development_env
+FROM python_base_cuda as getitune_development_env
 
 RUN mkdir actions-runner
 WORKDIR /home/validation/actions-runner

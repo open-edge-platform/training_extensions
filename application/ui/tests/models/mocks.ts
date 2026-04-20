@@ -223,6 +223,8 @@ export const MOCKED_TRAINING_CONFIGURATION: TrainingConfiguration = {
                                     value_type: 'float_range',
                                     value: [0.5, 1.5],
                                     default_value: [0.5, 1.5],
+                                    min_value: 0,
+                                    max_value: 10,
                                 },
                                 {
                                     type: 'parameter',
@@ -332,6 +334,8 @@ export const MOCKED_TRAINING_CONFIGURATION: TrainingConfiguration = {
                                     value_type: 'float_range',
                                     value: [0.875, 1.125],
                                     default_value: [0.875, 1.125],
+                                    min_value: 0,
+                                    max_value: 10,
                                 },
                                 {
                                     type: 'parameter',
@@ -343,6 +347,8 @@ export const MOCKED_TRAINING_CONFIGURATION: TrainingConfiguration = {
                                     value_type: 'float_range',
                                     value: [0.5, 1.5],
                                     default_value: [0.5, 1.5],
+                                    min_value: 0,
+                                    max_value: 10,
                                 },
                                 {
                                     type: 'parameter',
@@ -354,6 +360,8 @@ export const MOCKED_TRAINING_CONFIGURATION: TrainingConfiguration = {
                                     value_type: 'float_range',
                                     value: [0.5, 1.5],
                                     default_value: [0.5, 1.5],
+                                    min_value: 0,
+                                    max_value: 10,
                                 },
                                 {
                                     type: 'parameter',
@@ -365,6 +373,8 @@ export const MOCKED_TRAINING_CONFIGURATION: TrainingConfiguration = {
                                     value_type: 'float_range',
                                     value: [-0.05, 0.05],
                                     default_value: [-0.05, 0.05],
+                                    min_value: -1,
+                                    max_value: 1,
                                 },
                                 {
                                     type: 'parameter',
@@ -422,6 +432,8 @@ export const MOCKED_TRAINING_CONFIGURATION: TrainingConfiguration = {
                                     value_type: 'float_range',
                                     value: [0.1, 2],
                                     default_value: [0.1, 2],
+                                    min_value: 0,
+                                    max_value: 10,
                                 },
                                 {
                                     type: 'parameter',
@@ -1091,6 +1103,8 @@ export const MOCKED_MODEL_TRAINING_CONFIGURATION: TrainingConfiguration = {
                                     value_type: 'float_range',
                                     value: [0.5, 1.5],
                                     default_value: [0.5, 1.5],
+                                    min_value: 0,
+                                    max_value: 10,
                                 },
                                 {
                                     type: 'parameter',
@@ -1200,6 +1214,8 @@ export const MOCKED_MODEL_TRAINING_CONFIGURATION: TrainingConfiguration = {
                                     value_type: 'float_range',
                                     value: [0.875, 1.125],
                                     default_value: [0.875, 1.125],
+                                    min_value: 0,
+                                    max_value: 10,
                                 },
                                 {
                                     type: 'parameter',
@@ -1211,6 +1227,8 @@ export const MOCKED_MODEL_TRAINING_CONFIGURATION: TrainingConfiguration = {
                                     value_type: 'float_range',
                                     value: [0.5, 1.5],
                                     default_value: [0.5, 1.5],
+                                    min_value: 0,
+                                    max_value: 10,
                                 },
                                 {
                                     type: 'parameter',
@@ -1222,6 +1240,8 @@ export const MOCKED_MODEL_TRAINING_CONFIGURATION: TrainingConfiguration = {
                                     value_type: 'float_range',
                                     value: [0.5, 1.5],
                                     default_value: [0.5, 1.5],
+                                    min_value: 0,
+                                    max_value: 10,
                                 },
                                 {
                                     type: 'parameter',
@@ -1233,6 +1253,8 @@ export const MOCKED_MODEL_TRAINING_CONFIGURATION: TrainingConfiguration = {
                                     value_type: 'float_range',
                                     value: [-0.05, 0.05],
                                     default_value: [-0.05, 0.05],
+                                    min_value: -1,
+                                    max_value: 1,
                                 },
                                 {
                                     type: 'parameter',
@@ -1290,6 +1312,8 @@ export const MOCKED_MODEL_TRAINING_CONFIGURATION: TrainingConfiguration = {
                                     value_type: 'float_range',
                                     value: [0.1, 2],
                                     default_value: [0.1, 2],
+                                    min_value: 0,
+                                    max_value: 10,
                                 },
                                 {
                                     type: 'parameter',

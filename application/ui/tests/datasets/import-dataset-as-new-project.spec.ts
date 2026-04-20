@@ -32,7 +32,7 @@ const uploadAndWaitForPreparation = async (importDatasetPage: ImportDatasetPage)
 
 const selectTaskTypeAndProceed = async (importDatasetPage: ImportDatasetPage) => {
     const dialog = importDatasetPage.getDialog();
-    await expect(dialog.getByRole('button', { name: 'Detection (Recommended) Task' })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Object detection (Recommended) Task' })).toBeVisible();
     await dialog.getByRole('button', { name: 'Next' }).click();
 };
 
@@ -253,6 +253,7 @@ test.describe('Import dataset as new project', () => {
 
         await test.step('Prepare job fails and dialog closes', async () => {
             await expect(importDatasetPage.getDialog()).toBeHidden();
+            await page.getByLabel('Technical details of the job failure').click();
             await expect(page.getByText(errorData.error, { exact: true })).toBeVisible();
             await expect(page.getByText(errorData.message, { exact: true })).toBeVisible();
         });
@@ -311,6 +312,7 @@ test.describe('Import dataset as new project', () => {
         });
 
         await test.step('Verify error notification is shown', async () => {
+            await page.getByLabel('Technical details of the job failure').click();
             await expect(page.getByText(errorData.error, { exact: true })).toBeVisible();
             await expect(page.getByText(errorData.message, { exact: true })).toBeVisible();
         });

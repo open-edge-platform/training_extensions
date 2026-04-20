@@ -4,7 +4,7 @@
 import { Button, Divider, Flex, Text, View } from '@geti/ui';
 
 import { ExportDatasetJob } from '../../../../../../constants/shared-types';
-import { useExportDataset } from '../../../../../../hooks/localStorage/use-export-dataset.hook';
+import { useExportDataset } from '../../../../../../hooks/storage/use-export-dataset.hook';
 import { ExportJobDetails } from '../export-details/export-details.component';
 
 type ExportFailedJobProps = {

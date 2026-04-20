@@ -70,6 +70,12 @@ const test = testBase.extend<Fixtures>({
                             status: 'ok',
                         });
                     }),
+                    http.get('/api/system/info', ({ response }) => {
+                        return response(200).json({
+                            license_accepted: true,
+                            platform: 'linux',
+                        });
+                    }),
                     http.get('/api/system/metrics/memory', ({ response }) => {
                         return response(200).json({});
                     }),

@@ -6,7 +6,7 @@
 import pytest
 import torch
 
-from otx.backend.native.models.detection.necks.hybrid_encoder import HybridEncoder, HybridEncoderModule
+from getitune.backend.native.models.detection.necks.hybrid_encoder import HybridEncoder, HybridEncoderModule
 
 
 class TestHybridEncoderModule:

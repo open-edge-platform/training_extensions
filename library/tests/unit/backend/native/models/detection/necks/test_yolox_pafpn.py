@@ -8,8 +8,8 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/tests/test_mod
 
 import torch
 
-from otx.backend.native.models.detection.necks.yolox_pafpn import YOLOXPAFPNModule
-from otx.backend.native.models.modules.conv_module import DepthwiseSeparableConvModule
+from getitune.backend.native.models.detection.necks.yolox_pafpn import YOLOXPAFPNModule
+from getitune.backend.native.models.modules.conv_module import DepthwiseSeparableConvModule
 
 
 class TestYOLOXPAFPNModule:

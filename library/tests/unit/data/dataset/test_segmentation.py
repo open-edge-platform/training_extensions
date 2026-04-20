@@ -6,8 +6,8 @@ from unittest.mock import Mock
 
 from datumaro.experimental import Dataset
 
-from otx.data.dataset.segmentation import OTXSegmentationDataset
-from otx.data.entity.sample import SegmentationSample
+from getitune.data.dataset.segmentation import OTXSegmentationDataset
+from getitune.data.entity.sample import SegmentationSample
 
 
 class TestOTXSegmentationDataset:

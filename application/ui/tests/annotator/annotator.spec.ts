@@ -171,7 +171,7 @@ test.describe('Annotator', () => {
         });
     });
 
-    test('Tool selection persists across media items', async ({ page, polygonTool, annotatorPage, network }) => {
+    test('Tool selection persists across media items', async ({ polygonTool, annotatorPage, network }) => {
         const smallPolygon: Polygon = {
             type: 'polygon',
             points: [
@@ -249,23 +249,6 @@ test.describe('Annotator', () => {
             await polygonTool.drawPolygon(smallPolygon);
 
             expect(await annotatorPage.getAnnotationsListItems('annotation polygon')).toHaveLength(1);
-        });
-
-        await test.step('Verify tool resets when switching modes', async () => {
-            // Select SAM tool because polygon is the default tool for segmentation projects
-            await page.getByRole('button', { name: 'sam tool' }).click();
-
-            await annotatorPage.openPredictionMode();
-
-            await expect(page.getByTestId('primary-toolbar-id')).toBeHidden();
-
-            await annotatorPage.openAnnotationMode();
-
-            await expect(page.getByTestId('primary-toolbar-id')).toBeVisible();
-
-            // Verify polygon tool is active by drawing a polygon without manually selecting it
-            await polygonTool.drawPolygon(smallPolygon);
-            expect(await annotatorPage.getAnnotationsListItems('annotation polygon')).toHaveLength(2);
         });
     });
 

@@ -5,14 +5,14 @@ import { isNil } from 'lodash-es';
 
 import type { BenchmarkMetrics, ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 
-export type AccuracyMetric = { label: string; value: number };
+type AccuracyMetric = { label: string; value: number };
 
 type BenchmarkMetricKey = keyof BenchmarkMetrics;
 
 const ACCURACY_METRIC_LABELS: Partial<Record<BenchmarkMetricKey, string>> = {
-    imagenet_top1_accuracy: 'Top-1 Acc',
-    coco_map_50_95: 'mAP',
-    coco_map_50: 'mAP50',
+    imagenet_top1_accuracy: 'Top-1 Acc on ImageNet',
+    coco_map_50_95: 'mAP on COCO',
+    coco_map_50: 'mAP50 on COCO',
 };
 
 export const getAccuracyMetric = (

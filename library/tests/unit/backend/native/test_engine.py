@@ -7,18 +7,18 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from otx.backend.native.engine import OTXEngine
-from otx.backend.native.models.base import DataInputParams, OTXModel
-from otx.backend.native.models.classification.multiclass_models import EfficientNetMulticlassCls
-from otx.types.export import OTXExportFormatType
-from otx.types.precision import OTXPrecisionType
+from getitune.backend.native.engine import OTXEngine
+from getitune.backend.native.models.base import DataInputParams, OTXModel
+from getitune.backend.native.models.classification.multiclass_models import EfficientNetMulticlassCls
+from getitune.types.export import OTXExportFormatType
+from getitune.types.precision import OTXPrecisionType
 
 
 @pytest.fixture
 def fxt_engine(tmp_path) -> OTXEngine:
     return OTXEngine(
         data="tests/assets/classification_cifar10",
-        model="src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml",
+        model="src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml",
         work_dir=tmp_path,
         max_epochs=9,
     )
@@ -31,7 +31,7 @@ class TestEngine:
         engine = OTXEngine(
             work_dir=tmp_path,
             data=data_root,
-            model="src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+            model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
         )
         assert engine.task == "MULTI_CLASS_CLS"
         assert engine.datamodule.task == "MULTI_CLASS_CLS"
@@ -55,13 +55,13 @@ class TestEngine:
         mock_datamodule.task = "MULTI_CLASS_CLS"
 
         mocker.patch(
-            "otx.tools.auto_configurator.AutoConfigurator.get_datamodule",
+            "getitune.tools.auto_configurator.AutoConfigurator.get_datamodule",
             return_value=mock_datamodule,
         )
         engine = OTXEngine(
             work_dir=tmp_path,
             data=data_root,
-            model="src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+            model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
         )
 
         assert engine._model.data_input_params == DataInputParams((1234, 1234), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
@@ -69,8 +69,8 @@ class TestEngine:
 
     def test_training_with_override_args(self, fxt_engine, mocker) -> None:
         mocker.patch("pathlib.Path.symlink_to")
-        mocker.patch("otx.backend.native.engine.Trainer.fit")
-        mock_seed_everything = mocker.patch("otx.backend.native.engine.seed_everything")
+        mocker.patch("getitune.backend.native.engine.Trainer.fit")
+        mock_seed_everything = mocker.patch("getitune.backend.native.engine.seed_everything")
 
         assert fxt_engine._cache.args["max_epochs"] == 9
 
@@ -82,7 +82,7 @@ class TestEngine:
     def test_training_with_checkpoint(self, fxt_engine, resume: bool, mocker: MockerFixture, tmpdir) -> None:
         checkpoint = "path/to/checkpoint.ckpt"
 
-        mock_trainer = mocker.patch("otx.backend.native.engine.Trainer")
+        mock_trainer = mocker.patch("getitune.backend.native.engine.Trainer")
         mock_trainer.return_value.default_root_dir = Path(tmpdir)
         mock_trainer_fit = mock_trainer.return_value.fit
 
@@ -105,8 +105,8 @@ class TestEngine:
 
     def test_test(self, fxt_engine, mocker: MockerFixture) -> None:
         checkpoint = "path/to/checkpoint.ckpt"
-        mock_test = mocker.patch("otx.backend.native.engine.Trainer.test")
-        _ = mocker.patch("otx.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
+        mock_test = mocker.patch("getitune.backend.native.engine.Trainer.test")
+        _ = mocker.patch("getitune.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
         mocker.patch.object(fxt_engine, "_load_model_checkpoint", return_value={})
 
         mock_model = mocker.create_autospec(OTXModel)
@@ -119,11 +119,11 @@ class TestEngine:
     @pytest.mark.parametrize("explain", [True, False])
     def test_predict(self, fxt_engine, explain, mocker: MockerFixture) -> None:
         checkpoint = "path/to/checkpoint.ckpt"
-        mock_predict = mocker.patch("otx.backend.native.engine.Trainer.predict")
-        _ = mocker.patch("otx.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
+        mock_predict = mocker.patch("getitune.backend.native.engine.Trainer.predict")
+        _ = mocker.patch("getitune.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
         mocker.patch.object(fxt_engine, "_load_model_checkpoint", return_value={})
         mock_process_saliency_maps = mocker.patch(
-            "otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
+            "getitune.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
         )
 
         mock_model = mocker.create_autospec(OTXModel)
@@ -139,7 +139,7 @@ class TestEngine:
         with pytest.raises(RuntimeError, match="To make export, checkpoint must be specified."):
             fxt_engine.export()
 
-        mock_export = mocker.patch("otx.backend.native.engine.OTXModel.export")
+        mock_export = mocker.patch("getitune.backend.native.engine.OTXModel.export")
 
         mock_load_from_checkpoint = mocker.patch.object(fxt_engine, "_load_model_checkpoint", return_value={})
         mocker.patch.object(fxt_engine.model, "load_state_dict", return_value=fxt_engine.model)
@@ -188,11 +188,11 @@ class TestEngine:
         ],
     )
     def test_explain(self, fxt_engine, checkpoint, mocker) -> None:
-        mock_predict = mocker.patch("otx.backend.native.engine.Trainer.predict")
-        _ = mocker.patch("otx.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
+        mock_predict = mocker.patch("getitune.backend.native.engine.Trainer.predict")
+        _ = mocker.patch("getitune.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
         mocker.patch.object(fxt_engine, "_load_model_checkpoint", return_value={})
         mock_process_saliency_maps = mocker.patch(
-            "otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
+            "getitune.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
         )
 
         mock_model = mocker.create_autospec(OTXModel)
@@ -237,10 +237,10 @@ class TestEngine:
             )
 
     def test_from_config(self, tmp_path, mocker) -> None:
-        recipe_path = "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
+        recipe_path = "src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
         data_root = "tests/assets/classification_cifar10"
         mocker.patch("pathlib.Path.symlink_to")
-        mocker.patch("otx.backend.native.engine.Trainer.fit")
+        mocker.patch("getitune.backend.native.engine.Trainer.fit")
 
         overriding = {
             "data.train_subset.batch_size": 3,
@@ -293,7 +293,7 @@ class TestEngine:
             work_dir=tmp_path,
             data=data_root,
             num_devices=3,
-            model="src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+            model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
         )
         assert engine.num_devices == 3
         assert engine._cache.args.get("devices") == 3

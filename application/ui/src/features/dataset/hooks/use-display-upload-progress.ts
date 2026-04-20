@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import { toast } from '@geti/ui';
 
-export type UploadProgress = {
+type UploadProgress = {
     total: number;
     completed: number;
     succeeded: number;
@@ -13,7 +13,7 @@ export type UploadProgress = {
     isUploading: boolean;
 };
 
-export type UploadOutcome = Pick<UploadProgress, 'succeeded' | 'failed'>;
+type UploadOutcome = Pick<UploadProgress, 'succeeded' | 'failed'>;
 
 type UploadProgressUpdate = {
     settledResults: PromiseSettledResult<unknown>[];

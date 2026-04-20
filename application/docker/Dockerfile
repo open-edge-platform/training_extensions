@@ -40,18 +40,18 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 FROM backend-base AS cpu-base
 
 # Step 1: Install all third-party dependencies (cache key = uv.lock + pyproject.toml + version only).
-# --no-install-project skips building/installing the local project and its path deps (otx),
+# --no-install-project skips building/installing the local project and its path deps (getitune),
 # so changes to library/ source code do NOT invalidate this (slow) layer.
-# Note: __init__.py is needed because otx uses dynamic versioning (attr = "otx.__version__").
+# Note: __init__.py is needed because getitune uses dynamic versioning (attr = "getitune.__version__").
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library/pyproject.toml,target=/library/pyproject.toml \
-    --mount=type=bind,source=library/src/otx/__init__.py,target=/library/src/otx/__init__.py \
+    --mount=type=bind,source=library/src/getitune/__init__.py,target=/library/src/getitune/__init__.py \
     uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace --extra mqtt --extra cpu
 
-# Step 2: Build and install the local otx package + the project itself.
+# Step 2: Build and install the local getitune package + the project itself.
 # This layer is invalidated by library source changes, but is fast since all
 # third-party deps are already installed from step 1.
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -72,10 +72,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library/pyproject.toml,target=/library/pyproject.toml \
-    --mount=type=bind,source=library/src/otx/__init__.py,target=/library/src/otx/__init__.py \
+    --mount=type=bind,source=library/src/getitune/__init__.py,target=/library/src/getitune/__init__.py \
     uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace --extra mqtt --extra cuda
 
-# Step 2: Build and install the local otx package + the project itself.
+# Step 2: Build and install the local getitune package + the project itself.
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
@@ -94,10 +94,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library/pyproject.toml,target=/library/pyproject.toml \
-    --mount=type=bind,source=library/src/otx/__init__.py,target=/library/src/otx/__init__.py \
+    --mount=type=bind,source=library/src/getitune/__init__.py,target=/library/src/getitune/__init__.py \
     uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace --extra mqtt --extra xpu
 
-# Step 2: Build and install the local otx package + the project itself.
+# Step 2: Build and install the local getitune package + the project itself.
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
@@ -108,7 +108,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ##################
 # Geti UI packages
 ##################
-FROM node:24-alpine3.22@sha256:4f33c7804fa7775b87875f512e25e515692210bfdeafd715eb8bc441c364e2f6 AS geti-ui-packages
+FROM node:24-alpine3.22@sha256:b689d4005875ae167178471a7a622ec2909459a3bbb32277260be1971af7a99f AS geti-ui-packages
 
 WORKDIR /home/application/ui/
 RUN apk add --no-cache git=2.49.1-r0
@@ -118,7 +118,7 @@ RUN npm run clone-geti-ui-packages
 #############
 # Web UI deps
 #############
-FROM node:24-alpine3.22@sha256:4f33c7804fa7775b87875f512e25e515692210bfdeafd715eb8bc441c364e2f6 AS web-ui-base
+FROM node:24-alpine3.22@sha256:b689d4005875ae167178471a7a622ec2909459a3bbb32277260be1971af7a99f AS web-ui-base
 
 WORKDIR /home/application/ui/
 

@@ -10,9 +10,9 @@ from pathlib import Path
 from typing import Any, ClassVar
 from warnings import warn
 
+from getitune.backend.native.cli.utils import get_otx_root_path
+from getitune.tools.auto_configurator import AutoConfigurator
 from loguru import logger
-from otx.backend.native.cli.utils import get_otx_root_path
-from otx.tools.auto_configurator import AutoConfigurator
 
 RECIPE_PATH = get_otx_root_path() / "recipe"
 
@@ -241,7 +241,7 @@ class TransformsUpdater:
             "stage": "gpu",
         },
         "iou_random_crop": {
-            "class_paths": ["otx.data.augmentation.transforms.RandomIoUCrop"],
+            "class_paths": ["getitune.data.augmentation.transforms.RandomIoUCrop"],
             "stage": "cpu",
         },
         "random_zoom_out": {
@@ -249,11 +249,11 @@ class TransformsUpdater:
             "stage": "cpu",
         },
         "mixup": {
-            "class_paths": ["otx.data.augmentation.transforms.CachedMixUp"],
+            "class_paths": ["getitune.data.augmentation.transforms.CachedMixUp"],
             "stage": "cpu",
         },
         "mosaic": {
-            "class_paths": ["otx.data.augmentation.transforms.CachedMosaic"],
+            "class_paths": ["getitune.data.augmentation.transforms.CachedMosaic"],
             "stage": "cpu",
         },
         "random_erasing": {
@@ -345,7 +345,7 @@ class TransformsUpdater:
                 if aug_name == "random_resize_crop":
                     # Replace crop with simple Resize to keep the pipeline valid
                     aug_list[existing_idx] = {
-                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "class_path": "getitune.data.augmentation.transforms.Resize",
                         "init_args": {"size": "$(input_size)"},
                     }
                 else:
@@ -515,7 +515,7 @@ class HyperparametersUpdater:
 
         idx = GetiConfigConverter.get_callback_idx(
             config["callbacks"],
-            "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
+            "getitune.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
         )
         if not enable and idx > -1:
             config["callbacks"].pop(idx)
@@ -662,7 +662,7 @@ class GetiConfigConverter:
 
             engine, train_kwargs = converter.instantiate(
                 config=config,
-                work_dir="otx-workspace",
+                work_dir="getitune-workspace",
                 data_root="tests/assets/detection_coco",
             )
 
@@ -777,7 +777,7 @@ class GetiConfigConverter:
         callbacks = config.get("callbacks", [])
         idx = GetiConfigConverter.get_callback_idx(
             callbacks,
-            "otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback",
+            "getitune.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback",
         )
         if idx > -1:
             callbacks.pop(idx)

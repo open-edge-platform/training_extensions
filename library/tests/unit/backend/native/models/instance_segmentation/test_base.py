@@ -6,11 +6,11 @@
 import pytest
 import torch
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
-from otx.backend.native.models.instance_segmentation.maskrcnn_tv import MaskRCNNTV
-from otx.backend.native.tools.explain.explain_algo import feature_vector_fn
-from otx.types.export import TaskLevelExportParameters
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
+from getitune.backend.native.models.instance_segmentation.maskrcnn_tv import MaskRCNNTV
+from getitune.backend.native.tools.explain.explain_algo import feature_vector_fn
+from getitune.types.export import TaskLevelExportParameters
 
 
 class TestOTXInstanceSegModel:

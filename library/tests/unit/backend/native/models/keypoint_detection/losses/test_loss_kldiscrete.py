@@ -4,7 +4,7 @@
 
 import torch
 
-from otx.backend.native.models.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
+from getitune.backend.native.models.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
 
 
 class TestKLDiscretLoss:

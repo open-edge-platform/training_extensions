@@ -8,8 +8,8 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/tests/test_mod
 
 import torch
 
-from otx.backend.native.models.detection.utils.assigners import SimOTAAssigner
-from otx.backend.native.models.utils.utils import InstanceData
+from getitune.backend.native.models.detection.utils.assigners import SimOTAAssigner
+from getitune.backend.native.models.utils.utils import InstanceData
 
 
 class TestSimOTAAssigner:

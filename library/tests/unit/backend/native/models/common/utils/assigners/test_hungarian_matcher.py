@@ -6,7 +6,7 @@
 import pytest
 import torch
 
-from otx.backend.native.models.common.utils.assigners import HungarianMatcher
+from getitune.backend.native.models.common.utils.assigners import HungarianMatcher
 
 
 class TestHungarianMatcher:

@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from otx.backend.native.cli.utils import get_otx_root_path
-from otx.types.task import OTXTaskType
+from getitune.backend.native.cli.utils import get_otx_root_path
+from getitune.types.task import OTXTaskType
 
 RECIPE_PATH = get_otx_root_path() / "recipe"
 
@@ -127,7 +127,7 @@ def pytest_configure(config):
     run_category_only = config.getoption("--run-category-only")
 
     # This assumes have OTX installed in environment.
-    otx_module = importlib.import_module("otx")
+    otx_module = importlib.import_module("getitune")
     # Modify RECIPE_PATH based on the task
     recipe_path = Path(inspect.getfile(otx_module)).parent / "recipe"
     task_list = get_task_list(task.lower())

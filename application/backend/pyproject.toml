@@ -39,9 +39,9 @@ dependencies = [
 # - cpu: only CPU training (no GPU support)
 # - xpu: support training on compatible Intel GPUs
 # - cuda: support training on compatible NVIDIA GPUs
-cpu = ["otx[cpu]"]
-xpu = ["otx[xpu]"]
-cuda = ["otx[cuda]"]
+cpu = ["getitune[cpu]"]
+xpu = ["getitune[xpu]"]
+cuda = ["getitune[cuda]"]
 
 mqtt = [
     "paho-mqtt~=2.1.0",
@@ -77,9 +77,9 @@ conflicts = [
     # redeclare library conflicts to workaround bug with uv dependency resolution
     # For details, see: https://github.com/astral-sh/uv/issues/9942
     [
-        { package = "otx", extra = "cpu" },
-        { package = "otx", extra = "xpu" },
-        { package = "otx", extra = "cuda" },
+        { package = "getitune", extra = "cpu" },
+        { package = "getitune", extra = "xpu" },
+        { package = "getitune", extra = "cuda" },
     ],
 ]
 
@@ -104,7 +104,7 @@ allow-direct-references = true
 packages = ["app"]
 
 [tool.uv.sources]
-otx = { path = "../../library", editable = true }
+getitune = { path = "../../library", editable = true }
 
 [tool.ruff]
 target-version = "py313"

@@ -7,10 +7,10 @@ import pytest
 from onnx import ModelProto
 from onnxconverter_common import float16
 
-from otx.backend.native.exporter.base import OTXExportFormatType, OTXModelExporter, OTXPrecisionType
-from otx.backend.native.models.base import DataInputParams
-from otx.config.data import IntensityConfig
-from otx.types.export import TaskLevelExportParameters
+from getitune.backend.native.exporter.base import OTXExportFormatType, OTXModelExporter, OTXPrecisionType
+from getitune.backend.native.models.base import DataInputParams
+from getitune.config.data import IntensityConfig
+from getitune.types.export import TaskLevelExportParameters
 
 
 class MockModelExporter(OTXModelExporter):

@@ -5,7 +5,7 @@ import os
 
 import pytest
 
-from otx.backend.openvino.models.utils import get_default_num_async_infer_requests
+from getitune.backend.openvino.models.utils import get_default_num_async_infer_requests
 
 
 def test_get_default_num_async_infer_requests() -> None:

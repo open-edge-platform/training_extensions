@@ -99,8 +99,8 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('transformers')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
-# ---- OTX and model packages ----
-tmp_ret = collect_all('otx')
+# ---- Geti Tune and model packages ----
+tmp_ret = collect_all('getitune')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 tmp_ret = collect_all('rfdetr')

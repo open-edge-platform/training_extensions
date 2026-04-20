@@ -7,8 +7,8 @@ import pytest
 import torch
 from torch import nn
 
-from otx.backend.native.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
-from otx.backend.native.models.modules.norm import build_norm_layer
+from getitune.backend.native.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
+from getitune.backend.native.models.modules.norm import build_norm_layer
 
 
 def test_conv_module():

@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { Content, Flex, Grid, Heading, IllustratedMessage, View } from '@geti/ui';
+import { Content, Heading, IllustratedMessage, View } from '@geti/ui';
 import { usePipelineMetrics } from 'hooks/api/pipeline.hook';
 import { CartesianGrid, Label, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
 
@@ -105,36 +105,30 @@ export const Graphs = () => {
     const hasData = latencyData.length > 0 || throughputData.length > 0;
 
     return (
-        <Grid gridArea={'aside'} height={'100%'} areas={['header', 'graphs']} rows={['min-content', 'minmax(0, 1fr)']}>
-            <Flex gridArea={'header'} alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
-                <Heading level={4}>Model statistics</Heading>
-            </Flex>
-            <View gridArea={'graphs'} UNSAFE_style={{ overflow: 'hidden auto' }}>
-                {!hasData && !metrics ? (
-                    <IllustratedMessage>
-                        <Heading>No statistics available</Heading>
-                        <Content>
-                            Model statistics will appear here once the pipeline starts running and starts processing
-                            data.
-                        </Content>
-                    </IllustratedMessage>
-                ) : (
-                    <>
-                        <View>
-                            <Heading level={4} marginBottom={'size-300'}>
-                                Throughput
-                            </Heading>
-                            <Graph label='requests/sec' data={throughputData} />
-                        </View>
-                        <View>
-                            <Heading level={4} marginBottom={'size-300'}>
-                                Latency
-                            </Heading>
-                            <Graph label='ms' data={latencyData} />
-                        </View>
-                    </>
-                )}
-            </View>
-        </Grid>
+        <View height={'100%'} UNSAFE_style={{ overflow: 'hidden auto' }}>
+            {!hasData && !metrics ? (
+                <IllustratedMessage>
+                    <Heading>No statistics available</Heading>
+                    <Content>
+                        Model statistics will appear here once the pipeline starts running and starts processing data.
+                    </Content>
+                </IllustratedMessage>
+            ) : (
+                <>
+                    <View>
+                        <Heading level={4} marginBottom={'size-300'}>
+                            Throughput
+                        </Heading>
+                        <Graph label='requests/sec' data={throughputData} />
+                    </View>
+                    <View>
+                        <Heading level={4} marginBottom={'size-300'}>
+                            Latency
+                        </Heading>
+                        <Graph label='ms' data={latencyData} />
+                    </View>
+                </>
+            )}
+        </View>
     );
 };

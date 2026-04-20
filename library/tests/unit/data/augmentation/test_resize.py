@@ -12,8 +12,8 @@ from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from torch import LongTensor
 from torchvision import tv_tensors
 
-from otx.data.augmentation.transforms import Resize
-from otx.data.entity.sample import (
+from getitune.data.augmentation.transforms import Resize
+from getitune.data.entity.sample import (
     DetectionSample,
     InstanceSegmentationSample,
 )

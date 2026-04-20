@@ -152,13 +152,30 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-na
     fi
 
     passthrough_devices_args=()
+    has_video_device=false
     for dev in {{ passthrough-devices }}; do
         if [[ -e "$dev" ]]; then
             passthrough_devices_args+=(--device "$dev":"$dev")
+            # Track if any video device is being passed through
+            if [[ "$dev" == /dev/video* ]]; then
+                has_video_device=true
+            fi
         else
             echo "Warning: device '$dev' not found, skipping." >&2
         fi
     done
+
+    # When a video device is passed through, add the host's video group so the
+    # container process can actually open /dev/videoN (the in-container 'video'
+    # group created in the Dockerfile may have a different GID than the host's).
+    if [[ "$has_video_device" == "true" ]]; then
+        VIDEO_GID=$(getent group video | cut -d: -f3)
+        if [[ -n "$VIDEO_GID" ]]; then
+            passthrough_devices_args+=(--group-add "$VIDEO_GID")
+        else
+            echo "Warning: could not resolve host 'video' group GID; camera access may fail." >&2
+        fi
+    fi
 
     SHM_SIZE_FLAG=""
     if [[ -n "{{ shm-size }}" ]]; then

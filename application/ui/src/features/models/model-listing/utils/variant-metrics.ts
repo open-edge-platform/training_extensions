@@ -4,7 +4,7 @@
 import type { ModelVariant } from '../../../../constants/shared-types';
 import { getTestingMetrics } from '../components/model-row/utils';
 
-export type PrimaryTestingMetricValue = {
+type PrimaryTestingMetricValue = {
     name: string;
     value: number;
 };

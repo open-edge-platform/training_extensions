@@ -10,9 +10,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from otx.backend.native.callbacks.aug_scheduler import DataAugSwitch
-from otx.data.augmentation import CPUAugmentationPipeline
-from otx.data.dataset.mixins import DataAugSwitchMixin
+from getitune.backend.native.callbacks.aug_scheduler import DataAugSwitch
+from getitune.data.augmentation import CPUAugmentationPipeline
+from getitune.data.dataset.mixins import DataAugSwitchMixin
 
 
 class MockDataset(DataAugSwitchMixin):

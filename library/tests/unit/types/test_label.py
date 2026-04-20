@@ -9,7 +9,7 @@ from datumaro.experimental.categories import (
     LabelGroup,
 )
 
-from otx.types.label import HLabelInfo, NullLabelInfo, SegLabelInfo
+from getitune.types.label import HLabelInfo, NullLabelInfo, SegLabelInfo
 
 
 def test_as_json(fxt_label_info):

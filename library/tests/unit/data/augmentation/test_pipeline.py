@@ -16,8 +16,8 @@ import torchvision.transforms.v2 as tvt_v2
 from torch import nn
 from torchvision import tv_tensors
 
-from otx.config.data import IntensityConfig, SubsetConfig
-from otx.data.augmentation.pipeline import (
+from getitune.config.data import IntensityConfig, SubsetConfig
+from getitune.data.augmentation.pipeline import (
     CPUAugmentationPipeline,
     GPUAugmentationPipeline,
     _configure_input_size,
@@ -203,7 +203,7 @@ class TestCPUAugmentationPipelineFromConfig:
         # intensity transform (wrapped) + 1 user augmentation
         assert len(pipeline.augmentations) == 2
         # First transform should be an _IntensityAdapter wrapping ScaleToUnit
-        from otx.data.augmentation.intensity import ScaleToUnit
+        from getitune.data.augmentation.intensity import ScaleToUnit
 
         assert isinstance(pipeline.augmentations[0], _IntensityAdapter)
         # The inner nn.Sequential should contain ScaleToUnit
@@ -240,7 +240,7 @@ class TestCPUAugmentationPipelineFromConfig:
             input_size=None,
         )
         pipeline = CPUAugmentationPipeline.from_config(config)
-        from otx.data.augmentation.intensity import RangeScale
+        from getitune.data.augmentation.intensity import RangeScale
 
         assert len(pipeline.augmentations) == 1
         assert isinstance(pipeline.augmentations[0], _IntensityAdapter)
@@ -1043,7 +1043,7 @@ class TestGPUAugmentationCallback:
 
     def _make_callback(self, train_augs=None, val_augs=None, test_augs=None):  # noqa: ANN202
         """Create a GPUAugmentationCallback with optional configs."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         train_config = SubsetConfig(augmentations_gpu=train_augs or [])
         val_config = SubsetConfig(augmentations_gpu=val_augs or [])
@@ -1055,7 +1055,7 @@ class TestGPUAugmentationCallback:
         )
 
     def test_init_defaults(self):
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
         assert callback.train_config is None
@@ -1067,8 +1067,8 @@ class TestGPUAugmentationCallback:
 
     def test_setup_creates_pipelines(self):
         """setup() should create train and val pipelines."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
-        from otx.types.task import OTXTaskType
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.types.task import OTXTaskType
 
         train_config = SubsetConfig(
             augmentations_gpu=[
@@ -1101,8 +1101,8 @@ class TestGPUAugmentationCallback:
 
     def test_setup_updates_model_normalization(self):
         """setup() should update model's mean/std from GPU pipeline."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
-        from otx.types.task import OTXTaskType
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.types.task import OTXTaskType
 
         val_config = SubsetConfig(
             augmentations_gpu=[
@@ -1133,7 +1133,7 @@ class TestGPUAugmentationCallback:
 
     def test_on_train_batch_start_no_pipeline(self):
         """If no train pipeline, on_train_batch_start should be a no-op."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
         batch = MagicMock()
@@ -1142,7 +1142,7 @@ class TestGPUAugmentationCallback:
 
     def test_on_val_batch_start_disabled(self):
         """If no val pipeline, validation batches should not be augmented."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
         # _val_pipeline is None by default
@@ -1154,7 +1154,7 @@ class TestGPUAugmentationCallback:
 
     def test_on_test_batch_start_disabled(self):
         """If no test pipeline, test batches should not be augmented."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
         # _test_pipeline is None by default
@@ -1164,7 +1164,7 @@ class TestGPUAugmentationCallback:
 
     def test_test_config_fallback_to_val(self):
         """If test_config is None, it should fall back to val_config."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         val_config = SubsetConfig(augmentations_gpu=[])
         callback = GPUAugmentationCallback(val_config=val_config, test_config=None)
@@ -1172,8 +1172,8 @@ class TestGPUAugmentationCallback:
 
     def test_data_keys_per_task(self):
         """Verify correct data_keys are used for different task types."""
-        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
-        from otx.types.task import OTXTaskType
+        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.types.task import OTXTaskType
 
         expected_keys = {
             OTXTaskType.DETECTION: ["input", "bbox_xyxy", "label"],

@@ -14,11 +14,11 @@ from torch.utils._pytree import register_pytree_node
 from torchvision import tv_tensors
 from torchvision.tv_tensors import Mask
 
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
-from otx.types.task import OTXTaskType
-from otx.utils.device import is_xpu_available
+from getitune.data.entity.base import ImageInfo
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
+from getitune.types.task import OTXTaskType
+from getitune.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
 
 if TYPE_CHECKING:
