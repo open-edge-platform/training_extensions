@@ -48,6 +48,14 @@ class OTXCLI:
         """Initialize OTX CLI."""
         self.console = Console()
         self._subcommand_method_arguments: dict[str, list[str]] = {}
+        # Preserve the explicit args passed in so that add_subcommands() and
+        # _set_default_config() do not fall back to the global sys.argv when
+        # OTXCLI is constructed programmatically (e.g. by the benchmark
+        # runner via OTXEngine.from_config / get_instantiated_classes).
+        # Using sys.argv in that case caused stale `.latest/train` artefacts
+        # from a previous experiment to be picked up as "defaults" for the
+        # current experiment's test/export/optimize phases.
+        self._argv: list[str] = list(args) if args is not None else list(sys.argv)
         with patch_update_configs():
             self.parser = self.init_parser()
             self.add_subcommands()
@@ -56,6 +64,19 @@ class OTXCLI:
         self.subcommand = self.config["subcommand"]
         if run:
             self.run()
+
+    def _argv_contains(self, flag: str) -> bool:
+        """Return True if *flag* is present in the effective argv."""
+        return flag in self._argv
+
+    def _argv_value_after(self, flag: str) -> str | None:
+        """Return the token immediately following *flag* in the effective argv."""
+        if flag not in self._argv:
+            return None
+        idx = self._argv.index(flag)
+        if idx + 1 >= len(self._argv):
+            return None
+        return self._argv[idx + 1]
 
     def init_parser(self) -> ArgumentParser:
         """Initialize the argument parser for the OTX CLI.
@@ -234,12 +255,13 @@ class OTXCLI:
             return
         for subcommand in self.engine_subcommands():
             # If already have a workspace or run it from the root of a workspace, utilize config and checkpoint in cache
-            root_dir = Path(sys.argv[sys.argv.index("--work_dir") + 1]) if "--work_dir" in sys.argv else Path.cwd()
+            work_dir_override = self._argv_value_after("--work_dir")
+            root_dir = Path(work_dir_override) if work_dir_override is not None else Path.cwd()
             self.cache_dir = root_dir / ".latest" / "train"  # The config and checkpoint used in the latest training.
 
             parser_kwargs = self._set_default_config()
             sub_parser, added_arguments = self.engine_subcommand_parser(subcommand=subcommand, **parser_kwargs)
-            if "--config" not in sys.argv and "checkpoint" in added_arguments and self.cache_dir.exists():
+            if not self._argv_contains("--config") and "checkpoint" in added_arguments and self.cache_dir.exists():
                 # If the user specifies the config directly, not set the cache ckpt as default.
                 self._load_cache_ckpt(parser=sub_parser)
 
@@ -259,14 +281,14 @@ class OTXCLI:
             return
         latest_checkpoint = max(ckpt_files, key=lambda p: p.stat().st_mtime)
         parser.set_defaults(checkpoint=str(latest_checkpoint))
-        if "--print_config" not in sys.argv:
+        if not self._argv_contains("--print_config"):
             warn(f"Load default checkpoint from {latest_checkpoint}.", stacklevel=0)
 
     def _set_default_config(self) -> dict:
-        parser_kwargs = {}
-        if "--config" not in sys.argv and (self.cache_dir / "configs.yaml").exists():
+        parser_kwargs: dict = {}
+        if not self._argv_contains("--config") and (self.cache_dir / "configs.yaml").exists():
             parser_kwargs["default_config_files"] = [str(self.cache_dir / "configs.yaml")]
-            if "--print_config" not in sys.argv:
+            if not self._argv_contains("--print_config"):
                 warn(f"Load default config from {self.cache_dir / 'configs.yaml'}.", stacklevel=0)
             return parser_kwargs
 

@@ -248,11 +248,18 @@ class OTXModelExporter:
                     name_found = name_found and bool(len(traced_names))
 
                     if not name_found:
+                        # When converting directly from a traced PyTorch model
+                        # (via_onnx=False), OpenVINO often returns outputs with
+                        # no pre-assigned names.  Assigning our own name in
+                        # that case is correct and should not warn.
                         msg = (
                             f"{name} is not matched with the converted model's traced output names: {traced_names}."
                             " Please check output_names argument of the exporter's constructor."
                         )
-                        log.warning(msg)
+                        if not traced_names:
+                            log.debug(msg)
+                        else:
+                            log.warning(msg)
 
                     exported_model.outputs[i].tensor.set_names({name})
             else:
@@ -286,7 +293,13 @@ class OTXModelExporter:
                             f"{name} is not matched with the converted model's traced input names: {traced_names}."
                             " Please check input_names argument of the exporter's constructor."
                         )
-                        log.warning(msg)
+                        # See note in the output-name branch: empty traced
+                        # names simply mean OV did not assign any, which is
+                        # the normal case for direct Torch→OV conversion.
+                        if not traced_names or traced_names == {"inputs"}:
+                            log.debug(msg)
+                        else:
+                            log.warning(msg)
 
                     exported_model.inputs[i].tensor.set_names({name})
             else:

@@ -56,6 +56,7 @@ class FCNHeadModule(BaseSegmentationHead):
         dropout_ratio: float = -1,
         activation: Callable[..., nn.Module] | None = nn.ReLU,
         pretrained_weights: Path | str | None = None,
+        pretrained_prefix: str = "",
     ) -> None:
         """Initialize a Fully Convolution Networks head."""
         if not isinstance(dilation, int):
@@ -101,6 +102,7 @@ class FCNHeadModule(BaseSegmentationHead):
             num_classes=num_classes,
             activation=activation,
             pretrained_weights=pretrained_weights,
+            pretrained_prefix=pretrained_prefix,
         )
 
         self.aggregator = aggregator
@@ -222,6 +224,11 @@ class FCNHead:
             "input_transform": "resize_concat",
             "channels": 1536,
             "pretrained_weights": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_ade20k_linear_head.pth",
+            # The ADE20K linear-head checkpoint from the DINOv2 repo stores the
+            # head weights under the ``decode_head.`` prefix (mmseg layout).
+            # Strip it so that ``conv_seg.weight`` / ``conv_seg.bias`` resolve
+            # correctly against this head's state_dict.
+            "pretrained_prefix": "decode_head",
         },
     }
 

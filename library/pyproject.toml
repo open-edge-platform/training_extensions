@@ -141,7 +141,7 @@ Repository = "https://github.com/open-edge-platform/training_extensions/"
 
 [tool.uv]
 default-groups = ["dev", "lint"]
-required-version = "~=0.10.4"
+required-version = ">=0.10.4,<0.12"
 conflicts = [
     [
         { extra = "cpu" },

@@ -18,7 +18,7 @@ from torch import nn
 
 from getitune.backend.native.models.utils.weight_init import PretrainedInit, initialize, update_init_info
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class BaseModule(nn.Module, metaclass=ABCMeta):
@@ -167,7 +167,7 @@ class BaseModule(nn.Module, metaclass=ABCMeta):
                 with_file_handler = True
         if not with_file_handler:
             for name, param in self.named_parameters():
-                logger.info(f"\n{name} - {param.shape}: \n{self._params_init_info[param]['init_info']} \n ")
+                logger.debug(f"\n{name} - {param.shape}: \n{self._params_init_info[param]['init_info']} \n ")
 
     def __repr__(self):
         s = super().__repr__()

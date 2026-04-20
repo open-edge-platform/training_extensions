@@ -47,6 +47,7 @@ class BaseSegmentationHead(nn.Module):
         input_transform: str | None = None,
         align_corners: bool = False,
         pretrained_weights: Path | str | None = None,
+        pretrained_prefix: str = "",
     ) -> None:
         """Initialize the BaseSegmHead."""
         super().__init__()
@@ -76,7 +77,7 @@ class BaseSegmentationHead(nn.Module):
             self.dropout = None
 
         if pretrained_weights is not None:
-            self.load_pretrained_weights(pretrained_weights)
+            self.load_pretrained_weights(pretrained_weights, prefix=pretrained_prefix)
 
     def _transform_inputs(
         self,

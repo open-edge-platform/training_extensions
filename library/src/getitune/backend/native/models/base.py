@@ -444,12 +444,23 @@ class OTXModel(LightningModule):
             msg = f"{meter} has no data to compute metric or there is an error computing metric"
             raise RuntimeError(msg)
 
+        # Known auxiliary (non-scalar) entries emitted by torchmetrics'
+        # MeanAveragePrecision / classification metrics. These are intentionally
+        # non-scalar and do not need to be logged as Lightning scalars.
+        _known_non_scalar_keys = {
+            "classes",
+            "map_per_class",
+            "mar_100_per_class",
+            "ious",
+        }
+
         for name, value in results.items():
             log_metric_name = f"{key}/{name}"
 
             if not isinstance(value, Tensor) or value.numel() != 1:
-                msg = f"Log metric name={log_metric_name} is not a scalar tensor. Skip logging it."
-                warnings.warn(msg, stacklevel=1)
+                if name not in _known_non_scalar_keys:
+                    msg = f"Log metric name={log_metric_name} is not a scalar tensor. Skip logging it."
+                    warnings.warn(msg, stacklevel=1)
                 continue
 
             self.log(log_metric_name, value.to(self.device), sync_dist=True, prog_bar=True)
