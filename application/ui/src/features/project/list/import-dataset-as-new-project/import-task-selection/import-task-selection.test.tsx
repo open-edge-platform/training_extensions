@@ -85,7 +85,9 @@ describe('ImportTaskSelection', () => {
     it('shows only Object detection as recommended for bounding box annotations in geti format', async () => {
         renderApp({ format: 'geti', taskType: 'detection', annotationType: 'bounding_box' });
 
-        expect(await screen.findByRole('button', { name: /Task type/i })).toHaveTextContent('Object detection (Recommended)');
+        expect(await screen.findByRole('button', { name: /Task type/i })).toHaveTextContent(
+            'Object detection (Recommended)'
+        );
     });
 
     it('shows only Instance segmentation as recommended for polygon annotations in geti format', async () => {
