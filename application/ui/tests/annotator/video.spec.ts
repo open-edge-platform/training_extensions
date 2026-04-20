@@ -1,6 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import fs from 'fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { expect } from '@playwright/test';
 import { getMockedVideoFrame } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
@@ -8,7 +12,7 @@ import { HttpResponse } from 'msw';
 
 import { AnnotationDTO } from '../../src/constants/shared-types';
 import { http, test } from '../fixtures';
-import { candyBinaryHandler, redLabel } from './annotator-fixtures';
+import { candyPngBuffer, redLabel } from './annotator-fixtures';
 
 const mockedDetectionProject = getMockedProject({
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -34,10 +38,10 @@ const mockVideoFrame = getMockedVideoFrame({
     id: 'video-1',
     name: 'video-1.mp4',
     frame_number: 0,
-    frame_count: 5,
-    frame_stride: 2,
-    fps: 2,
-    duration: 5,
+    frame_count: 3600,
+    frame_stride: 60,
+    fps: 60,
+    duration: 1000 * 60 * 60,
     width: 960,
     height: 540,
 });
@@ -53,11 +57,14 @@ type SubmittedFrameRequest = {
     annotations: AnnotationDTO[];
 };
 
+const dirname = path.dirname(fileURLToPath(import.meta.url));
+const videoFilePath = path.resolve(dirname, '../assets/fish_60.mp4');
+
 test.describe('Annotator video player', () => {
     let frameAnnotations: Record<number, AnnotationDTO[]>;
     let submittedFrameRequests: SubmittedFrameRequest[];
 
-    test.beforeEach(async ({ page, network }) => {
+    test.beforeEach(async ({ network }) => {
         frameAnnotations = {
             0: [mockAnnotation],
             1: [],
@@ -67,20 +74,7 @@ test.describe('Annotator video player', () => {
         };
         submittedFrameRequests = [];
 
-        // Playwright tests run with mocked media: forcing a resolved play() avoids codec/browser differences.
-        await page.addInitScript(() => {
-            Object.defineProperty(HTMLMediaElement.prototype, 'play', {
-                configurable: true,
-                writable: true,
-                value: async () => Promise.resolve(),
-            });
-
-            Object.defineProperty(HTMLMediaElement.prototype, 'pause', {
-                configurable: true,
-                writable: true,
-                value: () => undefined,
-            });
-        });
+        const videoFile = fs.readFileSync(videoFilePath);
 
         network.use(
             http.get('/api/projects/{project_id}', () => {
@@ -92,7 +86,22 @@ test.describe('Annotator video player', () => {
                     pagination: { offset: 0, limit: 20, count: 1, total: 1 },
                 });
             }),
-            candyBinaryHandler,
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', ({ query }) => {
+                if (query.has('frame_index')) {
+                    return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
+                        headers: {
+                            'Content-Type': 'image/png',
+                        },
+                    });
+                }
+
+                return HttpResponse.arrayBuffer(
+                    videoFile.buffer.slice(videoFile.byteOffset, videoFile.byteOffset + videoFile.byteLength),
+                    {
+                        headers: { 'Content-Type': 'video/mp4', 'Content-Length': videoFile.byteLength.toString() },
+                    }
+                );
+            }),
             http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', ({ request }) => {
                 const frameIndex = Number(new URL(request.url).searchParams.get('frame_index') ?? '0');
 
@@ -131,7 +140,7 @@ test.describe('Annotator video player', () => {
         );
     });
 
-    test('loads video controls and timeline for a video item', async ({ videoPage }) => {
+    test('loads video controls and timeline for a video item', async ({ videoPage, page }) => {
         await videoPage.openVideoFromDataset(mockedDetectionProject.id, mockVideoFrame.name);
 
         await expect(videoPage.getPlayButton()).toBeVisible();
