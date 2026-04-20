@@ -21,13 +21,10 @@ type LabelEditorPopoverProps = {
 const LabelEditorPopover = ({ triggerRef, state, children }: LabelEditorPopoverProps) => {
     return (
         <Popover
-            hideArrow
             triggerRef={triggerRef}
             state={state}
             placement={'bottom end'}
-            UNSAFE_style={{
-                transform: 'translateY(10%)',
-            }}
+            UNSAFE_style={{ transform: 'translateY(2%)' }}
         >
             {children}
         </Popover>
