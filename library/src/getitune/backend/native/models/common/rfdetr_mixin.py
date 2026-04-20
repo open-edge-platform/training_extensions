@@ -61,7 +61,7 @@ class RFDETRMixin:
         model_class = self._model_class_mapping[self.model_name]  # type: ignore[attr-defined]
 
         detector = model_class(
-            pretrained_weights=None,
+            pretrain_weights=None,
             gradient_checkpointing=gradient_checkpointing,
         )
         lwdetr_model = detector.model.model

@@ -122,6 +122,7 @@ class TestResize:
         resize = Resize(size=(64, 64), resize_targets=False, keep_aspect_ratio=False)
         entity = deepcopy(square_image_entity)
         original_bboxes = entity.bboxes.clone()
+        assert entity.masks is not None
         original_masks_shape = entity.masks.shape[-2:]
 
         result = resize(entity)
@@ -129,6 +130,7 @@ class TestResize:
         assert result.image.shape[-2:] == (64, 64)
         # Bboxes and masks should be unchanged
         assert torch.equal(result.bboxes, original_bboxes)
+        assert result.masks is not None
         assert result.masks.shape[-2:] == original_masks_shape
 
     # ==================== Aspect Ratio Preservation Tests ====================

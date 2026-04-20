@@ -107,9 +107,14 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
         raise ValueError(msg)
     images = torch.stack(image_tensors)
 
+    # Convert labels to long
+    labels = _collect_optional_attr(items, "label")
+    if labels:
+        labels = [label.long() for label in labels]
+
     return OTXSampleBatch(
         images=images,
-        labels=_collect_optional_attr(items, "label"),
+        labels=labels,
         masks=_collect_optional_attr(items, "masks"),
         bboxes=_collect_optional_attr(items, "bboxes"),
         keypoints=_collect_optional_attr(items, "keypoints"),

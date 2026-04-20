@@ -699,6 +699,7 @@ class VisualEncoder(nn.Module):
             ref_y, ref_x = torch.meshgrid(
                 torch.linspace(0.5, h_ - 0.5, h_, device=device),
                 torch.linspace(0.5, w_ - 0.5, w_, device=device),
+                indexing="ij",
             )
             ref_y = ref_y.reshape(-1)[None] / (valid_ratios[:, None, lvl, 1] * h_)
             ref_x = ref_x.reshape(-1)[None] / (valid_ratios[:, None, lvl, 0] * w_)

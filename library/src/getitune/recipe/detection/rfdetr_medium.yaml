@@ -23,12 +23,12 @@ model:
             mode: max
             factor: 0.1
             patience: 10
-            monitor: val/map
+            monitor: val/map_50
 
 engine:
   device: auto
 
-callback_monitor: val/f1-score
+callback_monitor: val/map_50
 
 data: ../_base_/data/detection.yaml
 
@@ -42,14 +42,14 @@ callbacks:
       mode: max
       patience: 15
       check_on_train_epoch_end: false
-      monitor: val/f1-score
+      monitor: val/map_50
       min_delta: 0.001
       warmup_iters: 100
       warmup_epochs: 10
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
     init_args:
       dirpath: ""
-      monitor: val/f1-score
+      monitor: val/map_50
       mode: max
       save_top_k: 1
       save_last: true
