@@ -407,6 +407,21 @@ class BaseDenseHead(BaseModule):
 
         return self.export_by_feat(*outs, batch_img_metas=batch_img_metas, rescale=rescale, with_nms=with_nms)  # type: ignore[misc]
 
+    @staticmethod
+    def _format_no_nms_output(bboxes: Tensor, scores: Tensor) -> tuple[Tensor, Tensor]:
+        """Format raw detections for export without NMS.
+
+        Args:
+            bboxes (Tensor): Decoded bboxes, shape (batch, num_priors, 4).
+            scores (Tensor): Class scores, shape (batch, num_priors, num_classes).
+
+        Returns:
+            tuple[Tensor, Tensor]: dets (batch, num_priors, 5) and labels (batch, num_priors).
+        """
+        max_scores, labels = scores.max(dim=-1)
+        dets = torch.cat([bboxes, max_scores.unsqueeze(-1)], dim=-1)
+        return dets, labels
+
     def export_by_feat(
         self,
         cls_scores: list[Tensor],
@@ -544,13 +559,7 @@ class BaseDenseHead(BaseModule):
             batch_scores = batch_scores * batch_score_factors
 
         if not with_nms:
-            # Return decoded bboxes with max scores and class labels
-            # in the same format as post-NMS output for ModelAPI compatibility.
-            # batch_scores shape: (batch, num_priors, num_classes)
-            max_scores, labels = batch_scores.max(dim=-1)  # (batch, num_priors)
-            # Concatenate score into bbox: (batch, num_priors, 5) = [x1, y1, x2, y2, score]
-            dets = torch.cat([batch_bboxes, max_scores.unsqueeze(-1)], dim=-1)
-            return dets, labels
+            return self._format_no_nms_output(batch_bboxes, batch_scores)
 
         return multiclass_nms(
             batch_bboxes,

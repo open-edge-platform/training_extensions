@@ -86,3 +86,12 @@ class TestYOLOX:
         fxt_model.explain_mode = True
         output = fxt_model.forward_for_tracing(torch.randn(1, 3, 32, 32))
         assert len(output) == 4
+
+    def test_export_without_nms(self, fxt_model):
+        fxt_model.eval()
+        fxt_model.export_nms = False
+        dets, labels = fxt_model.forward_for_tracing(torch.randn(1, 3, 32, 32))
+        assert dets.ndim == 3
+        assert dets.shape[0] == 1
+        assert dets.shape[2] == 5
+        assert labels.shape == dets.shape[:2]

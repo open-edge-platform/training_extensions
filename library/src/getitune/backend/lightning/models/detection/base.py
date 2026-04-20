@@ -326,8 +326,7 @@ class LightningDetectionModel(LightningModel):
         """Defines parameters required to export a particular model implementation."""
         nms_params: dict[str, Any] = {}
         if not self.export_nms:
-            # When NMS is excluded from the model graph, tell ModelAPI to perform
-            # NMS in its postprocessing by embedding the relevant metadata.
+            # Embed NMS metadata so ModelAPI handles postprocessing.
             nms_params["nms_execute"] = True
             nms_params["agnostic_nms"] = False
             nms_params["nms_max_predictions"] = 0

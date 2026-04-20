@@ -368,13 +368,7 @@ class YOLOXHeadModule(BaseDenseHead):
         final_scores = cat_cls_scores * (score_factor.unsqueeze(-1))
 
         if not with_nms:
-            # Return decoded bboxes with max scores and class labels
-            # in the same format as post-NMS output for ModelAPI compatibility.
-            # final_scores shape: (batch, num_priors, num_classes)
-            max_scores, labels = final_scores.max(dim=-1)  # (batch, num_priors)
-            # Concatenate score into bbox: (batch, num_priors, 5) = [x1, y1, x2, y2, score]
-            dets = torch.cat([bboxes, max_scores.unsqueeze(-1)], dim=-1)
-            return dets, labels
+            return self._format_no_nms_output(bboxes, final_scores)
         return multiclass_nms(
             bboxes,
             final_scores,

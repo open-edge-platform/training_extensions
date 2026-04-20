@@ -523,8 +523,6 @@ class LightningEngine(Engine):
             export_demo_package (bool): Whether to export demo package with the model.
                 Only OpenVINO model can be exported with demo package.
             export_without_nms (bool): Whether to exclude NMS from the exported model graph.
-                When True, the model outputs raw bboxes and scores, and NMS metadata is
-                embedded so that ModelAPI can perform NMS at inference time.
                 Defaults to False.
 
         Returns:
@@ -559,7 +557,7 @@ class LightningEngine(Engine):
                 >>> getitune export ... \
                 ...     --explain True
                 ```
-            5. To export model without NMS (ModelAPI will handle NMS at inference time), run
+            5. To export model without NMS, run
                 ```shell
                 >>> getitune export ... \
                 ...     --export_without_nms True
@@ -583,7 +581,7 @@ class LightningEngine(Engine):
 
         self.model.explain_mode = explain
 
-        # Set export_nms flag for detection models
+        # Temporarily disable in-graph NMS for detection models if requested
         orig_export_nms = getattr(self.model, "export_nms", True)
         if export_without_nms and hasattr(self.model, "export_nms"):
             object.__setattr__(self.model, "export_nms", False)
