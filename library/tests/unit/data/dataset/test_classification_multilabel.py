@@ -7,8 +7,8 @@ from unittest.mock import Mock
 import torch
 from datumaro.experimental import Dataset
 
-from otx.data.dataset.classification import OTXMultilabelClsDataset
-from otx.data.entity.sample import ClassificationMultiLabelSample
+from getitune.data.dataset.classification import OTXMultilabelClsDataset
+from getitune.data.entity.sample import ClassificationMultiLabelSample
 
 
 class TestOTXMultilabelClsDataset:

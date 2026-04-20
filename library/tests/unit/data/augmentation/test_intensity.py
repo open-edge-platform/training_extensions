@@ -8,8 +8,8 @@ from __future__ import annotations
 import pytest
 import torch
 
-from otx.config.data import IntensityConfig
-from otx.data.augmentation.intensity import (
+from getitune.config.data import IntensityConfig
+from getitune.data.augmentation.intensity import (
     PercentileClip,
     RangeScale,
     RepeatChannels,

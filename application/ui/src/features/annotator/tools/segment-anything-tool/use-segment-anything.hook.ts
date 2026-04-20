@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { EncodingOutput } from '@geti/smart-tools/segment-anything';
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import { queryOptions, skipToken, useQuery } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
 import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -22,6 +22,7 @@ import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
 type SegmentAnythingRemoteInstance = Remote<SegmentAnythingWorkerInstance>;
 const SAM_TIMEOUT_MS = 5000;
+const SAM_ENCODER_TIMEOUT_MS = 30000;
 
 const getSegmentAnythingWorkerQueryKey = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER') =>
     ['workers', algorithmType] as const;
@@ -71,7 +72,7 @@ export const segmentAnythingEncodingQueryOptions = (
                 throw new Error('Model not yet initialized');
             }
 
-            return model.processEncoder(image);
+            return executeWithTimeout(model.processEncoder(image), 'SAM encoder', SAM_ENCODER_TIMEOUT_MS);
         },
         staleTime: Infinity,
         gcTime: 3600 * 15,
@@ -93,22 +94,14 @@ const useEncodingQuery = (
 ) => {
     const isEnabled = model !== undefined && mediaItem !== undefined && image !== undefined && isImageReady;
 
-    return useQuery({
-        queryKey:
-            mediaItem === undefined
-                ? ['segment-anything-model', 'encoding', 'disabled']
-                : getSegmentAnythingEncodingQueryKey(mediaItem),
-        queryFn: async () => {
-            if (model === undefined || image === undefined) {
-                throw new Error('Model not yet initialized');
-            }
-
-            return executeWithTimeout(model.processEncoder(image), 'SAM encoder', SAM_TIMEOUT_MS);
-        },
-        staleTime: Infinity,
-        gcTime: 3600 * 15,
-        enabled: isEnabled,
-    });
+    return useQuery(
+        mediaItem !== undefined && image !== undefined
+            ? segmentAnythingEncodingQueryOptions(mediaItem, model, image, isEnabled)
+            : {
+                  queryKey: ['segment-anything-model', 'encoding', 'disabled'],
+                  queryFn: skipToken,
+              }
+    );
 };
 
 const useDecoderOutputType = () => {
@@ -177,10 +170,12 @@ export const useSegmentAnythingModel = ({ nextMediaItem }: SegmentAnythingModelO
 
     // First we get the encoding for the CURRENT image
     const encodingQuery = useEncodingQuery(encoderModel, mediaItem, image, isImageReady);
+
     // At the same time we start prefetching the encoding for the NEXT image,
     // so when the user moves to the next media item the decoding will be faster.
     // We don't need to get the decoding query result for the next image, we just want to cache the encoding result.
-    useEncodingQuery(encoderModel, nextMediaItem, nextImageQuery.data, nextImageQuery.isSuccess);
+    const canPrefetch = nextImageQuery.isSuccess && !encodingQuery.isFetching;
+    useEncodingQuery(encoderModel, nextMediaItem, nextImageQuery.data, canPrefetch);
 
     const decodingQueryFn = useDecodingFn(decoderModel, encodingQuery.data);
 

@@ -4,15 +4,15 @@ import torch
 from torch import LongTensor
 from torchvision import tv_tensors
 
-from otx.backend.native.models.utils.utils import InstanceData
-from otx.backend.native.tools.explain.explain_algo import (
+from getitune.backend.native.models.utils.utils import InstanceData
+from getitune.backend.native.tools.explain.explain_algo import (
     ActivationMap,
     DetClassProbabilityMap,
     InstSegExplainAlgo,
     ReciproCAM,
     ViTReciproCAM,
 )
-from otx.data.entity.base import ImageInfo
+from getitune.data.entity.base import ImageInfo
 
 
 def test_activationmap() -> None:

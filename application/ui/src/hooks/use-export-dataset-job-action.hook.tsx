@@ -6,7 +6,7 @@ import { useActionState } from 'react';
 import { isString } from 'lodash-es';
 
 import { $api } from '../api/client';
-import { useExportDataset } from './localStorage/use-export-dataset.hook';
+import { useExportDataset } from './storage/use-export-dataset.hook';
 import { useProjectIdentifier } from './use-project-identifier.hook';
 
 type FormValues = {

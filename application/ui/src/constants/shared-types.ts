@@ -11,6 +11,7 @@ export type Model = components['schemas']['ModelView'];
 export type ModelVariant = components['schemas']['ModelVariantView'];
 export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
 export type ModelArchitectureWithPerformanceCategory = ModelArchitecture & { performanceCategory?: string };
+export type BenchmarkMetrics = components['schemas']['BenchmarkMetrics'];
 export type ModelFormat = components['schemas']['ModelFormat'];
 export type RecommendedModelArchitectures = components['schemas']['TopPicks'];
 export type Evaluation = components['schemas']['EvaluationView'];
@@ -60,10 +61,7 @@ export type Media = MediaImage | MediaVideo | MediaVideoFrame;
 export type MediaItemState = 'accepted' | 'rejected';
 
 export type DeviceType = components['schemas']['DeviceType'];
-export type TrainingDevice = {
-    type: DeviceType;
-    name: string;
-};
+export type TrainingDevice = components['schemas']['DeviceInfoView'];
 
 export type DatasetSubset = components['schemas']['DatasetItemSubset'];
 export type DatasetItem = components['schemas']['DatasetItemView'];
@@ -72,7 +70,7 @@ export type DatasetRevisionItem = components['schemas']['DatasetRevisionItemView
 
 export type Project = components['schemas']['ProjectView'];
 
-export type TaskType = 'detection' | 'instance_segmentation' | 'classification';
+export type TaskType = components['schemas']['TaskType'];
 export type Task = components['schemas']['TaskView'];
 
 export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfigView'];
@@ -140,3 +138,7 @@ export type TrainingRequestPayload = components['schemas']['TrainingRequest'];
 export type TrainingConfigurationRequestPayload = {
     [key: string]: unknown;
 };
+
+export type Pagination = components['schemas']['Pagination'];
+export type MediaWithPagination = components['schemas']['MediaWithPagination'];
+export type DatasetFormat = components['schemas']['DatasetFormat'];

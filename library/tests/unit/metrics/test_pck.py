@@ -8,8 +8,8 @@ from __future__ import annotations
 import pytest
 import torch
 
-from otx.metrics.pck import PCKMeasure
-from otx.types.label import LabelInfo
+from getitune.metrics.pck import PCKMeasure
+from getitune.types.label import LabelInfo
 
 
 class TestPCK:

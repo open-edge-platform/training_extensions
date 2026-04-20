@@ -88,3 +88,7 @@
 .labelList {
     @include lineClamp.clamp(3);
 }
+
+.projectCreationDate {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+}

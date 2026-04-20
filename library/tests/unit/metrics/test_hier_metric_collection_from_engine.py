@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from otx.engine import Engine, create_engine
-from otx.metrics.hier_metric_collection import hier_metric_collection_callable
+from getitune.engine import Engine, create_engine
+from getitune.metrics.hier_metric_collection import hier_metric_collection_callable
 
 
 class TestCreateEngine:
@@ -18,7 +18,7 @@ class TestCreateEngine:
         mock_engine_cls.is_supported.return_value = True
         return mock_engine_cls
 
-    @patch("otx.engine.Engine.__subclasses__", autospec=True)
+    @patch("getitune.engine.Engine.__subclasses__", autospec=True)
     def test_hier_metric_collection_by_engine(self, mock___subclasses__, mock_engine_subclass):
         """Test create_engine with arbitrary Engine."""
         mock___subclasses__.return_value = [mock_engine_subclass]

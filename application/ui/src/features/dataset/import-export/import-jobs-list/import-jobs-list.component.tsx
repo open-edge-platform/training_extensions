@@ -3,9 +3,9 @@
 
 import { Flex } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
+import { useImportDatasetToProject } from 'hooks/storage/use-import-dataset-to-project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { partition } from 'lodash-es';
+import { isEmpty, partition } from 'lodash-es';
 
 import { StagedImportDataset } from '../../../../components/import-card-status/staged-import-dataset/staged-import-dataset.component';
 import { LoadingImportDataset } from '../../../../components/loading-import-dataset/loading-import-dataset.component';
@@ -28,14 +28,17 @@ export const ImportJobsList = () => {
     const stagedImportsQueue = stagedImports.reverse();
     const preparingImportsQueue = preparingImports.reverse();
 
-    const handleImportSuccess = () => {
-        queryClient.invalidateQueries({
-            queryKey: getQueryKey([
-                'get',
-                '/api/projects/{project_id}/dataset/media',
-                { params: { path: { project_id: projectId } } },
-            ]),
-        });
+    const handleImportSuccess = async () => {
+        const params = { path: { project_id: projectId } };
+
+        await Promise.all([
+            queryClient.invalidateQueries({
+                queryKey: getQueryKey(['get', '/api/projects/{project_id}/dataset/media', { params }]),
+            }),
+            queryClient.invalidateQueries({
+                queryKey: getQueryKey(['get', '/api/projects/{project_id}/dataset/items', { params }]),
+            }),
+        ]);
     };
 
     const handleOpen = (stagedDatasetId: string) => {
@@ -43,6 +46,10 @@ export const ImportJobsList = () => {
         setCurrentStagedId(stagedDatasetId);
         datasetImportDialogState.open();
     };
+
+    if (isEmpty(preparingImportsQueue) && isEmpty(stagedImportsQueue) && isEmpty(loadingItemsQueue)) {
+        return null;
+    }
 
     return (
         <Flex

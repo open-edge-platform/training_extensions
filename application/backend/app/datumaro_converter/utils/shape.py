@@ -13,6 +13,6 @@ class ShapeConverter:
         return [rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height]
 
     @staticmethod
-    def polygon_to_points(polygon: Polygon) -> list[list[int]]:
+    def polygon_to_points(polygon: Polygon) -> list[list[float]]:
         """Converts polygon to list of xy points."""
         return [[point.x, point.y] for point in polygon.points]

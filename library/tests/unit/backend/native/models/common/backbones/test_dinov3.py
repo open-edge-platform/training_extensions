@@ -6,7 +6,7 @@
 import pytest
 import torch
 
-from otx.backend.native.models.common.backbones.dinov3 import (
+from getitune.backend.native.models.common.backbones.dinov3 import (
     DinoVisionTransformer,
     Weights,
     configs,
@@ -47,7 +47,7 @@ class TestDinoVisionTransformer:
         assert vit_small_plus.embed_dim == 384
         assert vit_small_plus.n_blocks == 12
         # Check SwiGLU FFN is used
-        from otx.backend.native.models.classification.utils.swiglu_ffn import SwiGLUFFNV2
+        from getitune.backend.native.models.classification.utils.swiglu_ffn import SwiGLUFFNV2
 
         assert isinstance(vit_small_plus.blocks[0].mlp, SwiGLUFFNV2)
 

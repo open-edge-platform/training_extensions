@@ -6,14 +6,14 @@ from __future__ import annotations
 
 import pytest
 
-from otx.data.augmentation.kernels import (
+from getitune.data.augmentation.kernels import (
     _center_crop_image_info,
     _crop_image_info,
     _pad_image_info,
     _resize_image_info,
     _resized_crop_image_info,
 )
-from otx.data.entity.base import ImageInfo
+from getitune.data.entity.base import ImageInfo
 
 
 def _make_img_info(h: int = 100, w: int = 200) -> ImageInfo:

@@ -4,6 +4,7 @@
 import { Item, Key, Picker } from '@geti/ui';
 import { usePatchPipeline } from 'hooks/api/pipeline.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { isEmpty } from 'lodash-es';
 
 import { useGetActiveModel } from '../../models/hooks/api/use-get-active-model.hook';
 import { useGetSuccessfulModels } from '../../models/hooks/api/use-get-models.hook';
@@ -25,16 +26,22 @@ export const ActiveModel = () => {
         });
     };
 
+    if (isEmpty(models)) {
+        return null;
+    }
+
     return (
-        <Picker
-            aria-label={'active model'}
-            label={'Model'}
-            labelPosition={'side'}
-            items={models}
-            onSelectionChange={handleChange}
-            selectedKey={activeModel?.id ?? null}
-        >
-            {(item) => <Item>{item.name}</Item>}
-        </Picker>
+        <>
+            <Picker
+                aria-label={'active model'}
+                label={'Model'}
+                labelPosition={'side'}
+                items={models}
+                onSelectionChange={handleChange}
+                selectedKey={activeModel?.id ?? null}
+            >
+                {(item) => <Item>{item.name}</Item>}
+            </Picker>
+        </>
     );
 };

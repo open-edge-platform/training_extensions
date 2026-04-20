@@ -23,16 +23,15 @@ import logging
 from collections.abc import Awaitable, Callable
 from os import getenv
 from pathlib import Path
-from typing import Annotated, cast
+from typing import cast
 
 import uvicorn
-from fastapi import Depends, FastAPI, Request, Response, status
+from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
-from app.api.dependencies import get_license_service
 from app.api.routers import (
     dataset_ie,
     dataset_revisions,
@@ -53,7 +52,6 @@ from app.api.routers import (
 from app.core.logging import InterceptHandler
 from app.lifecycle import lifespan
 from app.services.base import ResourceNotFoundError
-from app.services.license_service import LicenseService
 from app.settings import get_settings
 
 settings = get_settings()
@@ -111,17 +109,9 @@ async def get_webrtc_stream() -> FileResponse:
 
 
 @app.get("/health")
-async def health_check(
-    license_service: Annotated[LicenseService, Depends(get_license_service)],
-) -> dict[str, str | bool]:
+async def health_check() -> dict[str, str]:
     """Health check endpoint"""
-    try:
-        license_accepted = license_service.is_accepted()
-    except OSError:
-        logger.warning("License acceptance check failed during health check", exc_info=True)
-        return {"status": "degraded", "license_accepted": False}
-
-    return {"status": "ok", "license_accepted": license_accepted}
+    return {"status": "ok"}
 
 
 @app.middleware("http")

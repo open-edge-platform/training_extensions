@@ -3,19 +3,21 @@
 
 import { ReactNode, Suspense } from 'react';
 
-import { Button, Heading, IllustratedMessage, IntelBrandedLoading, View } from '@geti/ui';
-import { CloudErrorIcon } from '@geti/ui/icons';
+import { IntelBrandedLoading } from '@geti/ui';
 import { Outlet } from 'react-router';
 
 import { $api } from '../../api/client';
-import { paths } from '../../constants/paths';
-import { redirectTo } from '../utils';
+import { License } from '../../features/license/license.component';
+import { ServerErrorFallback } from './server-error-fallback.component';
 
 const REFETCH_INTERVAL = 5000;
+const RETRY_DELAY = 5000;
+const MAX_RETRIES = 5;
 
 const HealthCheck = ({ children }: { children: ReactNode }) => {
     const { data, isPending, isError } = $api.useQuery('get', '/health', undefined, {
-        retry: 2,
+        retry: MAX_RETRIES,
+        retryDelay: RETRY_DELAY,
         refetchInterval: (query) => {
             return query.state.data?.status === 'ok' ? false : REFETCH_INTERVAL;
         },
@@ -26,24 +28,7 @@ const HealthCheck = ({ children }: { children: ReactNode }) => {
     }
 
     if (isError) {
-        return (
-            <View height={'100vh'}>
-                <IllustratedMessage>
-                    <CloudErrorIcon size='XXL' />
-                    <Heading>Server Error</Heading>
-
-                    <Button
-                        variant={'accent'}
-                        marginTop={'size-200'}
-                        onPress={() => {
-                            redirectTo(paths.root({}));
-                        }}
-                    >
-                        Refresh
-                    </Button>
-                </IllustratedMessage>
-            </View>
-        );
+        return <ServerErrorFallback />;
     }
 
     if (data?.status === 'ok') {
@@ -53,11 +38,36 @@ const HealthCheck = ({ children }: { children: ReactNode }) => {
     return <IntelBrandedLoading />;
 };
 
+const LicenseCheck = ({ children }: { children: ReactNode }) => {
+    const { data, isPending, isError } = $api.useQuery('get', '/api/system/info', undefined, {
+        retry: 2,
+        refetchInterval: (query) => {
+            return query.state.data?.license_accepted ? false : REFETCH_INTERVAL;
+        },
+    });
+
+    if (isPending) {
+        return <IntelBrandedLoading />;
+    }
+
+    if (isError) {
+        return <ServerErrorFallback />;
+    }
+
+    if (data && !data.license_accepted) {
+        return <License platform={data.platform} />;
+    }
+
+    return children;
+};
+
 export const RootLayout = () => {
     return (
         <Suspense fallback={<IntelBrandedLoading />}>
             <HealthCheck>
-                <Outlet />
+                <LicenseCheck>
+                    <Outlet />
+                </LicenseCheck>
             </HealthCheck>
         </Suspense>
     );

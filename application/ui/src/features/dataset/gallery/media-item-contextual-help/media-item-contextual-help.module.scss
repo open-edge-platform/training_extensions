@@ -1,0 +1,10 @@
+.videoIndicatorDetails {
+    [class*='spectrum-Dialog-content'] {
+        margin: 0px !important;
+    }
+
+    [class*='spectrum-Dialog-grid'] {
+        --spectrum-dialog-padding-x: var(--spectrum-global-dimension-size-200) !important;
+        --spectrum-dialog-padding-y: var(--spectrum-global-dimension-size-200) !important;
+    }
+}

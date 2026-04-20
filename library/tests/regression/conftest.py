@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 
 import pytest
 from cpuinfo import get_cpu_info
-from otx import __version__
+from getitune import __version__
 
 
 log = logging.getLogger(__name__)
@@ -124,6 +124,6 @@ def fxt_mlflow_experiment(
 @pytest.fixture(scope="module", autouse=True)
 def fxt_recipe_dir() -> Path:
     """OTX recipe directory."""
-    import otx.recipe as otx_recipe
+    import getitune.recipe as otx_recipe
 
     return Path(otx_recipe.__file__).parent

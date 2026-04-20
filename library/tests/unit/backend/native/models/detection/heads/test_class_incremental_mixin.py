@@ -4,11 +4,11 @@
 
 import torch
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, GIoULoss
-from otx.backend.native.models.common.utils.coders.delta_xywh_bbox_coder import DeltaXYWHBBoxCoder
-from otx.backend.native.models.detection.atss import ATSS
-from otx.backend.native.models.detection.losses import ATSSCriterion
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, GIoULoss
+from getitune.backend.native.models.common.utils.coders.delta_xywh_bbox_coder import DeltaXYWHBBoxCoder
+from getitune.backend.native.models.detection.atss import ATSS
+from getitune.backend.native.models.detection.losses import ATSSCriterion
 
 
 class MockGTInstance:
@@ -60,7 +60,7 @@ class TestClassIncrementalMixin:
         ]
 
         mocker.patch(
-            "otx.backend.native.models.detection.heads.base_head.unpack_det_entity",
+            "getitune.backend.native.models.detection.heads.base_head.unpack_det_entity",
             return_value=(batch_gt_instances, batch_img_metas),
         )
         loss_with_ignored_labels = criterion(
@@ -82,7 +82,7 @@ class TestClassIncrementalMixin:
         ]
 
         mocker.patch(
-            "otx.backend.native.models.detection.heads.base_head.unpack_det_entity",
+            "getitune.backend.native.models.detection.heads.base_head.unpack_det_entity",
             return_value=(batch_gt_instances, batch_img_metas),
         )
         loss_without_ignored_labels = criterion(

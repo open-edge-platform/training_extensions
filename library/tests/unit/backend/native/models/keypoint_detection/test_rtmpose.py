@@ -6,10 +6,10 @@ import pytest
 import torch
 from torchvision import tv_tensors
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.keypoint_detection.rtmpose import RTMPose
-from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.sample import OTXSampleBatch
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.keypoint_detection.rtmpose import RTMPose
+from getitune.data.entity.base import OTXBatchLossEntity
+from getitune.data.entity.sample import OTXSampleBatch
 
 
 class TestRTMPoseTiny:

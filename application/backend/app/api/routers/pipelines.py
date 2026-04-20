@@ -110,7 +110,7 @@ def get_pipeline(
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid request body or project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or pipeline not found"},
         status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be enabled"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
             "description": "Invalid model variant (e.g., non-OpenVINO format or INT8 not supported on device)"
         },
     },
@@ -151,9 +151,9 @@ def update_pipeline(
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except IncompatibleModelVariantError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(e))
     except DeviceInt8NotSupportedError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(e))
     except OtherProjectActiveError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 

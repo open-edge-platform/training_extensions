@@ -8,7 +8,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from otx.backend.native.models.detection.losses.deim_loss import DEIMCriterion
+from getitune.backend.native.models.detection.losses.deim_loss import DEIMCriterion
 
 
 class TestDEIMCriterion:
@@ -196,7 +196,7 @@ class TestDEIMCriterion:
 
     def test_criterion_inheritance(self, criterion: DEIMCriterion) -> None:
         """Test that DEIM criterion properly inherits from DFINECriterion."""
-        from otx.backend.native.models.detection.losses.dfine_loss import DFINECriterion
+        from getitune.backend.native.models.detection.losses.dfine_loss import DFINECriterion
 
         assert isinstance(criterion, DFINECriterion)
 

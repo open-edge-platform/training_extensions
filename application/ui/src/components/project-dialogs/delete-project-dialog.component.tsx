@@ -44,6 +44,7 @@ export const DeleteProjectDialog = ({
                     primaryActionLabel='Delete'
                     onPrimaryAction={handleDelete}
                     onSecondaryAction={onClose}
+                    autoFocusButton='primary'
                     isPrimaryActionDisabled={deleteMutation.isPending}
                 >
                     {`Are you sure you want to delete project "${projectName}"?`}

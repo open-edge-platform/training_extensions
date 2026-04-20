@@ -33,6 +33,7 @@ export const CurrentModelRunning = ({ groupBy, datasetRevisions }: CurrentModelR
 
     return (
         <Flex
+            width={'100%'}
             gap={'size-200'}
             direction={'column'}
             UNSAFE_style={{ padding: 'var(--spectrum-global-dimension-size-300)' }}

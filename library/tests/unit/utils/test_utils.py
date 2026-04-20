@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from otx.utils.utils import (
+from getitune.utils.utils import (
     check_pickleable,
     find_file_recursively,
     find_unpickleable_obj,

@@ -125,7 +125,7 @@ const MediaPreviewContent = ({
     const [mode, setMode] = useAnnotatorMode({ predictions: initialPredictions, annotations: initialAnnotations });
 
     return (
-        <ToolProvider mode={mode}>
+        <ToolProvider>
             <AnnotatorProviders
                 mediaItem={mediaItem}
                 initialAnnotationsDTO={initialAnnotations}

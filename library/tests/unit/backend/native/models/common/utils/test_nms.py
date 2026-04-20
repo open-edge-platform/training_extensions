@@ -9,8 +9,8 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 
-from otx.backend.native.models.common.utils import nms as target_file
-from otx.backend.native.models.common.utils.nms import NMSop
+from getitune.backend.native.models.common.utils import nms as target_file
+from getitune.backend.native.models.common.utils.nms import NMSop
 
 
 class TestNMSop:
@@ -23,7 +23,7 @@ class TestNMSop:
 
     @pytest.fixture
     def mock_torch_autocast(self, mocker) -> MagicMock:
-        return mocker.patch("otx.backend.native.models.common.utils.nms.torch.autocast")
+        return mocker.patch("getitune.backend.native.models.common.utils.nms.torch.autocast")
 
     @pytest.fixture
     def mock_bboxes(self) -> torch.Tensor:

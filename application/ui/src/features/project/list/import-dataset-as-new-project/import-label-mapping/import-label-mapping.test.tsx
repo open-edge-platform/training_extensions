@@ -10,7 +10,7 @@ import { server } from '../../../../../msw-node-setup';
 import { ImportDatasetDialogProvider } from '../../../providers/import-dataset-dialog-provider.component';
 import { ImportLabelMapping } from './import-label-mapping.component';
 
-vi.mock('hooks/localStorage/use-import-dataset-as-new-project.hook', () => ({
+vi.mock('hooks/storage/use-import-dataset-as-new-project.hook', () => ({
     useImportDatasetAsNewProject: () => ({
         getImportEntry: vi.fn(),
         updateImportEntry: vi.fn(),

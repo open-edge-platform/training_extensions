@@ -4,7 +4,7 @@
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../api/client';
-import type { DatasetRevisionItem, DatasetSubset } from '../constants/shared-types';
+import type { DatasetRevisionItem, DatasetSubset, Pagination } from '../constants/shared-types';
 
 const DATASET_ITEMS_LIMIT = 20;
 
@@ -31,11 +31,7 @@ export const useGetDatasetRevisionItems = ({ datasetRevisionId, subset }: UseGet
         },
         {
             pageParamName: 'offset',
-            getNextPageParam: ({
-                pagination,
-            }: {
-                pagination: { offset: number; limit: number; count: number; total: number };
-            }) => {
+            getNextPageParam: ({ pagination }: { pagination: Pagination }) => {
                 const total = pagination.offset + pagination.count;
 
                 if (total >= pagination.total) {

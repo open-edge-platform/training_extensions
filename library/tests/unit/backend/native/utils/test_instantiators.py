@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from otx.backend.native.utils.instantiators import (
+from getitune.backend.native.utils.instantiators import (
     instantiate_callbacks,
     instantiate_loggers,
     partial_instantiate_class,
 )
-from otx.config.data import SamplerConfig
-from otx.data.utils import instantiate_sampler
+from getitune.config.data import SamplerConfig
+from getitune.data.utils import instantiate_sampler
 
 
 def test_instantiate_callbacks() -> None:

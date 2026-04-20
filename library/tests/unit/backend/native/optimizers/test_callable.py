@@ -6,7 +6,7 @@ import pytest
 from torch import nn
 from torch.optim import SGD
 
-from otx.backend.native.optimizers import OptimizerCallableSupportAdaptiveBS
+from getitune.backend.native.optimizers import OptimizerCallableSupportAdaptiveBS
 
 
 class TestOptimizerCallableSupportAdaptiveBS:

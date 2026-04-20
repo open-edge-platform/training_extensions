@@ -7,12 +7,13 @@ import { Badge, Content, ContextualHelp, Divider, Flex, Heading, Radio, Text } f
 import { clsx } from 'clsx';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../../constants/shared-types';
+import { getAccuracyMetric } from '../utils';
 
-import styles from './model-architecture-card.module.scss';
+import classes from './model-architecture-card.module.scss';
 
 const ActiveModelArchitecture = () => {
     return (
-        <Badge variant={'info'} UNSAFE_className={styles.activeModelArchitecture}>
+        <Badge variant={'info'} UNSAFE_className={classes.activeModelArchitecture}>
             Active model
         </Badge>
     );
@@ -22,7 +23,7 @@ const ModelArchitectureDescription = () => {
     const { modelArchitecture, isSelected } = useModelArchitecture();
 
     return (
-        <ContextualHelp variant='info' UNSAFE_className={clsx({ [styles.description]: isSelected })}>
+        <ContextualHelp variant='info' UNSAFE_className={clsx({ [classes.description]: isSelected })}>
             <Heading>{modelArchitecture.name}</Heading>
             <Content>
                 <Text>{modelArchitecture.description}</Text>
@@ -39,8 +40,26 @@ const ModelArchitectureParameters = () => {
     const { modelArchitecture } = useModelArchitecture();
 
     return (
-        <ul className={styles.modelArchitectureParameters}>
+        <ul className={classes.modelArchitectureParameters}>
             <li>Number of parameters: {modelArchitecture.stats.trainable_parameters} million</li>
+            <li>License: Apache 2.0</li>
+        </ul>
+    );
+};
+
+const ModelArchitectureDetailedParameters = () => {
+    const { modelArchitecture } = useModelArchitecture();
+    const accuracyMetric = getAccuracyMetric(modelArchitecture);
+
+    return (
+        <ul className={classes.modelArchitectureParameters}>
+            <li>Number of parameters: {modelArchitecture.stats.trainable_parameters} million</li>
+            <li>Gigaflops: {modelArchitecture.stats.gigaflops}</li>
+            {accuracyMetric !== undefined && (
+                <li>
+                    {accuracyMetric.label}: {accuracyMetric.value}%
+                </li>
+            )}
             <li>License: Apache 2.0</li>
         </ul>
     );
@@ -55,8 +74,8 @@ const ModelArchitectureName = () => {
                 flex={1}
                 minWidth={0}
                 value={modelArchitecture.id}
-                UNSAFE_className={clsx(styles.modelArchitectureName, {
-                    [styles.modelArchitectureNameSelected]: isSelected,
+                UNSAFE_className={clsx(classes.modelArchitectureName, {
+                    [classes.modelArchitectureNameSelected]: isSelected,
                 })}
             >
                 {modelArchitecture.name}
@@ -99,8 +118,8 @@ export const ModelArchitectureCard = ({
     return (
         <ModelArchitectureContext value={{ isSelected, modelArchitecture }}>
             <div
-                className={clsx(styles.modelArchitectureContainer, {
-                    [styles.modelArchitectureSelected]: isSelected,
+                className={clsx(classes.modelArchitectureContainer, {
+                    [classes.modelArchitectureSelected]: isSelected,
                 })}
                 onClick={onSelect}
             >
@@ -112,6 +131,7 @@ export const ModelArchitectureCard = ({
 
 ModelArchitectureCard.Name = ModelArchitectureName;
 ModelArchitectureCard.Parameters = ModelArchitectureParameters;
+ModelArchitectureCard.DetailedParameters = ModelArchitectureDetailedParameters;
 ModelArchitectureCard.Divider = ModelArchitectureDivider;
 ModelArchitectureCard.Description = ModelArchitectureDescription;
 ModelArchitectureCard.Active = ActiveModelArchitecture;

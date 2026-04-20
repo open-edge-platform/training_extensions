@@ -35,6 +35,7 @@ from app.models.media import ImageFormat, MediaListPredictionRequest, MediaType,
 from app.services import DatasetService, MediaPredictionService, MediaService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError, SubsetAlreadyAssignedError
+from app.services.inference import InferenceBusyError
 from app.services.media_prediction_service import BinaryNotFoundError, VideoRangeError
 from app.services.media_service import ImageMetadata, InvalidImageError, MediaFilters
 
@@ -548,6 +549,9 @@ def delete_media_annotation(
             "or media inference limit exceeded"
         },
         status.HTTP_404_NOT_FOUND: {"description": "Media, dataset item or project not found"},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "description": "Inference server is busy with another request, try again later"
+        },
     },
 )
 def media_predict(
@@ -584,5 +588,7 @@ def media_predict(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except BinaryNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except InferenceBusyError as e:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

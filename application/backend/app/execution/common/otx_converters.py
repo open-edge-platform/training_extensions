@@ -1,13 +1,13 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import torch
+from getitune import OTXTaskType
+from getitune.data import OTXDetectionDataset, OTXInstanceSegDataset, OTXMulticlassClsDataset, OTXMultilabelClsDataset
+from getitune.data.dataset.base import OTXDataset
+from getitune.metrics import MetricCallable
+from getitune.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
+from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from loguru import logger
-from otx import OTXTaskType
-from otx.data import OTXDetectionDataset, OTXInstanceSegDataset, OTXMulticlassClsDataset, OTXMultilabelClsDataset
-from otx.data.dataset.base import OTXDataset
-from otx.metrics import MetricCallable
-from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
-from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 
 from app.models import Task, TaskType
 

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from otx.backend.native.utils.cache import TrainerArgumentsCache
+from getitune.backend.native.utils.cache import TrainerArgumentsCache
 
 
 class TestTrainerArgumentsCache:

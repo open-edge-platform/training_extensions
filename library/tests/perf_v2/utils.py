@@ -20,7 +20,7 @@ import pandas as pd
 from cpuinfo import get_cpu_info
 from jsonargparse import ArgumentParser, Namespace
 
-from otx.types.task import OTXTaskType
+from getitune.types.task import OTXTaskType
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -149,7 +149,7 @@ def setup_output_root(config: Namespace, task: OTXTaskType) -> Path:
 
 def get_version_tags(current_date: str) -> dict[str, str]:
     try:
-        version_str = subprocess.check_output(["otx", "--version"]).decode("ascii").strip()[4:]  # noqa: S607
+        version_str = subprocess.check_output(["getitune", "--version"]).decode("ascii").strip()[4:]  # noqa: S607
     except Exception:
         version_str = "unknown"
     try:

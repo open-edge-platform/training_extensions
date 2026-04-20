@@ -4,13 +4,13 @@
 import pytest
 import torch
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.classification.classifier import ImageClassifier
-from otx.backend.native.models.classification.hlabel_models.timm_model import TimmModelHLabelCls
-from otx.backend.native.models.classification.multiclass_models.timm_model import TimmModelMulticlassCls
-from otx.backend.native.models.classification.multilabel_models.timm_model import TimmModelMultilabelCls
-from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.sample import OTXPredictionBatch
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.classification.classifier import ImageClassifier
+from getitune.backend.native.models.classification.hlabel_models.timm_model import TimmModelHLabelCls
+from getitune.backend.native.models.classification.multiclass_models.timm_model import TimmModelMulticlassCls
+from getitune.backend.native.models.classification.multilabel_models.timm_model import TimmModelMultilabelCls
+from getitune.data.entity.base import OTXBatchLossEntity
+from getitune.data.entity.sample import OTXPredictionBatch
 
 
 @pytest.fixture

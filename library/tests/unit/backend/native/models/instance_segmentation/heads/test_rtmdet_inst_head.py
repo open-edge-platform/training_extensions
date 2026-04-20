@@ -12,14 +12,14 @@ import pytest
 import torch
 from torch import nn
 
-from otx.backend.native.models.common.utils.assigners import DynamicSoftLabelAssigner
-from otx.backend.native.models.common.utils.coders import DistancePointBBoxCoder
-from otx.backend.native.models.common.utils.prior_generators import MlvlPointGenerator
-from otx.backend.native.models.common.utils.samplers import PseudoSampler
-from otx.backend.native.models.instance_segmentation.heads.rtmdet_inst_head import RTMDetInstHead
-from otx.backend.native.models.modules.norm import build_norm_layer
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.sample import OTXSampleBatch
+from getitune.backend.native.models.common.utils.assigners import DynamicSoftLabelAssigner
+from getitune.backend.native.models.common.utils.coders import DistancePointBBoxCoder
+from getitune.backend.native.models.common.utils.prior_generators import MlvlPointGenerator
+from getitune.backend.native.models.common.utils.samplers import PseudoSampler
+from getitune.backend.native.models.instance_segmentation.heads.rtmdet_inst_head import RTMDetInstHead
+from getitune.backend.native.models.modules.norm import build_norm_layer
+from getitune.data.entity.base import ImageInfo
+from getitune.data.entity.sample import OTXSampleBatch
 
 
 def set_mock_sampling_results_list(batch_size: int) -> list[Mock]:

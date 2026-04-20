@@ -7,7 +7,7 @@ import pytest
 import torch
 from torchmetrics.classification import Precision as TorchPrecision
 
-from otx.metrics.hier_metric_collection import (
+from getitune.metrics.hier_metric_collection import (
     FullPathAccuracy,
     InconsistentPathRatio,
     LeafAccuracy,

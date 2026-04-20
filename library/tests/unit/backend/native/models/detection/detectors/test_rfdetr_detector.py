@@ -11,7 +11,7 @@ import pytest
 import torch
 from torch import nn
 
-from otx.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
+from getitune.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
 
 
 class DummyLWDETR(nn.Module):

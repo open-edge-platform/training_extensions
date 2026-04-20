@@ -119,7 +119,7 @@ fi
 echo "env flags = $ENV_FLAGS, mount flags = $MOUNT_FLAGS, cache mount flag = $CACHE_MOUNT_FLAGS"
 
 if [ "$DEBUG_CONTAINER" = true ]; then
-    CONTAINER_NAME="otx-ci-container-debug"
+    CONTAINER_NAME="getitune-ci-container-debug"
 fi
 
 CONTAINER_NAME="$CONTAINER_NAME"-${GPU_ID//,/_}

@@ -34,7 +34,7 @@ concurrency:
 
 jobs:
   zizmor-scan:
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     permissions:
       contents: read
       security-events: write # Needed to upload the results to code-scanning dashboard
@@ -46,7 +46,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Zizmor scan
-        uses: open-edge-platform/geti-ci/actions/zizmor@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
+        uses: open-edge-platform/geti-ci/actions/zizmor@7e686c1248b3939f8ee8e04e2612da727e379d91
         with:
           scan-scope: ${{ github.event_name == 'pull_request' && 'changed' || 'all' }}
           severity-level: ${{ github.event_name == 'pull_request' && 'MEDIUM' || 'LOW' }}
@@ -54,7 +54,7 @@ jobs:
           fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
 
   bandit-scan:
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     permissions:
       contents: read
       security-events: write # Needed to upload the results to code-scanning dashboard
@@ -62,7 +62,7 @@ jobs:
       - *checkout
 
       - name: Run Bandit scan
-        uses: open-edge-platform/geti-ci/actions/bandit@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
+        uses: open-edge-platform/geti-ci/actions/bandit@7e686c1248b3939f8ee8e04e2612da727e379d91
         with:
           scan-scope: ${{ github.event_name == 'pull_request' && 'changed' || 'all' }}
           severity-level: "LOW"
@@ -71,7 +71,7 @@ jobs:
           fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
 
   trivy-scan:
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     if: github.event_name != 'pull_request'
     permissions:
       contents: read
@@ -81,7 +81,7 @@ jobs:
 
       - name: Run Trivy scan
         id: trivy
-        uses: open-edge-platform/geti-ci/actions/trivy@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
+        uses: open-edge-platform/geti-ci/actions/trivy@7e686c1248b3939f8ee8e04e2612da727e379d91
         with:
           scan_type: "fs"
           scan-scope: all
@@ -93,7 +93,7 @@ jobs:
 
   dast-scan:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     permissions:
       contents: read
     strategy:
@@ -101,7 +101,7 @@ jobs:
         ai-device: [cpu]
     steps:
       - name: Runner cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@7e686c1248b3939f8ee8e04e2612da727e379d91
         with:
           type: "initial"
 
@@ -184,7 +184,7 @@ jobs:
             --report-junit-path schemathesis-report/junit.xml
 
       - name: Upload Schemathesis report
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
           name: schemathesis-report-${{ matrix.ai-device }}
@@ -217,7 +217,7 @@ jobs:
           fi
 
       - name: Upload container logs
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
           name: container-logs
@@ -233,7 +233,7 @@ jobs:
 
   trivy-image-scan:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     permissions:
       contents: read
     strategy:
@@ -241,7 +241,7 @@ jobs:
         ai-device: [cpu, cuda, xpu]
     steps:
       - name: Run container image scan (${{ matrix.ai-device }})
-        uses: open-edge-platform/geti-ci/actions/trivy@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
+        uses: open-edge-platform/geti-ci/actions/trivy@7e686c1248b3939f8ee8e04e2612da727e379d91
         with:
           artifact-name: "trivy-scan-container-${{ matrix.ai-device }}"
           scan_type: "image"

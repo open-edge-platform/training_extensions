@@ -13,12 +13,12 @@ import torch
 from datumaro.experimental import Dataset, LazyImage
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, Subset
-from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
-from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
-from otx.metrics.types import MetricCallable
-from otx.types.export import OTXExportFormatType
-from otx.types.precision import OTXPrecisionType
-from otx.types.task import OTXTaskType
+from getitune.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
+from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
+from getitune.metrics.types import MetricCallable
+from getitune.types.export import OTXExportFormatType
+from getitune.types.precision import OTXPrecisionType
+from getitune.types.task import OTXTaskType
 
 from app.core.jobs.exec.exceptions import CancelledExc
 from app.core.run import ExecutionContext
@@ -721,7 +721,7 @@ class TestOTXTrainerTrainModel:
         # Create training configuration
         training_config: dict[str, Any] = {
             "model": {
-                "class_path": "otx.backend.native.models.detection.yolox.YOLOXModel",
+                "class_path": "getitune.backend.native.models.detection.yolox.YOLOXModel",
                 "init_args": {
                     "model_name": "yolox_tiny",
                 },
@@ -753,7 +753,7 @@ class TestOTXTrainerTrainModel:
 
         # Mock OTXEngine
         mock_otx_engine = Mock()
-        mock_otx_engine.work_dir = str(tmp_path / f"otx-workspace-{model_id}")
+        mock_otx_engine.work_dir = str(tmp_path / f"getitune-workspace-{model_id}")
         Path(mock_otx_engine.work_dir).mkdir(parents=True)
 
         # Create expected checkpoint file
@@ -801,7 +801,7 @@ class TestOTXTrainerTrainModel:
         engine_call_kwargs = mock_engine_class.call_args.kwargs
         assert engine_call_kwargs["model"] == mock_otx_model
         assert engine_call_kwargs["data"] == mock_datamodule
-        assert engine_call_kwargs["work_dir"] == otx_trainer._data_dir / f"otx-workspace-{model_id}"
+        assert engine_call_kwargs["work_dir"] == otx_trainer._data_dir / f"getitune-workspace-{model_id}"
         assert engine_call_kwargs["device"] == otx_device
         assert engine_call_kwargs["checkpoint"] == weights_path
 
@@ -1125,7 +1125,7 @@ class TestOTXTrainerStoreModelArtifacts:
         model_dir.mkdir(parents=True)
 
         # Create OTX work directory with artifacts
-        otx_work_dir = tmp_path / f"otx-workspace-{model_id}"
+        otx_work_dir = tmp_path / f"getitune-workspace-{model_id}"
         otx_work_dir.mkdir(parents=True)
 
         # Create model checkpoint
