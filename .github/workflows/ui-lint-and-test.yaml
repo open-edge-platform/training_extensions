@@ -102,12 +102,12 @@ jobs:
 
       - name: Build UI
         working-directory: "application/ui"
+        env:
+          PUBLIC_API_BASE_URL: http://localhost:7860
         run: npm run build
 
       - name: Compress build
         working-directory: "application/ui"
-        env:
-          PUBLIC_API_BASE_URL: http://localhost:7860
         run: tar -czf dist.tar.gz dist
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
