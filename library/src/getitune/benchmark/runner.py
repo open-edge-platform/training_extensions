@@ -348,10 +348,20 @@ class BenchmarkRunner:
 
         use_parent = len(seed_results) > 1
         parent_ctx = None
+        parent_run_id: str | None = None
         if use_parent:
             try:
                 parent_ctx = self._tracker.start_parent_run(experiment)
-                parent_ctx.__enter__()
+                active_run = parent_ctx.__enter__()
+                # ``__enter__`` returns the ActiveRun; capture its id so we can
+                # post-process the rollup's duration after all seeds log.
+                try:
+                    parent_run_id = active_run.info.run_id  # type: ignore[attr-defined]
+                except AttributeError:
+                    import mlflow  # local import to avoid top-level dep here
+
+                    active = mlflow.active_run()
+                    parent_run_id = active.info.run_id if active is not None else None
             except Exception:
                 logger.warning("Failed to open MLflow rollup run.", exc_info=True)
                 parent_ctx = None
@@ -371,6 +381,15 @@ class BenchmarkRunner:
                     parent_ctx.__exit__(None, None, None)
                 except Exception:
                     logger.debug("Failed to close MLflow rollup run.", exc_info=True)
+                # After the rollup run is terminated, rewrite its end_time so
+                # Duration reflects the sum of per-seed wall-clock times rather
+                # than the (tiny) logging window.
+                if parent_run_id is not None:
+                    total_seconds = float(sum(r.total_wall_time() for r in seed_results))
+                    try:
+                        self._tracker.set_parent_run_duration(parent_run_id, total_seconds)
+                    except Exception:
+                        logger.debug("Failed to adjust rollup duration.", exc_info=True)
 
     def _log_seed_result(
         self,

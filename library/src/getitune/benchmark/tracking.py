@@ -365,6 +365,31 @@ class BenchmarkTracker:
             },
         )
 
+    @staticmethod
+    def set_parent_run_duration(run_id: str, total_seconds: float) -> None:
+        """Overwrite a rollup run's ``end_time`` so Duration = sum of seed wall times.
+
+        By default MLflow measures Duration as ``end_time - start_time`` around
+        the (fast) logging window, which makes rollup rows show sub-second
+        durations even though the underlying seeds took many minutes. We
+        post-process the parent run here so the MLflow UI reports a Duration
+        equal to the sum of the seed wall-clock times.
+        """
+        if total_seconds <= 0:
+            return
+        try:
+            from mlflow.tracking import MlflowClient
+
+            client = MlflowClient()
+            run = client.get_run(run_id)
+            start_ms = int(run.info.start_time)
+            end_ms = start_ms + round(total_seconds * 1000)
+            # set_terminated with an explicit end_time rewrites the stored value,
+            # which is what the UI uses to compute the Duration column.
+            client.set_terminated(run_id, status=run.info.status, end_time=end_ms)
+        except Exception:
+            logger.debug("Could not adjust rollup run duration.", exc_info=True)
+
     def log_aggregate(
         self,
         results: list[ExperimentResult],

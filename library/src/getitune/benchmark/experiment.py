@@ -52,6 +52,10 @@ class ExperimentResult:
             merged.update(phase.metrics)
         return merged
 
+    def total_wall_time(self) -> float:
+        """Sum of wall-clock seconds across every phase of this seed run."""
+        return float(sum(p.wall_time for p in self.phases))
+
     @classmethod
     def failure(
         cls,
