@@ -55,13 +55,8 @@ class TestRunTags:
             scenario="default",
             seed="0",
             size_tier="tiny",
-            otx_version="2.5.0",
-            git_sha="abc123",
             branch="develop",
             accelerator="gpu",
-            accelerator_info="NVIDIA A100",
-            machine_name="runner-01",
-            cpu_info="Intel Xeon",
             status="success",
             extra={"override.lr": "0.01"},
         )
@@ -70,7 +65,7 @@ class TestRunTags:
         assert d["model"] == "yolox_s"
         assert d["override.lr"] == "0.01"
         assert "status" in d
-        assert len(d) == 15  # 14 base + 1 extra
+        assert len(d) == 11  # 10 base + 1 extra
 
 
 # ---------------------------------------------------------------------------

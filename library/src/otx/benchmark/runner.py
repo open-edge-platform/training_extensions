@@ -199,25 +199,7 @@ class BenchmarkRunner:
                 logger.error("Dataset '%s' not provisioned; skipping.", experiment.dataset_name)
                 continue
 
-            num_seeds = self.config.num_seeds or experiment.num_seeds
-            for seed in range(num_seeds):
-                result = self._run_single(experiment, seed, data_path, allowed_phases)
-
-                # Log to MLflow
-                if self._tracker is not None:
-                    try:
-                        self._tracker.log_run(
-                            result,
-                            experiment,
-                            size_tier=size_tier_map.get(experiment.dataset_name, ""),
-                        )
-                    except Exception:
-                        logger.warning("Failed to log run to MLflow.", exc_info=True)
-
-                if result.success:
-                    self.results.append(result)
-                else:
-                    self.failures.append(result)
+            self._run_experiment(experiment, data_path, allowed_phases, size_tier_map)
 
             # Persist report after each experiment so partial results survive crashes
             if self.config.enable_report:
@@ -314,6 +296,75 @@ class BenchmarkRunner:
             logger.info("Cleanup: removed %d checkpoint/model files (%.1f MB freed).", removed, freed_mb)
 
     # -- single experiment -------------------------------------------------
+
+    def _run_experiment(
+        self,
+        experiment: Experiment,
+        data_path: Path,
+        allowed_phases: set[str],
+        size_tier_map: dict[str, str],
+    ) -> None:
+        """Run all seeds for a single experiment and log them to MLflow."""
+        num_seeds = self.config.num_seeds or experiment.num_seeds
+        seed_results: list[ExperimentResult] = []
+
+        # Wrap all seeds for this (task, model, dataset, scenario) in a
+        # single rollup parent run so the MLflow UI shows ONE row per
+        # experiment that expands into per-seed children.  Only open a
+        # parent when tracking is enabled AND we'll actually produce
+        # more than one child — otherwise the single-seed case stays
+        # flat (no empty parent row cluttering the table).
+        parent_ctx = None
+        if self._tracker is not None and num_seeds > 1:
+            try:
+                parent_ctx = self._tracker.start_parent_run(experiment)
+                parent_ctx.__enter__()
+            except Exception:
+                logger.warning("Failed to open MLflow rollup run.", exc_info=True)
+                parent_ctx = None
+
+        try:
+            for seed in range(num_seeds):
+                result = self._run_single(experiment, seed, data_path, allowed_phases)
+                seed_results.append(result)
+                self._log_seed_result(result, experiment, size_tier_map, nested=parent_ctx is not None)
+                if result.success:
+                    self.results.append(result)
+                else:
+                    self.failures.append(result)
+
+            if parent_ctx is not None and self._tracker is not None:
+                try:
+                    self._tracker.log_aggregate(seed_results, experiment)
+                except Exception:
+                    logger.warning("Failed to log MLflow rollup aggregate.", exc_info=True)
+        finally:
+            if parent_ctx is not None:
+                try:
+                    parent_ctx.__exit__(None, None, None)
+                except Exception:
+                    logger.debug("Failed to close MLflow rollup run.", exc_info=True)
+
+    def _log_seed_result(
+        self,
+        result: ExperimentResult,
+        experiment: Experiment,
+        size_tier_map: dict[str, str],
+        *,
+        nested: bool,
+    ) -> None:
+        """Log a per-seed result to MLflow (no-op if tracking disabled)."""
+        if self._tracker is None:
+            return
+        try:
+            self._tracker.log_run(
+                result,
+                experiment,
+                size_tier=size_tier_map.get(experiment.dataset_name, ""),
+                nested=nested,
+            )
+        except Exception:
+            logger.warning("Failed to log run to MLflow.", exc_info=True)
 
     @staticmethod
     def _is_deterministic_error(exc: BaseException) -> bool:
