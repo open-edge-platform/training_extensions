@@ -51,7 +51,7 @@ cannot bloat the desktop bundle.
 ```
 src/platform/
   download-file.ts         ← web (default) implementation
-  download-file.tauri.ts   ← tauri override (uses @tauri-apps/plugin-upload to bypass webview CORS)
+  download-file.tauri.ts   ← tauri override (fetch+blob anchor by default; native save dialog when a filename is provided)
   …                        ← future capabilities follow the same pair
 ```
 
