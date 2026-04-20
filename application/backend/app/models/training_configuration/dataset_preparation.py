@@ -3,13 +3,18 @@
 
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from .augmentation import AugmentationParameters
 
 
 class IntensityMappingMode(StrEnum):
-    """Mode for mapping image intensity values before training."""
+    """
+    Mode for mapping image intensity values before training.
+
+    Important: the enum keys must match the lowercase strings expected by the training library (getitune),
+    whereas the values correspond to the user-friendly names shown in the UI.
+    """
 
     SCALE_TO_UNIT = "Unit interval scaling"  # (x / max_value)
     WINDOW = "Windowing"  # clamp((x - low) / (high - low), 0, 1)
@@ -77,6 +82,25 @@ class IntensityMapping(BaseModel):
         ),
         json_schema_extra={"depends_on": {"mode": "Clipped scaling"}},
     )
+
+    @field_validator("mode", mode="before")
+    @classmethod
+    def validate_mode(cls, value: str) -> IntensityMappingMode:
+        """Accept both the user-friendly enum value and the lowercase key name."""
+        try:
+            return IntensityMappingMode(value)
+        except ValueError:
+            # Try matching by uppercase key name (e.g. "scale_to_unit" -> "SCALE_TO_UNIT")
+            try:
+                return IntensityMappingMode[value.upper()]
+            except KeyError:
+                raise ValueError(f"Invalid intensity mapping mode: {value!r}") from None
+
+    @field_serializer("mode")
+    @staticmethod
+    def serialize_mode(value: IntensityMappingMode) -> str:
+        """Serialize mode as the lowercase enum key name expected by the training library."""
+        return value.name.lower()
 
 
 class SubsetSplit(BaseModel):

@@ -802,11 +802,9 @@ class GetiConfigConverter:
             intensity_mapping: Dict with keys: mode, max_value, min_value,
                 window_center, window_width, scale_factor.
         """
-        intensity_config: dict[str, Any] = {
-            "mode": intensity_mapping.get("mode", "scale_to_unit"),
-        }
+        mode = intensity_mapping.get("mode", "scale_to_unit")
+        intensity_config: dict[str, Any] = {"mode": mode}
 
-        mode = intensity_config["mode"]
         if mode == "scale_to_unit":
             max_value = intensity_mapping.get("max_value", 255.0)
             intensity_config["max_value"] = max_value
