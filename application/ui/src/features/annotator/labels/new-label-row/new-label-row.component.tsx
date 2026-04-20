@@ -26,13 +26,17 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
     const isEmptyName = name.trim().length === 0;
     const validationError = isEmptyName ? undefined : validateName(name);
 
-    const isCreateButtonDisabled = isEmptyName || validationError !== undefined;
+    const canSave = (newName: string) => {
+        const trimmedName = newName.trim();
+
+        return trimmedName.length > 0 && validateName(trimmedName) !== undefined;
+    };
+
+    const isCreateButtonDisabled = !canSave(name);
 
     const handleSave = () => {
-        const trimmedName = name.trim();
-
-        if (trimmedName.length > 0 && !validationError) {
-            onSave(trimmedName, color);
+        if (canSave(name)) {
+            onSave(name.trim(), color);
         }
     };
 
@@ -53,7 +57,7 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
 
         const trimmedName = name.trim();
 
-        if (trimmedName.length > 0 && !validationError) {
+        if (canSave(name)) {
             onSave(trimmedName, color);
         } else if (trimmedName.length === 0) {
             onCancel();
