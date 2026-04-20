@@ -4,8 +4,6 @@
     "description": "enables the default permissions",
     "windows": ["main"],
     "permissions": [
-        "core:default",
-        "dialog:allow-save",
-        "upload:default"
+        "core:default"
     ]
 }
