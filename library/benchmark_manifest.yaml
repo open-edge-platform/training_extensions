@@ -41,10 +41,6 @@ experiments:
         priority: extended
         recipe: classification/multi_class_cls/mobilenet_v3_large.yaml
 
-      - name: efficientnet_b0_tile
-        priority: extended
-        recipe: classification/multi_class_cls/efficientnet_b0_tile.yaml
-
     datasets:
       - allround
 
@@ -79,6 +75,10 @@ experiments:
       - name: yolox_tiny
         priority: extended
         recipe: detection/yolox_tiny.yaml
+
+      - name: yolox_tiny
+        priority: extended
+        recipe: detection/yolox_tiny_tile.yaml
 
       - name: yolox_l
         priority: extended
