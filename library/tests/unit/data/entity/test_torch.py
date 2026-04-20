@@ -46,7 +46,7 @@ class TestDetectionSampleNoneAnnotations:
         annotated = DetectionSample(
             image=tv_tensors.Image(torch.rand(3, *img_size, dtype=torch.float32)),
             dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
-            bboxes=tv_tensors.BoundingBoxes(
+            bboxes=tv_tensors.BoundingBoxes(  # type: ignore[call-overload]
                 torch.tensor([[5, 5, 20, 20]], dtype=torch.float32),
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=img_size,
@@ -63,6 +63,7 @@ class TestDetectionSampleNoneAnnotations:
         assert isinstance(batch, OTXSampleBatch)
         assert batch.batch_size == 2
         # Labels should be cast to long by the collate function
+        assert batch.labels is not None
         assert all(label.dtype == torch.long for label in batch.labels)
 
 
@@ -99,7 +100,7 @@ class TestInstanceSegmentationSampleNoneAnnotations:
         annotated = InstanceSegmentationSample(
             image=tv_tensors.Image(torch.rand(3, *img_size, dtype=torch.float32)),
             dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
-            bboxes=tv_tensors.BoundingBoxes(
+            bboxes=tv_tensors.BoundingBoxes(  # type: ignore[call-overload]
                 torch.tensor([[5, 5, 20, 20]], dtype=torch.float32),
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=img_size,
@@ -118,8 +119,10 @@ class TestInstanceSegmentationSampleNoneAnnotations:
         assert isinstance(batch, OTXSampleBatch)
         assert batch.batch_size == 2
         # Labels should be cast to long by the collate function
+        assert batch.labels is not None
         assert all(label.dtype == torch.long for label in batch.labels)
         # Masks should be present for both samples
+        assert batch.masks is not None
         assert len(batch.masks) == 2
 
 
