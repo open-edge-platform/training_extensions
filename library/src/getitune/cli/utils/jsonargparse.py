@@ -450,9 +450,9 @@ def get_configuration(config_path: str | PathLike, subcommand: str = "train", **
     config = namespace_to_dict(args)
     logger.info(f"{config_path} is loaded.")
 
-    # Remove unnecessary cli arguments for API usage. Only warn about keys
-    # that are actually present in the config to avoid spamming the log on
-    # every call (previously this warning was emitted unconditionally).
+    # Remove unnecessary cli arguments for API usage. Only log dropped keys
+    # when they are actually present in the config to avoid spamming the log
+    # on every call.
     cli_args = [
         "verbose",
         "data_root",
