@@ -387,6 +387,7 @@ class BaseDenseHead(BaseModule):
         x: tuple[Tensor],
         batch_img_metas: list[dict],
         rescale: bool = False,
+        with_nms: bool = True,
     ) -> tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
         """Perform forward propagation of the detection head and predict detection results.
 
@@ -396,6 +397,7 @@ class BaseDenseHead(BaseModule):
                 `gt_instance`, `gt_panoptic_seg` and `gt_sem_seg`.
             rescale (bool, optional): Whether to rescale the results.
                 Defaults to False.
+            with_nms (bool, optional): Whether to apply NMS. Defaults to True.
 
         Returns:
             tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
@@ -403,7 +405,7 @@ class BaseDenseHead(BaseModule):
         """
         outs = self(x)
 
-        return self.export_by_feat(*outs, batch_img_metas=batch_img_metas, rescale=rescale)  # type: ignore[misc]
+        return self.export_by_feat(*outs, batch_img_metas=batch_img_metas, rescale=rescale, with_nms=with_nms)  # type: ignore[misc]
 
     def export_by_feat(
         self,
@@ -540,6 +542,15 @@ class BaseDenseHead(BaseModule):
 
         if with_score_factors:
             batch_scores = batch_scores * batch_score_factors
+
+        if not with_nms:
+            # Return decoded bboxes with max scores and class labels
+            # in the same format as post-NMS output for ModelAPI compatibility.
+            # batch_scores shape: (batch, num_priors, num_classes)
+            max_scores, labels = batch_scores.max(dim=-1)  # (batch, num_priors)
+            # Concatenate score into bbox: (batch, num_priors, 5) = [x1, y1, x2, y2, score]
+            dets = torch.cat([batch_bboxes, max_scores.unsqueeze(-1)], dim=-1)
+            return dets, labels
 
         return multiclass_nms(
             batch_bboxes,

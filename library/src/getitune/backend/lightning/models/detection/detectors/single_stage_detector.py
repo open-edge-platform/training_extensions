@@ -191,6 +191,7 @@ class SingleStageDetector(BaseModule):
         batch_img_metas: list[dict],
         rescale: bool = True,
         explain_mode: bool = False,
+        with_nms: bool = True,
     ) -> list[InstanceData] | dict:
         """Predict results from a batch of inputs and data samples with post-processing.
 
@@ -240,7 +241,7 @@ class SingleStageDetector(BaseModule):
                 "saliency_map": saliency_map,
             }
         x = self.extract_feat(batch_inputs)
-        return self.bbox_head.export(x, batch_img_metas, rescale=rescale)
+        return self.bbox_head.export(x, batch_img_metas, rescale=rescale, with_nms=with_nms)
 
     def _forward(
         self,

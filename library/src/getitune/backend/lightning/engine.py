@@ -510,6 +510,7 @@ class LightningEngine(Engine):
         export_precision: Precision = Precision.FP32,
         explain: bool = False,
         export_demo_package: bool = False,
+        export_without_nms: bool = False,
         **kwargs,
     ) -> Path:
         r"""Export the trained model to OpenVINO Intermediate Representation (IR) or ONNX formats.
@@ -521,6 +522,10 @@ class LightningEngine(Engine):
             explain (bool): Whether to get "saliency_map" and "feature_vector" or not.
             export_demo_package (bool): Whether to export demo package with the model.
                 Only OpenVINO model can be exported with demo package.
+            export_without_nms (bool): Whether to exclude NMS from the exported model graph.
+                When True, the model outputs raw bboxes and scores, and NMS metadata is
+                embedded so that ModelAPI can perform NMS at inference time.
+                Defaults to False.
 
         Returns:
             Path: Path to the exported model.
@@ -554,6 +559,11 @@ class LightningEngine(Engine):
                 >>> getitune export ... \
                 ...     --explain True
                 ```
+            5. To export model without NMS (ModelAPI will handle NMS at inference time), run
+                ```shell
+                >>> getitune export ... \
+                ...     --export_without_nms True
+                ```
         """
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
 
@@ -572,6 +582,12 @@ class LightningEngine(Engine):
         self.model.eval()
 
         self.model.explain_mode = explain
+
+        # Set export_nms flag for detection models
+        orig_export_nms = getattr(self.model, "export_nms", True)
+        if export_without_nms and hasattr(self.model, "export_nms"):
+            object.__setattr__(self.model, "export_nms", False)
+
         exported_model_path = self.model.export(
             output_dir=Path(self.work_dir),
             base_name=self._EXPORTED_MODEL_BASE_NAME,
@@ -580,6 +596,8 @@ class LightningEngine(Engine):
         )
 
         self.model.explain_mode = False
+        if hasattr(self.model, "export_nms"):
+            object.__setattr__(self.model, "export_nms", orig_export_nms)
         return exported_model_path
 
     def benchmark(

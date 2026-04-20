@@ -143,6 +143,8 @@ class YOLOX(LightningDetectionModel):
             resize_mode = "standard"
         swap_rgb = self.model_name != "yolox_tiny"  # only YOLOX-TINY uses RGB
 
+        # Output: boxes=(N, K, 5) with score, labels=(N, K) regardless of NMS inclusion.
+
         return LightningModelExporter(
             task_level_export_parameters=self._export_parameters,
             data_input_params=self.data_input_params,

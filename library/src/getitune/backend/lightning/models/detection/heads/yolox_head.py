@@ -359,19 +359,25 @@ class YOLOXHeadModule(BaseDenseHead):
         flatten_bbox_preds = [bbox_pred.permute(0, 2, 3, 1).reshape(batch_size, -1, 4) for bbox_pred in bbox_preds]
         flatten_objectness = [objectness.permute(0, 2, 3, 1).reshape(batch_size, -1) for objectness in objectnesses]
 
-        cls_scores = torch.cat(flatten_cls_scores, dim=1).sigmoid()
+        cat_cls_scores = torch.cat(flatten_cls_scores, dim=1).sigmoid()
         score_factor = torch.cat(flatten_objectness, dim=1).sigmoid()
         flatten_bbox_preds = torch.cat(flatten_bbox_preds, dim=1)
         flatten_priors = torch.cat(mlvl_priors)
         bboxes = self._bbox_decode(flatten_priors, flatten_bbox_preds)
         # directly multiply score factor and feed to nms
-        scores = cls_scores * (score_factor.unsqueeze(-1))
+        final_scores = cat_cls_scores * (score_factor.unsqueeze(-1))
 
         if not with_nms:
-            return bboxes, scores
+            # Return decoded bboxes with max scores and class labels
+            # in the same format as post-NMS output for ModelAPI compatibility.
+            # final_scores shape: (batch, num_priors, num_classes)
+            max_scores, labels = final_scores.max(dim=-1)  # (batch, num_priors)
+            # Concatenate score into bbox: (batch, num_priors, 5) = [x1, y1, x2, y2, score]
+            dets = torch.cat([bboxes, max_scores.unsqueeze(-1)], dim=-1)
+            return dets, labels
         return multiclass_nms(
             bboxes,
-            scores,
+            final_scores,
             max_output_boxes_per_class=200,  # TODO (sungchul): temporarily set to mmdeploy cfg, will be updated
             iou_threshold=cfg["nms"]["iou_threshold"],  # type: ignore[index]
             score_threshold=cfg["score_thr"],  # type: ignore[index]
