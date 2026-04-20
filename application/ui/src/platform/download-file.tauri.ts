@@ -4,8 +4,18 @@
 // `<a download>` is ignored by WKWebView/Chromium for cross-origin URLs (the
 // webview navigates instead of downloading), and `fetch` would be blocked by
 // webview CORS. `@tauri-apps/plugin-upload` does the request in Rust, so
-// neither restriction applies.
+// neither restriction applies. Blob URLs are same-origin to the webview, so
+// the standard anchor flow still works for them.
+
+import { downloadFile as downloadBlobViaAnchor } from './download-file';
+
 export const downloadFile = (url: string, name?: string): void => {
+    if (url.startsWith('blob:')) {
+        downloadBlobViaAnchor(url, name);
+
+        return;
+    }
+
     void runDownload(url, name).catch((error: unknown) => {
         console.error('[tauri downloadFile] failed', error);
     });
@@ -19,19 +29,6 @@ const runDownload = async (url: string, name?: string): Promise<void> => {
 
     const path = await save({ defaultPath: name });
     if (path === null) {
-        return;
-    }
-
-    if (url.startsWith('blob:')) {
-        // Blob URLs only exist inside the webview; Rust can't fetch them.
-        const { writeFile } = await import('@tauri-apps/plugin-fs');
-        const response = await fetch(url);
-        const bytes = new Uint8Array(await response.arrayBuffer());
-
-        await writeFile(path, bytes);
-
-        URL.revokeObjectURL(url);
-
         return;
     }
 

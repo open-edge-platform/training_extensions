@@ -50,7 +50,6 @@ fn main() {
     // Build the app
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_upload::init())
         .setup({
             let child_handle = child_handle.clone();
