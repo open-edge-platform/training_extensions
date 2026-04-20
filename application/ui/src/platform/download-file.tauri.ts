@@ -8,8 +8,6 @@
 // `Content-Disposition`, so the caller-supplied `name` (or the URL's last
 // path segment) is used as the filename.
 
-import { downloadViaAnchor } from './download-file-anchor';
-
 export const downloadFile = (url: string, name?: string): void => {
     if (url.startsWith('blob:')) {
         downloadViaAnchor(url, name);
@@ -35,4 +33,19 @@ const autoDownload = async (url: string, name?: string): Promise<void> => {
     const blobUrl = URL.createObjectURL(await response.blob());
 
     downloadViaAnchor(blobUrl, filename);
+};
+
+const downloadViaAnchor = (url: string, name?: string): void => {
+    const link = document.createElement('a');
+
+    link.href = url;
+    if (name !== undefined) {
+        link.download = name;
+    }
+    link.hidden = true;
+    link.click();
+
+    if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+    }
 };

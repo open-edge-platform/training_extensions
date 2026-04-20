@@ -70,8 +70,10 @@ Rules of thumb when adding a platform-specific behaviour:
    so an extensionless import (`import './foo'`) resolves to `foo.tauri.scss`
    on the desktop build and `foo.scss` on the web build. Drop the extension
    on the import site to opt in to the override.
-5. **No `isTauri()` runtime checks anywhere.** If you find yourself reaching
-   for one, add (or split) a capability module instead.
+5. **No `isTauri()` runtime checks anywhere.** Enforced by the
+   `no-restricted-syntax` rule in [`../eslint.config.js`](../eslint.config.js).
+   If you find yourself reaching for one, add (or split) a capability module
+   instead.
 
 The Tauri shell wires `BUILD_TARGET=tauri` for both the dev server and the
 production build via `beforeDevCommand` / `beforeBuildCommand` in

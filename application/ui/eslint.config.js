@@ -51,6 +51,17 @@ export default [
                             group: ['src/*'],
                             message: 'Use relative imports instead of absolute "src/" imports.',
                         },
+                        // Contain Tauri-specific APIs inside `*.tauri.{ts,tsx}` files under
+                        // `src/platform/`. The bundler picks those files for the Tauri build
+                        // via `resolve.extensions`, so only they should import `@tauri-apps/*`.
+                        // The override below relaxes this rule for those files.
+                        {
+                            group: ['@tauri-apps/*'],
+                            message:
+                                'Import Tauri plugins only from `*.tauri.{ts,tsx}` files under src/platform/. ' +
+                                'Consumers should import the capability module (e.g. ../platform/download-file) ' +
+                                'so the bundler can swap implementations per build target.',
+                        },
                     ],
                 },
             ],
@@ -65,6 +76,17 @@ export default [
                     ' SPDX-License-Identifier: Apache-2.0',
                 ],
             ],
+            // Forbid `isTauri()` runtime branching. Per-platform behaviour must
+            // be selected at build time by the bundler via `*.tauri.{ts,tsx}`
+            // overrides in `src/platform/` — see src-tauri/README.md.
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: "CallExpression[callee.name='isTauri']",
+                    message:
+                        'Do not branch on `isTauri()` at runtime. Add or split a capability module under src/platform/ instead.',
+                },
+            ],
         },
     },
     {
@@ -74,14 +96,9 @@ export default [
         },
     },
     {
-        // Contain Tauri-specific APIs inside `*.tauri.{ts,tsx}` files under
-        // `src/platform/`. The bundler picks those files for the Tauri build
-        // via `resolve.extensions`, so only they should ever import
-        // `@tauri-apps/*`. Everywhere else, consume the capability module
-        // (e.g. `import { downloadFile } from '../platform/download-file'`)
-        // and let the bundler swap the implementation per target.
-        files: ['src/**/*.{ts,tsx}'],
-        ignores: ['src/platform/**/*.tauri.{ts,tsx}'],
+        // Relax the `@tauri-apps/*` import restriction for Tauri platform files.
+        // These files are the bundler's swap targets and must import the plugins.
+        files: ['src/platform/**/*.tauri.{ts,tsx}'],
         rules: {
             'no-restricted-imports': [
                 'error',
@@ -108,13 +125,6 @@ export default [
                         {
                             group: ['src/*'],
                             message: 'Use relative imports instead of absolute "src/" imports.',
-                        },
-                        {
-                            group: ['@tauri-apps/*'],
-                            message:
-                                'Import Tauri plugins only from `*.tauri.{ts,tsx}` files under src/platform/. ' +
-                                'Consumers should import the capability module (e.g. ../platform/download-file) ' +
-                                'so the bundler can swap implementations per build target.',
                         },
                     ],
                 },
