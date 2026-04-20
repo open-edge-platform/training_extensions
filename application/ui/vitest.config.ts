@@ -22,6 +22,9 @@ export default defineConfig({
     ],
     test: {
         environment: 'jsdom',
+        env: {
+            PUBLIC_API_BASE_URL: 'http://localhost:7860',
+        },
 
         coverage: {
             provider: 'v8',
