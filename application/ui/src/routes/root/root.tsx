@@ -3,7 +3,7 @@
 
 import { ReactNode, Suspense } from 'react';
 
-import { IntelBrandedLoading } from '@geti/ui';
+import { Flex, Heading, IntelBrandedLoading } from '@geti/ui';
 import { Outlet } from 'react-router';
 
 import { $api } from '../../api/client';
@@ -24,7 +24,14 @@ const HealthCheck = ({ children }: { children: ReactNode }) => {
     });
 
     if (isPending) {
-        return <IntelBrandedLoading />;
+        return (
+            <Flex direction={'column'} justifyContent={'center'} alignItems={'center'} height={'100vh'}>
+                <IntelBrandedLoading height={'auto'} />
+                <Heading bottom={'size-4600'} level={2}>
+                    Loading...Please wait.
+                </Heading>
+            </Flex>
+        );
     }
 
     if (isError) {

@@ -2,3 +2,7 @@
 # will have compiled files and executables
 /target/
 /gen/schemas
+
+# PyInstaller backend sidecar (per-host symlinks; see README §"Backend sidecar")
+/_internal
+/geti-backend-*
