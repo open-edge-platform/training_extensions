@@ -1,15 +1,15 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for otx.benchmark.report (regression detection and Markdown generation)."""
+"""Tests for getitune.benchmark.report (regression detection and Markdown generation)."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from otx.benchmark.experiment import ExperimentResult, PhaseResult
-from otx.benchmark.manifest import CriteriaConfig, Threshold
-from otx.benchmark.report import (
+from getitune.benchmark.experiment import ExperimentResult, PhaseResult
+from getitune.benchmark.manifest import CriteriaConfig, Threshold
+from getitune.benchmark.report import (
     BenchmarkReport,
     ExperimentComparison,
     FailureRecord,
@@ -381,7 +381,7 @@ class TestGenerateMarkdown:
     def test_contains_header(self) -> None:
         report = BenchmarkReport(comparisons=[], failures=[], branch="develop", git_sha="abc")
         md = generate_markdown(report)
-        assert "OTX Benchmark Report" in md
+        assert "GetiTune Benchmark Report" in md
         assert "`develop`" in md
         assert "`abc`" in md
 
@@ -439,7 +439,7 @@ class TestGenerateMarkdown:
     def test_empty_report(self) -> None:
         report = BenchmarkReport(comparisons=[], failures=[])
         md = generate_markdown(report)
-        assert "OTX Benchmark Report" in md
+        assert "GetiTune Benchmark Report" in md
         assert "**0** passed" in md
 
 

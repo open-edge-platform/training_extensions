@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from otx.benchmark.dataset_helpers import download, extract_archive, parse_args
+from getitune.benchmark.dataset_helpers import download, extract_archive, parse_args
 
 _URL = "https://storage.geti.intel.com/test-data/integration-iai/datasets/allround.zip"
 

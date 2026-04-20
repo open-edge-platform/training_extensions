@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for otx.benchmark.manifest."""
+"""Tests for getitune.benchmark.manifest."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from otx.benchmark.manifest import (
+from getitune.benchmark.manifest import (
     BenchmarkManifest,
     Experiment,
     ManifestDefaults,

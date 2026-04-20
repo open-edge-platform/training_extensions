@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for otx.benchmark.runner (core loop, resume logic)."""
+"""Tests for getitune.benchmark.runner (core loop, resume logic)."""
 
 from __future__ import annotations
 
@@ -12,19 +12,19 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from otx.benchmark.catalog import DatasetCatalog, load_catalog
-from otx.benchmark.experiment import (
+from getitune.benchmark.catalog import DatasetCatalog, load_catalog
+from getitune.benchmark.experiment import (
     ExperimentResult,
     PhaseResult,
     detect_resume_point,
     resolve_overrides,
 )
-from otx.benchmark.manifest import (
+from getitune.benchmark.manifest import (
     BenchmarkManifest,
     ManifestFilters,
     load_manifest,
 )
-from otx.benchmark.runner import BenchmarkRunner, RunConfig
+from getitune.benchmark.runner import BenchmarkRunner, RunConfig
 
 # ---------------------------------------------------------------------------
 # Fixtures — minimal catalog + manifest
@@ -195,8 +195,8 @@ class TestRunnerDryRun:
 
 
 class TestRunnerExecution:
-    @patch("otx.benchmark.runner.provision_datasets")
-    @patch("otx.benchmark.runner.ExperimentExecutor")
+    @patch("getitune.benchmark.runner.provision_datasets")
+    @patch("getitune.benchmark.runner.ExperimentExecutor")
     def test_single_experiment_success(
         self,
         mock_executor_cls: MagicMock,
@@ -233,8 +233,8 @@ class TestRunnerExecution:
         assert successes[0].model == "model_a"
         assert successes[0].success is True
 
-    @patch("otx.benchmark.runner.provision_datasets")
-    @patch("otx.benchmark.runner.ExperimentExecutor")
+    @patch("getitune.benchmark.runner.provision_datasets")
+    @patch("getitune.benchmark.runner.ExperimentExecutor")
     def test_experiment_failure_collected(
         self,
         mock_executor_cls: MagicMock,
@@ -260,8 +260,8 @@ class TestRunnerExecution:
         assert failures[0].error is not None
         assert "CUDA OOM" in failures[0].error
 
-    @patch("otx.benchmark.runner.provision_datasets")
-    @patch("otx.benchmark.runner.ExperimentExecutor")
+    @patch("getitune.benchmark.runner.provision_datasets")
+    @patch("getitune.benchmark.runner.ExperimentExecutor")
     def test_retry_on_transient_failure(
         self,
         mock_executor_cls: MagicMock,
@@ -380,8 +380,8 @@ class TestRunConfig:
 
 
 class TestRunnerEvalUpto:
-    @patch("otx.benchmark.runner.provision_datasets")
-    @patch("otx.benchmark.runner.ExperimentExecutor")
+    @patch("getitune.benchmark.runner.provision_datasets")
+    @patch("getitune.benchmark.runner.ExperimentExecutor")
     def test_eval_upto_train_limits_phases(
         self,
         mock_executor_cls: MagicMock,
@@ -426,9 +426,9 @@ class TestRunnerEvalUpto:
 
 
 class TestRunnerResume:
-    @patch("otx.benchmark.runner.provision_datasets")
-    @patch("otx.benchmark.runner.detect_resume_point", return_value=(True, None))
-    @patch("otx.benchmark.runner.ExperimentExecutor")
+    @patch("getitune.benchmark.runner.provision_datasets")
+    @patch("getitune.benchmark.runner.detect_resume_point", return_value=(True, None))
+    @patch("getitune.benchmark.runner.ExperimentExecutor")
     def test_skip_completed_experiment(
         self,
         mock_executor_cls: MagicMock,
@@ -458,7 +458,7 @@ class TestRunnerResume:
 
 
 class TestRunnerMissingDataset:
-    @patch("otx.benchmark.runner.provision_datasets")
+    @patch("getitune.benchmark.runner.provision_datasets")
     def test_missing_dataset_skipped(
         self,
         mock_provision: MagicMock,

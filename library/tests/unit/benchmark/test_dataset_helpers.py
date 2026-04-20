@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for otx.benchmark.dataset_helpers."""
+"""Tests for getitune.benchmark.dataset_helpers."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 import pytest
 
-from otx.benchmark.dataset_helpers import (
+from getitune.benchmark.dataset_helpers import (
     DatasetArgs,
     download,
     extract_archive,
@@ -67,7 +67,7 @@ class TestDownload:
         def fake_urlretrieve(url: str, dest: str | Path) -> None:
             Path(dest).write_text("fake archive content")
 
-        with patch("otx.benchmark.dataset_helpers.urllib.request.urlretrieve", side_effect=fake_urlretrieve):
+        with patch("getitune.benchmark.dataset_helpers.urllib.request.urlretrieve", side_effect=fake_urlretrieve):
             result = download("https://example.com/data.tar.gz", dest_dir)
 
         assert result == dest_dir / "data.tar.gz"
@@ -79,7 +79,7 @@ class TestDownload:
         def fake_urlretrieve(url: str, dest: str | Path) -> None:
             Path(dest).write_text("content")
 
-        with patch("otx.benchmark.dataset_helpers.urllib.request.urlretrieve", side_effect=fake_urlretrieve):
+        with patch("getitune.benchmark.dataset_helpers.urllib.request.urlretrieve", side_effect=fake_urlretrieve):
             result = download("https://example.com/v2/data.tar.gz", dest_dir, filename="custom.tar.gz")
 
         assert result == dest_dir / "custom.tar.gz"
@@ -91,7 +91,7 @@ class TestDownload:
         def fake_urlretrieve(url: str, dest: str | Path) -> None:
             Path(dest).write_text("content")
 
-        with patch("otx.benchmark.dataset_helpers.urllib.request.urlretrieve", side_effect=fake_urlretrieve):
+        with patch("getitune.benchmark.dataset_helpers.urllib.request.urlretrieve", side_effect=fake_urlretrieve):
             download("https://example.com/a.zip", dest_dir)
 
         assert dest_dir.exists()

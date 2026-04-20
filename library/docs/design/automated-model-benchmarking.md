@@ -157,12 +157,12 @@ The system is composed of four independent layers:
 | Layer                | Responsibility                                              | Artifact                                                 |
 | -------------------- | ----------------------------------------------------------- | -------------------------------------------------------- |
 | **Dataset Catalog**  | Declare datasets, their preparation scripts, and size class | `benchmark_catalog.yaml` + `scripts/benchmark_datasets/` |
-| **Benchmark Runner** | Provision data via scripts, run experiments, log to MLflow  | Python package `otx.benchmark`                           |
+| **Benchmark Runner** | Provision data via scripts, run experiments, log to MLflow  | Python package `getitune.benchmark`                      |
 | **Report Generator** | Compare against baselines, produce human-readable report    | Markdown + CSV                                           |
 | **CI Workflow**      | Orchestrate the above on GitHub Actions runners             | `.github/workflows/benchmark.yml`                        |
 
 Each layer is independently testable and usable outside CI (e.g., an engineer
-can run the benchmark runner locally with `python -m otx.benchmark run ...`).
+can run the benchmark runner locally with `python -m getitune.benchmark run ...`).
 
 ---
 
@@ -241,7 +241,7 @@ datasets:
 
 ### 5.3 Script-Based Provisioning & Cache
 
-A utility (`otx.benchmark.catalog`) will:
+A utility (`getitune.benchmark.catalog`) will:
 
 1. Read the catalog.
 2. For each required dataset, check if the directory `<data_root>/<name>`
@@ -269,7 +269,7 @@ Each preparation script in `scripts/benchmark_datasets/` must:
 - Be **idempotent** — running the script twice produces the same result.
 - Exit with code 0 on success, non-zero on failure.
 
-Scripts should use the shared helpers in `otx.benchmark.dataset_helpers` to
+Scripts should use the shared helpers in `getitune.benchmark.dataset_helpers` to
 avoid duplicating boilerplate. The module provides:
 
 | Helper              | Purpose                                                             |
@@ -286,7 +286,7 @@ A simple "download + extract" dataset needs only ~10 lines:
 # scripts/benchmark_datasets/prepare_pothole.py
 """Download and prepare the pothole_tiny benchmark dataset."""
 
-from otx.benchmark.dataset_helpers import download, extract_archive, parse_args
+from getitune.benchmark.dataset_helpers import download, extract_archive, parse_args
 
 _URL = "https://storage.geti.intel.com/test-data/pothole_tiny.tar.gz"
 
@@ -324,7 +324,7 @@ def main() -> None:
 ```
 
 ```python
-# otx/benchmark/catalog.py  (simplified)
+# getitune/benchmark/catalog.py  (simplified)
 def provision_datasets(
     catalog: DatasetCatalog,
     data_root: Path,
@@ -498,25 +498,25 @@ The manifest is the _full_ matrix. At invocation time, the user can filter:
 
 ```bash
 # Run everything
-python -m otx.benchmark run
+python -m getitune.benchmark run
 
 # Single model
-python -m otx.benchmark run --model yolox_s
+python -m getitune.benchmark run --model yolox_s
 
 # All models for a task
-python -m otx.benchmark run --task detection
+python -m getitune.benchmark run --task detection
 
 # Specific list
-python -m otx.benchmark run --model yolox_s --model atss_mobilenetv2
+python -m getitune.benchmark run --model yolox_s --model atss_mobilenetv2
 
 # Only tiny/small datasets (quick smoke test)
-python -m otx.benchmark run --size-tier tiny --size-tier small
+python -m getitune.benchmark run --size-tier tiny --size-tier small
 
 # Specific scenario (optional, see §6.3; omit for default recipe config)
-python -m otx.benchmark run --scenario tiling --task detection
+python -m getitune.benchmark run --scenario tiling --task detection
 
 # Preview what would run without executing (see also §6.4.4)
-python -m otx.benchmark run --task detection --size-tier tiny --dry-run
+python -m getitune.benchmark run --task detection --size-tier tiny --dry-run
 ```
 
 All commands above run each model with its **default recipe configuration**
@@ -594,13 +594,13 @@ scenarios:
 
 ```bash
 # Run only the lr_high scenario for detection
-python -m otx.benchmark run --scenario lr_high --task detection
+python -m getitune.benchmark run --scenario lr_high --task detection
 
 # Run all configurable-parameter scenarios (exclude default and tiling)
-python -m otx.benchmark run --scenario-tag configurable
+python -m getitune.benchmark run --scenario-tag configurable
 
 # Run a one-off parameter variation without a manifest entry
-python -m otx.benchmark run \
+python -m getitune.benchmark run \
     --model yolox_s \
     --dataset pothole_tiny \
     --override model.init_args.optimizer.init_args.lr=0.01 \
@@ -707,10 +707,10 @@ For ad-hoc local use, engineers can run any scenario directly:
 
 ```bash
 # Run a specific parameter scenario
-python -m otx.benchmark run --scenario lr_high --task detection
+python -m getitune.benchmark run --scenario lr_high --task detection
 
 # Run all configurable-parameter scenarios
-python -m otx.benchmark run --scenario-tag configurable --task detection
+python -m getitune.benchmark run --scenario-tag configurable --task detection
 ```
 
 ### 6.4 Scaling to Hundreds of Models
@@ -773,13 +773,13 @@ their model will next be benchmarked.
 
 ```bash
 # Rotation happens automatically based on the current week
-python -m otx.benchmark run --priority extended   # runs only this week's group
+python -m getitune.benchmark run --priority extended   # runs only this week's group
 
 # Override to force a specific rotation group
-python -m otx.benchmark run --priority extended --rotation-group 2
+python -m getitune.benchmark run --priority extended --rotation-group 2
 
 # Run ALL extended models regardless of rotation (e.g. before a release)
-python -m otx.benchmark run --priority extended --no-rotation
+python -m getitune.benchmark run --priority extended --no-rotation
 ```
 
 Over a 4-week cycle every `extended` model is benchmarked at least once, while
@@ -803,14 +803,14 @@ by a `benchmark:release` label on the release PR.
 
 ```bash
 # Filter by priority
-python -m otx.benchmark run --priority core
-python -m otx.benchmark run --priority core,extended
+python -m getitune.benchmark run --priority core
+python -m getitune.benchmark run --priority core,extended
 
 # Combine with other filters
-python -m otx.benchmark run --priority core --task detection --size-tier tiny
+python -m getitune.benchmark run --priority core --task detection --size-tier tiny
 
 # See what would run (dry-run)
-python -m otx.benchmark run --priority extended --dry-run
+python -m getitune.benchmark run --priority extended --dry-run
 # Output: "Would run 15 of 60 extended models (rotation group 2 of 4)"
 ```
 
@@ -841,9 +841,9 @@ and `tests/regression/test_regression.py`.
 ### 7.1 Package Structure
 
 ```
-src/otx/benchmark/
+src/getitune/benchmark/
 ├── __init__.py
-├── __main__.py          # CLI entry: `python -m otx.benchmark`
+├── __main__.py          # CLI entry: `python -m getitune.benchmark`
 ├── cli.py               # Argument parsing
 ├── catalog.py           # Dataset catalog loading & provisioning
 ├── dataset_helpers.py   # Shared helpers for preparation scripts (download, extract, parse_args)
@@ -1412,11 +1412,11 @@ jobs:
           key: benchmark-datasets-${{ hashFiles('scripts/benchmark_datasets/**') }}
 
       - name: Provision datasets
-        run: python -m otx.benchmark provision --catalog benchmark_catalog.yaml --data-root data/
+        run: python -m getitune.benchmark provision --catalog benchmark_catalog.yaml --data-root data/
 
       - name: Run benchmarks
         run: |
-          python -m otx.benchmark run \
+          python -m getitune.benchmark run \
             --manifest benchmark_manifest.yaml \
             --catalog benchmark_catalog.yaml \
             --data-root data/ \
@@ -1433,7 +1433,7 @@ jobs:
       - name: Generate report
         if: always()
         run: |
-          python -m otx.benchmark report \
+          python -m getitune.benchmark report \
             --results-dir results/ \
             --output report.md
 
@@ -1471,7 +1471,7 @@ engineers run on any target on-demand.
 ### 11.3 Runner Environment
 
 No dedicated Docker image is required. The benchmark runner is a plain Python
-CLI (`python -m otx.benchmark`) with no dependencies beyond what OTX and its
+CLI (`python -m getitune.benchmark`) with no dependencies beyond what OTX and its
 dev group already provide (`mlflow`, `py-cpuinfo`, etc. are already in
 `pyproject.toml` `[dependency-groups] dev`).
 
@@ -1626,7 +1626,7 @@ def _should_skip(self, experiment: Experiment, seed: int) -> tuple[bool, str | N
 
 ```
 library/
-├── src/otx/benchmark/
+├── src/getitune/benchmark/
 │   ├── __init__.py
 │   ├── __main__.py
 │   ├── cli.py
@@ -1714,7 +1714,7 @@ results/
 
 ### Phase 1 — Foundation (2 weeks)
 
-- [ ] Create `src/otx/benchmark/` package skeleton.
+- [ ] Create `src/getitune/benchmark/` package skeleton.
 - [ ] Implement `catalog.py`: YAML parsing, script execution, sentinel-based caching (script hash re-verification).
 - [ ] Implement `manifest.py`: YAML parsing, filtering, experiment enumeration, `{metric}` placeholder resolution.
 - [ ] Write `benchmark_catalog.yaml` for detection (one task, end-to-end proof of concept).

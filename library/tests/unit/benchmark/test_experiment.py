@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for otx.benchmark.experiment (result types, resume, metric scraping)."""
+"""Tests for getitune.benchmark.experiment (result types, resume, metric scraping)."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from otx.benchmark.experiment import (
+from getitune.benchmark.experiment import (
     ExperimentExecutor,
     ExperimentResult,
     PhaseResult,
@@ -247,7 +247,7 @@ class TestScrapeCsvMetrics:
 
     def test_epoch_takes_max(self, tmp_path: Path) -> None:
         csv_path = tmp_path / "metrics.csv"
-        csv_path.write_text("epoch\n1\n2\n3\n")
+        csv_path.write_text("epoch\n0\n1\n2\n")
         metrics = _scrape_csv_metrics(csv_path, prefix="training:")
         assert metrics["training:epoch"] == 3.0
 

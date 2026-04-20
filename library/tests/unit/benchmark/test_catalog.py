@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for otx.benchmark.catalog."""
+"""Tests for getitune.benchmark.catalog."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 
-from otx.benchmark.catalog import (
+from getitune.benchmark.catalog import (
     DatasetCatalog,
     DatasetEntry,
     load_catalog,
@@ -171,7 +171,7 @@ class TestProvisionDataset:
             size_tier="tiny",
         )
 
-        with patch("otx.benchmark.catalog._resolve_script_path", return_value=script_path):
+        with patch("getitune.benchmark.catalog._resolve_script_path", return_value=script_path):
             result = provision_dataset(entry, data_root)
 
         assert result.exists()
@@ -188,7 +188,7 @@ class TestProvisionDataset:
         )
 
         with patch(
-            "otx.benchmark.catalog._resolve_script_path",
+            "getitune.benchmark.catalog._resolve_script_path",
             return_value=tmp_path / "scripts" / "does_not_exist.py",
         ), pytest.raises(FileNotFoundError, match="Preparation script not found"):
             provision_dataset(entry, data_root)
@@ -206,7 +206,7 @@ class TestProvisionDataset:
             size_tier="tiny",
         )
 
-        with patch("otx.benchmark.catalog._resolve_script_path", return_value=script_path), pytest.raises(
+        with patch("getitune.benchmark.catalog._resolve_script_path", return_value=script_path), pytest.raises(
             RuntimeError, match="failed with exit code"
         ):
             provision_dataset(entry, data_root)
@@ -282,7 +282,7 @@ class TestProvisionDatasets:
         def resolve(script: str) -> Path:
             return tmp_path / script
 
-        with patch("otx.benchmark.catalog._resolve_script_path", side_effect=resolve):
+        with patch("getitune.benchmark.catalog._resolve_script_path", side_effect=resolve):
             result = provision_datasets(catalog, data_root)
 
         assert set(result.keys()) == {"a", "b"}
@@ -302,7 +302,7 @@ class TestProvisionDatasets:
         def resolve(script: str) -> Path:
             return tmp_path / script
 
-        with patch("otx.benchmark.catalog._resolve_script_path", side_effect=resolve):
+        with patch("getitune.benchmark.catalog._resolve_script_path", side_effect=resolve):
             result = provision_datasets(catalog, data_root, entries=[entry_a])
 
         assert "a" in result

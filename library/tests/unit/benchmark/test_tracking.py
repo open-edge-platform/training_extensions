@@ -1,22 +1,22 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for otx.benchmark.tracking (MLflow integration)."""
+"""Tests for getitune.benchmark.tracking (MLflow integration)."""
 
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from otx.benchmark.experiment import ExperimentResult, PhaseResult
-from otx.benchmark.manifest import CriteriaConfig, Experiment, ModelEntry, Scenario
-from otx.benchmark.tracking import (
+from getitune.benchmark.experiment import ExperimentResult, PhaseResult
+from getitune.benchmark.manifest import CriteriaConfig, Experiment, ModelEntry, Scenario
+from getitune.benchmark.tracking import (
     BenchmarkTracker,
     RunTags,
     TrackingConfig,
     _get_cpu_info,
+    _get_getitune_version,
     _get_git_branch,
     _get_git_sha,
-    _get_otx_version,
 )
 
 # ---------------------------------------------------------------------------
@@ -33,12 +33,12 @@ class TestTrackingConfig:
 
     def test_experiment_name_with_explicit_branch(self) -> None:
         cfg = TrackingConfig(branch="develop", trigger="weekly")
-        assert cfg.experiment_name == "otx-benchmark/develop/weekly"
+        assert cfg.experiment_name == "getitune-benchmark/develop/weekly"
 
-    @patch("otx.benchmark.tracking.get_git_branch", return_value="feature/xyz")
+    @patch("getitune.benchmark.tracking.get_git_branch", return_value="feature/xyz")
     def test_experiment_name_auto_branch(self, mock_branch: MagicMock) -> None:
         cfg = TrackingConfig(branch="", trigger="nightly")
-        assert cfg.experiment_name == "otx-benchmark/feature/xyz/nightly"
+        assert cfg.experiment_name == "getitune-benchmark/feature/xyz/nightly"
 
 
 # ---------------------------------------------------------------------------
@@ -98,8 +98,8 @@ class TestGitHelpers:
         with patch.dict("os.environ", {"GITHUB_REF_NAME": "pr-42"}):
             assert _get_git_branch() == "pr-42"
 
-    def test_get_otx_version(self) -> None:
-        v = _get_otx_version()
+    def test_get_getitune_version(self) -> None:
+        v = _get_getitune_version()
         assert isinstance(v, str)
         assert v != ""
 
@@ -114,7 +114,7 @@ class TestGitHelpers:
 
 
 class TestBenchmarkTrackerSetup:
-    @patch("otx.benchmark.tracking.mlflow")
+    @patch("getitune.benchmark.tracking.mlflow")
     def test_setup_creates_experiment(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(
             tracking_uri="/tmp/test_mlruns",  # noqa: S108
@@ -128,11 +128,11 @@ class TestBenchmarkTrackerSetup:
         tracker.setup()
 
         mock_mlflow.set_tracking_uri.assert_called_once_with("/tmp/test_mlruns")  # noqa: S108
-        mock_mlflow.get_experiment_by_name.assert_called_once_with("otx-benchmark/develop/manual")
-        mock_mlflow.create_experiment.assert_called_once_with("otx-benchmark/develop/manual")
+        mock_mlflow.get_experiment_by_name.assert_called_once_with("getitune-benchmark/develop/manual")
+        mock_mlflow.create_experiment.assert_called_once_with("getitune-benchmark/develop/manual")
         assert tracker._experiment_id == "1"
 
-    @patch("otx.benchmark.tracking.mlflow")
+    @patch("getitune.benchmark.tracking.mlflow")
     def test_setup_reuses_existing_experiment(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(branch="develop", trigger="weekly")
 
@@ -184,7 +184,7 @@ class TestBenchmarkTrackerLogRun:
             criteria=CriteriaConfig(accuracy_metric="mAP", thresholds={}),
         )
 
-    @patch("otx.benchmark.tracking.mlflow")
+    @patch("getitune.benchmark.tracking.mlflow")
     def test_log_successful_run(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(branch="develop", trigger="manual")
         tracker = BenchmarkTracker(config)
@@ -210,7 +210,7 @@ class TestBenchmarkTrackerLogRun:
         # log_metrics should have been called for numeric metrics and per-phase wall times
         assert mock_mlflow.log_metrics.call_count >= 1
 
-    @patch("otx.benchmark.tracking.mlflow")
+    @patch("getitune.benchmark.tracking.mlflow")
     def test_log_failed_run_sets_error_tag(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(branch="develop", trigger="manual")
         tracker = BenchmarkTracker(config)
@@ -238,7 +238,7 @@ class TestBenchmarkTrackerLogRun:
 
 
 class TestResolveBaseline:
-    @patch("otx.benchmark.tracking.mlflow")
+    @patch("getitune.benchmark.tracking.mlflow")
     def test_no_experiment_returns_none(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(branch="develop", trigger="manual")
         tracker = BenchmarkTracker(config)
@@ -251,7 +251,7 @@ class TestResolveBaseline:
         result = tracker.resolve_baseline(model="m", dataset="d")
         assert result is None
 
-    @patch("otx.benchmark.tracking.mlflow")
+    @patch("getitune.benchmark.tracking.mlflow")
     def test_no_runs_returns_none(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(branch="develop", trigger="weekly")
         tracker = BenchmarkTracker(config)
@@ -259,7 +259,7 @@ class TestResolveBaseline:
         mock_client = MagicMock()
         mock_exp = MagicMock()
         mock_exp.experiment_id = "1"
-        mock_exp.name = "otx-benchmark/develop/weekly"
+        mock_exp.name = "getitune-benchmark/develop/weekly"
         mock_client.search_experiments.return_value = [mock_exp]
         mock_client.search_runs.return_value = []
         mock_mlflow.tracking.MlflowClient.return_value = mock_client
@@ -267,7 +267,7 @@ class TestResolveBaseline:
         result = tracker.resolve_baseline(model="m", dataset="d")
         assert result is None
 
-    @patch("otx.benchmark.tracking.mlflow")
+    @patch("getitune.benchmark.tracking.mlflow")
     def test_returns_metrics_from_latest_run(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(branch="develop", trigger="weekly")
         tracker = BenchmarkTracker(config)
@@ -275,7 +275,7 @@ class TestResolveBaseline:
         mock_client = MagicMock()
         mock_exp = MagicMock()
         mock_exp.experiment_id = "1"
-        mock_exp.name = "otx-benchmark/develop/weekly"
+        mock_exp.name = "getitune-benchmark/develop/weekly"
         mock_client.search_experiments.return_value = [mock_exp]
 
         mock_run = MagicMock()
@@ -341,7 +341,7 @@ class TestResolveBaselinesForResults:
 
 
 class TestPurgeOldRuns:
-    @patch("otx.benchmark.tracking.mlflow")
+    @patch("getitune.benchmark.tracking.mlflow")
     def test_no_experiments_returns_zero(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(tracking_uri="/tmp/mlruns")  # noqa: S108
         tracker = BenchmarkTracker(config)
@@ -353,7 +353,7 @@ class TestPurgeOldRuns:
         deleted = tracker.purge_old_runs(max_age_days=30)
         assert deleted == 0
 
-    @patch("otx.benchmark.tracking.mlflow")
+    @patch("getitune.benchmark.tracking.mlflow")
     def test_deletes_old_feature_branch_runs(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(tracking_uri="/tmp/mlruns")  # noqa: S108
         tracker = BenchmarkTracker(config)
@@ -362,7 +362,7 @@ class TestPurgeOldRuns:
 
         # One benchmark experiment
         mock_exp = MagicMock()
-        mock_exp.name = "otx-benchmark/feature/foo/manual"
+        mock_exp.name = "getitune-benchmark/feature/foo/manual"
         mock_exp.experiment_id = "1"
         mock_client.search_experiments.return_value = [mock_exp]
 
@@ -388,7 +388,7 @@ class TestPurgeOldRuns:
         assert deleted == 1
         mock_client.delete_run.assert_called_once_with("old_run")
 
-    @patch("otx.benchmark.tracking.mlflow")
+    @patch("getitune.benchmark.tracking.mlflow")
     def test_protects_develop_branch_runs(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(tracking_uri="/tmp/mlruns")  # noqa: S108
         tracker = BenchmarkTracker(config)
@@ -396,7 +396,7 @@ class TestPurgeOldRuns:
         mock_client = MagicMock()
 
         mock_exp = MagicMock()
-        mock_exp.name = "otx-benchmark/develop/weekly"
+        mock_exp.name = "getitune-benchmark/develop/weekly"
         mock_exp.experiment_id = "1"
         mock_client.search_experiments.return_value = [mock_exp]
 
@@ -417,7 +417,7 @@ class TestPurgeOldRuns:
         assert deleted == 0
         mock_client.delete_run.assert_not_called()
 
-    @patch("otx.benchmark.tracking.mlflow")
+    @patch("getitune.benchmark.tracking.mlflow")
     def test_dry_run_does_not_delete(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(tracking_uri="/tmp/mlruns")  # noqa: S108
         tracker = BenchmarkTracker(config)
@@ -425,7 +425,7 @@ class TestPurgeOldRuns:
         mock_client = MagicMock()
 
         mock_exp = MagicMock()
-        mock_exp.name = "otx-benchmark/feature/bar/manual"
+        mock_exp.name = "getitune-benchmark/feature/bar/manual"
         mock_exp.experiment_id = "1"
         mock_client.search_experiments.return_value = [mock_exp]
 
