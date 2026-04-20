@@ -9,6 +9,14 @@ import { pluginSvgr } from '@rsbuild/plugin-svgr';
 
 const { publicVars } = loadEnv({ prefixes: ['PUBLIC_'] });
 
+// Platform target selection. When building for the Tauri desktop shell we
+// prepend `.tauri.*` extensions so the bundler resolves platform-specific
+// overrides (e.g. `foo.tauri.ts` wins over `foo.ts`). Files not shadowed by
+// a `.tauri.*` twin resolve as usual. This keeps Tauri-specific code out of
+// the web graph entirely, and removes the need for runtime `isTauri` checks.
+const isTauriBuild = process.env.BUILD_TARGET === 'tauri';
+const platformExtensions = isTauriBuild ? ['.tauri.tsx', '.tauri.ts', '.tauri.jsx', '.tauri.js'] : [];
+
 export default defineConfig({
     plugins: [
         pluginReact(),
@@ -63,10 +71,18 @@ export default defineConfig({
         },
     },
     tools: {
-        rspack: {
-            watchOptions: {
-                ignored: ['**/src-tauri/**'],
-            },
+        rspack: (config) => {
+            // `resolve.extensions` is order-sensitive: the first match wins.
+            // Rsbuild's defaults put `.ts` near the front, so a plain object
+            // merge would let it shadow our `.tauri.ts` overrides. Prepend
+            // explicitly and dedupe to keep the platform suffixes first.
+            const existing = config.resolve?.extensions ?? [];
+            const extensions = Array.from(new Set([...platformExtensions, ...existing]));
+            return {
+                ...config,
+                resolve: { ...config.resolve, extensions },
+                watchOptions: { ...config.watchOptions, ignored: ['**/src-tauri/**'] },
+            };
         },
     },
     server: {

@@ -3,5 +3,9 @@
     "identifier": "default",
     "description": "enables the default permissions",
     "windows": ["main"],
-    "permissions": ["core:default", "core:window:allow-on-close-requested"]
+    "permissions": [
+        "core:default",
+        "dialog:allow-save",
+        "upload:default"
+    ]
 }

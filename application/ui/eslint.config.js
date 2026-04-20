@@ -73,6 +73,54 @@ export default [
             'max-len': ['off'],
         },
     },
+    {
+        // Contain Tauri-specific APIs inside `*.tauri.{ts,tsx}` files under
+        // `src/platform/`. The bundler picks those files for the Tauri build
+        // via `resolve.extensions`, so only they should ever import
+        // `@tauri-apps/*`. Everywhere else, consume the capability module
+        // (e.g. `import { downloadFile } from '../platform/download-file'`)
+        // and let the bundler swap the implementation per target.
+        files: ['src/**/*.{ts,tsx}'],
+        ignores: ['src/**/*.tauri.{ts,tsx}'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: [
+                        {
+                            name: '@adobe/react-spectrum',
+                            message: 'Use component from the @geti/ui folder instead.',
+                        },
+                    ],
+                    patterns: [
+                        {
+                            group: ['@react-spectrum'],
+                            message: 'Use component from the @geti/ui folder instead.',
+                        },
+                        {
+                            group: ['@react-types/*'],
+                            message: 'Use type from the @geti/ui folder instead.',
+                        },
+                        {
+                            group: ['@spectrum-icons'],
+                            message: 'Use icons from the @geti/ui/icons folder instead.',
+                        },
+                        {
+                            group: ['src/*'],
+                            message: 'Use relative imports instead of absolute "src/" imports.',
+                        },
+                        {
+                            group: ['@tauri-apps/*'],
+                            message:
+                                'Import Tauri plugins only from `*.tauri.{ts,tsx}` files under src/platform/. ' +
+                                'Consumers should import the capability module (e.g. ../platform/download-file) ' +
+                                'so the bundler can swap implementations per build target.',
+                        },
+                    ],
+                },
+            ],
+        },
+    },
     ...compat.extends('plugin:playwright/playwright-test').map((config) => ({
         ...config,
         files: ['tests/**/*.ts'],
