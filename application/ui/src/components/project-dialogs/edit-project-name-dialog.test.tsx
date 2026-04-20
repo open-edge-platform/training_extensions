@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, screen, waitFor } from '@testing-library/react';
@@ -16,7 +16,13 @@ describe('EditProjectNameDialog', () => {
 
     it('disables save button when name is empty', async () => {
         render(
-            <EditProjectNameDialog onClose={vi.fn()} isOpen={true} projectId={projectId} projectName={projectName} />
+            <EditProjectNameDialog
+                onClose={vi.fn()}
+                isOpen={true}
+                projectId={projectId}
+                projectName={projectName}
+                projectNames={[]}
+            />
         );
 
         const input = screen.getByLabelText(/edit project name field/i);
@@ -27,7 +33,13 @@ describe('EditProjectNameDialog', () => {
 
     it('disables save button when name is unchanged', () => {
         render(
-            <EditProjectNameDialog onClose={vi.fn()} isOpen={true} projectId={projectId} projectName={projectName} />
+            <EditProjectNameDialog
+                onClose={vi.fn()}
+                isOpen={true}
+                projectId={projectId}
+                projectName={projectName}
+                projectNames={[]}
+            />
         );
 
         expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
@@ -44,7 +56,13 @@ describe('EditProjectNameDialog', () => {
         );
 
         render(
-            <EditProjectNameDialog onClose={onClose} isOpen={true} projectId={projectId} projectName={projectName} />
+            <EditProjectNameDialog
+                onClose={onClose}
+                isOpen={true}
+                projectId={projectId}
+                projectName={projectName}
+                projectNames={[]}
+            />
         );
 
         const input = screen.getByLabelText(/edit project name field/i);
@@ -72,7 +90,13 @@ describe('EditProjectNameDialog', () => {
         );
 
         render(
-            <EditProjectNameDialog onClose={onClose} isOpen={true} projectId={projectId} projectName={projectName} />
+            <EditProjectNameDialog
+                onClose={onClose}
+                isOpen={true}
+                projectId={projectId}
+                projectName={projectName}
+                projectNames={[]}
+            />
         );
 
         const input = screen.getByLabelText(/edit project name field/i);
@@ -82,5 +106,62 @@ describe('EditProjectNameDialog', () => {
 
         expect(await screen.findByText(errorMessage)).toBeVisible();
         expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('disables save button and shows error when name matches an existing project name', () => {
+        const existingName = 'Another Project';
+
+        render(
+            <EditProjectNameDialog
+                onClose={vi.fn()}
+                isOpen={true}
+                projectId={projectId}
+                projectName={projectName}
+                projectNames={[existingName, 'Yet Another Project']}
+            />
+        );
+
+        const input = screen.getByLabelText(/edit project name field/i);
+        fireEvent.change(input, { target: { value: existingName } });
+
+        expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
+        expect(screen.getByText('That project name already exists')).toBeVisible();
+    });
+
+    it('duplicate name check is case-sensitive — different casing does not trigger duplicate error', () => {
+        const existingName = 'Another Project';
+
+        render(
+            <EditProjectNameDialog
+                onClose={vi.fn()}
+                isOpen={true}
+                projectId={projectId}
+                projectName={projectName}
+                projectNames={[existingName]}
+            />
+        );
+
+        const input = screen.getByLabelText(/edit project name field/i);
+        fireEvent.change(input, { target: { value: existingName.toUpperCase() } });
+
+        expect(screen.queryByText('That project name already exists')).not.toBeInTheDocument();
+    });
+
+    it('enables save button when a valid new name is entered', () => {
+        render(
+            <EditProjectNameDialog
+                onClose={vi.fn()}
+                isOpen={true}
+                projectId={projectId}
+                projectName={projectName}
+                projectNames={['Taken Name']}
+            />
+        );
+
+        const input = screen.getByLabelText(/edit project name field/i);
+        fireEvent.change(input, { target: { value: 'Brand New Name' } });
+
+        expect(screen.getByRole('button', { name: /save/i })).not.toBeDisabled();
+        expect(screen.queryByText('That project name already exists')).not.toBeInTheDocument();
     });
 });

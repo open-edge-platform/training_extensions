@@ -105,7 +105,7 @@ export const Graphs = () => {
     const hasData = latencyData.length > 0 || throughputData.length > 0;
 
     return (
-        <View gridArea={'aside'} height={'100%'} UNSAFE_style={{ overflow: 'hidden auto' }}>
+        <View height={'100%'} UNSAFE_style={{ overflow: 'hidden auto' }}>
             {!hasData && !metrics ? (
                 <IllustratedMessage>
                     <Heading>No statistics available</Heading>

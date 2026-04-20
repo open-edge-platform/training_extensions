@@ -7,7 +7,7 @@ import { isInvalidJob, isJobDone, isJobFailed } from 'hooks/api/util';
 
 import { $api } from '../../../../../api/client';
 import { ExportDatasetJob } from '../../../../../constants/shared-types';
-import { useExportDataset } from '../../../../../hooks/localStorage/use-export-dataset.hook';
+import { useExportDataset } from '../../../../../hooks/storage/use-export-dataset.hook';
 
 export const useExportStatus = (jobId: string) => {
     const { removeLsExportId } = useExportDataset();

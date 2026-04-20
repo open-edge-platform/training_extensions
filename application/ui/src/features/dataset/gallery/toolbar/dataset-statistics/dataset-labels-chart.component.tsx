@@ -25,6 +25,9 @@ type DatasetLabelsChartProps = {
     }[];
 };
 
+const BAR_SIZE = 36;
+const MIN_CHART_HEIGHT = 192;
+
 const getAxisTicks = (total: number): number[] => {
     const TICK_SPACING = 20;
 
@@ -34,13 +37,7 @@ const getAxisTicks = (total: number): number[] => {
 };
 
 const ItemLabel = (props: LabelProps) => {
-    const minBarHeight = 20;
-    const height = Number(props?.height ?? 0);
-
-    if (props.value === 0 || height <= minBarHeight) {
-        return null;
-    }
-    return <Label {...props} fill={'white'} />;
+    return props.value === 0 ? null : <Label {...props} fill={'white'} />;
 };
 
 export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLabelsChartProps) => {
@@ -56,13 +53,12 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
     });
 
     return (
-        <ResponsiveContainer width='100%' height={'100%'} minHeight={dimensionValue('size-2400')}>
-            <BarChart
-                data={chartData}
-                layout='vertical'
-                margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-                barCategoryGap={20}
-            >
+        <ResponsiveContainer
+            width='100%'
+            height='100%'
+            minHeight={Math.max(projectLabels.length * BAR_SIZE, MIN_CHART_HEIGHT)}
+        >
+            <BarChart data={chartData} layout='vertical' margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
                 <CartesianGrid stroke='var(--spectrum-global-color-gray-600)' strokeOpacity={0.4} horizontal={false} />
 
                 <XAxis
@@ -78,12 +74,13 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
                     type='category'
                     dataKey='label'
                     width={140}
+                    interval={0}
                     tick={{ fill: 'var(--spectrum-global-color-gray-800)', fontSize: dimensionValue('size-200') }}
                     axisLine={{ stroke: 'var(--spectrum-global-color-gray-600)', strokeWidth: 1 }}
                     tickLine={false}
                 />
 
-                <Bar dataKey='score' fill='var(--moss)' radius={[4, 4, 4, 4]} barSize={36}>
+                <Bar dataKey='score' fill='var(--moss)' radius={[4, 4, 4, 4]} barSize={BAR_SIZE}>
                     <LabelList content={ItemLabel} position='insideEnd' />
                 </Bar>
 

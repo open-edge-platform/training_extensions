@@ -7,18 +7,18 @@ import { Flex, Form, Item, Picker, Text, TextField, View } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
 import { useProjects } from 'hooks/api/project.hook';
 import { useStagedDatasetSuspense } from 'hooks/api/staged-dataset.hook';
-import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-dataset-as-new-project.hook';
+import { useImportDatasetAsNewProject } from 'hooks/storage/use-import-dataset-as-new-project.hook';
 
 import { TaskType } from '../../../../../constants/shared-types';
-import { validateProjectName } from '../../../create/validator';
 import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
+import { validateProjectName } from '../../../validator';
 import { getRecommendedTaskType, TASK_SELECTION_FORM_ID } from './util';
 
 type ImportTaskSelectionProps = {
     stagedDatasetId: string;
 };
 
-const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType) => {
+const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType | undefined) => {
     const { data: projects } = useProjects();
     const { setCurrentStep } = useImportDatasetDialog();
     const { getImportEntry, updateImportEntry } = useImportDatasetAsNewProject();
@@ -29,7 +29,7 @@ const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType) => {
         task_type: importEntry?.project?.task_type ?? defaultTaskType,
     };
 
-    return useActionState<{ name: string; task_type: TaskType }, FormData>(async (_prevState, formData) => {
+    return useActionState<{ name: string; task_type: TaskType | undefined }, FormData>(async (_prevState, formData) => {
         const project = {
             name: String(formData.get('name')).trim(),
             task_type: formData.get('task_type') as TaskType,
@@ -45,7 +45,9 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
     const { data: projects } = useProjects();
     const { data: stagedDataset } = useStagedDatasetSuspense(stagedDatasetId);
 
-    const defaultTaskType = getRecommendedTaskType(stagedDataset?.metadata?.annotation_type);
+    const isGetiFormat = stagedDataset.format === 'geti';
+    const defaultTaskType = isGetiFormat ? getRecommendedTaskType(stagedDataset?.metadata?.annotation_type) : undefined;
+
     const [formState, submitAction] = useFormConfig(stagedDatasetId, defaultTaskType);
     const [name, setName] = useState(formState.name);
 
@@ -76,10 +78,11 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
                     label={'Task type'}
                     aria-label={'Task type'}
                     marginBottom={'size-150'}
+                    placeholder='select an option...'
                     defaultSelectedKey={formState.task_type}
                 >
                     <Item key={'detection'}>
-                        {defaultTaskType === 'detection' ? 'Detection (Recommended)' : 'Detection'}
+                        {defaultTaskType === 'detection' ? 'Object detection (Recommended)' : 'Object detection'}
                     </Item>
                     <Item key={'classification'}>
                         {defaultTaskType === 'classification' ? 'Classification (Recommended)' : 'Classification'}
