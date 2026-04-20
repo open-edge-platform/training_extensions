@@ -184,6 +184,12 @@ class Resize(tvt_v2.Transform):
                 else:
                     # Empty mask: just reshape spatial dims to target size
                     resized_masks = masks.new_zeros((0, new_h + pad_top + pad_bottom, new_w + pad_left + pad_right))
+                if resized_masks.shape[-2:] != sample.image.shape[-2:]:
+                    msg = (
+                        "Resized masks spatial dimensions must match the transformed image shape: "
+                        f"{resized_masks.shape[-2:]} != {sample.image.shape[-2:]}"
+                    )
+                    raise RuntimeError(msg)
                 sample.masks = (  # type: ignore[missing-attribute]
                     tv_tensors.Mask(resized_masks) if isinstance(masks, tv_tensors.Mask) else resized_masks
                 )
