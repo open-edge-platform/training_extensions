@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="assets/geti-header.png" alt="Geti™ - Build and deploy computer vision AI models with minimal effort and data">
+<img src="../assets/geti-header.png" alt="Geti™ - Build and deploy computer vision AI models with minimal effort and data">
 
 Full-stack web application to build and deploy computer vision AI models, powered by the [getitune](../library) library.
 
@@ -27,8 +27,8 @@ We provide [pre-built images](#option-1-download-the-image) for Intel® XPU and 
 
 **Prerequisites** (on the host system):
 
-- Just v1.46+ [[docs]](https://github.com/casey/just)
 - Docker v29+ [[docs]](https://docs.docker.com/)
+- (Optional, recommended) Just v1.46+ [[docs]](https://github.com/casey/just)
 - (Only for Intel® XPU) the latest driver suitable with your HW [[docs]](https://www.intel.com/content/www/us/en/developer/articles/tool/pytorch-prerequisites-for-intel-gpu/2-11.html)
 - (Only for NVIDIA GPU) NVIDIA driver and the NVIDIA Container Toolkit [[docs]](https://www.nvidia.com/Download/index.aspx)
 
@@ -61,7 +61,8 @@ docker pull ghcr.io/open-edge-platform/geti-cpu
 
 #### (Option 2) Build the image
 
-Here is how you can build a Docker image from scratch, by means of the application `Dockerfile`.
+Here is how you can build a Docker image from scratch, by means of the application `Dockerfile`. The instructions below
+use `just` to simplify the build process, but you can also build the image manually with `docker build` if you prefer.
 
 From the `application` directory:
 
@@ -115,7 +116,7 @@ just venv --accelerator xpu
 just run-server
 ```
 
-Run `just --usage run-image` for a full list of options for running the server. Notably, by passing the option
+Run `just --usage run-server` for a full list of options for running the server. Notably, by passing the option
 `--setup-demo`, the application will be pre-populated with demo data, including sample datasets and pre-trained models.
 
 Then, build and launch the UI in a separate terminal:
@@ -169,15 +170,15 @@ instance segmentation tasks. Would you like to see a specific model added to the
 
 ### Object Detection
 
-| Model Architecture     | Paper                                                                                      |
-| ---------------------- | ------------------------------------------------------------------------------------------ |
-| D-FINE M / L / X       | [D-FINE](https://arxiv.org/abs/2410.13842)                                                 |
-| DINOv3 DETR S / M / L  | [DINOv3](https://arxiv.org/abs/2508.10104) + [DETR](https://arxiv.org/abs/2005.12872)      |
-| MobileNet V2 ATSS      | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [ATSS](https://arxiv.org/abs/1912.02424) |
-| MobileNet V2 SSD       | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [SSD](https://arxiv.org/abs/1512.02325)  |
-| RF-DETR S / M / L      | [RF-DETR](https://arxiv.org/abs/2511.09554)                                                |
-| RT-DETR R50            | [RT-DETR](https://arxiv.org/abs/2304.08069)                                                |
-| YOLOX Tiny / S / L / X | [YOLOX](https://arxiv.org/abs/2107.08430)                                                  |
+| Model Architecture     | Paper                                                                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| D-FINE M / L / X       | [DEIM](https://arxiv.org/abs/2412.04234) + [D-FINE](https://arxiv.org/abs/2410.13842)                                                 |
+| DINOv3 DETR S / M / L  | [DINOv3](https://arxiv.org/abs/2508.10104) + [DEIMv2](https://arxiv.org/html/2509.20787v4) + [DETR](https://arxiv.org/abs/2005.12872) |
+| MobileNet V2 ATSS      | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [ATSS](https://arxiv.org/abs/1912.02424)                                            |
+| MobileNet V2 SSD       | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [SSD](https://arxiv.org/abs/1512.02325)                                             |
+| RF-DETR S / M / L      | [RF-DETR](https://arxiv.org/abs/2511.09554)                                                                                           |
+| RT-DETR R50            | [RT-DETR](https://arxiv.org/abs/2304.08069)                                                                                           |
+| YOLOX Tiny / S / L / X | [YOLOX](https://arxiv.org/abs/2107.08430)                                                                                             |
 
 ### Instance Segmentation
 

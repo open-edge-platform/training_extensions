@@ -45,6 +45,10 @@ As a product, Geti™ consists of two components:
 
 ## Key Features
 
+- **Hardware Acceleration**: Geti™ is optimized for modern Intel® hardware with AI capabilities, such as Intel® Arc™
+  GPUs and Intel® Core™ Ultra processors. Every trained model is automatically exported with
+  [OpenVINO™](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html) and it can be
+  deployed for inference across the full Intel® XPU portfolio.
 - **Iterative Model Improvement**: Geti™ enables users to start building computer vision models with as few as 10-20
   images and iterate on those models in a rapid, feedback-driven loop. This allows you to quickly see results and make
   improvements without needing a large initial dataset; you can add more data as you go, and the predictions from the
@@ -59,10 +63,6 @@ As a product, Geti™ consists of two components:
   and YOLO, making it easy to integrate with other tools and workflows.
 - **Model Optimization**: Geti™ provides built-in support for quantization and optimization techniques that can reduce
   model size and improve inference speed, making it easier to deploy models on resource-constrained edge devices.
-- **Hardware Acceleration**: Geti™ is optimized for modern Intel® hardware with AI capabilities, such as Intel® Arc™
-  GPUs and Intel® Core™ Ultra processors. Every trained model is automatically exported with
-  [OpenVINO™](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html) and it can be
-  deployed for inference across the full Intel® XPU portfolio.
 - **Inference Stream (NEW)**: Geti™ application includes a built-in inference pipeline that allows you to enable your
   trained models for real-time inference on video streams, with support for various input sources (cameras, video files,
   RTSP stream, ...). The predictions are visualized directly in the web application, and you can also configure it
