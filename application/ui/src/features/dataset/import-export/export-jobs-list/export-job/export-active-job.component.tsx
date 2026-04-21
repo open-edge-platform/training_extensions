@@ -33,7 +33,7 @@ export const ExportActiveJob = ({ job, datasetName }: ExportActiveJobProps) => {
                     <CancelJobConfirmation jobId={job.job_id} onRemove={handleRemove} />
                 </Flex>
 
-                <Text>Dataset is being processed in order to export it</Text>
+                <Text>Processing dataset for export</Text>
 
                 <Divider size='S' marginY='size-150' />
 
