@@ -23,6 +23,11 @@ import { InteractiveAnnotationPoint } from './segment-anything.interface';
 type SegmentAnythingRemoteInstance = Remote<SegmentAnythingWorkerInstance>;
 const SAM_TIMEOUT_MS = 5000;
 const SAM_ENCODER_TIMEOUT_MS = 30000;
+// Loading the SAM ONNX models (especially the encoder, hundreds of MB) involves a network
+// fetch and/or a Chrome Cache Storage hydration that can easily take longer than the decoder
+// budget. Use the same envelope as the encoder run to avoid spurious timeouts when the user
+// first opens the tool on a cold cache.
+const SAM_WORKER_INIT_TIMEOUT_MS = SAM_ENCODER_TIMEOUT_MS;
 
 const getSegmentAnythingWorkerQueryKey = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER') =>
     ['workers', algorithmType] as const;
@@ -39,9 +44,13 @@ const segmentAnythingWorkerQueryOptions = (
             });
             try {
                 const samWorker = wrap<SegmentAnythingWorkerApi>(baseWorker);
-                const model = await executeWithTimeout(samWorker.build(), 'SAM worker build', SAM_TIMEOUT_MS);
+                const model = await executeWithTimeout(
+                    samWorker.build(),
+                    'SAM worker build',
+                    SAM_WORKER_INIT_TIMEOUT_MS
+                );
 
-                await executeWithTimeout(model.init(algorithmType), 'SAM worker init', SAM_TIMEOUT_MS);
+                await executeWithTimeout(model.init(algorithmType), 'SAM worker init', SAM_WORKER_INIT_TIMEOUT_MS);
 
                 return model;
             } catch (error) {
