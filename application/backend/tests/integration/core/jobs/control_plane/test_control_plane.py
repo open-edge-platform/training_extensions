@@ -9,7 +9,7 @@ import pytest
 
 from app.core.jobs.control_plane import CancellationResult, JobController, JobQueue
 from app.core.jobs.exec import ThreadRunnerFactory
-from app.core.jobs.models import Job, JobParams, JobStatus
+from app.core.jobs.models import Job, JobParams, JobStatus, JobType
 from app.core.run import ExecutionContext, RunnableFactory
 
 from .mock_runnable import MockRunnable, RunnableBehaviour
@@ -188,7 +188,21 @@ class TestJobControlPlaneIntegration:
             await job_controller.stop()
 
     @pytest.mark.asyncio
-    async def test_capacity_management_limits_concurrency(self, fxt_runnable_factory, fxt_job):
+    @pytest.mark.parametrize(
+        "job_type, jobs_in_progress",
+        [
+            (JobType.TRAIN, 1),
+            (JobType.QUANTIZE, 1),
+            (JobType.STAGE_DATASET, 3),
+            (JobType.IMPORT_DATASET_AS_NEW_PROJECT, 3),
+            (JobType.PREPARE_DATASET_FOR_IMPORT, 3),
+            (JobType.EXPORT_DATASET, 3),
+            (JobType.IMPORT_DATASET_TO_PROJECT, 3),
+        ],
+    )
+    async def test_capacity_management_limits_concurrency(
+        self, job_type, jobs_in_progress, fxt_runnable_factory, fxt_job
+    ):
         """Test that capacity management properly limits concurrent execution."""
         job_queue = JobQueue()
         runner_factory = ThreadRunnerFactory(fxt_runnable_factory)
@@ -220,7 +234,7 @@ class TestJobControlPlaneIntegration:
         # Create multiple jobs
         jobs = []
         for i in range(3):
-            job = fxt_job()
+            job = fxt_job(job_type=job_type)
             jobs.append(job)
             await job_queue.submit(job)
 
@@ -234,8 +248,10 @@ class TestJobControlPlaneIntegration:
             for job in jobs:
                 await self._wait_for_job_status(job, JobStatus.DONE, timeout=5.0)
 
-            # Verify capacity was respected (max 1 concurrent)
-            assert max_concurrent == 1, f"Expected max 1 concurrent job, got {max_concurrent}"
+            # Verify capacity was respected
+            assert max_concurrent == jobs_in_progress, (
+                f"Expected max {jobs_in_progress} concurrent job, got {max_concurrent}"
+            )
 
             # All jobs should complete
             assert all(job.status == JobStatus.DONE for job in jobs)

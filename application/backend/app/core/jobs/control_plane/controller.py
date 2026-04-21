@@ -7,7 +7,7 @@ import threading
 
 from loguru import logger
 
-from app.core.jobs.models import Cancelled, Done, Failed, Job, Progress, Started
+from app.core.jobs.models import Cancelled, Done, Failed, Job, JobType, Progress, Started
 from app.core.run import Runner, RunnerFactory
 
 from .capacity import Capacity
@@ -101,7 +101,9 @@ class JobController:
         task.add_done_callback(lambda t: (self._tasks.discard(t)))
 
     async def _run_job(self, job: Job) -> None:
-        async with self._capacity.permit():
+        needs_capacity_permit = job.job_type in (JobType.TRAIN, JobType.QUANTIZE)
+        permit_ctx = self._capacity.permit() if needs_capacity_permit else contextlib.nullcontext()
+        async with permit_ctx:
             job_run = self._runner_factory.for_job(job)
             event_q: asyncio.Queue = asyncio.Queue()
 
