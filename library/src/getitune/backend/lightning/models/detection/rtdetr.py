@@ -59,9 +59,9 @@ class RTDETR(LightningDetectionModel):
     """
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "rtdetr_18": "https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r18vd_5x_coco_objects365_from_paddle.pth",
-        "rtdetr_50": "https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r50vd_2x_coco_objects365_from_paddle.pth",
-        "rtdetr_101": "https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r101vd_2x_coco_objects365_from_paddle.pth",
+        "rtdetr_18": "https://storage.geti.intel.com/weights/rtdetr_r18vd_5x_coco_objects365_from_paddle.pth",
+        "rtdetr_50": "https://storage.geti.intel.com/weights/rtdetr_r50vd_2x_coco_objects365_from_paddle.pth",
+        "rtdetr_101": "https://storage.geti.intel.com/weights/rtdetr_r101vd_2x_coco_objects365_from_paddle.pth",
     }
 
     input_size_multiplier = 32

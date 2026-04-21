@@ -2,7 +2,8 @@ id: instance-segmentation-mask-rcnn-efficientnet-b2
 name: Mask-RCNN-EfficientNet-B2
 
 pretrained_weights:
-  url: https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/instance_segmentation/v2/efficientnet_b2b-mask_rcnn-576x576.pth
+  url: https://storage.geti.intel.com/weights/efficientnet_b2b-mask_rcnn-576x576.pth
+  mirror_url: https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/instance_segmentation/v2/efficientnet_b2b-mask_rcnn-576x576.pth
   sha_sum: b00407a212bdba77866b6c337a24e997b4b2621afb50e62b261df1a4f8efd3c6
 
 description: "This model integrates Mask R-CNN with an EfficientNet-B2B backbone, combining the accuracy of a region-based detection approach with the efficiency of the EfficientNet architecture. It offers strong instance segmentation performance with reduced computational cost, making it suitable for scenarios where both precision and efficiency are important."

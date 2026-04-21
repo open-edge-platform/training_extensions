@@ -1,7 +1,7 @@
 @use '../../shared/styles/line-clamp' as lineClamp;
 
 .panelButtons {
-    padding-block-start: 0;
+    padding: var(--spectrum-global-dimension-size-125);
 }
 
 .addProjectButton {
@@ -15,15 +15,9 @@
 
 .dialog {
     & div[class*='spectrum-Dialog-grid'] {
-        --spectrum-dialog-padding-x: 0px;
-        --spectrum-dialog-padding-y: var(--spectrum-global-dimension-size-250);
+        --spectrum-dialog-padding-x: 0;
+        --spectrum-dialog-padding-y: 0;
     }
-}
-
-.projectList {
-    list-style: none;
-    padding-inline-start: 0;
-    overflow: auto;
 }
 
 .projectName {

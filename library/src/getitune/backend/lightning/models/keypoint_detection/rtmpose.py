@@ -32,7 +32,7 @@ class RTMPose(LightningKeypointDetectionModel):
     """RTMPose Model."""
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "rtmpose_tiny": "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/cspnext-tiny_udp-aic-coco_210e-256x192-cbed682d_20230130.pth",
+        "rtmpose_tiny": "https://storage.geti.intel.com/weights/cspnext-tiny_udp-aic-coco_210e-256x192-cbed682d_20230130.pth",
     }
 
     def __init__(

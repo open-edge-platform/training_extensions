@@ -18,9 +18,8 @@ from getitune.backend.lightning.models.modules.activation import Swish, build_ac
 from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
 
-PRETRAINED_ROOT = "https://github.com/osmr/imgclsmob/releases/download/v0.0.364/"
 pretrained_urls = {
-    "efficientnet_b0": PRETRAINED_ROOT + "efficientnet_b0-0752-0e386130.pth.zip",
+    "efficientnet_b0": "https://storage.geti.intel.com/weights/efficientnet_b0-0752-0e386130.pth.zip",
 }
 
 

@@ -46,7 +46,7 @@ class DinoV2Seg(LightningSegmentationModel):
     """
 
     pretrained_weights: ClassVar[dict[str, str]] = {
-        "dinov2-small-seg": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth",
+        "dinov2-small-seg": "https://storage.geti.intel.com/weights/dinov2_vits14_reg4_pretrain.pth",
     }
 
     def __init__(

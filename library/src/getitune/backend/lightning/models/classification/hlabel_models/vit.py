@@ -31,21 +31,27 @@ if TYPE_CHECKING:
 
     from getitune.metrics import MetricCallable
 
-augreg_url = "https://storage.googleapis.com/vit_models/augreg/"
-dinov2_url = "https://dl.fbaipublicfiles.com/dinov2/"
 pretrained_urls = {
-    "vit-tiny": augreg_url
-    + "Ti_16-i21k-300ep-lr_0.001-aug_none-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz",
-    "vit-small": augreg_url
-    + "S_16-i21k-300ep-lr_0.001-aug_light1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz",
-    "vit-base": augreg_url
-    + "B_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_224.npz",
-    "vit-large": augreg_url
-    + "L_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.1-sd_0.1--imagenet2012-steps_20k-lr_0.01-res_224.npz",
-    "dinov2-small": dinov2_url + "dinov2_vits14/dinov2_vits14_reg4_pretrain.pth",
-    "dinov2-base": dinov2_url + "dinov2_vitb14/dinov2_vitb14_reg4_pretrain.pth",
-    "dinov2-large": dinov2_url + "dinov2_vitl14/dinov2_vitl14_reg4_pretrain.pth",
-    "dinov2-giant": dinov2_url + "dinov2_vitg14/dinov2_vitg14_reg4_pretrain.pth",
+    "vit-tiny": (
+        "https://storage.geti.intel.com/weights/"
+        "Ti_16-i21k-300ep-lr_0.001-aug_none-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz"
+    ),
+    "vit-small": (
+        "https://storage.geti.intel.com/weights/"
+        "S_16-i21k-300ep-lr_0.001-aug_light1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz"
+    ),
+    "vit-base": (
+        "https://storage.geti.intel.com/weights/"
+        "B_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_224.npz"
+    ),
+    "vit-large": (
+        "https://storage.geti.intel.com/weights/"
+        "L_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.1-sd_0.1--imagenet2012-steps_20k-lr_0.01-res_224.npz"
+    ),
+    "dinov2-small": "https://storage.geti.intel.com/weights/dinov2_vits14_reg4_pretrain.pth",
+    "dinov2-base": "https://storage.geti.intel.com/weights/dinov2_vitb14_reg4_pretrain.pth",
+    "dinov2-large": "https://storage.geti.intel.com/weights/dinov2_vitl14_reg4_pretrain.pth",
+    "dinov2-giant": "https://storage.geti.intel.com/weights/dinov2_vitg14_reg4_pretrain.pth",
 }
 
 

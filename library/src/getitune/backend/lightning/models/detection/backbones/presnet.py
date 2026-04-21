@@ -267,10 +267,10 @@ class PResNetModule(BaseModule):
     }
 
     donwload_url: ClassVar = {
-        18: "https://github.com/lyuwenyu/storage/releases/download/v0.1/ResNet18_vd_pretrained_from_paddle.pth",
-        34: "https://github.com/lyuwenyu/storage/releases/download/v0.1/ResNet34_vd_pretrained_from_paddle.pth",
-        50: "https://github.com/lyuwenyu/storage/releases/download/v0.1/ResNet50_vd_ssld_v2_pretrained_from_paddle.pth",
-        101: "https://github.com/lyuwenyu/storage/releases/download/v0.1/ResNet101_vd_ssld_pretrained_from_paddle.pth",
+        18: "https://storage.geti.intel.com/weights/ResNet18_vd_pretrained_from_paddle.pth",
+        34: "https://storage.geti.intel.com/weights/ResNet34_vd_pretrained_from_paddle.pth",
+        50: "https://storage.geti.intel.com/weights/ResNet50_vd_ssld_v2_pretrained_from_paddle.pth",
+        101: "https://storage.geti.intel.com/weights/ResNet101_vd_ssld_pretrained_from_paddle.pth",
     }
 
     def __init__(

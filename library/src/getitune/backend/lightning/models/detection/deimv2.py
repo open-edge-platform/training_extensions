@@ -59,10 +59,10 @@ class DEIMV2(DEIMDFine):
     """
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "deimv2_x": "https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_x_coco.pth",
-        "deimv2_l": "https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_l_coco.pth",
-        "deimv2_m": "https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_m_coco.pth",
-        "deimv2_s": "https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_s_coco.pth",
+        "deimv2_x": "https://storage.geti.intel.com/weights/deimv2_dinov3_x_coco.pth",
+        "deimv2_l": "https://storage.geti.intel.com/weights/deimv2_dinov3_l_coco.pth",
+        "deimv2_m": "https://storage.geti.intel.com/weights/deimv2_dinov3_m_coco.pth",
+        "deimv2_s": "https://storage.geti.intel.com/weights/deimv2_dinov3_s_coco.pth",
     }
 
     input_size_multiplier = 32
