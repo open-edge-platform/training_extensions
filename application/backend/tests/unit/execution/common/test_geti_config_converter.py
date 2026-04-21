@@ -665,7 +665,7 @@ class TestIntensityMappingUpdate:
         otx_cfg = _make_otx_config()
         geti_cfg = _make_geti_config(
             task_level_parameters={
-                "dataset_preparation": {"intensity_mapping": {"mode": "scale_to_unit", "max_value": 65535.0}}
+                "dataset_preparation": {"intensity_mapping": {"mode": "scale_to_unit", "max_intensity_value": 65535.0}}
             }
         )
 
@@ -708,8 +708,8 @@ class TestIntensityMappingUpdate:
                     "intensity_mapping": {
                         "mode": "range_scale",
                         "scale_factor": 0.4,
-                        "min_value": 10.0,
-                        "max_value": 300.0,
+                        "clip_min_value": 10.0,
+                        "clip_max_value": 300.0,
                     }
                 }
             }

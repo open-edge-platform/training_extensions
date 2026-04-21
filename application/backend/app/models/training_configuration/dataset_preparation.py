@@ -18,7 +18,7 @@ class IntensityMappingMode(StrEnum):
 
     SCALE_TO_UNIT = "Unit interval scaling"  # (x / max_value)
     WINDOW = "Windowing"  # clamp((x - low) / (high - low), 0, 1)
-    RANGE_SCALE = "Clipped scaling"  # clamp(x * factor, min_value, max_value)
+    RANGE_SCALE = "Clipped scaling"  # (clamp(x * factor, min_value, max_value) - min_value) / (max_value - min_value)
 
 
 class IntensityMapping(BaseModel):
@@ -33,25 +33,41 @@ class IntensityMapping(BaseModel):
         title="Intensity mapping mode",
         description=(
             "Strategy used to transform pixel intensities. "
-            "'Unit interval scaling' divides by max_value, thus mapping the range [0, max_value] to [0, 1]. "
+            "'Unit interval scaling' divides by max_intensity_value, thus mapping the range "
+            "[0, max_intensity_value] to [0, 1]. "
             "'Windowing' isolates a specific intensity range, mapping a specific window (specified with center and "
             "width) to [0, 1] and clipping values outside the window. "
-            "'Clipped scaling' multiplies pixel values by a scale factor and clips the result to a specified range "
-            "(min_value, max_value)."
+            "'Clipped scaling' multiplies pixel values by a scale factor, clips the result to a specified range "
+            "(clip_min_value, clip_max_value) and finally normalizes to [0, 1]."
         ),
     )
-    max_value: float = Field(
+    max_intensity_value: float = Field(
         default=255.0,
         ge=0.0,
-        title="Maximum pixel value",
+        title="Maximum pixel intensity",
         description=(
-            "Maximum possible pixel value in the raw image. For 8-bit images use 255, for 16-bit images use 65535."
+            "Maximum possible pixel value in the raw image, used as the divisor for 'Unit interval scaling'. "
+            "For 8-bit images use 255, for 16-bit images use 65535."
         ),
+        json_schema_extra={"depends_on": {"mode": "Unit interval scaling"}},
     )
-    min_value: float = Field(
+    clip_min_value: float = Field(
         default=0.0,
-        title="Minimum output value",
-        description=("Minimum output value after rescaling the image; Pixel values below this threshold are clipped."),
+        title="Clip minimum value",
+        description=(
+            "Minimum output value after rescaling the image in 'Clipped scaling' mode; "
+            "pixel values below this threshold are clipped."
+        ),
+        json_schema_extra={"depends_on": {"mode": "Clipped scaling"}},
+    )
+    clip_max_value: float = Field(
+        default=255.0,
+        ge=0.0,
+        title="Clip maximum value",
+        description=(
+            "Maximum output value after rescaling the image in 'Clipped scaling' mode; "
+            "pixel values above this threshold are clipped."
+        ),
         json_schema_extra={"depends_on": {"mode": "Clipped scaling"}},
     )
     window_center: float = Field(
@@ -78,7 +94,8 @@ class IntensityMapping(BaseModel):
         gt=0.0,
         title="Scale factor",
         description=(
-            "Multiplicative factor applied to pixel values, before clipping the result to [min_value, max_value]."
+            "Multiplicative factor applied to pixel values, before clipping the result to "
+            "[clip_min_value, clip_max_value]."
         ),
         json_schema_extra={"depends_on": {"mode": "Clipped scaling"}},
     )
@@ -227,7 +244,7 @@ class TaskLevelDatasetPreparationParameters(BaseModel):
         default_factory=IntensityMapping,
         title="Intensity mapping",
         description=(
-            "Intensity mapping parameters control how raw pixel values are normalised before training. "
+            "Intensity mapping parameters control how raw pixel values are normalised to [0, 1] range before training. "
             "This is especially important for images with non-standard bit depths (e.g. 16-bit), where the "
             "default [0, 255] assumption does not hold."
         ),

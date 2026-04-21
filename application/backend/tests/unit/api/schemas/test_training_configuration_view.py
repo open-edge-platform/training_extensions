@@ -56,8 +56,9 @@ def fxt_training_configuration() -> TrainingConfiguration:
                 ),
                 intensity_mapping=IntensityMapping(
                     mode=IntensityMappingMode.WINDOW,
-                    max_value=255.0,
-                    min_value=0.0,
+                    max_intensity_value=255.0,
+                    clip_min_value=0.0,
+                    clip_max_value=255.0,
                     window_center=200.0,
                     window_width=400.0,
                     scale_factor=1.0,
@@ -412,8 +413,8 @@ def fxt_training_configuration_view_json() -> dict:
                         "key": "intensity_mapping",
                         "name": "Intensity mapping",
                         "description": (
-                            "Intensity mapping parameters control how raw pixel values are normalised before "
-                            "training. This is especially important for images with non-standard bit depths "
+                            "Intensity mapping parameters control how raw pixel values are normalised to [0, 1] range "
+                            "before training. This is especially important for images with non-standard bit depths "
                             "(e.g. 16-bit), where the default [0, 255] assumption does not hold."
                         ),
                         "depends_on": None,
@@ -424,11 +425,12 @@ def fxt_training_configuration_view_json() -> dict:
                                 "name": "Intensity mapping mode",
                                 "description": (
                                     "Strategy used to transform pixel intensities. "
-                                    "'Unit interval scaling' divides by max_value, thus mapping the range "
-                                    "[0, max_value] to [0, 1]. 'Windowing' isolates a specific intensity range, "
-                                    "mapping a specific window (specified with center and width) to [0, 1] and "
+                                    "'Unit interval scaling' divides by max_intensity_value, thus mapping the range "
+                                    "[0, max_intensity_value] to [0, 1]. 'Windowing' isolates a specific intensity "
+                                    "range, mapping a specific window (specified with center and width) to [0, 1] and "
                                     "clipping values outside the window. 'Clipped scaling' multiplies pixel values by "
-                                    "a scale factor and clips the result to a specified range (min_value, max_value)."
+                                    "a scale factor, clips the result to a specified range (clip_min_value, "
+                                    "clip_max_value) and finally normalizes to [0, 1]."
                                 ),
                                 "value": "Windowing",
                                 "default_value": "Unit interval scaling",
@@ -438,10 +440,11 @@ def fxt_training_configuration_view_json() -> dict:
                             },
                             {
                                 "type": "parameter",
-                                "key": "max_value",
-                                "name": "Maximum pixel value",
+                                "key": "max_intensity_value",
+                                "name": "Maximum pixel intensity",
                                 "description": (
-                                    "Maximum possible pixel value in the raw image. "
+                                    "Maximum possible pixel value in the raw image, used as the divisor for "
+                                    "'Unit interval scaling'. "
                                     "For 8-bit images use 255, for 16-bit images use 65535."
                                 ),
                                 "value": 255.0,
@@ -450,20 +453,36 @@ def fxt_training_configuration_view_json() -> dict:
                                 "min_value": 0.0,
                                 "max_value": None,
                                 "allowed_values": None,
-                                "depends_on": None,
+                                "depends_on": {"mode": "Unit interval scaling"},
                             },
                             {
                                 "type": "parameter",
-                                "key": "min_value",
-                                "name": "Minimum output value",
+                                "key": "clip_min_value",
+                                "name": "Clip minimum value",
                                 "description": (
-                                    "Minimum output value after rescaling the image; "
-                                    "Pixel values below this threshold are clipped."
+                                    "Minimum output value after rescaling the image in 'Clipped scaling' mode; "
+                                    "pixel values below this threshold are clipped."
                                 ),
                                 "value": 0.0,
                                 "default_value": 0.0,
                                 "value_type": "float",
                                 "min_value": None,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": {"mode": "Clipped scaling"},
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "clip_max_value",
+                                "name": "Clip maximum value",
+                                "description": (
+                                    "Maximum output value after rescaling the image in 'Clipped scaling' mode; "
+                                    "pixel values above this threshold are clipped."
+                                ),
+                                "value": 255.0,
+                                "default_value": 255.0,
+                                "value_type": "float",
+                                "min_value": 0.0,
                                 "max_value": None,
                                 "allowed_values": None,
                                 "depends_on": {"mode": "Clipped scaling"},
@@ -507,7 +526,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "name": "Scale factor",
                                 "description": (
                                     "Multiplicative factor applied to pixel values, "
-                                    "before clipping the result to [min_value, max_value]."
+                                    "before clipping the result to [clip_min_value, clip_max_value]."
                                 ),
                                 "value": 1.0,
                                 "default_value": 1.0,

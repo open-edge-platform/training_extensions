@@ -798,23 +798,22 @@ class GetiConfigConverter:
         IntensityConfig format and sets them on train/val/test subsets.
 
         Args:
-            config: The full OTX config dictionary.
-            intensity_mapping: Dict with keys: mode, max_value, min_value,
-                window_center, window_width, scale_factor.
+            config: The full getitune config dictionary.
+            intensity_mapping: Dict with keys: mode, max_intensity_value, clip_min_value,
+                clip_max_value, window_center, window_width, scale_factor.
         """
         mode = intensity_mapping.get("mode", "scale_to_unit")
         intensity_config: dict[str, Any] = {"mode": mode}
 
         if mode == "scale_to_unit":
-            max_value = intensity_mapping.get("max_value", 255.0)
-            intensity_config["max_value"] = max_value
+            intensity_config["max_value"] = intensity_mapping.get("max_intensity_value", 255.0)
         elif mode == "window":
             intensity_config["window_center"] = intensity_mapping.get("window_center", 127.5)
             intensity_config["window_width"] = intensity_mapping.get("window_width", 255.0)
         elif mode == "range_scale":
             intensity_config["scale_factor"] = intensity_mapping.get("scale_factor", 1.0)
-            intensity_config["min_value"] = intensity_mapping.get("min_value", 0.0)
-            intensity_config["max_value"] = intensity_mapping.get("max_value", 255.0)
+            intensity_config["min_value"] = intensity_mapping.get("clip_min_value", 0.0)
+            intensity_config["max_value"] = intensity_mapping.get("clip_max_value", 255.0)
 
         # Apply to all subsets
         for subset_key in ("train_subset", "val_subset", "test_subset"):

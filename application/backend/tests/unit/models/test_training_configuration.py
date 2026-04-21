@@ -153,8 +153,9 @@ class TestTrainingConfiguration:
     def test_intensity_mapping_defaults(self) -> None:
         im = IntensityMapping()
         assert im.mode == IntensityMappingMode.SCALE_TO_UNIT
-        assert im.max_value == 255.0
-        assert im.min_value == 0.0
+        assert im.max_intensity_value == 255.0
+        assert im.clip_min_value == 0.0
+        assert im.clip_max_value == 255.0
         assert im.window_center == 127.5
         assert im.window_width == 255.0
         assert im.scale_factor == 1.0

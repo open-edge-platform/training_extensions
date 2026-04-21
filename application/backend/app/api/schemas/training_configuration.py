@@ -652,8 +652,8 @@ class TrainingConfigurationView(BaseModel):
                                 "key": "intensity_mapping",
                                 "name": "Intensity mapping",
                                 "description": (
-                                    "Intensity mapping parameters control how raw pixel values are normalised "
-                                    "before training. This is especially important for images with non-standard "
+                                    "Intensity mapping parameters control how raw pixel values are normalised to [0, 1]"
+                                    " range before training. This is especially important for images with non-standard "
                                     "bit depths (e.g. 16-bit), where the default [0, 255] assumption does not hold."
                                 ),
                                 "parameters": [
@@ -667,8 +667,9 @@ class TrainingConfigurationView(BaseModel):
                                             "[0, max_value] to [0, 1]. 'Windowing' isolates a specific intensity "
                                             "range, mapping a specific window (specified with center and "
                                             "width) to [0, 1] and clipping values outside the window. "
-                                            "'Clipped scaling' multiplies pixel values by a scale factor and clips "
-                                            "the result to a specified range (min_value, max_value)."
+                                            "'Clipped scaling' multiplies pixel values by a scale factor, clips the "
+                                            "result to a specified range (clip_min_value, clip_max_value) and finally "
+                                            "normalizes to [0, 1]."
                                         ),
                                         "value": "Unit interval scaling",
                                         "default_value": "Unit interval scaling",
