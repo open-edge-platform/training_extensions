@@ -6,13 +6,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { expect } from '@playwright/test';
+import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedVideoFrame } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
-import { AnnotationDTO } from '../../src/constants/shared-types';
-import { http, test } from '../fixtures';
-import { candyPngBuffer, redLabel } from './annotator-fixtures';
+import { AnnotationDTO } from '../../../src/constants/shared-types';
+import { http, test } from '../../fixtures';
+import { candyPngBuffer, redLabel } from '../annotator-fixtures';
+import { ANNOTATIONS_MOCKS, PREDICTIONS_MOCKS } from './mocks';
 
 const mockedDetectionProject = getMockedProject({
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -60,9 +62,9 @@ type SubmittedFrameRequest = {
 };
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
-const videoFilePath = path.resolve(dirname, '../assets/fish_60.mp4');
+const videoFilePath = path.resolve(dirname, '../../assets/fish_60.mp4');
 
-test.describe.only('Annotator video player', () => {
+test.describe('Annotator video player', () => {
     let frameAnnotations: Record<number, AnnotationDTO[]>;
     let submittedFrameRequests: SubmittedFrameRequest[];
 
@@ -179,9 +181,7 @@ test.describe.only('Annotator video player', () => {
     });
 
     test('adds annotation on video frame and submits', async ({ annotatorPage, boundingBoxTool, videoPage }) => {
-        await test.step('Opens annotator', async () => {
-            await videoPage.openVideoFromDataset(mockedDetectionProject.id, mockVideoFrame.name);
-        });
+        await videoPage.openVideoFromDataset(mockedDetectionProject.id, mockVideoFrame.name);
 
         await test.step('Selects frame to annotate', async () => {
             await videoPage.expandToolbar();
@@ -255,5 +255,61 @@ test.describe.only('Annotator video player', () => {
 
         await videoPage.toggleFrameMode();
         await expect(videoPage.getFrameModeIndicator()).toHaveText('1/1');
+    });
+
+    test('Displays annotations and predictions in the segments below video timeline', async ({
+        videoPage,
+        annotatorPage,
+        network,
+    }) => {
+        const fishLabel = getMockedLabel({
+            id: 'a6efefed-e469-4b1c-b803-c2e21ea0597b',
+            name: 'Fish',
+            color: '#ad2323',
+        });
+
+        const mockedProject = getMockedProject({
+            id: '123e4567-e89b-12d3-a456-426614174000',
+            task: {
+                exclusive_labels: true,
+                task_type: 'instance_segmentation',
+                labels: [fishLabel],
+            },
+        });
+
+        network.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(mockedProject);
+            }),
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/frames', async () => {
+                return HttpResponse.json(ANNOTATIONS_MOCKS);
+            }),
+            http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+                return HttpResponse.json({
+                    predictions: PREDICTIONS_MOCKS,
+                });
+            })
+        );
+
+        await videoPage.openVideoFromDataset(mockedProject.id, mockVideoFrame.name);
+        await videoPage.expandToolbar();
+
+        await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
+
+        await Promise.all(
+            ANNOTATIONS_MOCKS.map(async (annotation) => {
+                await expect(videoPage.getLabelSegment(annotation.frame_index, fishLabel.name)).toBeVisible();
+            })
+        );
+
+        await annotatorPage.openPredictionMode();
+
+        await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
+
+        await Promise.all(
+            PREDICTIONS_MOCKS.map(async ({ media }) => {
+                await expect(videoPage.getLabelSegment(Number(media.frame_index), fishLabel.name)).toBeVisible();
+            })
+        );
     });
 });
