@@ -62,7 +62,7 @@ const useMediaItem = (initialMediaItem: Media) => {
     const [mediaItem, setMediaItem] = useState<Media>(() => convertMediaItem(initialMediaItem, frameNumber));
     const prevInitialMediaItem = useRef(initialMediaItem);
 
-    if (!isEqual(initialMediaItem, prevInitialMediaItem.current)) {
+    if (initialMediaItem.id !== prevInitialMediaItem.current.id) {
         prevInitialMediaItem.current = initialMediaItem;
         setMediaItem(convertMediaItem(initialMediaItem, frameNumber));
     }
