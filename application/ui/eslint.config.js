@@ -18,6 +18,43 @@ const compat = new FlatCompat({
     allConfig: js.configs.all,
 });
 
+const restrictedImportPaths = [
+    {
+        name: '@adobe/react-spectrum',
+        message: 'Use component from the @geti/ui folder instead.',
+    },
+];
+
+const restrictedImportPatterns = [
+    {
+        group: ['@react-spectrum'],
+        message: 'Use component from the @geti/ui folder instead.',
+    },
+    {
+        group: ['@react-types/*'],
+        message: 'Use type from the @geti/ui folder instead.',
+    },
+    {
+        group: ['@spectrum-icons'],
+        message: 'Use icons from the @geti/ui/icons folder instead.',
+    },
+    {
+        group: ['src/*'],
+        message: 'Use relative imports instead of absolute "src/" imports.',
+    },
+];
+
+// Containment rule for Tauri APIs. The bundler picks `*.tauri.{ts,tsx}` files
+// for the Tauri build via `resolve.extensions`, so only those files should
+// import `@tauri-apps/*`. Applied to every source file *except* tauri twins.
+const tauriRestrictedImportPattern = {
+    group: ['@tauri-apps/*'],
+    message:
+        'Import Tauri plugins only from `*.tauri.{ts,tsx}` files. Consumers should ' +
+        'import the capability module (e.g. ./download-file) so the bundler can ' +
+        'swap implementations per build target.',
+};
+
 export default [
     {
         ignores: [...sharedEslintConfig[0].ignores, 'src/api/openapi-spec.d.ts'],
@@ -28,30 +65,8 @@ export default [
             'no-restricted-imports': [
                 'error',
                 {
-                    paths: [
-                        {
-                            name: '@adobe/react-spectrum',
-                            message: 'Use component from the @geti/ui folder instead.',
-                        },
-                    ],
-                    patterns: [
-                        {
-                            group: ['@react-spectrum'],
-                            message: 'Use component from the @geti/ui folder instead.',
-                        },
-                        {
-                            group: ['@react-types/*'],
-                            message: 'Use type from the @geti/ui folder instead.',
-                        },
-                        {
-                            group: ['@spectrum-icons'],
-                            message: 'Use icons from the @geti/ui/icons folder instead.',
-                        },
-                        {
-                            group: ['src/*'],
-                            message: 'Use relative imports instead of absolute "src/" imports.',
-                        },
-                    ],
+                    paths: restrictedImportPaths,
+                    patterns: restrictedImportPatterns,
                 },
             ],
             'header/header': [
@@ -65,12 +80,38 @@ export default [
                     ' SPDX-License-Identifier: Apache-2.0',
                 ],
             ],
+            // Forbid `isTauri()` runtime branching. Per-platform behaviour must
+            // be selected at build time by the bundler via `*.tauri.{ts,tsx}`
+            // file overrides — see src-tauri/README.md.
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: "CallExpression[callee.name='isTauri']",
+                    message:
+                        'Do not branch on `isTauri()` at runtime. Add or split a capability module via a `.tauri.{ts,tsx}` twin instead.',
+                },
+            ],
         },
     },
     {
         files: ['**/*.test.ts', '**/*.test.tsx', '**/*mock*.ts', '**/*.spec.ts'],
         rules: {
             'max-len': ['off'],
+        },
+    },
+    {
+        // Every source file *except* `.tauri.{ts,tsx}` twins must not import
+        // `@tauri-apps/*` directly.
+        files: ['src/**/*.{ts,tsx}'],
+        ignores: ['src/**/*.tauri.{ts,tsx}'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: restrictedImportPaths,
+                    patterns: [...restrictedImportPatterns, tauriRestrictedImportPattern],
+                },
+            ],
         },
     },
     ...compat.extends('plugin:playwright/playwright-test').map((config) => ({
