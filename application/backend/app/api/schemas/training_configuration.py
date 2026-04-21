@@ -704,7 +704,7 @@ class TrainingConfigurationView(BaseModel):
                                         "min_value": None,
                                         "max_value": None,
                                         "allowed_values": None,
-                                        "depends_on": {"mode": "range_scale"},
+                                        "depends_on": {"mode": "Clipped scaling"},
                                     },
                                     {
                                         "type": "parameter",
@@ -720,7 +720,7 @@ class TrainingConfigurationView(BaseModel):
                                         "min_value": None,
                                         "max_value": None,
                                         "allowed_values": None,
-                                        "depends_on": {"mode": "window"},
+                                        "depends_on": {"mode": "Windowing"},
                                     },
                                     {
                                         "type": "parameter",
@@ -737,7 +737,7 @@ class TrainingConfigurationView(BaseModel):
                                         "min_value": 0.0,
                                         "max_value": None,
                                         "allowed_values": None,
-                                        "depends_on": {"mode": "window"},
+                                        "depends_on": {"mode": "Windowing"},
                                     },
                                     {
                                         "type": "parameter",
@@ -753,7 +753,7 @@ class TrainingConfigurationView(BaseModel):
                                         "min_value": 0.0,
                                         "max_value": None,
                                         "allowed_values": None,
-                                        "depends_on": {"mode": "range_scale"},
+                                        "depends_on": {"mode": "Clipped scaling"},
                                     },
                                 ],
                             },
