@@ -50,6 +50,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
     const needsMinimumNumberOfLabels = isSingleLabelClassification && labels.length < 2;
 
     const isCreateProjectDisabled =
+        isSubmitting ||
         selectedTask === null ||
         validationErrorMessage !== undefined ||
         labels.length === 0 ||

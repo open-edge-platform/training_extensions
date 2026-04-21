@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Badge, dimensionValue, Divider, Flex, Grid, Text } from '@geti/ui';
+import { dimensionValue, Divider, Flex, Grid, Text } from '@geti/ui';
 import { isEmpty, isNil } from 'lodash-es';
 
 import { ExportDatasetMetadata } from '../../../../../../constants/shared-types';
@@ -54,16 +54,9 @@ export const ExportJobDetails = ({ datasetName, metadata }: ExportJobDetailsProp
 
                 <Divider orientation='vertical' size='S' />
 
-                <Flex alignItems={'center'} gap={'size-100'} minWidth={0}>
-                    <Text>Labels:</Text>
-                    <Flex gap={'size-75'} wrap UNSAFE_style={{ minWidth: 0, overflow: 'hidden' }}>
-                        {labelsList.map((label) => (
-                            <Badge variant={'neutral'} key={label}>
-                                {label}
-                            </Badge>
-                        ))}
-                    </Flex>
-                </Flex>
+                <Text UNSAFE_style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                    Labels: {labelsList.join(', ')}
+                </Text>
             </Grid>
         </Flex>
     );

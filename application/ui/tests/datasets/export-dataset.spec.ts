@@ -127,7 +127,7 @@ test.describe('Export dataset', () => {
         });
 
         await test.step('Verify export job completes and download dataset', async () => {
-            await page.waitForSelector(`text="Dataset is ready to download"`);
+            await page.waitForSelector(`text="Dataset is ready for download"`);
 
             const downloadButton = page.getByRole('button', { name: /download dataset/i });
             await expect(downloadButton).toBeVisible();
@@ -144,7 +144,7 @@ test.describe('Export dataset', () => {
             const closeButton = page.getByRole('button', { name: /close export dataset status/i });
             await closeButton.click();
 
-            await expect(page.getByText('Dataset is ready to download')).toBeHidden();
+            await expect(page.getByText('Dataset is ready for download')).toBeHidden();
             await expect.poll(() => deletedStagedDatasetId).toBe(STAGED_DATASET_ID);
         });
     });
