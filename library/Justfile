@@ -7,14 +7,10 @@ default:
 # Virtual environment management
 # -------------------------------------------------------------------------------------------------
 
-uv_version := `grep -A 3 '\[tool\.uv\]' pyproject.toml | grep 'required-version' | sed -E 's/.*required-version[[:space:]]*=[[:space:]]*"[^0-9]*([0-9]+\.[0-9]+\.[0-9]+).*"/\1/'`
+uv_version := `grep -A 3 '\[tool\.uv\]' pyproject.toml | grep 'required-version' | sed 's/.*= "[~=<>]*\(.*\)"/\1/'`
 
-# Ensure uv is installed at the pinned version from pyproject.toml's [tool.uv] required-version.
-# If uv is missing or reports a different version, (re)install it via the official installer.
 _ensure_uv:
-    @installed="$(command -v uv > /dev/null && uv --version 2>/dev/null | awk '{print $2}')"; \
-    if [ "$installed" != "{{uv_version}}" ]; then \
-        echo "Installing uv {{uv_version}} (found: $${installed:-none})..."; \
+    @if ! command -v uv > /dev/null; then \
         curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/astral-sh/uv/releases/download/{{uv_version}}/uv-installer.sh" | sh; \
     fi
 
