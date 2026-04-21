@@ -103,7 +103,7 @@ class BaseTest:
 
                 # This is also not working. It produces an empty dictionary for test_metrics = {}
                 # with patch("sys.argv", test_cfg):
-                #     cli = OTXCLI()
+                #     cli = CLI()
                 #     test_metrics = cli.engine.trainer.callback_metrics
                 # mlflow.log_metrics(test_metrics)
 

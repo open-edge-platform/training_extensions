@@ -55,7 +55,7 @@ def fxt_configs() -> Namespace:
         ),
         callbacks=[
             Namespace(
-                class_path="getitune.backend.native.callbacks.iteration_timer.IterationTimer",
+                class_path="getitune.backend.lightning.callbacks.iteration_timer.IterationTimer",
                 init_args=Namespace(prog_bar=True),
             ),
             Namespace(
@@ -206,7 +206,7 @@ def test_namespace_override(fxt_configs) -> None:
             t for t in cfg.data.train_subset.transforms if t["class_path"] == "torchvision.transforms.v2.Normalize"
         )
 
-        # otx.data.augmentation.transforms.Resize
+        # getitune.data.augmentation.transforms.Resize
         assert (
             resize_transform["init_args"]["keep_ratio"]
             == overrides.train_subset.transforms[0]["init_args"]["keep_ratio"]
@@ -275,7 +275,7 @@ def test_list_override(fxt_configs) -> None:
         iter_timer = next(
             c
             for c in fxt_configs.callbacks
-            if c.class_path == "getitune.backend.native.callbacks.iteration_timer.IterationTimer"
+            if c.class_path == "getitune.backend.lightning.callbacks.iteration_timer.IterationTimer"
         )
         early_stop = next(
             c for c in fxt_configs.callbacks if c.class_path == "lightning.pytorch.callbacks.EarlyStopping"

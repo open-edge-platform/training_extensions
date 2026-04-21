@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Auto-Configurator class & util functions for OTX Auto-Configuration."""
+"""Auto-Configurator class & util functions for getitune Auto-Configuration."""
 
 from __future__ import annotations
 
@@ -14,13 +14,13 @@ from warnings import warn
 
 from jsonargparse import ArgumentParser, Namespace
 
-from getitune.backend.native.cli.utils import get_otx_root_path, list_models
-from getitune.backend.native.models.base import DataInputParams, OTXModel
+from getitune.backend.lightning.cli.utils import get_getitune_root_path, list_models
+from getitune.backend.lightning.models.base import DataInputParams, LightningModel
 from getitune.config.data import SamplerConfig, SubsetConfig, TileConfig
-from getitune.data.module import OTXDataModule
+from getitune.data.module import DataModule
 from getitune.types import PathLike
 from getitune.types.label import LabelInfoTypes
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 from getitune.utils.utils import can_pass_tile_config, get_model_cls_from_config, should_pass_label_info
 
 if TYPE_CHECKING:
@@ -28,38 +28,38 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger()
-RECIPE_PATH = get_otx_root_path() / "recipe"
+RECIPE_PATH = get_getitune_root_path() / "recipe"
 
 DEFAULT_CONFIG_PER_TASK = {
-    OTXTaskType.MULTI_CLASS_CLS: RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",
-    OTXTaskType.MULTI_LABEL_CLS: RECIPE_PATH / "classification" / "multi_label_cls" / "mobilenet_v3_large.yaml",
-    OTXTaskType.H_LABEL_CLS: RECIPE_PATH / "classification" / "h_label_cls" / "mobilenet_v3_large.yaml",
-    OTXTaskType.DETECTION: RECIPE_PATH / "detection" / "yolox_s.yaml",
-    OTXTaskType.ROTATED_DETECTION: RECIPE_PATH / "rotated_detection" / "maskrcnn_r50.yaml",
-    OTXTaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
-    OTXTaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_small.yaml",
-    OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
+    TaskType.MULTI_CLASS_CLS: RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",
+    TaskType.MULTI_LABEL_CLS: RECIPE_PATH / "classification" / "multi_label_cls" / "mobilenet_v3_large.yaml",
+    TaskType.H_LABEL_CLS: RECIPE_PATH / "classification" / "h_label_cls" / "mobilenet_v3_large.yaml",
+    TaskType.DETECTION: RECIPE_PATH / "detection" / "yolox_s.yaml",
+    TaskType.ROTATED_DETECTION: RECIPE_PATH / "rotated_detection" / "maskrcnn_r50.yaml",
+    TaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
+    TaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_small.yaml",
+    TaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
 }
 
 
 OVMODEL_PER_TASK = {
-    OTXTaskType.MULTI_CLASS_CLS: "getitune.backend.openvino.models.OVMulticlassClassificationModel",
-    OTXTaskType.MULTI_LABEL_CLS: "getitune.backend.openvino.models.OVMultilabelClassificationModel",
-    OTXTaskType.H_LABEL_CLS: "getitune.backend.openvino.models.OVHlabelClassificationModel",
-    OTXTaskType.DETECTION: "getitune.backend.openvino.models.OVDetectionModel",
-    OTXTaskType.ROTATED_DETECTION: "getitune.backend.openvino.models.OVRotatedDetectionModel",
-    OTXTaskType.INSTANCE_SEGMENTATION: "getitune.backend.openvino.models.OVInstanceSegmentationModel",
-    OTXTaskType.SEMANTIC_SEGMENTATION: "getitune.backend.openvino.models.OVSegmentationModel",
-    OTXTaskType.KEYPOINT_DETECTION: "getitune.backend.openvino.models.OVKeypointDetectionModel",
+    TaskType.MULTI_CLASS_CLS: "getitune.backend.openvino.models.OVMulticlassClassificationModel",
+    TaskType.MULTI_LABEL_CLS: "getitune.backend.openvino.models.OVMultilabelClassificationModel",
+    TaskType.H_LABEL_CLS: "getitune.backend.openvino.models.OVHlabelClassificationModel",
+    TaskType.DETECTION: "getitune.backend.openvino.models.OVDetectionModel",
+    TaskType.ROTATED_DETECTION: "getitune.backend.openvino.models.OVRotatedDetectionModel",
+    TaskType.INSTANCE_SEGMENTATION: "getitune.backend.openvino.models.OVInstanceSegmentationModel",
+    TaskType.SEMANTIC_SEGMENTATION: "getitune.backend.openvino.models.OVSegmentationModel",
+    TaskType.KEYPOINT_DETECTION: "getitune.backend.openvino.models.OVKeypointDetectionModel",
 }
 
 
 class AutoConfigurator:
-    """This Class is used to configure the OTXDataModule, OTXModel, Optimizer, and Scheduler with OTX Default.
+    """This Class is used to configure the DataModule, LightningModel, Optimizer, and Scheduler with getitune Default.
 
     Args:
         data_root (PathLike | None, optional): The root directory for data storage. Defaults to None.
-        task (OTXTaskType | None, optional): The task type. If None, the task will be configured based on the model.
+        task (TaskType | None, optional): The task type. If None, the task will be configured based on the model.
             Defaults to None.
         model (PathLike | str | None, optional): Path to the model config file or name of the model to use.
             If None, the task should be provided and the default model for the task will be used.
@@ -70,7 +70,7 @@ class AutoConfigurator:
 
         >>> auto_configurator = AutoConfigurator(
         ...     data_root=<dataset/path>,
-        ...     task=<OTXTaskType>,
+        ...     task=<TaskType>,
         ... )
 
         # If task is None, the task will be configured based on the data root.
@@ -82,7 +82,7 @@ class AutoConfigurator:
     def __init__(
         self,
         data_root: PathLike | None = None,
-        task: OTXTaskType | None = None,
+        task: TaskType | None = None,
         model: PathLike | str | None = None,
     ) -> None:
         self.data_root = data_root
@@ -112,7 +112,7 @@ class AutoConfigurator:
                 raise FileNotFoundError(msg)
         if model_config_path:
             self._config: dict = self._load_default_config(config_path=model_config_path)
-            self._task = OTXTaskType(self._config.get("task", task))
+            self._task = TaskType(self._config.get("task", task))
         elif task:
             self._config = self._load_default_config(task=task)
         else:
@@ -120,19 +120,19 @@ class AutoConfigurator:
             raise ValueError(msg)
 
     @property
-    def task(self) -> OTXTaskType:
+    def task(self) -> TaskType:
         """Returns the current task.
 
         Raises:
             RuntimeError: If there are no ready tasks.
 
         Returns:
-            OTXTaskType | str: The current task.
+            TaskType | str: The current task.
         """
         if self._task is not None:
             return self._task
         if self._config is not None and "task" in self._config:
-            return OTXTaskType(self._config["task"])
+            return TaskType(self._config["task"])
         msg = "There are no ready task"
         raise RuntimeError(msg)
 
@@ -145,7 +145,7 @@ class AutoConfigurator:
         """
         return self._config
 
-    def _load_default_config(self, config_path: PathLike | None = None, task: OTXTaskType | None = None) -> dict:
+    def _load_default_config(self, config_path: PathLike | None = None, task: TaskType | None = None) -> dict:
         """Load the default configuration for the specified model.
 
         Args:
@@ -169,11 +169,11 @@ class AutoConfigurator:
 
         return get_configuration(config_path)
 
-    def get_datamodule(self, data_root: PathLike | None = None) -> OTXDataModule:
-        """Returns an instance of OTXDataModule with the configured data root.
+    def get_datamodule(self, data_root: PathLike | None = None) -> DataModule:
+        """Returns an instance of DataModule with the configured data root.
 
         Returns:
-            OTXDataModule | None: An instance of OTXDataModule.
+            DataModule | None: An instance of DataModule.
         """
         if data_root is None and self.data_root is None:
             msg = "No data root provided."
@@ -193,7 +193,7 @@ class AutoConfigurator:
         _ = data_config.pop("__path__", {})  # Remove __path__ key that for CLI
         _ = data_config.pop("config", {})  # Remove config key that for CLI
 
-        return OTXDataModule(
+        return DataModule(
             train_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
             val_subset=SubsetConfig(sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
             test_subset=SubsetConfig(sampler=SamplerConfig(**test_config.pop("sampler", {})), **test_config),
@@ -206,8 +206,8 @@ class AutoConfigurator:
         model_name: str | None = None,
         label_info: LabelInfoTypes | None = None,
         data_input_params: DataInputParams | dict | None = None,
-    ) -> OTXModel:
-        """Retrieves the OTXModel instance based on the provided model name and meta information.
+    ) -> LightningModel:
+        """Retrieves the LightningModel instance based on the provided model name and meta information.
 
         Args:
             model_name (str | None): The name of the model to retrieve. If None, the default model will be used.
@@ -217,10 +217,10 @@ class AutoConfigurator:
                 containing the input size, input mean and std.
 
         Returns:
-            OTXModel: The instantiated OTXModel instance.
+            LightningModel: The instantiated LightningModel instance.
 
         Example:
-            The following examples show how to get the OTXModel class.
+            The following examples show how to get the LightningModel class.
 
             # If model_name is None, the default model will be used from task.
             >>> auto_configurator.get_model(
@@ -233,7 +233,7 @@ class AutoConfigurator:
             ...     label_info=<LabelInfo>,
             ... )
         """
-        # TODO(vinnamki): There are some overlaps with src/getitune/cli/cli.py::OTXCLI::instantiate_model
+        # TODO(vinnamki): There are some overlaps with src/getitune/cli/cli.py::CLI::instantiate_model
         if model_name is not None:
             self._config = self._load_default_config(model_name)
 
@@ -274,7 +274,7 @@ class AutoConfigurator:
 
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(
-            OTXModel,
+            LightningModel,
             "model",
             skip=skip,
             required=False,
@@ -282,7 +282,7 @@ class AutoConfigurator:
         )
         return model_parser.instantiate_classes(Namespace(model=model_config)).get("model")
 
-    def get_ov_model(self, model_name: PathLike, task: OTXTaskType | None = None) -> OVModel:
+    def get_ov_model(self, model_name: PathLike, task: TaskType | None = None) -> OVModel:
         """Retrieves the OVModel instance based on the given model name and label information.
 
         Args:
@@ -309,16 +309,16 @@ class AutoConfigurator:
 
     def update_ov_subset_pipeline(
         self,
-        datamodule: OTXDataModule,
+        datamodule: DataModule,
         subset: str = "test",
-        task: OTXTaskType | None = None,
+        task: TaskType | None = None,
         input_size: tuple[int, int] | None = None,
         keep_aspect_ratio: bool = False,
-    ) -> OTXDataModule:
-        """Returns an OTXDataModule object with OpenVINO subset transforms applied.
+    ) -> DataModule:
+        """Returns an DataModule object with OpenVINO subset transforms applied.
 
         Args:
-            datamodule (OTXDataModule): The original OTXDataModule object.
+            datamodule (DataModule): The original DataModule object.
             subset (str, optional): The subset to update. Defaults to "test".
             input_size (tuple[int, int] | None, optional): Model input size (H, W)
                 from the OV model metadata.  When provided this overrides
@@ -331,7 +331,7 @@ class AutoConfigurator:
                 Defaults to ``False``.
 
         Returns:
-            OTXDataModule: The modified OTXDataModule object with OpenVINO subset transforms applied.
+            DataModule: The modified DataModule object with OpenVINO subset transforms applied.
         """
         task = task if task is not None else self._task
         if task is None:
@@ -372,11 +372,11 @@ class AutoConfigurator:
         warn(msg, stacklevel=1)
 
         # If the datamodule was created from pre-constructed datasets (no data_root),
-        # rebuild using from_otx_datasets to avoid re-importing from disk.
+        # rebuild using from_vision_datasets to avoid re-importing from disk.
         # This is useful for the quantization pipeline.
         if not datamodule.data_root and datamodule.subsets:
             datamodule.train_subset.input_size = actual_input_size
-            return OTXDataModule.from_otx_datasets(
+            return DataModule.from_vision_datasets(
                 train_dataset=datamodule.subsets["train"],
                 val_dataset=datamodule.subsets["val"],
                 test_dataset=datamodule.subsets.get("test"),
@@ -387,7 +387,7 @@ class AutoConfigurator:
                 device=datamodule.device,
             )
 
-        return OTXDataModule(
+        return DataModule(
             task=datamodule.task,
             data_root=datamodule.data_root,
             train_subset=datamodule.train_subset,

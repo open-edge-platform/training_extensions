@@ -9,11 +9,11 @@ from unittest.mock import Mock
 
 from datumaro.experimental import Dataset
 
-from getitune.data.dataset.classification import OTXMulticlassClsDataset
+from getitune.data.dataset.classification import MulticlassClsDataset
 
 
-class TestOTXMulticlassClsDataset:
-    """Test OTXMulticlassClsDataset class."""
+class TestMulticlassClsDataset:
+    """Test MulticlassClsDataset class."""
 
     def setup_method(self):
         """Set up test fixtures."""
@@ -43,7 +43,7 @@ class TestOTXMulticlassClsDataset:
 
         self.mock_dm_subset.__getitem__ = Mock(side_effect=mock_items)
 
-        dataset = OTXMulticlassClsDataset(
+        dataset = MulticlassClsDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
         )
@@ -67,7 +67,7 @@ class TestOTXMulticlassClsDataset:
 
         self.mock_dm_subset.__getitem__ = Mock(side_effect=mock_items)
 
-        dataset = OTXMulticlassClsDataset(
+        dataset = MulticlassClsDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
         )

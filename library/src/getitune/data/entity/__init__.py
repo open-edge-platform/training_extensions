@@ -1,14 +1,14 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTX data entities."""
+"""Module for getitune data entities."""
 
 from .base import ImageInfo, ImageType
 from .sample import (
-    OTXPrediction,
-    OTXPredictionBatch,
-    OTXSample,
-    OTXSampleBatch,
+    BaseSample,
+    Prediction,
+    PredictionBatch,
+    SampleBatch,
 )
 from .tile import (
     TileBatchDetDataEntity,
@@ -19,12 +19,12 @@ from .tile import (
 )
 
 __all__ = [
+    "BaseSample",
     "ImageInfo",
     "ImageType",
-    "OTXPrediction",
-    "OTXPredictionBatch",
-    "OTXSample",
-    "OTXSampleBatch",
+    "Prediction",
+    "PredictionBatch",
+    "SampleBatch",
     "TileBatchDetDataEntity",
     "TileBatchInstSegDataEntity",
     "TileBatchSegDataEntity",

@@ -9,15 +9,15 @@ import torch
 from torchmetrics import MetricCollection
 from torchvision import tv_tensors
 
-from getitune.backend.native.models.base import DataInputParams
-from getitune.backend.native.models.detection.base import OTXDetectionModel
+from getitune.backend.lightning.models.base import DataInputParams
+from getitune.backend.lightning.models.detection.base import LightningDetectionModel
 from getitune.data.entity.base import ImageInfo
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.metrics.fmeasure import FMeasure
 from getitune.types.label import LabelInfo
 
 
-class MockDetectionModel(OTXDetectionModel):
+class MockDetectionModel(LightningDetectionModel):
     """Mock detection model for unit testing."""
 
     def _create_model(self, num_classes=None) -> torch.nn.Module:
@@ -56,7 +56,7 @@ def detection_model():
 @pytest.fixture
 def sample_predictions():
     """Create sample prediction data."""
-    return OTXPredictionBatch(
+    return PredictionBatch(
         images=torch.stack([torch.rand(3, 416, 416), torch.rand(3, 416, 416)]),
         imgs_info=[
             ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416)),
@@ -90,7 +90,7 @@ def sample_predictions():
 @pytest.fixture
 def sample_batch():
     """Create sample input batch."""
-    return OTXSampleBatch(
+    return SampleBatch(
         images=torch.stack([torch.rand(3, 416, 416), torch.rand(3, 416, 416)]),
         imgs_info=[
             ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416)),
@@ -211,7 +211,7 @@ class TestFilterOutputsByThreshold:
 
     def test_filtering_with_none_outputs(self, detection_model):
         """Test filtering when outputs have None values."""
-        preds_with_none = OTXPredictionBatch(
+        preds_with_none = PredictionBatch(
             images=torch.rand(1, 3, 416, 416),
             imgs_info=[ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416))],
             scores=None,
@@ -228,7 +228,7 @@ class TestFilterOutputsByThreshold:
 
     def test_filtering_empty_predictions(self, detection_model):
         """Test filtering with empty prediction lists."""
-        empty_preds = OTXPredictionBatch(
+        empty_preds = PredictionBatch(
             images=torch.stack([torch.rand(3, 416, 416), torch.rand(3, 416, 416)]),
             imgs_info=[
                 ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416)),
@@ -253,8 +253,8 @@ class TestFilterOutputsByThreshold:
 class TestTestStep:
     """Test cases for test_step method."""
 
-    @patch("getitune.backend.native.models.detection.base.OTXDetectionModel.forward")
-    @patch("getitune.backend.native.models.detection.base.OTXDetectionModel._filter_outputs_by_threshold")
+    @patch("getitune.backend.lightning.models.detection.base.LightningDetectionModel.forward")
+    @patch("getitune.backend.lightning.models.detection.base.LightningDetectionModel._filter_outputs_by_threshold")
     def test_filtering_before_metric_computation(
         self,
         mock_filter,
@@ -299,20 +299,20 @@ class TestTestStep:
             mock_filter.assert_called_once_with(sample_predictions)
             assert result == filtered_preds
 
-    @patch("getitune.backend.native.models.detection.base.OTXDetectionModel.forward")
+    @patch("getitune.backend.lightning.models.detection.base.LightningDetectionModel.forward")
     def test_test_step_with_loss_entity_raises_error(self, mock_forward, detection_model, sample_batch):
-        """Test that test_step raises TypeError when forward returns OTXBatchLossEntity."""
-        from getitune.data.entity.base import OTXBatchLossEntity
+        """Test that test_step raises TypeError when forward returns BatchLoss."""
+        from getitune.data.entity.base import BatchLoss
 
         # Setup mock to return loss entity
-        mock_forward.return_value = OTXBatchLossEntity()
+        mock_forward.return_value = BatchLoss()
 
         # Should raise TypeError
         with pytest.raises(TypeError):
             detection_model.test_step(sample_batch, 0)
 
-    @patch("getitune.backend.native.models.detection.base.OTXDetectionModel.forward")
-    @patch("getitune.backend.native.models.detection.base.OTXDetectionModel._filter_outputs_by_threshold")
+    @patch("getitune.backend.lightning.models.detection.base.LightningDetectionModel.forward")
+    @patch("getitune.backend.lightning.models.detection.base.LightningDetectionModel._filter_outputs_by_threshold")
     def test_test_step_with_list_metric_inputs(
         self,
         mock_filter,
@@ -423,7 +423,7 @@ class TestIntegration:
             "_convert_pred_entity_to_compute_metric",
         ) as mock_convert:
             # Setup sample predictions with scores above and below threshold
-            test_preds = OTXPredictionBatch(
+            test_preds = PredictionBatch(
                 images=torch.rand(1, 3, 416, 416),
                 imgs_info=[ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416))],
                 scores=[torch.tensor([0.9, 0.5, 0.3])],

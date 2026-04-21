@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTXKeypointDetectionDataset."""
+"""Module for KeypointDetectionDataset."""
 
 from __future__ import annotations
 
@@ -9,22 +9,22 @@ from typing import TYPE_CHECKING
 
 import torch
 
-from getitune.data.dataset.base import OTXDataset, Transforms
+from getitune.data.dataset.base import Transforms, VisionDataset
 from getitune.data.entity.sample import KeypointSample
 from getitune.data.entity.utils import with_image_dtype
-from getitune.types import OTXTaskType
+from getitune.types import TaskType
 from getitune.types.label import LabelInfo
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
 
 
-class OTXKeypointDetectionDataset(OTXDataset):
-    """OTX Dataset for keypoint detection tasks.
+class KeypointDetectionDataset(VisionDataset):
+    """getitune Dataset for keypoint detection tasks.
 
     This dataset handles keypoint detection where specific key points (like body joints)
     are detected and localized in images. It processes Datumaro dataset items and
-    converts them into OTXSample format suitable for keypoint detection training
+    converts them into BaseSample format suitable for keypoint detection training
     and inference.
 
     Args:
@@ -35,8 +35,8 @@ class OTXKeypointDetectionDataset(OTXDataset):
 
 
     Example:
-        >>> from getitune.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
-        >>> dataset = OTXKeypointDetectionDataset(
+        >>> from getitune.data.dataset.keypoint_detection import KeypointDetectionDataset
+        >>> dataset = KeypointDetectionDataset(
         ...     dm_subset=my_dm_subset,
         ...     transforms=my_transforms,
         ... )
@@ -66,14 +66,14 @@ class OTXKeypointDetectionDataset(OTXDataset):
 
     def _get_item_impl(self, index: int) -> KeypointSample | None:
         item = self._read_dm_item(index)
-        item.keypoints[:, 2] = torch.clamp(item.keypoints[:, 2], max=1)  # OTX represents visibility as 0 or 1
+        item.keypoints[:, 2] = torch.clamp(item.keypoints[:, 2], max=1)  # getitune represents visibility as 0 or 1
         return self._apply_transforms(item)  # type: ignore[return-value]
 
     @property
-    def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+    def task_type(self) -> TaskType:
+        """Getitune Task Type for the dataset.
 
         Returns:
-            OTXTaskType: The keypoint detection task type.
+            TaskType: The keypoint detection task type.
         """
-        return OTXTaskType.KEYPOINT_DETECTION
+        return TaskType.KEYPOINT_DETECTION

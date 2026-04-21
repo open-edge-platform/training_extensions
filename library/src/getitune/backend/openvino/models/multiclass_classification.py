@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for classification model entity used in OTX."""
+"""Class definition for classification model entity used in getitune."""
 
 from __future__ import annotations
 
@@ -9,12 +9,12 @@ from typing import TYPE_CHECKING, Any
 import torch
 
 from getitune.backend.openvino.models.base import OVModel
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.metrics import MetricInput
 from getitune.metrics.accuracy import (
     MultiClassClsMetricCallable,
 )
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 if TYPE_CHECKING:
     from model_api.models.result import ClassificationResult
@@ -27,7 +27,7 @@ class OVMulticlassClassificationModel(OVModel):
     """Classification model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository
-    and create the OTX classification model compatible for OTX testing pipeline.
+    and create the getitune classification model compatible for getitune testing pipeline.
     """
 
     def __init__(
@@ -60,21 +60,21 @@ class OVMulticlassClassificationModel(OVModel):
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
-        self._task = OTXTaskType.MULTI_CLASS_CLS
+        self._task = TaskType.MULTI_CLASS_CLS
 
     def _customize_outputs(
         self,
         outputs: list[ClassificationResult],
-        inputs: OTXSampleBatch,
-    ) -> OTXPredictionBatch:
-        """Customize the outputs of the model for OTX pipeline compatibility.
+        inputs: SampleBatch,
+    ) -> PredictionBatch:
+        """Customize the outputs of the model for getitune pipeline compatibility.
 
         Args:
             outputs (list[ClassificationResult]): List of classification results from the model.
-            inputs (OTXSampleBatch): Input batch containing images and metadata.
+            inputs (SampleBatch): Input batch containing images and metadata.
 
         Returns:
-            OTXPredictionBatch: A batch of predictions containing scores, labels,
+            PredictionBatch: A batch of predictions containing scores, labels,
                 and optionally saliency maps and feature vectors.
         """
         pred_labels = [torch.tensor(out.top_labels[0].id, dtype=torch.long) for out in outputs]
@@ -86,7 +86,7 @@ class OVMulticlassClassificationModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return OTXPredictionBatch(
+            return PredictionBatch(
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=pred_scores,
@@ -95,7 +95,7 @@ class OVMulticlassClassificationModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return OTXPredictionBatch(
+        return PredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=pred_scores,
@@ -104,16 +104,16 @@ class OVMulticlassClassificationModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredictionBatch,
-        inputs: OTXSampleBatch,
+        preds: PredictionBatch,
+        inputs: SampleBatch,
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
         Converts prediction and input entities into a format suitable for metric evaluation.
 
         Args:
-            preds (OTXPredictionBatch): Predicted batch containing predicted labels and other metadata.
-            inputs (OTXSampleBatch): Input batch containing ground truth labels and other metadata.
+            preds (PredictionBatch): Predicted batch containing predicted labels and other metadata.
+            inputs (SampleBatch): Input batch containing ground truth labels and other metadata.
 
         Returns:
             MetricInput: A dictionary containing 'preds' and 'target' keys corresponding to predicted and target labels.

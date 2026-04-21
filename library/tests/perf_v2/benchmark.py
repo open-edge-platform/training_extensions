@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX benchmark runner."""
+"""getitune benchmark runner."""
 
 from __future__ import annotations
 
@@ -13,10 +13,10 @@ from typing import Any, Literal
 
 import pandas as pd
 
-from getitune.backend.native.cli.utils import RECIPE_PATH
-from getitune.backend.native.engine import OTXEngine
+from getitune.backend.lightning.cli.utils import RECIPE_PATH
+from getitune.backend.lightning.engine import LightningEngine
 from getitune.backend.openvino.engine import OVEngine
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 from tests.perf_v2 import CRITERIA_COLLECTIONS, DATASET_COLLECTIONS, MODEL_COLLECTIONS, summary
 from tests.perf_v2.utils import (
     Criterion,
@@ -34,23 +34,23 @@ from tests.perf_v2.utils import (
 logger = logging.getLogger(__name__)
 
 FOLDER_MAPPINGS = {
-    OTXTaskType.MULTI_CLASS_CLS: RECIPE_PATH / "classification" / "multi_class_cls",
-    OTXTaskType.MULTI_LABEL_CLS: RECIPE_PATH / "classification" / "multi_label_cls",
-    OTXTaskType.H_LABEL_CLS: RECIPE_PATH / "classification" / "h_label_cls",
-    OTXTaskType.DETECTION: RECIPE_PATH / "detection",
-    OTXTaskType.ROTATED_DETECTION: RECIPE_PATH / "rotated_detection",
-    OTXTaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation",
-    OTXTaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation",
-    OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection",
+    TaskType.MULTI_CLASS_CLS: RECIPE_PATH / "classification" / "multi_class_cls",
+    TaskType.MULTI_LABEL_CLS: RECIPE_PATH / "classification" / "multi_label_cls",
+    TaskType.H_LABEL_CLS: RECIPE_PATH / "classification" / "h_label_cls",
+    TaskType.DETECTION: RECIPE_PATH / "detection",
+    TaskType.ROTATED_DETECTION: RECIPE_PATH / "rotated_detection",
+    TaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation",
+    TaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation",
+    TaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection",
 }
 
 
-def task_benchmark_dataset(task: OTXTaskType) -> dict[str, DatasetInfo]:
+def task_benchmark_dataset(task: TaskType) -> dict[str, DatasetInfo]:
     test_cases = DATASET_COLLECTIONS[task]
     return {test_case.name: test_case for test_case in test_cases}
 
 
-def task_benchmark_models(task: OTXTaskType) -> dict[str, ModelInfo]:
+def task_benchmark_models(task: TaskType) -> dict[str, ModelInfo]:
     model_info_list = MODEL_COLLECTIONS[task]
     return {model.name: model for model in model_info_list}
 
@@ -66,11 +66,11 @@ class AggregateError(Exception):
 
 
 class Benchmark:
-    """Benchmark runner for OTX2.x.
+    """Benchmark runner for getitune 2.x.
 
     Args:
         data_root (str): Path to the root of dataset directories. Defaults to './data'.
-        output_root (str): Output root dirctory for logs and results. Defaults to './otx-benchmark'.
+        output_root (str): Output root dirctory for logs and results. Defaults to './getitune-benchmark'.
         num_epoch (int): Overrides the per-model default number of epoch settings.
             Defaults to 0, which means no overriding.
         eval_upto (str): The last serial operation to evaluate. Choose one of ('train', 'export', 'optimize').
@@ -78,7 +78,7 @@ class Benchmark:
             e.x) Eval up to 'optimize': train -> eval -> export -> eval -> optimize -> eval
             Default to 'train'.
         tags (dict, optional): Key-values pair metadata for the experiment.
-        dry_run (bool): Whether to just print the OTX command without execution. Defaults to False.
+        dry_run (bool): Whether to just print the getitune command without execution. Defaults to False.
         deterministic (bool): Whether to turn on deterministic training mode. Defaults to False.
         accelerator (str): Accelerator device on which to run benchmark. Defaults to gpu.
         reference_results (pd.DataFrame): Reference benchmark results for performance checking.
@@ -93,7 +93,7 @@ class Benchmark:
     def __init__(
         self,
         data_root: Path = Path("data"),
-        output_root: Path = Path("otx-benchmark"),
+        output_root: Path = Path("getitune-benchmark"),
         num_epoch: int = 0,
         eval_upto: str = "train",
         tags: dict[str, str] | None = None,
@@ -115,7 +115,7 @@ class Benchmark:
         if (test_only == "export" and eval_upto == "train") or (
             test_only == "optimize" and eval_upto in ["train", "export"]
         ):
-            msg = "test_only should be set to previous otx command than eval_upto."
+            msg = "test_only should be set to previous getitune command than eval_upto."
             raise ValueError(msg)
         self.test_only = test_only
 
@@ -301,7 +301,7 @@ class Benchmark:
         del engine
         total_time = time() - start_time
 
-        # OTX does not create metrics.cvs during optimization,
+        # getitune does not create metrics.cvs during optimization,
         # So we are manually write optimize:e2e_time to csv.
         data_frame = pd.DataFrame({"optimize:e2e_time": [total_time]})
         data_frame.to_csv(sub_work_dir / f"{SubCommand.OPTIMIZE.value}/metrics.csv", index=False)
@@ -312,7 +312,7 @@ class Benchmark:
         model_info: ModelInfo,
         dataset_info: DatasetInfo,
         work_dir: Path,
-    ) -> OTXEngine:
+    ) -> LightningEngine:
         """Initialise engine with given model and dataset settings.
 
         Args:
@@ -324,8 +324,8 @@ class Benchmark:
             Engine: Initialised engine
         """
 
-        return OTXEngine.from_config(
-            config_path=FOLDER_MAPPINGS[OTXTaskType(model_info.task)] / (model_info.name + ".yaml"),
+        return LightningEngine.from_config(
+            config_path=FOLDER_MAPPINGS[TaskType(model_info.task)] / (model_info.name + ".yaml"),
             data_root=self.data_root / dataset_info.path,
             work_dir=work_dir,
             device=self.accelerator,
@@ -498,7 +498,7 @@ class Benchmark:
 
         Args:
             work_dir (Path): work directory
-            tags (dict[str, str]): OTX metadata (ie. task, model, data_group, data, seed, etc)
+            tags (dict[str, str]): getitune metadata (ie. task, model, data_group, data, seed, etc)
             criteria (list[Criterion]): task criteria
             extra_metrics (dict[str, Any] | None, optional): extra metrics to be logged. Defaults to None.
         """

@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX export-related types definition."""
+"""getitune export-related types definition."""
 
 from __future__ import annotations
 
@@ -14,8 +14,8 @@ from getitune.config.data import TileConfig
 from getitune.types.label import HLabelInfo, LabelInfo
 
 
-class OTXExportFormatType(str, Enum):
-    """OTX export format type definition."""
+class ExportFormat(str, Enum):
+    """getitune export format type definition."""
 
     ONNX = "ONNX"
     OPENVINO = "OPENVINO"
@@ -29,7 +29,7 @@ class TaskLevelExportParameters:
         model_type (str): Model type field used in ModelAPI.
         model_name (str): Model name field.
         task_type (str): Task type field used in ModelAPI.
-        label_info (LabelInfo): OTX label info metadata.
+        label_info (LabelInfo): getitune label info metadata.
             It will be parsed into a format compatible with ModelAPI.
         optimization_config (dict): Configurations for NNCF PTQ model optimization.
         multilabel (bool | None): Whether it is multilabel or not.
@@ -122,7 +122,7 @@ class TaskLevelExportParameters:
             ("model_info", "labels"): all_labels.strip(),
             ("model_info", "label_ids"): all_label_ids.strip(),
             ("model_info", "optimization_config"): json.dumps(self.optimization_config),
-            ("model_info", "otx_version"): getitune.__version__,
+            ("model_info", "getitune_version"): getitune.__version__,
         }
 
         if isinstance(self.label_info, HLabelInfo):

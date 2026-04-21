@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""Test of Module for OTX custom metrices."""
+"""Test of Module for getitune custom metrices."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ class TestFMeasure:
         ]
 
     def test_fmeasure(self, fxt_preds, fxt_targets) -> None:
-        """Check whether f1 score is same with OTX1.x version."""
+        """Check whether f1 score is same with getitune 1.x version."""
         metric = FMeasure(label_info=LabelInfo.from_num_classes(1))
         metric.update(fxt_preds, fxt_targets)
         result = metric.compute()

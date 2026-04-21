@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Custom Help Formatters for OTX CLI."""
+"""Custom Help Formatters for getitune CLI."""
 
 from __future__ import annotations
 
@@ -101,7 +101,7 @@ def get_verbosity_subcommand() -> dict:
 
 
 INTRO_MARKDOWN = (
-    "# OpenVINO™ Training Extensions CLI Guide\n\n"
+    "# getitune CLI Guide\n\n"
     "Github Repository: [https://github.com/open-edge-platform/training_extensions](https://github.com/open-edge-platform/training_extensions)."
     "\n\n"
     "A better guide is provided by the [documentation](https://open-edge-platform.github.io/training_extensions/stable/)."
@@ -162,10 +162,10 @@ def render_guide(subcommand: str | None = None) -> list:
     """
     if subcommand is None:
         return []
-    from getitune.backend.native.engine import OTXEngine
+    from getitune.backend.lightning.engine import LightningEngine
 
     contents: list[Panel | Markdown] = [Markdown(INTRO_MARKDOWN)]
-    target_command = getattr(OTXEngine, subcommand)
+    target_command = getattr(LightningEngine, subcommand)
     cli_usage = get_cli_usage_docstring(target_command)
     if cli_usage is not None:
         cli_usage += f"\n{VERBOSE_USAGE.format(subcommand=subcommand)}"
@@ -175,10 +175,10 @@ def render_guide(subcommand: str | None = None) -> list:
 
 
 class CustomHelpFormatter(RichHelpFormatter, DefaultHelpFormatter):
-    """A custom help formatter for OTX CLI.
+    """A custom help formatter for getitune CLI.
 
     This formatter extends the RichHelpFormatter and DefaultHelpFormatter classes to provide
-    a more detailed and customizable help output for OTX CLI.
+    a more detailed and customizable help output for getitune CLI.
 
     Attributes:
         verbosity_level : int
