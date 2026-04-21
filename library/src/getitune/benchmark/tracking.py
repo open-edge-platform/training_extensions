@@ -22,6 +22,15 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+# Number of decimals to round benchmark metrics to before logging to MLflow.
+_METRIC_DECIMALS = 4
+
+
+def _round_metric(value: float) -> float:
+    """Round a metric value to :data:`_METRIC_DECIMALS` decimals for MLflow logging."""
+    return round(float(value), _METRIC_DECIMALS)
+
+
 # ---------------------------------------------------------------------------
 # Tracking configuration
 # ---------------------------------------------------------------------------
@@ -407,9 +416,9 @@ class BenchmarkTracker:
         """
         import statistics
 
-        mlflow.log_metric("num_seeds", float(len(results)))
+        mlflow.log_metric("num_seeds", _round_metric(len(results)))
         successful = [r for r in results if r.success]
-        mlflow.log_metric("num_successful_seeds", float(len(successful)))
+        mlflow.log_metric("num_successful_seeds", _round_metric(len(successful)))
 
         primary_key = _primary_metric_key(experiment.task)
         if primary_key is None or not successful:
@@ -424,11 +433,11 @@ class BenchmarkTracker:
             return
 
         mlflow.set_tag("primary_metric_name", primary_key)
-        mlflow.log_metric("primary_metric/mean", statistics.mean(values))
-        mlflow.log_metric("primary_metric/min", min(values))
-        mlflow.log_metric("primary_metric/max", max(values))
+        mlflow.log_metric("primary_metric/mean", _round_metric(statistics.mean(values)))
+        mlflow.log_metric("primary_metric/min", _round_metric(min(values)))
+        mlflow.log_metric("primary_metric/max", _round_metric(max(values)))
         if len(values) > 1:
-            mlflow.log_metric("primary_metric/std", statistics.stdev(values))
+            mlflow.log_metric("primary_metric/std", _round_metric(statistics.stdev(values)))
 
     def log_run(
         self,
@@ -487,7 +496,7 @@ class BenchmarkTracker:
                 for k, v in all_metrics.items():
                     if not isinstance(v, (int, float)):
                         continue
-                    numeric_metrics[_rewrite_metric_key(k)] = float(v)
+                    numeric_metrics[_rewrite_metric_key(k)] = _round_metric(v)
 
                 if numeric_metrics:
                     mlflow.log_metrics(numeric_metrics)
@@ -497,7 +506,7 @@ class BenchmarkTracker:
                 if primary_key and primary_key in all_metrics:
                     value = all_metrics[primary_key]
                     if isinstance(value, (int, float)):
-                        mlflow.log_metric("primary_metric", float(value))
+                        mlflow.log_metric("primary_metric", _round_metric(value))
             elif result.error:
                 mlflow.set_tag("error", result.error[:250])
 
