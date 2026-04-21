@@ -449,15 +449,15 @@ class MSCAN:
         "segnext_tiny": {
             "depths": [3, 3, 5, 2],
             "embed_dims": [32, 64, 160, 256],
-            "pretrained_weights": "https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/segnext/mscan_t_20230227-119e8c9f.pth",
+            "pretrained_weights": "https://storage.geti.intel.com/weights/mscan_t_20230227-119e8c9f.pth",
         },
         "segnext_small": {
             "depths": [2, 2, 4, 2],
-            "pretrained_weights": "https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/segnext/mscan_s_20230227-f33ccdf2.pth",
+            "pretrained_weights": "https://storage.geti.intel.com/weights/mscan_s_20230227-f33ccdf2.pth",
         },
         "segnext_base": {
             "depths": [3, 3, 12, 3],
-            "pretrained_weights": "https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/segnext/mscan_b_20230227-3ab7d230.pth",
+            "pretrained_weights": "https://storage.geti.intel.com/weights/mscan_b_20230227-3ab7d230.pth",
         },
     }
 

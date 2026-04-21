@@ -84,3 +84,5 @@ jobs:
           RENOVATE_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.dry-run == 'true') && 'full' || null }}
           RENOVATE_PLATFORM: github
           RENOVATE_REPOSITORIES: ${{ github.repository }}
+          # Feature freeze control: set RENOVATE_AUTOMERGE_ENABLED repository variable to 'false' to disable automerge
+          RENOVATE_AUTOMERGE: ${{ vars.RENOVATE_AUTOMERGE_ENABLED != 'false' }}

@@ -69,14 +69,10 @@ class YOLOX(OTXDetectionModel):
     """
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "yolox_tiny": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/"
-        "object_detection/v2/yolox_tiny_8x8.pth",
-        "yolox_s": "https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_s_8x8_300e_coco/"
-        "yolox_s_8x8_300e_coco_20211121_095711-4592a793.pth",
-        "yolox_l": "https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_l_8x8_300e_coco/"
-        "yolox_l_8x8_300e_coco_20211126_140236-d3bd2b23.pth",
-        "yolox_x": "https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco/"
-        "yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth",
+        "yolox_tiny": "https://storage.geti.intel.com/weights/yolox_tiny_8x8.pth",
+        "yolox_s": "https://storage.geti.intel.com/weights/yolox_s_8x8_300e_coco_20211121_095711-4592a793.pth",
+        "yolox_l": "https://storage.geti.intel.com/weights/yolox_l_8x8_300e_coco_20211126_140236-d3bd2b23.pth",
+        "yolox_x": "https://storage.geti.intel.com/weights/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth",
     }
 
     input_size_multiplier = 32

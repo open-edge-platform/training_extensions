@@ -1,14 +1,20 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import fs from 'fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { expect } from '@playwright/test';
+import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedVideoFrame } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
-import { AnnotationDTO } from '../../src/constants/shared-types';
-import { http, test } from '../fixtures';
-import { candyBinaryHandler, redLabel } from './annotator-fixtures';
+import { AnnotationDTO } from '../../../src/constants/shared-types';
+import { http, test } from '../../fixtures';
+import { candyPngBuffer, redLabel } from '../annotator-fixtures';
+import { ANNOTATIONS_MOCKS, PREDICTIONS_MOCKS } from './mocks';
 
 const mockedDetectionProject = getMockedProject({
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -34,13 +40,15 @@ const mockVideoFrame = getMockedVideoFrame({
     id: 'video-1',
     name: 'video-1.mp4',
     frame_number: 0,
-    frame_count: 5,
-    frame_stride: 2,
-    fps: 2,
-    duration: 5,
+    frame_count: 3600,
+    frame_stride: 60,
+    fps: 60,
+    duration: 1000 * 60 * 60,
     width: 960,
     height: 540,
 });
+
+const totalFrames = mockVideoFrame.frame_count - 1;
 
 const videoGalleryItem = {
     ...mockVideoFrame,
@@ -53,11 +61,14 @@ type SubmittedFrameRequest = {
     annotations: AnnotationDTO[];
 };
 
+const dirname = path.dirname(fileURLToPath(import.meta.url));
+const videoFilePath = path.resolve(dirname, '../../assets/fish_60.mp4');
+
 test.describe('Annotator video player', () => {
     let frameAnnotations: Record<number, AnnotationDTO[]>;
     let submittedFrameRequests: SubmittedFrameRequest[];
 
-    test.beforeEach(async ({ page, network }) => {
+    test.beforeEach(async ({ network }) => {
         frameAnnotations = {
             0: [mockAnnotation],
             1: [],
@@ -67,20 +78,7 @@ test.describe('Annotator video player', () => {
         };
         submittedFrameRequests = [];
 
-        // Playwright tests run with mocked media: forcing a resolved play() avoids codec/browser differences.
-        await page.addInitScript(() => {
-            Object.defineProperty(HTMLMediaElement.prototype, 'play', {
-                configurable: true,
-                writable: true,
-                value: async () => Promise.resolve(),
-            });
-
-            Object.defineProperty(HTMLMediaElement.prototype, 'pause', {
-                configurable: true,
-                writable: true,
-                value: () => undefined,
-            });
-        });
+        const videoFile = fs.readFileSync(videoFilePath);
 
         network.use(
             http.get('/api/projects/{project_id}', () => {
@@ -92,7 +90,22 @@ test.describe('Annotator video player', () => {
                     pagination: { offset: 0, limit: 20, count: 1, total: 1 },
                 });
             }),
-            candyBinaryHandler,
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', ({ query }) => {
+                if (query.has('frame_index')) {
+                    return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
+                        headers: {
+                            'Content-Type': 'image/png',
+                        },
+                    });
+                }
+
+                return HttpResponse.arrayBuffer(
+                    videoFile.buffer.slice(videoFile.byteOffset, videoFile.byteOffset + videoFile.byteLength),
+                    {
+                        headers: { 'Content-Type': 'video/mp4', 'Content-Length': videoFile.byteLength.toString() },
+                    }
+                );
+            }),
             http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', ({ request }) => {
                 const frameIndex = Number(new URL(request.url).searchParams.get('frame_index') ?? '0');
 
@@ -155,50 +168,62 @@ test.describe('Annotator video player', () => {
         await videoPage.openVideoFromDataset(mockedDetectionProject.id, mockVideoFrame.name);
 
         await videoPage.expandToolbar();
-        await videoPage.expectCurrentFrame(0, 4);
+        await videoPage.expectCurrentFrame(0, totalFrames);
         expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
 
         await videoPage.nextFrame();
-        await videoPage.expectCurrentFrame(2, 4);
+        await videoPage.expectCurrentFrame(mockVideoFrame.frame_stride, totalFrames);
         expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
 
         await videoPage.previousFrame();
-        await videoPage.expectCurrentFrame(0, 4);
+        await videoPage.expectCurrentFrame(0, totalFrames);
         expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
     });
 
     test('adds annotation on video frame and submits', async ({ annotatorPage, boundingBoxTool, videoPage }) => {
         await videoPage.openVideoFromDataset(mockedDetectionProject.id, mockVideoFrame.name);
 
-        await videoPage.expandToolbar();
-        await videoPage.nextFrame();
-        await videoPage.expectCurrentFrame(2, 4);
-        expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
+        await test.step('Selects frame to annotate', async () => {
+            await videoPage.expandToolbar();
+            await videoPage.nextFrame();
+            await videoPage.expectCurrentFrame(mockVideoFrame.frame_stride, totalFrames);
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
+        });
 
-        await boundingBoxTool.selectTool();
-        await boundingBoxTool.drawBoundingBox({ x: 260, y: 140, width: 180, height: 120 });
+        await test.step('Draws an annotation on video frame', async () => {
+            await boundingBoxTool.selectTool();
+            await boundingBoxTool.drawBoundingBox({ x: 260, y: 140, width: 180, height: 120 });
 
-        expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
-        await expect(videoPage.getSubmitButton()).toBeEnabled();
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+            await expect(videoPage.getSubmitButton()).toBeEnabled();
+        });
 
-        await videoPage.getSubmitButton().click();
+        await test.step('Submits annotation on video frame', async () => {
+            await videoPage.getSubmitButton().click();
 
-        expect(submittedFrameRequests).toHaveLength(1);
-        expect(submittedFrameRequests[0].frameIndex).toBe(2);
-        expect(submittedFrameRequests[0].annotations).toHaveLength(1);
-        expect(submittedFrameRequests[0].annotations[0].shape.type).toBe('rectangle');
+            expect(submittedFrameRequests).toHaveLength(1);
+            expect(submittedFrameRequests[0].frameIndex).toBe(mockVideoFrame.frame_stride);
+            expect(submittedFrameRequests[0].annotations).toHaveLength(1);
+            expect(submittedFrameRequests[0].annotations[0].shape.type).toBe('rectangle');
+        });
+
+        await test.step('Navigates to the next frame automatically', async () => {
+            await videoPage.expectCurrentFrame(mockVideoFrame.frame_stride * 2, totalFrames);
+        });
     });
 
-    test('disables next frame button at last frame boundary', async ({ videoPage }) => {
+    test('disables next frame button at last frame boundary, disable previous frame at first frame boundary', async ({
+        videoPage,
+    }) => {
         await videoPage.openVideoFromDataset(mockedDetectionProject.id, mockVideoFrame.name);
         await videoPage.expandToolbar();
 
         await expect(videoPage.getPreviousFrameButton()).toBeDisabled();
 
-        await videoPage.nextFrame();
-        await videoPage.nextFrame();
+        const lastFrame = mockVideoFrame.frame_count - mockVideoFrame.frame_stride;
+        await videoPage.selectFrame(lastFrame);
 
-        await videoPage.expectCurrentFrame(4, 4);
+        await videoPage.expectCurrentFrame(lastFrame, totalFrames);
         await expect(videoPage.getNextFrameButton()).toBeDisabled();
         await expect(videoPage.getPreviousFrameButton()).toBeEnabled();
     });
@@ -210,15 +235,15 @@ test.describe('Annotator video player', () => {
         // In 1/1 mode, frame step follows default frame_stride/fps behavior (here, +2).
         await expect(videoPage.getFrameModeIndicator()).toHaveText('1/1');
         await videoPage.nextFrame();
-        await videoPage.expectCurrentFrame(2, 4);
+        await videoPage.expectCurrentFrame(mockVideoFrame.frame_stride, totalFrames);
         await videoPage.previousFrame();
-        await videoPage.expectCurrentFrame(0, 4);
+        await videoPage.expectCurrentFrame(0, totalFrames);
 
         // In ALL mode, frame step is 1 frame.
         await videoPage.toggleFrameMode();
         await expect(videoPage.getFrameModeIndicator()).toHaveText('ALL');
         await videoPage.nextFrame();
-        await videoPage.expectCurrentFrame(1, 4);
+        await videoPage.expectCurrentFrame(1, totalFrames);
 
         await videoPage.play();
         await expect(videoPage.getPauseButton()).toBeVisible();
@@ -230,5 +255,61 @@ test.describe('Annotator video player', () => {
 
         await videoPage.toggleFrameMode();
         await expect(videoPage.getFrameModeIndicator()).toHaveText('1/1');
+    });
+
+    test('Displays annotations and predictions in the segments below video timeline', async ({
+        videoPage,
+        annotatorPage,
+        network,
+    }) => {
+        const fishLabel = getMockedLabel({
+            id: 'a6efefed-e469-4b1c-b803-c2e21ea0597b',
+            name: 'Fish',
+            color: '#ad2323',
+        });
+
+        const mockedProject = getMockedProject({
+            id: '123e4567-e89b-12d3-a456-426614174000',
+            task: {
+                exclusive_labels: true,
+                task_type: 'instance_segmentation',
+                labels: [fishLabel],
+            },
+        });
+
+        network.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(mockedProject);
+            }),
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/frames', async () => {
+                return HttpResponse.json(ANNOTATIONS_MOCKS);
+            }),
+            http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+                return HttpResponse.json({
+                    predictions: PREDICTIONS_MOCKS,
+                });
+            })
+        );
+
+        await videoPage.openVideoFromDataset(mockedProject.id, mockVideoFrame.name);
+        await videoPage.expandToolbar();
+
+        await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
+
+        await Promise.all(
+            ANNOTATIONS_MOCKS.map(async (annotation) => {
+                await expect(videoPage.getLabelSegment(annotation.frame_index, fishLabel.name)).toBeVisible();
+            })
+        );
+
+        await annotatorPage.openPredictionMode();
+
+        await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
+
+        await Promise.all(
+            PREDICTIONS_MOCKS.map(async ({ media }) => {
+                await expect(videoPage.getLabelSegment(Number(media.frame_index), fishLabel.name)).toBeVisible();
+            })
+        );
     });
 });

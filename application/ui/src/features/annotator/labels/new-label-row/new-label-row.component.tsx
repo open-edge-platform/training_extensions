@@ -1,10 +1,10 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { FocusEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
+import { FocusEvent, KeyboardEvent, useRef, useState } from 'react';
 
-import { ActionButton, DOMRefValue, Grid, TextField, TextFieldRef, useUnwrapDOMRef, View } from '@geti/ui';
-import { Close } from '@geti/ui/icons';
+import { ActionButton, DOMRefValue, Grid, TextField, useUnwrapDOMRef, View } from '@geti/ui';
+import { Add, Close } from '@geti/ui/icons';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
 import { getRandomDistinctColor } from '../../label-utils';
@@ -20,20 +20,22 @@ type NewLabelRowProps = {
 export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps) => {
     const rowRef = useRef<DOMRefValue<HTMLDivElement>>(null);
     const rowRefUnwrapped = useUnwrapDOMRef(rowRef);
-    const inputRef = useRef<TextFieldRef<HTMLInputElement>>(null);
-    const inputRefUnwrapped = useUnwrapDOMRef(inputRef);
     const [name, setName] = useState('');
     const [color, setColor] = useState(getRandomDistinctColor);
 
-    const validationError = name.trim() === '' ? undefined : validateName(name);
+    const isEmptyName = name.trim().length === 0;
+    const validationError = isEmptyName ? undefined : validateName(name);
 
-    useEffect(() => {
-        // Focus the input when the component mounts
-        inputRefUnwrapped.current?.focus();
-    }, [inputRefUnwrapped]);
+    const canSave = (newName: string) => {
+        const trimmedName = newName.trim();
+
+        return trimmedName.length > 0 && validateName(trimmedName) === undefined;
+    };
+
+    const isCreateButtonDisabled = !canSave(name);
 
     const handleSave = () => {
-        if (name.trim() !== '' && !validationError) {
+        if (canSave(name)) {
             onSave(name.trim(), color);
         }
     };
@@ -53,9 +55,11 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
             return;
         }
 
-        if (name.trim() !== '' && !validationError) {
-            onSave(name.trim(), color);
-        } else if (name.trim() === '') {
+        const trimmedName = name.trim();
+
+        if (canSave(name)) {
+            onSave(trimmedName, color);
+        } else if (trimmedName.length === 0) {
             onCancel();
         }
     };
@@ -75,7 +79,8 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
 
             <View>
                 <TextField
-                    ref={inputRef}
+                    // eslint-disable-next-line jsx-a11y/no-autofocus
+                    autoFocus
                     aria-label={'New label name'}
                     placeholder={'Label name'}
                     value={name}
@@ -88,7 +93,14 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
                 />
             </View>
 
-            <View />
+            <ActionButton
+                isQuiet
+                aria-label={'Create new label'}
+                onPress={handleSave}
+                isDisabled={isCreateButtonDisabled}
+            >
+                <Add />
+            </ActionButton>
 
             <ActionButton
                 aria-label='Cancel new label'

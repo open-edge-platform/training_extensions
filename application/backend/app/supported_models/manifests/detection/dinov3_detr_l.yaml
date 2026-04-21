@@ -2,7 +2,8 @@ id: object-detection-dinov3-detr-l
 name: DINOv3-DETR-L
 
 pretrained_weights:
-  url: https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_l_coco.pth
+  url: https://storage.geti.intel.com/weights/deimv2_dinov3_l_coco.pth
+  mirror_url: https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_l_coco.pth
   sha_sum: 54ec9c9a0f1c16e958fde04ffebb4766061fbf5312e86f80090058c82dcfa183
 
 description: "DINOv3-DETR is an efficient end-to-end object detection transformer that leverages the DEIMv2 training framework with a DINOv3 backbone, achieving strong accuracy with fewer parameters."

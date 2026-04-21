@@ -94,4 +94,15 @@ export class VideoPage {
     async expectCurrentFrame(frame: number, totalFrames: number) {
         await expect(this.page.getByText(`Current frame: ${frame} / Total frames: ${totalFrames}`)).toBeVisible();
     }
+
+    getLabelSegment(frameNumber: number, label: string) {
+        return this.page.getByRole('gridcell', {
+            name: `Label ${label} in frame number ${frameNumber}`,
+            exact: true,
+        });
+    }
+
+    async selectFrame(frameNumber: number) {
+        await this.page.getByRole('gridcell', { name: new RegExp(`in frame number ${frameNumber}`, 'i') }).click();
+    }
 }

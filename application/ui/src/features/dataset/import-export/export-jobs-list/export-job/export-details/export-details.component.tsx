@@ -26,11 +26,19 @@ export const ExportJobDetails = ({ datasetName, metadata }: ExportJobDetailsProp
     const labelsList = isEmpty(selectedLabels) ? projectLabelsNames : selectedLabels;
 
     return (
-        <Flex direction='column' UNSAFE_style={{ fontWeight: 500, fontSize: dimensionValue('size-200') }}>
-            <Text>Export {isNil(datasetName) ? 'dataset' : datasetName}</Text>
+        <Flex direction={'column'}>
+            <Text UNSAFE_style={{ fontWeight: 500, fontSize: dimensionValue('size-225') }}>
+                Export {isNil(datasetName) ? 'dataset' : datasetName}
+            </Text>
 
-            <Grid gap='size-125' columns={['auto', '1px', 'auto', '1px', '1fr']}>
+            <Grid
+                marginTop={'size-200'}
+                alignItems={'center'}
+                gap='size-125'
+                columns={['auto', '1px', 'auto', '1px', '1fr']}
+            >
                 <Text>
+                    Format:{' '}
                     <Text
                         UNSAFE_style={{
                             textTransform: isGetiFormat(metadata.export_format) ? 'capitalize' : 'uppercase',
@@ -38,17 +46,16 @@ export const ExportJobDetails = ({ datasetName, metadata }: ExportJobDetailsProp
                     >
                         {metadata.export_format}
                     </Text>{' '}
-                    format
                 </Text>
 
                 <Divider orientation='vertical' size='S' />
 
-                <Text>{metadata.filters.include_unannotated ? 'All media' : 'Only media with annotations'}</Text>
+                <Text>Media: {metadata.filters.include_unannotated ? 'All media' : 'Only media with annotations'}</Text>
 
                 <Divider orientation='vertical' size='S' />
 
                 <Text UNSAFE_style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                    With labels: {labelsList.join(', ')}
+                    Labels: {labelsList.join(', ')}
                 </Text>
             </Grid>
         </Flex>
