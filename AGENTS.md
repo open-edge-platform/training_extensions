@@ -16,6 +16,11 @@
 - `DOCS/`: documentation and supporting repo docs.
 - `.github/workflows/`: CI source of truth for path-based checks and required jobs.
 
+## Data & State
+
+- The backend stores persistent data in `application/backend/data/`.
+- This includes the SQLite database (`geti.db`) and media artifacts (images, videos) under `projects/`.
+
 ## Choose the Right Workflow
 
 - Use the `library` workflow for changes under `library/src`, `library/tests`, or OTX model, training, export, and CLI logic.
@@ -48,7 +53,7 @@
 
 - Work from `application/ui/`.
 - Use Node `v24.2.0` and npm `>=11.3.0`.
-- Install dependencies with `npm ci`.
+- Install dependencies with `npm ci`. This also fetches the core `@geti` UI packages via a `preinstall` hook.
 - Build with `npm run build`.
 - Run formatting checks with `npm run format:check`.
 - Run lint with `npm run lint`.
