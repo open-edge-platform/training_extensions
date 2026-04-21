@@ -189,7 +189,7 @@ class TestJobControlPlaneIntegration:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "job_type, jobs_in_progress",
+        "job_type, expected_max_concurrent",
         [
             (JobType.TRAIN, 1),
             (JobType.QUANTIZE, 1),
@@ -201,7 +201,7 @@ class TestJobControlPlaneIntegration:
         ],
     )
     async def test_capacity_management_limits_concurrency(
-        self, job_type, jobs_in_progress, fxt_runnable_factory, fxt_job
+        self, job_type, expected_max_concurrent, fxt_runnable_factory, fxt_job
     ):
         """Test that capacity management properly limits concurrent execution."""
         job_queue = JobQueue()
@@ -249,8 +249,8 @@ class TestJobControlPlaneIntegration:
                 await self._wait_for_job_status(job, JobStatus.DONE, timeout=5.0)
 
             # Verify capacity was respected
-            assert max_concurrent == jobs_in_progress, (
-                f"Expected max {jobs_in_progress} concurrent job, got {max_concurrent}"
+            assert max_concurrent == expected_max_concurrent, (
+                f"Expected max {expected_max_concurrent} concurrent job, got {max_concurrent}"
             )
 
             # All jobs should complete

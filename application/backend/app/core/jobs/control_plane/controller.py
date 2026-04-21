@@ -38,7 +38,7 @@ class JobController:
     Args:
         jobs_queue: Source of jobs to execute and cancellation state tracker
         runner_factory: Creates appropriate runner contexts for different job types
-        max_parallel_jobs: Maximum number of jobs that can execute simultaneously
+        max_parallel_jobs: Maximum number of capacity-managed jobs that can execute simultaneously
     """
 
     def __init__(self, jobs_queue: JobQueue, runner_factory: RunnerFactory, max_parallel_jobs: int) -> None:
