@@ -47,6 +47,7 @@ type SecondaryToolbarProps = {
     onModeChange: (mode: AnnotatorMode) => void;
     onSelectNextMediaItem: () => void;
     subset: DatasetSubset;
+    isSubsetChanged?: boolean;
 };
 
 export const SecondaryToolbar = ({
@@ -58,6 +59,7 @@ export const SecondaryToolbar = ({
     onModeChange,
     onSelectNextMediaItem,
     subset,
+    isSubsetChanged = false,
 }: SecondaryToolbarProps) => {
     const { data: selectedProject } = useProject();
 
@@ -82,7 +84,7 @@ export const SecondaryToolbar = ({
     const isAnnotationMode = mode === 'annotation';
 
     // If annotations are not changed but subset has changed we want to allow user to submit
-    const isSubmitDisabled = !((canSubmit || subset !== 'unassigned') && !isSaving);
+    const isSubmitDisabled = !((canSubmit || isSubsetChanged) && !isSaving);
 
     return (
         <Flex

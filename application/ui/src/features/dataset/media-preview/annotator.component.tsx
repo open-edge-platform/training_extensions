@@ -104,6 +104,7 @@ const Annotator = ({
                     onModeChange={onChangeAnnotatorMode}
                     onSelectNextMediaItem={selectNextMediaItem}
                     subset={currentSubset}
+                    isSubsetChanged={currentSubset !== subset}
                 />
             </View>
 
