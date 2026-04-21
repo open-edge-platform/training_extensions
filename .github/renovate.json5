@@ -20,7 +20,8 @@
   lockFileMaintenance: {
     enabled: true,
     schedule: ["* * * * 0"], // weekly on Sunday
-    automerge: true,
+    // `automerge` is not set here
+    // controlled via RENOVATE_AUTOMERGE env variable
     automergeType: "pr",
     reviewers: ["sys-geti"],
     platformAutomerge: true,
@@ -70,7 +71,8 @@
       groupName: "Pin images",
       groupSlug: "pin-images",
       schedule: ["* * * * 6"], // weekly on Saturday
-      automerge: true,
+      // `automerge` is not set here
+      // controlled via RENOVATE_AUTOMERGE env variable
       automergeType: "pr",
       reviewers: ["sys-geti"],
       platformAutomerge: true,
