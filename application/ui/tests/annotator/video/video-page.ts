@@ -3,6 +3,8 @@
 
 import { expect, Locator, Page } from '@playwright/test';
 
+// Copyright (C) 2025-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 export class VideoPage {
     constructor(private readonly page: Page) {}
 
@@ -93,5 +95,9 @@ export class VideoPage {
 
     async expectCurrentFrame(frame: number, totalFrames: number) {
         await expect(this.page.getByText(`Current frame: ${frame} / Total frames: ${totalFrames}`)).toBeVisible();
+    }
+
+    async selectFrame(frame: number) {
+        await this.page.getByRole('gridcell', { name: new RegExp(`in frame number ${frame}`, 'i') }).click();
     }
 }

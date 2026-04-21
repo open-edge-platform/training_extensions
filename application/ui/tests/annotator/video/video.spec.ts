@@ -46,6 +46,8 @@ const mockVideoFrame = getMockedVideoFrame({
     height: 540,
 });
 
+const totalFrames = mockVideoFrame.frame_count - 1;
+
 const videoGalleryItem = {
     ...mockVideoFrame,
     video_id: 'video-parent-1',
@@ -60,7 +62,7 @@ type SubmittedFrameRequest = {
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const videoFilePath = path.resolve(dirname, '../assets/fish_60.mp4');
 
-test.describe('Annotator video player', () => {
+test.describe.only('Annotator video player', () => {
     let frameAnnotations: Record<number, AnnotationDTO[]>;
     let submittedFrameRequests: SubmittedFrameRequest[];
 
@@ -140,7 +142,7 @@ test.describe('Annotator video player', () => {
         );
     });
 
-    test('loads video controls and timeline for a video item', async ({ videoPage, page }) => {
+    test('loads video controls and timeline for a video item', async ({ videoPage }) => {
         await videoPage.openVideoFromDataset(mockedDetectionProject.id, mockVideoFrame.name);
 
         await expect(videoPage.getPlayButton()).toBeVisible();
@@ -164,50 +166,64 @@ test.describe('Annotator video player', () => {
         await videoPage.openVideoFromDataset(mockedDetectionProject.id, mockVideoFrame.name);
 
         await videoPage.expandToolbar();
-        await videoPage.expectCurrentFrame(0, 4);
+        await videoPage.expectCurrentFrame(0, totalFrames);
         expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
 
         await videoPage.nextFrame();
-        await videoPage.expectCurrentFrame(2, 4);
+        await videoPage.expectCurrentFrame(mockVideoFrame.frame_stride, totalFrames);
         expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
 
         await videoPage.previousFrame();
-        await videoPage.expectCurrentFrame(0, 4);
+        await videoPage.expectCurrentFrame(0, totalFrames);
         expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
     });
 
     test('adds annotation on video frame and submits', async ({ annotatorPage, boundingBoxTool, videoPage }) => {
-        await videoPage.openVideoFromDataset(mockedDetectionProject.id, mockVideoFrame.name);
+        await test.step('Opens annotator', async () => {
+            await videoPage.openVideoFromDataset(mockedDetectionProject.id, mockVideoFrame.name);
+        });
 
-        await videoPage.expandToolbar();
-        await videoPage.nextFrame();
-        await videoPage.expectCurrentFrame(2, 4);
-        expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
+        await test.step('Selects frame to annotate', async () => {
+            await videoPage.expandToolbar();
+            await videoPage.nextFrame();
+            await videoPage.expectCurrentFrame(mockVideoFrame.frame_stride, totalFrames);
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
+        });
 
-        await boundingBoxTool.selectTool();
-        await boundingBoxTool.drawBoundingBox({ x: 260, y: 140, width: 180, height: 120 });
+        await test.step('Draws an annotation on video frame', async () => {
+            await boundingBoxTool.selectTool();
+            await boundingBoxTool.drawBoundingBox({ x: 260, y: 140, width: 180, height: 120 });
 
-        expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
-        await expect(videoPage.getSubmitButton()).toBeEnabled();
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+            await expect(videoPage.getSubmitButton()).toBeEnabled();
+        });
 
-        await videoPage.getSubmitButton().click();
+        await test.step('Submits annotation on video frame', async () => {
+            await videoPage.getSubmitButton().click();
 
-        expect(submittedFrameRequests).toHaveLength(1);
-        expect(submittedFrameRequests[0].frameIndex).toBe(2);
-        expect(submittedFrameRequests[0].annotations).toHaveLength(1);
-        expect(submittedFrameRequests[0].annotations[0].shape.type).toBe('rectangle');
+            expect(submittedFrameRequests).toHaveLength(1);
+            expect(submittedFrameRequests[0].frameIndex).toBe(mockVideoFrame.frame_stride);
+            expect(submittedFrameRequests[0].annotations).toHaveLength(1);
+            expect(submittedFrameRequests[0].annotations[0].shape.type).toBe('rectangle');
+        });
+
+        await test.step('Navigates to the next frame automatically', async () => {
+            await videoPage.expectCurrentFrame(mockVideoFrame.frame_stride * 2, totalFrames);
+        });
     });
 
-    test('disables next frame button at last frame boundary', async ({ videoPage }) => {
+    test('disables next frame button at last frame boundary, disable previous frame at first frame boundary', async ({
+        videoPage,
+    }) => {
         await videoPage.openVideoFromDataset(mockedDetectionProject.id, mockVideoFrame.name);
         await videoPage.expandToolbar();
 
         await expect(videoPage.getPreviousFrameButton()).toBeDisabled();
 
-        await videoPage.nextFrame();
-        await videoPage.nextFrame();
+        const lastFrame = mockVideoFrame.frame_count - mockVideoFrame.frame_stride;
+        await videoPage.selectFrame(lastFrame);
 
-        await videoPage.expectCurrentFrame(4, 4);
+        await videoPage.expectCurrentFrame(lastFrame, totalFrames);
         await expect(videoPage.getNextFrameButton()).toBeDisabled();
         await expect(videoPage.getPreviousFrameButton()).toBeEnabled();
     });
@@ -219,15 +235,15 @@ test.describe('Annotator video player', () => {
         // In 1/1 mode, frame step follows default frame_stride/fps behavior (here, +2).
         await expect(videoPage.getFrameModeIndicator()).toHaveText('1/1');
         await videoPage.nextFrame();
-        await videoPage.expectCurrentFrame(2, 4);
+        await videoPage.expectCurrentFrame(mockVideoFrame.frame_stride, totalFrames);
         await videoPage.previousFrame();
-        await videoPage.expectCurrentFrame(0, 4);
+        await videoPage.expectCurrentFrame(0, totalFrames);
 
         // In ALL mode, frame step is 1 frame.
         await videoPage.toggleFrameMode();
         await expect(videoPage.getFrameModeIndicator()).toHaveText('ALL');
         await videoPage.nextFrame();
-        await videoPage.expectCurrentFrame(1, 4);
+        await videoPage.expectCurrentFrame(1, totalFrames);
 
         await videoPage.play();
         await expect(videoPage.getPauseButton()).toBeVisible();
