@@ -32,6 +32,11 @@ RUN echo "0 19 * * * find /tmp/* -mtime +1 -exec rm -rf {} \;" >> ./cron_clean_t
     useradd -l -r -m validation -g ${gid} -u ${uid} && \
     echo "${gid}:${uid}"
 
+COPY SectigoPublicServerAuthenticationCAOVR36-base64.crt /usr/local/share/ca-certificates/
+COPY SectigoPublicServerAuthenticationRootR46-base64.crt /usr/local/share/ca-certificates/
+COPY SectigoRSAOrganizationValidationSecureServerCA-base64.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates --fresh
+
 USER validation
 
 WORKDIR /home/validation
@@ -45,7 +50,7 @@ FROM python_base_cuda as getitune_development_env
 
 RUN mkdir actions-runner
 WORKDIR /home/validation/actions-runner
-ARG ACTIONS_RUNNER_VER=2.327.1
+ARG ACTIONS_RUNNER_VER=2.333.1
 # download actions-runner and extract it
 RUN curl -o actions-runner-linux-x64.tar.gz -L https://github.com/actions/runner/releases/download/v${ACTIONS_RUNNER_VER}/actions-runner-linux-x64-${ACTIONS_RUNNER_VER}.tar.gz && \
     tar xzf ./actions-runner-linux-x64.tar.gz && \
