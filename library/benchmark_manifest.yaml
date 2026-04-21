@@ -10,7 +10,7 @@ version: 1
 defaults:
   num_seeds: 3
   eval_upto: optimize
-  deterministic: true
+  deterministic: false # Setting to true is extremely slow for certain models, ~50x longer for MaskRCNN
   rotation:
     extended_groups: 4
 
