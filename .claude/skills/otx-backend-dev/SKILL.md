@@ -17,7 +17,7 @@ description: Develop and validate changes in `application/backend/` for the Fast
 1. Keep the change inside the existing backend boundaries unless the task explicitly crosses into `library/` or `application/ui/`.
 2. Keep routers thin and move business logic into services or repositories that match the existing package structure.
 3. Generate a fresh OpenAPI spec when router or schema changes affect the API contract.
-4. Use the OpenAPI sync skill after backend contract changes so the UI types stay aligned.
+4. Hand off to the $otx-openapi-sync skill after backend contract changes so the UI types stay aligned.
 
 ## Architecture Reminders
 
@@ -37,5 +37,4 @@ description: Develop and validate changes in `application/backend/` for the Fast
 ## Coordination Notes
 
 - `application/backend` depends on the local editable `../../library`. Validate `library/` too when shared OTX behavior changes.
-- Hand off to `$otx-openapi-sync` after API contract changes that the UI consumes.
 - Prefer project `just` targets over custom shell commands so local work matches CI.
