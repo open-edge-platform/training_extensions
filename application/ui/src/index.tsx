@@ -5,9 +5,12 @@ import React from 'react';
 
 import ReactDOM from 'react-dom/client';
 
+import { setupStorageCleanup } from './platform/storage-cleanup';
 import { Providers } from './providers';
 
 import './index.css';
+
+setupStorageCleanup();
 
 const rootEl = document.getElementById('root');
 if (rootEl) {

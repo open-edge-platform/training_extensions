@@ -1,13 +1,13 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Flex, Text, View } from '@geti/ui';
+import { Button, Divider, Flex, Text, View } from '@geti/ui';
 import { useDeleteStagedDataset, useStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { isNil } from 'lodash-es';
 
 import { API_BASE_URL } from '../../../../../../api/client';
 import { ExportDatasetJob } from '../../../../../../constants/shared-types';
-import { useExportDataset } from '../../../../../../hooks/localStorage/use-export-dataset.hook';
+import { useExportDataset } from '../../../../../../hooks/storage/use-export-dataset.hook';
 import { downloadFile } from '../../../../../../shared/util';
 import { ExportJobDetails } from '../export-details/export-details.component';
 
@@ -67,7 +67,9 @@ export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps
                 </Flex>
             </Flex>
 
-            <Text>Dataset is ready to download</Text>
+            <Divider size={'S'} marginY={'size-150'} />
+
+            <Text>Dataset is ready for download</Text>
         </View>
     );
 };

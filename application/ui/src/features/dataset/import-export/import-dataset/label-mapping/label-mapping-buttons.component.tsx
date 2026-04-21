@@ -3,7 +3,7 @@
 
 import { Button, ButtonGroup } from '@geti/ui';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
-import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
+import { useImportDatasetToProject } from 'hooks/storage/use-import-dataset-to-project.hook';
 
 import { IMPORT_DATASET_FORM_ID } from './util';
 

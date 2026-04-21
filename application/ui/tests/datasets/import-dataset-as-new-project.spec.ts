@@ -32,7 +32,7 @@ const uploadAndWaitForPreparation = async (importDatasetPage: ImportDatasetPage)
 
 const selectTaskTypeAndProceed = async (importDatasetPage: ImportDatasetPage) => {
     const dialog = importDatasetPage.getDialog();
-    await expect(dialog.getByRole('button', { name: 'Detection (Recommended) Task' })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Object detection (Recommended) Task' })).toBeVisible();
     await dialog.getByRole('button', { name: 'Next' }).click();
 };
 

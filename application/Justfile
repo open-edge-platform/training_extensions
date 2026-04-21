@@ -71,6 +71,7 @@ build-image accelerator="cpu" tag="latest": install-uv
 run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-name="" detach="false" remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="":
     #!/usr/bin/env bash
     set -euo pipefail
+    shopt -s nullglob
 
     IMAGE_NAME="{{ application-name }}-{{ accelerator }}:{{ tag }}"
     if [[ -n "{{ container-name }}" ]]; then

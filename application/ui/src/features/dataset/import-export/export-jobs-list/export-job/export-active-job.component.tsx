@@ -3,7 +3,7 @@
 
 import { Divider, Flex, Loading, Text, View } from '@geti/ui';
 import { getJobProgress, isJobRunning } from 'hooks/api/util';
-import { useExportDataset } from 'hooks/localStorage/use-export-dataset.hook';
+import { useExportDataset } from 'hooks/storage/use-export-dataset.hook';
 
 import { ExportDatasetJob } from '../../../../../constants/shared-types';
 import { BottomProgressBar } from '../../../../models/model-listing/current-model-running/bottom-progress-bar.component';
@@ -33,7 +33,7 @@ export const ExportActiveJob = ({ job, datasetName }: ExportActiveJobProps) => {
                     <CancelJobConfirmation jobId={job.job_id} onRemove={handleRemove} />
                 </Flex>
 
-                <Text>Dataset is being processed in order to export it</Text>
+                <Text>Processing dataset for export</Text>
 
                 <Divider size='S' marginY='size-150' />
 

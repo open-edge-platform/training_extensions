@@ -15,7 +15,7 @@ import { ExportFailedJob } from './export-failed-job.component';
 
 const mockedRemoveLsExportId = vi.fn();
 
-vi.mock('../../../../../../hooks/localStorage/use-export-dataset.hook', () => ({
+vi.mock('../../../../../../hooks/storage/use-export-dataset.hook', () => ({
     useExportDataset: () => ({
         removeLsExportId: mockedRemoveLsExportId,
         getLsExportIds: vi.fn(() => []),

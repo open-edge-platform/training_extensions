@@ -70,7 +70,7 @@ export type DatasetRevisionItem = components['schemas']['DatasetRevisionItemView
 
 export type Project = components['schemas']['ProjectView'];
 
-export type TaskType = 'detection' | 'instance_segmentation' | 'classification';
+export type TaskType = components['schemas']['TaskType'];
 export type Task = components['schemas']['TaskView'];
 
 export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfigView'];
@@ -141,3 +141,4 @@ export type TrainingConfigurationRequestPayload = {
 
 export type Pagination = components['schemas']['Pagination'];
 export type MediaWithPagination = components['schemas']['MediaWithPagination'];
+export type DatasetFormat = components['schemas']['DatasetFormat'];

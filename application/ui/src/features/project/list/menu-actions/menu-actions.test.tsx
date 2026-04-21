@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, screen } from '@testing-library/react';
@@ -12,7 +12,14 @@ describe('MenuActions', () => {
     const actionButtonStyle = {};
 
     it('opens edit dialog when rename menu item is clicked', async () => {
-        render(<MenuActions projectId={projectId} projectName={projectName} actionButtonStyle={actionButtonStyle} />);
+        render(
+            <MenuActions
+                projectId={projectId}
+                projectName={projectName}
+                actionButtonStyle={actionButtonStyle}
+                projectNames={[]}
+            />
+        );
 
         fireEvent.click(screen.getByLabelText(/open project options/i));
         fireEvent.click(await screen.findByText('Rename'));
@@ -23,7 +30,14 @@ describe('MenuActions', () => {
     });
 
     it('opens delete confirmation dialog when delete menu item is clicked', async () => {
-        render(<MenuActions projectId={projectId} projectName={projectName} actionButtonStyle={actionButtonStyle} />);
+        render(
+            <MenuActions
+                projectId={projectId}
+                projectName={projectName}
+                actionButtonStyle={actionButtonStyle}
+                projectNames={[]}
+            />
+        );
 
         fireEvent.click(screen.getByLabelText(/open project options/i));
         fireEvent.click(await screen.findByText('Delete'));
@@ -38,6 +52,7 @@ describe('MenuActions', () => {
                 projectName={projectName}
                 actionButtonStyle={actionButtonStyle}
                 isPipelineRunning={false}
+                projectNames={[]}
             />
         );
 

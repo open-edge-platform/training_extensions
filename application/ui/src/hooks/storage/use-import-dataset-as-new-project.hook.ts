@@ -11,8 +11,10 @@ export type DatasetImportAsNewProjectState = DatasetImportState<ImportDatasetAsN
     filters?: { labels: string[]; include_unannotated: boolean };
 };
 
+export const IMPORT_DATASET_AS_NEW_PROJECT_KEY = 'import-dataset-as-new-project';
+
 export const useImportDatasetAsNewProject = () => {
     return useDatasetImportStorage<ImportDatasetAsNewProjectState, DatasetImportAsNewProjectState>(
-        'import-dataset-as-new-project'
+        IMPORT_DATASET_AS_NEW_PROJECT_KEY
     );
 };

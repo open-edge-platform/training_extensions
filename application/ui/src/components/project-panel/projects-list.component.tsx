@@ -4,15 +4,13 @@
 import { Project } from '../../constants/shared-types';
 import { ProjectListItem } from './project-list-item/project-list-item.component';
 
-import classes from './projects-list.module.scss';
-
 type ProjectListProps = {
     projects: Project[];
 };
 
 export const ProjectsList = ({ projects }: ProjectListProps) => {
     return (
-        <ul className={classes.projectList}>
+        <ul>
             {projects.map((project) => (
                 <ProjectListItem key={project.id} project={project} />
             ))}
