@@ -48,7 +48,10 @@ describe('ExportJobDetails', () => {
 
         renderApp(metadata);
 
-        expect(await screen.findByText(/With labels: label 1, label 2, label 3/)).toBeVisible();
+        expect(await screen.findByText('Labels:')).toBeVisible();
+        expect(screen.getByText('label 1')).toBeVisible();
+        expect(screen.getByText('label 2')).toBeVisible();
+        expect(screen.getByText('label 3')).toBeVisible();
     });
 
     it('displays selected labels when specific labels are filtered', async () => {
@@ -64,7 +67,10 @@ describe('ExportJobDetails', () => {
 
         renderApp(metadata);
 
-        expect(await screen.findByText(/With labels: label 1, label 2/)).toBeVisible();
+        expect(await screen.findByText('Labels:')).toBeVisible();
+        expect(screen.getByText('label 1')).toBeVisible();
+        expect(screen.getByText('label 2')).toBeVisible();
+        expect(screen.queryByText('label 3')).not.toBeInTheDocument();
     });
 
     it('filters out labels that are not in the project', async () => {
@@ -80,8 +86,8 @@ describe('ExportJobDetails', () => {
 
         renderApp(metadata);
 
-        expect(await screen.findByText(/With labels: label 1/)).toBeVisible();
-        expect(screen.queryByText(/NonExistentLabel/)).not.toBeInTheDocument();
+        expect(await screen.findByText('label 1')).toBeVisible();
+        expect(screen.queryByText('NonExistentLabel')).not.toBeInTheDocument();
     });
 
     it('displays "Only media with annotations" when include_unannotated is false', async () => {
@@ -94,7 +100,7 @@ describe('ExportJobDetails', () => {
 
         renderApp(metadata);
 
-        expect(await screen.findByText('Only media with annotations')).toBeVisible();
+        expect(await screen.findByText(/Only media with annotations/)).toBeVisible();
     });
 
     it('does not display "Only media with annotations" when include_unannotated is true', async () => {
@@ -109,6 +115,6 @@ describe('ExportJobDetails', () => {
 
         await screen.findByText('COCO');
 
-        expect(await screen.findByText('All media')).toBeVisible();
+        expect(await screen.findByText(/All media/)).toBeVisible();
     });
 });

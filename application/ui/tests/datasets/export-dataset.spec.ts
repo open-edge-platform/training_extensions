@@ -119,9 +119,10 @@ test.describe('Export dataset', () => {
 
         await test.step('Verify export job progress', async () => {
             await expect(dialog).toBeHidden();
-            await expect(
-                page.getByText(`With labels: ${projectLabels.map((label) => label.name).join(', ')}`)
-            ).toBeVisible();
+            await expect(page.getByText('Labels:')).toBeVisible();
+            for (const label of projectLabels) {
+                await expect(page.getByText(label.name, { exact: true })).toBeVisible();
+            }
             await expect(page.getByText(String(exportingJob.message))).toBeVisible();
         });
 
