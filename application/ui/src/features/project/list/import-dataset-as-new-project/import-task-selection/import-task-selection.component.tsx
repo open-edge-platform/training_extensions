@@ -10,6 +10,7 @@ import { useStagedDatasetSuspense } from 'hooks/api/staged-dataset.hook';
 import { useImportDatasetAsNewProject } from 'hooks/storage/use-import-dataset-as-new-project.hook';
 
 import { TaskType } from '../../../../../constants/shared-types';
+import { generateUniqueProjectName } from '../../../create/utils';
 import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
 import { validateProjectName } from '../../../validator';
 import { getRecommendedTaskType, TASK_SELECTION_FORM_ID } from './util';
@@ -24,8 +25,10 @@ const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType | unde
     const { getImportEntry, updateImportEntry } = useImportDatasetAsNewProject();
     const importEntry = getImportEntry(stagedDatasetId);
 
+    const uniqueProjectName = generateUniqueProjectName(projects.map((project) => project.name));
+
     const initialFormState = {
-        name: importEntry?.project?.name ?? `Project #${projects.length + 1}`,
+        name: importEntry?.project?.name ?? uniqueProjectName,
         task_type: importEntry?.project?.task_type ?? defaultTaskType,
     };
 
