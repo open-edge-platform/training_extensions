@@ -48,11 +48,11 @@ class DFine(RTDETR):
     """
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "dfine_hgnetv2_n": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_n_coco.pth",
-        "dfine_hgnetv2_s": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_s_coco.pth",
-        "dfine_hgnetv2_m": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_m_coco.pth",
-        "dfine_hgnetv2_l": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_l_coco.pth",
-        "dfine_hgnetv2_x": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_x_coco.pth",
+        "dfine_hgnetv2_n": "https://storage.geti.intel.com/weights/dfine_n_coco.pth",
+        "dfine_hgnetv2_s": "https://storage.geti.intel.com/weights/dfine_s_coco.pth",
+        "dfine_hgnetv2_m": "https://storage.geti.intel.com/weights/dfine_m_coco.pth",
+        "dfine_hgnetv2_l": "https://storage.geti.intel.com/weights/dfine_l_coco.pth",
+        "dfine_hgnetv2_x": "https://storage.geti.intel.com/weights/dfine_x_coco.pth",
     }
 
     input_size_multiplier = 32

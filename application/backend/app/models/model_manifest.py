@@ -96,6 +96,7 @@ class PretrainedWeights(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     url: str = Field(title="Weights URL", description="URL to download the pretrained weights")
+    mirror_url: str = Field(title="Weights mirror URL", description="Alternative URL to download the weights")
     sha_sum: str = Field(title="Weights SHA256", description="SHA256 checksum of the pretrained weights file")
 
 

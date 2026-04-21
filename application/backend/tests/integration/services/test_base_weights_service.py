@@ -38,10 +38,7 @@ class TestBaseWeightsService:
         result = fxt_base_weights_service.get_remote_weights_path(
             task=TaskType.DETECTION, model_manifest_id=DETECTION_MODEL_MANIFEST_ID
         )
-        assert (
-            result
-            == "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/object_detection/v2/mobilenet_v2-2s_ssd-992x736.pth"
-        )
+        assert result == "https://storage.geti.intel.com/weights/mobilenet_v2-2s_ssd-992x736.pth"
 
     def test_get_remote_weights_path_model_not_found(self, fxt_base_weights_service):
         """Test error when model manifest is not found."""
