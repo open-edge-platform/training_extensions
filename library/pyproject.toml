@@ -36,7 +36,6 @@ dependencies = [
     "rich_argparse==1.7.0", # CLI help-formatter
     "einops==0.8.1",
     "typeguard>=4.3,<4.5",
-    "setuptools==78.1.1",
     "lightning==2.6.0",
     "torchmetrics==1.8.2",
     "pytorchcv==0.0.74",
@@ -87,7 +86,6 @@ lint = [
     "types-Deprecated",
     "types-docutils",
     "types_futures",
-    "types-setuptools",
     "types-python-dateutil",
     "tokenize-rt==3.2.0",
     "pyrefly~=0.51.0",
