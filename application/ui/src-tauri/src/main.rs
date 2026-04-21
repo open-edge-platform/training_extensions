@@ -17,21 +17,48 @@ fn backend_filename() -> &'static str {
     }
 }
 
-/// Spawns the side-car in the same folder as this executable.
+/// Spawns the side-car backend.
+///
+/// In **release** builds, Tauri bundles `geti-backend` and its `_internal/` into
+/// the `.app` so we just launch the binary that sits next to the Tauri exe.
+///
+/// In **debug** (i.e. `tauri dev`) builds, Tauri stages `geti-backend` into
+/// `target/<profile>/` but does **not** copy the `_internal/` directory. Trying
+/// to symlink `_internal` next to the staged binary creates a path loop
+/// (`target/debug/_internal -> src-tauri/_internal -> backend/dist/...`) that
+/// causes Tauri's resource staging to truncate every dist file to 0 bytes via
+/// `fs::copy(src, dest)` where `src` and `dest` resolve to the same inode.
+/// To avoid this we launch the original PyInstaller binary directly from
+/// `backend/dist/geti-backend/` where `_internal/` already sits next to it.
+/// Spawns the side-car backend from the same folder as the Tauri executable.
+///
+/// Tauri stages `geti-backend` (from `externalBin`) and `_internal/` (from
+/// `resources`) next to its own binary in both dev (`target/<profile>/`) and
+/// release (the `.app` bundle), so PyInstaller's frozen layout works in both
+/// modes without any extra path juggling.
 fn spawn_backend() -> std::io::Result<Child> {
-    // Locate the Tauri executable, then its parent folder
     let exe_path = env::current_exe().expect("failed to get current exe path");
     let exe_dir = exe_path
         .parent()
         .expect("failed to get parent directory of exe");
-
-    // Build the full path to geti-backend.exe
-    // Tauri build will have renamed the suffixed file to plain name next to the exe.
     let backend_path = exe_dir.join(backend_filename());
 
     log::info!("▶ Looking for backend side-car at {:?}", backend_path);
     let mut command = Command::new(&backend_path);
-    command.env("CORS_ORIGINS", "http://tauri.localhost");
+    // The Tauri 2 webview loads the UI from `tauri://localhost` on macOS/Linux
+    // and `https://tauri.localhost` on Windows (Edge WebView2). Both must be
+    // in the backend's CORS allowlist or every fetch from the UI is rejected.
+    // Only set a default — let the user override via the inherited environment.
+    if env::var_os("CORS_ORIGINS").is_none() {
+        // In `tauri dev` the webview loads the UI from the rsbuild dev server
+        // at http://localhost:3000 (see tauri.conf.json `devUrl`), so that
+        // origin must also be allowed or every fetch is blocked by CORS.
+        #[cfg(debug_assertions)]
+        let origins = "tauri://localhost,https://tauri.localhost,http://localhost:3000";
+        #[cfg(not(debug_assertions))]
+        let origins = "tauri://localhost,https://tauri.localhost";
+        command.env("CORS_ORIGINS", origins);
+    }
     #[cfg(all(windows, not(debug_assertions)))]
     {
         use std::os::windows::process::CommandExt;
