@@ -7,7 +7,7 @@ import { isNil } from 'lodash-es';
 
 import { API_BASE_URL } from '../../../../../../api/client';
 import { ExportDatasetJob } from '../../../../../../constants/shared-types';
-import { useExportDataset } from '../../../../../../hooks/localStorage/use-export-dataset.hook';
+import { useExportDataset } from '../../../../../../hooks/storage/use-export-dataset.hook';
 import { downloadFile } from '../../../../../../shared/util';
 import { ExportJobDetails } from '../export-details/export-details.component';
 

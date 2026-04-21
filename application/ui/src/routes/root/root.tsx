@@ -11,10 +11,13 @@ import { License } from '../../features/license/license.component';
 import { ServerErrorFallback } from './server-error-fallback.component';
 
 const REFETCH_INTERVAL = 5000;
+const RETRY_DELAY = 5000;
+const MAX_RETRIES = 5;
 
 const HealthCheck = ({ children }: { children: ReactNode }) => {
     const { data, isPending, isError } = $api.useQuery('get', '/health', undefined, {
-        retry: 2,
+        retry: MAX_RETRIES,
+        retryDelay: RETRY_DELAY,
         refetchInterval: (query) => {
             return query.state.data?.status === 'ok' ? false : REFETCH_INTERVAL;
         },
