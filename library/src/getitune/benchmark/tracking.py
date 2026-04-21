@@ -357,7 +357,7 @@ class BenchmarkTracker:
         for closing it (use it as a context manager).
         """
         run_name = self._build_parent_run_name(
-            model=experiment.model.name,
+            model=experiment.model.display_name,
             dataset=experiment.dataset_name,
             scenario=experiment.scenario.name,
         )
@@ -365,7 +365,7 @@ class BenchmarkTracker:
             run_name=run_name,
             tags={
                 "task": experiment.task,
-                "model": experiment.model.name,
+                "model": experiment.model.display_name,
                 "dataset": experiment.dataset_name,
                 "scenario": experiment.scenario.name,
                 "run_type": "rollup",
