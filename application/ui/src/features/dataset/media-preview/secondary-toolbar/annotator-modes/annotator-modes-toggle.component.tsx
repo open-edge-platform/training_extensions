@@ -27,9 +27,11 @@ const ToggleButton = ({ children, mode, selectedMode, onClick }: ToggleButtonPro
 type AnnotatorModes = {
     mode: AnnotatorMode;
     onModeChange: (mode: AnnotatorMode) => void;
+    hasAnnotations: boolean;
+    hasPredictions: boolean;
 };
 
-export const AnnotatorModes = ({ mode, onModeChange }: AnnotatorModes) => {
+export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredictions }: AnnotatorModes) => {
     return (
         <View backgroundColor={'gray-200'} padding={'size-50'} borderRadius={'regular'}>
             <Flex

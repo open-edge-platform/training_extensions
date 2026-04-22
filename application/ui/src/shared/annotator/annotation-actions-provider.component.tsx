@@ -32,6 +32,8 @@ type AnnotationsContextValue = {
     isUserReviewed: boolean;
     isSaving: boolean;
     isReadOnlyMode: boolean;
+    initialAnnotations: Annotation[];
+    initialPredictions: Annotation[];
 };
 
 const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
@@ -227,6 +229,8 @@ export const AnnotationActionsProvider = ({
                 addAnnotationWithEmptyLabel,
                 resetAnnotations,
                 replaceAnnotations,
+                initialAnnotations,
+                initialPredictions: predictions,
 
                 // Remote
                 submitAnnotations,
