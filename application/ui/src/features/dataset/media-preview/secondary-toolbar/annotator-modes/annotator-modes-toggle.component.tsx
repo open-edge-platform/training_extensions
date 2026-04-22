@@ -1,9 +1,9 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { ReactNode } from 'react';
 
-import { Flex, View } from '@geti/ui';
+import { Flex, StatusLight, View } from '@geti/ui';
 
 import { type AnnotatorMode } from '../../../../../shared/annotator/annotator-mode';
 
@@ -32,6 +32,9 @@ type AnnotatorModes = {
 };
 
 export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredictions }: AnnotatorModes) => {
+    const showAnnotationCue = mode === 'prediction' && hasAnnotations;
+    const showPredictionCue = mode === 'annotation' && hasPredictions;
+
     return (
         <View backgroundColor={'gray-200'} padding={'size-50'} borderRadius={'regular'}>
             <Flex
@@ -41,12 +44,32 @@ export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredicti
                 alignItems={'center'}
                 data-testid={'annotator-modes-id'}
             >
-                <ToggleButton mode={'annotation'} selectedMode={mode} onClick={() => onModeChange('annotation')}>
-                    Annotation
-                </ToggleButton>
-                <ToggleButton mode={'prediction'} selectedMode={mode} onClick={() => onModeChange('prediction')}>
-                    Prediction
-                </ToggleButton>
+                <span className={styles.buttonWrapper}>
+                    <ToggleButton mode={'annotation'} selectedMode={mode} onClick={() => onModeChange('annotation')}>
+                        Annotation
+                    </ToggleButton>
+                    {showAnnotationCue && (
+                        <StatusLight
+                            variant={'info'}
+                            role={'status'}
+                            aria-label={'Annotation available'}
+                            UNSAFE_className={styles.availabilityCue}
+                        />
+                    )}
+                </span>
+                <span className={styles.buttonWrapper}>
+                    <ToggleButton mode={'prediction'} selectedMode={mode} onClick={() => onModeChange('prediction')}>
+                        Prediction
+                    </ToggleButton>
+                    {showPredictionCue && (
+                        <StatusLight
+                            variant={'info'}
+                            role={'status'}
+                            aria-label={'Prediction available'}
+                            UNSAFE_className={styles.availabilityCue}
+                        />
+                    )}
+                </span>
             </Flex>
         </View>
     );

@@ -15,3 +15,29 @@
         color: var(--energy-blue);
     }
 }
+
+.buttonWrapper {
+    position: relative;
+    display: inline-flex;
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.4);
+    }
+}
+
+.availabilityCue {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    animation: pulse 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
