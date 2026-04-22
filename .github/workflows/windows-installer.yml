@@ -98,7 +98,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.checkout_sha || github.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.checkout_sha || github.sha }}
           persist-credentials: false
 
       # Install and setup build tools
