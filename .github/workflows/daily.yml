@@ -62,7 +62,9 @@ jobs:
       build_version: ${{ needs.get-version.outputs.version }}
       device: cpu
       checkout_sha: ${{ github.sha }}
-    secrets: inherit
+    secrets:
+      MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
+      MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
     permissions:
       contents: read
 
