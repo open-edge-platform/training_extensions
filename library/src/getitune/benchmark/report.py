@@ -110,6 +110,7 @@ class FailureRecord:
     scenario: str
     seed: int
     error: str
+    traceback: str | None = None
 
 
 @dataclass
@@ -343,6 +344,7 @@ def build_report(
             scenario=f.scenario,
             seed=f.seed,
             error=f.error or "Unknown error",
+            traceback=getattr(f, "traceback", None),
         )
         for f in failures
     ]
@@ -495,22 +497,40 @@ def generate_markdown(report: BenchmarkReport) -> str:
     # that multiple seeds producing the same error are shown as a single row.
     if report.failures:
         seen: set[tuple[str, str, str, str]] = set()
-        unique: list[tuple[str, str, str, str]] = []
+        unique: list[tuple[str, str, str, str, str | None]] = []
         for f in report.failures:
             error_short = f.error[:120].replace("|", "\\|").replace("\n", " ")
             key = (f.model, f.dataset, f.scenario, error_short)
             if key in seen:
                 continue
             seen.add(key)
-            unique.append(key)
+            unique.append((*key, f.traceback))
 
         lines.append(f"### ❌ Failures ({len(unique)})")
         lines.append("")
         lines.append("| Model | Dataset | Scenario | Error |")
         lines.append("| --- | --- | --- | --- |")
-        for model, dataset, scenario, error_short in unique:
+        for model, dataset, scenario, error_short, _tb in unique:
             lines.append(f"| {model} | {dataset} | {scenario} | {error_short} |")
         lines.append("")
+
+        # Expandable tracebacks below the table
+        any_tb = any(tb for *_, tb in unique)
+        if any_tb:
+            lines.append("#### Tracebacks")
+            lines.append("")
+            for model, dataset, scenario, _error_short, tb in unique:
+                if not tb:
+                    continue
+                lines.append(f"<details><summary><b>{model}</b> on <b>{dataset}</b> ({scenario})</summary>")
+                lines.append("")
+                lines.append("```")
+                # Guard against accidental fence-breaking content
+                lines.append(tb.rstrip().replace("```", "``\u200b`"))
+                lines.append("```")
+                lines.append("")
+                lines.append("</details>")
+                lines.append("")
 
     return "\n".join(lines)
 
@@ -635,6 +655,7 @@ def write_failures_json(failures: list[FailureRecord], output_path: Path) -> Non
             "scenario": f.scenario,
             "seed": f.seed,
             "error": f.error,
+            "traceback": f.traceback,
         }
         for f in failures
     ]

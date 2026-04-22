@@ -9,6 +9,7 @@ import json
 import logging
 import shutil
 import time
+import traceback as _traceback
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -44,6 +45,7 @@ class ExperimentResult:
     success: bool
     phases: list[PhaseResult] = field(default_factory=list)
     error: str | None = None
+    traceback: str | None = None
 
     def all_metrics(self) -> dict[str, float]:
         """Merge metrics from all phases into a single dict."""
@@ -68,6 +70,7 @@ class ExperimentResult:
         exc: BaseException,
     ) -> ExperimentResult:
         """Construct a failed result from an exception."""
+        tb_str = "".join(_traceback.format_exception(type(exc), exc, exc.__traceback__))
         return cls(
             task=task,
             model=model,
@@ -77,6 +80,7 @@ class ExperimentResult:
             success=False,
             phases=[],
             error=f"{type(exc).__name__}: {exc}",
+            traceback=tb_str,
         )
 
 
