@@ -582,10 +582,11 @@ class LightningEngine(Engine):
 
         self.model.explain_mode = explain
 
-        # Temporarily disable in-graph NMS for detection models if requested
-        orig_export_nms = getattr(self.model, "export_nms", True)
-        if export_without_nms and hasattr(self.model, "export_nms"):
-            object.__setattr__(self.model, "export_nms", False)
+        # Temporarily disable in-graph NMS for detection models if requested.
+        # Only detection models define export_nms; other model types are unaffected.
+        orig_export_nms = getattr(self.model, "export_nms", None)
+        if export_without_nms and orig_export_nms is not None:
+            self.model.export_nms = False
 
         try:
             exported_model_path = self.model.export(
@@ -596,8 +597,8 @@ class LightningEngine(Engine):
             )
         finally:
             self.model.explain_mode = False
-            if hasattr(self.model, "export_nms"):
-                object.__setattr__(self.model, "export_nms", orig_export_nms)
+            if orig_export_nms is not None:
+                self.model.export_nms = orig_export_nms
         return exported_model_path
 
     def benchmark(
