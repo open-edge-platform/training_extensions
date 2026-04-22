@@ -29,7 +29,6 @@ def main():
         log.info(f"Usage: {sys.argv[0]} <path_to_model> <path_to_video_file> <device_name>(default: CPU)")
         return 1
 
-    max_num_requests = 0
     num_frames_to_load = 10
 
     video_service = VideoService()
@@ -39,7 +38,6 @@ def main():
         ie,
         str(sys.argv[1]),
         device=device_name,
-        max_num_requests=max_num_requests,
         plugin_config={"PERFORMANCE_HINT": "THROUGHPUT"},
     )
     model = Model.create_model(adapter)
@@ -49,15 +47,17 @@ def main():
     log.info(f"Video metadata: width={video_metadata.width}, height={video_metadata.height}")
     inputs = [video_service.extract_frame(video_path, index) for index in range(num_frames_to_load)]
 
+    queue_size = len(adapter.async_queue)
+
     latencies = []
     # Warm up
-    for index in range(max_num_requests):
+    for index in range(queue_size):
         model.infer_async(inputs[index], {"start_time": perf_counter()})
     model.await_all()
 
     def _on_inference_completed(inf_result: Result, userdata: dict[str, Any]) -> None:
         start_time = userdata["start_time"]
-        latency = (perf_counter() - start_time) * 1e3 / max_num_requests
+        latency = (perf_counter() - start_time) * 1e3 / queue_size
         latencies.append(latency)
 
     model.set_callback(_on_inference_completed)
