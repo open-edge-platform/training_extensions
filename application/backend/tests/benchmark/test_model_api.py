@@ -29,7 +29,7 @@ def main():
         log.info(f"Usage: {sys.argv[0]} <path_to_model> <path_to_video_file> <device_name>(default: CPU)")
         return 1
 
-    max_num_requests = 4
+    max_num_requests = 0
     num_frames_to_load = 10
 
     video_service = VideoService()
@@ -40,6 +40,7 @@ def main():
         str(sys.argv[1]),
         device=device_name,
         max_num_requests=max_num_requests,
+        plugin_config={"PERFORMANCE_HINT": "THROUGHPUT"},
     )
     model = Model.create_model(adapter)
 
