@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import os
 import struct
-import subprocess
+import subprocess  # nosec B404 — fixed-argv `codesign` invocation, no shell, no untrusted input
 import sys
 
 # Mach-O 64-bit magic number (little-endian). We only support 64-bit binaries;
@@ -49,12 +49,10 @@ LC_DATAOFF_OFFSET = 8
 LC_DATASIZE_OFFSET = 12
 
 
-# Sizes of the fixed-width fields we read with `struct.unpack_from` so we can
-# bounds-check before reading. A malformed/truncated binary must yield `None`,
-# never a `struct.error` that aborts the whole run.
-U32_SIZE = 4
-LC_HEADER_SIZE = 8  # cmd(4) + cmdsize(4)
-LC_CODE_SIGNATURE_PAYLOAD_SIZE = 8  # dataoff(4) + datasize(4)
+# Minimum size of a load-command header (cmd + cmdsize). A `cmdsize` smaller
+# than this would mean a corrupt binary that could loop forever; everything
+# else is bounds-checked implicitly via `struct.unpack_from`.
+LC_HEADER_SIZE = 8
 
 
 def _find_code_signature(data: bytes) -> tuple[int, int, int] | None:
@@ -64,29 +62,25 @@ def _find_code_signature(data: bytes) -> tuple[int, int, int] | None:
     is not a Mach-O 64 binary, has no code signature, or is truncated /
     malformed in any way that prevents safe parsing.
     """
-    if len(data) < LOAD_COMMANDS_OFFSET:
-        return None
-    (magic,) = struct.unpack_from("<I", data, MAGIC_OFFSET)
-    if magic != MH_MAGIC_64:
-        return None
-
-    (ncmds,) = struct.unpack_from("<I", data, NCMDS_OFFSET)
-    cmd_offset = LOAD_COMMANDS_OFFSET
-    for _ in range(ncmds):
-        if cmd_offset + LC_HEADER_SIZE > len(data):
+    # `struct.unpack_from` raises `struct.error` when reading past EOF, which
+    # acts as our bounds check for free. The only thing we still need to guard
+    # explicitly is `cmd_size < LC_HEADER_SIZE` — that one would loop forever.
+    try:
+        (magic,) = struct.unpack_from("<I", data, MAGIC_OFFSET)
+        if magic != MH_MAGIC_64:
             return None
-        cmd, cmdsize = struct.unpack_from("<II", data, cmd_offset)
-        # `cmdsize` < header size or one that runs past EOF means a corrupt
-        # load-command stream; bail rather than risk an infinite/wild loop.
-        if cmdsize < LC_HEADER_SIZE or cmd_offset + cmdsize > len(data):
-            return None
-        if cmd == LC_CODE_SIGNATURE:
-            payload_offset = cmd_offset + LC_DATAOFF_OFFSET
-            if payload_offset + LC_CODE_SIGNATURE_PAYLOAD_SIZE > len(data):
+        (ncmds,) = struct.unpack_from("<I", data, NCMDS_OFFSET)
+        cmd_offset = LOAD_COMMANDS_OFFSET
+        for _ in range(ncmds):
+            cmd, cmd_size = struct.unpack_from("<II", data, cmd_offset)
+            if cmd_size < LC_HEADER_SIZE:
                 return None
-            dataoff, datasize = struct.unpack_from("<II", data, payload_offset)
-            return cmd_offset, dataoff, datasize
-        cmd_offset += cmdsize
+            if cmd == LC_CODE_SIGNATURE:
+                dataoff, datasize = struct.unpack_from("<II", data, cmd_offset + LC_DATAOFF_OFFSET)
+                return cmd_offset, dataoff, datasize
+            cmd_offset += cmd_size
+    except struct.error:
+        return None
     return None
 
 
@@ -118,12 +112,21 @@ def repair(path: str) -> bool:
     return True
 
 
+# Absolute path to `codesign`. Using the absolute path keeps argv free of
+# `$PATH` lookups (silences S607) and matches the system binary that ships
+# with macOS in every supported version.
+CODESIGN_BIN = "/usr/bin/codesign"
+
+
 def codesign(path: str) -> subprocess.CompletedProcess[str]:
     """Run an ad-hoc ``codesign --force --sign -`` on the given file."""
-    return subprocess.run(
-        ["codesign", "--force", "--sign", "-", path],
+    # Fixed-argv invocation of a system binary; `path` comes from our own
+    # `os.walk` of caller-supplied roots, so there is no injection surface.
+    return subprocess.run(  # noqa: S603
+        [CODESIGN_BIN, "--force", "--sign", "-", path],
         capture_output=True,
         text=True,
+        check=False,
     )
 
 
@@ -133,6 +136,7 @@ def _is_repairable_codesign_error(stderr: str) -> bool:
 
 
 def _iter_mach_o_files(roots: list[str]):
+    """Yield every ``*.dylib`` / ``*.so`` under each existing root directory."""
     for root in roots:
         if not os.path.isdir(root):
             continue
@@ -143,6 +147,7 @@ def _iter_mach_o_files(roots: list[str]):
 
 
 def main(roots: list[str]) -> int:
+    """Walk each root, codesign every dylib/so, and repair the ones that need it."""
     if sys.platform != "darwin":
         print("Not macOS; nothing to do.")
         return 0
