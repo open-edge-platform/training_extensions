@@ -55,7 +55,7 @@ LC_DATASIZE_OFFSET = 12
 LC_HEADER_SIZE = 8
 
 
-def _find_code_signature(data: bytes) -> tuple[int, int, int] | None:
+def _find_code_signature(data: bytes | bytearray) -> tuple[int, int, int] | None:
     """Locate the LC_CODE_SIGNATURE load command in a Mach-O 64 binary.
 
     Returns ``(command_offset, dataoff, datasize)`` or ``None`` if the file
@@ -175,7 +175,7 @@ def main(roots: list[str]) -> int:
             print(f"FAILED: {path}\n  {result.stderr.strip()}", file=sys.stderr)
 
     print(f"\nfixed={fixed} failed={failed}")
-    return 1 if failed else 0
+    return 1 if failed > 0 else 0
 
 
 if __name__ == "__main__":

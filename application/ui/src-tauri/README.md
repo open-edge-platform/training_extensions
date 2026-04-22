@@ -166,7 +166,7 @@ Tauri's `externalBin` mechanism requires the executable next to
 We use **symlinks** so the side-car always reflects the latest PyInstaller
 run without copying gigabytes around.
 
-From `application/ui/src-tauri`:
+cd into `application/ui/src-tauri`, then:
 
 ```sh
 # macOS — Apple silicon (M1/M2/M3/M4)

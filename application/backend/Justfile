@@ -91,6 +91,19 @@ pyinstaller accelerator="cpu": install-uv
     uv sync --frozen --extra {{accelerator}} --extra mqtt --extra installer
     just fix-macho-signatures
     uv run pyinstaller --noconfirm geti.spec
+    just _strip-macos-quarantine
+
+# Strip the `com.apple.quarantine` xattr from the freshly built bundle so
+# Gatekeeper's full validation pass (which scans every dylib in `_internal/`,
+# ~30–90s on a clean install) only runs once instead of on every launch.
+# No-op on non-macOS.
+_strip-macos-quarantine:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "$(uname)" != "Darwin" ]]; then exit 0; fi
+    if [[ -d dist/geti-backend ]]; then
+        xattr -dr com.apple.quarantine dist/geti-backend || true
+    fi
 
 # -------------------------------------------------------------------------------------------------
 # Development server
