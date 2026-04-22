@@ -5,7 +5,7 @@ import { ActionButton, Flex } from '@geti/ui';
 import { Pause, Play, SoundOff, SoundOn, StepBackward, StepForward } from '@geti/ui/icons';
 
 import { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
-import { useIsLoadingAnyPredictions } from '../../api/use-media-predictions';
+import { useIsFetchingAnyPredictions } from '../../api/use-media-predictions';
 import { useVideoPlayer } from '../video-player-provider.component';
 
 type VideoControlsProps = {
@@ -17,7 +17,7 @@ export const VideoControls = ({ mode }: VideoControlsProps) => {
     const { isPlaying, play, pause, previousFrame, nextFrame, canSelectPreviousFrame, canSelectNextFrame } =
         videoControls;
 
-    const isLoadingPredictions = useIsLoadingAnyPredictions(videoFrame.id) && mode === 'prediction';
+    const isLoadingPredictions = useIsFetchingAnyPredictions(videoFrame.id) && mode === 'prediction';
 
     return (
         <Flex alignItems={'center'} gap={'size-100'}>

@@ -9,7 +9,7 @@ import type { DatasetSubset, Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
-import { useIsLoadingAnyPredictions } from '../../annotator/api/use-media-predictions';
+import { useIsFetchingAnyPredictions } from '../../annotator/api/use-media-predictions';
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
@@ -84,7 +84,7 @@ const Annotator = ({
 
     const { nextMediaItem } = useNextMediaPrefetch(mediaItem, items);
     const { currentSubset, changeCurrentSubset, isReadOnlySubset } = useSubset(subset, mediaItem);
-    const isLoadingPredictions = useIsLoadingAnyPredictions(mediaItem.id) && isPredictionMode;
+    const isLoadingPredictions = useIsFetchingAnyPredictions(mediaItem.id) && isPredictionMode;
 
     usePlayPauseVideoBySystem(isLoadingPredictions);
 
@@ -108,7 +108,7 @@ const Annotator = ({
                     onModeChange={onChangeAnnotatorMode}
                     onSelectNextMediaItem={selectNextMediaItem}
                     subset={currentSubset}
-                    isSubsetChanged={currentSubset !== subset}
+                    hasSubsetChanged={currentSubset !== subset}
                     isLoadingPredictions={isLoadingPredictions}
                 />
             </View>

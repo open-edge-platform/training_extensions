@@ -76,14 +76,12 @@ export const useMediaPredictions = ({
     return useQuery(mediaPredictionsQueryOptions({ projectId, modelId, mediaId, range }));
 };
 
-export const useIsLoadingAnyPredictions = (mediaId: string) => {
+export const useIsFetchingAnyPredictions = (mediaId: string) => {
     const projectId = useProjectIdentifier();
 
     const queryKey = MEDIA_PREDICTIONS_QUERY_KEY_PREFIX(projectId, mediaId);
 
-    return (
-        useIsFetching({
-            queryKey,
-        }) > 0
-    );
+    const numberOfFetchingPredictions = useIsFetching({ queryKey });
+
+    return numberOfFetchingPredictions > 0;
 };
