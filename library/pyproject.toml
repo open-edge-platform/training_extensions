@@ -2,7 +2,7 @@
 # SETUP CONFIGURATION.                                                        #
 [build-system]
 requires = [
-    "setuptools>=82.0.1",
+    "setuptools>=78.1.1",
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
