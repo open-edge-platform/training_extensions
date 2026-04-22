@@ -32,7 +32,7 @@ def create_engine(model: MODEL, data: DATA, **kwargs) -> Engine:
 
     supported_engines: list[type[Engine]] = [LightningEngine, OVEngine]
 
-    # Ultralytics backend (optional — requires `pip install getitune[ultralytics]`)
+    # Ultralytics backend (optional)
     try:
         from getitune.backend.ultralytics.engine import UltralyticsEngine
 

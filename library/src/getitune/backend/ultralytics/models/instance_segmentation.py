@@ -1,30 +1,24 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Ultralytics instance segmentation model for getitune."""
+"""Ultralytics instance-segmentation model."""
 
 from __future__ import annotations
 
 from typing import ClassVar
 
+from getitune.backend.ultralytics.trainers.instance_segmentation import SegmentationTrainer
+
 from .base import UltralyticsModel
 
 
 class UltralyticsInstSegModel(UltralyticsModel):
-    """Ultralytics YOLO model for instance segmentation.
-
-    Wraps a YOLO segmentation model (e.g. ``yolo11s-seg.pt``) for use
-    with the getitune engine.  Default model is ``yolo11s-seg.pt``.
-
-    The model integrates with getitune's data pipeline: images arrive as
-    ``float32 CHW [0,1]`` tensors from the CPU augmentation pipeline and
-    are passed directly to Ultralytics without uint8 conversion.
-    """
+    """YOLO model configured for instance segmentation (default: ``yolo11s-seg.pt``)."""
 
     task: str = "segment"
     default_model_name: str = "yolo11s-seg.pt"
+    trainer_cls: ClassVar[type] = SegmentationTrainer
 
-    # Maps Ultralytics metric keys -> getitune-style metric names.
     metric_keys: ClassVar[dict[str, str]] = {
         "metrics/mAP50(B)": "val/map_50",
         "metrics/mAP50-95(B)": "val/map",
