@@ -36,7 +36,7 @@ type MediaPreviewContentProps = {
     onSelectedMediaItem: (item: Media) => void;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
-    isUserReviewed: (mediaItemId: string) => boolean;
+    isMediaItemReviewedById: (mediaItemId: string) => boolean;
 };
 
 type MediaPreviewPanelsProps = {
@@ -47,7 +47,7 @@ type MediaPreviewPanelsProps = {
     onSelectedMediaItem: (item: Media) => void;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
-    isUserReviewed: (mediaItemId: string) => boolean;
+    isMediaItemReviewedById: (mediaItemId: string) => boolean;
     isCurrentMediaReviewed: boolean;
     subset: DatasetSubset;
 };
@@ -61,7 +61,7 @@ const MediaPreviewPanels = ({
     onSelectedMediaItem,
     isFetchingNextPage,
     fetchNextPage,
-    isUserReviewed,
+    isMediaItemReviewedById,
     isCurrentMediaReviewed,
 }: MediaPreviewPanelsProps) => {
     const { mediaItem } = useSelectedMediaItem();
@@ -85,7 +85,7 @@ const MediaPreviewPanels = ({
                     mediaItem={mediaItem}
                     isFetchingNextPage={isFetchingNextPage}
                     fetchNextPage={fetchNextPage}
-                    isUserReviewed={isUserReviewed}
+                    isUserReviewed={isMediaItemReviewedById}
                     onSelectedMediaItem={handleMediaTransition}
                 />
             </View>
@@ -99,7 +99,7 @@ const MediaPreviewContent = ({
     onClose,
     isFetchingNextPage,
     fetchNextPage,
-    isUserReviewed,
+    isMediaItemReviewedById,
 }: MediaPreviewContentProps) => {
     const { mediaItem } = useSelectedMediaItem();
     const { selectedModelId } = usePredictionSetup();
@@ -143,7 +143,7 @@ const MediaPreviewContent = ({
                     onSelectedMediaItem={onSelectedMediaItem}
                     isFetchingNextPage={isFetchingNextPage}
                     fetchNextPage={fetchNextPage}
-                    isUserReviewed={isUserReviewed}
+                    isMediaItemReviewedById={isMediaItemReviewedById}
                     isCurrentMediaReviewed={isCurrentMediaReviewed}
                     subset={subset}
                 />
@@ -153,7 +153,7 @@ const MediaPreviewContent = ({
 };
 
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
-    const { items, isFetchingNextPage, fetchNextPage, isUserReviewed } = useDatasetMediaWithReviewStatus({});
+    const { items, isFetchingNextPage, fetchNextPage, isMediaItemReviewedById } = useDatasetMediaWithReviewStatus({});
 
     return (
         <Dialog
@@ -185,7 +185,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                 onSelectedMediaItem={onSelectedMediaItem}
                                 isFetchingNextPage={isFetchingNextPage}
                                 fetchNextPage={fetchNextPage}
-                                isUserReviewed={isUserReviewed}
+                                isMediaItemReviewedById={isMediaItemReviewedById}
                             />
                         </PredictionsSetupProvider>
                     </SelectedMediaItemProvider>

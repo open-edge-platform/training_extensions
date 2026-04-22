@@ -29,7 +29,7 @@ type GalleryProps = {
     hasActiveFilter: boolean;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
-    isUserReviewed: (mediaItemId: string) => boolean;
+    isMediaItemReviewedById: (mediaItemId: string) => boolean;
 };
 
 // DetailsView isn’t needed, so we’re forcing the cast to prevent TS from complaining about missing properties
@@ -44,7 +44,7 @@ type GalleryListProps = {
     viewMode: ViewModes;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
-    isUserReviewed: (mediaItemId: string) => boolean;
+    isMediaItemReviewedById: (mediaItemId: string) => boolean;
     onSelectedMediaItemChange: (item: Media) => void;
 };
 
@@ -54,7 +54,7 @@ const GalleryList = ({
     isFetchingNextPage,
     fetchNextPage,
     onSelectedMediaItemChange,
-    isUserReviewed,
+    isMediaItemReviewedById,
 }: GalleryListProps) => {
     const projectId = useProjectIdentifier();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
@@ -115,7 +115,7 @@ const GalleryList = ({
                             </Flex>
                         )}
                         bottomRightElement={() => (
-                            <AnnotationStatusIcon state={isUserReviewed(item.id) ? 'accepted' : undefined} />
+                            <AnnotationStatusIcon state={isMediaItemReviewedById(item.id) ? 'accepted' : undefined} />
                         )}
                     />
                 );
@@ -131,7 +131,7 @@ export const Gallery = ({
     hasActiveFilter,
     isFetchingNextPage,
     fetchNextPage,
-    isUserReviewed,
+    isMediaItemReviewedById,
 }: GalleryProps) => {
     const { selectedMediaItem, onSelectedMediaItemChange } = useSelectDatasetItem();
 
@@ -145,7 +145,7 @@ export const Gallery = ({
                 items={items}
                 viewMode={viewMode}
                 fetchNextPage={fetchNextPage}
-                isUserReviewed={isUserReviewed}
+                isMediaItemReviewedById={isMediaItemReviewedById}
                 onSelectedMediaItemChange={onSelectedMediaItemChange}
                 isFetchingNextPage={isFetchingNextPage}
             />
