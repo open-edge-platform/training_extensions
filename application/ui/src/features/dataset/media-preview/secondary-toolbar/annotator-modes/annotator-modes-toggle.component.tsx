@@ -1,39 +1,70 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 
 import { Flex, StatusLight, View } from '@geti/ui';
 
 import { type AnnotatorMode } from '../../../../../shared/annotator/annotator-mode';
 
-import styles from './annotator-modes.module.scss';
+import classes from './annotator-modes.module.scss';
 
-type ToggleButtonProps = {
+interface ToggleButtonProps {
     children: ReactNode;
-    selectedMode: AnnotatorMode;
-    mode: AnnotatorMode;
+    isActive: boolean;
     onClick: () => void;
-};
+}
 
-const ToggleButton = ({ children, mode, selectedMode, onClick }: ToggleButtonProps) => {
+const ToggleButton = ({ children, isActive, onClick }: ToggleButtonProps) => {
     return (
-        <button aria-pressed={mode === selectedMode} onClick={onClick} className={styles.toggleButton}>
+        <button aria-pressed={isActive} onClick={onClick} className={classes.toggleButton}>
             {children}
         </button>
     );
 };
 
-type AnnotatorModes = {
+interface ToggleButtonWithCueProps extends ToggleButtonProps {
+    showCue: boolean;
+    cueLabel: string;
+}
+
+const ToggleButtonWithCue = ({ showCue, cueLabel, onClick, isActive, children }: ToggleButtonWithCueProps) => {
+    return (
+        <span className={classes.buttonWrapper}>
+            <ToggleButton isActive={isActive} onClick={onClick}>
+                {children}
+            </ToggleButton>
+            {showCue && (
+                <StatusLight
+                    variant={'info'}
+                    role={'status'}
+                    aria-label={cueLabel}
+                    UNSAFE_className={classes.availabilityCue}
+                />
+            )}
+        </span>
+    );
+};
+
+interface AnnotatorModesProps {
     mode: AnnotatorMode;
     onModeChange: (mode: AnnotatorMode) => void;
     hasAnnotations: boolean;
     hasPredictions: boolean;
-};
+}
 
-export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredictions }: AnnotatorModes) => {
-    const showAnnotationCue = mode === 'prediction' && hasAnnotations;
-    const showPredictionCue = mode === 'annotation' && hasPredictions;
+export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredictions }: AnnotatorModesProps) => {
+    const [dismissedCues, setDismissedCues] = useState<Set<AnnotatorMode>>(new Set());
+
+    const handleModeChange = (nextMode: AnnotatorMode) => {
+        const hasContent = nextMode === 'annotation' ? hasAnnotations : hasPredictions;
+
+        if (hasContent) {
+            setDismissedCues((prev) => new Set(prev).add(nextMode));
+        }
+
+        onModeChange(nextMode);
+    };
 
     return (
         <View backgroundColor={'gray-200'} padding={'size-50'} borderRadius={'regular'}>
@@ -44,32 +75,24 @@ export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredicti
                 alignItems={'center'}
                 data-testid={'annotator-modes-id'}
             >
-                <span className={styles.buttonWrapper}>
-                    <ToggleButton mode={'annotation'} selectedMode={mode} onClick={() => onModeChange('annotation')}>
-                        Annotation
-                    </ToggleButton>
-                    {showAnnotationCue && (
-                        <StatusLight
-                            variant={'info'}
-                            role={'status'}
-                            aria-label={'Annotation available'}
-                            UNSAFE_className={styles.availabilityCue}
-                        />
-                    )}
-                </span>
-                <span className={styles.buttonWrapper}>
-                    <ToggleButton mode={'prediction'} selectedMode={mode} onClick={() => onModeChange('prediction')}>
-                        Prediction
-                    </ToggleButton>
-                    {showPredictionCue && (
-                        <StatusLight
-                            variant={'info'}
-                            role={'status'}
-                            aria-label={'Prediction available'}
-                            UNSAFE_className={styles.availabilityCue}
-                        />
-                    )}
-                </span>
+                <ToggleButtonWithCue
+                    isActive={mode === 'annotation'}
+                    onClick={() => handleModeChange('annotation')}
+                    showCue={mode === 'prediction' && hasAnnotations && !dismissedCues.has('annotation')}
+                    cueLabel={'Annotation available'}
+                >
+                    Annotation
+                </ToggleButtonWithCue>
+                <ToggleButtonWithCue
+                    isActive={mode === 'prediction'}
+                    onClick={() => handleModeChange('prediction')}
+                    showCue={
+                        mode === 'annotation' && !hasAnnotations && hasPredictions && !dismissedCues.has('prediction')
+                    }
+                    cueLabel={'Prediction available'}
+                >
+                    Prediction
+                </ToggleButtonWithCue>
             </Flex>
         </View>
     );
