@@ -28,6 +28,9 @@ export const TotalItems = ({ totalSelectedElements }: TotalItemsProps) => {
     if (numberOfVideos > 0) {
         return <Text>{videosMessage}</Text>;
     }
+    if (numberOfImages > 0) {
+        return <Text>{imagesMessage}</Text>;
+    }
 
-    return <Text>{imagesMessage}</Text>;
+    return '';
 };

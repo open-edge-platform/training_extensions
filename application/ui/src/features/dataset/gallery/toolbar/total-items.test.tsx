@@ -77,4 +77,18 @@ describe('TotalItems', () => {
 
         expect(screen.getByText('1 image, 1 video')).toBeVisible();
     });
+
+    it('does not show any media count when there are no images and no videos', async () => {
+        await renderTotalItems(0, { images: 0, videos: 0, video_frames: 0 });
+
+        expect(screen.queryByText('image', { exact: false })).not.toBeInTheDocument();
+        expect(screen.queryByText('video', { exact: false })).not.toBeInTheDocument();
+    });
+
+    it('shows selected count instead of media counts when items are selected', async () => {
+        await renderTotalItems(2, { images: 5, videos: 3, video_frames: 0 });
+
+        expect(screen.getByText('2 selected')).toBeVisible();
+        expect(screen.queryByText(/images/)).not.toBeInTheDocument();
+    });
 });
