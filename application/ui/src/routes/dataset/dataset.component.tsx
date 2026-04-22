@@ -16,9 +16,10 @@ import { ImportJobsList } from '../../features/dataset/import-export/import-jobs
 export const Dataset = () => {
     const [viewMode, setViewMode] = useViewMode('dataset-gallery-view-mode');
     const [filterStatus, setFilterStatus] = useState<DatasetItemAnnotationStatus | null>(null);
-    const { items, isPending, isFetchingNextPage, fetchNextPage, isUserReviewed } = useDatasetMediaWithReviewStatus({
-        annotationStatus: filterStatus ?? undefined,
-    });
+    const { items, isPending, isFetchingNextPage, fetchNextPage, isMediaItemReviewedById } =
+        useDatasetMediaWithReviewStatus({
+            annotationStatus: filterStatus ?? undefined,
+        });
 
     const handleFilterByStatusChange = (status: FilterByStatusKey) => {
         setFilterStatus(status === 'all' ? null : status);
@@ -51,7 +52,7 @@ export const Dataset = () => {
                     viewMode={viewMode}
                     isPending={isPending}
                     fetchNextPage={fetchNextPage}
-                    isUserReviewed={isUserReviewed}
+                    isMediaItemReviewedById={isMediaItemReviewedById}
                     hasActiveFilter={filterStatus !== null}
                     isFetchingNextPage={isFetchingNextPage}
                 />

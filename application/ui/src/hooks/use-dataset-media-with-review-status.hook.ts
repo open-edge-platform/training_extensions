@@ -23,7 +23,7 @@ export const useDatasetMediaWithReviewStatus = ({ annotationStatus }: UseDataset
         }
     };
 
-    const isUserReviewed = (mediaItemId: string) => {
+    const isMediaItemReviewedById = (mediaItemId: string) => {
         return datasetItemsResponse.reviewStatus.get(mediaItemId) ?? false;
     };
 
@@ -32,6 +32,6 @@ export const useDatasetMediaWithReviewStatus = ({ annotationStatus }: UseDataset
         isPending: mediaItemsResponse.isPending || datasetItemsResponse.isPending,
         isFetchingNextPage: mediaItemsResponse.isFetchingNextPage || datasetItemsResponse.isFetchingNextPage,
         fetchNextPage,
-        isUserReviewed,
+        isMediaItemReviewedById,
     };
 };
