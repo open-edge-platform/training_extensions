@@ -64,7 +64,7 @@ class TestYOLOXHeadModule:
         feat = [torch.rand(1, 1, s // feat_size, s // feat_size) for feat_size in [4, 8, 16]]
         cls_scores, bbox_preds, objectnesses = head.forward(feat)
 
-        dets, labels = head.export_by_feat(
+        dets, labels = head.export_by_feat(  # pyrefly: ignore[bad-unpacking]
             cls_scores,
             bbox_preds,
             objectnesses,

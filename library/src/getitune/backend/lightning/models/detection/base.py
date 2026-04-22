@@ -330,7 +330,10 @@ class LightningDetectionModel(LightningModel):
     def _export_parameters(self) -> TaskLevelExportParameters:
         """Defines parameters required to export a particular model implementation."""
         nms_params: dict[str, Any] = {}
-        if not self.export_nms and "with_nms" in inspect.signature(self.model.export).parameters:
+        if (
+            not self.export_nms
+            and "with_nms" in inspect.signature(self.model.export).parameters  # pyrefly: ignore[bad-argument-type]
+        ):
             # Only NMS-based models (e.g. SingleStageDetector) need this metadata.
             # DETR-based models don't use NMS and handle postprocessing differently.
             nms_params["nms_execute"] = True

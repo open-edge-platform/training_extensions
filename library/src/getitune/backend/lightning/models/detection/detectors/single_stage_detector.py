@@ -223,7 +223,7 @@ class SingleStageDetector(BaseModule):
             if hasattr(self.bbox_head, "mask_head") and self.bbox_head.mask_head is not None:
                 # create dummy saliency map as its implemented in ModelAPI
                 saliency_map = torch.zeros(1)
-                bboxes, labels, masks = self.bbox_head.export(
+                bboxes, labels, masks = self.bbox_head.export(  # pyrefly: ignore[not-callable]
                     backbone_feat, batch_img_metas, rescale=rescale, with_nms=with_nms
                 )  # type: ignore[misc]
                 return {
