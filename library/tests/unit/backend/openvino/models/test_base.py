@@ -12,14 +12,14 @@ from model_api.models.result import ClassificationResult
 from pytest_mock import MockerFixture
 
 from getitune.backend.openvino.models import OVModel
-from getitune.data.entity.sample import OTXSampleBatch
+from getitune.data.entity.sample import SampleBatch
 
 
 class TestOVModel:
     @pytest.fixture
-    def input_batch(self) -> OTXSampleBatch:
+    def input_batch(self) -> SampleBatch:
         image = [torch.rand(3, 10, 10) for _ in range(3)]
-        return OTXSampleBatch(images=torch.stack(image), labels=[])
+        return SampleBatch(images=torch.stack(image), labels=[])
 
     @pytest.fixture
     def model(self, get_dummy_ov_cls_model) -> OVModel:

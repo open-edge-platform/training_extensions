@@ -81,7 +81,7 @@ class TestEngine:
             return_value=fxt_engine.datamodule,
         )
         mock_process_saliency_maps = mocker.patch(
-            "getitune.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
+            "getitune.backend.lightning.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
         )
         fxt_engine._derive_task_from_ir = MagicMock(return_value="MULTI_LABEL_CLS")
         mock_model = MagicMock()

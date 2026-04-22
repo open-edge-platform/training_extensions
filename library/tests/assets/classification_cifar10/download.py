@@ -8,7 +8,7 @@ The script:
 2. Selects a balanced subset from 5 classes (6 samples per class) - enough for
    quick classification testing / benchmarking.
 3. Wraps every image in a ``ClassificationSample`` (the library entity defined
-   in ``otx.data.entity.sample``).
+   in ``getitune.data.entity.sample``).
 4. Stores all samples in a ``datumaro.experimental.Dataset``.
 5. Exports the dataset to disk with ``export_dataset``.
 

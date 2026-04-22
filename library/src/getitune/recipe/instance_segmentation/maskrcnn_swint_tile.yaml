@@ -1,6 +1,6 @@
 task: INSTANCE_SEGMENTATION
 model:
-  class_path: getitune.backend.native.models.instance_segmentation.maskrcnn.MaskRCNN
+  class_path: getitune.backend.lightning.models.instance_segmentation.maskrcnn.MaskRCNN
   init_args:
     model_name: maskrcnn_swin_tiny
     label_info: 80
@@ -12,7 +12,7 @@ model:
         weight_decay: 0.05
 
     scheduler:
-      class_path: getitune.backend.native.schedulers.LinearWarmupSchedulerCallable
+      class_path: getitune.backend.lightning.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 100
         main_scheduler_callable:
@@ -30,7 +30,7 @@ callback_monitor: val/map_50
 
 data: ../_base_/data/instance_segmentation.yaml
 callbacks:
-  - class_path: getitune.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: getitune.backend.lightning.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
       patience: 10

@@ -10,19 +10,19 @@ import torch
 import yaml
 from rich.console import Console
 
-from getitune.cli import OTXCLI, main
+from getitune.cli import CLI, main
 
 
-class TestOTXCLI:
+class TestCLI:
     def test_init(self, mocker) -> None:
         # Test that main function runs with errors -> return 2
         argv = ["getitune"]
         with mocker.patch.object(sys, "argv", argv) and pytest.raises(SystemExit, match="2"):
-            OTXCLI()
+            CLI()
 
         argv = ["getitune", "-h"]
         with mocker.patch.object(sys, "argv", argv) and pytest.raises(SystemExit, match="0"):
-            OTXCLI()
+            CLI()
 
     def test_main(self, mocker) -> None:
         argv = ["getitune"]
@@ -41,11 +41,11 @@ class TestOTXCLI:
     def test_train_help_command(self, fxt_train_help_command) -> None:
         # Test that main function runs with help -> return 0
         with pytest.raises(SystemExit, match="0"):
-            OTXCLI()
+            CLI()
 
     def test_init_parser(self, mocker) -> None:
-        mocker.patch("getitune.cli.cli.OTXCLI.__init__", return_value=None)
-        cli = OTXCLI()
+        mocker.patch("getitune.cli.cli.CLI.__init__", return_value=None)
+        cli = CLI()
         parser = cli.init_parser()
         assert parser.__class__.__name__ == "ArgumentParser"
         argument_list = [action.dest for action in parser._actions]
@@ -53,8 +53,8 @@ class TestOTXCLI:
         assert argument_list == expected_argument
 
     def test_subcommand_parser(self, mocker) -> None:
-        mocker.patch("getitune.cli.cli.OTXCLI.__init__", return_value=None)
-        cli = OTXCLI()
+        mocker.patch("getitune.cli.cli.CLI.__init__", return_value=None)
+        cli = CLI()
         parser, _ = cli.engine_subcommand_parser(subcommand="train")
         assert parser.__class__.__name__ == "ArgumentParser"
         argument_list = [action.dest for action in parser._actions]
@@ -71,8 +71,8 @@ class TestOTXCLI:
             assert args in argument_list
 
     def test_add_subcommands(self, mocker) -> None:
-        mocker.patch("getitune.cli.cli.OTXCLI.__init__", return_value=None)
-        cli = OTXCLI()
+        mocker.patch("getitune.cli.cli.CLI.__init__", return_value=None)
+        cli = CLI()
         cli.parser = cli.init_parser()
         cli._subcommand_method_arguments = {}
         cli.add_subcommands()
@@ -99,33 +99,33 @@ class TestOTXCLI:
         return fxt_train_argv
 
     def test_instantiate_classes(self, fxt_train_command, mocker) -> None:
-        mock_run = mocker.patch("getitune.cli.OTXCLI.run")
-        cli = OTXCLI()
+        mock_run = mocker.patch("getitune.cli.CLI.run")
+        cli = CLI()
         assert mock_run.call_count == 1
         cli.instantiate_classes()
 
-        from getitune.backend.native.models.base import OTXModel
+        from getitune.backend.lightning.models.base import LightningModel
 
-        assert isinstance(cli.model, OTXModel)
+        assert isinstance(cli.model, LightningModel)
 
-        from getitune.data.module import OTXDataModule
+        from getitune.data.module import DataModule
 
-        assert isinstance(cli.datamodule, OTXDataModule)
+        assert isinstance(cli.datamodule, DataModule)
 
-        from getitune.backend.native.engine import OTXEngine
+        from getitune.backend.lightning.engine import LightningEngine
 
-        assert isinstance(cli.engine, OTXEngine)
+        assert isinstance(cli.engine, LightningEngine)
 
         assert cli.datamodule == cli.engine.datamodule
         assert cli.model == cli.engine.model
 
     @pytest.mark.parametrize("input_size", [512, 1024])
     def test_instantiate_classes_set_input_size(self, input_size, fxt_train_argv, monkeypatch, mocker) -> None:
-        mocker.patch("getitune.cli.OTXCLI.run")
+        mocker.patch("getitune.cli.CLI.run")
         fxt_train_argv.extend(["--data.input_size", f"{[input_size, input_size]}"])
         monkeypatch.setattr("sys.argv", fxt_train_argv)
 
-        cli = OTXCLI()
+        cli = CLI()
         cli.instantiate_classes()
 
         assert cli.model.data_input_params.input_size == (input_size, input_size)
@@ -137,11 +137,11 @@ class TestOTXCLI:
         return model_cls
 
     def test_raise_error_correctly(self, fxt_train_command, mocker) -> None:
-        mock_engine = mocker.patch("getitune.cli.OTXCLI.instantiate_engine")
+        mock_engine = mocker.patch("getitune.cli.CLI.instantiate_engine")
         mock_engine.return_value.train.side_effect = RuntimeError("my_error")
 
         with pytest.raises(RuntimeError) as exc_info:
-            OTXCLI()
+            CLI()
 
         exc_info.match("my_error")
 
@@ -163,7 +163,7 @@ class TestOTXCLI:
     def test_print_config_scheduler_override_command(self, fxt_print_config_scheduler_override_command, capfd) -> None:
         # Test that main function runs with help -> return 0
         with pytest.raises(SystemExit, match="0"):
-            OTXCLI()
+            CLI()
         out, _ = capfd.readouterr()
         result_config = yaml.safe_load(out)
         assert result_config["model"]["init_args"]["scheduler"]["init_args"]["monitor"] == "val/test_f1"
@@ -186,14 +186,14 @@ class TestOTXCLI:
     def test_print_metric_override_command(self, fxt_metric_override_command, capfd) -> None:
         # Test that main function runs with help -> return 0
         with pytest.raises(SystemExit, match="0"):
-            OTXCLI()
+            CLI()
         out, _ = capfd.readouterr()
         result_config = yaml.safe_load(out)
         assert result_config["metric"] == "getitune.metrics.fmeasure._f_measure_callable"
 
     def test_print_results(self, mocker, capfd):
-        mocker.patch("getitune.cli.cli.OTXCLI.__init__", return_value=None)
-        cli = OTXCLI()
+        mocker.patch("getitune.cli.cli.CLI.__init__", return_value=None)
+        cli = CLI()
         cli.console = Console()
         cli.engine = mocker.MagicMock()
         cli.engine.work_dir.return_value = "work_dir"
