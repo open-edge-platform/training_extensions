@@ -192,7 +192,7 @@ class TestJobControlPlaneIntegration:
         "job_type, expected_max_concurrent",
         [
             (JobType.TRAIN, 1),
-            (JobType.QUANTIZE, 1),
+            (JobType.QUANTIZE, 3),
             (JobType.STAGE_DATASET, 3),
             (JobType.IMPORT_DATASET_AS_NEW_PROJECT, 3),
             (JobType.PREPARE_DATASET_FOR_IMPORT, 3),

@@ -101,7 +101,7 @@ class JobController:
         task.add_done_callback(lambda t: (self._tasks.discard(t)))
 
     async def _run_job(self, job: Job) -> None:
-        needs_capacity_permit = job.job_type in (JobType.TRAIN, JobType.QUANTIZE)
+        needs_capacity_permit = job.job_type == JobType.TRAIN
         permit_ctx = self._capacity.permit() if needs_capacity_permit else contextlib.nullcontext()
         async with permit_ctx:
             job_run = self._runner_factory.for_job(job)
