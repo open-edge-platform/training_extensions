@@ -12,7 +12,7 @@ from typing import Any, Iterator
 
 import yaml
 
-from getitune.backend.native.cli.utils import RECIPE_PATH
+from getitune.backend.lightning.cli.utils import RECIPE_PATH
 
 logger = logging.getLogger(__name__)
 
