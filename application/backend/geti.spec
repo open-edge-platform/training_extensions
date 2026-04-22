@@ -1,7 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 import glob
 import platform
+from PyInstaller.compat import is_darwin
 from PyInstaller.utils.hooks import collect_all, collect_dynamic_libs, collect_submodules, collect_data_files, copy_metadata
+
+
+from pyinstaller.fix_macho_signatures import fix_macho_signatures
 
 datas = [
     ('app/alembic', 'app/alembic'),
@@ -176,6 +180,11 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
+# On macOS, fix Mach-O dylibs with truncated LC_CODE_SIGNATURE before COLLECT
+# tries to re-sign them (openvino ships broken arm64 dylibs).
+if is_darwin:
+    fix_macho_signatures([src for src, *_ in a.binaries])
+
 pyz = PYZ(a.pure)
 
 exe = EXE(

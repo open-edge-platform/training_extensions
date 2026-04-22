@@ -25,6 +25,9 @@ import os
 import struct
 import subprocess  # nosec B404 — fixed-argv `codesign` invocation, no shell, no untrusted input
 import sys
+from collections.abc import Generator
+
+from PyInstaller.compat import is_darwin
 
 # Mach-O 64-bit magic number (little-endian). We only support 64-bit binaries;
 # any fat/universal or 32-bit file is left untouched.
@@ -55,7 +58,7 @@ LC_DATASIZE_OFFSET = 12
 LC_HEADER_SIZE = 8
 
 
-def _find_code_signature(data: bytes) -> tuple[int, int, int] | None:
+def _find_code_signature(data: bytearray) -> tuple[int, int, int] | None:
     """Locate the LC_CODE_SIGNATURE load command in a Mach-O 64 binary.
 
     Returns ``(command_offset, dataoff, datasize)`` or ``None`` if the file
@@ -146,34 +149,56 @@ def _iter_mach_o_files(roots: list[str]):
                     yield os.path.join(dirpath, name)
 
 
-def main(roots: list[str]) -> int:
-    """Walk each root, codesign every dylib/so, and repair the ones that need it."""
-    if sys.platform != "darwin":
-        print("Not macOS; nothing to do.")
-        return 0
+def _fix_files(paths: Generator[str]) -> tuple[int, int]:
+    """Attempt to codesign each path; repair and retry on known errors.
 
+    Returns ``(fixed, failed)`` counts.
+    """
     fixed = 0
     failed = 0
-    for path in _iter_mach_o_files(roots):
-        # Fast path: file already signs cleanly, leave it alone.
+    for path in paths:
+        if not os.path.isfile(path):
+            continue
         result = codesign(path)
         if result.returncode == 0:
             continue
-
-        # Only touch files whose failure matches the signature we know how to
-        # repair; anything else is a genuine error we should surface.
         if not _is_repairable_codesign_error(result.stderr):
             failed += 1
             print(f"FAILED: {path}\n  {result.stderr.strip()}", file=sys.stderr)
             continue
-
         if repair(path) and codesign(path).returncode == 0:
             fixed += 1
             print(f"FIXED: {path}")
         else:
             failed += 1
             print(f"FAILED: {path}\n  {result.stderr.strip()}", file=sys.stderr)
+    return fixed, failed
 
+
+def fix_macho_signatures(paths: list[str]) -> None:
+    """Fix Mach-O signatures for a list of file paths (e.g. from PyInstaller Analysis).
+
+    Intended to be called from a ``.spec`` file on macOS before ``COLLECT``.
+    Silently returns on non-macOS platforms.
+    """
+    if not is_darwin:
+        return
+    fixed, failed = _fix_files(p for p in paths if p.endswith((".dylib", ".so")))
+    print(f"fix_macho_signatures: fixed={fixed} failed={failed}")
+    if failed:
+        raise SystemError(f"Failed to fix {failed} Mach-O signature(s)")
+
+
+def main(roots: list[str]) -> int:
+    """CLI entry point: walk *roots* directories and fix every Mach-O inside.
+
+    Returns ``0`` on success, ``1`` if any file could not be repaired.
+    """
+    if not is_darwin:
+        print("Not macOS; nothing to do.")
+        return 0
+
+    fixed, failed = _fix_files(_iter_mach_o_files(roots))
     print(f"\nfixed={fixed} failed={failed}")
     return 1 if failed else 0
 
