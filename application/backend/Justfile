@@ -77,11 +77,11 @@ gen-api-spec output-path="openapi.json": install-uv
 # Repair malformed Mach-O dylibs shipped by some wheels (e.g. openvino) so
 # that PyInstaller's ad-hoc codesigning step doesn't fail with
 # "internal error in Code Signing subsystem". No-op on non-macOS.
-fix-macho-signatures:
+fix-macho-signatures: install-uv
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "$(uname)" != "Darwin" ]]; then exit 0; fi
-    python3 pyinstaller/fix_macho_signatures.py \
+    uv run python pyinstaller/fix_macho_signatures.py \
         .venv/lib/python*/site-packages/openvino \
         "$HOME/Library/Application Support/pyinstaller"
 
