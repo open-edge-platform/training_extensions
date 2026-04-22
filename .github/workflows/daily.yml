@@ -37,6 +37,35 @@ jobs:
       contents: read
       pull-requests: write # required by nested job
 
+  get-version:
+    name: Get application version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.value }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Read application version
+        id: version
+        run: |
+          echo "value=$(cat application/VERSION | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
+
+  windows-installer:
+    name: Daily Windows installer build
+    needs: get-version
+    uses: ./.github/workflows/windows-installer.yml
+    with:
+      build_version: ${{ needs.get-version.outputs.version }}
+      device: cpu
+      checkout_sha: ${{ github.sha }}
+    secrets: inherit
+    permissions:
+      contents: read
+
   check-existing-issue:
     name: Check for existing failure issue
     runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
@@ -45,6 +74,7 @@ jobs:
       - backend-lint-and-test
       - lib-lint-and-test
       - ui-lint-and-test
+      - windows-installer
     if: failure()
     permissions:
       issues: read
@@ -90,6 +120,7 @@ jobs:
       - backend-lint-and-test
       - lib-lint-and-test
       - ui-lint-and-test
+      - windows-installer
       - check-existing-issue
     if: failure() && needs.check-existing-issue.outputs.issue_exists == 'false'
     permissions:
