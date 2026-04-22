@@ -30,7 +30,16 @@ def create_engine(model: MODEL, data: DATA, **kwargs) -> Engine:
     from getitune.backend.lightning.engine import LightningEngine
     from getitune.backend.openvino.engine import OVEngine
 
-    supported_engines = [LightningEngine, OVEngine]
+    supported_engines: list[type[Engine]] = [LightningEngine, OVEngine]
+
+    # Ultralytics backend (optional — requires `pip install getitune[ultralytics]`)
+    try:
+        from getitune.backend.ultralytics.engine import UltralyticsEngine
+
+        supported_engines.append(UltralyticsEngine)
+    except ImportError:
+        pass
+
     # Dynamically discover all custom subclasses of Engine
     for child_engines in Engine.__subclasses__():
         if child_engines not in supported_engines:
