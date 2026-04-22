@@ -27,6 +27,7 @@ import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { AssignLabel } from './assign-label.component';
 import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
 import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
+import { MediaFilter } from './media-filter/media-filter.component';
 import { MediaUpload } from './media-upload.component';
 import { getNumberOfImagesAndVideosMessage, toggleMultipleSelection } from './util';
 
@@ -140,6 +141,8 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                     <Text>{message}</Text>
 
                     <DatasetStatistics />
+
+                    <MediaFilter />
 
                     <MediaViewModes
                         viewMode={viewMode}
