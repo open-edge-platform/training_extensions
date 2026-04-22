@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { Key, Loading, View } from '@geti/ui';
 
@@ -11,16 +11,13 @@ import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { useIsLoadingAnyPredictions } from '../../annotator/api/use-media-predictions';
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
-import {
-    useVideoPlayerContext,
-    VideoPlayerProvider,
-} from '../../annotator/video-player/video-player-provider.component';
+import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
-import { useNextMediaPrefetch } from './utils';
+import { useNextMediaPrefetch, usePlayPauseVideoBySystem } from './utils';
 
 const DATASET_SUBSETS: DatasetSubset[] = ['unassigned', 'training', 'validation', 'testing'];
 
@@ -57,32 +54,6 @@ const useSubset = (subset: DatasetSubset, mediaItem: Media) => {
         changeCurrentSubset: changeSubset,
         isReadOnlySubset: pendingSubset === subset && subset !== 'unassigned',
     };
-};
-
-const usePlayPauseVideoBySystem = (isLoadingPredictions: boolean) => {
-    const isPausedBySystem = useRef<boolean>(false);
-    const context = useVideoPlayerContext();
-
-    const playRef = useRef(context?.videoControls.play);
-    const pauseRef = useRef(context?.videoControls.pause);
-
-    useEffect(() => {
-        playRef.current = context?.videoControls.play;
-    }, [context?.videoControls.play]);
-
-    useEffect(() => {
-        pauseRef.current = context?.videoControls.pause;
-    }, [context?.videoControls.pause]);
-
-    useEffect(() => {
-        if (isLoadingPredictions && context?.videoControls.isPlaying) {
-            isPausedBySystem.current = true;
-            pauseRef.current?.();
-        } else if (!isLoadingPredictions && isPausedBySystem.current) {
-            isPausedBySystem.current = false;
-            playRef.current?.();
-        }
-    }, [isLoadingPredictions, context?.videoControls.isPlaying]);
 };
 
 type AnnotatorProps = {

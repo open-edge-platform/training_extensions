@@ -3,7 +3,6 @@
 
 import { ActionButton, Icon, Text } from '@geti/ui';
 import { Checkmark, Edit } from '@geti/ui/icons';
-import { isEmpty } from 'lodash-es';
 
 import { useAnnotationActions } from '../../../../../shared/annotator/annotation-actions-provider.component';
 import type { AnnotatorMode } from '../../../../../shared/annotator/annotator-mode';
