@@ -395,7 +395,7 @@ def generate_markdown(report: BenchmarkReport) -> str:
     lines: list[str] = []
 
     # Header
-    lines.append(f"## 🏋️ GetiTune Benchmark Report — {report.timestamp}")
+    lines.append(f"## GetiTune Benchmark Report — {report.timestamp}")
     lines.append("")
     lines.append(
         f"**Branch:** `{report.branch}` | **Commit:** `{report.git_sha}` | **Accelerator:** {report.accelerator}"
@@ -491,16 +491,25 @@ def generate_markdown(report: BenchmarkReport) -> str:
             lines.append("</details>")
             lines.append("")
 
-    # Failures section
+    # Failures section - deduplicate by (model, dataset, scenario, error) so
+    # that multiple seeds producing the same error are shown as a single row.
     if report.failures:
-        lines.append(f"### ❌ Failures ({len(report.failures)})")
-        lines.append("")
-        lines.append("| Model | Dataset | Scenario | Seed | Error |")
-        lines.append("| --- | --- | --- | --- | --- |")
+        seen: set[tuple[str, str, str, str]] = set()
+        unique: list[tuple[str, str, str, str]] = []
         for f in report.failures:
-            # Truncate long error messages for the table
             error_short = f.error[:120].replace("|", "\\|").replace("\n", " ")
-            lines.append(f"| {f.model} | {f.dataset} | {f.scenario} | {f.seed} | {error_short} |")
+            key = (f.model, f.dataset, f.scenario, error_short)
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append(key)
+
+        lines.append(f"### ❌ Failures ({len(unique)})")
+        lines.append("")
+        lines.append("| Model | Dataset | Scenario | Error |")
+        lines.append("| --- | --- | --- | --- |")
+        for model, dataset, scenario, error_short in unique:
+            lines.append(f"| {model} | {dataset} | {scenario} | {error_short} |")
         lines.append("")
 
     return "\n".join(lines)

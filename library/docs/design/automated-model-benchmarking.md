@@ -1212,7 +1212,7 @@ Margins are defined per-metric in the benchmark manifest (Section 6).
 Example summary (Markdown):
 
 ```markdown
-## 🏋️ OTX Benchmark Report — 2026-03-26
+## OTX Benchmark Report — 2026-03-26
 
 **Branch:** `feature/new-augmentation` | **Commit:** `a1b2c3d` | **Accelerator:** NVIDIA A100
 
