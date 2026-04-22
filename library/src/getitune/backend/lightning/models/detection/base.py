@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging as log
 import types
 from contextlib import contextmanager
@@ -314,12 +315,16 @@ class LightningDetectionModel(LightningModel):
             "scale_factor": (1.0, 1.0),
         }
         meta_info_list = [meta_info] * len(inputs)
-        return self.model.export(
-            inputs,
-            meta_info_list,
-            explain_mode=self.explain_mode,
-            with_nms=self.export_nms,
-        )
+        # Build export kwargs dynamically based on the model's export() signature.
+        # Not all detectors accept all parameters (e.g. DETR-based models don't
+        # use NMS and don't accept with_nms; RFDETRDetector doesn't accept explain_mode).
+        export_sig = inspect.signature(self.model.export).parameters
+        export_kwargs: dict[str, Any] = {}
+        if "explain_mode" in export_sig:
+            export_kwargs["explain_mode"] = self.explain_mode
+        if "with_nms" in export_sig:
+            export_kwargs["with_nms"] = self.export_nms
+        return self.model.export(inputs, meta_info_list, **export_kwargs)
 
     @property
     def _export_parameters(self) -> TaskLevelExportParameters:

@@ -79,7 +79,7 @@ class TestYOLOXHeadModule:
         assert dets.shape[2] == 5
         assert labels.ndim == 2
         assert labels.shape == dets.shape[:2]
-        # scores in [0, 1]
+        # Verify scores are within valid probability range [0, 1]
         assert (dets[..., 4] >= 0).all()
         assert (dets[..., 4] <= 1).all()
         # labels in valid range

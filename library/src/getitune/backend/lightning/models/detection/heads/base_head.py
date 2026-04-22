@@ -393,8 +393,7 @@ class BaseDenseHead(BaseModule):
 
         Args:
             x (tuple[Tensor]): Multi-level features from the upstream network, each is a 4D-tensor.
-            batch_data_samples (list[dict]): The Data Samples. It usually includes information such as
-                `gt_instance`, `gt_panoptic_seg` and `gt_sem_seg`.
+            batch_img_metas (list[dict]): Image meta info, e.g. img_shape, scale_factor.
             rescale (bool, optional): Whether to rescale the results.
                 Defaults to False.
             with_nms (bool, optional): Whether to apply NMS. Defaults to True.

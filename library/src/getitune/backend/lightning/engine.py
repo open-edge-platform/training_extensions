@@ -517,12 +517,13 @@ class LightningEngine(Engine):
 
         Args:
             checkpoint (PathLike | None, optional): Checkpoint to export. Defaults to None.
-            export_config (ExportConfig | None, optional): Config that allows to set export
-            format and precision. Defaults to None.
+            export_format (ExportFormat, optional): Export format. Defaults to ExportFormat.OPENVINO.
+            export_precision (Precision, optional): Export precision. Defaults to Precision.FP32.
             explain (bool): Whether to get "saliency_map" and "feature_vector" or not.
             export_demo_package (bool): Whether to export demo package with the model.
                 Only OpenVINO model can be exported with demo package.
             export_without_nms (bool): Whether to exclude NMS from the exported model graph.
+                When True, NMS metadata is embedded so ModelAPI handles NMS at inference time.
                 Defaults to False.
 
         Returns:
@@ -586,16 +587,17 @@ class LightningEngine(Engine):
         if export_without_nms and hasattr(self.model, "export_nms"):
             object.__setattr__(self.model, "export_nms", False)
 
-        exported_model_path = self.model.export(
-            output_dir=Path(self.work_dir),
-            base_name=self._EXPORTED_MODEL_BASE_NAME,
-            export_format=export_format,
-            precision=export_precision,
-        )
-
-        self.model.explain_mode = False
-        if hasattr(self.model, "export_nms"):
-            object.__setattr__(self.model, "export_nms", orig_export_nms)
+        try:
+            exported_model_path = self.model.export(
+                output_dir=Path(self.work_dir),
+                base_name=self._EXPORTED_MODEL_BASE_NAME,
+                export_format=export_format,
+                precision=export_precision,
+            )
+        finally:
+            self.model.explain_mode = False
+            if hasattr(self.model, "export_nms"):
+                object.__setattr__(self.model, "export_nms", orig_export_nms)
         return exported_model_path
 
     def benchmark(
