@@ -9,6 +9,12 @@ import { pluginSvgr } from '@rsbuild/plugin-svgr';
 
 const { publicVars } = loadEnv({ prefixes: ['PUBLIC_'] });
 
+// `TAURI_ENV_DEBUG` is set by the Tauri CLI: `tauri dev` / `start:desktop`
+// propagate it as `true`, and `tauri build` sets it to `false`. We disable
+// minification and emit inline JS source maps for debug desktop builds so
+// stack traces are readable inside the embedded WebView.
+const isTauriDebugBuild = process.env.TAURI_ENV_DEBUG === 'true';
+
 // Platform target selection. When building for the Tauri desktop shell we
 // prepend `.tauri.*` extensions so the bundler resolves platform-specific
 // overrides (e.g. `foo.tauri.ts` wins over `foo.ts`). Files not shadowed by
@@ -43,6 +49,13 @@ export default defineConfig({
     ],
     output: {
         assetPrefix: process.env.ASSET_PREFIX,
+        minify: isTauriDebugBuild ? false : undefined,
+        sourceMap: isTauriDebugBuild
+            ? {
+                  js: 'inline-source-map',
+                  css: false,
+              }
+            : undefined,
     },
     source: {
         define: {

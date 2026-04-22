@@ -49,6 +49,7 @@ fn main() {
 
     // Build the app
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .setup({
             let child_handle = child_handle.clone();
             move |_app_handle| {
