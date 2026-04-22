@@ -16,6 +16,13 @@ on:
         type: boolean
         required: false
         default: false
+    secrets:
+      MSIX_SIGN_CERTIFICATE:
+        description: "Certificate for signing the MSIX package"
+        required: false
+      MSIX_SIGN_CERTIFICATE_PASSWORD:
+        description: "Password for the signing certificate"
+        required: false
 
   # allow to manually trigger this workflow
   workflow_dispatch:
