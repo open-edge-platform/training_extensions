@@ -1,7 +1,7 @@
 task: INSTANCE_SEGMENTATION
 
 model:
-  class_path: getitune.backend.native.models.instance_segmentation.RFDETRInst
+  class_path: getitune.backend.lightning.models.instance_segmentation.RFDETRInst
   init_args:
     model_name: rfdetr_seg_xl
     label_info: 91
@@ -15,7 +15,7 @@ model:
         weight_decay: 0.0001
 
     scheduler:
-      class_path: getitune.backend.native.schedulers.LinearWarmupSchedulerCallable
+      class_path: getitune.backend.lightning.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 0
         main_scheduler_callable:
@@ -35,11 +35,11 @@ data: ../_base_/data/instance_segmentation.yaml
 callback_monitor: val/map_50
 
 callbacks:
-  - class_path: getitune.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+  - class_path: getitune.backend.lightning.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
     init_args:
       max_interval: 1
       min_lrschedule_patience: 5
-  - class_path: getitune.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: getitune.backend.lightning.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
       patience: 15

@@ -1,6 +1,6 @@
 task: DETECTION
 model:
-  class_path: getitune.backend.native.models.detection.DEIMDFine
+  class_path: getitune.backend.lightning.models.detection.DEIMDFine
   init_args:
     model_name: deim_dfine_hgnetv2_l
     label_info: 80
@@ -14,7 +14,7 @@ model:
         weight_decay: 0.000125
 
     scheduler:
-      class_path: getitune.backend.native.schedulers.LinearWarmupSchedulerCallable
+      class_path: getitune.backend.lightning.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 30
         main_scheduler_callable:
@@ -31,11 +31,11 @@ engine:
 callback_monitor: val/map_50
 
 callbacks:
-  - class_path: getitune.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+  - class_path: getitune.backend.lightning.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
     init_args:
       max_interval: 1
       min_lrschedule_patience: 3
-  - class_path: getitune.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: getitune.backend.lightning.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
       patience: 15
@@ -51,10 +51,10 @@ callbacks:
       save_last: true
       auto_insert_metric_name: false
       filename: "checkpoints/epoch_{epoch:03d}"
-  - class_path: getitune.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback
+  - class_path: getitune.backend.lightning.callbacks.aug_scheduler.AugmentationSchedulerCallback
     init_args:
       data_aug_switch:
-        class_path: getitune.backend.native.callbacks.aug_scheduler.DataAugSwitch
+        class_path: getitune.backend.lightning.callbacks.aug_scheduler.DataAugSwitch
         init_args:
           policy_epochs: [4, 23]
           input_size: [640, 640]
@@ -165,11 +165,11 @@ callbacks:
 data: ../_base_/data/detection.yaml
 overrides:
   callbacks:
-    - class_path: getitune.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+    - class_path: getitune.backend.lightning.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
       init_args:
         max_interval: 1
         min_lrschedule_patience: 3
-    - class_path: getitune.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    - class_path: getitune.backend.lightning.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:
         warmup_iters: 100
         warmup_epochs: 7

@@ -14,12 +14,12 @@ import pytest
 import torch
 from torch._dynamo.testing import CompileCounter
 
-from getitune.backend.native.models.base import DataInputParams
-from getitune.backend.native.models.detection.atss import ATSS
-from getitune.backend.native.models.detection.rtdetr import RTDETR
-from getitune.backend.native.models.detection.yolox import YOLOX
-from getitune.backend.native.models.segmentation.dino_v2_seg import DinoV2Seg
-from getitune.backend.native.models.segmentation.segnext import SegNext
+from getitune.backend.lightning.models.base import DataInputParams
+from getitune.backend.lightning.models.detection.atss import ATSS
+from getitune.backend.lightning.models.detection.rtdetr import RTDETR
+from getitune.backend.lightning.models.detection.yolox import YOLOX
+from getitune.backend.lightning.models.segmentation.dino_v2_seg import DinoV2Seg
+from getitune.backend.lightning.models.segmentation.segnext import SegNext
 from getitune.config import register_configs
 
 
@@ -80,7 +80,7 @@ class TestCompiledModelsDetection:
         _run_compile_test(model, model.data_input_params.input_size)
 
     def test_ssd_compiled(self) -> None:
-        from getitune.backend.native.models.detection import SSD
+        from getitune.backend.lightning.models.detection import SSD
 
         model = SSD(
             model_name="ssd_mobilenetv2",

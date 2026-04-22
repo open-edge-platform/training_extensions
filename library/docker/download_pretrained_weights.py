@@ -9,7 +9,7 @@ from pathlib import Path
 from importlib_resources import files
 from omegaconf import OmegaConf
 
-from getitune.backend.native.utils.instantiators import partial_instantiate_class
+from getitune.backend.lightning.utils.instantiators import partial_instantiate_class
 
 logging.basicConfig(
     level=logging.INFO,

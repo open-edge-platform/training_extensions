@@ -11,14 +11,14 @@ from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from datumaro.experimental.fields import Subset
 from torchvision import tv_tensors
 
-from getitune.data.dataset import OTXMulticlassClsDataset
-from getitune.data.dataset.base import OTXDataset
+from getitune.data.dataset import MulticlassClsDataset
+from getitune.data.dataset.base import VisionDataset
 from getitune.data.entity.sample import ClassificationSample
 from getitune.data.samplers.class_incremental_sampler import ClassIncrementalSampler
 
 
 @pytest.fixture
-def fxt_old_new_dataset() -> OTXDataset:
+def fxt_old_new_dataset() -> VisionDataset:
     categories = {"label": LabelCategories(labels=("0", "1", "2"))}
     dm_dataset = Dataset(ClassificationSample, categories=categories)  # type: ignore[arg-type]
 
@@ -50,7 +50,7 @@ def fxt_old_new_dataset() -> OTXDataset:
             ),
         )
 
-    return OTXMulticlassClsDataset(
+    return MulticlassClsDataset(
         dm_subset=dm_dataset,
         transforms=[],
     )

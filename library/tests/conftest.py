@@ -15,9 +15,9 @@ from torchvision import tv_tensors
 from torchvision.tv_tensors import Mask
 
 from getitune.data.entity.base import ImageInfo
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 from getitune.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
 
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 class MockSample:
     """Mock sample class for testing purposes.
 
-    This is a simple dataclass that mimics the OTXSample interface for tests.
+    This is a simple dataclass that mimics the BaseSample interface for tests.
     """
 
     image: torch.Tensor | np.ndarray
@@ -155,7 +155,7 @@ def pytest_addoption(parser: pytest):
         "--dry-run",
         action="store_true",
         default=False,
-        help="Print OTX commands without execution.",
+        help="Print getitune commands without execution.",
     )
     parser.addoption(
         "--deterministic",
@@ -175,11 +175,11 @@ def pytest_addoption(parser: pytest):
         help="URI for MLFlow Tracking server to store the regression test results.",
     )
     parser.addoption(
-        "--otx-ref",
+        "--getitune-ref",
         type=str,
         default="__CURRENT_BRANCH_COMMIT__",
-        help="Target OTX ref (tag / branch name / commit hash) on main repo to test. Defaults to the current branch. "
-        "`pip install otx[full]@https://github.com/open-edge-platform/training_extensions.git@{otx_ref}` will be executed before run, "
+        help="Target getitune ref (tag / branch name / commit hash) on main repo to test. Defaults to the current branch. "
+        "`pip install getitune[full]@https://github.com/open-edge-platform/training_extensions.git@{getitune_ref}` will be executed before run, "
         "and reverted after run. Works only for v2.x assuming CLI compatibility.",
     )
     parser.addoption(
@@ -207,7 +207,7 @@ def pytest_addoption(parser: pytest):
         action="store",
         default="all",
         type=str,
-        help="Task type of OTX to use test.",
+        help="Task type of getitune to use test.",
     )
     parser.addoption(
         "--device",
@@ -224,7 +224,7 @@ def pytest_addoption(parser: pytest):
 
 
 @pytest.fixture(scope="session")
-def fxt_multi_class_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXSampleBatch]:
+def fxt_multi_class_cls_data_entity() -> tuple[MockSample, SampleBatch, SampleBatch]:
     img_size = (64, 64)
     fake_images = torch.zeros(size=(1, 3, *img_size), dtype=torch.float32)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
@@ -232,12 +232,12 @@ def fxt_multi_class_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXSa
     fake_score = torch.Tensor([0.6])
     # define data entity
     single_data_entity = MockSample(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
-    batch_data_entity = OTXSampleBatch(
+    batch_data_entity = SampleBatch(
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
     )
-    batch_pred_data_entity = OTXPredictionBatch(
+    batch_pred_data_entity = PredictionBatch(
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
@@ -248,7 +248,7 @@ def fxt_multi_class_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXSa
 
 
 @pytest.fixture(scope="session")
-def fxt_multi_label_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXSampleBatch]:
+def fxt_multi_label_cls_data_entity() -> tuple[MockSample, SampleBatch, SampleBatch]:
     img_size = (64, 64)
     fake_images = torch.zeros(size=(1, 3, *img_size), dtype=torch.float32)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
@@ -256,12 +256,12 @@ def fxt_multi_label_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXSa
     fake_score = torch.Tensor([0.6])
     # define data entity
     single_data_entity = MockSample(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
-    batch_data_entity = OTXSampleBatch(
+    batch_data_entity = SampleBatch(
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
     )
-    batch_pred_data_entity = OTXPredictionBatch(
+    batch_pred_data_entity = PredictionBatch(
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
@@ -272,7 +272,7 @@ def fxt_multi_label_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXSa
 
 
 @pytest.fixture(scope="session")
-def fxt_h_label_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXPredictionBatch]:
+def fxt_h_label_cls_data_entity() -> tuple[MockSample, SampleBatch, PredictionBatch]:
     img_size = (64, 64)
     fake_images = torch.zeros(size=(1, 3, *img_size), dtype=torch.float32)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
@@ -280,12 +280,12 @@ def fxt_h_label_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXPredic
     fake_score = torch.Tensor([0.6])
     # define data entity
     single_data_entity = MockSample(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
-    batch_data_entity = OTXSampleBatch(
+    batch_data_entity = SampleBatch(
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
     )
-    batch_pred_data_entity = OTXPredictionBatch(
+    batch_pred_data_entity = PredictionBatch(
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
@@ -296,7 +296,7 @@ def fxt_h_label_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXPredic
 
 
 @pytest.fixture(scope="session")
-def fxt_det_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
+def fxt_det_data_entity() -> tuple[tuple, MockSample, SampleBatch]:
     img_size = (64, 64)
     fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
     fake_images = fake_image.unsqueeze(0)  # (1, 3, H, W)
@@ -310,13 +310,13 @@ def fxt_det_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         bboxes=fake_bboxes,
         label=fake_labels,
     )
-    batch_data_entity = OTXSampleBatch(
+    batch_data_entity = SampleBatch(
         images=fake_images,
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
     )
-    batch_pred_data_entity = OTXPredictionBatch(
+    batch_pred_data_entity = PredictionBatch(
         images=fake_images,
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
@@ -328,7 +328,7 @@ def fxt_det_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
 
 
 @pytest.fixture(scope="session")
-def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
+def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, SampleBatch]:
     img_size = (64, 64)
     fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
     fake_images = fake_image.unsqueeze(0)  # (1, 3, H, W)
@@ -345,14 +345,14 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         masks=fake_masks,
         label=fake_labels,
     )
-    batch_data_entity = OTXSampleBatch(
+    batch_data_entity = SampleBatch(
         images=fake_images,
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
         masks=[fake_masks],
     )
-    batch_pred_data_entity = OTXPredictionBatch(
+    batch_pred_data_entity = PredictionBatch(
         images=fake_images,
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
@@ -364,7 +364,7 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
 
 
 @pytest.fixture(scope="session")
-def fxt_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
+def fxt_seg_data_entity() -> tuple[tuple, MockSample, SampleBatch]:
     img_size = (32, 32)
     fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
     fake_images = fake_image.unsqueeze(0)  # (1, 3, H, W)
@@ -376,12 +376,12 @@ def fxt_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         img_info=fake_image_info,
         masks=fake_masks,
     )
-    batch_data_entity = OTXSampleBatch(
+    batch_data_entity = SampleBatch(
         images=fake_images,
         imgs_info=[fake_image_info],
         masks=[fake_masks],
     )
-    batch_pred_data_entity = OTXPredictionBatch(
+    batch_pred_data_entity = PredictionBatch(
         images=fake_images,
         imgs_info=[fake_image_info],
         masks=[fake_masks],
@@ -398,8 +398,8 @@ def fxt_accelerator(request: pytest.FixtureRequest) -> str:
     return request.config.getoption("--device", "gpu")
 
 
-@pytest.fixture(params=set(OTXTaskType))
-def fxt_task(request: pytest.FixtureRequest) -> OTXTaskType:
+@pytest.fixture(params=set(TaskType))
+def fxt_task(request: pytest.FixtureRequest) -> TaskType:
     return request.param
 
 

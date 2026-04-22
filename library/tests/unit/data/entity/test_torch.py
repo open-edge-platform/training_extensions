@@ -12,10 +12,10 @@ from torchvision import tv_tensors
 from getitune.data.dataset.base import _default_collate_fn
 from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import (
+    BaseSample,
     DetectionSample,
     InstanceSegmentationSample,
-    OTXSample,
-    OTXSampleBatch,
+    SampleBatch,
 )
 
 
@@ -60,7 +60,7 @@ class TestDetectionSampleNoneAnnotations:
             label=None,
         )
         batch = _default_collate_fn([annotated, unannotated])
-        assert isinstance(batch, OTXSampleBatch)
+        assert isinstance(batch, SampleBatch)
         assert batch.batch_size == 2
         # Labels should be cast to long by the collate function
         assert batch.labels is not None
@@ -116,7 +116,7 @@ class TestInstanceSegmentationSampleNoneAnnotations:
             masks=None,
         )
         batch = _default_collate_fn([annotated, unannotated])
-        assert isinstance(batch, OTXSampleBatch)
+        assert isinstance(batch, SampleBatch)
         assert batch.batch_size == 2
         # Labels should be cast to long by the collate function
         assert batch.labels is not None
@@ -132,7 +132,7 @@ class TestCollateFn:
         # Create mock samples with required attributes
         samples = []
         for i in range(3):
-            sample = Mock(spec=OTXSample)
+            sample = Mock(spec=BaseSample)
             # Use float32 images since _default_collate_fn expects tensors
             sample.image = tv_tensors.Image(torch.randn(3, 224, 224))
             sample.img_info = ImageInfo(img_idx=i, img_shape=(224, 224), ori_shape=(224, 224))
@@ -148,6 +148,6 @@ class TestCollateFn:
 
         data_batch = _default_collate_fn(samples)
         assert len(data_batch.imgs_info) == len(data_batch.images)
-        assert isinstance(data_batch, OTXSampleBatch)
-        for field in OTXSampleBatch.__dataclass_fields__:
+        assert isinstance(data_batch, SampleBatch)
+        for field in SampleBatch.__dataclass_fields__:
             assert hasattr(data_batch, field), f"Field {field} is missing in the collated batch"

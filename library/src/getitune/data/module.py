@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""LightningDataModule extension for OTX."""
+"""LightningDataModule extension for getitune."""
 
 from __future__ import annotations
 
@@ -18,25 +18,25 @@ from torch.utils.data import DataLoader, RandomSampler
 
 from getitune.config.data import SubsetConfig, TileConfig
 from getitune.data.augmentation import CPUAugmentationPipeline
-from getitune.data.dataset.tile import OTXTileDatasetFactory
-from getitune.data.factory import OTXDatasetFactory
+from getitune.data.dataset.tile import TileDatasetFactory
+from getitune.data.factory import DatasetFactory
 from getitune.data.utils import get_adaptive_num_workers, instantiate_sampler
 from getitune.types.device import DeviceType
 from getitune.types.label import LabelInfo
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
     from lightning.pytorch.utilities.parsing import AttributeDict
 
-    from getitune.data.dataset.base import OTXDataset
+    from getitune.data.dataset.base import VisionDataset
 
 logger = logging.getLogger(__name__)
 
 
 _MP_CONTEXT = multiprocessing.get_context("spawn")
 
-# Mapping from OTX subset config names to Datumaro experimental Subset enums
+# Mapping from getitune subset config names to Datumaro experimental Subset enums
 _SUBSET_NAME_TO_ENUM: dict[str, Subset] = {
     "train": Subset.TRAINING,
     "val": Subset.VALIDATION,
@@ -47,13 +47,13 @@ _SUBSET_NAME_TO_ENUM: dict[str, Subset] = {
 }
 
 
-class OTXDataModule(LightningDataModule):
-    """LightningDataModule extension for OTX.
+class DataModule(LightningDataModule):
+    """LightningDataModule extension for getitune.
 
-    Handles data loading, transformation, and preparation for OTX pipelines.
+    Handles data loading, transformation, and preparation for getitune pipelines.
 
     Args:
-        task (OTXTaskType): Task type (e.g., classification, detection).
+        task (TaskType): Task type (e.g., classification, detection).
         data_root (str): Root directory of the dataset.
         train_subset (SubsetConfig, optional): Training subset configuration. Defaults to None.
         val_subset (SubsetConfig, optional): Validation subset configuration. Defaults to None.
@@ -66,12 +66,12 @@ class OTXDataModule(LightningDataModule):
         input_size (tuple[int, int] | None, optional): Final image/video shape after transformation. Defaults to None.
 
     Note:
-        To create an OTXDataModule from pre-constructed datasets, use the `from_otx_datasets` class method.
+        To create an DataModule from pre-constructed datasets, use the `from_vision_datasets` class method.
     """
 
     def __init__(
         self,
-        task: OTXTaskType,
+        task: TaskType,
         data_root: str,
         train_subset: SubsetConfig | None = None,
         val_subset: SubsetConfig | None = None,
@@ -105,7 +105,7 @@ class OTXDataModule(LightningDataModule):
         self.auto_num_workers = auto_num_workers
         self.device = device
 
-        self.subsets: dict[str, OTXDataset] = {}
+        self.subsets: dict[str, VisionDataset] = {}
         self.save_hyperparameters(ignore=["input_size"])
 
         dataset = import_dataset(self.data_root)
@@ -132,10 +132,10 @@ class OTXDataModule(LightningDataModule):
         # propagate intensity config from train subset for use in export
         self.input_intensity_config = getattr(self.train_subset, "intensity", None)
 
-        self._setup_otx_dataset(dataset)
+        self._setup_dataset(dataset)
 
-    def _setup_otx_dataset(self, dataset: Dataset) -> None:
-        """Setup OTXDataset instances from a Datumaro experimental Dataset.
+    def _setup_dataset(self, dataset: Dataset) -> None:
+        """Setup VisionDataset instances from a Datumaro experimental Dataset.
 
         Args:
             dataset: A ``datumaro.experimental.Dataset`` loaded via ``import_dataset``.
@@ -172,7 +172,7 @@ class OTXDataModule(LightningDataModule):
                 logger.warning(f"Subset '{name}' is empty in the dataset. Skip it")
                 continue
 
-            otx_dataset = OTXDatasetFactory.create(
+            subset_dataset = DatasetFactory.create(
                 task=self.task,
                 dm_subset=dm_subset,
                 cfg_subset=subset_cfg,
@@ -180,11 +180,11 @@ class OTXDataModule(LightningDataModule):
             )
 
             if self.tile_config.enable_tiler:
-                otx_dataset = OTXTileDatasetFactory.create(
-                    dataset=otx_dataset,
+                subset_dataset = TileDatasetFactory.create(
+                    dataset=subset_dataset,
                     tile_config=self.tile_config,
                 )
-            self.subsets[name] = otx_dataset
+            self.subsets[name] = subset_dataset
             label_infos += [self.subsets[name].label_info]
             logger.info(f"Add name: {name}, self.subsets: {self.subsets}")
 
@@ -195,27 +195,27 @@ class OTXDataModule(LightningDataModule):
         self.label_info = next(iter(label_infos))
 
     @classmethod
-    def from_otx_datasets(
+    def from_vision_datasets(
         cls,
-        train_dataset: OTXDataset,
-        val_dataset: OTXDataset,
-        test_dataset: OTXDataset | None = None,
+        train_dataset: VisionDataset,
+        val_dataset: VisionDataset,
+        test_dataset: VisionDataset | None = None,
         train_subset: SubsetConfig | None = None,
         val_subset: SubsetConfig | None = None,
         test_subset: SubsetConfig | None = None,
         auto_num_workers: bool = False,
         device: DeviceType = DeviceType.auto,
-    ) -> OTXDataModule:
-        """Create an OTXDataModule from pre-constructed OTXDataset instances.
+    ) -> DataModule:
+        """Create an DataModule from pre-constructed VisionDataset instances.
 
-        This is a factory method that provides a clean way to create OTXDataModule instances
+        This is a factory method that provides a clean way to create DataModule instances
         when you already have constructed datasets, without needing to provide data_root
         or other data loading parameters.
 
         Args:
-            train_dataset (OTXDataset): Pre-constructed training dataset.
-            val_dataset (OTXDataset): Pre-constructed validation dataset.
-            test_dataset (OTXDataset | None, optional): Pre-constructed test dataset. Defaults to None.
+            train_dataset (VisionDataset): Pre-constructed training dataset.
+            val_dataset (VisionDataset): Pre-constructed validation dataset.
+            test_dataset (VisionDataset | None, optional): Pre-constructed test dataset. Defaults to None.
             train_subset (SubsetConfig): Configuration for the training dataloader.
                 Must have ``input_size`` set to the fixed model input size (H, W).
                 The ``input_size`` value is used to resolve ``$(input_size)`` placeholders
@@ -230,7 +230,7 @@ class OTXDataModule(LightningDataModule):
                 Defaults to DeviceType.auto.
 
         Returns:
-            OTXDataModule: Configured data module with the provided datasets.
+            DataModule: Configured data module with the provided datasets.
 
         Raises:
             ValueError: If datasets have inconsistent label metadata.
@@ -238,13 +238,13 @@ class OTXDataModule(LightningDataModule):
 
         Examples:
             >>> from getitune.config.data import SubsetConfig
-            >>> from getitune.data.module import OTXDataModule
+            >>> from getitune.data.module import DataModule
             >>>
             >>> train_config = SubsetConfig(
             ...     batch_size=8,
             ...     input_size=(512, 512),
             ... )
-            >>> datamodule = OTXDataModule.from_otx_datasets(
+            >>> datamodule = DataModule.from_vision_datasets(
             ...     train_dataset=my_train_dataset,
             ...     val_dataset=my_val_dataset,
             ...     test_dataset=my_test_dataset,
@@ -285,7 +285,7 @@ class OTXDataModule(LightningDataModule):
         else:
             msg = (
                 "input_size is not set on the train_subset config. "
-                "When using from_otx_datasets, the caller must provide a SubsetConfig "
+                "When using from_vision_datasets, the caller must provide a SubsetConfig "
                 "with an explicit input_size (from the recipe or application manifest)."
             )
             raise ValueError(msg)
@@ -299,7 +299,7 @@ class OTXDataModule(LightningDataModule):
                 if getattr(subset, "augmentations_cpu", None):
                     logger.warning(
                         f"The provided {name} SubsetConfig contains augmentations_cpu which will be overridden "
-                        "by the transforms of the provided OTXDataset. When building OTXDataModule from "
+                        "by the transforms of the provided VisionDataset. When building DataModule from "
                         "pre-constructed datasets, developers should set up the transforms when creating the datasets.",
                     )
             else:
@@ -348,14 +348,14 @@ class OTXDataModule(LightningDataModule):
         """
         # Map task type to config file name
         task_to_data_config_file = {
-            OTXTaskType.MULTI_CLASS_CLS: "classification.yaml",
-            OTXTaskType.MULTI_LABEL_CLS: "classification.yaml",
-            OTXTaskType.H_LABEL_CLS: "classification.yaml",
-            OTXTaskType.DETECTION: "detection.yaml",
-            OTXTaskType.ROTATED_DETECTION: "detection.yaml",
-            OTXTaskType.INSTANCE_SEGMENTATION: "instance_segmentation.yaml",
-            OTXTaskType.SEMANTIC_SEGMENTATION: "semantic_segmentation.yaml",
-            OTXTaskType.KEYPOINT_DETECTION: "keypoint_detection.yaml",
+            TaskType.MULTI_CLASS_CLS: "classification.yaml",
+            TaskType.MULTI_LABEL_CLS: "classification.yaml",
+            TaskType.H_LABEL_CLS: "classification.yaml",
+            TaskType.DETECTION: "detection.yaml",
+            TaskType.ROTATED_DETECTION: "detection.yaml",
+            TaskType.INSTANCE_SEGMENTATION: "instance_segmentation.yaml",
+            TaskType.SEMANTIC_SEGMENTATION: "semantic_segmentation.yaml",
+            TaskType.KEYPOINT_DETECTION: "keypoint_detection.yaml",
         }
 
         config_file = task_to_data_config_file.get(self.task)
@@ -398,7 +398,7 @@ class OTXDataModule(LightningDataModule):
         """Check whether there are mismatches in the metainfo for the all subsets."""
         return bool(all(label_info == label_infos[0] for label_info in label_infos))
 
-    def _get_dataset(self, subset: str) -> OTXDataset:
+    def _get_dataset(self, subset: str) -> VisionDataset:
         if (dataset := self.subsets.get(subset)) is None:
             msg = f"Dataset has no '{subset}'. Available subsets = {list(self.subsets.keys())}"
             raise KeyError(msg)
