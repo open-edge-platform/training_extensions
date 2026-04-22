@@ -2,7 +2,8 @@ id: instance-segmentation-rfdetr-s
 name: RF-DETR-Seg-S
 
 pretrained_weights:
-  url: https://storage.googleapis.com/rfdetr/rf-detr-seg-s-ft.pth
+  url: https://storage.geti.intel.com/weights/rf-detr-seg-s-ft.pth
+  mirror_url: https://storage.googleapis.com/rfdetr/rf-detr-seg-s-ft.pth
   sha_sum: 6de3da31b2572cac214a1c76cce4a92a13966d56390ac2b3a3de9a8dc2b2bca3
 
 description: "RF-DETR for instance segmentation extends the RF-DETR object detector with mask prediction capabilities, providing high-accuracy instance segmentation with real-time performance."

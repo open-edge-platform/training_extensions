@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTX base data entities."""
+"""Module for getitune base data entities."""
 
 from __future__ import annotations
 
@@ -154,5 +154,5 @@ class ImageInfo(tv_tensors.TVTensor):
         )
 
 
-class OTXBatchLossEntity(Dict[str, Tensor]):
+class BatchLoss(Dict[str, Tensor]):
     """Data entity to represent model output losses."""

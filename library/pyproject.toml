@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "getitune"
 version = "0.1.0"
-description = "Geti Tune: Train, Evaluate, Optimize, Deploy Computer Vision Models"
+description = "getitune: Train, Evaluate, Optimize, Deploy Computer Vision Models"
 # TODO restore after creating a proper README file for the library
 # readme = "README.md"
 requires-python = ">=3.11,<3.15"
@@ -133,7 +133,7 @@ ci_publish = [
 
 [project.scripts]
 getitune = "getitune.cli:main"
-otx = "getitune.cli:main"  # backward-compat alias; will be removed in a future release
+otx = "getitune.cli:main"
 
 [project.urls]
 Documentation = "https://open-edge-platform.github.io/training_extensions/"

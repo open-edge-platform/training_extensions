@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTX accuracy metric used for classification tasks."""
+"""Module for getitune accuracy metric used for classification tasks."""
 
 from __future__ import annotations
 

@@ -6,11 +6,11 @@ from unittest.mock import Mock
 
 from datumaro.experimental import Dataset
 
-from getitune.data.dataset.segmentation import OTXSegmentationDataset
+from getitune.data.dataset.segmentation import SegmentationDataset
 from getitune.data.entity.sample import SegmentationSample
 
 
-class TestOTXSegmentationDataset:
+class TestSegmentationDataset:
     def setup_method(self):
         # Mock Datumaro experimental Dataset subset
         self.mock_dm_subset = Mock(spec=Dataset)
@@ -28,7 +28,7 @@ class TestOTXSegmentationDataset:
         self.mock_transforms = Mock()
 
     def test_init_converts_schema_and_sets_label_info(self):
-        dataset = OTXSegmentationDataset(
+        dataset = SegmentationDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
             ignore_index=255,

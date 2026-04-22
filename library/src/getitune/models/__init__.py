@@ -3,7 +3,7 @@
 
 """Reimport models from differnt backends for user frendly imports."""
 
-from getitune.backend.native.models import (
+from getitune.backend.lightning.models import (
     ATSS,
     DEIMV2,
     RTDETR,

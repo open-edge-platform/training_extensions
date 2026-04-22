@@ -1,7 +1,7 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Validation functions for OTX data entities."""
+"""Validation functions for getitune data entities."""
 
 from __future__ import annotations
 

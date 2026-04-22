@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""Test of Module for OTX custom metrices."""
+"""Test of Module for getitune custom metrices."""
 
 import pytest
 import torch
@@ -19,7 +19,7 @@ from getitune.types.label import HLabelInfo, LabelInfo
 
 class TestAccuracy:
     def test_multiclass_accuracy(self, fxt_multiclass_labelinfo: LabelInfo) -> None:
-        """Check whether accuracy is same with OTX1.x version."""
+        """Check whether accuracy is same with getitune 1.x version."""
         preds = [
             torch.Tensor([0]),
             torch.Tensor([0]),
@@ -59,7 +59,7 @@ class TestAccuracy:
         assert isinstance(binary_metric.accuracy, BinaryAccuracy)
 
     def test_multilabel_accuracy(self, fxt_multilabel_labelinfo: LabelInfo) -> None:
-        """Check whether accuracy is same with OTX1.x version."""
+        """Check whether accuracy is same with getitune 1.x version."""
         preds = [
             torch.Tensor([0.2, 0.8, 0.9]),
             torch.Tensor([0.8, 0.7, 0.7]),
@@ -75,7 +75,7 @@ class TestAccuracy:
         assert round(acc.item(), 3) == 0.667
 
     def test_hlabel_accuracy(self, fxt_hlabel_multilabel_info: HLabelInfo) -> None:
-        """Check whether accuracy is same with OTX1.x version."""
+        """Check whether accuracy is same with getitune 1.x version."""
         preds = [
             torch.Tensor([1, -1, 0, 0.2, 0.8, 0.9]),
             torch.Tensor([1, 0, 0, 0.8, 0.7, 0.7]),
