@@ -9,7 +9,7 @@ import { useProjectLabels } from 'hooks/use-project-labels.hook';
 import { isEmpty } from 'lodash-es';
 
 import { MultiSelectList } from '../../../../../components/multi-select-list/multi-select-list.component';
-import { LabelView } from '../../../../../constants/shared-types';
+import { Label } from '../../../../../constants/shared-types';
 import { FilterChips } from './filter-chips.component';
 
 import classes from './media-filter-labels.module.scss';
@@ -37,11 +37,11 @@ export const MediaFilterLabels = () => {
 
     const filteredLabels = selectedLabelIds
         .map((id) => labels.find((label) => label.id === id))
-        .filter(Boolean) as LabelView[];
+        .filter(Boolean) as Label[];
 
     return (
         <DialogTrigger hideArrow type='popover'>
-            <PressableElement>
+            <PressableElement aria-label='Filter by labels'>
                 <Flex width={'size-3000'} UNSAFE_className={classes.filterContainer}>
                     {filteredLabels.map((label) => (
                         <FilterChips key={label.id} name={label.name} onClose={() => handleRemoveFilter(label.id)} />

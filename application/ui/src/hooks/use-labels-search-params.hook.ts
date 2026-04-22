@@ -5,6 +5,8 @@ import { isEmpty } from 'lodash-es';
 import { useSearchParams } from 'react-router-dom';
 import { parse, stringify } from 'zipson/lib';
 
+import { isNonEmptyString } from '../shared/util';
+
 const LABELS_PARAM = 'filters';
 
 // The `decodeFromBinary` and `encodeToBinary` functions are taken from,
@@ -33,7 +35,7 @@ export const encodeFilterSearchParam = <T>(filterSearch: T): string => {
     return encodeToBinary(encodeURIComponent(stringify(filterSearch)));
 };
 
-export const getFilterParam = <T>(filterParam: string): T => {
+const getFilterParam = <T>(filterParam: string): T => {
     try {
         // This may fail if the user manually changes the filter parameter in the url,
         // in that case we ignore the filter
@@ -47,7 +49,8 @@ export const useLabelsSearchParams = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     const labelsParam = searchParams.get(LABELS_PARAM);
-    const selectedLabelIds = labelsParam ? getFilterParam<string>(labelsParam).split(',') : [];
+    const filterParam = getFilterParam<string>(labelsParam ?? '');
+    const selectedLabelIds = isNonEmptyString(filterParam) ? filterParam.split(',') : [];
 
     const setSelectedLabelIds = (ids: string[]) => {
         setSearchParams((prev) => {

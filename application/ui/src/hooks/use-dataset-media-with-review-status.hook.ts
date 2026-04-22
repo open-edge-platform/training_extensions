@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { isEmpty } from 'lodash';
+import { isEmpty } from 'lodash-es';
 
 import type { DatasetItemAnnotationStatus } from '../constants/shared-types';
 import { useGetDatasetItemsById } from './use-get-dataset-items-by-id.hook';
