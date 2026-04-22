@@ -99,7 +99,7 @@ class TestDefaultCollateFn:
 
     def test_collate_casts_uint8_labels_to_long(self):
         """Test that uint8 labels are cast to long during collation."""
-        sample1 = Mock(spec=OTXSample)
+        sample1 = Mock(spec=BaseSample)
         sample1.image = torch.randn(3, 224, 224)
         sample1.label = torch.tensor([0, 1], dtype=torch.uint8)
         sample1.masks = None
@@ -107,7 +107,7 @@ class TestDefaultCollateFn:
         sample1.keypoints = None
         sample1.img_info = None
 
-        sample2 = Mock(spec=OTXSample)
+        sample2 = Mock(spec=BaseSample)
         sample2.image = torch.randn(3, 224, 224)
         sample2.label = torch.tensor([2], dtype=torch.uint8)
         sample2.masks = None
@@ -117,7 +117,7 @@ class TestDefaultCollateFn:
 
         result = _default_collate_fn([sample1, sample2])
 
-        assert isinstance(result, OTXSampleBatch)
+        assert isinstance(result, SampleBatch)
         assert result.labels is not None
         for label in result.labels:
             assert label.dtype == torch.long, f"Expected torch.long but got {label.dtype}"
@@ -127,7 +127,7 @@ class TestDefaultCollateFn:
 
     def test_collate_casts_empty_uint8_labels_to_long(self):
         """Test that empty uint8 labels (unannotated images) are cast to long."""
-        sample1 = Mock(spec=OTXSample)
+        sample1 = Mock(spec=BaseSample)
         sample1.image = torch.randn(3, 64, 64)
         sample1.label = torch.tensor([1], dtype=torch.uint8)
         sample1.masks = None
@@ -135,7 +135,7 @@ class TestDefaultCollateFn:
         sample1.keypoints = None
         sample1.img_info = None
 
-        sample2 = Mock(spec=OTXSample)
+        sample2 = Mock(spec=BaseSample)
         sample2.image = torch.randn(3, 64, 64)
         sample2.label = torch.zeros(0, dtype=torch.uint8)  # empty label (no annotations)
         sample2.masks = None
