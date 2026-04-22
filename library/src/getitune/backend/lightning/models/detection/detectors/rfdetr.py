@@ -141,7 +141,7 @@ class RFDETRDetector(BaseModule):
             )
             labels_list.append(result["labels"].long())
             if "masks" in result:
-                masks_list.append(torch.tensor(result["masks"].squeeze(1), dtype=torch.uint8))
+                masks_list.append(result["masks"].squeeze(1).to(dtype=torch.uint8))
 
         return scores_list, boxes_list, labels_list, masks_list
 
