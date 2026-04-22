@@ -46,7 +46,7 @@ export const JobStatusCard = ({
             <Divider size='S' marginY='size-150' />
 
             <Flex justifyContent='space-between'>
-                <Flex alignItems='center' gap='size-100'>
+                <Flex gap={'size-100'} direction={'column'}>
                     {bottomIcon}
 
                     {isNonEmptyString(bottomLeftMessage) ? <Text>{bottomLeftMessage}</Text> : bottomLeftMessage}

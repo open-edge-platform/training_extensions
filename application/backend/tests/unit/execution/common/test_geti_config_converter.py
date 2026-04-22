@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 from app.execution.common.geti_config_converter import GetiConfigConverter, HyperparametersUpdater, TransformsUpdater
 
-EARLY_STOPPING_CLASS_PATH = "getitune.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
+EARLY_STOPPING_CLASS_PATH = "getitune.backend.lightning.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
 
 EARLY_STOPPING_CALLBACK = {
     "class_path": EARLY_STOPPING_CLASS_PATH,
@@ -24,8 +24,8 @@ CHECKPOINT_CALLBACK = {
 }
 
 
-def _make_otx_config(**overrides: Any) -> dict:
-    """Build a minimal OTX recipe config dict with sane defaults.
+def _make_getitune_config(**overrides: Any) -> dict:
+    """Build a minimal getitune recipe config dict with sane defaults.
 
     Override any key via keyword arguments.
     """
@@ -34,7 +34,7 @@ def _make_otx_config(**overrides: Any) -> dict:
         "max_epochs": 200,
         "precision": "16-mixed",
         "model": {
-            "class_path": "getitune.backend.native.models.detection.atss.ATSS",
+            "class_path": "getitune.backend.lightning.models.detection.atss.ATSS",
             "init_args": {
                 "model_name": "atss_mobilenetv2",
                 "label_info": 80,
@@ -43,7 +43,7 @@ def _make_otx_config(**overrides: Any) -> dict:
                     "init_args": {"lr": 0.004, "momentum": 0.9, "weight_decay": 0.0001},
                 },
                 "scheduler": {
-                    "class_path": "getitune.backend.native.schedulers.LinearWarmupSchedulerCallable",
+                    "class_path": "getitune.backend.lightning.schedulers.LinearWarmupSchedulerCallable",
                     "init_args": {
                         "num_warmup_steps": 0,
                         "main_scheduler_callable": {
@@ -115,55 +115,55 @@ class TestGetiConfigConverterConvert:
 
     def test_convert_returns_config_without_cli_keys(self) -> None:
         """convert() should strip the 'config' and '__path__' keys."""
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config()
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         assert "config" not in result
         assert "__path__" not in result["data"]
 
     def test_convert_applies_learning_rate(self) -> None:
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(hyper_parameters={"training": {"learning_rate": 0.01}})
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         assert result["model"]["init_args"]["optimizer"]["init_args"]["lr"] == 0.01
 
     def test_convert_applies_batch_size(self) -> None:
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(hyper_parameters={"training": {"batch_size": 16}})
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         assert result["data"]["train_subset"]["batch_size"] == 16
         assert result["data"]["val_subset"]["batch_size"] == 16
 
     def test_convert_applies_max_epochs(self) -> None:
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(hyper_parameters={"training": {"max_epochs": 50}})
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         assert result["max_epochs"] == 50
 
     def test_convert_applies_early_stopping_patience(self) -> None:
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(
             hyper_parameters={"training": {"early_stopping": {"enable": True, "patience": 20}}}
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         idx = GetiConfigConverter.get_callback_idx(result["callbacks"], EARLY_STOPPING_CLASS_PATH)
@@ -171,90 +171,90 @@ class TestGetiConfigConverterConvert:
         assert result["callbacks"][idx]["init_args"]["patience"] == 20
 
     def test_convert_removes_early_stopping_when_disabled(self) -> None:
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(
             hyper_parameters={"training": {"early_stopping": {"enable": False, "patience": 10}}}
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         idx = GetiConfigConverter.get_callback_idx(result["callbacks"], EARLY_STOPPING_CLASS_PATH)
         assert idx == -1
 
     def test_convert_applies_input_size(self) -> None:
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(hyper_parameters={"training": {"input_size_height": 640, "input_size_width": 640}})
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         assert result["data"]["input_size"] == (640, 640)
 
     def test_convert_applies_weight_decay(self) -> None:
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(hyper_parameters={"training": {"weight_decay": 0.001}})
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         assert result["model"]["init_args"]["optimizer"]["init_args"]["weight_decay"] == 0.001
 
     def test_convert_applies_gradient_clip(self) -> None:
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(
             hyper_parameters={"training": {"gradient_clip": {"enable": True, "max_grad_norm": 1.0}}}
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         assert result["engine"]["gradient_clip_val"] == 1.0
 
     def test_convert_disables_gradient_clip(self) -> None:
-        otx_cfg = _make_otx_config()
-        otx_cfg["gradient_clip_val"] = 35.0  # pre-existing value
+        getitune_cfg = _make_getitune_config()
+        getitune_cfg["gradient_clip_val"] = 35.0  # pre-existing value
         geti_cfg = _make_geti_config(
             hyper_parameters={"training": {"gradient_clip": {"enable": False, "max_grad_norm": 35.0}}}
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         assert result["engine"]["gradient_clip_val"] is None
 
     def test_convert_applies_gradient_accumulation(self) -> None:
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(
             hyper_parameters={"training": {"gradient_accumulation": {"enable": True, "batches": 4}}}
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         assert result["engine"]["accumulate_grad_batches"] == 4
 
     def test_convert_disables_gradient_accumulation(self) -> None:
-        otx_cfg = _make_otx_config()
-        otx_cfg["engine"]["accumulate_grad_batches"] = 4
+        getitune_cfg = _make_getitune_config()
+        getitune_cfg["engine"]["accumulate_grad_batches"] = 4
         geti_cfg = _make_geti_config(
             hyper_parameters={"training": {"gradient_accumulation": {"enable": False, "batches": 4}}}
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         assert result["engine"]["accumulate_grad_batches"] == 1
 
     def test_convert_applies_scheduler_reduce_lr_params(self) -> None:
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(
             hyper_parameters={
                 "training": {
@@ -269,7 +269,7 @@ class TestGetiConfigConverterConvert:
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         scheduler = result["model"]["init_args"]["scheduler"]
@@ -279,7 +279,7 @@ class TestGetiConfigConverterConvert:
         assert main_sched["init_args"]["patience"] == 3
 
     def test_convert_enables_warmup(self) -> None:
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(
             hyper_parameters={
                 "training": {
@@ -292,7 +292,7 @@ class TestGetiConfigConverterConvert:
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         scheduler = result["model"]["init_args"]["scheduler"]
@@ -300,8 +300,8 @@ class TestGetiConfigConverterConvert:
         assert scheduler["init_args"]["warmup_interval"] == "epoch"
 
     def test_convert_disables_warmup(self) -> None:
-        otx_cfg = _make_otx_config()
-        otx_cfg["model"]["init_args"]["scheduler"]["init_args"]["num_warmup_steps"] = 10
+        getitune_cfg = _make_getitune_config()
+        getitune_cfg["model"]["init_args"]["scheduler"]["init_args"]["num_warmup_steps"] = 10
         geti_cfg = _make_geti_config(
             hyper_parameters={
                 "training": {
@@ -313,7 +313,7 @@ class TestGetiConfigConverterConvert:
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         scheduler = result["model"]["init_args"]["scheduler"]
@@ -321,14 +321,14 @@ class TestGetiConfigConverterConvert:
 
     def test_convert_classification_routes_sub_task_type(self) -> None:
         """Verify that classification models use the sub_task_type for recipe path."""
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(
             model_manifest_id="image-classification-efficientnet-b0",
             sub_task_type="MULTI_CLASS_CLS",
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             GetiConfigConverter.convert(geti_cfg)
 
             # Verify AutoConfigurator was called with a path containing multi_class_cls
@@ -339,7 +339,7 @@ class TestGetiConfigConverterConvert:
             assert "multi_class_cls" in str(model_path)
 
     def test_convert_applies_tiling(self) -> None:
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(
             hyper_parameters={
                 "dataset_preparation": {
@@ -356,7 +356,7 @@ class TestGetiConfigConverterConvert:
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         assert result["data"]["tile_config"]["enable_tiler"] is True
@@ -369,46 +369,46 @@ class TestHyperparametersUpdater:
     """Direct tests for HyperparametersUpdater methods."""
 
     def test_update_weight_decay(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         HyperparametersUpdater._update_weight_decay(0.005, config)
         assert config["model"]["init_args"]["optimizer"]["init_args"]["weight_decay"] == 0.005
 
     def test_update_weight_decay_none(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         original = config["model"]["init_args"]["optimizer"]["init_args"]["weight_decay"]
         HyperparametersUpdater._update_weight_decay(None, config)
         assert config["model"]["init_args"]["optimizer"]["init_args"]["weight_decay"] == original
 
     def test_update_gradient_clip_enable(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         HyperparametersUpdater._update_gradient_clip({"enable": True, "max_grad_norm": 5.0}, config)
         assert config["engine"]["gradient_clip_val"] == 5.0
 
     def test_update_gradient_clip_disable(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         config["gradient_clip_val"] = 35.0
         HyperparametersUpdater._update_gradient_clip({"enable": False}, config)
         assert config["engine"]["gradient_clip_val"] is None
 
     def test_update_gradient_accumulation_enable(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         HyperparametersUpdater._update_gradient_accumulation({"enable": True, "batches": 8}, config)
         assert config["engine"]["accumulate_grad_batches"] == 8
 
     def test_update_gradient_accumulation_disable(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         config["engine"]["accumulate_grad_batches"] = 4
         HyperparametersUpdater._update_gradient_accumulation({"enable": False}, config)
         assert config["engine"]["accumulate_grad_batches"] == 1
 
     def test_update_gradient_accumulation_single_batch_noop(self) -> None:
         """When enable=True but batches=1, no key should be set."""
-        config = _make_otx_config()
+        config = _make_getitune_config()
         HyperparametersUpdater._update_gradient_accumulation({"enable": True, "batches": 1}, config)
         assert "accumulate_grad_batches" not in config.get("engine", {})
 
     def test_update_scheduler_factor_patience(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         HyperparametersUpdater._update_scheduler(
             {"type": "reduce_lr_on_plateau", "factor": 0.2, "patience": 7, "warmup": {"enable": False}},
             config,
@@ -418,7 +418,7 @@ class TestHyperparametersUpdater:
         assert main["init_args"]["patience"] == 7
 
     def test_update_scheduler_warmup_enable(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         HyperparametersUpdater._update_scheduler(
             {"warmup": {"enable": True, "epochs": 3}},
             config,
@@ -428,7 +428,7 @@ class TestHyperparametersUpdater:
         assert sched["warmup_interval"] == "epoch"
 
     def test_update_scheduler_warmup_disable(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         config["model"]["init_args"]["scheduler"]["init_args"]["num_warmup_steps"] = 10
         HyperparametersUpdater._update_scheduler(
             {"warmup": {"enable": False}},
@@ -442,7 +442,7 @@ class TestTransformsUpdater:
     """Tests for _TransformsUpdater."""
 
     def test_update_adds_new_augmentation(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         TransformsUpdater.update(
             {"random_vertical_flip": {"enable": True, "probability": 0.3}},
             config,
@@ -453,7 +453,7 @@ class TestTransformsUpdater:
         assert vflip[0]["init_args"]["p"] == 0.3
 
     def test_update_removes_augmentation(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         TransformsUpdater.update(
             {"random_horizontal_flip": {"enable": False, "probability": 0.5}},
             config,
@@ -463,7 +463,7 @@ class TestTransformsUpdater:
         assert len(hflip) == 0
 
     def test_update_modifies_existing_augmentation(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         TransformsUpdater.update(
             {"random_horizontal_flip": {"enable": True, "probability": 0.9}},
             config,
@@ -475,7 +475,7 @@ class TestTransformsUpdater:
 
     def test_update_disable_random_resize_crop_replaces_with_resize(self) -> None:
         """Disabling random_resize_crop should replace it with a plain Resize."""
-        config = _make_otx_config()
+        config = _make_getitune_config()
         # Add a RandomResizedCrop first
         config["data"]["train_subset"]["augmentations_cpu"].insert(
             0,
@@ -493,7 +493,7 @@ class TestTransformsUpdater:
         assert cpu_augs[0]["class_path"] == "getitune.data.augmentation.transforms.Resize"
 
     def test_tiling_update(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         TransformsUpdater.update_tiling(
             {
                 "enable": True,
@@ -510,7 +510,7 @@ class TestTransformsUpdater:
         assert tc["overlap"] == 0.5
 
     def test_tiling_update_disabled(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         TransformsUpdater.update_tiling(
             {
                 "enable": False,
@@ -524,7 +524,7 @@ class TestTransformsUpdater:
         assert tc["enable_tiler"] is False
 
     def test_gaussian_noise_sigma_renamed_to_std(self) -> None:
-        config = _make_otx_config()
+        config = _make_getitune_config()
         TransformsUpdater.update(
             {
                 "gaussian_noise": {
@@ -561,7 +561,7 @@ class TestFullConfigRoundTrip:
 
     def test_detection_full_config(self) -> None:
         """Simulate a full detection training configuration from Geti."""
-        otx_cfg = _make_otx_config()
+        getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(
             model_manifest_id="object-detection-atss-mobilenet-v2",
             hyper_parameters={
@@ -600,7 +600,7 @@ class TestFullConfigRoundTrip:
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
+            MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         # Verify all hyperparameters were applied

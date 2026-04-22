@@ -1,7 +1,7 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX object detection performance benchmark."""
+"""getitune object detection performance benchmark."""
 
 from __future__ import annotations
 
@@ -13,9 +13,9 @@ from tests.perf_v2.utils import (
     ModelInfo,
 )
 
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
-TASK_TYPE = OTXTaskType.DETECTION
+TASK_TYPE = TaskType.DETECTION
 
 MODEL_TEST_CASES = [
     ModelInfo(task=TASK_TYPE.value, name="atss_mobilenetv2", category="default"),

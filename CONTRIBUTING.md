@@ -1,4 +1,4 @@
-# Contributing to OTX
+# Contributing to getitune
 
 We welcome your input! 👐
 
@@ -16,7 +16,7 @@ We use GitHub issues to track the bugs. Report a bug by using our Bug Report Tem
 
 ## Discussion
 
-We enabled [GitHub Discussions](https://github.com/open-edge-platform/training_extensions/discussions) in OTX to welcome the community to ask questions and/or propose ideas/solutions. This will not only provide a medium for the community to discuss OTX but also help us de-clutter [Issues](https://github.com/open-edge-platform/training_extensions/issues/).
+We enabled [GitHub Discussions](https://github.com/open-edge-platform/training_extensions/discussions) in getitune to welcome the community to ask questions and/or propose ideas/solutions. This will not only provide a medium for the community to discuss getitune but also help us de-clutter [Issues](https://github.com/open-edge-platform/training_extensions/issues/).
 
 ## Feature Request
 
@@ -30,7 +30,7 @@ We actively welcome your pull requests:
 
 #### 1. Fork and Clone the Repository
 
-First, fork the OTX repository by following the GitHub documentation on [forking a repo](https://docs.github.com/en/enterprise-cloud@latest/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo). Then, clone your forked repository to your local machine and create a new branch from `develop`.
+First, fork the getitune repository by following the GitHub documentation on [forking a repo](https://docs.github.com/en/enterprise-cloud@latest/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo). Then, clone your forked repository to your local machine and create a new branch from `develop`.
 
 #### 2. Set Up Your Development Environment
 
@@ -42,7 +42,7 @@ Set up your development environment to start contributing. This involves install
 1. Create and activate a new python environment:
 
    ```bash
-   cd lib
+   cd library
    python -m venv .getitune
    source .getitune/bin/activate
    ```
@@ -73,7 +73,7 @@ tox -vv -e pre-commit
 4. **Pass Tests and Quality Checks:** Ensure the test suite passes and that your code meets quality standards by running:
 
    ```bash
-   cd lib
+   cd library
    tox -vv -e pre-commit
    pytest tests/unit
    pytest tests/integration
@@ -96,7 +96,7 @@ tox -vv -e pre-commit
 Once you've followed the above steps and are satisfied with your changes:
 
 1. Push your changes to your forked repository.
-2. Go to the original OTX repository you forked and click "New pull request".
+2. Go to the original getitune repository you forked and click "New pull request".
 3. Choose your fork and the branch with your changes to open a pull request.
 4. Fill in the pull request template with the necessary details about your changes.
 

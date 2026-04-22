@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX tile dataset."""
+"""getitune tile dataset."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from datumaro.experimental.fields import Subset
 from datumaro.experimental.filtering.filter_registry import create_filtering_transform
 from datumaro.experimental.tiling.tiler_registry import TilingConfig, create_tiling_transform
 
-from getitune.data.entity.sample import OTXSample
+from getitune.data.entity.sample import BaseSample
 from getitune.data.entity.tile import (
     TileBatchDetDataEntity,
     TileBatchInstSegDataEntity,
@@ -21,43 +21,43 @@ from getitune.data.entity.tile import (
     TileInstSegDataEntity,
     TileSegDataEntity,
 )
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
-from .base import OTXDataset, _ensure_chw_format
+from .base import VisionDataset, _ensure_chw_format
 
 if TYPE_CHECKING:
     from getitune.config.data import TileConfig
-    from getitune.data.dataset.detection import OTXDetectionDataset
-    from getitune.data.dataset.instance_segmentation import OTXInstanceSegDataset
-    from getitune.data.dataset.segmentation import OTXSegmentationDataset
+    from getitune.data.dataset.detection import DetectionDataset
+    from getitune.data.dataset.instance_segmentation import InstanceSegDataset
+    from getitune.data.dataset.segmentation import SegmentationDataset
 
 # ruff: noqa: SLF001
 # NOTE: Disable private-member-access (SLF001).
 # This is a workaround so we could apply the same transforms to tiles as the original dataset.
 
 
-class OTXTileDatasetFactory:
-    """OTX tile dataset factory."""
+class TileDatasetFactory:
+    """getitune tile dataset factory."""
 
     @classmethod
     def create(
         cls,
-        dataset: OTXDataset,
+        dataset: VisionDataset,
         tile_config: TileConfig,
-    ) -> OTXDataset:
+    ) -> VisionDataset:
         """Create a tile dataset based on the task type and subset type.
 
-        NOte: All task utilize the same OTXTileTrainDataset for training.
+        NOte: All task utilize the same TileTrainDataset for training.
               In testing, we use different tile dataset for different task
               type due to different annotation format and data entity.
 
         Args:
-            task (OTXTaskType): OTX task type.
-            dataset (OTXDataset): OTX dataset.
+            task (TaskType): getitune task type.
+            dataset (VisionDataset): getitune dataset.
             tile_config (TilerConfig): Tile configuration.
 
         Returns:
-            OTXTileDataset: Tile dataset.
+            TileDataset: Tile dataset.
         """
         subset = dataset.dm_subset[0].subset  # type: ignore[attr-defined]
         if subset == Subset.TRAINING:
@@ -78,26 +78,26 @@ class OTXTileDatasetFactory:
             dataset.dm_subset = dm_dataset
             return dataset
 
-        if dataset.task_type == OTXTaskType.DETECTION:
-            return OTXTileDetTestDataset(dataset, tile_config, subset)
-        if dataset.task_type in [OTXTaskType.ROTATED_DETECTION, OTXTaskType.INSTANCE_SEGMENTATION]:
-            return OTXTileInstSegTestDataset(dataset, tile_config, subset)
-        if dataset.task_type == OTXTaskType.SEMANTIC_SEGMENTATION:
-            return OTXTileSemanticSegTestDataset(dataset, tile_config, subset)
+        if dataset.task_type == TaskType.DETECTION:
+            return TileDetTestDataset(dataset, tile_config, subset)
+        if dataset.task_type in [TaskType.ROTATED_DETECTION, TaskType.INSTANCE_SEGMENTATION]:
+            return TileInstSegTestDataset(dataset, tile_config, subset)
+        if dataset.task_type == TaskType.SEMANTIC_SEGMENTATION:
+            return TileSemanticSegTestDataset(dataset, tile_config, subset)
 
         msg = f"Unsupported task type: {dataset.task_type} for tiling"
         raise NotImplementedError(msg)
 
 
-class OTXTileDataset(OTXDataset):
-    """OTX tile dataset base class.
+class TileDataset(VisionDataset):
+    """getitune tile dataset base class.
 
     Args:
-        dataset (OTXDataset): OTX dataset.
+        dataset (VisionDataset): getitune dataset.
         tile_config (TilerConfig): Tile configuration.
     """
 
-    def __init__(self, dataset: OTXDataset, tile_config: TileConfig, subset: Subset) -> None:
+    def __init__(self, dataset: VisionDataset, tile_config: TileConfig, subset: Subset) -> None:
         super().__init__(
             dataset.dm_subset,
             dataset.transforms,
@@ -132,14 +132,14 @@ class OTXTileDataset(OTXDataset):
         """Collate function from the original dataset."""
         return self._dataset.collate_fn
 
-    def _get_item_impl(self, index: int) -> OTXSample | None:
+    def _get_item_impl(self, index: int) -> BaseSample | None:
         """Get item implementation from the original dataset."""
         return self._dataset._get_item_impl(index)
 
     def get_tiles(
         self,
         parent_idx: int,
-    ) -> list[OTXSample]:
+    ) -> list[BaseSample]:
         """Retrieves tiles from the given image and dataset item.
 
         Args:
@@ -149,7 +149,7 @@ class OTXTileDataset(OTXDataset):
 
         Returns:
             A tuple containing two lists:
-            - tile_entities (list[OTXSample]): List of tile entities.
+            - tile_entities (list[BaseSample]): List of tile entities.
         """
         parent_slice_ds = self.dm_subset.slice(parent_idx, 1)  # type: ignore[attr-defined]
         tile_ds = parent_slice_ds.transform(  # type: ignore[attr-defined]
@@ -165,7 +165,7 @@ class OTXTileDataset(OTXDataset):
             if len(tile_ds) == 0:
                 tile_ds = parent_slice_ds
 
-        tile_entities: list[OTXSample] = []
+        tile_entities: list[BaseSample] = []
         for tile in tile_ds:
             # Fix datumaro HWC→CHW format issue for tile images
             tile.image = _ensure_chw_format(tile.image)
@@ -179,17 +179,17 @@ class OTXTileDataset(OTXDataset):
         return tile_entities
 
 
-class OTXTileDetTestDataset(OTXTileDataset):
-    """OTX tile detection test dataset.
+class TileDetTestDataset(TileDataset):
+    """getitune tile detection test dataset.
 
-    OTXTileDetTestDataset wraps a list of tiles (DetDataEntity) into a single TileDetDataEntity for testing/predicting.
+    TileDetTestDataset wraps a list of tiles (DetDataEntity) into a single TileDetDataEntity for testing/predicting.
 
     Args:
-        dataset (OTXDetDataset): OTX detection dataset.
+        dataset (DetectionDataset): getitune detection dataset.
         tile_config (TilerConfig): Tile configuration.
     """
 
-    def __init__(self, dataset: OTXDetectionDataset, tile_config: TileConfig, subset: Subset) -> None:
+    def __init__(self, dataset: DetectionDataset, tile_config: TileConfig, subset: Subset) -> None:
         super().__init__(dataset, tile_config, subset)
 
     @property
@@ -210,8 +210,8 @@ class OTXTileDetTestDataset(OTXTileDataset):
             TileDetDataEntity: tile detection data entity that wraps a list of detection data entities.
 
         Note:
-            Ignoring [override] check is necessary here since OTXDataset._get_item_impl exclusively permits
-            the return of OTXSample. Nevertheless, in instances involving tiling, it becomes
+            Ignoring [override] check is necessary here since VisionDataset._get_item_impl exclusively permits
+            the return of BaseSample. Nevertheless, in instances involving tiling, it becomes
             imperative to encapsulate tiles within a unified entity, namely TileDetDataEntity.
         """
         item = self.dm_subset[index]
@@ -226,18 +226,18 @@ class OTXTileDetTestDataset(OTXTileDataset):
         )
 
 
-class OTXTileInstSegTestDataset(OTXTileDataset):
-    """OTX tile inst-seg test dataset.
+class TileInstSegTestDataset(TileDataset):
+    """getitune tile inst-seg test dataset.
 
-    OTXTileDetTestDataset wraps a list of tiles (TorchDataItem) into a single TileDetDataEntity
+    TileDetTestDataset wraps a list of tiles (TorchDataItem) into a single TileDetDataEntity
     for testing/predicting.
 
     Args:
-        dataset (OTXInstanceSegDataset): OTX inst-seg dataset.
+        dataset (InstanceSegDataset): getitune inst-seg dataset.
         tile_config (TilerConfig): Tile configuration.
     """
 
-    def __init__(self, dataset: OTXInstanceSegDataset, tile_config: TileConfig, subset: Subset) -> None:
+    def __init__(self, dataset: InstanceSegDataset, tile_config: TileConfig, subset: Subset) -> None:
         super().__init__(dataset, tile_config, subset)
 
     @property
@@ -258,8 +258,8 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
             TileInstSegDataEntity: tile inst-seg data entity that wraps a list of inst-seg data entities.
 
         Note:
-            Ignoring [override] check is necessary here since OTXDataset._get_item_impl exclusively permits
-            the return of OTXSample. Nevertheless, in instances involving tiling, it becomes
+            Ignoring [override] check is necessary here since VisionDataset._get_item_impl exclusively permits
+            the return of BaseSample. Nevertheless, in instances involving tiling, it becomes
             imperative to encapsulate tiles within a unified entity, namely TileInstSegDataEntity.
         """
         item = self.dm_subset[index]
@@ -275,18 +275,18 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
         )
 
 
-class OTXTileSemanticSegTestDataset(OTXTileDataset):
-    """OTX tile semantic-seg test dataset.
+class TileSemanticSegTestDataset(TileDataset):
+    """getitune tile semantic-seg test dataset.
 
-    OTXTileSemanticSegTestDataset wraps a list of tiles (SegDataEntity) into a single TileSegDataEntity
+    TileSemanticSegTestDataset wraps a list of tiles (SegDataEntity) into a single TileSegDataEntity
     for testing/predicting.
 
     Args:
-        dataset (OTXSegmentationDataset): OTX semantic-seg dataset.
+        dataset (SegmentationDataset): getitune semantic-seg dataset.
         tile_config (TilerConfig): Tile configuration.
     """
 
-    def __init__(self, dataset: OTXSegmentationDataset, tile_config: TileConfig, subset: Subset) -> None:
+    def __init__(self, dataset: SegmentationDataset, tile_config: TileConfig, subset: Subset) -> None:
         super().__init__(dataset, tile_config, subset)
 
     @property

@@ -11,7 +11,7 @@ import numpy as np
 import torch
 from torch.utils.data import Sampler
 
-from getitune.data.dataset.base import OTXDataset
+from getitune.data.dataset.base import VisionDataset
 
 
 class ClassIncrementalSampler(Sampler):
@@ -24,7 +24,7 @@ class ClassIncrementalSampler(Sampler):
     the ratio of old and new data is used as 1:1
 
     Args:
-        dataset (OTXDataset): A built-up dataset
+        dataset (VisionDataset): A built-up dataset
         batch_size (int): batch size of Sampling
         efficient_mode (bool): Flag about using efficient mode
         num_replicas (int, optional): Number of processes participating in
@@ -42,7 +42,7 @@ class ClassIncrementalSampler(Sampler):
 
     def __init__(
         self,
-        dataset: OTXDataset,
+        dataset: VisionDataset,
         batch_size: int,
         old_classes: list[str],
         new_classes: list[str],

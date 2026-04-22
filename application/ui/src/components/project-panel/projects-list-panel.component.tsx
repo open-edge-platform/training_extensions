@@ -116,13 +116,13 @@ export const ProjectsListPanel = () => {
                     </Flex>
                 </Header>
 
+                <Divider size={'S'} marginY={'size-200'} />
+
                 <Content>
-                    <Divider size={'S'} marginY={'size-200'} />
-
                     <ProjectsList projects={data} />
-
-                    <Divider size={'S'} marginY={'size-200'} />
                 </Content>
+
+                <Divider size={'S'} marginY={'size-200'} />
 
                 <ButtonGroup UNSAFE_className={classes.panelButtons}>
                     <AddProjectButton />

@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from getitune.backend.native.callbacks.aug_scheduler import DataAugSwitch
+from getitune.backend.lightning.callbacks.aug_scheduler import DataAugSwitch
 from getitune.data.augmentation import CPUAugmentationPipeline
 from getitune.data.dataset.mixins import DataAugSwitchMixin
 
@@ -110,7 +110,7 @@ class TestDataAugSwitchMixin:
     # -- edge cases -----------------------------------------------------
 
     def test_mixin_on_plain_class(self):
-        """Mixin works even on a plain class that doesn't inherit OTXDataset."""
+        """Mixin works even on a plain class that doesn't inherit VisionDataset."""
 
         class PlainDataset(DataAugSwitchMixin):
             def __init__(self):
