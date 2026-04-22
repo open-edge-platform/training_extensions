@@ -471,7 +471,7 @@ class BenchmarkRunner:
 
         return ExperimentResult.failure(
             task=experiment.task,
-            model=experiment.model.display_name,
+            model=experiment.model.name,
             dataset=experiment.dataset_name,
             scenario=experiment.scenario.name,
             seed=seed,
@@ -499,7 +499,7 @@ class BenchmarkRunner:
             logger.info("  seed=%d — all phases complete, skipping.", seed)
             return ExperimentResult(
                 task=experiment.task,
-                model=experiment.model.display_name,
+                model=experiment.model.name,
                 dataset=experiment.dataset_name,
                 scenario=experiment.scenario.name,
                 seed=seed,
@@ -545,7 +545,7 @@ class BenchmarkRunner:
 
         return ExperimentResult(
             task=experiment.task,
-            model=experiment.model.display_name,
+            model=experiment.model.name,
             dataset=experiment.dataset_name,
             scenario=experiment.scenario.name,
             seed=seed,

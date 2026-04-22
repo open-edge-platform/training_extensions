@@ -76,7 +76,7 @@ experiments:
         priority: extended
         recipe: detection/yolox_tiny.yaml
 
-      - name: yolox_tiny
+      - name: yolox_tiny_tile
         priority: extended
         recipe: detection/yolox_tiny_tile.yaml
 
@@ -232,11 +232,11 @@ experiments:
 
   rotated_detection:
     models:
-      - name: maskrcnn_r50
+      - name: maskrcnn_r50_rotated
         priority: core
         recipe: rotated_detection/maskrcnn_r50.yaml
 
-      - name: maskrcnn_efficientnetb2b
+      - name: maskrcnn_efficientnetb2b_rotated
         priority: extended
         recipe: rotated_detection/maskrcnn_efficientnetb2b.yaml
 

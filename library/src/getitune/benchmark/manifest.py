@@ -62,29 +62,6 @@ class ModelEntry:
         """Absolute path to the recipe YAML."""
         return RECIPE_PATH / self.recipe
 
-    @property
-    def is_tiling(self) -> bool:
-        """Whether this entry points at a tiling recipe.
-
-        The manifest can list the same base model twice — once with a standard
-        recipe and once with a tiling recipe (e.g. ``yolox_tiny.yaml`` vs
-        ``yolox_tiny_tile.yaml``). Both entries share ``name``, which would
-        make them indistinguishable in run IDs and MLflow. This flag keys
-        :attr:`display_name` off of the recipe filename.
-        """
-        stem = Path(self.recipe).stem.lower()
-        return stem.endswith(("_tile", "_tiling")) or "_tile_" in stem or "_tiling_" in stem
-
-    @property
-    def display_name(self) -> str:
-        """Name used for run IDs, report rows, and MLflow tags.
-
-        Appends ``_tile`` for tiling recipes so that two manifest rows with
-        the same ``name`` but different recipes do not collide on disk or in
-        MLflow.
-        """
-        return f"{self.name}_tile" if self.is_tiling else self.name
-
 
 @dataclass(frozen=True)
 class CriteriaConfig:
@@ -161,7 +138,7 @@ class Experiment:
     @property
     def run_id(self) -> str:
         """Unique directory-safe identifier."""
-        parts = [self.task, self.model.display_name, self.dataset_name]
+        parts = [self.task, self.model.name, self.dataset_name]
         if self.scenario.name != "default":
             parts.append(self.scenario.name)
         return "/".join(parts)
