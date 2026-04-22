@@ -34,6 +34,7 @@ import { getNumberOfImagesAndVideosMessage, toggleMultipleSelection } from './ut
 type ToolbarProps = {
     items: Media[];
     viewMode: ViewModes;
+    totalItemsCount: number;
     setViewMode: Dispatch<SetStateAction<ViewModes>>;
     onFilter: (status: FilterByStatusKey) => void;
 };
@@ -51,7 +52,7 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
     );
 };
 
-export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps) => {
+export const Toolbar = ({ items, viewMode, totalItemsCount, setViewMode, onFilter }: ToolbarProps) => {
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
@@ -61,7 +62,7 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
     const hasSelectedElements = totalSelectedElements > 0;
     const message = hasSelectedElements
         ? `${totalSelectedElements} selected`
-        : getNumberOfImagesAndVideosMessage(items);
+        : getNumberOfImagesAndVideosMessage(items, totalItemsCount);
 
     const handleToggleManyItemSelection = () => {
         const images = items.map((item) => String(item.id));

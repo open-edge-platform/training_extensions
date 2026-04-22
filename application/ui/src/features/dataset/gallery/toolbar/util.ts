@@ -23,11 +23,11 @@ export const toggleMultipleSelection =
         return new Set();
     };
 
-export const getNumberOfImagesAndVideosMessage = (mediaItems: Media[]) => {
+export const getNumberOfImagesAndVideosMessage = (mediaItems: Media[], numberOfItems: number) => {
     const numberOfVideos = mediaItems.filter(isVideo).length;
-    const numberOfImages = mediaItems.length - numberOfVideos;
+    const numberOfImages = numberOfItems - numberOfVideos;
 
-    const imagesMessage = `${numberOfImages} image${numberOfImages === 1 ? '' : 's'}`;
+    const imagesMessage = `${numberOfImages} Item${numberOfImages === 1 ? '' : 's'}`;
     const videosMessage = `${numberOfVideos} video${numberOfVideos == 1 ? '' : 's'}`;
 
     if (numberOfImages > 0 && numberOfVideos > 0) {
