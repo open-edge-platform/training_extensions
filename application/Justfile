@@ -4,7 +4,7 @@ import "recipes.justfile"
 # -------------------------------------------------------------------------------------------------
 # Build variables
 # -------------------------------------------------------------------------------------------------
-docker-build-context := shell("git -C " + justfile_directory() + " rev-parse --show-toplevel")
+docker-build-context := justfile_directory() / ".."
 docker-build-args := "--build-arg http_proxy --build-arg https_proxy --build-arg no_proxy --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY"
 application-name := "geti"
 
