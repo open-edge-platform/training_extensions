@@ -88,12 +88,19 @@ def extract_video_frames(
     frames: dict[int, np.ndarray] = {}
     try:
         sorted_indexes = sorted(set(frame_indexes))
-        for frame_index in sorted_indexes:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+        first_index = sorted_indexes[0]
+        last_index = sorted_indexes[-1]
+        requested_indexes = set(sorted_indexes)
+        if not cap.set(cv2.CAP_PROP_POS_FRAMES, first_index):
+            raise RuntimeError(f"Cannot seek to frame at {first_index} index in video: {video_path}")
+        current_index = first_index
+        while current_index <= last_index:
             read_success, frame = cap.read()
             if not read_success:
-                raise RuntimeError(f"Cannot read frame at {frame_index} index from video: {video_path}")
-            frames[frame_index] = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                raise RuntimeError(f"Cannot read frame at {current_index} index from video: {video_path}")
+            if current_index in requested_indexes:
+                frames[current_index] = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            current_index += 1
         return frames
     except RuntimeError:
         raise

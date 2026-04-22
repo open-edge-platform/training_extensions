@@ -185,25 +185,26 @@ class MediaPredictionService(BaseSessionManagedService):
         batch_inference_result: BatchInferenceResult,
         model_id: UUID,
     ) -> None:
+        prediction_map: dict[tuple[UUID, int | None], BatchInferencePrediction] = {
+            (pred.media.id, pred.media.frame_index): pred for pred in batch_inference_result.predictions
+        }
+        input_map: dict[tuple[UUID, int | None], BatchInferenceInput] = {
+            (inp.media_id, inp.frame_index): inp for inp in inputs
+        }
+
         for media in loaded_media.single_media:
-            prediction = next(pred for pred in batch_inference_result.predictions if pred.media.id == media.id)
+            prediction = prediction_map[(media.id, None)]
             self._create_or_update_dataset_item(project=project, media=media, prediction=prediction, model_id=model_id)
 
         for frame in loaded_media.video_frames:
-            prediction = next(
-                pred
-                for pred in batch_inference_result.predictions
-                if pred.media.id == frame.video_id and pred.media.frame_index == frame.frame_index
-            )
+            prediction = prediction_map[(frame.video_id, frame.frame_index)]
             logger.debug("Prediction is {}, frame is {}", prediction, frame)
             if isinstance(frame, VideoFrame):
                 self._create_or_update_dataset_item(
                     project=project, media=frame, prediction=prediction, model_id=model_id
                 )
             else:
-                input_data = next(
-                    inp for inp in inputs if inp.media_id == frame.video.id and inp.frame_index == frame.frame_index
-                )
+                input_data = input_map[(frame.video_id, frame.frame_index)]
                 frame_image = PILImage.fromarray(input_data.data)
                 video_frame = self._media_service.save_video_frame(
                     project=project, video=frame.video, frame_index=frame.frame_index, frame_image=frame_image
