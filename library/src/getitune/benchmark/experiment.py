@@ -90,7 +90,7 @@ class ExperimentResult:
 
 
 def resolve_overrides(scenario_overrides: dict[str, Any]) -> dict[str, Any]:
-    """Convert scenario overrides into kwargs for ``OTXEngine.from_config()``.
+    """Convert scenario overrides into kwargs for ``LightningEngine.from_config()``.
 
     Complex values (dicts, lists) are JSON-serialized so that jsonargparse can
     parse them on the engine side.
@@ -269,10 +269,10 @@ class ExperimentExecutor:
 
     def train(self) -> PhaseResult:
         """Train the model and return scraped metrics."""
-        from getitune.backend.native.engine import OTXEngine
+        from getitune.backend.lightning.engine import LightningEngine
 
         overrides = resolve_overrides(self.scenario_overrides)
-        engine = OTXEngine.from_config(
+        engine = LightningEngine.from_config(
             config_path=self.recipe_path,
             data_root=self.data_path,
             work_dir=self.work_dir / "train",
@@ -303,10 +303,10 @@ class ExperimentExecutor:
 
     def test_torch(self) -> PhaseResult:
         """Test the PyTorch checkpoint and return metrics."""
-        from getitune.backend.native.engine import OTXEngine
+        from getitune.backend.lightning.engine import LightningEngine
 
         overrides = resolve_overrides(self.scenario_overrides)
-        engine = OTXEngine.from_config(
+        engine = LightningEngine.from_config(
             config_path=self.recipe_path,
             data_root=self.data_path,
             work_dir=self.work_dir / "test" / "torch",
@@ -337,10 +337,10 @@ class ExperimentExecutor:
 
     def export(self) -> PhaseResult:
         """Export the trained model to OpenVINO IR."""
-        from getitune.backend.native.engine import OTXEngine
+        from getitune.backend.lightning.engine import LightningEngine
 
         overrides = resolve_overrides(self.scenario_overrides)
-        engine = OTXEngine.from_config(
+        engine = LightningEngine.from_config(
             config_path=self.recipe_path,
             data_root=self.data_path,
             work_dir=self.work_dir / "export",
