@@ -17,19 +17,6 @@ fn backend_filename() -> &'static str {
     }
 }
 
-/// Spawns the side-car backend.
-///
-/// In **release** builds, Tauri bundles `geti-backend` and its `_internal/` into
-/// the `.app` so we just launch the binary that sits next to the Tauri exe.
-///
-/// In **debug** (i.e. `tauri dev`) builds, Tauri stages `geti-backend` into
-/// `target/<profile>/` but does **not** copy the `_internal/` directory. Trying
-/// to symlink `_internal` next to the staged binary creates a path loop
-/// (`target/debug/_internal -> src-tauri/_internal -> backend/dist/...`) that
-/// causes Tauri's resource staging to truncate every dist file to 0 bytes via
-/// `fs::copy(src, dest)` where `src` and `dest` resolve to the same inode.
-/// To avoid this we launch the original PyInstaller binary directly from
-/// `backend/dist/geti-backend/` where `_internal/` already sits next to it.
 /// Spawns the side-car backend from the same folder as the Tauri executable.
 ///
 /// Tauri stages `geti-backend` (from `externalBin`) and `_internal/` (from

@@ -4,12 +4,21 @@
 import { downloadViaAnchor } from './download-file.shared';
 
 // `<a download>` is ignored by WKWebView/Chromium for cross-origin URLs (it
-// navigates to the URL instead of saving it). Every caller here passes a
-// backend HTTP URL (`${API_BASE_URL}/...`) — model variant binaries, training
-// logs, dataset export zips, dataset media items — which is a different
-// origin from the Tauri webview, so the anchor flow can't be used directly.
+// navigates to the URL instead of saving it). Most callers here pass a
+// backend HTTP URL (`${API_BASE_URL}/...`) — model variant binaries, dataset
+// export zips, dataset media items — which is a different origin from the
+// Tauri webview, so the anchor flow can't be used directly. Those URLs go
+// through `autoDownload`, which fetches the response and re-wraps it in a
+// same-origin `blob:` URL the anchor will save. Callers that already have a
+// `blob:` URL (e.g. training logs) skip the fetch and go straight
+// to the anchor.
 
 export const downloadFile = (url: string, name?: string): void => {
+    if (url.startsWith('blob:')) {
+        downloadViaAnchor(url, name);
+        return;
+    }
+
     void autoDownload(url, name);
 };
 
@@ -29,10 +38,6 @@ const autoDownload = async (url: string, name?: string): Promise<void> => {
         const blobUrl = URL.createObjectURL(await response.blob());
 
         downloadViaAnchor(blobUrl, filename);
-
-        if (url.startsWith('blob:')) {
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-        }
     } catch (error) {
         console.error('[tauri downloadFile] failed', error);
     }

@@ -49,11 +49,20 @@ LC_DATAOFF_OFFSET = 8
 LC_DATASIZE_OFFSET = 12
 
 
+# Sizes of the fixed-width fields we read with `struct.unpack_from` so we can
+# bounds-check before reading. A malformed/truncated binary must yield `None`,
+# never a `struct.error` that aborts the whole run.
+U32_SIZE = 4
+LC_HEADER_SIZE = 8  # cmd(4) + cmdsize(4)
+LC_CODE_SIGNATURE_PAYLOAD_SIZE = 8  # dataoff(4) + datasize(4)
+
+
 def _find_code_signature(data: bytes) -> tuple[int, int, int] | None:
     """Locate the LC_CODE_SIGNATURE load command in a Mach-O 64 binary.
 
     Returns ``(command_offset, dataoff, datasize)`` or ``None`` if the file
-    is not a Mach-O 64 binary or has no code signature.
+    is not a Mach-O 64 binary, has no code signature, or is truncated /
+    malformed in any way that prevents safe parsing.
     """
     if len(data) < LOAD_COMMANDS_OFFSET:
         return None
@@ -64,11 +73,18 @@ def _find_code_signature(data: bytes) -> tuple[int, int, int] | None:
     (ncmds,) = struct.unpack_from("<I", data, NCMDS_OFFSET)
     cmd_offset = LOAD_COMMANDS_OFFSET
     for _ in range(ncmds):
+        if cmd_offset + LC_HEADER_SIZE > len(data):
+            return None
         cmd, cmdsize = struct.unpack_from("<II", data, cmd_offset)
+        # `cmdsize` < header size or one that runs past EOF means a corrupt
+        # load-command stream; bail rather than risk an infinite/wild loop.
+        if cmdsize < LC_HEADER_SIZE or cmd_offset + cmdsize > len(data):
+            return None
         if cmd == LC_CODE_SIGNATURE:
-            dataoff, datasize = struct.unpack_from(
-                "<II", data, cmd_offset + LC_DATAOFF_OFFSET
-            )
+            payload_offset = cmd_offset + LC_DATAOFF_OFFSET
+            if payload_offset + LC_CODE_SIGNATURE_PAYLOAD_SIZE > len(data):
+                return None
+            dataoff, datasize = struct.unpack_from("<II", data, payload_offset)
             return cmd_offset, dataoff, datasize
         cmd_offset += cmdsize
     return None
