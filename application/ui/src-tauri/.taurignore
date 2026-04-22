@@ -1,0 +1,10 @@
+# Tauri 2 file-watcher ignore list (gitignore syntax). Without this, the
+# backend writing to data/ and logs/ at runtime triggers `tauri dev` to
+# rebuild and restart the app on every write — an infinite loop.
+data/
+logs/
+
+# Sidecar binary + its PyInstaller `_internal/` dir are written/refreshed by
+# the build pipeline, not Rust source.
+_internal/
+geti-backend-*
