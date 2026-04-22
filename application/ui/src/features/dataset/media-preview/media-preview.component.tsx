@@ -48,6 +48,7 @@ type MediaPreviewPanelsProps = {
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
     isUserReviewed: (mediaItemId: string) => boolean;
+    isCurrentMediaReviewed: boolean;
     subset: DatasetSubset;
 };
 
@@ -61,6 +62,7 @@ const MediaPreviewPanels = ({
     isFetchingNextPage,
     fetchNextPage,
     isUserReviewed,
+    isCurrentMediaReviewed,
 }: MediaPreviewPanelsProps) => {
     const { mediaItem } = useSelectedMediaItem();
     const handleMediaTransition = useAnnotatorMediaTransition({ onSelectedMediaItem });
@@ -72,7 +74,7 @@ const MediaPreviewPanels = ({
                 items={items}
                 subset={subset}
                 onClose={onClose}
-                isUserReviewed={isUserReviewed(mediaItem.id)}
+                isUserReviewed={isCurrentMediaReviewed}
                 changeAnnotatorMode={changeAnnotatorMode}
                 onSelectedMediaItem={handleMediaTransition}
             />
@@ -142,6 +144,7 @@ const MediaPreviewContent = ({
                     isFetchingNextPage={isFetchingNextPage}
                     fetchNextPage={fetchNextPage}
                     isUserReviewed={isUserReviewed}
+                    isCurrentMediaReviewed={isCurrentMediaReviewed}
                     subset={subset}
                 />
             </AnnotatorProviders>
