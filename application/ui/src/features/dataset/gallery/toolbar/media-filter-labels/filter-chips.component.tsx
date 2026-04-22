@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Text } from '@geti/ui';
+import { Flex, Text } from '@geti/ui';
 import { CloseSmall } from '@geti/ui/icons';
 
 import classes from './filter-chips.module.scss';
@@ -13,7 +13,7 @@ type FilterChipsProps = {
 
 export const FilterChips = ({ name, onClose }: FilterChipsProps) => {
     return (
-        <div className={classes.container}>
+        <Flex UNSAFE_className={classes.container} alignItems={'center'} gap={'size-75'}>
             <Text UNSAFE_className={classes.name}>{name}</Text>
 
             <CloseSmall
@@ -23,6 +23,6 @@ export const FilterChips = ({ name, onClose }: FilterChipsProps) => {
                     onClose();
                 }}
             />
-        </div>
+        </Flex>
     );
 };

@@ -1,11 +1,8 @@
 .container {
-    gap: var(--spectrum-global-dimension-size-75);
-    display: flex;
+    border: 1px solid var(--stroke-active);
     padding: var(--spectrum-global-dimension-size-25) var(--spectrum-global-dimension-size-75);
     font-size: var(--spectrum-global-dimension-size-150);
     border-radius: var(--spectrum-global-dimension-size-25);
-    align-items: center;
-    border: 1px solid var(--stroke-active);
 }
 
 .name {

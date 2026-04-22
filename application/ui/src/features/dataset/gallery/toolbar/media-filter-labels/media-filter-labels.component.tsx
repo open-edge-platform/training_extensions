@@ -1,9 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties } from 'react';
-
-import { Content, Dialog, DialogTrigger, dimensionValue, Flex, PressableElement, Text } from '@geti/ui';
+import { Content, Dialog, DialogTrigger, Flex, PressableElement, Text } from '@geti/ui';
 import { useLabelsSearchParams } from 'hooks/use-labels-search-params.hook';
 import { useProjectLabels } from 'hooks/use-project-labels.hook';
 import { isEmpty } from 'lodash-es';
@@ -13,11 +11,6 @@ import { Label } from '../../../../../constants/shared-types';
 import { FilterChips } from './filter-chips.component';
 
 import classes from './media-filter-labels.module.scss';
-
-const paddingStyle = {
-    '--spectrum-dialog-padding-x': dimensionValue('size-300'),
-    '--spectrum-dialog-padding-y': dimensionValue('size-300'),
-} as CSSProperties;
 
 export const MediaFilterLabels = () => {
     const labels = useProjectLabels();
@@ -42,7 +35,14 @@ export const MediaFilterLabels = () => {
     return (
         <DialogTrigger hideArrow type='popover'>
             <PressableElement aria-label='Filter by labels'>
-                <Flex width={'size-3000'} UNSAFE_className={classes.filterContainer}>
+                <Flex
+                    gap={'size-40'}
+                    wrap={'wrap'}
+                    width={'size-3000'}
+                    height={'size-400'}
+                    alignItems={'center'}
+                    UNSAFE_className={classes.filterContainer}
+                >
                     {filteredLabels.map((label) => (
                         <FilterChips key={label.id} name={label.name} onClose={() => handleRemoveFilter(label.id)} />
                     ))}
@@ -51,7 +51,7 @@ export const MediaFilterLabels = () => {
                 </Flex>
             </PressableElement>
 
-            <Dialog width={'size-5000'} UNSAFE_style={paddingStyle} aria-label='Filter media items'>
+            <Dialog width={'size-5000'} UNSAFE_className={classes.dialog} aria-label='Filter media items'>
                 <Content>
                     <MultiSelectList
                         name='labels'

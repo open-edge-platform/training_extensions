@@ -17,7 +17,7 @@ export const useDatasetMediaWithReviewStatus = ({ annotationStatus }: UseDataset
 
     const mediaItemsResponse = useGetDatasetMediaItems({
         annotationStatus,
-        labels: isEmpty(selectedLabelIds) ? undefined : selectedLabelIds,
+        labelIds: isEmpty(selectedLabelIds) ? undefined : selectedLabelIds,
     });
 
     const datasetItemsResponse = useGetDatasetItemsById({ annotationStatus });
