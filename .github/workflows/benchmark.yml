@@ -5,9 +5,8 @@
 # summarized as Markdown reports (posted as PR comments or CI artifacts).
 #
 # Triggers:
-#   - Weekly full benchmark (Sunday 02:00 UTC) — core + extended models, all dataset tiers
-#   - Nightly quick benchmark (Mon–Sat 02:00 UTC) — core models, tiny + small datasets
-#   - PR label — benchmark:run (quick), benchmark:params (parameter scenarios), benchmark:full
+#   - Weekly full benchmark (Sunday 19:00 UTC) — core + extended models, all dataset tiers
+#   - Nightly quick benchmark (Mon–Sat 19:00 UTC) — core models, tiny + small datasets
 #   - Manual workflow_dispatch — full control over all parameters
 #
 # Required secrets:
@@ -22,10 +21,8 @@ name: Model Benchmark
 
 on:
   schedule:
-    - cron: "0 2 * * 0" # Weekly full: Sunday 02:00 UTC
-    - cron: "0 2 * * 1-6" # Nightly quick: Mon–Sat 02:00 UTC
-  pull_request:
-    types: [labeled] # Trigger on benchmark labels
+    - cron: "0 19 * * 0" # Weekly full: Sunday 19:00 UTC
+    - cron: "0 19 * * 1-5" # Nightly quick: Mon–Fri 19:00 UTC
   workflow_dispatch:
     inputs:
       task:
@@ -118,39 +115,6 @@ jobs:
             echo "trigger=nightly" >> "$GITHUB_OUTPUT"
             echo "should_run=true" >> "$GITHUB_OUTPUT"
 
-          # ── PR labels ──────────────────────────────────────────────────
-          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            LABEL="${{ github.event.label.name }}"
-            if [[ "$LABEL" == "benchmark:run" ]]; then
-              echo "priority=core" >> "$GITHUB_OUTPUT"
-              echo "size_tier=tiny" >> "$GITHUB_OUTPUT"
-              echo "num_seeds=1" >> "$GITHUB_OUTPUT"
-              echo "eval_upto=train" >> "$GITHUB_OUTPUT"
-              echo "scenario=default" >> "$GITHUB_OUTPUT"
-              echo "accelerator=gpu" >> "$GITHUB_OUTPUT"
-              echo "trigger=pr" >> "$GITHUB_OUTPUT"
-              echo "should_run=true" >> "$GITHUB_OUTPUT"
-            elif [[ "$LABEL" == "benchmark:params" ]]; then
-              echo "priority=core" >> "$GITHUB_OUTPUT"
-              echo "size_tier=tiny" >> "$GITHUB_OUTPUT"
-              echo "num_seeds=1" >> "$GITHUB_OUTPUT"
-              echo "eval_upto=train" >> "$GITHUB_OUTPUT"
-              echo "scenario=default,configurable" >> "$GITHUB_OUTPUT"
-              echo "accelerator=gpu" >> "$GITHUB_OUTPUT"
-              echo "trigger=pr" >> "$GITHUB_OUTPUT"
-              echo "should_run=true" >> "$GITHUB_OUTPUT"
-            elif [[ "$LABEL" == "benchmark:full" ]]; then
-              echo "priority=core,extended" >> "$GITHUB_OUTPUT"
-              echo "size_tier=tiny,small,medium" >> "$GITHUB_OUTPUT"
-              echo "num_seeds=3" >> "$GITHUB_OUTPUT"
-              echo "eval_upto=optimize" >> "$GITHUB_OUTPUT"
-              echo "scenario=default" >> "$GITHUB_OUTPUT"
-              echo "accelerator=gpu" >> "$GITHUB_OUTPUT"
-              echo "trigger=pr" >> "$GITHUB_OUTPUT"
-              echo "should_run=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "should_run=false" >> "$GITHUB_OUTPUT"
-            fi
 
           else
             echo "should_run=false" >> "$GITHUB_OUTPUT"
@@ -205,11 +169,7 @@ jobs:
           TRIGGER="${{ needs.configure.outputs.trigger }}"
 
           # Determine the branch name
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            BRANCH="${{ github.head_ref }}"
-          else
-            BRANCH="${{ github.ref_name }}"
-          fi
+          BRANCH="${{ github.ref_name }}"
 
           uv run python -m otx.benchmark run \
             --manifest benchmark_manifest.yaml \
@@ -268,14 +228,6 @@ jobs:
             library/results/aggregated.csv
             library/results/failed_experiments.json
           retention-days: 90
-
-      # ── Post report as PR comment ────────────────────────────────────
-      - name: Comment on PR
-        if: github.event_name == 'pull_request' && always()
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: library/results/report.md
 
       # ── MLflow retention: prune old feature-branch runs ────────────
       - name: Cleanup old MLflow runs
