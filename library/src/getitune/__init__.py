@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Geti Tune - Train, Evaluate, Optimize, Deploy Computer Vision Models."""
+"""getitune - Train, Evaluate, Optimize, Deploy Computer Vision Models."""
 
 __version__ = "0.1.0"
 

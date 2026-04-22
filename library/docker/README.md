@@ -1,6 +1,6 @@
 # How to build cuda and cuda-pretrained-ready Docker images
 
-1. By executing the following commands, it will build two Docker images: `otx:${OTX_VERSION}-cuda` and `otx:${OTX_VERSION}-cuda-pretrained-ready`.
+1. By executing the following commands, it will build two Docker images: `getitune:${GETITUNE_VERSION}-cuda` and `getitune:${GETITUNE_VERSION}-cuda-pretrained-ready`.
 
    ```console
    git clone https://github.com/open-edge-platform/training_extensions.git
@@ -11,7 +11,7 @@
 2. After that, you can check whether the images are built correctly such as
 
    ```console
-   docker image ls | grep otx
+   docker image ls | grep getitune
    ```
 
    Example:
@@ -21,4 +21,4 @@
    otx                                           2.0.0-cuda                                     8d14caccb29a   8 minutes ago   10.4GB
    ```
 
-`otx:${OTX_VERSION}-cuda` is a minimal Docker image where OTX is installed with CUDA supports. On the other hand, `otx:${OTX_VERSION}-cuda-pretrained-ready` includes all the model pre-trained weights that OTX provides in addition to `otx:${OTX_VERSION}-cuda`.
+`getitune:${GETITUNE_VERSION}-cuda` is a minimal Docker image where getitune is installed with CUDA supports. On the other hand, `getitune:${GETITUNE_VERSION}-cuda-pretrained-ready` includes all the model pre-trained weights that getitune provides in addition to `getitune:${GETITUNE_VERSION}-cuda`.

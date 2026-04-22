@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX instance segmentation performance benchmark."""
+"""getitune instance segmentation performance benchmark."""
 
 from __future__ import annotations
 
@@ -13,9 +13,9 @@ from tests.perf_v2.utils import (
     ModelInfo,
 )
 
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
-TASK_TYPE = OTXTaskType.INSTANCE_SEGMENTATION
+TASK_TYPE = TaskType.INSTANCE_SEGMENTATION
 
 
 MODEL_TEST_CASES = [

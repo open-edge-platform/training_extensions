@@ -362,5 +362,5 @@ class NullLabelInfo(LabelInfo):
 # 1. label_info: int => LabelInfo.from_num_classes(label_info)
 # 2. label_info: list[str] => LabelInfo(label_names=label_info, label_groups=[label_info])
 # 3. label_info: LabelInfo => label_info
-# See OTXModel._dispatch_label_info() for more details
+# See LightningModel._dispatch_label_info() for more details
 LabelInfoTypes = LabelInfo | int | list[str]

@@ -1,28 +1,28 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for data related objects, such as OTXDataset, OTXDataEntity, OTXDataModule, and Transforms."""
+"""Module for data related objects, such as VisionDataset, DataEntity, DataModule, and Transforms."""
 
 from .dataset import (
-    OTXDetectionDataset,
-    OTXHlabelClsDataset,
-    OTXInstanceSegDataset,
-    OTXKeypointDetectionDataset,
-    OTXMulticlassClsDataset,
-    OTXMultilabelClsDataset,
-    OTXSegmentationDataset,
-    OTXTileDatasetFactory,
+    DetectionDataset,
+    HlabelClsDataset,
+    InstanceSegDataset,
+    KeypointDetectionDataset,
+    MulticlassClsDataset,
+    MultilabelClsDataset,
+    SegmentationDataset,
+    TileDatasetFactory,
 )
-from .module import OTXDataModule
+from .module import DataModule
 
 __all__ = [
-    "OTXDataModule",
-    "OTXDetectionDataset",
-    "OTXHlabelClsDataset",
-    "OTXInstanceSegDataset",
-    "OTXKeypointDetectionDataset",
-    "OTXMulticlassClsDataset",
-    "OTXMultilabelClsDataset",
-    "OTXSegmentationDataset",
-    "OTXTileDatasetFactory",
+    "DataModule",
+    "DetectionDataset",
+    "HlabelClsDataset",
+    "InstanceSegDataset",
+    "KeypointDetectionDataset",
+    "MulticlassClsDataset",
+    "MultilabelClsDataset",
+    "SegmentationDataset",
+    "TileDatasetFactory",
 ]

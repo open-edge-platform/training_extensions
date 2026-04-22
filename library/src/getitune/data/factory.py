@@ -8,10 +8,10 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 from .augmentation.pipeline import CPUAugmentationPipeline
-from .dataset.base import OTXDataset, Transforms
+from .dataset.base import Transforms, VisionDataset
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-__all__ = ["OTXDatasetFactory", "TransformLibFactory"]
+__all__ = ["DatasetFactory", "TransformLibFactory"]
 
 
 class TransformLibFactory:
@@ -48,19 +48,19 @@ class TransformLibFactory:
         return CPUAugmentationPipeline(augmentations=[])
 
 
-class OTXDatasetFactory:
-    """Factory class for OTXDataset."""
+class DatasetFactory:
+    """Factory class for VisionDataset."""
 
     @classmethod
     def create(
         cls,
-        task: OTXTaskType,
+        task: TaskType,
         dm_subset: Dataset,
         cfg_subset: SubsetConfig,
         # TODO(gdlg): Add support for ignore_index again
         ignore_index: int = 255,  # noqa: ARG003
-    ) -> OTXDataset:
-        """Create OTXDataset."""
+    ) -> VisionDataset:
+        """Create VisionDataset."""
         transforms = TransformLibFactory.generate(cfg_subset)
 
         # Auto-detect storage dtype from the first image's file header.
@@ -74,40 +74,40 @@ class OTXDatasetFactory:
         }
 
         match task:
-            case OTXTaskType.MULTI_CLASS_CLS:
-                from .dataset.classification import OTXMulticlassClsDataset
+            case TaskType.MULTI_CLASS_CLS:
+                from .dataset.classification import MulticlassClsDataset
 
-                return OTXMulticlassClsDataset(**common_kwargs)
+                return MulticlassClsDataset(**common_kwargs)
 
-            case OTXTaskType.MULTI_LABEL_CLS:
-                from .dataset.classification import OTXMultilabelClsDataset
+            case TaskType.MULTI_LABEL_CLS:
+                from .dataset.classification import MultilabelClsDataset
 
-                return OTXMultilabelClsDataset(**common_kwargs)
+                return MultilabelClsDataset(**common_kwargs)
 
-            case OTXTaskType.H_LABEL_CLS:
-                from .dataset.classification import OTXHlabelClsDataset
+            case TaskType.H_LABEL_CLS:
+                from .dataset.classification import HlabelClsDataset
 
-                return OTXHlabelClsDataset(**common_kwargs)
+                return HlabelClsDataset(**common_kwargs)
 
-            case OTXTaskType.DETECTION:
-                from .dataset.detection import OTXDetectionDataset
+            case TaskType.DETECTION:
+                from .dataset.detection import DetectionDataset
 
-                return OTXDetectionDataset(**common_kwargs)
+                return DetectionDataset(**common_kwargs)
 
-            case OTXTaskType.ROTATED_DETECTION | OTXTaskType.INSTANCE_SEGMENTATION:
-                from .dataset.instance_segmentation import OTXInstanceSegDataset
+            case TaskType.ROTATED_DETECTION | TaskType.INSTANCE_SEGMENTATION:
+                from .dataset.instance_segmentation import InstanceSegDataset
 
-                return OTXInstanceSegDataset(task_type=task, **common_kwargs)
+                return InstanceSegDataset(task_type=task, **common_kwargs)
 
-            case OTXTaskType.SEMANTIC_SEGMENTATION:
-                from .dataset.segmentation import OTXSegmentationDataset
+            case TaskType.SEMANTIC_SEGMENTATION:
+                from .dataset.segmentation import SegmentationDataset
 
-                return OTXSegmentationDataset(**common_kwargs)
+                return SegmentationDataset(**common_kwargs)
 
-            case OTXTaskType.KEYPOINT_DETECTION:
-                from .dataset.keypoint_detection import OTXKeypointDetectionDataset
+            case TaskType.KEYPOINT_DETECTION:
+                from .dataset.keypoint_detection import KeypointDetectionDataset
 
-                return OTXKeypointDetectionDataset(**common_kwargs)
+                return KeypointDetectionDataset(**common_kwargs)
 
             case _:
                 raise NotImplementedError(task)

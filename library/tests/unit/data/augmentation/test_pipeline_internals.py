@@ -33,7 +33,7 @@ class _ScaleTransform(nn.Module):
 
 
 class _SimpleSample:
-    """Minimal duck-type of OTXSample for testing."""
+    """Minimal duck-type of BaseSample for testing."""
 
     def __init__(self, image: torch.Tensor, img_info: object | None = None) -> None:
         self.image = image
