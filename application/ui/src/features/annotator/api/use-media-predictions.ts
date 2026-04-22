@@ -1,12 +1,16 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import { queryOptions, useIsFetching, useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { fetchClient } from '../../../api/client';
 import { PredictionDTO, PredictionVideoRangePayload } from '../../../constants/shared-types';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
+
+const MEDIA_PREDICTIONS_QUERY_KEY_PREFIX = (projectId: string, mediaId: string) => {
+    return [projectId, 'media-predictions', mediaId];
+};
 
 export const mediaPredictionsQueryOptions = ({
     projectId,
@@ -20,7 +24,7 @@ export const mediaPredictionsQueryOptions = ({
     range?: PredictionVideoRangePayload | null;
 }) =>
     queryOptions({
-        queryKey: [projectId, 'media-predictions', mediaId, modelId, range],
+        queryKey: [...MEDIA_PREDICTIONS_QUERY_KEY_PREFIX(projectId, mediaId), modelId, range],
         queryFn: async () => {
             if (modelId === undefined) return [];
 
@@ -70,4 +74,16 @@ export const useMediaPredictions = ({
     const projectId = useProjectIdentifier();
 
     return useQuery(mediaPredictionsQueryOptions({ projectId, modelId, mediaId, range }));
+};
+
+export const useIsLoadingAnyPredictions = (mediaId: string) => {
+    const projectId = useProjectIdentifier();
+
+    const queryKey = MEDIA_PREDICTIONS_QUERY_KEY_PREFIX(projectId, mediaId);
+
+    return (
+        useIsFetching({
+            queryKey,
+        }) > 0
+    );
 };

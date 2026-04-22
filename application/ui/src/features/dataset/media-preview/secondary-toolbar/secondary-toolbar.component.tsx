@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { ActionButton, Button, ButtonGroup, Divider, Flex, Icon, Text } from '@geti/ui';
@@ -9,6 +9,7 @@ import type { DatasetSubset, Media } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
 import { Labels } from '../../../annotator/labels/labels.component';
+import { useVideoPlayerContext } from '../../../annotator/video-player/video-player-provider.component';
 import { isClassificationTask, isMultiLabelClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
@@ -47,7 +48,8 @@ type SecondaryToolbarProps = {
     onModeChange: (mode: AnnotatorMode) => void;
     onSelectNextMediaItem: () => void;
     subset: DatasetSubset;
-    isSubsetChanged?: boolean;
+    isSubsetChanged: boolean;
+    isLoadingPredictions: boolean;
 };
 
 export const SecondaryToolbar = ({
@@ -60,8 +62,11 @@ export const SecondaryToolbar = ({
     onSelectNextMediaItem,
     subset,
     isSubsetChanged = false,
+    isLoadingPredictions = false,
 }: SecondaryToolbarProps) => {
     const { data: selectedProject } = useProject();
+    const videoPlayerContext = useVideoPlayerContext();
+    const isPlaying = videoPlayerContext?.videoControls?.isPlaying ?? false;
 
     const { canSubmit, isSaving, submitAnnotations } = useAnnotationActions();
 
@@ -84,7 +89,7 @@ export const SecondaryToolbar = ({
     const isAnnotationMode = mode === 'annotation';
 
     // If annotations are not changed but subset has changed we want to allow user to submit
-    const isSubmitDisabled = !((canSubmit || isSubsetChanged) && !isSaving);
+    const isSubmitDisabled = (!canSubmit && !isSubsetChanged) || isSaving || isLoadingPredictions;
 
     return (
         <Flex
@@ -98,7 +103,7 @@ export const SecondaryToolbar = ({
                 <Toolbar.Section>
                     <Flex alignItems={'center'} gap={'size-200'}>
                         <AnnotatorModes mode={mode} onModeChange={onModeChange} />
-                        {isPredictionMode && <PredictionModelSelector />}
+                        {isPredictionMode && <PredictionModelSelector isDisabled={isLoadingPredictions || isPlaying} />}
                     </Flex>
                 </Toolbar.Section>
             </Toolbar.Container>
