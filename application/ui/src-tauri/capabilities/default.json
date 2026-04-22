@@ -9,7 +9,6 @@
             "identifier": "opener:allow-open-url",
             "allow": [
                 { "url": "https://www.intel.com/*" },
-                { "url": "https://www.apache.org/*" },
                 { "url": "https://github.com/*" }
             ]
         }

@@ -6,7 +6,7 @@ import { type ComponentProps } from 'react';
 import { Link as GetiLink } from '@geti/ui';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
-export type LinkProps = ComponentProps<typeof GetiLink>;
+type LinkProps = ComponentProps<typeof GetiLink>;
 
 export const Link = ({ href, target, onPress, ...props }: LinkProps) => {
     const shouldOpenExternally = target === '_blank' && Boolean(href);

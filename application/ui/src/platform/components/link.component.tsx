@@ -5,6 +5,6 @@ import { type ComponentProps } from 'react';
 
 import { Link as GetiLink } from '@geti/ui';
 
-export type LinkProps = ComponentProps<typeof GetiLink>;
+type LinkProps = ComponentProps<typeof GetiLink>;
 
 export const Link = (props: LinkProps) => <GetiLink {...props} />;
