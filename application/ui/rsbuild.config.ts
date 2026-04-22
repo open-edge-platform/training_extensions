@@ -9,18 +9,19 @@ import { pluginSvgr } from '@rsbuild/plugin-svgr';
 
 const { publicVars } = loadEnv({ prefixes: ['PUBLIC_'] });
 
-// `TAURI_ENV_DEBUG` is set by the Tauri CLI: `tauri dev` / `start:desktop`
-// propagate it as `true`, and `tauri build` sets it to `false`. We disable
-// minification and emit inline JS source maps for debug desktop builds so
-// stack traces are readable inside the embedded WebView.
-const isTauriDebugBuild = process.env.TAURI_ENV_DEBUG === 'true';
-
 // Platform target selection. When building for the Tauri desktop shell we
 // prepend `.tauri.*` extensions so the bundler resolves platform-specific
 // overrides (e.g. `foo.tauri.ts` wins over `foo.ts`). Files not shadowed by
 // a `.tauri.*` twin resolve as usual. This keeps Tauri-specific code out of
 // the web graph entirely, and removes the need for runtime `isTauri` checks.
 const isTauriBuild = process.env.BUILD_TARGET === 'tauri';
+
+// `TAURI_ENV_DEBUG` is set by the Tauri CLI: `tauri dev` / `start:desktop`
+// propagate it as `true`, and `tauri build` sets it to `false`. We disable
+// minification and emit inline JS source maps for debug desktop builds so
+// stack traces are readable inside the embedded WebView.
+const isTauriDebugBuild = isTauriBuild && process.env.TAURI_ENV_DEBUG === 'true';
+
 const platformExtensions = isTauriBuild ? ['.tauri.tsx', '.tauri.ts', '.tauri.jsx', '.tauri.js', '.tauri.scss'] : [];
 // `.scss` is appended unconditionally so extensionless SCSS imports (used
 // to opt in to the platform-override mechanism, e.g. `import './foo'`)
