@@ -137,7 +137,7 @@ Below is how to train with auto-configuration, which is provided to users with d
 from getitune.engine import create_engine
 
 # get all the available recipes for all tasks
-from getitune.backend.native.cli.utils import list_models
+from getitune.backend.lightning.cli.utils import list_models
 model_lists = list_models(print_table=True)
 
 # instantiate native getitune engine with atss model for object detection

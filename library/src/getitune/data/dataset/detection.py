@@ -1,14 +1,14 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTXDetectionDataset."""
+"""Module for DetectionDataset."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from getitune import OTXTaskType
-from getitune.data.dataset.base import OTXDataset, Transforms
+from getitune import TaskType
+from getitune.data.dataset.base import Transforms, VisionDataset
 from getitune.data.dataset.mixins import DataAugSwitchMixin
 from getitune.data.entity.sample import DetectionSample
 from getitune.data.entity.utils import with_image_dtype
@@ -18,12 +18,12 @@ if TYPE_CHECKING:
     from datumaro.experimental import Dataset
 
 
-class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
-    """OTX Dataset for object detection tasks.
+class DetectionDataset(VisionDataset, DataAugSwitchMixin):
+    """getitune Dataset for object detection tasks.
 
     This dataset handles object detection where each image contains multiple objects with
     bounding box annotations. It processes Datumaro dataset items and converts them into
-    OTXSample format suitable for object detection training and inference.
+    BaseSample format suitable for object detection training and inference.
 
     Args:
         dm_subset (DmDataset): Datumaro dataset subset containing the data items.
@@ -33,8 +33,8 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
 
 
     Example:
-        >>> from getitune.data.dataset.detection import OTXDetectionDataset
-        >>> dataset = OTXDetectionDataset(
+        >>> from getitune.data.dataset.detection import DetectionDataset
+        >>> dataset = DetectionDataset(
         ...     dm_subset=my_dm_subset,
         ...     transforms=my_transforms,
         ... )
@@ -87,10 +87,10 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
         return super()._apply_transforms(entity)
 
     @property
-    def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+    def task_type(self) -> TaskType:
+        """Getitune Task Type for the dataset.
 
         Returns:
-            OTXTaskType: The object detection task type.
+            TaskType: The object detection task type.
         """
-        return OTXTaskType.DETECTION
+        return TaskType.DETECTION

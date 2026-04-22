@@ -58,7 +58,7 @@ def test_wrap(fxt_label_info, task_type):
     assert ("model_info", "max_pred_number") in metadata
 
     # misc
-    assert ("model_info", "otx_version") in metadata
+    assert ("model_info", "getitune_version") in metadata
     assert ("model_info", "model_name") in metadata
 
 

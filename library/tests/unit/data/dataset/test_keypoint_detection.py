@@ -14,12 +14,12 @@ from torch import Tensor
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import Identity, Transform
 
-from getitune.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
+from getitune.data.dataset.keypoint_detection import KeypointDetectionDataset
 from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import KeypointSample
 
 
-class TestOTXKeypointDetectionDataset:
+class TestKeypointDetectionDataset:
     @pytest.fixture
     def fxt_dm_dataset(self) -> Dataset:
         """Build a small keypoint detection dataset with the new DM API."""
@@ -58,7 +58,7 @@ class TestOTXKeypointDetectionDataset:
         fxt_dm_dataset,
         fxt_tvt_transforms: Transform,
     ) -> None:
-        dataset = OTXKeypointDetectionDataset(
+        dataset = KeypointDetectionDataset(
             fxt_dm_dataset,
             transforms=fxt_tvt_transforms,
         )

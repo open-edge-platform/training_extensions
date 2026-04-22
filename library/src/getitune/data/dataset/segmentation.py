@@ -1,28 +1,28 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTXSegmentationDataset."""
+"""Module for SegmentationDataset."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 from getitune import SegLabelInfo
-from getitune.data.dataset.base import OTXDataset, Transforms
+from getitune.data.dataset.base import Transforms, VisionDataset
 from getitune.data.entity.sample import SegmentationSample
 from getitune.data.entity.utils import with_image_dtype
-from getitune.types import OTXTaskType
+from getitune.types import TaskType
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
 
 
-class OTXSegmentationDataset(OTXDataset):
-    """OTX Dataset for semantic segmentation tasks.
+class SegmentationDataset(VisionDataset):
+    """getitune Dataset for semantic segmentation tasks.
 
     This dataset handles semantic segmentation where each pixel in an image is classified
     into one of multiple classes. It processes Datumaro dataset items and converts them
-    into OTXSample format suitable for semantic segmentation training and inference.
+    into BaseSample format suitable for semantic segmentation training and inference.
 
     Args:
         dm_subset: Datumaro dataset subset containing the data items.
@@ -36,8 +36,8 @@ class OTXSegmentationDataset(OTXDataset):
         ignore_index: Index value for pixels to be ignored during training.
 
     Example:
-        >>> from getitune.data.dataset.segmentation import OTXSegmentationDataset
-        >>> dataset = OTXSegmentationDataset(
+        >>> from getitune.data.dataset.segmentation import SegmentationDataset
+        >>> dataset = SegmentationDataset(
         ...     dm_subset=my_dm_subset,
         ...     transforms=my_transforms,
         ...     ignore_index=255
@@ -70,10 +70,10 @@ class OTXSegmentationDataset(OTXDataset):
         )
 
     @property
-    def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+    def task_type(self) -> TaskType:
+        """Getitune Task Type for the dataset.
 
         Returns:
-            OTXTaskType: The semantic segmentation task type.
+            TaskType: The semantic segmentation task type.
         """
-        return OTXTaskType.SEMANTIC_SEGMENTATION
+        return TaskType.SEMANTIC_SEGMENTATION

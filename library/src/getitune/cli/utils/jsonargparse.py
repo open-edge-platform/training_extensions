@@ -290,7 +290,7 @@ def apply_override(cfg: Namespace, overrides: Namespace) -> None:
 
 
 # [FIXME] harimkang: have to see if there's a better way to do it. (For now, Added 2 lines to existing function)
-# The thing called `overrides` is only available in OTXCLI via `apply_config`.
+# The thing called `overrides` is only available in CLI via `apply_config`.
 # Currently, default_config_files in jsonargparse is loading the default config file without using the ActionConfigFile,
 # and it's not updating the overrides properly in the process.
 # So this function patches to allow configs to come in via `default_config_files` with `overrides` applied.
@@ -439,10 +439,10 @@ def get_configuration(config_path: str | PathLike, subcommand: str = "train", **
     Returns:
         dict: The configuration dictionary.
     """
-    from getitune.cli.cli import OTXCLI
+    from getitune.cli.cli import CLI
 
     with patch_update_configs():
-        parser, _ = OTXCLI.engine_subcommand_parser(subcommand=subcommand)
+        parser, _ = CLI.engine_subcommand_parser(subcommand=subcommand)
         if kwargs:
             parser.set_defaults(**kwargs)
 
@@ -486,7 +486,7 @@ def get_instantiated_classes(
     Returns:
         dict: The instantiated classes for training.
     """
-    from getitune.cli import OTXCLI
+    from getitune.cli import CLI
 
     cli_args = [
         "train",
@@ -501,13 +501,13 @@ def get_instantiated_classes(
         cli_args.extend(["--data_root", str(data_root)])
     for key, value in kwargs.items():
         cli_args.extend([f"--{key}", str(value)])
-    otx_cli = OTXCLI(
+    getitune_cli = CLI(
         args=cli_args,
         run=False,
     )
 
-    otx_cli.set_seed()
-    otx_cli.instantiate_classes(instantiate_engine=False)
-    instantiated_config = namespace_to_dict(otx_cli.config_init["train"])
+    getitune_cli.set_seed()
+    getitune_cli.instantiate_classes(instantiate_engine=False)
+    instantiated_config = namespace_to_dict(getitune_cli.config_init["train"])
 
-    return instantiated_config, otx_cli.prepare_subcommand_kwargs("train")
+    return instantiated_config, getitune_cli.prepare_subcommand_kwargs("train")

@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""CPU and GPU augmentation pipelines for OTX.
+"""CPU and GPU augmentation pipelines for getitune.
 
 This module provides the core augmentation pipeline classes:
 - CPUAugmentationPipeline: Runs in Dataset workers using torchvision.transforms.v2
@@ -28,7 +28,7 @@ from torch import nn
 
 from getitune.config.data import IntensityConfig
 from getitune.data.augmentation.intensity import build_intensity_transform
-from getitune.data.entity.sample import OTXSample
+from getitune.data.entity.sample import BaseSample
 from getitune.data.utils import import_object_from_module
 
 if TYPE_CHECKING:
@@ -201,7 +201,7 @@ class _IntensityAdapter(nn.Module):
         self.transform = transform
         self.bit_depth = _DTYPE_TO_BIT_DEPTH.get(storage_dtype, 8)
 
-    def forward(self, sample: OTXSample) -> OTXSample:
+    def forward(self, sample: BaseSample) -> BaseSample:
         """Apply intensity transform and set ``img_info.bit_depth``."""
         sample.image = self.transform(sample.image)
         if hasattr(sample, "img_info") and sample.img_info is not None:
@@ -220,13 +220,13 @@ class CPUAugmentationPipeline(nn.Module):
     All outputs are fixed-size tensors suitable for batch stacking.
 
     The pipeline supports two types of transforms:
-    1. OTX-style transforms: Have a `forward(*OTXDataItem)` signature and handle
+    1. getitune-style transforms: Have a `forward(*DataItem)` signature and handle
        all data types internally (image, bboxes, masks, etc.)
     2. Native torchvision.v2 transforms: Applied to all tv_tensors extracted
-       from the OTXDataItem (image, bboxes, masks, keypoints)
+       from the DataItem (image, bboxes, masks, keypoints)
 
     Args:
-        augmentations: List of torchvision.transforms.v2 transforms or OTX transforms.
+        augmentations: List of torchvision.transforms.v2 transforms or getitune transforms.
 
     Example:
         >>> pipeline = CPUAugmentationPipeline([
@@ -234,7 +234,7 @@ class CPUAugmentationPipeline(nn.Module):
         ...     v2.RandomHorizontalFlip(p=0.5),
         ...     v2.ToDtype(torch.float32, scale=True),
         ... ])
-        >>> item = pipeline(item)  # OTXDataItem with fixed-size image
+        >>> item = pipeline(item)  # DataItem with fixed-size image
     """
 
     def __init__(self, augmentations: list[nn.Module] | None = None) -> None:
@@ -357,22 +357,22 @@ class CPUAugmentationPipeline(nn.Module):
 
         Rules:
         - Pure torchvision transforms (module starts with ``torchvision.``) → native.
-        - OTX subclasses of ``tvt_v2.Transform`` that define their own ``forward()``
-          (e.g. ``Resize``, ``CachedMosaic``) handle ``OTXSample`` themselves → NOT native.
-        - OTX wrappers that only add ``__call__`` probability gating without a custom
+        - getitune subclasses of ``tvt_v2.Transform`` that define their own ``forward()``
+          (e.g. ``Resize``, ``CachedMosaic``) handle ``BaseSample`` themselves → NOT native.
+        - getitune wrappers that only add ``__call__`` probability gating without a custom
           ``forward()`` (e.g. ``RandomIoUCrop``) delegate to the parent torchvision
           ``forward()`` and must go through ``_apply_native_transform`` → native.
         """
         module = type(transform).__module__
         if module.startswith("torchvision."):
             return True
-        # OTX class that is a tvt_v2.Transform subclass: treat as native only when it
+        # getitune class that is a tvt_v2.Transform subclass: treat as native only when it
         # does NOT define its own forward() (i.e. it relies on the parent's forward).
         if isinstance(transform, tvt_v2.Transform):
             return "forward" not in type(transform).__dict__
         return False
 
-    def _apply_native_transform(self, transform: nn.Module, inputs: OTXSample) -> OTXSample:  # type: ignore[return-value]
+    def _apply_native_transform(self, transform: nn.Module, inputs: BaseSample) -> BaseSample:  # type: ignore[return-value]
         """Apply native torchvision transform only to image-related fields.
 
         TorchVision v2 expects standard field names like `boxes`/`labels`; we
@@ -401,23 +401,23 @@ class CPUAugmentationPipeline(nn.Module):
             result = transform(transformable["image"])
             inputs.image = result
         else:
-            # Reverse mapping: torchvision key → OTXSample attribute name
-            tv_to_otx = {"boxes": "bboxes", "labels": "label"}
+            # Reverse mapping: torchvision key → BaseSample attribute name
+            tv_to_getitune = {"boxes": "bboxes", "labels": "label"}
 
             result = transform(transformable)
             if isinstance(result, dict):
                 for key, value in result.items():
-                    attr = tv_to_otx.get(key, key)
+                    attr = tv_to_getitune.get(key, key)
                     setattr(inputs, attr, value)
             else:
                 # Single result, assume it's the image
                 inputs.image = result
         return inputs
 
-    def forward(self, *inputs: OTXSample) -> OTXSample | None:
+    def forward(self, *inputs: BaseSample) -> BaseSample | None:
         """Forward with skipping None."""
         needs_unpacking = len(inputs) > 1
-        outputs: OTXSample | None = inputs[0]  # type: ignore[assignment]
+        outputs: BaseSample | None = inputs[0]  # type: ignore[assignment]
         for transform in self.augmentations:
             if self._is_native_torchvision_transform(transform):
                 # Apply native transforms only to image-related fields

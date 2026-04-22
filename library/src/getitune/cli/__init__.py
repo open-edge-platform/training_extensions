@@ -6,16 +6,16 @@
 from datetime import timedelta
 from time import time
 
-from getitune.cli.cli import OTXCLI
+from getitune.cli.cli import CLI
 
 
 def main() -> None:
-    """Entry point for OTX CLI.
+    """Entry point for getitune CLI.
 
-    This function is a single entry point for all OTX CLI related operations:
+    This function is a single entry point for all getitune CLI related operations:
     """
     start = time()
-    OTXCLI()
+    CLI()
     dt = timedelta(seconds=time() - start)
     print(f"Elapsed time: {dt}")
 

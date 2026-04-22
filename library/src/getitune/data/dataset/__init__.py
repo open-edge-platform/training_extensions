@@ -1,22 +1,22 @@
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module defines OTXDatasets."""
+"""Module defines VisionDatasets."""
 
-from .classification import OTXHlabelClsDataset, OTXMulticlassClsDataset, OTXMultilabelClsDataset
-from .detection import OTXDetectionDataset
-from .instance_segmentation import OTXInstanceSegDataset
-from .keypoint_detection import OTXKeypointDetectionDataset
-from .segmentation import OTXSegmentationDataset
-from .tile import OTXTileDatasetFactory
+from .classification import HlabelClsDataset, MulticlassClsDataset, MultilabelClsDataset
+from .detection import DetectionDataset
+from .instance_segmentation import InstanceSegDataset
+from .keypoint_detection import KeypointDetectionDataset
+from .segmentation import SegmentationDataset
+from .tile import TileDatasetFactory
 
 __all__ = [
-    "OTXDetectionDataset",
-    "OTXHlabelClsDataset",
-    "OTXInstanceSegDataset",
-    "OTXKeypointDetectionDataset",
-    "OTXMulticlassClsDataset",
-    "OTXMultilabelClsDataset",
-    "OTXSegmentationDataset",
-    "OTXTileDatasetFactory",
+    "DetectionDataset",
+    "HlabelClsDataset",
+    "InstanceSegDataset",
+    "KeypointDetectionDataset",
+    "MulticlassClsDataset",
+    "MultilabelClsDataset",
+    "SegmentationDataset",
+    "TileDatasetFactory",
 ]

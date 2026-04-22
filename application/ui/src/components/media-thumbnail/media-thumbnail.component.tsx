@@ -39,7 +39,7 @@ const VideoIndicator = ({ duration }: VideoIndicatorProps) => {
 export const MediaThumbnail = ({ onDoubleClick, onClick, url, alt, item }: MediaThumbnailProps) => {
     return (
         <div onDoubleClick={onDoubleClick} onClick={onClick} className={classes.imgContainer}>
-            <img src={url} alt={alt} className={classes.img} />
+            <img src={url} alt={alt} className={classes.img} draggable={false} />
             {isVideo(item) && <VideoIndicator duration={item.duration} />}
         </div>
     );

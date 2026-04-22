@@ -20,18 +20,18 @@ from getitune.cli.utils import absolute_path
 from getitune.cli.utils.help_formatter import CustomHelpFormatter
 from getitune.cli.utils.jsonargparse import get_short_docstring, patch_update_configs
 from getitune.cli.utils.workspace import Workspace
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 if TYPE_CHECKING:
     from jsonargparse._actions import _ActionSubCommands
 
-    from getitune.backend.native.models.base import OTXModel
-    from getitune.data.module import OTXDataModule
+    from getitune.backend.lightning.models.base import LightningModel
+    from getitune.data.module import DataModule
 
 
 _ENGINE_AVAILABLE = True
 try:
-    from getitune.backend.native.engine import OTXEngine
+    from getitune.backend.lightning.engine import LightningEngine
     from getitune.config import register_configs
 
     register_configs()
@@ -39,13 +39,13 @@ except ImportError:
     _ENGINE_AVAILABLE = False
 
 
-class OTXCLI:
-    """OTX CLI entrypoint."""
+class CLI:
+    """getitune CLI entrypoint."""
 
-    datamodule: OTXDataModule
+    datamodule: DataModule
 
     def __init__(self, args: list[str] | None = None, run: bool = True) -> None:
-        """Initialize OTX CLI."""
+        """Initialize getitune CLI."""
         self.console = Console()
         self._subcommand_method_arguments: dict[str, list[str]] = {}
         # Preserve the explicit args passed in so that add_subcommands() and
@@ -79,7 +79,7 @@ class OTXCLI:
         return self._argv[idx + 1]
 
     def init_parser(self) -> ArgumentParser:
-        """Initialize the argument parser for the OTX CLI.
+        """Initialize the argument parser for the getitune CLI.
 
         Returns:
             ArgumentParser: The initialized argument parser.
@@ -95,7 +95,7 @@ class OTXCLI:
             "--version",
             action="version",
             version=f"%(prog)s {__version__}",
-            help="Display OTX version number.",
+            help="Display getitune version number.",
         )
         return parser
 
@@ -155,7 +155,7 @@ class OTXCLI:
         )
         parser.add_argument(
             "--disable-infer-num-classes",
-            help="OTX automatically infers num_classes from the given dataset "
+            help="getitune automatically infers num_classes from the given dataset "
             "and applies it to the model initialization."
             "Consequently, there might be a mismatch with the provided model configuration during runtime. "
             "Setting this option to true will disable this behavior.",
@@ -163,7 +163,7 @@ class OTXCLI:
         )
         engine_skip = {"model", "work_dir", "data"}
         parser.add_class_arguments(
-            OTXEngine,
+            LightningEngine,
             "engine",
             fail_untyped=False,
             sub_configs=True,
@@ -171,20 +171,20 @@ class OTXCLI:
             skip=engine_skip,
         )
         # Model Settings
-        from getitune.backend.native.models.base import OTXModel
+        from getitune.backend.lightning.models.base import LightningModel
         from getitune.backend.openvino.models import OVModel
 
         parser.add_subclass_arguments(
-            (OTXModel, OVModel),
+            (LightningModel, OVModel),
             "model",
             required=False,
             fail_untyped=False,
         )
         # Datamodule Settings
-        from getitune.data.module import OTXDataModule
+        from getitune.data.module import DataModule
 
         parser.add_class_arguments(
-            OTXDataModule,
+            DataModule,
             "data",
             fail_untyped=False,
             sub_configs=True,
@@ -197,9 +197,9 @@ class OTXCLI:
         parser.link_arguments("engine.device", "data.device")
 
         added_arguments = parser.add_method_arguments(
-            OTXEngine,
+            LightningEngine,
             subcommand,
-            skip=set(OTXCLI.engine_subcommands()[subcommand]),
+            skip=set(CLI.engine_subcommands()[subcommand]),
             fail_untyped=False,
         )
 
@@ -240,7 +240,7 @@ class OTXCLI:
     def add_subcommands(self) -> None:
         """Adds subcommands to the CLI parser.
 
-        This method initializes and configures subcommands for the OTX CLI parser.
+        This method initializes and configures subcommands for the getitune CLI parser.
         It iterates over the available subcommands, adds arguments specific to each subcommand,
         and registers them with the parser.
 
@@ -265,7 +265,7 @@ class OTXCLI:
                 # If the user specifies the config directly, not set the cache ckpt as default.
                 self._load_cache_ckpt(parser=sub_parser)
 
-            fn = getattr(OTXEngine, subcommand)
+            fn = getattr(LightningEngine, subcommand)
             description = get_short_docstring(fn)
 
             self._subcommand_method_arguments[subcommand] = added_arguments
@@ -301,7 +301,7 @@ class OTXCLI:
             find_parser.add_argument(
                 "--task",
                 help="Value for filtering by task. Default is None, which shows all recipes.",
-                type=Optional[OTXTaskType],
+                type=Optional[TaskType],
             )
             find_parser.add_argument(
                 "--pattern",
@@ -310,7 +310,7 @@ class OTXCLI:
                       you can use '--pattern efficient'",
                 type=Optional[str],
             )
-            parser_subcommands.add_subcommand("find", find_parser, help="This shows the model provided by OTX.")
+            parser_subcommands.add_subcommand("find", find_parser, help="This shows the model provided by getitune.")
 
     def instantiate_classes(self, instantiate_engine: bool = True) -> None:
         """Instantiate the necessary classes based on the subcommand.
@@ -331,7 +331,7 @@ class OTXCLI:
             self.workspace = self.get_config_value(self.config_init, "workspace")
             self.datamodule = self.get_config_value(self.config_init, "data")
 
-            # pass OTXDataModule input size, mean and std to the model
+            # pass DataModule input size, mean and std to the model
             if self.datamodule.input_size is None:
                 msg = (
                     "Input size is not specified in the datamodule. Ensure that the datamodule has a valid input size."
@@ -356,7 +356,7 @@ class OTXCLI:
             if instantiate_engine:
                 self.engine = self.instantiate_engine()
 
-    def instantiate_engine(self) -> OTXEngine:
+    def instantiate_engine(self) -> LightningEngine:
         """Instantiate an Engine object with the specified parameters.
 
         Returns:
@@ -364,14 +364,14 @@ class OTXCLI:
         """
         engine_kwargs = self.get_config_value(self.config_init, "engine")
 
-        return OTXEngine(
+        return LightningEngine(
             model=self.model,
             data=self.datamodule,
             work_dir=self.workspace.work_dir,
             **engine_kwargs,
         )
 
-    def instantiate_model(self, model_config: Namespace) -> OTXModel:
+    def instantiate_model(self, model_config: Namespace) -> LightningModel:
         """Instantiate the model based on the subcommand.
 
         This method checks if the subcommand is one of the engine subcommands.
@@ -383,7 +383,7 @@ class OTXCLI:
         Returns:
             tuple: The model and optimizer and scheduler.
         """
-        from getitune.backend.native.models.base import OTXModel
+        from getitune.backend.lightning.models.base import LightningModel
         from getitune.utils.utils import can_pass_tile_config, get_model_cls_from_config, should_pass_label_info
 
         skip = set()
@@ -399,7 +399,7 @@ class OTXCLI:
             model_config.init_args.label_info = self.datamodule.label_info
             warning_msg = (
                 "Automatically infer label_info from the given dataset. "
-                "Then, giving it to the OTXModel.__init__() argument. "
+                "Then, giving it to the LightningModel.__init__() argument. "
                 "If you don't want this behavior, please use `--disable-infer-num-classes` option."
             )
             warn(warning_msg, stacklevel=0)
@@ -417,10 +417,10 @@ class OTXCLI:
         if isinstance(scheduler_arg, str) and scheduler_arg.endswith("<lambda>"):
             model_config.init_args.pop("scheduler")
 
-        # Parses the OTXModel separately to update num_classes.
+        # Parses the LightningModel separately to update num_classes.
         model_parser = ArgumentParser()
-        model_parser.add_subclass_arguments(OTXModel, "model", skip=skip, required=False, fail_untyped=False)
-        model: OTXModel = model_parser.instantiate_classes(Namespace(model=model_config)).get("model")
+        model_parser.add_subclass_arguments(LightningModel, "model", skip=skip, required=False, fail_untyped=False)
+        model: LightningModel = model_parser.instantiate_classes(Namespace(model=model_config)).get("model")
         self.config_init[self.subcommand]["model"] = model
 
         # Update self.config with model
@@ -533,7 +533,7 @@ class OTXCLI:
         """
         self.console.print(f"[blue]{LIBRARY_LOGO}[/blue] ver.{__version__}", justify="center")
         if self.subcommand == "find":
-            from getitune.backend.native.cli.utils import list_models
+            from getitune.backend.lightning.cli.utils import list_models
 
             list_models(print_table=True, **self.config[self.subcommand])
         elif self.subcommand in self.engine_subcommands():
@@ -556,7 +556,7 @@ class OTXCLI:
         if outputs is None:
             return
         if self.subcommand == "train" and isinstance(outputs, dict):
-            # Print Metric like 'otx test'
+            # Print Metric like 'getitune test'
             from rich.table import Column, Table
             from torch import Tensor
 
