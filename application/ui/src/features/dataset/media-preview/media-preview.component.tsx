@@ -124,7 +124,7 @@ const MediaPreviewContent = ({
         return predictionsData?.flatMap((predictionData) => predictionData.prediction) ?? [];
     }, [predictionsData]);
 
-    const [mode, setMode] = useAnnotatorMode({ predictions: initialPredictions, annotations: initialAnnotations });
+    const [mode, setMode] = useAnnotatorMode();
 
     return (
         <ToolProvider>

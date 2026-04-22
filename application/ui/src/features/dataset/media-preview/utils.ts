@@ -91,31 +91,10 @@ export const useNextMediaPrefetch = (currentMediaItem: Media, allMediaItems: Med
     };
 };
 
-export const useAnnotatorMode = ({
-    annotations,
-    predictions,
-}: {
-    annotations: AnnotationDTO[];
-    predictions: PredictionDTO[];
-}) => {
+export const useAnnotatorMode = () => {
     const projectId = useProjectIdentifier();
-    const hasPredictions = !isEmpty(predictions);
-    const hasAnnotations = !isEmpty(annotations);
-    const [mode, setMode] = useLocalStorage<AnnotatorMode>(
-        `${projectId}-annotator-mode`,
-        hasAnnotations || !hasPredictions ? 'annotation' : 'prediction'
-    );
 
-    useEffect(() => {
-        if (hasAnnotations) {
-            setMode('annotation');
-            return;
-        }
-
-        if (hasPredictions) {
-            setMode('prediction');
-        }
-    }, [hasAnnotations, hasPredictions, setMode]);
+    const [mode, setMode] = useLocalStorage<AnnotatorMode>(`${projectId}-annotator-mode`, 'annotation');
 
     return [mode, setMode] as const;
 };
