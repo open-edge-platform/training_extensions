@@ -18,6 +18,7 @@ interface MultiSelectListProps
     > {
     name: string;
     label?: string;
+    selectAllLabel?: string;
     defaultSelectedKeys: Set<string>;
     onSelectionChange?: (selectedKeys: Set<string> | 'all') => void;
     items: { id: string; name: string }[];
@@ -26,15 +27,13 @@ interface MultiSelectListProps
 export const MultiSelectList = ({
     name,
     label,
+    selectAllLabel = 'Select all',
     items,
     onSelectionChange,
     defaultSelectedKeys,
     ...listProps
 }: MultiSelectListProps) => {
-    const [selectedLabels, setSelectedLabels] = useState<Set<string>>(
-        defaultSelectedKeys
-        /* () => new Set(allSelectedByDefault ? items.map(({ id }) => id) : []) */
-    );
+    const [selectedLabels, setSelectedLabels] = useState<Set<string>>(defaultSelectedKeys);
 
     const allItemSelected = selectedLabels.size === items.length && items.length > 0;
 
@@ -55,7 +54,7 @@ export const MultiSelectList = ({
             {isNonEmptyString(label) && <Text UNSAFE_className={classes.label}>{label}</Text>}
 
             <Checkbox aria-label='Select all items' onChange={handleSelectAllItems} isSelected={allItemSelected}>
-                Select all
+                {selectAllLabel}
             </Checkbox>
 
             <ListView

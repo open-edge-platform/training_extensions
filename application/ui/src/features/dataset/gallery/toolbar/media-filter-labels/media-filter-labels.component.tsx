@@ -3,23 +3,23 @@
 
 import { CSSProperties } from 'react';
 
-import { ActionButton, Content, Dialog, DialogTrigger, dimensionValue } from '@geti/ui';
-import { Filter } from '@geti/ui/icons';
+import { Content, Dialog, DialogTrigger, dimensionValue, Flex, PressableElement, Text } from '@geti/ui';
 import { useLabelsSearchParams } from 'hooks/use-labels-search-params.hook';
 import { useProjectLabels } from 'hooks/use-project-labels.hook';
+import { isEmpty } from 'lodash-es';
 
 import { MultiSelectList } from '../../../../../components/multi-select-list/multi-select-list.component';
+import { LabelView } from '../../../../../constants/shared-types';
+import { FilterChips } from './filter-chips.component';
 
-interface MediaFilterProps {
-    isDisabled?: boolean;
-}
+import classes from './media-filter-labels.module.scss';
 
 const paddingStyle = {
     '--spectrum-dialog-padding-x': dimensionValue('size-300'),
     '--spectrum-dialog-padding-y': dimensionValue('size-300'),
 } as CSSProperties;
 
-export const MediaFilter = ({ isDisabled = false }: MediaFilterProps) => {
+export const MediaFilterLabels = () => {
     const labels = useProjectLabels();
     const { selectedLabelIds, setSelectedLabelIds } = useLabelsSearchParams();
 
@@ -29,11 +29,27 @@ export const MediaFilter = ({ isDisabled = false }: MediaFilterProps) => {
         setSelectedLabelIds(ids);
     };
 
+    const handleRemoveFilter = (id: string) => {
+        const newSelectedLabelIds = selectedLabelIds.filter((selectedId) => selectedId !== id);
+
+        setSelectedLabelIds(newSelectedLabelIds);
+    };
+
+    const filteredLabels = selectedLabelIds
+        .map((id) => labels.find((label) => label.id === id))
+        .filter(Boolean) as LabelView[];
+
     return (
         <DialogTrigger hideArrow type='popover'>
-            <ActionButton isQuiet isDisabled={isDisabled} aria-label='Filter media items'>
-                <Filter />
-            </ActionButton>
+            <PressableElement>
+                <Flex width={'size-3000'} UNSAFE_className={classes.filterContainer}>
+                    {filteredLabels.map((label) => (
+                        <FilterChips key={label.id} name={label.name} onClose={() => handleRemoveFilter(label.id)} />
+                    ))}
+
+                    {isEmpty(filteredLabels) && <Text UNSAFE_className={classes.searchPlaceholder}>Search labels</Text>}
+                </Flex>
+            </PressableElement>
 
             <Dialog width={'size-5000'} UNSAFE_style={paddingStyle} aria-label='Filter media items'>
                 <Content>
@@ -41,6 +57,7 @@ export const MediaFilter = ({ isDisabled = false }: MediaFilterProps) => {
                         name='labels'
                         items={labels}
                         maxHeight='size-2000'
+                        selectAllLabel='Toggle all'
                         onSelectionChange={handleSelectionChange}
                         defaultSelectedKeys={new Set(selectedLabelIds)}
                     />

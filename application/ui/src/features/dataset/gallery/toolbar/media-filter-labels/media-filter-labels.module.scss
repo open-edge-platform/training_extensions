@@ -1,0 +1,16 @@
+.filterContainer {
+    gap: var(--spectrum-global-dimension-size-40);
+    padding: var(--spectrum-global-dimension-size-40);
+    display: flex;
+    flex-wrap: wrap;
+    overflow: auto;
+    align-items: center;
+    border: 1px solid var(--spectrum-alias-border-color);
+    border-radius: var(--spectrum-global-dimension-size-50);
+    height: var(--spectrum-global-dimension-size-400);
+}
+
+.searchPlaceholder {
+    color: var(--placeholder-light);
+    margin-left: var(--spectrum-global-dimension-size-125);
+}
