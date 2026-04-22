@@ -12,6 +12,7 @@ import { render } from 'test-utils/render';
 import { http } from '../../../../api/utils';
 import type { Media } from '../../../../constants/shared-types';
 import { server } from '../../../../msw-node-setup';
+import { isImage } from '../../../../shared/media-item-utils';
 import { SelectedDataProvider } from '../../providers/selected-data-provider.component';
 import { Toolbar } from './toolbar.component';
 
@@ -57,7 +58,15 @@ describe('Toolbar', () => {
                 return HttpResponse.json(getMockedProject({ id: 'project-123' }));
             }),
             http.get('/api/projects/{project_id}/dataset/statistics', () => {
-                return HttpResponse.json(getMockedDatasetStatistics({}));
+                return HttpResponse.json(
+                    getMockedDatasetStatistics({
+                        media_counts: {
+                            images: items.filter(isImage).length,
+                            videos: items.filter((item) => !isImage(item)).length,
+                            video_frames: 0,
+                        },
+                    })
+                );
             })
         );
 

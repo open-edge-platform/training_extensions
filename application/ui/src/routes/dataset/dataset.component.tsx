@@ -29,7 +29,6 @@ export const Dataset = () => {
         setFilterStatus(status === 'all' ? null : status);
     };
 
-    console.log('items', items);
     return (
         <Grid
             height='100%'
@@ -46,7 +45,6 @@ export const Dataset = () => {
                 <Toolbar
                     items={items}
                     viewMode={viewMode}
-                    totalItemsCount={totalItemsCount}
                     setViewMode={setViewMode}
                     onFilter={handleFilterByStatusChange}
                 />

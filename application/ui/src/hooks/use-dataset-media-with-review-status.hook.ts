@@ -36,12 +36,10 @@ export const useDatasetMediaWithReviewStatus = ({ annotationStatus }: UseDataset
         return datasetItemsResponse.reviewStatus.get(mediaItemId) ?? false;
     };
 
-    console.log('mediaItemsResponse', mediaItemsResponse);
     return {
         items: mediaItemsResponse.items,
         isPending: mediaItemsResponse.isPending || datasetItemsResponse.isPending,
         isFetchingNextPage: mediaItemsResponse.isFetchingNextPage || datasetItemsResponse.isFetchingNextPage,
-        totalItemsCount: mediaItemsResponse.totalCount,
         fetchNextPage,
         isMediaItemReviewedById,
     };

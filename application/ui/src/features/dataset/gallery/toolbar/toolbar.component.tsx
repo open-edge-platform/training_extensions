@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction, useMemo } from 'react';
+import { Dispatch, SetStateAction, Suspense, useMemo } from 'react';
 
 import {
     Button,
@@ -11,8 +11,8 @@ import {
     Divider,
     Flex,
     Heading,
+    Loading,
     MediaViewModes,
-    Text,
     ViewModes,
 } from '@geti/ui';
 import { isString } from 'lodash-es';
@@ -29,12 +29,12 @@ import { DatasetStatistics } from './dataset-statistics/dataset-statistics.compo
 import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
 import { MediaFilterLabels } from './media-filter-labels/media-filter-labels.component';
 import { MediaUpload } from './media-upload.component';
-import { getNumberOfImagesAndVideosMessage, toggleMultipleSelection } from './util';
+import { TotalItems } from './total-items.component';
+import { toggleMultipleSelection } from './util';
 
 type ToolbarProps = {
     items: Media[];
     viewMode: ViewModes;
-    totalItemsCount: number;
     setViewMode: Dispatch<SetStateAction<ViewModes>>;
     onFilter: (status: FilterByStatusKey) => void;
 };
@@ -52,7 +52,7 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
     );
 };
 
-export const Toolbar = ({ items, viewMode, totalItemsCount, setViewMode, onFilter }: ToolbarProps) => {
+export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps) => {
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
@@ -60,9 +60,6 @@ export const Toolbar = ({ items, viewMode, totalItemsCount, setViewMode, onFilte
 
     const totalSelectedElements = selectedMediaItems?.size ?? 0;
     const hasSelectedElements = totalSelectedElements > 0;
-    const message = hasSelectedElements
-        ? `${totalSelectedElements} selected`
-        : getNumberOfImagesAndVideosMessage(items, totalItemsCount);
 
     const handleToggleManyItemSelection = () => {
         const images = items.map((item) => String(item.id));
@@ -138,14 +135,17 @@ export const Toolbar = ({ items, viewMode, totalItemsCount, setViewMode, onFilte
                 </Flex>
 
                 <Flex gap={'size-200'} alignItems={'center'}>
-                    <Text>{message}</Text>
+                    <FilterByStatus onChange={onFilter} />
+
+                    <Suspense fallback={<Loading mode='inline' size='S' />}>
+                        <TotalItems totalSelectedElements={totalSelectedElements} />
+                    </Suspense>
 
                     <FilterByStatus onChange={onFilter} />
 
                     <MediaFilterLabels />
 
                     <DatasetStatistics />
-
                     <MediaViewModes
                         viewMode={viewMode}
                         setViewMode={setViewMode}
