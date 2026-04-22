@@ -96,7 +96,7 @@ class LightningDetectionModel(LightningModel):
         )
 
         self.explain_mode = explain_mode
-        self.export_nms = True  # Whether to include NMS in the exported model graph
+        self.export_nms = False  # Whether to include NMS in the exported model graph
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 
@@ -330,8 +330,9 @@ class LightningDetectionModel(LightningModel):
     def _export_parameters(self) -> TaskLevelExportParameters:
         """Defines parameters required to export a particular model implementation."""
         nms_params: dict[str, Any] = {}
-        if not self.export_nms:
-            # Embed NMS metadata so ModelAPI handles postprocessing.
+        if not self.export_nms and "with_nms" in inspect.signature(self.model.export).parameters:
+            # Only NMS-based models (e.g. SingleStageDetector) need this metadata.
+            # DETR-based models don't use NMS and handle postprocessing differently.
             nms_params["nms_execute"] = True
             nms_params["agnostic_nms"] = False
             nms_params["nms_max_predictions"] = 0
