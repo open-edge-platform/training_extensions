@@ -55,12 +55,16 @@ jobs:
           echo "value=$(cat application/VERSION | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
 
   windows-installer:
-    name: Daily Windows installer build
+    name: Daily Windows installer build (${{ matrix.device }})
     needs: get-version
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [cpu, xpu, cuda]
     uses: ./.github/workflows/windows-installer.yml
     with:
       build_version: ${{ needs.get-version.outputs.version }}
-      device: cpu
+      device: ${{ matrix.device }}
     secrets:
       MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
       MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
