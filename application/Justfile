@@ -46,6 +46,7 @@ build-image accelerator="cpu" tag="latest": install-uv
         {{ docker-build-args }} \
         {{ docker-build-context }} \
         -f "{{ justfile_directory() }}/docker/Dockerfile" \
+        --ulimit nofile=1048576:1048576 \
         --target "${IMAGE}" \
         ${TAG_ARGS} \
         ${CACHE_FROM_ARGS} \
