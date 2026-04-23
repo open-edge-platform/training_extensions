@@ -4,10 +4,12 @@
 import { ActionButton, Button, ButtonGroup, Divider, Flex, Icon, Text } from '@geti/ui';
 import { CloseSemiBold } from '@geti/ui/icons';
 import { useProject } from 'hooks/api/project.hook';
+import { isEmpty } from 'lodash-es';
 
 import type { DatasetSubset, Media } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
+import { isVideoFrame } from '../../../../shared/media-item-utils';
 import { Labels } from '../../../annotator/labels/labels.component';
 import { useVideoPlayerContext } from '../../../annotator/video-player/video-player-provider.component';
 import { isClassificationTask, isMultiLabelClassificationTask } from '../../../project/task-type-guards';
@@ -68,7 +70,7 @@ export const SecondaryToolbar = ({
     const videoPlayerContext = useVideoPlayerContext();
     const isPlaying = videoPlayerContext?.videoControls?.isPlaying ?? false;
 
-    const { canSubmit, isSaving, submitAnnotations } = useAnnotationActions();
+    const { canSubmit, isSaving, submitAnnotations, initialAnnotations, initialPredictions } = useAnnotationActions();
 
     const handleSubmit = async () => {
         await submitAnnotations(subset);
@@ -102,7 +104,14 @@ export const SecondaryToolbar = ({
             <Toolbar.Container>
                 <Toolbar.Section>
                     <Flex alignItems={'center'} gap={'size-200'}>
-                        <AnnotatorModes mode={mode} onModeChange={onModeChange} />
+                        <AnnotatorModes
+                            // We want to reset annotation and/or prediction cue when media item changes
+                            key={isVideoFrame(mediaItem) ? `${mediaItem.id}-${mediaItem.frame_number}` : mediaItem.id}
+                            mode={mode}
+                            onModeChange={onModeChange}
+                            hasAnnotations={!isEmpty(initialAnnotations)}
+                            hasPredictions={!isEmpty(initialPredictions)}
+                        />
                         {isPredictionMode && <PredictionModelSelector isDisabled={isLoadingPredictions || isPlaying} />}
                     </Flex>
                 </Toolbar.Section>

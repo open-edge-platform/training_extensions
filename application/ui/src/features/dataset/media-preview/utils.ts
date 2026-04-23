@@ -5,10 +5,10 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { isEmpty, range } from 'lodash-es';
+import { range } from 'lodash-es';
 import { useLocalStorage } from 'usehooks-ts';
 
-import type { AnnotationDTO, Media, PredictionDTO } from '../../../constants/shared-types';
+import type { AnnotationDTO, Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideoFrame } from '../../../shared/media-item-utils';
 import { loadImageQueryOptions } from '../../annotator/hooks/use-load-image-query.hook';
@@ -91,31 +91,10 @@ export const useNextMediaPrefetch = (currentMediaItem: Media, allMediaItems: Med
     };
 };
 
-export const useAnnotatorMode = ({
-    annotations,
-    predictions,
-}: {
-    annotations: AnnotationDTO[];
-    predictions: PredictionDTO[];
-}) => {
+export const useAnnotatorMode = () => {
     const projectId = useProjectIdentifier();
-    const hasPredictions = !isEmpty(predictions);
-    const hasAnnotations = !isEmpty(annotations);
-    const [mode, setMode] = useLocalStorage<AnnotatorMode>(
-        `${projectId}-annotator-mode`,
-        hasAnnotations || !hasPredictions ? 'annotation' : 'prediction'
-    );
 
-    useEffect(() => {
-        if (hasAnnotations) {
-            setMode('annotation');
-            return;
-        }
-
-        if (hasPredictions) {
-            setMode('prediction');
-        }
-    }, [hasAnnotations, hasPredictions, setMode]);
+    const [mode, setMode] = useLocalStorage<AnnotatorMode>(`${projectId}-annotator-mode`, 'annotation');
 
     return [mode, setMode] as const;
 };
