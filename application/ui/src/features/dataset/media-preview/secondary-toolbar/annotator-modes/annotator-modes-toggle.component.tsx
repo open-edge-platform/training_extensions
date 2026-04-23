@@ -30,7 +30,7 @@ interface ToggleButtonWithCueProps extends ToggleButtonProps {
 
 const ToggleButtonWithCue = ({ showCue, cueLabel, onClick, isActive, children }: ToggleButtonWithCueProps) => {
     return (
-        <span className={classes.buttonWrapper}>
+        <Flex alignItems={'center'} position={'relative'}>
             <ToggleButton isActive={isActive} onClick={onClick}>
                 {children}
             </ToggleButton>
@@ -42,7 +42,7 @@ const ToggleButtonWithCue = ({ showCue, cueLabel, onClick, isActive, children }:
                     UNSAFE_className={classes.availabilityCue}
                 />
             )}
-        </span>
+        </Flex>
     );
 };
 
