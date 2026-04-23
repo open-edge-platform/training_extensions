@@ -1,14 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { isEmpty, range } from 'lodash-es';
+import { range } from 'lodash-es';
 import { useLocalStorage } from 'usehooks-ts';
 
-import type { AnnotationDTO, Media, PredictionDTO } from '../../../constants/shared-types';
+import type { AnnotationDTO, Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideoFrame } from '../../../shared/media-item-utils';
 import { loadImageQueryOptions } from '../../annotator/hooks/use-load-image-query.hook';

@@ -123,7 +123,7 @@ describe('AnnotatorModes', () => {
         });
 
         it('dismisses prediction cue after clicking prediction button when has predictions', () => {
-            renderComponent({ mode: 'prediction', hasPredictions: true, hasAnnotations: false });
+            renderComponent({ mode: 'annotation', hasPredictions: true, hasAnnotations: false });
 
             expect(screen.getByRole('status', { name: 'Prediction available' })).toBeInTheDocument();
 

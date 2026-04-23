@@ -1,14 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { act } from '@testing-library/react';
-import { getMockedAnnotation } from 'mocks/mock-annotation';
 import { getMockedMediaImage, getMockedVideoFrame, getMultipleMockedMediaImage } from 'mocks/mock-media';
-import { renderHook } from 'test-utils/render';
 
 import type { AnnotationDTO } from '../../../constants/shared-types';
 import { useVideoPlayerContext } from '../../annotator/video-player/video-player-provider.component';
-import { getInitialAnnotations, getNextMediaItem, useAnnotatorMode, usePlayPauseVideoBySystem } from './utils';
+import { getInitialAnnotations, getNextMediaItem, usePlayPauseVideoBySystem } from './utils';
 
 vi.mock('../../annotator/video-player/video-player-provider.component', () => ({
     useVideoPlayerContext: vi.fn(),

@@ -41,3 +41,9 @@
     animation: pulse 1.5s ease-in-out infinite;
     pointer-events: none;
 }
+
+@media (prefers-reduced-motion: reduce) {
+    .availabilityCue {
+        animation: none;
+    }
+}

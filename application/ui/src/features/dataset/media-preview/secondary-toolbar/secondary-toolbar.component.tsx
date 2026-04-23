@@ -9,6 +9,7 @@ import { isEmpty } from 'lodash-es';
 import type { DatasetSubset, Media } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
+import { isVideoFrame } from '../../../../shared/media-item-utils';
 import { Labels } from '../../../annotator/labels/labels.component';
 import { useVideoPlayerContext } from '../../../annotator/video-player/video-player-provider.component';
 import { isClassificationTask, isMultiLabelClassificationTask } from '../../../project/task-type-guards';
@@ -105,7 +106,7 @@ export const SecondaryToolbar = ({
                     <Flex alignItems={'center'} gap={'size-200'}>
                         <AnnotatorModes
                             // We want to reset annotation and/or prediction cue when media item changes
-                            key={mediaItem.id}
+                            key={isVideoFrame(mediaItem) ? `${mediaItem.id}-${mediaItem.frame_number}` : mediaItem.id}
                             mode={mode}
                             onModeChange={onModeChange}
                             hasAnnotations={!isEmpty(initialAnnotations)}
