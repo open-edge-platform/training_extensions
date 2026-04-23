@@ -3,7 +3,6 @@
 
 import { Key } from 'react';
 
-import { useProject } from 'hooks/api/project.hook';
 import polylabel from 'polylabel';
 
 import type { Label } from '../../../constants/shared-types';
@@ -11,7 +10,6 @@ import { useAnnotationActions } from '../../../shared/annotator/annotation-actio
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
 import type { Annotation } from '../../../shared/types';
-import { isClassificationTask } from '../../project/task-type-guards';
 import { useAnnotatorLabels } from '../annotator-labels-provider.component';
 import { AnnotationLabels } from './annotation-labels/annotation-labels.component';
 import { AnnotationShape } from './annotation-shape/annotation-shape.component';
@@ -21,7 +19,6 @@ type AnnotationShapeProps = {
 };
 
 export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) => {
-    const { data: selectedProject } = useProject();
     const { isVisible } = useAnnotationVisibility();
     const { updateAnnotations, deleteAnnotations, isReadOnlyMode } = useAnnotationActions();
     const { selectedLabelId, setSelectedLabelId } = useAnnotatorLabels();
@@ -39,11 +36,9 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
 
         const updatedLabels = annotation.labels.filter((label) => label.id !== labelId) as Label[];
         const hasNoLabels = updatedLabels.length === 0;
-        const shouldDeleteAnnotation =
-            hasNoLabels &&
-            (isClassificationTask(selectedProject.task.task_type) || annotation.shape.type === 'full_image');
 
-        if (shouldDeleteAnnotation) {
+        if (hasNoLabels) {
+            // An annotation without labels is invalid: remove it so it cannot be submitted.
             deleteAnnotations([annotation.id]);
         } else {
             updateAnnotations([{ ...annotation, labels: updatedLabels }]);

@@ -83,7 +83,7 @@ describe('AnnotationShapeWithLabels', () => {
         expect(mockSetSelectedLabelId).toHaveBeenCalledWith(null);
     });
 
-    it('keeps non-full-image behavior unchanged in detection projects', async () => {
+    it('deletes non-full-image annotation when removing its last label in detection projects', async () => {
         const annotation = getMockedAnnotation({
             id: 'rect-annotation',
             labels: [getMockedLabel({ id: 'label-1', name: 'Person' })],
@@ -92,12 +92,7 @@ describe('AnnotationShapeWithLabels', () => {
         render(<AnnotationShapeWithLabels annotation={annotation} />);
         fireEvent.pointerDown(await screen.findByRole('button', { name: 'Remove Person' }));
 
-        expect(mockDeleteAnnotations).not.toHaveBeenCalled();
-        expect(mockUpdateAnnotations).toHaveBeenCalledWith([
-            {
-                ...annotation,
-                labels: [],
-            },
-        ]);
+        expect(mockDeleteAnnotations).toHaveBeenCalledWith(['rect-annotation']);
+        expect(mockUpdateAnnotations).not.toHaveBeenCalled();
     });
 });
