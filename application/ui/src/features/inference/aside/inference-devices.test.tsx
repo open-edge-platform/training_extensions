@@ -114,11 +114,11 @@ describe('InferenceDevices', () => {
         expect(options[1]).toHaveTextContent('Intel(R) Graphics [0xe216]');
         expect(options[2]).toHaveTextContent('Intel(R) Graphics [0xe216]');
 
-        // Pick the second xpu and verify the patch is sent with correct device id
-        await userEvent.click(options[2]);
+        // Pick the first xpu (index 0) and verify the patch uses 'xpu-0' (guards against falsy-check regressions)
+        await userEvent.click(options[1]);
 
         await waitFor(() => {
-            expect(pipelinePatchSpy).toHaveBeenCalledWith({ device: 'xpu-1' });
+            expect(pipelinePatchSpy).toHaveBeenCalledWith({ device: 'xpu-0' });
         });
     });
 });

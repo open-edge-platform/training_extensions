@@ -12,7 +12,8 @@ import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook
 
 // Generate device id based on type and index (if available) to ensure uniqueness
 // in case of multiple devices of the same type (e.g., multiple GPUs)
-const getDeviceId = (device: DeviceInfo): string => (device.index ? `${device.type}-${device.index}` : device.type);
+const getDeviceId = (device: DeviceInfo): string =>
+    device.index != null ? `${device.type}-${device.index}` : device.type;
 
 export const InferenceDevices = () => {
     const { data: devices } = $api.useSuspenseQuery('get', '/api/system/devices/inference');
