@@ -20,7 +20,7 @@ type AnnotationShapeProps = {
 
 export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) => {
     const { isVisible } = useAnnotationVisibility();
-    const { updateAnnotations, deleteAnnotations, isReadOnlyMode } = useAnnotationActions();
+    const { updateAnnotations, isReadOnlyMode } = useAnnotationActions();
     const { selectedLabelId, setSelectedLabelId } = useAnnotatorLabels();
 
     const { shape, labels } = annotation;
@@ -35,14 +35,8 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
         }
 
         const updatedLabels = annotation.labels.filter((label) => label.id !== labelId) as Label[];
-        const hasNoLabels = updatedLabels.length === 0;
 
-        if (hasNoLabels) {
-            // An annotation without labels is invalid so we get rid of it.
-            deleteAnnotations([annotation.id]);
-        } else {
-            updateAnnotations([{ ...annotation, labels: updatedLabels }]);
-        }
+        updateAnnotations([{ ...annotation, labels: updatedLabels }]);
     };
 
     if (shape.type === 'full_image') {
