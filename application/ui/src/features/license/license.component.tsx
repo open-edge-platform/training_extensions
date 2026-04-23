@@ -19,8 +19,8 @@ const LICENSE_LINKS = {
         href: 'https://www.apache.org/licenses/LICENSE-2.0',
     },
     dinov2: {
-        label: 'DINOv2 License (Apache 2.0)',
-        href: 'https://github.com/facebookresearch/dinov2/blob/main/LICENSE',
+        label: 'DINOv3 License',
+        href: 'https://github.com/facebookresearch/dinov3/blob/main/LICENSE.md',
     },
 };
 
