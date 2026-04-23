@@ -290,6 +290,45 @@ macOS needs the sidecar nested one level deeper — that's done by the
 > $env:BUILD_TARGET = 'tauri'; npx rsbuild build
 > ```
 
+## Where is my data?
+
+The desktop shell pins the backend's `DATA_DIR`, `LOG_DIR` and matplotlib
+cache to OS-conventional per-user directories (resolved via Tauri's
+`app.path()` APIs from the `com.intel.geti` bundle identifier). These live
+**outside** the install prefix, so reinstalls and upgrades preserve them
+— same convention as Chrome and VSCode.
+
+| Platform | Data                                              | Logs                              | Cache (matplotlib)                           |
+| -------- | ------------------------------------------------- | --------------------------------- | -------------------------------------------- |
+| macOS    | `~/Library/Application Support/com.intel.geti`    | `~/Library/Logs/com.intel.geti`   | `~/Library/Caches/com.intel.geti/matplotlib` |
+| Windows  | `%APPDATA%\com.intel.geti`                        | `%APPDATA%\com.intel.geti\logs`   | `%LOCALAPPDATA%\com.intel.geti\matplotlib`   |
+| Linux    | `~/.local/share/com.intel.geti`                   | `~/.local/state/com.intel.geti`   | `~/.cache/com.intel.geti/matplotlib`         |
+
+Set `DATA_DIR`, `LOG_DIR`, or `MPLCONFIGDIR` in the environment to override
+any of them (the Rust shell only fills in what's missing).
+
+## Cleanup / uninstall
+
+The OS uninstaller / drag-to-trash only removes the app bundle. To wipe
+**everything**:
+
+1. **Per-user data** — delete the directories listed above. On macOS:
+    ```sh
+    rm -rf ~/Library/{Application\ Support,Logs,Caches}/com.intel.geti
+    ```
+2. **PyInstaller build output** (only if you built locally):
+    ```sh
+    rm -rf application/backend/dist application/backend/build
+    ```
+3. **Rust build artifacts**:
+    ```sh
+    rm -rf application/ui/src-tauri/target
+    ```
+4. **Frontend build output**:
+    ```sh
+    rm -rf application/ui/dist
+    ```
+
 ## Verifying the platform split
 
 Quick checks after changing anything under `src/platform/`:
