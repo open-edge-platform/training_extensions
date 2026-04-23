@@ -6,8 +6,13 @@ import { useState } from 'react';
 import { Item, Key, Picker } from '@geti/ui';
 
 import { $api } from '../../../api/client';
+import { DeviceInfo } from '../../../constants/shared-types';
 import { usePatchPipeline, usePipeline } from '../../../hooks/api/pipeline.hook';
 import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
+
+// Generate device id based on type and index (if available) to ensure uniqueness
+// in case of multiple devices of the same type (e.g., multiple GPUs)
+const getDeviceId = (device: DeviceInfo): string => (device.index ? `${device.type}-${device.index}` : device.type);
 
 export const InferenceDevices = () => {
     const { data: devices } = $api.useSuspenseQuery('get', '/api/system/devices/inference');
@@ -16,7 +21,7 @@ export const InferenceDevices = () => {
     const [selectedKey, setSelectedKey] = useState<Key | null>(pipeline.device);
     const updatePipeline = usePatchPipeline();
 
-    const options = devices.map((device) => ({ id: device.type, name: device.name }));
+    const items = devices.map((device) => ({ ...device, id: getDeviceId(device) }));
 
     const handleChange = (key: Key | null) => {
         if (key === null) {
@@ -45,11 +50,11 @@ export const InferenceDevices = () => {
             aria-label='inference compute'
             labelAlign='end'
             labelPosition='side'
-            items={options}
+            items={items}
             onSelectionChange={handleChange}
             selectedKey={selectedKey}
         >
-            {(item) => <Item>{item.name}</Item>}
+            {(device) => <Item key={device.id}>{device.name}</Item>}
         </Picker>
     );
 };
