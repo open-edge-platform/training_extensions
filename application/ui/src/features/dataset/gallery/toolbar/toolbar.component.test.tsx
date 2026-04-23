@@ -67,12 +67,29 @@ describe('Toolbar', () => {
                         },
                     })
                 );
+            }),
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: [getMockedMediaImage({})],
+                    pagination: { offset: 0, limit: 1, count: items.length, total: items.length },
+                });
+            }),
+            http.get('/api/projects/{project_id}/dataset/items', () => {
+                return HttpResponse.json({
+                    pagination: {
+                        total: items.length,
+                        offset: 0,
+                        limit: 0,
+                        count: items.length,
+                    },
+                    items: [],
+                });
             })
         );
 
         const result = render(
             <SelectedDataProvider>
-                <Toolbar items={items} viewMode={ViewModes.LARGE} setViewMode={vi.fn()} onFilter={vi.fn()} />
+                <Toolbar items={items} viewMode={ViewModes.LARGE} setViewMode={vi.fn()} />
             </SelectedDataProvider>
         );
 
@@ -95,12 +112,6 @@ describe('Toolbar', () => {
         fireEvent.change(input, { target: { files: [file] } });
 
         expect(uploadMediaMock).toHaveBeenCalledWith([file]);
-    });
-
-    it('shows total images count when no items are selected', async () => {
-        await renderToolbar([getMockedMediaImage({ id: '1' }), getMockedMediaImage({ id: '2' })]);
-
-        expect(screen.getByText('2 images')).toBeVisible();
     });
 
     it('disables annotate button when there are no items', async () => {

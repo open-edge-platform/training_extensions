@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction, Suspense, useMemo } from 'react';
+import { Dispatch, SetStateAction, useMemo } from 'react';
 
 import {
     Button,
@@ -11,7 +11,6 @@ import {
     Divider,
     Flex,
     Heading,
-    Loading,
     MediaViewModes,
     ViewModes,
 } from '@geti/ui';
@@ -26,7 +25,7 @@ import { DeleteMediaItem } from '../delete-media-item/delete-media-item.componen
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { AssignLabel } from './assign-label.component';
 import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
-import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
+import { FilterByStatus } from './filter-by-status/filter-by-status.component';
 import { MediaFilterLabels } from './media-filter-labels/media-filter-labels.component';
 import { MediaUpload } from './media-upload.component';
 import { TotalItems } from './total-items.component';
@@ -36,7 +35,6 @@ type ToolbarProps = {
     items: Media[];
     viewMode: ViewModes;
     setViewMode: Dispatch<SetStateAction<ViewModes>>;
-    onFilter: (status: FilterByStatusKey) => void;
 };
 
 type AnnotateButtonProps = {
@@ -52,7 +50,7 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
     );
 };
 
-export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps) => {
+export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
@@ -135,13 +133,9 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                 </Flex>
 
                 <Flex gap={'size-200'} alignItems={'center'}>
-                    <FilterByStatus onChange={onFilter} />
+                    <TotalItems totalSelectedElements={totalSelectedElements} />
 
-                    <Suspense fallback={<Loading mode='inline' size='S' />}>
-                        <TotalItems totalSelectedElements={totalSelectedElements} />
-                    </Suspense>
-
-                    <FilterByStatus onChange={onFilter} />
+                    <FilterByStatus />
 
                     <MediaFilterLabels />
 

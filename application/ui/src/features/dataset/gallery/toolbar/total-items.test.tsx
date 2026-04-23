@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { screen, waitForElementToBeRemoved } from '@testing-library/react';
-import { getMockedDatasetStatistics } from 'mocks/mock-dataset-item';
+import { screen } from '@testing-library/react';
+import { getMockedMediaImage } from 'mocks/mock-media';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
@@ -15,80 +15,51 @@ vi.mock('hooks/use-project-identifier.hook', () => ({
 }));
 
 describe('TotalItems', () => {
-    const renderTotalItems = async (
-        totalSelectedElements: number,
-        mediaCounts: { images: number; videos: number; video_frames: number } = {
-            images: 0,
-            videos: 0,
-            video_frames: 0,
-        }
-    ) => {
+    const renderTotalItems = async (totalSelectedElements: number, totalItems: number) => {
         server.use(
-            http.get('/api/projects/{project_id}/dataset/statistics', () => {
-                return HttpResponse.json(getMockedDatasetStatistics({ media_counts: mediaCounts }));
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: [getMockedMediaImage({})],
+                    pagination: { offset: 0, limit: 1, count: totalItems, total: totalItems },
+                });
+            }),
+            http.get('/api/projects/{project_id}/dataset/items', () => {
+                return HttpResponse.json({
+                    pagination: {
+                        total: totalItems,
+                        offset: 0,
+                        limit: 0,
+                        count: 0,
+                    },
+                    items: [],
+                });
             })
         );
 
-        const result = render(<TotalItems totalSelectedElements={totalSelectedElements} />);
-
-        await waitForElementToBeRemoved(screen.getByRole('progressbar'));
-
-        return result;
+        return render(<TotalItems totalSelectedElements={totalSelectedElements} />);
     };
 
     it('shows selected count when items are selected', async () => {
-        await renderTotalItems(3, { images: 5, videos: 0, video_frames: 0 });
+        await renderTotalItems(3, 10);
 
         expect(screen.getByText('3 selected')).toBeVisible();
     });
 
-    it('shows images and videos when both exist', async () => {
-        await renderTotalItems(0, { images: 4, videos: 2, video_frames: 0 });
+    it('shows total media count with plural when no items are selected', async () => {
+        await renderTotalItems(0, 5);
 
-        expect(screen.getByText('4 images, 2 videos')).toBeVisible();
+        expect(await screen.findByText('5 medias')).toBeVisible();
     });
 
-    it('shows only videos when there are no images', async () => {
-        await renderTotalItems(0, { images: 0, videos: 3, video_frames: 0 });
+    it('shows singular media when there is exactly 1 item', async () => {
+        await renderTotalItems(0, 1);
 
-        expect(screen.getByText('3 videos')).toBeVisible();
+        expect(await screen.findByText('1 media')).toBeVisible();
     });
 
-    it('shows only images when there are no videos', async () => {
-        await renderTotalItems(0, { images: 5, videos: 0, video_frames: 0 });
+    it('shows 0 medias when there are no items', async () => {
+        await renderTotalItems(0, 0);
 
-        expect(screen.getByText('5 images')).toBeVisible();
-    });
-
-    it('uses singular "image" for exactly one image', async () => {
-        await renderTotalItems(0, { images: 1, videos: 0, video_frames: 0 });
-
-        expect(screen.getByText('1 image')).toBeVisible();
-    });
-
-    it('uses singular "video" for exactly one video', async () => {
-        await renderTotalItems(0, { images: 0, videos: 1, video_frames: 0 });
-
-        expect(screen.getByText('1 video')).toBeVisible();
-    });
-
-    it('uses singular forms when both counts are one', async () => {
-        await renderTotalItems(0, { images: 1, videos: 1, video_frames: 0 });
-
-        expect(screen.getByText('1 image, 1 video')).toBeVisible();
-    });
-
-    it('does not show any media count when there are no images and no videos', async () => {
-        await renderTotalItems(0, { images: 0, videos: 0, video_frames: 0 });
-
-        expect(screen.queryByText('image', { exact: false })).not.toBeInTheDocument();
-        expect(screen.queryByText('video', { exact: false })).not.toBeInTheDocument();
-    });
-
-    it('shows selected count instead of media counts when items are selected', async () => {
-        await renderTotalItems(2, { images: 5, videos: 3, video_frames: 0 });
-
-        expect(screen.getByText('2 selected')).toBeVisible();
-        expect(screen.queryByText(/images/)).not.toBeInTheDocument();
+        expect(await screen.findByText('0 medias')).toBeVisible();
     });
 });

@@ -2,35 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Text } from '@geti/ui';
-import { useDatasetStatistics } from 'hooks/api/dataset.hook';
+import { useDatasetMediaWithReviewStatus } from 'hooks/use-dataset-media-with-review-status.hook';
 
-type TotalItemsProps = {
+interface TotalItemsProps {
     totalSelectedElements: number;
-};
-
+}
 export const TotalItems = ({ totalSelectedElements }: TotalItemsProps) => {
-    const { data: statistics } = useDatasetStatistics();
-
     const hasSelectedElements = totalSelectedElements > 0;
-    const numberOfImages = statistics?.media_counts.images;
-    const numberOfVideos = statistics?.media_counts.videos;
-    const imagesMessage = `${numberOfImages} image${numberOfImages === 1 ? '' : 's'}`;
-    const videosMessage = `${numberOfVideos} video${numberOfVideos === 1 ? '' : 's'}`;
+    const { totalCount } = useDatasetMediaWithReviewStatus();
 
     if (hasSelectedElements) {
         return <Text>{`${totalSelectedElements} selected`}</Text>;
     }
 
-    if (numberOfImages > 0 && numberOfVideos > 0) {
-        return <Text>{`${imagesMessage}, ${videosMessage}`}</Text>;
-    }
-
-    if (numberOfVideos > 0) {
-        return <Text>{videosMessage}</Text>;
-    }
-    if (numberOfImages > 0) {
-        return <Text>{imagesMessage}</Text>;
-    }
-
-    return '';
+    return <Text>{`${totalCount} media${totalCount === 1 ? '' : 's'}`}</Text>;
 };

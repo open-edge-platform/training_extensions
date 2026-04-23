@@ -1,13 +1,24 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { isEmpty } from 'lodash-es';
+import { isEmpty, isNil } from 'lodash-es';
 import { useSearchParams } from 'react-router-dom';
 import { parse, stringify } from 'zipson/lib';
 
+import type { DatasetItemAnnotationStatus, FilterByStatusKey } from '../constants/shared-types';
 import { isNonEmptyString } from '../shared/util';
 
-const LABELS_PARAM = 'filters';
+const LABELS_PARAM = 'filtersFiler';
+const ANNOTATION_STATUS_PARAM = 'annotationStatusFilter';
+
+const VALID_ANNOTATION_STATUSES: Set<string> = new Set<string>(['unannotated', 'reviewed', 'to_review']);
+
+const parseAnnotationStatus = (value: string | null): DatasetItemAnnotationStatus | null => {
+    if (value !== null && VALID_ANNOTATION_STATUSES.has(value)) {
+        return value as DatasetItemAnnotationStatus;
+    }
+    return null;
+};
 
 // The `decodeFromBinary` and `encodeToBinary` functions are taken from,
 // https://tanstack.com/router/v1/docs/guide/custom-search-param-serialization#using-zipson
@@ -45,12 +56,13 @@ const getFilterParam = <T>(filterParam: string): T => {
     }
 };
 
-export const useLabelsSearchParams = () => {
+export const useDatasetFiltersSearchParams = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     const labelsParam = searchParams.get(LABELS_PARAM);
     const filterParam = getFilterParam<string>(labelsParam ?? '');
     const selectedLabelIds = isNonEmptyString(filterParam) ? filterParam.split(',') : [];
+    const annotationStatus = parseAnnotationStatus(searchParams.get(ANNOTATION_STATUS_PARAM));
 
     const setSelectedLabelIds = (ids: string[]) => {
         setSearchParams((prev) => {
@@ -64,5 +76,17 @@ export const useLabelsSearchParams = () => {
         });
     };
 
-    return { selectedLabelIds, setSelectedLabelIds };
+    const setAnnotationStatus = (status: FilterByStatusKey | null) => {
+        setSearchParams((prev) => {
+            if (isNil(status)) {
+                prev.delete(ANNOTATION_STATUS_PARAM);
+            } else {
+                prev.set(ANNOTATION_STATUS_PARAM, status);
+            }
+
+            return prev;
+        });
+    };
+
+    return { selectedLabelIds, setSelectedLabelIds, annotationStatus, setAnnotationStatus };
 };
