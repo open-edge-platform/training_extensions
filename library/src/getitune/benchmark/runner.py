@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import gc
 import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, ClassVar
@@ -47,6 +48,55 @@ _EVAL_UPTO_GATES: dict[str, set[str]] = {
 }
 
 _MAX_ATTEMPTS = 3
+
+
+# ---------------------------------------------------------------------------
+# Resource cleanup
+# ---------------------------------------------------------------------------
+
+
+def _cleanup_resources(*, reset_cuda_peak: bool = False) -> None:
+    """Best-effort cleanup of leaked resources between phases/experiments.
+
+    The benchmark runs every experiment inside a single long-lived Python
+    process. Several downstream libraries leak workers / semaphores / GPU
+    memory across runs which, over ~30+ experiments, accumulates until the
+    Linux OOM-killer terminates the process without a traceback.
+
+    This helper tries to reclaim:
+
+    * joblib/loky reusable executor workers (NNCF/PTQ spawns 64 of them per
+      ``optimize`` phase and does not shut them down).
+    * Python garbage (cyclic references to DataLoader workers, Lightning
+      trainer, CUDA tensors, …).
+    * The CUDA caching allocator's reserved memory.
+
+    The function never raises — any failure is logged at debug level.
+    """
+    # 1. Shut down the loky reusable executor that NNCF/joblib leaves behind.
+    try:
+        from joblib.externals.loky import get_reusable_executor
+
+        get_reusable_executor().shutdown(wait=True, kill_workers=True)
+    except Exception:
+        logger.debug("loky executor shutdown failed (ignored).", exc_info=True)
+
+    # 2. Python GC — run twice to break cycles involving __del__.
+    gc.collect()
+    gc.collect()
+
+    # 3. CUDA cache + optional peak-memory reset.
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+            if reset_cuda_peak:
+                torch.cuda.reset_peak_memory_stats()
+    except Exception:
+        logger.debug("CUDA cache cleanup failed (ignored).", exc_info=True)
 
 
 # ---------------------------------------------------------------------------
@@ -200,6 +250,13 @@ class BenchmarkRunner:
                 continue
 
             self._run_experiment(experiment, data_path, allowed_phases, size_tier_map)
+
+            # Reclaim resources before the next experiment runs. This is
+            # critical: NNCF's optimize phase leaks loky workers (64 per run),
+            # and PyTorch's caching allocator retains reserved GPU memory.
+            # Over dozens of experiments this eventually triggers the OOM
+            # killer and the whole benchmark process dies without a traceback.
+            _cleanup_resources(reset_cuda_peak=True)
 
             # Persist report after each experiment so partial results survive crashes
             if self.config.enable_report:
@@ -540,8 +597,19 @@ class BenchmarkRunner:
 
             logger.info("  seed=%d  phase=%s", seed, phase_name)
             method = getattr(executor, method_name)
-            result = method()
+            try:
+                result = method()
+            finally:
+                # Per-phase cleanup: reclaim loky workers spawned by NNCF,
+                # flush PyTorch's CUDA cache, and collect cycle garbage so
+                # the next phase starts from a clean slate.
+                _cleanup_resources()
             phase_results.append(result)
+
+        # Drop the executor (and the heavy engine/trainer state it holds)
+        # before returning so the next seed does not inherit its memory.
+        del executor
+        _cleanup_resources()
 
         return ExperimentResult(
             task=experiment.task,
