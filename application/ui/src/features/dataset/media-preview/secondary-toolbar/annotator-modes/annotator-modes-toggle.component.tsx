@@ -55,6 +55,9 @@ interface AnnotatorModesProps {
 
 export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredictions }: AnnotatorModesProps) => {
     const [dismissedCues, setDismissedCues] = useState<Set<AnnotatorMode>>(new Set());
+    const shouldDisplayAnnotationCue = mode === 'prediction' && hasAnnotations && !dismissedCues.has('annotation');
+    const shouldDisplayPredictionCue =
+        mode === 'annotation' && !hasAnnotations && hasPredictions && !dismissedCues.has('prediction');
 
     const handleModeChange = (nextMode: AnnotatorMode) => {
         const hasContent = nextMode === 'annotation' ? hasAnnotations : hasPredictions;
@@ -78,7 +81,7 @@ export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredicti
                 <ToggleButtonWithCue
                     isActive={mode === 'annotation'}
                     onClick={() => handleModeChange('annotation')}
-                    showCue={mode === 'prediction' && hasAnnotations && !dismissedCues.has('annotation')}
+                    showCue={shouldDisplayAnnotationCue}
                     cueLabel={'Annotation available'}
                 >
                     Annotation
@@ -86,9 +89,7 @@ export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredicti
                 <ToggleButtonWithCue
                     isActive={mode === 'prediction'}
                     onClick={() => handleModeChange('prediction')}
-                    showCue={
-                        mode === 'annotation' && !hasAnnotations && hasPredictions && !dismissedCues.has('prediction')
-                    }
+                    showCue={shouldDisplayPredictionCue}
                     cueLabel={'Prediction available'}
                 >
                     Prediction
