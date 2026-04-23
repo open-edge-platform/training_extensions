@@ -192,11 +192,11 @@ Find your host triple with `rustc -vV | grep host` if unsure.
 
 The symlinks are gitignored. Tauri stages both `geti-backend` (from
 `externalBin`) and `_internal/` (from `resources`) next to its own
-executable in `target/<profile>/` during `tauri dev` and inside the
-bundle for `tauri build`, so PyInstaller's frozen layout works in both
-modes without any extra path juggling. The Rust shell simply spawns the
-binary that sits next to it — see `spawn_backend()` in
-[`src/main.rs`](./src/main.rs).
+executable in `target/<profile>/` during `tauri dev`, so PyInstaller's
+frozen layout works in dev with no extra steps. The release `.app` on
+macOS needs the sidecar nested one level deeper — that's done by the
+`just tauri-build` recipe in [`../../Justfile`](../../Justfile); see
+`spawn_backend()` and `locate_backend()` in [`src/backend.rs`](./src/backend.rs).
 
 ### macOS
 
@@ -220,9 +220,14 @@ binary that sits next to it — see `spawn_backend()` in
 
 4. Build a distributable `.app` / `.dmg`:
     ```sh
-    npx tauri build
+    just tauri-build   # from application/
     ```
-    Artifacts land in `src-tauri/target/release/bundle/`.
+    Artifacts land in `application/ui/src-tauri/target/release/bundle/`.
+    Note: the recipe runs `npx tauri build` and then patches the bundle
+    layout (moves the sidecar + `_internal/` into `Contents/MacOS/backend/`)
+    to work around PyInstaller's `.app` bundle detection. Running
+    `npx tauri build` directly produces a `.app` whose backend dies on
+    launch with `Failed to load Python shared library 'libpython*.dylib'`.
 
 ### Linux
 
@@ -251,9 +256,9 @@ binary that sits next to it — see `spawn_backend()` in
 
 4. Build a distributable AppImage / `.deb`:
     ```sh
-    npx tauri build
+    just tauri-build   # from application/
     ```
-    Artifacts land in `src-tauri/target/release/bundle/`.
+    Artifacts land in `application/ui/src-tauri/target/release/bundle/`.
 
 ### Windows
 
@@ -271,9 +276,9 @@ binary that sits next to it — see `spawn_backend()` in
 
 5. Build a distributable `.msi` / `.exe`:
     ```powershell
-    npx tauri build
+    just tauri-build   # from application\
     ```
-    Artifacts land in `src-tauri\target\release\bundle\`.
+    Artifacts land in `application\ui\src-tauri\target\release\bundle\`.
 
 > The `start:tauri` and `build:tauri` npm scripts set `BUILD_TARGET=tauri`
 > using POSIX shell syntax (`BUILD_TARGET=tauri rsbuild …`). On native
