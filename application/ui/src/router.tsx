@@ -23,9 +23,9 @@ const Redirect = () => {
 
     const { data: projects } = useProjects();
 
-    // No projects -> Go to create project
+    // No projects -> Go to the projects list so users can create or import a project
     if (projects.length === 0) {
-        path = paths.project.new({});
+        path = paths.project.index({});
 
         // Only 1 project -> Redirect to the dataset page
     } else if (projects.length === 1) {
