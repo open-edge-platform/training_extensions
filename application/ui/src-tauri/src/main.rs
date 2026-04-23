@@ -18,8 +18,8 @@ fn main() {
         .plugin(tauri_plugin_log::Builder::default().build())
         .setup({
             let child_handle = child_handle.clone();
-            move |_app_handle| {
-                let child = spawn_backend().expect("Failed to spawn python backend");
+            move |app| {
+                let child = spawn_backend(app.handle()).expect("Failed to spawn python backend");
                 *child_handle.lock().unwrap() = Some(child);
                 Ok(())
             }

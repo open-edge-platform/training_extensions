@@ -10,6 +10,8 @@ use std::{
     process::{Child, Command},
 };
 
+use tauri::{AppHandle, Manager};
+
 /// "geti-backend.exe" on Windows, "geti-backend" elsewhere.
 fn backend_filename() -> &'static str {
     if cfg!(windows) {
@@ -38,7 +40,7 @@ fn backend_filename() -> &'static str {
 ///   the packaging recipe in [`application/Justfile`](../../Justfile).
 /// - **Other platforms** keep the flat layout in both dev and release because
 ///   no equivalent bundle-detection exists on Windows / Linux.
-pub fn spawn_backend() -> std::io::Result<Child> {
+pub fn spawn_backend(app: &AppHandle) -> std::io::Result<Child> {
     let exe_path = env::current_exe().expect("failed to get current exe path");
     let exe_dir = exe_path
         .parent()
@@ -47,7 +49,7 @@ pub fn spawn_backend() -> std::io::Result<Child> {
 
     log::info!("▶ Looking for backend side-car at {:?}", backend_path);
     let mut command = Command::new(&backend_path);
-    apply_default_env(&mut command);
+    apply_default_env(&mut command, app);
 
     #[cfg(all(windows, not(debug_assertions)))]
     {
@@ -72,7 +74,7 @@ fn locate_backend(exe_dir: &std::path::Path) -> PathBuf {
 
 /// Apply the default environment for the side-car. Each var is only set if the
 /// inherited environment doesn't already provide one, so callers can override.
-fn apply_default_env(command: &mut Command) {
+fn apply_default_env(command: &mut Command, app: &AppHandle) {
     // The Tauri 2 webview loads the UI from `tauri://localhost` on macOS/Linux
     // and `https://tauri.localhost` on Windows (Edge WebView2). Both must be
     // in the backend's CORS allowlist or every fetch from the UI is rejected.
@@ -88,56 +90,32 @@ fn apply_default_env(command: &mut Command) {
     let cors_origins = "tauri://localhost,https://tauri.localhost";
     command.env("CORS_ORIGINS", cors_origins);
 
+    // Resolve OS-conventional per-user dirs via Tauri (driven by the bundle
+    // identifier in `tauri.conf.json`). These live outside the install prefix
+    // so they survive reinstalls — same convention as Chrome/VSCode.
+    //   macOS  : ~/Library/{Application Support, Logs, Caches}/com.intel.geti
+    //   Windows: %APPDATA%\com.intel.geti\{,logs}, %LOCALAPPDATA%\com.intel.geti
+    //   Linux  : ~/.local/share, ~/.local/state, ~/.cache (each /com.intel.geti)
+    let resolver = app.path();
+    set_env_from_dir(command, "DATA_DIR", resolver.app_local_data_dir().ok());
+    set_env_from_dir(command, "LOG_DIR", resolver.app_log_dir().ok());
     // Pin matplotlib's font/style cache to a stable per-user dir so it's built
     // once and reused across launches. Without this, matplotlib falls back to
     // a path inside the frozen `_internal/` (re-extracted on every launch),
     // forcing a full font-cache rebuild every start.
-    if env::var_os("MPLCONFIGDIR").is_none() {
-        if let Some(cache_dir) = per_user_subdir(CacheRoot::Cache, "matplotlib") {
-            command.env("MPLCONFIGDIR", cache_dir);
-        }
-    }
+    set_env_from_dir(
+        command,
+        "MPLCONFIGDIR",
+        resolver.app_cache_dir().ok().map(|d| d.join("matplotlib")),
+    );
 
-    // The backend defaults `data_dir=Path("data")` and `log_dir=Path("logs")`
-    // (relative to cwd). In a packaged `.app`/`Program Files` install that
-    // directory is read-only, and in dev it pollutes `src-tauri/`. Pin both
-    // to a per-user writable location so the same layout works in dev and
-    // release without `.taurignore` masking the file-watcher loop.
-    if env::var_os("DATA_DIR").is_none() {
-        if let Some(dir) = per_user_subdir(CacheRoot::Data, "data") {
-            command.env("DATA_DIR", dir);
-        }
+/// Sets `key` to `dir` on `command` (creating the directory if needed), unless
+/// the inherited environment already provides one or `dir` is `None`.
+fn set_env_from_dir(command: &mut Command, key: &str, dir: Option<PathBuf>) {
+    if env::var_os(key).is_some() {
+        return;
     }
-    if env::var_os("LOG_DIR").is_none() {
-        if let Some(dir) = per_user_subdir(CacheRoot::Data, "logs") {
-            command.env("LOG_DIR", dir);
-        }
-    }
-}
-
-/// Distinguishes ephemeral cache from durable application data so we land in
-/// the OS-conventional folder (matters most on macOS, where `~/Library/Caches`
-/// is purgeable while `~/Library/Application Support` is not).
-enum CacheRoot {
-    Cache,
-    Data,
-}
-
-/// Per-user `<root>/com.intel.geti/<sub>` directory, created if missing.
-/// Returns `None` if no suitable home dir is available.
-fn per_user_subdir(root: CacheRoot, sub: &str) -> Option<PathBuf> {
-    let home = env::var_os("HOME").or_else(|| env::var_os("USERPROFILE"))?;
-    let mut path = PathBuf::from(home);
-    let base = match (cfg!(target_os = "macos"), cfg!(windows), &root) {
-        (true, _, CacheRoot::Cache) => "Library/Caches",
-        (true, _, CacheRoot::Data) => "Library/Application Support",
-        (_, true, _) => "AppData/Local",
-        (_, _, CacheRoot::Cache) => ".cache",
-        (_, _, CacheRoot::Data) => ".local/share",
-    };
-    path.push(base);
-    path.push("com.intel.geti");
-    path.push(sub);
-    let _ = std::fs::create_dir_all(&path);
-    Some(path)
+    let Some(dir) = dir else { return };
+    let _ = std::fs::create_dir_all(&dir);
+    command.env(key, dir);
 }
