@@ -36,7 +36,7 @@ type MediaPreviewContentProps = {
     onSelectedMediaItem: (item: Media) => void;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
-    isUserReviewed: (mediaItemId: string) => boolean;
+    isMediaItemReviewedById: (mediaItemId: string) => boolean;
 };
 
 type MediaPreviewPanelsProps = {
@@ -47,7 +47,8 @@ type MediaPreviewPanelsProps = {
     onSelectedMediaItem: (item: Media) => void;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
-    isUserReviewed: (mediaItemId: string) => boolean;
+    isMediaItemReviewedById: (mediaItemId: string) => boolean;
+    isCurrentMediaReviewed: boolean;
     subset: DatasetSubset;
 };
 
@@ -60,7 +61,8 @@ const MediaPreviewPanels = ({
     onSelectedMediaItem,
     isFetchingNextPage,
     fetchNextPage,
-    isUserReviewed,
+    isMediaItemReviewedById,
+    isCurrentMediaReviewed,
 }: MediaPreviewPanelsProps) => {
     const { mediaItem } = useSelectedMediaItem();
     const handleMediaTransition = useAnnotatorMediaTransition({ onSelectedMediaItem });
@@ -72,7 +74,7 @@ const MediaPreviewPanels = ({
                 items={items}
                 subset={subset}
                 onClose={onClose}
-                isUserReviewed={isUserReviewed(mediaItem.id)}
+                isUserReviewed={isCurrentMediaReviewed}
                 changeAnnotatorMode={changeAnnotatorMode}
                 onSelectedMediaItem={handleMediaTransition}
             />
@@ -83,7 +85,7 @@ const MediaPreviewPanels = ({
                     mediaItem={mediaItem}
                     isFetchingNextPage={isFetchingNextPage}
                     fetchNextPage={fetchNextPage}
-                    isUserReviewed={isUserReviewed}
+                    isUserReviewed={isMediaItemReviewedById}
                     onSelectedMediaItem={handleMediaTransition}
                 />
             </View>
@@ -97,7 +99,7 @@ const MediaPreviewContent = ({
     onClose,
     isFetchingNextPage,
     fetchNextPage,
-    isUserReviewed,
+    isMediaItemReviewedById,
 }: MediaPreviewContentProps) => {
     const { mediaItem } = useSelectedMediaItem();
     const { selectedModelId } = usePredictionSetup();
@@ -122,7 +124,7 @@ const MediaPreviewContent = ({
         return predictionsData?.flatMap((predictionData) => predictionData.prediction) ?? [];
     }, [predictionsData]);
 
-    const [mode, setMode] = useAnnotatorMode({ predictions: initialPredictions, annotations: initialAnnotations });
+    const [mode, setMode] = useAnnotatorMode();
 
     return (
         <ToolProvider>
@@ -141,7 +143,8 @@ const MediaPreviewContent = ({
                     onSelectedMediaItem={onSelectedMediaItem}
                     isFetchingNextPage={isFetchingNextPage}
                     fetchNextPage={fetchNextPage}
-                    isUserReviewed={isUserReviewed}
+                    isMediaItemReviewedById={isMediaItemReviewedById}
+                    isCurrentMediaReviewed={isCurrentMediaReviewed}
                     subset={subset}
                 />
             </AnnotatorProviders>
@@ -150,7 +153,7 @@ const MediaPreviewContent = ({
 };
 
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
-    const { items, isFetchingNextPage, fetchNextPage, isUserReviewed } = useDatasetMediaWithReviewStatus({});
+    const { items, isFetchingNextPage, fetchNextPage, isMediaItemReviewedById } = useDatasetMediaWithReviewStatus({});
 
     return (
         <Dialog
@@ -182,7 +185,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                 onSelectedMediaItem={onSelectedMediaItem}
                                 isFetchingNextPage={isFetchingNextPage}
                                 fetchNextPage={fetchNextPage}
-                                isUserReviewed={isUserReviewed}
+                                isMediaItemReviewedById={isMediaItemReviewedById}
                             />
                         </PredictionsSetupProvider>
                     </SelectedMediaItemProvider>

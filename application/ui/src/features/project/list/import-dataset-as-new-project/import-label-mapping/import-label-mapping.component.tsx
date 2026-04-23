@@ -106,7 +106,7 @@ export const ImportLabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                         name='labels'
                         label='Dataset labels'
                         maxHeight='size-2000'
-                        allSelectedByDefault
+                        defaultSelectedKeys={new Set(datasetLabels.map((label) => label))}
                         items={datasetLabels.map((label) => ({ id: label, name: label }))}
                     />
 

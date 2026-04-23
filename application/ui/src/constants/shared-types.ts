@@ -142,3 +142,4 @@ export type TrainingConfigurationRequestPayload = {
 export type Pagination = components['schemas']['Pagination'];
 export type MediaWithPagination = components['schemas']['MediaWithPagination'];
 export type DatasetFormat = components['schemas']['DatasetFormat'];
+export type DeviceInfo = components['schemas']['DeviceInfoView'];

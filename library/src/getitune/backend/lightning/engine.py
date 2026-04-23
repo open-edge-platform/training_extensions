@@ -23,6 +23,7 @@ from lightning import Trainer, seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint, RichModelSummary, RichProgressBar
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.plugins.precision import MixedPrecision
+from lightning.pytorch.utilities.rank_zero import rank_zero_info
 
 from getitune.backend.lightning.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
 from getitune.backend.lightning.callbacks.aug_scheduler import AugmentationSchedulerCallback
@@ -924,6 +925,10 @@ class LightningEngine(Engine):
             self.configure_callbacks()
 
             kwargs = self._cache.args
+            # Check if XPU is available and log the information.
+            xpu_available = is_xpu_available()
+            xpu_used = xpu_available and self._device.accelerator == DeviceType.xpu
+            rank_zero_info(f"XPU available: {xpu_available}, used: {xpu_used}")
             self._trainer = Trainer(logger=logger, **kwargs)
             self._cache.is_trainer_args_identical = True
             self._trainer.task = self.task
