@@ -1,16 +1,25 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { isEmpty } from 'lodash-es';
+
 import type { DatasetItemAnnotationStatus } from '../constants/shared-types';
 import { useGetDatasetItemsById } from './use-get-dataset-items-by-id.hook';
 import { useGetDatasetMediaItems } from './use-get-dataset-media-items.hook';
+import { useLabelsSearchParams } from './use-labels-search-params.hook';
 
 interface UseDatasetMediaWithReviewStatusOptions {
     annotationStatus?: DatasetItemAnnotationStatus;
 }
 
 export const useDatasetMediaWithReviewStatus = ({ annotationStatus }: UseDatasetMediaWithReviewStatusOptions) => {
-    const mediaItemsResponse = useGetDatasetMediaItems({ annotationStatus });
+    const { selectedLabelIds } = useLabelsSearchParams();
+
+    const mediaItemsResponse = useGetDatasetMediaItems({
+        annotationStatus,
+        labelIds: isEmpty(selectedLabelIds) ? undefined : selectedLabelIds,
+    });
+
     const datasetItemsResponse = useGetDatasetItemsById({ annotationStatus });
 
     const fetchNextPage = () => {
@@ -23,7 +32,7 @@ export const useDatasetMediaWithReviewStatus = ({ annotationStatus }: UseDataset
         }
     };
 
-    const isUserReviewed = (mediaItemId: string) => {
+    const isMediaItemReviewedById = (mediaItemId: string) => {
         return datasetItemsResponse.reviewStatus.get(mediaItemId) ?? false;
     };
 
@@ -32,6 +41,6 @@ export const useDatasetMediaWithReviewStatus = ({ annotationStatus }: UseDataset
         isPending: mediaItemsResponse.isPending || datasetItemsResponse.isPending,
         isFetchingNextPage: mediaItemsResponse.isFetchingNextPage || datasetItemsResponse.isFetchingNextPage,
         fetchNextPage,
-        isUserReviewed,
+        isMediaItemReviewedById,
     };
 };

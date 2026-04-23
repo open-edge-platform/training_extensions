@@ -107,9 +107,14 @@ def _default_collate_fn(items: list[BaseSample]) -> SampleBatch:
         raise ValueError(msg)
     images = torch.stack(image_tensors)
 
+    # Convert labels to long
+    labels = _collect_optional_attr(items, "label")
+    if labels is not None:
+        labels = [label.long() for label in labels]
+
     return SampleBatch(
         images=images,
-        labels=_collect_optional_attr(items, "label"),
+        labels=labels,
         masks=_collect_optional_attr(items, "masks"),
         bboxes=_collect_optional_attr(items, "bboxes"),
         keypoints=_collect_optional_attr(items, "keypoints"),

@@ -122,6 +122,7 @@ class TestResize:
         resize = Resize(size=(64, 64), resize_targets=False, keep_aspect_ratio=False)
         entity = deepcopy(square_image_entity)
         original_bboxes = entity.bboxes.clone()
+        assert entity.masks is not None
         original_masks_shape = entity.masks.shape[-2:]
 
         result = resize(entity)
@@ -129,6 +130,7 @@ class TestResize:
         assert result.image.shape[-2:] == (64, 64)
         # Bboxes and masks should be unchanged
         assert torch.equal(result.bboxes, original_bboxes)
+        assert result.masks is not None
         assert result.masks.shape[-2:] == original_masks_shape
 
     # ==================== Aspect Ratio Preservation Tests ====================
@@ -274,7 +276,7 @@ class TestResize:
         assert len(result.bboxes) == 0
 
     def test_resize_empty_masks(self) -> None:
-        """Test resize with empty masks."""
+        """Test resize with empty masks preserves spatial dimensions matching the image."""
         img_size = (100, 100)
         entity = InstanceSegmentationSample(
             image=tv_tensors.Image(torch.randint(0, 256, (3, *img_size), dtype=torch.uint8)),
@@ -293,6 +295,30 @@ class TestResize:
 
         assert result.image.shape[-2:] == (64, 64)
         assert result.masks.shape[0] == 0
+        # Spatial dimensions of empty masks must match the resized/padded image
+        assert result.masks.shape[-2:] == result.image.shape[-2:]
+
+    def test_resize_empty_masks_non_square(self) -> None:
+        """Test resize empty masks with non-square image (padding required)."""
+        img_size = (100, 200)  # wide image
+        entity = InstanceSegmentationSample(
+            image=tv_tensors.Image(torch.randint(0, 256, (3, *img_size), dtype=torch.uint8)),
+            dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
+            bboxes=tv_tensors.BoundingBoxes(  # type: ignore[call-overload]
+                torch.tensor([[10, 10, 50, 50]], dtype=torch.float32),
+                format=tv_tensors.BoundingBoxFormat.XYXY,
+                canvas_size=img_size,
+            ),
+            label=LongTensor([0]),
+            masks=tv_tensors.Mask(torch.empty((0, *img_size), dtype=torch.uint8)),
+        )
+        resize = Resize(size=(128, 128), keep_aspect_ratio=True)
+
+        result = resize(entity)
+
+        assert result.image.shape[-2:] == (128, 128)
+        assert result.masks.shape[0] == 0
+        assert result.masks.shape[-2:] == result.image.shape[-2:]
 
     def test_resize_single_int_size(self) -> None:
         """Test that single int size is converted to tuple."""

@@ -61,12 +61,25 @@ overrides:
         - class_path: kornia.augmentation.RandomHorizontalFlip
           init_args:
             p: 0.5
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.485, 0.456, 0.406]
+            std: [1.0, 1.0, 1.0]
       sampler:
         class_path: getitune.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
       num_workers: 4
-      augmentations_gpu: []
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.485, 0.456, 0.406]
+            std: [1.0, 1.0, 1.0]
     test_subset:
       num_workers: 4
-      augmentations_gpu: []
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.485, 0.456, 0.406]
+            std: [1.0, 1.0, 1.0]
+            

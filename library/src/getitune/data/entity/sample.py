@@ -130,7 +130,7 @@ class DetectionSample(BaseSample):
     """DetectionSample is a base class for getitune detection items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), format="RGB", channels_first=True)
-    label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
+    label: torch.Tensor | None = label_field(pl.UInt8(), is_list=True)
     # Use Union type to allow torch.Tensor from Polars (since tv_tensors.BoundingBoxes
     # conversion is not supported in Datumaro), then convert in __post_init__
     bboxes: tv_tensors.BoundingBoxes | torch.Tensor = bbox_field(dtype=pl.Float32())
@@ -138,11 +138,16 @@ class DetectionSample(BaseSample):
 
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
+
+        # Handle None fields for images with no annotations
+        if self.label is None:
+            self.label = torch.zeros(0, dtype=torch.uint8)
+
         # Ensure bboxes are tv_tensors.BoundingBoxes
         if not isinstance(self.bboxes, tv_tensors.BoundingBoxes):
-            # If it's a plain tensor, wrap it
+            bboxes = self.bboxes if self.bboxes is not None else torch.zeros((0, 4), dtype=torch.float32)
             self.bboxes = tv_tensors.BoundingBoxes(
-                self.bboxes,
+                bboxes,
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=shape,
                 dtype=torch.float32,
@@ -184,18 +189,24 @@ class InstanceSegmentationSample(BaseSample):
     # Use Union type to allow torch.Tensor from Polars (since tv_tensors.BoundingBoxes
     # conversion is not supported in Datumaro), then convert in __post_init__
     bboxes: tv_tensors.BoundingBoxes | torch.Tensor = bbox_field(dtype=pl.Float32())
-    masks: tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8())
-    label: torch.Tensor = label_field(dtype=pl.UInt8(), is_list=True)
+    masks: tv_tensors.Mask | None = instance_mask_field(dtype=pl.UInt8())
+    label: torch.Tensor | None = label_field(dtype=pl.UInt8(), is_list=True)
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
 
+        # Handle None fields for images with no annotations
+        if self.label is None:
+            self.label = torch.zeros(0, dtype=torch.uint8)
+        if self.masks is None:
+            self.masks = tv_tensors.Mask(torch.zeros((0, *shape), dtype=torch.uint8))
+
         # Ensure bboxes are tv_tensors.BoundingBoxes
         if not isinstance(self.bboxes, tv_tensors.BoundingBoxes):
-            # If it's a plain tensor, wrap it
+            bboxes = self.bboxes if self.bboxes is not None else torch.zeros((0, 4), dtype=torch.float32)
             self.bboxes = tv_tensors.BoundingBoxes(
-                self.bboxes,
+                bboxes,
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=shape,
                 dtype=torch.float32,

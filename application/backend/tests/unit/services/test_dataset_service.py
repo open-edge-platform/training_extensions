@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import re
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
@@ -117,15 +118,15 @@ class TestDatasetServiceUnit:
         DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
 
     @pytest.mark.parametrize(
-        "x, y, width, height",
+        "x, y, width, height, validation_msg",
         [
-            (1000, 0, 10, 10),
-            (0, 1000, 10, 10),
-            (0, 0, 1000, 10),
-            (0, 0, 10, 1000),
+            (1000, 0, 10, 10, "Rectangle coordinates (x1=1000, x2=1010) are out of bounds for media width 100"),
+            (0, 1000, 10, 10, "Rectangle coordinates (y1=1000, y2=1010) are out of bounds for media height 50"),
+            (0, 0, 1000, 10, "Rectangle coordinates (x1=0, x2=1000) are out of bounds for media width 100"),
+            (0, 0, 10, 1000, "Rectangle coordinates (y1=0, y2=1000) are out of bounds for media height 50"),
         ],
     )
-    def test_validate_annotations_coordinates_invalid_rectangle(self, x, y, width, height):
+    def test_validate_annotations_coordinates_invalid_rectangle(self, x, y, width, height, validation_msg):
         media = MediaDB(name="test", format="jpg", width=100, height=50, size=1024)
         annotations = [
             DatasetItemAnnotation(
@@ -133,7 +134,7 @@ class TestDatasetServiceUnit:
                 shape=Rectangle(type="rectangle", x=x, y=y, width=width, height=height),
             )
         ]
-        with pytest.raises(AnnotationValidationError):
+        with pytest.raises(AnnotationValidationError, match=re.escape(validation_msg)):
             DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
 
     def test_validate_annotations_coordinates_polygon(self) -> None:
@@ -147,13 +148,13 @@ class TestDatasetServiceUnit:
         DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
 
     @pytest.mark.parametrize(
-        "x, y",
+        "x, y, validation_msg",
         [
-            (1000, 10),
-            (10, 1000),
+            (1000, 10, "Polygon points (x=1000.0, y=10.0) are out of bounds for media (100, 50)"),
+            (10, 1000, "Polygon points (x=10.0, y=1000.0) are out of bounds for media (100, 50)"),
         ],
     )
-    def test_validate_annotations_coordinates_invalid_polygon(self, x, y):
+    def test_validate_annotations_coordinates_invalid_polygon(self, x, y, validation_msg):
         media = MediaDB(name="test", format="jpg", width=100, height=50, size=1024)
         annotations = [
             DatasetItemAnnotation(
@@ -161,7 +162,7 @@ class TestDatasetServiceUnit:
                 shape=Polygon(type="polygon", points=[Point(x=0, y=0), Point(x=x, y=y)]),
             )
         ]
-        with pytest.raises(AnnotationValidationError):
+        with pytest.raises(AnnotationValidationError, match=re.escape(validation_msg)):
             DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
 
     def test_validate_annotations_multilabel_classification(self, fxt_multilabel_classification_project) -> None:
