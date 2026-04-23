@@ -15,13 +15,15 @@
                 "title": "Geti",
                 "width": 1280,
                 "height": 800,
+                "minWidth": 960,
+                "minHeight": 600,
                 "resizable": true,
                 "fullscreen": false,
                 "dragDropEnabled": false
             }
         ],
         "security": {
-            "csp": null
+            "csp": "default-src 'self'; script-src 'self' 'unsafe-eval' blob:; worker-src 'self' blob:; connect-src 'self' ipc: http://ipc.localhost http://localhost:7860 data:; img-src 'self' http://localhost:7860 data: blob:; media-src 'self' http://localhost:7860 blob: data:; style-src 'self' 'unsafe-inline';"
         }
     },
     "bundle": {
