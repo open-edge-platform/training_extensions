@@ -68,7 +68,7 @@ export const SecondaryToolbar = ({
     const videoPlayerContext = useVideoPlayerContext();
     const isPlaying = videoPlayerContext?.videoControls?.isPlaying ?? false;
 
-    const { canSubmit, isSaving, submitAnnotations, hasInvalidAnnotation } = useAnnotationActions();
+    const { canSubmit, isSaving, submitAnnotations } = useAnnotationActions();
 
     const handleSubmit = async () => {
         await submitAnnotations(subset);
@@ -89,9 +89,7 @@ export const SecondaryToolbar = ({
     const isAnnotationMode = mode === 'annotation';
 
     // If annotations are not changed but subset has changed we want to allow user to submit
-    // Invalid annotations (no labels) always disables submission, regardless of subset changes.
-    const isSubmitDisabled =
-        hasInvalidAnnotation || (!canSubmit && !hasSubsetChanged) || isSaving || isLoadingPredictions;
+    const isSubmitDisabled = (!canSubmit && !hasSubsetChanged) || isSaving || isLoadingPredictions;
 
     return (
         <Flex
