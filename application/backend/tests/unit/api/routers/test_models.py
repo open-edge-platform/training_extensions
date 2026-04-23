@@ -277,7 +277,7 @@ class TestModelEndpoints:
         assert response.headers["content-type"] == "application/zip"
         assert "content-disposition" in response.headers
         assert (
-            f"model-{str(fxt_model.id)[:8]}-{model_format.value}-{model_precision}.zip"
+            f"model-{str(fxt_model.id).split('-')[0]}-{model_format.value}-{model_precision}.zip"
             in response.headers["content-disposition"]
         )
 
