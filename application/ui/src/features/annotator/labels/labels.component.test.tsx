@@ -237,9 +237,7 @@ describe('Labels', () => {
             const personButton = screen.getByRole('button', { name: 'Label Person' });
             fireEvent.click(personButton);
 
-            expect(mockUpdateAnnotations).toHaveBeenCalledWith([
-                { ...mockAnnotations.current[0], labels: [] },
-            ]);
+            expect(mockUpdateAnnotations).toHaveBeenCalledWith([{ ...mockAnnotations.current[0], labels: [] }]);
             expect(mockDeleteAnnotations).not.toHaveBeenCalled();
         });
 
