@@ -7,6 +7,10 @@ from __future__ import annotations
 
 import gc
 import logging
+import multiprocessing as mp
+import os
+import pickle
+import traceback as _traceback
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, ClassVar
 
@@ -48,6 +52,63 @@ _EVAL_UPTO_GATES: dict[str, set[str]] = {
 }
 
 _MAX_ATTEMPTS = 3
+
+
+# ---------------------------------------------------------------------------
+# Subprocess isolation
+# ---------------------------------------------------------------------------
+
+
+def _subprocess_worker(
+    payload: bytes,
+    result_path: str,
+) -> None:
+    """Entry point for a spawned child that runs a single ``_execute`` call.
+
+    This function is deliberately module-level so it pickles under the
+    ``spawn`` start method. It reconstructs the runner in the child, invokes
+    ``_execute`` exactly once, and writes the resulting :class:`ExperimentResult`
+    (or a failure surrogate) to *result_path* as a pickle file. Any exception
+    is captured and also serialized there — the parent never raises from this
+    worker, it only inspects the file.
+    """
+    # Configure logging in the child to mirror the parent's format so output
+    # stays readable in the combined stream.
+    logging.basicConfig(
+        level=os.environ.get("GETITUNE_LOG_LEVEL", "INFO"),
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%H:%M:%S",
+        force=True,
+    )
+
+    try:
+        config, experiment, seed, data_path, allowed_phases, deterministic = pickle.loads(payload)  # noqa: S301
+        # Build a throw-away runner just to reuse ``_execute``. ``_tracker``
+        # stays ``None`` in the child so MLflow writes happen only in the
+        # parent after the child returns.
+        runner = BenchmarkRunner(config)
+        result = runner._execute(  # noqa: SLF001
+            experiment,
+            seed,
+            data_path,
+            allowed_phases,
+            deterministic=deterministic,
+        )
+        outcome: tuple[str, object] = ("ok", result)
+    except BaseException as exc:
+        outcome = ("error", (type(exc).__name__, str(exc), _traceback.format_exc()))
+
+    try:
+        with open(result_path, "wb") as fh:  # noqa: PTH123
+            pickle.dump(outcome, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    except Exception:
+        # Last-ditch: write a minimal text marker so the parent at least
+        # knows the child did start before it died.
+        try:
+            with open(result_path + ".err", "w") as fh:  # noqa: PTH123
+                fh.write("failed to serialize worker outcome\n")
+        except Exception:  # noqa: S110
+            pass
 
 
 # ---------------------------------------------------------------------------
@@ -137,6 +198,18 @@ class RunConfig:
     # Rotation logic
     rotation_group: int | None = None  # If set, only run extended models in this group
     no_rotation: bool = False  # If True, skip rotation filtering entirely
+
+    # Process isolation. When True (default), each seed of each experiment
+    # runs in a freshly spawned child Python process that exits as soon as
+    # the seed is done. This is the ONLY reliable way to stop host-memory
+    # leaks (persistent DataLoader workers, datumaro dm_subset caches,
+    # Lightning logger buffers, module-level registries, mmap regions, …)
+    # from accumulating across the 30+ experiments in a run. A single
+    # long-lived parent process will otherwise eventually be OOM-killed —
+    # we have observed ~219 GB anon-RSS before the kernel stepped in.
+    # Set to False for debugging or when running a single experiment.
+    isolate_in_subprocess: bool = True
+    subprocess_timeout: float | None = None  # seconds; None = no timeout
 
 
 # ---------------------------------------------------------------------------
@@ -491,9 +564,11 @@ class BenchmarkRunner:
         last_exc: BaseException | None = None
         deterministic: bool | str = self.config.deterministic
 
+        run_fn = self._execute_isolated if self.config.isolate_in_subprocess else self._execute
+
         for attempt in range(1, _MAX_ATTEMPTS + 1):
             try:
-                return self._execute(experiment, seed, data_path, allowed_phases, deterministic=deterministic)
+                return run_fn(experiment, seed, data_path, allowed_phases, deterministic=deterministic)
             except Exception as exc:  # noqa: PERF203
                 last_exc = exc
                 if attempt < _MAX_ATTEMPTS:
@@ -534,6 +609,106 @@ class BenchmarkRunner:
             seed=seed,
             exc=last_exc,  # type: ignore[arg-type]
         )
+
+    def _execute_isolated(
+        self,
+        experiment: Experiment,
+        seed: int,
+        data_path: Path,
+        allowed_phases: set[str],
+        *,
+        deterministic: bool | str | None = None,
+    ) -> ExperimentResult:
+        """Run ``_execute`` in a spawned child process and return its result.
+
+        The child is a fresh Python interpreter. When it exits, the OS
+        reclaims every byte of its memory — DataLoader workers, datumaro
+        dm_subset caches, Lightning/MLflow buffers, CUDA context, mmap'd
+        weight tensors, everything. This is the only watertight defense
+        against the slow host-memory accumulation that otherwise OOM-kills
+        the benchmark after ~30 experiments.
+
+        Any exception raised inside the child is reconstructed here as a
+        ``RuntimeError`` carrying the child's traceback, so the outer retry
+        logic in :py:meth:`_run_single` can still do its thing.
+        """
+        if deterministic is None:
+            deterministic = self.config.deterministic
+
+        # Use a dedicated temp file for the result rather than a Queue/Pipe
+        # because some children segfault at shutdown (e.g. after CUDA/NNCF
+        # misbehaves) and would leave a Pipe hanging. A file can be inspected
+        # even if the child died during final cleanup.
+        import contextlib
+        import tempfile
+        from pathlib import Path as _Path
+
+        with tempfile.NamedTemporaryFile(
+            prefix=f"getitune-seed-{experiment.model.name}-{seed}-",
+            suffix=".pkl",
+            delete=False,
+        ) as tmp:
+            result_path = tmp.name
+        result_file = _Path(result_path)
+
+        try:
+            payload = pickle.dumps(
+                (self.config, experiment, seed, data_path, allowed_phases, deterministic),
+                protocol=pickle.HIGHEST_PROTOCOL,
+            )
+        except Exception:
+            logger.exception("Failed to pickle subprocess payload; falling back to in-process execution.")
+            with contextlib.suppress(FileNotFoundError):
+                result_file.unlink()
+            return self._execute(experiment, seed, data_path, allowed_phases, deterministic=deterministic)
+
+        ctx = mp.get_context("spawn")
+        proc = ctx.Process(
+            target=_subprocess_worker,
+            args=(payload, result_path),
+            name=f"getitune-{experiment.model.name}-s{seed}",
+        )
+        proc.start()
+        proc.join(self.config.subprocess_timeout)
+
+        if proc.is_alive():
+            logger.error(
+                "  seed=%d subprocess exceeded timeout (%ss); terminating.",
+                seed,
+                self.config.subprocess_timeout,
+            )
+            proc.terminate()
+            proc.join(10)
+            if proc.is_alive():
+                proc.kill()
+                proc.join()
+            with contextlib.suppress(FileNotFoundError):
+                result_file.unlink()
+            msg = f"Subprocess timeout after {self.config.subprocess_timeout}s"
+            raise TimeoutError(msg)
+
+        exitcode = proc.exitcode
+        try:
+            with result_file.open("rb") as fh:
+                outcome = pickle.load(fh)  # noqa: S301
+        except (FileNotFoundError, EOFError, pickle.UnpicklingError) as exc:
+            # Child died before writing a result — almost always OOM-killed
+            # (exitcode = -9 / SIGKILL) or segfault. Surface it as a real
+            # exception so _run_single's retry can kick in.
+            msg = f"Subprocess for seed={seed} produced no result (exitcode={exitcode}): {exc}"
+            raise RuntimeError(msg) from exc
+        finally:
+            with contextlib.suppress(FileNotFoundError):
+                result_file.unlink()
+
+        status, payload_out = outcome
+        if status == "ok":
+            return payload_out  # type: ignore[return-value]
+
+        # status == "error" — re-raise in the parent so the retry logic sees it.
+        exc_type_name, exc_msg, tb_str = payload_out  # type: ignore[misc]
+        err_msg = f"{exc_type_name}: {exc_msg}\n--- child traceback ---\n{tb_str}"
+        raise RuntimeError(err_msg)
 
     def _execute(
         self,
