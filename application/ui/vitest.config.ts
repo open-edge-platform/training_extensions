@@ -9,6 +9,7 @@ import { defineConfig } from 'vitest/config';
 const CI = !!process.env.CI;
 
 export default defineConfig({
+    envPrefix: ['PUBLIC_'],
     plugins: [
         tsconfigPaths(),
         react(),
@@ -22,9 +23,6 @@ export default defineConfig({
     ],
     test: {
         environment: 'jsdom',
-        env: {
-            PUBLIC_API_BASE_URL: 'http://localhost:7860',
-        },
 
         coverage: {
             provider: 'v8',
