@@ -38,7 +38,7 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
         const hasNoLabels = updatedLabels.length === 0;
 
         if (hasNoLabels) {
-            // An annotation without labels is invalid: remove it so it cannot be submitted.
+            // An annotation without labels is invalid so we get rid of it.
             deleteAnnotations([annotation.id]);
         } else {
             updateAnnotations([{ ...annotation, labels: updatedLabels }]);
