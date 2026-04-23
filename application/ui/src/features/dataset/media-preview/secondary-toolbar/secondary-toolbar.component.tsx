@@ -104,6 +104,8 @@ export const SecondaryToolbar = ({
                 <Toolbar.Section>
                     <Flex alignItems={'center'} gap={'size-200'}>
                         <AnnotatorModes
+                            // We want to reset annotation and/or prediction cue when media item changes
+                            key={mediaItem.id}
                             mode={mode}
                             onModeChange={onModeChange}
                             hasAnnotations={!isEmpty(initialAnnotations)}
