@@ -23,12 +23,10 @@ const Redirect = () => {
 
     const { data: projects } = useProjects();
 
-    // No projects -> Go to the projects list so users can create or import a project
-    if (projects.length === 0) {
-        path = paths.project.index({});
+    // No projects -> fall through to the default path (projects list), letting users create or import a project
 
-        // Only 1 project -> Redirect to the dataset page
-    } else if (projects.length === 1) {
+    // Only 1 project -> Redirect to the dataset page
+    if (projects.length === 1) {
         const projectId = projects[0].id;
 
         if (projectId) {
@@ -36,15 +34,13 @@ const Redirect = () => {
         } else {
             path = paths.project.new({});
         }
-    } else {
-        // More than 1 project -> Redirect the active one
-        // And if none are active, redirect to /projects
+    } else if (projects.length > 1) {
+        // More than 1 project -> Redirect to the active one
+        // And if none are active, fall through to the default path (projects list)
         const projectWithActivePipeline = projects.find((project) => Boolean(project.active_pipeline));
 
         if (projectWithActivePipeline) {
             path = paths.project.dataset.index({ projectId: projectWithActivePipeline.id });
-        } else {
-            path = paths.project.index({});
         }
     }
 
