@@ -31,8 +31,8 @@
 
 .availabilityCue {
     position: absolute;
-    top: -8px;
-    right: -8px;
+    top: calc(-1 * var(--spectrum-global-dimension-size-100));
+    right: calc(-1 * var(--spectrum-global-dimension-size-100));
     animation: pulse 1.5s ease-in-out infinite;
     pointer-events: none;
 }
