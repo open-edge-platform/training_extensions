@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -118,4 +118,30 @@ export const useAnnotatorMode = ({
     }, [hasAnnotations, hasPredictions, setMode]);
 
     return [mode, setMode] as const;
+};
+
+export const usePlayPauseVideoBySystem = (isLoadingPredictions: boolean) => {
+    const isPausedBySystem = useRef<boolean>(false);
+    const context = useVideoPlayerContext();
+
+    const playRef = useRef(context?.videoControls.play);
+    const pauseRef = useRef(context?.videoControls.pause);
+
+    useEffect(() => {
+        playRef.current = context?.videoControls.play;
+    }, [context?.videoControls.play]);
+
+    useEffect(() => {
+        pauseRef.current = context?.videoControls.pause;
+    }, [context?.videoControls.pause]);
+
+    useEffect(() => {
+        if (isLoadingPredictions && context?.videoControls.isPlaying) {
+            isPausedBySystem.current = true;
+            pauseRef.current?.();
+        } else if (!isLoadingPredictions && isPausedBySystem.current) {
+            isPausedBySystem.current = false;
+            playRef.current?.();
+        }
+    }, [isLoadingPredictions, context?.videoControls.isPlaying]);
 };

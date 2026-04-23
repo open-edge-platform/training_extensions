@@ -14,6 +14,7 @@ import { Annotations } from '../annotations/annotations.component';
 import { VideoAnnotations, VideoPredictions } from '../annotations/video-annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
 import { ToolManager } from '../tools/tool-manager.component';
+import { usePrefetchVideoFramesAnnotations } from '../video-player/api/use-video-frames-annotations';
 import {
     PREDICTION_CHUNK_SIZE,
     PREDICTION_FRAME_SKIP,
@@ -79,6 +80,21 @@ const ImageAnnotations = ({ mediaItem }: ImageAnnotationsProps) => {
     );
 };
 
+const PrefetchAnnotations = () => {
+    const { videoFrame, step } = useVideoPlayer();
+
+    const nextFrameRangeIndexes = getVideoFrameRangeIndexes({
+        frames: videoFrame.frame_count - 1,
+        frameSkip: step,
+        frameNumber: videoFrame.frame_number,
+    });
+
+    usePrefetchVideoFramesAnnotations({ frameNumber: videoFrame.frame_number, frameSkip: step });
+    usePrefetchVideoFramesAnnotations({ frameNumber: nextFrameRangeIndexes.endFrameIndex + 1, frameSkip: step });
+
+    return null;
+};
+
 const PrefetchPredictions = () => {
     const { videoFrame } = useVideoPlayer();
     const nextFrameRangeIndexes = getVideoFrameRangeIndexes({
@@ -111,7 +127,12 @@ const MediaAnnotations = ({ mediaItem, mode }: MediaAnnotationsProps) => {
 
     if (isVideoFrame(mediaItem) && videoPlayerContext?.videoControls?.isPlaying) {
         if (mode === 'annotation') {
-            return <VideoAnnotations />;
+            return (
+                <>
+                    <VideoAnnotations />
+                    <PrefetchAnnotations />
+                </>
+            );
         } else if (mode === 'prediction') {
             return (
                 <>
@@ -126,6 +147,7 @@ const MediaAnnotations = ({ mediaItem, mode }: MediaAnnotationsProps) => {
         <>
             <ImageAnnotations mediaItem={mediaItem} />
             {isVideoFrame(mediaItem) && mode === 'prediction' && <PrefetchPredictions />}
+            {isVideoFrame(mediaItem) && mode === 'annotation' && <PrefetchAnnotations />}
         </>
     );
 };

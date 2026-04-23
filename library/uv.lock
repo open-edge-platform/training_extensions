@@ -863,7 +863,7 @@ wheels = [
 [[package]]
 name = "datumaro"
 version = "2.0.0"
-source = { git = "https://github.com/open-edge-platform/datumaro.git?rev=develop#2f8e16d11c642b8a142ff4ca5d7232e3cf0352a9" }
+source = { git = "https://github.com/open-edge-platform/datumaro.git?rev=develop#a7ed7a3a8d2d6c5957ef39b25b7199b0dcce3c80" }
 dependencies = [
     { name = "attrs" },
     { name = "cachetools" },
@@ -1261,7 +1261,6 @@ dependencies = [
     { name = "rich" },
     { name = "rich-argparse" },
     { name = "roboflow" },
-    { name = "setuptools" },
     { name = "tensorboard" },
     { name = "tensorboardx" },
     { name = "timm" },
@@ -1331,7 +1330,6 @@ lint = [
     { name = "types-python-dateutil" },
     { name = "types-pyyaml" },
     { name = "types-requests" },
-    { name = "types-setuptools" },
 ]
 
 [package.metadata]
@@ -1366,7 +1364,6 @@ requires-dist = [
     { name = "rich", specifier = "==14.0.0" },
     { name = "rich-argparse", specifier = "==1.7.0" },
     { name = "roboflow", specifier = "~=1.2" },
-    { name = "setuptools", specifier = "==78.1.1" },
     { name = "sphinx", marker = "extra == 'docs'", specifier = "==7.2.6" },
     { name = "sphinx-autoapi", marker = "extra == 'docs'" },
     { name = "sphinx-copybutton", marker = "extra == 'docs'", specifier = "==0.5.2" },
@@ -1419,7 +1416,6 @@ lint = [
     { name = "types-python-dateutil" },
     { name = "types-pyyaml", specifier = "~=6.0.12" },
     { name = "types-requests", specifier = "~=2.32.4" },
-    { name = "types-setuptools" },
 ]
 
 [[package]]
@@ -5176,11 +5172,11 @@ wheels = [
 
 [[package]]
 name = "setuptools"
-version = "78.1.1"
+version = "82.0.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/81/9c/42314ee079a3e9c24b27515f9fbc7a3c1d29992c33451779011c74488375/setuptools-78.1.1.tar.gz", hash = "sha256:fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d", size = 1368163, upload-time = "2025-04-19T18:23:36.68Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/db/cfac1baf10650ab4d1c111714410d2fbb77ac5a616db26775db562c8fab2/setuptools-82.0.1.tar.gz", hash = "sha256:7d872682c5d01cfde07da7bccc7b65469d3dca203318515ada1de5eda35efbf9", size = 1152316, upload-time = "2026-03-09T12:47:17.221Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/90/99/158ad0609729111163fc1f674a5a42f2605371a4cf036d0441070e2f7455/setuptools-78.1.1-py3-none-any.whl", hash = "sha256:c3a9c4211ff4c309edb8b8c4f1cbfa7ae324c4ba9f91ff254e3d305b9fd54561", size = 1256462, upload-time = "2025-04-19T18:23:34.525Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/76/f789f7a86709c6b087c5a2f52f911838cad707cc613162401badc665acfe/setuptools-82.0.1-py3-none-any.whl", hash = "sha256:a59e362652f08dcd477c78bb6e7bd9d80a7995bc73ce773050228a348ce2e5bb", size = 1006223, upload-time = "2026-03-09T12:47:15.026Z" },
 ]
 
 [[package]]
@@ -6396,15 +6392,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/6c/b1/66bafdc85965e5aa3db42e1b9128bf8abe252edd7556d00a07ef437a3e0e/types_requests-2.32.4.20260324.tar.gz", hash = "sha256:33a2a9ccb1de7d4e4da36e347622c35418f6761269014cc32857acabd5df739e", size = 23765, upload-time = "2026-03-24T04:06:35.106Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5b/5a/ce5999f9bd72c7fac681d26cd0a5782b379053bfc2214e2a3fbe30852c9e/types_requests-2.32.4.20260324-py3-none-any.whl", hash = "sha256:f83ef2deb284fe99a249b8b0b0a3e4b9809e01ff456063c4df0aac7670c07ab9", size = 20735, upload-time = "2026-03-24T04:06:33.9Z" },
-]
-
-[[package]]
-name = "types-setuptools"
-version = "82.0.0.20260210"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4b/90/796ac8c774a7f535084aacbaa6b7053d16fff5c630eff87c3ecff7896c37/types_setuptools-82.0.0.20260210.tar.gz", hash = "sha256:d9719fbbeb185254480ade1f25327c4654f8c00efda3fec36823379cebcdee58", size = 44768, upload-time = "2026-02-10T04:22:02.107Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3e/54/3489432b1d9bc713c9d8aa810296b8f5b0088403662959fb63a8acdbd4fc/types_setuptools-82.0.0.20260210-py3-none-any.whl", hash = "sha256:5124a7daf67f195c6054e0f00f1d97c69caad12fdcf9113eba33eff0bce8cd2b", size = 68433, upload-time = "2026-02-10T04:22:00.876Z" },
 ]
 
 [[package]]

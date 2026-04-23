@@ -7,7 +7,22 @@ import { getMockedMediaImage, getMockedVideoFrame, getMultipleMockedMediaImage }
 import { renderHook } from 'test-utils/render';
 
 import type { AnnotationDTO } from '../../../constants/shared-types';
-import { getInitialAnnotations, getNextMediaItem, useAnnotatorMode } from './utils';
+import { useVideoPlayerContext } from '../../annotator/video-player/video-player-provider.component';
+import { getInitialAnnotations, getNextMediaItem, useAnnotatorMode, usePlayPauseVideoBySystem } from './utils';
+
+vi.mock('../../annotator/video-player/video-player-provider.component', () => ({
+    useVideoPlayerContext: vi.fn(),
+}));
+
+const mockUseVideoPlayerContext = vi.mocked(useVideoPlayerContext);
+
+const createVideoPlayerContext = (isPlaying: boolean) => {
+    const play = vi.fn().mockResolvedValue(undefined);
+    const pause = vi.fn();
+    return {
+        videoControls: { isPlaying, play, pause },
+    };
+};
 
 describe('getInitialAnnotations', () => {
     const mockAnnotations: AnnotationDTO[] = [
@@ -167,5 +182,74 @@ describe('useAnnotatorMode', () => {
         });
 
         expect(result.current[0]).toBe('annotation');
+    });
+});
+
+describe('usePlayPauseVideoBySystem', () => {
+    beforeEach(() => {
+        mockUseVideoPlayerContext.mockReturnValue(null);
+    });
+
+    it('does not call play or pause when not loading and video is not playing', () => {
+        const context = createVideoPlayerContext(false);
+        mockUseVideoPlayerContext.mockReturnValue(context as never);
+
+        renderHook(() => usePlayPauseVideoBySystem(false));
+
+        expect(context.videoControls.play).not.toHaveBeenCalled();
+        expect(context.videoControls.pause).not.toHaveBeenCalled();
+    });
+
+    it('calls pause when isLoadingPredictions becomes true and video is playing', () => {
+        const context = createVideoPlayerContext(true);
+        mockUseVideoPlayerContext.mockReturnValue(context as never);
+
+        renderHook(() => usePlayPauseVideoBySystem(true));
+
+        expect(context.videoControls.pause).toHaveBeenCalledTimes(1);
+        expect(context.videoControls.play).not.toHaveBeenCalled();
+    });
+
+    it('calls play when isLoadingPredictions becomes false after system paused the video', () => {
+        const context = createVideoPlayerContext(true);
+        mockUseVideoPlayerContext.mockReturnValue(context as never);
+
+        let isLoading = true;
+        const { rerender } = renderHook(() => usePlayPauseVideoBySystem(isLoading));
+
+        expect(context.videoControls.pause).toHaveBeenCalledTimes(1);
+
+        act(() => {
+            isLoading = false;
+            rerender();
+        });
+
+        expect(context.videoControls.play).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call play when isLoadingPredictions becomes false but video was paused by user', () => {
+        const context = createVideoPlayerContext(false);
+        mockUseVideoPlayerContext.mockReturnValue(context as never);
+
+        let isLoading = true;
+        const { rerender } = renderHook(() => usePlayPauseVideoBySystem(isLoading));
+
+        expect(context.videoControls.pause).not.toHaveBeenCalled();
+
+        act(() => {
+            isLoading = false;
+            rerender();
+        });
+
+        expect(context.videoControls.play).not.toHaveBeenCalled();
+    });
+
+    it('does not call pause when video is not playing and isLoadingPredictions becomes true', () => {
+        const context = createVideoPlayerContext(false);
+        mockUseVideoPlayerContext.mockReturnValue(context as never);
+
+        renderHook(() => usePlayPauseVideoBySystem(true));
+
+        expect(context.videoControls.pause).not.toHaveBeenCalled();
     });
 });
