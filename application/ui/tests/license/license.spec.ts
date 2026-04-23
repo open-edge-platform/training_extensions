@@ -25,7 +25,7 @@ test.describe('License agreement', () => {
             await page.goto('/');
 
             await expect(page.getByRole('heading', { name: /License Agreement/i })).toBeVisible();
-            await expect(page.getByRole('link', { name: /DINOv2 License/i })).toBeVisible();
+            await expect(page.getByRole('link', { name: /DINOv3 License/i })).toBeVisible();
             await expect(page.getByRole('link', { name: /Apache License 2\.0/i })).toBeVisible();
         });
 
