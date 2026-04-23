@@ -58,7 +58,8 @@
         "recharts": "~3.7.0",
         "static-path": "~0.0.4",
         "utif": "^3.1.0",
-        "uuid": "~11.1.0"
+        "uuid": "~11.1.0",
+        "zipson": "^0.2.12"
     },
     "devDependencies": {
         "@eslint/compat": "~1.2.8",

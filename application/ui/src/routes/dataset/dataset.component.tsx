@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { dimensionValue, Grid, useViewMode, View } from '@geti/ui';
 import { useDatasetMediaWithReviewStatus } from 'hooks/use-dataset-media-with-review-status.hook';
+import { useLabelsSearchParams } from 'hooks/use-labels-search-params.hook';
 
 import { DatasetItemAnnotationStatus } from '../../constants/shared-types';
 import { Gallery } from '../../features/dataset/gallery/gallery.component';
@@ -15,11 +16,14 @@ import { ImportJobsList } from '../../features/dataset/import-export/import-jobs
 
 export const Dataset = () => {
     const [viewMode, setViewMode] = useViewMode('dataset-gallery-view-mode');
+    const { selectedLabelIds: selectedFilterLabels } = useLabelsSearchParams();
     const [filterStatus, setFilterStatus] = useState<DatasetItemAnnotationStatus | null>(null);
     const { items, isPending, isFetchingNextPage, fetchNextPage, isMediaItemReviewedById } =
         useDatasetMediaWithReviewStatus({
             annotationStatus: filterStatus ?? undefined,
         });
+
+    const hasActiveFilter = filterStatus !== null || selectedFilterLabels.length > 0;
 
     const handleFilterByStatusChange = (status: FilterByStatusKey) => {
         setFilterStatus(status === 'all' ? null : status);
@@ -53,7 +57,7 @@ export const Dataset = () => {
                     isPending={isPending}
                     fetchNextPage={fetchNextPage}
                     isMediaItemReviewedById={isMediaItemReviewedById}
-                    hasActiveFilter={filterStatus !== null}
+                    hasActiveFilter={hasActiveFilter}
                     isFetchingNextPage={isFetchingNextPage}
                 />
             </View>
