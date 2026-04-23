@@ -68,7 +68,7 @@ describe('AnnotationShapeWithLabels', () => {
         vi.clearAllMocks();
     });
 
-    it('deletes full-image annotation when removing its last label in detection projects', async () => {
+    it('updates a full-image annotation to have no labels when removing its last label', async () => {
         const annotation = getMockedAnnotation({
             id: 'full-image-annotation',
             shape: { type: 'full_image' },
@@ -78,12 +78,12 @@ describe('AnnotationShapeWithLabels', () => {
         render(<AnnotationShapeWithLabels annotation={annotation} />);
         fireEvent.pointerDown(await screen.findByRole('button', { name: 'Remove No object' }));
 
-        expect(mockDeleteAnnotations).toHaveBeenCalledWith(['full-image-annotation']);
-        expect(mockUpdateAnnotations).not.toHaveBeenCalled();
+        expect(mockUpdateAnnotations).toHaveBeenCalledWith([{ ...annotation, labels: [] }]);
+        expect(mockDeleteAnnotations).not.toHaveBeenCalled();
         expect(mockSetSelectedLabelId).toHaveBeenCalledWith(null);
     });
 
-    it('deletes non-full-image annotation when removing its last label in detection projects', async () => {
+    it('updates a non-full-image annotation to have no labels when removing its last label', async () => {
         const annotation = getMockedAnnotation({
             id: 'rect-annotation',
             labels: [getMockedLabel({ id: 'label-1', name: 'Person' })],
@@ -92,7 +92,7 @@ describe('AnnotationShapeWithLabels', () => {
         render(<AnnotationShapeWithLabels annotation={annotation} />);
         fireEvent.pointerDown(await screen.findByRole('button', { name: 'Remove Person' }));
 
-        expect(mockDeleteAnnotations).toHaveBeenCalledWith(['rect-annotation']);
-        expect(mockUpdateAnnotations).not.toHaveBeenCalled();
+        expect(mockUpdateAnnotations).toHaveBeenCalledWith([{ ...annotation, labels: [] }]);
+        expect(mockDeleteAnnotations).not.toHaveBeenCalled();
     });
 });
