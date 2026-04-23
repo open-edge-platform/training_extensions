@@ -229,7 +229,7 @@ describe('Labels', () => {
             ]);
         });
 
-        it('deletes annotation when removing last label in multi-label mode', () => {
+        it('keeps annotation with empty labels when removing last label in multi-label mode', () => {
             mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
 
             render(<Labels isClassification isMultiLabel />);
@@ -237,7 +237,8 @@ describe('Labels', () => {
             const personButton = screen.getByRole('button', { name: 'Label Person' });
             fireEvent.click(personButton);
 
-            expect(mockDeleteAnnotations).toHaveBeenCalledWith(['annotation-1']);
+            expect(mockUpdateAnnotations).toHaveBeenCalledWith([{ ...mockAnnotations.current[0], labels: [] }]);
+            expect(mockDeleteAnnotations).not.toHaveBeenCalled();
         });
 
         it('does not require selected annotations for classification', () => {
