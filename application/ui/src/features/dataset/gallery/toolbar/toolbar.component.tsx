@@ -12,7 +12,6 @@ import {
     Flex,
     Heading,
     MediaViewModes,
-    Text,
     ViewModes,
 } from '@geti/ui';
 import { isString } from 'lodash-es';
@@ -26,16 +25,16 @@ import { DeleteMediaItem } from '../delete-media-item/delete-media-item.componen
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { AssignLabel } from './assign-label.component';
 import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
-import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
+import { FilterByStatus } from './filter-by-status/filter-by-status.component';
 import { MediaFilterLabels } from './media-filter-labels/media-filter-labels.component';
 import { MediaUpload } from './media-upload.component';
-import { getNumberOfImagesAndVideosMessage, toggleMultipleSelection } from './util';
+import { TotalItems } from './total-items.component';
+import { toggleMultipleSelection } from './util';
 
 type ToolbarProps = {
     items: Media[];
     viewMode: ViewModes;
     setViewMode: Dispatch<SetStateAction<ViewModes>>;
-    onFilter: (status: FilterByStatusKey) => void;
 };
 
 type AnnotateButtonProps = {
@@ -51,7 +50,7 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
     );
 };
 
-export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps) => {
+export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
@@ -59,9 +58,6 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
 
     const totalSelectedElements = selectedMediaItems?.size ?? 0;
     const hasSelectedElements = totalSelectedElements > 0;
-    const message = hasSelectedElements
-        ? `${totalSelectedElements} selected`
-        : getNumberOfImagesAndVideosMessage(items);
 
     const handleToggleManyItemSelection = () => {
         const images = items.map((item) => String(item.id));
@@ -137,14 +133,13 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                 </Flex>
 
                 <Flex gap={'size-200'} alignItems={'center'}>
-                    <Text>{message}</Text>
+                    <TotalItems totalSelectedElements={totalSelectedElements} />
 
-                    <FilterByStatus onChange={onFilter} />
+                    <FilterByStatus />
 
                     <MediaFilterLabels />
 
                     <DatasetStatistics />
-
                     <MediaViewModes
                         viewMode={viewMode}
                         setViewMode={setViewMode}

@@ -124,7 +124,7 @@ const MediaPreviewContent = ({
         return predictionsData?.flatMap((predictionData) => predictionData.prediction) ?? [];
     }, [predictionsData]);
 
-    const [mode, setMode] = useAnnotatorMode({ predictions: initialPredictions, annotations: initialAnnotations });
+    const [mode, setMode] = useAnnotatorMode();
 
     return (
         <ToolProvider>
@@ -153,7 +153,7 @@ const MediaPreviewContent = ({
 };
 
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
-    const { items, isFetchingNextPage, fetchNextPage, isMediaItemReviewedById } = useDatasetMediaWithReviewStatus({});
+    const { items, isFetchingNextPage, fetchNextPage, isMediaItemReviewedById } = useDatasetMediaWithReviewStatus();
 
     return (
         <Dialog

@@ -6,7 +6,11 @@ import { isEmpty } from 'lodash-es';
 
 import { usePredictionSetup } from '../../../../annotator/predictions-setup-provider.component';
 
-export const PredictionModelSelector = () => {
+type PredictionModelSelectorProps = {
+    isDisabled: boolean;
+};
+
+export const PredictionModelSelector = ({ isDisabled }: PredictionModelSelectorProps) => {
     const { models, selectedModelId, changeSelectedModelId } = usePredictionSetup();
 
     if (isEmpty(models)) {
@@ -19,6 +23,7 @@ export const PredictionModelSelector = () => {
             aria-label={'Select prediction model'}
             items={models}
             selectedKey={selectedModelId}
+            isDisabled={isDisabled}
             onSelectionChange={(key) => key !== null && changeSelectedModelId(String(key))}
         >
             {(item) => <Item key={item.id}>{item.name}</Item>}

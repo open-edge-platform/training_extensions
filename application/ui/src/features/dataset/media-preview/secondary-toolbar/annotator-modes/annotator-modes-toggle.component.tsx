@@ -1,35 +1,91 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 
-import { Flex, View } from '@geti/ui';
+import { Flex, StatusLight, View } from '@geti/ui';
 
 import { type AnnotatorMode } from '../../../../../shared/annotator/annotator-mode';
 
-import styles from './annotator-modes.module.scss';
+import classes from './annotator-modes.module.scss';
 
-type ToggleButtonProps = {
+interface ToggleButtonProps {
     children: ReactNode;
-    selectedMode: AnnotatorMode;
-    mode: AnnotatorMode;
+    isActive: boolean;
     onClick: () => void;
-};
+}
 
-const ToggleButton = ({ children, mode, selectedMode, onClick }: ToggleButtonProps) => {
+const ToggleButton = ({ children, isActive, onClick }: ToggleButtonProps) => {
     return (
-        <button aria-pressed={mode === selectedMode} onClick={onClick} className={styles.toggleButton}>
+        <button aria-pressed={isActive} onClick={onClick} className={classes.toggleButton}>
             {children}
         </button>
     );
 };
 
-type AnnotatorModes = {
-    mode: AnnotatorMode;
-    onModeChange: (mode: AnnotatorMode) => void;
+interface ToggleButtonWithCueProps extends ToggleButtonProps {
+    showCue: boolean;
+    cueLabel: string;
+}
+
+const ToggleButtonWithCue = ({ showCue, cueLabel, onClick, isActive, children }: ToggleButtonWithCueProps) => {
+    return (
+        <Flex alignItems={'center'} position={'relative'}>
+            <ToggleButton isActive={isActive} onClick={onClick}>
+                {children}
+            </ToggleButton>
+            {showCue && (
+                <StatusLight
+                    variant={'info'}
+                    role={'status'}
+                    aria-label={cueLabel}
+                    UNSAFE_className={classes.availabilityCue}
+                />
+            )}
+        </Flex>
+    );
 };
 
-export const AnnotatorModes = ({ mode, onModeChange }: AnnotatorModes) => {
+interface AnnotatorModesProps {
+    mode: AnnotatorMode;
+    onModeChange: (mode: AnnotatorMode) => void;
+    hasAnnotations: boolean;
+    hasPredictions: boolean;
+}
+
+export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredictions }: AnnotatorModesProps) => {
+    const [dismissedCues, setDismissedCues] = useState<Set<AnnotatorMode>>(new Set());
+
+    const shouldDisplayAnnotationCue = mode === 'prediction' && hasAnnotations && !dismissedCues.has('annotation');
+    const shouldDisplayPredictionCue =
+        mode === 'annotation' && !hasAnnotations && hasPredictions && !dismissedCues.has('prediction');
+
+    const handleModeChange = (nextMode: AnnotatorMode) => {
+        if (mode === nextMode) {
+            return;
+        }
+
+        setDismissedCues((prevDismissedCues) => {
+            const nextDismissedCues = new Set(prevDismissedCues);
+
+            // user is leaving the current mode — if it had content they've seen it
+            const currentHasContent = mode === 'annotation' ? hasAnnotations : hasPredictions;
+            if (currentHasContent) {
+                nextDismissedCues.add(mode);
+            }
+
+            // user is switching to the next mode — if it has content they're about to see it
+            const nextHasContent = nextMode === 'annotation' ? hasAnnotations : hasPredictions;
+            if (nextHasContent) {
+                nextDismissedCues.add(nextMode);
+            }
+
+            return nextDismissedCues;
+        });
+
+        onModeChange(nextMode);
+    };
+
     return (
         <View backgroundColor={'gray-200'} padding={'size-50'} borderRadius={'regular'}>
             <Flex
@@ -39,12 +95,22 @@ export const AnnotatorModes = ({ mode, onModeChange }: AnnotatorModes) => {
                 alignItems={'center'}
                 data-testid={'annotator-modes-id'}
             >
-                <ToggleButton mode={'annotation'} selectedMode={mode} onClick={() => onModeChange('annotation')}>
+                <ToggleButtonWithCue
+                    isActive={mode === 'annotation'}
+                    onClick={() => handleModeChange('annotation')}
+                    showCue={shouldDisplayAnnotationCue}
+                    cueLabel={'Annotation available'}
+                >
                     Annotation
-                </ToggleButton>
-                <ToggleButton mode={'prediction'} selectedMode={mode} onClick={() => onModeChange('prediction')}>
+                </ToggleButtonWithCue>
+                <ToggleButtonWithCue
+                    isActive={mode === 'prediction'}
+                    onClick={() => handleModeChange('prediction')}
+                    showCue={shouldDisplayPredictionCue}
+                    cueLabel={'Prediction available'}
+                >
                     Prediction
-                </ToggleButton>
+                </ToggleButtonWithCue>
             </Flex>
         </View>
     );

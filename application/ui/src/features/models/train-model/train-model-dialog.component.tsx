@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import {
@@ -21,8 +21,8 @@ import { useMatch } from 'react-router';
 import { paths } from '../../../constants/paths';
 import { AdvancedSettings } from './advanced-settings/advanced-settings.component';
 import { BasicTrainModelContent } from './basic-train-model-content.component';
-import { useIsTrainingButtonDisabled } from './hooks/use-is-training-button-disabled';
 import { useTrainModel } from './hooks/use-train-model';
+import { useTrainModelDisabledReason } from './hooks/use-train-model-disabled-reason';
 import { TrainModelDialogLayout } from './train-model-dialog-layout.component';
 import { useTrainModelState } from './train-model-provider.component';
 
@@ -40,7 +40,8 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     } = useTrainModelState();
     const projectId = useProjectIdentifier();
     const isModelsPage = useMatch(paths.project.models.pattern);
-    const isTrainingDisabled = useIsTrainingButtonDisabled();
+    const trainingDisabledReason = useTrainModelDisabledReason().reason;
+    const isTrainingDisabled = trainingDisabledReason !== undefined;
 
     const { trainModel, isPending } = useTrainModel();
 
@@ -92,10 +93,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                     {isTrainingDisabled ? (
                         <InlineAlert variant={'notice'}>
                             <Heading>Why can I not start training?</Heading>
-                            <Content>
-                                In order to train a model, you need to annotate at least 3 items in your dataset,
-                                although we recommend annotating several more for better results.
-                            </Content>
+                            <Content>{trainingDisabledReason}</Content>
                         </InlineAlert>
                     ) : null}
                 </Flex>

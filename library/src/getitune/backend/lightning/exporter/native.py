@@ -97,9 +97,27 @@ class LightningModelExporter(ModelExporter):
             )
         exported_model = self._postprocess_openvino_model(exported_model)
 
+        # Validate the converted model before persisting.  OpenVINO's PyTorch
+        # frontend will log a deserialization error on failure and then
+        # silently fall back -- leaving us with a zero-op graph that passes
+        # through the "Converting to OpenVINO is done." line.  Raise here
+        # instead so the caller sees the real error.
+        if len(exported_model.inputs) == 0 or len(exported_model.outputs) == 0:
+            msg = (
+                "OpenVINO conversion produced an empty model "
+                f"(inputs={len(exported_model.inputs)}, outputs={len(exported_model.outputs)}). "
+                "Check preceding logs for the underlying Torch/ONNX export failure."
+            )
+            raise RuntimeError(msg)
+
         save_path = output_dir / (base_model_name + ".xml")
         openvino.save_model(exported_model, save_path, compress_to_fp16=(precision == Precision.FP16))
-        log.info("Converting to OpenVINO is done.")
+        log.info(
+            "Converting to OpenVINO is done. (%d inputs, %d outputs) -> %s",
+            len(exported_model.inputs),
+            len(exported_model.outputs),
+            save_path,
+        )
 
         return Path(save_path)
 

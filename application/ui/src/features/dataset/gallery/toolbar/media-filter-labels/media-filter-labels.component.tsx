@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Content, Dialog, DialogTrigger, Flex, PressableElement, Text } from '@geti/ui';
-import { useLabelsSearchParams } from 'hooks/use-labels-search-params.hook';
+import { useDatasetFiltersSearchParams } from 'hooks/use-dataset-filters-search-params.hook';
 import { useProjectLabels } from 'hooks/use-project-labels.hook';
 import { isEmpty } from 'lodash-es';
 
@@ -14,7 +14,7 @@ import classes from './media-filter-labels.module.scss';
 
 export const MediaFilterLabels = () => {
     const labels = useProjectLabels();
-    const { selectedLabelIds, setSelectedLabelIds } = useLabelsSearchParams();
+    const { selectedLabelIds, setSelectedLabelIds } = useDatasetFiltersSearchParams();
 
     const handleSelectionChange = (selectedKeys: Set<string> | 'all') => {
         const ids = selectedKeys === 'all' ? labels.map(({ id }) => id) : Array.from(selectedKeys);

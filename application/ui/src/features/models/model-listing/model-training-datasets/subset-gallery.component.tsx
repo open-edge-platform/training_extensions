@@ -75,6 +75,7 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
                             onClose={onClose}
                             mode={mode}
                             subset={item.subset}
+                            hasAnnotationStatus={false}
                         />
                     </AnnotatorProviders>
                 </Grid>

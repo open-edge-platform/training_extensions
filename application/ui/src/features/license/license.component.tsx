@@ -1,8 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Content, Divider, Flex, Heading, Link, Text, View } from '@geti/ui';
+import { Button, Content, Divider, Flex, Heading, Text, View } from '@geti/ui';
 
+import { Link } from '../../platform/components/link.component';
 import { useAcceptLicense } from './api/use-accept-license.hook';
 
 import styles from './license.module.scss';
@@ -18,8 +19,8 @@ const LICENSE_LINKS = {
         href: 'https://www.apache.org/licenses/LICENSE-2.0',
     },
     dinov2: {
-        label: 'DINOv2 License (Apache 2.0)',
-        href: 'https://github.com/facebookresearch/dinov2/blob/main/LICENSE',
+        label: 'DINOv3 License',
+        href: 'https://github.com/facebookresearch/dinov3/blob/main/LICENSE.md',
     },
 };
 
