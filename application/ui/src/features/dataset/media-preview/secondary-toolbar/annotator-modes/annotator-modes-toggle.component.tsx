@@ -65,22 +65,22 @@ export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredicti
             return;
         }
 
-        setDismissedCues((prev) => {
-            const next = new Set(prev);
+        setDismissedCues((prevDismissedCues) => {
+            const nextDismissedCues = new Set(prevDismissedCues);
 
             // user is leaving the current mode — if it had content they've seen it
             const currentHasContent = mode === 'annotation' ? hasAnnotations : hasPredictions;
             if (currentHasContent) {
-                next.add(mode);
+                nextDismissedCues.add(mode);
             }
 
             // user is switching to the next mode — if it has content they're about to see it
             const nextHasContent = nextMode === 'annotation' ? hasAnnotations : hasPredictions;
             if (nextHasContent) {
-                next.add(nextMode);
+                nextDismissedCues.add(nextMode);
             }
 
-            return next;
+            return nextDismissedCues;
         });
 
         onModeChange(nextMode);
