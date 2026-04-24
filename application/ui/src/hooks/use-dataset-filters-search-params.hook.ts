@@ -8,8 +8,10 @@ import { parse, stringify } from 'zipson/lib';
 import type { DatasetItemAnnotationStatus, FilterByStatusKey } from '../constants/shared-types';
 import { isNonEmptyString } from '../shared/util';
 
-export const LABELS_PARAM = 'labelsFiler';
+export const LABELS_PARAM = 'labelsFilter';
 export const ANNOTATION_STATUS_PARAM = 'annotationStatusFilter';
+export const START_DATE_PARAM = 'startDateFilter';
+export const END_DATE_PARAM = 'endDateFilter';
 
 const VALID_ANNOTATION_STATUSES = new Set<DatasetItemAnnotationStatus>(['unannotated', 'reviewed', 'to_review']);
 
@@ -64,6 +66,8 @@ export const useDatasetFiltersSearchParams = () => {
     const filterParam = getFilterParam<string>(labelsParam ?? '');
     const selectedLabelIds = isNonEmptyString(filterParam) ? filterParam.split(',') : [];
     const annotationStatus = parseAnnotationStatus(searchParams.get(ANNOTATION_STATUS_PARAM));
+    const startDate = searchParams.get(START_DATE_PARAM);
+    const endDate = searchParams.get(END_DATE_PARAM);
 
     const setSelectedLabelIds = (ids: string[]) => {
         setSearchParams((prev) => {
@@ -89,5 +93,38 @@ export const useDatasetFiltersSearchParams = () => {
         });
     };
 
-    return { selectedLabelIds, setSelectedLabelIds, annotationStatus, setAnnotationStatus };
+    const setStartDate = (date: string | null) => {
+        setSearchParams((prev) => {
+            if (isNil(date)) {
+                prev.delete(START_DATE_PARAM);
+            } else {
+                prev.set(START_DATE_PARAM, date);
+            }
+
+            return prev;
+        });
+    };
+
+    const setEndDate = (date: string | null) => {
+        setSearchParams((prev) => {
+            if (isNil(date)) {
+                prev.delete(END_DATE_PARAM);
+            } else {
+                prev.set(END_DATE_PARAM, date);
+            }
+
+            return prev;
+        });
+    };
+
+    return {
+        selectedLabelIds,
+        setSelectedLabelIds,
+        annotationStatus,
+        setAnnotationStatus,
+        startDate,
+        setStartDate,
+        endDate,
+        setEndDate,
+    };
 };
