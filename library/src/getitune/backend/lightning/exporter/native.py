@@ -111,22 +111,10 @@ class LightningModelExporter(ModelExporter):
         precision: Precision = Precision.FP32,
         embed_metadata: bool = True,
     ) -> Path:
-        """Export the given PyTorch model to ONNX format and save it to the specified output directory.
-
-        Args:
-            model (LightningModel): The PyTorch model to be exported.
-            output_dir (Path): The directory where the ONNX model will be saved.
-            base_model_name (str, optional): The base name for the exported model. Defaults to "exported_model".
-            precision (Precision, optional): The precision type for the exported model.
-            Defaults to Precision.FP32.
-            embed_metadata (bool, optional): Whether to embed metadata in the ONNX model. Defaults to True.
-
-        Returns:
-            Path: The path to the saved ONNX model.
-        """
+        """Export a PyTorch model to ONNX format with automatic fallback to legacy exporter."""
         dummy_tensor = torch.rand(self.data_input_params.as_ncwh()).to(next(model.parameters()).device)
         save_path = str(output_dir / (base_model_name + ".onnx"))
-        torch.onnx.export(model, dummy_tensor, save_path, **self.onnx_export_configuration)
+        self._export_onnx(model, dummy_tensor, save_path)
 
         onnx_model = onnx.load(save_path)
         onnx_model = self._postprocess_onnx_model(onnx_model, embed_metadata, precision)
@@ -135,3 +123,49 @@ class LightningModelExporter(ModelExporter):
         log.info("Converting to ONNX is done.")
 
         return Path(save_path)
+
+    def _export_onnx(self, model: LightningModel, dummy_tensor: torch.Tensor, save_path: str) -> None:
+        """Run torch.onnx.export, falling back to legacy TorchScript exporter on dynamo failure.
+
+        The dynamo-based exporter (triggered by ``dynamic_shapes`` in the config)
+        can fail due to upstream bugs in onnxscript or PyTorch FX passes.
+        When that happens and ``dynamic_shapes`` is present, this method retries
+        with the legacy TorchScript exporter by converting ``dynamic_shapes`` to
+        ``dynamic_axes``.
+        """
+        try:
+            torch.onnx.export(model, dummy_tensor, save_path, **self.onnx_export_configuration)
+        except Exception:
+            if "dynamic_shapes" not in self.onnx_export_configuration:
+                raise
+            log.warning(
+                "Dynamo-based ONNX export failed, retrying with legacy TorchScript exporter.",
+                exc_info=True,
+            )
+            legacy_config = self._build_legacy_onnx_config()
+            torch.onnx.export(model, dummy_tensor, save_path, **legacy_config)
+
+    def _build_legacy_onnx_config(self) -> dict[str, Any]:
+        """Convert dynamo-style onnx_export_configuration to legacy TorchScript style.
+
+        Replaces ``dynamic_shapes`` with equivalent ``dynamic_axes`` and removes
+        dynamo-only parameters.
+        """
+        config = dict(self.onnx_export_configuration)
+
+        dynamic_shapes = config.pop("dynamic_shapes", None)
+        if dynamic_shapes is not None and "dynamic_axes" not in config:
+            input_names = config.get("input_names", [])
+            dynamic_axes: dict[str, dict[int, str]] = {}
+            for i, shape_spec in enumerate(dynamic_shapes.values()):
+                if i < len(input_names) and isinstance(shape_spec, dict):
+                    dynamic_axes[input_names[i]] = {
+                        dim_idx: getattr(dim_val, "__name__", str(dim_val)) for dim_idx, dim_val in shape_spec.items()
+                    }
+            config["dynamic_axes"] = dynamic_axes
+
+        # Remove parameters not supported by the legacy exporter
+        config.pop("autograd_inlining", None)
+        config["dynamo"] = False
+
+        return config

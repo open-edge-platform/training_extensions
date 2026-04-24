@@ -4897,10 +4897,22 @@
       "severity": "error"
     },
     {
-      "line": 129,
-      "column": 34,
-      "stop_line": 129,
-      "stop_column": 46,
+      "line": 137,
+      "column": 38,
+      "stop_line": 137,
+      "stop_column": 50,
+      "path": "src/getitune/backend/lightning/exporter/native.py",
+      "code": -2,
+      "name": "bad-argument-type",
+      "description": "Argument `Tensor` is not assignable to parameter `args` with type `tuple[Any, ...]` in function `torch.onnx.export`",
+      "concise_description": "Argument `Tensor` is not assignable to parameter `args` with type `tuple[Any, ...]` in function `torch.onnx.export`",
+      "severity": "error"
+    },
+    {
+      "line": 146,
+      "column": 38,
+      "stop_line": 146,
+      "stop_column": 50,
       "path": "src/getitune/backend/lightning/exporter/native.py",
       "code": -2,
       "name": "bad-argument-type",
