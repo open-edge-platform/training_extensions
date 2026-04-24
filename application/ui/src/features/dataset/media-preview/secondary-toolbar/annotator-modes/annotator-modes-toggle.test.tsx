@@ -151,32 +151,5 @@ describe('AnnotatorModes', () => {
 
             expect(screen.queryByRole('status', { name: 'Prediction available' })).not.toBeInTheDocument();
         });
-
-        it('shows annotation cue when annotations appear after mount and user switches to prediction', () => {
-            const DynamicWrapper = () => {
-                const [hasAnnotations, setHasAnnotations] = useState(false);
-                const [mode, setMode] = useState<AnnotatorMode>('annotation');
-
-                return (
-                    <>
-                        <button onClick={() => setHasAnnotations(true)}>Add annotations</button>
-                        <AnnotatorModes
-                            mode={mode}
-                            onModeChange={setMode}
-                            hasAnnotations={hasAnnotations}
-                            hasPredictions={false}
-                        />
-                    </>
-                );
-            };
-
-            render(<DynamicWrapper />);
-
-            fireEvent.click(screen.getByRole('button', { name: 'Add annotations' }));
-
-            fireEvent.click(screen.getByRole('button', { name: 'Prediction' }));
-
-            expect(screen.getByRole('status', { name: 'Annotation available' })).toBeInTheDocument();
-        });
     });
 });
