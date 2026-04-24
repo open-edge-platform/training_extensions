@@ -1,33 +1,23 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-
 import { dimensionValue, Grid, useViewMode, View } from '@geti/ui';
+import { useDatasetFiltersSearchParams } from 'hooks/use-dataset-filters-search-params.hook';
 import { useDatasetMediaWithReviewStatus } from 'hooks/use-dataset-media-with-review-status.hook';
-import { useLabelsSearchParams } from 'hooks/use-labels-search-params.hook';
 
-import { DatasetItemAnnotationStatus } from '../../constants/shared-types';
 import { Gallery } from '../../features/dataset/gallery/gallery.component';
-import type { FilterByStatusKey } from '../../features/dataset/gallery/toolbar/filter-by-status/filter-by-status.component';
 import { Toolbar } from '../../features/dataset/gallery/toolbar/toolbar.component';
 import { ExportJobsList } from '../../features/dataset/import-export/export-jobs-list/export-jobs-list.component';
 import { ImportJobsList } from '../../features/dataset/import-export/import-jobs-list/import-jobs-list.component';
 
 export const Dataset = () => {
     const [viewMode, setViewMode] = useViewMode('dataset-gallery-view-mode');
-    const { selectedLabelIds: selectedFilterLabels } = useLabelsSearchParams();
-    const [filterStatus, setFilterStatus] = useState<DatasetItemAnnotationStatus | null>(null);
+    const { selectedLabelIds: selectedFilterLabels, annotationStatus: filterStatus } = useDatasetFiltersSearchParams();
+
     const { items, isPending, isFetchingNextPage, fetchNextPage, isMediaItemReviewedById } =
-        useDatasetMediaWithReviewStatus({
-            annotationStatus: filterStatus ?? undefined,
-        });
+        useDatasetMediaWithReviewStatus();
 
     const hasActiveFilter = filterStatus !== null || selectedFilterLabels.length > 0;
-
-    const handleFilterByStatusChange = (status: FilterByStatusKey) => {
-        setFilterStatus(status === 'all' ? null : status);
-    };
 
     return (
         <Grid
@@ -42,12 +32,7 @@ export const Dataset = () => {
             </View>
 
             <View gridRow='2 / 3'>
-                <Toolbar
-                    items={items}
-                    viewMode={viewMode}
-                    setViewMode={setViewMode}
-                    onFilter={handleFilterByStatusChange}
-                />
+                <Toolbar items={items} viewMode={viewMode} setViewMode={setViewMode} />
             </View>
 
             <View gridRow='3 / 4'>

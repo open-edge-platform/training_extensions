@@ -57,7 +57,7 @@ test.describe('Dataset', () => {
         await datasetPage.goto();
         const loadedItems = 40;
 
-        await expect(datasetPage.getImagesCountText(loadedItems)).toBeVisible();
+        await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
 
         await datasetPage.selectAll();
 
@@ -69,7 +69,7 @@ test.describe('Dataset', () => {
 
         await datasetPage.goto();
 
-        await expect(datasetPage.getImagesCountText(40)).toBeVisible();
+        await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
 
         const options = datasetPage.getMediaGridOptions();
 
@@ -83,7 +83,7 @@ test.describe('Dataset', () => {
     test('loads additional items when scrolling to the end of the container', async ({ datasetPage }) => {
         await datasetPage.goto();
 
-        await expect(datasetPage.getImagesCountText(40)).toBeVisible();
+        await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
 
         await datasetPage.getMediaGrid().press('End');
 
