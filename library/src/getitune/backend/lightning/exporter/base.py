@@ -313,8 +313,159 @@ class ModelExporter:
             onnx_model = self._embed_onnx_metadata(onnx_model, metadata)
 
         if precision == Precision.FP16:
-            from onnxconverter_common import float16
-
-            onnx_model = float16.convert_float_to_float16(onnx_model)
+            onnx_model = _convert_onnx_to_float16(onnx_model)
 
         return onnx_model
+
+
+def _convert_onnx_to_float16(onnx_model: onnx.ModelProto) -> onnx.ModelProto:
+    """Convert an ONNX model to float16 with a workaround for an onnxconverter_common bug.
+
+    ``onnxconverter_common`` (<= 1.16.0) ``remove_unnecessary_cast_node`` assumes
+    every Cast node has a single downstream consumer.  When a Cast output feeds
+    *multiple* nodes (common in MaskRCNN-style ROI graphs), the function stores
+    them as a plain ``list`` but later accesses ``.input`` on that list, raising
+    ``AttributeError: 'list' object has no attribute 'input'``.
+
+    We disable the buggy pass during conversion and run our own fixed version
+    of the cast-cleanup afterwards.
+
+    See: https://github.com/open-edge-platform/training_extensions/issues/5439
+    """
+    from onnxconverter_common import float16
+
+    original_fn = float16.remove_unnecessary_cast_node
+    float16.remove_unnecessary_cast_node = lambda _graph: None
+    try:
+        onnx_model = float16.convert_float_to_float16(onnx_model)
+    finally:
+        float16.remove_unnecessary_cast_node = original_fn
+
+    _remove_unnecessary_cast_nodes(onnx_model.graph)
+    return onnx_model
+
+
+def _remove_unnecessary_cast_nodes(graph_proto: onnx.GraphProto) -> None:
+    """Remove redundant consecutive Cast (fp16 <-> fp32) node pairs from an ONNX graph.
+
+    This is a fixed re-implementation of
+    ``onnxconverter_common.float16.remove_unnecessary_cast_node`` that correctly
+    handles Cast nodes with **multiple downstream consumers**.
+
+    The upstream implementation (as of v1.16.0) stores multi-consumer downstream
+    nodes as a ``list`` in step 2, handles the list in step 4 when *identifying*
+    removable pairs, but forgets to handle it in step 5 when *reconnecting* the
+    graph -- causing ``AttributeError: 'list' object has no attribute 'input'``.
+    """
+    cast_index = _CastNodeIndex(graph_proto)
+    remove_candidate = cast_index.find_removable_pairs()
+    cast_index.reconnect_and_remove(remove_candidate, graph_proto)
+
+
+class _CastNodeIndex:
+    """Index of Cast nodes and their upstream/downstream relationships in an ONNX graph."""
+
+    def __init__(self, graph_proto: onnx.GraphProto) -> None:
+        self.cast_node_list: list[Any] = []
+        self.input_name_to_cast: dict[str, Any] = {}
+        self.output_name_to_cast: dict[str, Any] = {}
+        self.name_to_node: dict[str, Any] = {}
+        self.upstream: dict[str, Any] = {}
+        self.downstream: dict[str, Any] = {}
+
+        self._index_cast_nodes(graph_proto)
+        self._map_neighbors(graph_proto)
+        self._exclude_constant_upstream()
+
+    def _index_cast_nodes(self, graph_proto: onnx.GraphProto) -> None:
+        """Step 1: index all Cast nodes by their input/output names."""
+        for node in graph_proto.node:
+            if node.op_type == "Cast":
+                self.cast_node_list.append(node)
+                self.name_to_node[node.name] = node
+                for inp in node.input:
+                    self.input_name_to_cast[inp] = node
+                for out in node.output:
+                    self.output_name_to_cast[out] = node
+
+    def _map_neighbors(self, graph_proto: onnx.GraphProto) -> None:
+        """Step 2: map each Cast node to its upstream / downstream node(s)."""
+        for current_node in graph_proto.node:
+            for inp in current_node.input:
+                if inp in self.output_name_to_cast:
+                    cast_node = self.output_name_to_cast[inp]
+                    existing = self.downstream.get(cast_node.name)
+                    if existing is None:
+                        self.downstream[cast_node.name] = current_node
+                    elif isinstance(existing, list):
+                        existing.append(current_node)
+                    else:
+                        self.downstream[cast_node.name] = [existing, current_node]
+
+            for out in current_node.output:
+                if out in self.input_name_to_cast:
+                    cast_node = self.input_name_to_cast[out]
+                    self.upstream[cast_node.name] = current_node
+
+    def _exclude_constant_upstream(self) -> None:
+        """Step 3: exclude Cast nodes whose upstream is a Constant."""
+        for cast_name, up_node in self.upstream.items():
+            if up_node.op_type == "Constant":
+                cast_node = self.name_to_node[cast_name]
+                if cast_node in self.cast_node_list:
+                    self.cast_node_list.remove(cast_node)
+
+    def find_removable_pairs(self) -> list[tuple[Any, Any]]:
+        """Step 4: identify removable Cast16->Cast32 pairs."""
+        remove_candidate: list[tuple[Any, Any]] = []
+        for cast_name, dn in self.downstream.items():
+            cast_node = self.name_to_node[cast_name]
+            dn_list = dn if isinstance(dn, list) else [dn]
+            for dn_node in dn_list:
+                if dn_node.op_type == "Cast" and dn_node in self.cast_node_list and cast_node in self.cast_node_list:
+                    first_attr = cast_node.attribute[0].i
+                    second_attr = dn_node.attribute[0].i
+                    # fp16 (10) -> fp32 (1)  OR  int16 (16) -> int32 (32) style pairs
+                    if (first_attr == 10 and second_attr == 1) or (first_attr == 16 and second_attr == 32):
+                        remove_candidate.append((cast_node, dn_node))
+        return remove_candidate
+
+    def reconnect_and_remove(
+        self,
+        remove_candidate: list[tuple[Any, Any]],
+        graph_proto: onnx.GraphProto,
+    ) -> None:
+        """Steps 5-6: reconnect the graph to bypass each Cast pair and remove them."""
+        for first_cast, second_cast in remove_candidate:
+            bypass_output = self._compute_bypass_output(first_cast, second_cast)
+            if bypass_output is None:
+                continue
+
+            dn_raw = self.downstream.get(second_cast.name)
+            dn_nodes = dn_raw if isinstance(dn_raw, list) else ([dn_raw] if dn_raw is not None else [])
+            for dn_node in dn_nodes:
+                for i, inp in enumerate(dn_node.input):
+                    if inp in list(second_cast.output):
+                        dn_node.input[i] = bypass_output
+
+        for first_cast, second_cast in remove_candidate:
+            if first_cast in graph_proto.node:
+                graph_proto.node.remove(first_cast)
+            if second_cast in graph_proto.node:
+                graph_proto.node.remove(second_cast)
+
+    def _compute_bypass_output(self, first_cast: onnx.NodeProto, second_cast: onnx.NodeProto) -> str | None:
+        """Compute the output name that should replace the cast pair's output."""
+        up_node = self.upstream.get(first_cast.name)
+        dn_raw = self.downstream.get(second_cast.name)
+
+        if up_node is None and dn_raw is not None:
+            return first_cast.input[0]
+        if up_node is not None and dn_raw is None:
+            msg = "The downstream node of the second cast node should be graph output"
+            raise ValueError(msg)
+        if up_node is not None:
+            for out in up_node.output:
+                if out == first_cast.input[0]:
+                    return out
+        return None
