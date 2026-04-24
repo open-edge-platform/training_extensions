@@ -319,23 +319,14 @@ class ModelExporter:
 
 
 def _convert_onnx_to_float16(onnx_model: onnx.ModelProto) -> onnx.ModelProto:
-    """Convert an ONNX model to float16 with a workaround for an onnxconverter_common bug.
-
-    ``onnxconverter_common`` (<= 1.16.0) ``remove_unnecessary_cast_node`` assumes
-    every Cast node has a single downstream consumer.  When a Cast output feeds
-    *multiple* nodes (common in MaskRCNN-style ROI graphs), the function stores
-    them as a plain ``list`` but later accesses ``.input`` on that list, raising
-    ``AttributeError: 'list' object has no attribute 'input'``.
-
-    We disable the buggy pass during conversion and run our own fixed version
-    of the cast-cleanup afterwards.
+    """Convert ONNX model to float16, working around onnxconverter_common multi-consumer Cast bug.
 
     See: https://github.com/open-edge-platform/training_extensions/issues/5439
     """
     from onnxconverter_common import float16
 
     original_fn = float16.remove_unnecessary_cast_node
-    float16.remove_unnecessary_cast_node = lambda _graph: None
+    float16.remove_unnecessary_cast_node = lambda graph_proto: None  # noqa: ARG005
     try:
         onnx_model = float16.convert_float_to_float16(onnx_model)
     finally:
@@ -346,24 +337,14 @@ def _convert_onnx_to_float16(onnx_model: onnx.ModelProto) -> onnx.ModelProto:
 
 
 def _remove_unnecessary_cast_nodes(graph_proto: onnx.GraphProto) -> None:
-    """Remove redundant consecutive Cast (fp16 <-> fp32) node pairs from an ONNX graph.
-
-    This is a fixed re-implementation of
-    ``onnxconverter_common.float16.remove_unnecessary_cast_node`` that correctly
-    handles Cast nodes with **multiple downstream consumers**.
-
-    The upstream implementation (as of v1.16.0) stores multi-consumer downstream
-    nodes as a ``list`` in step 2, handles the list in step 4 when *identifying*
-    removable pairs, but forgets to handle it in step 5 when *reconnecting* the
-    graph -- causing ``AttributeError: 'list' object has no attribute 'input'``.
-    """
+    """Remove redundant consecutive Cast node pairs, handling multi-consumer Cast nodes."""
     cast_index = _CastNodeIndex(graph_proto)
     remove_candidate = cast_index.find_removable_pairs()
     cast_index.reconnect_and_remove(remove_candidate, graph_proto)
 
 
 class _CastNodeIndex:
-    """Index of Cast nodes and their upstream/downstream relationships in an ONNX graph."""
+    """Index of Cast nodes and their upstream/downstream relationships."""
 
     def __init__(self, graph_proto: onnx.GraphProto) -> None:
         self.cast_node_list: list[Any] = []
@@ -378,7 +359,7 @@ class _CastNodeIndex:
         self._exclude_constant_upstream()
 
     def _index_cast_nodes(self, graph_proto: onnx.GraphProto) -> None:
-        """Step 1: index all Cast nodes by their input/output names."""
+        """Index all Cast nodes by their input/output names."""
         for node in graph_proto.node:
             if node.op_type == "Cast":
                 self.cast_node_list.append(node)
@@ -389,7 +370,7 @@ class _CastNodeIndex:
                     self.output_name_to_cast[out] = node
 
     def _map_neighbors(self, graph_proto: onnx.GraphProto) -> None:
-        """Step 2: map each Cast node to its upstream / downstream node(s)."""
+        """Map each Cast node to its upstream and downstream node(s)."""
         for current_node in graph_proto.node:
             for inp in current_node.input:
                 if inp in self.output_name_to_cast:
@@ -408,7 +389,7 @@ class _CastNodeIndex:
                     self.upstream[cast_node.name] = current_node
 
     def _exclude_constant_upstream(self) -> None:
-        """Step 3: exclude Cast nodes whose upstream is a Constant."""
+        """Exclude Cast nodes whose upstream is a Constant."""
         for cast_name, up_node in self.upstream.items():
             if up_node.op_type == "Constant":
                 cast_node = self.name_to_node[cast_name]
@@ -416,7 +397,7 @@ class _CastNodeIndex:
                     self.cast_node_list.remove(cast_node)
 
     def find_removable_pairs(self) -> list[tuple[Any, Any]]:
-        """Step 4: identify removable Cast16->Cast32 pairs."""
+        """Identify removable Cast16->Cast32 pairs."""
         remove_candidate: list[tuple[Any, Any]] = []
         for cast_name, dn in self.downstream.items():
             cast_node = self.name_to_node[cast_name]
@@ -435,7 +416,7 @@ class _CastNodeIndex:
         remove_candidate: list[tuple[Any, Any]],
         graph_proto: onnx.GraphProto,
     ) -> None:
-        """Steps 5-6: reconnect the graph to bypass each Cast pair and remove them."""
+        """Reconnect the graph to bypass each Cast pair and remove them."""
         for first_cast, second_cast in remove_candidate:
             bypass_output = self._compute_bypass_output(first_cast, second_cast)
             if bypass_output is None:
@@ -455,7 +436,7 @@ class _CastNodeIndex:
                 graph_proto.node.remove(second_cast)
 
     def _compute_bypass_output(self, first_cast: onnx.NodeProto, second_cast: onnx.NodeProto) -> str | None:
-        """Compute the output name that should replace the cast pair's output."""
+        """Return the output name that should replace the cast pair's output."""
         up_node = self.upstream.get(first_cast.name)
         dn_raw = self.downstream.get(second_cast.name)
 
