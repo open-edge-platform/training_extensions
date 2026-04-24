@@ -43,21 +43,22 @@ const INITIAL_SSIM_STATE: SSIMState = {
 };
 
 export const useSSIMWorker = (enabled = true) => {
-    const { data, isLoading, isError } = useQuery({
+    const { data, isLoading, isError } = useQuery<{ worker: Worker; instance: Remote<SSIMWorkerInstance> }>({
         queryKey: ['workers', 'SSIM'],
         queryFn: async () => {
-            const baseWorker = new Worker(new URL('../../webworkers/ssim-worker', import.meta.url), {
+            const worker = new Worker(new URL('../../webworkers/ssim-worker', import.meta.url), {
                 type: 'module',
             });
-            const ssimWorker = wrap<SSIMWorkerApi>(baseWorker);
+            const ssimWorker = wrap<SSIMWorkerApi>(worker);
+            const instance = await ssimWorker.build();
 
-            return ssimWorker.build();
+            return { worker, instance };
         },
         staleTime: Infinity,
         enabled,
     });
 
-    return { worker: data, isLoading, isError };
+    return { worker: data?.instance, isLoading, isError };
 };
 
 const toToolRect = (rect: Rect): ToolRunSSIMProps['template'] => {

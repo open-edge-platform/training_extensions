@@ -12,19 +12,23 @@ import type {
 type IntelligentScissorsRemoteInstance = Remote<IntelligentScissorsWorkerInstance>;
 
 export const useIntelligentScissorsWorker = (enabled = true) => {
-    const { data, isLoading, isSuccess, isError } = useQuery<IntelligentScissorsRemoteInstance>({
+    const { data, isLoading, isSuccess, isError } = useQuery<{
+        worker: Worker;
+        instance: IntelligentScissorsRemoteInstance;
+    }>({
         queryKey: ['workers', 'INTELLIGENT_SCISSORS'],
         queryFn: async () => {
-            const baseWorker = new Worker(new URL('../../webworkers/intelligent-scissors.worker', import.meta.url), {
+            const worker = new Worker(new URL('../../webworkers/intelligent-scissors.worker', import.meta.url), {
                 type: 'module',
             });
-            const intelligentScissorsWorker = wrap<IntelligentScissorsWorkerApi>(baseWorker);
+            const intelligentScissorsWorker = wrap<IntelligentScissorsWorkerApi>(worker);
+            const instance = await intelligentScissorsWorker.build();
 
-            return intelligentScissorsWorker.build();
+            return { worker, instance };
         },
         staleTime: Infinity,
         enabled,
     });
 
-    return { worker: data, isLoading, isSuccess, isError };
+    return { worker: data?.instance, isLoading, isSuccess, isError };
 };

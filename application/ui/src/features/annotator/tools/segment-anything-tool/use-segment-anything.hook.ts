@@ -33,18 +33,16 @@ const SAM_ENCODING_GC_TIME_MS = 60_000;
 // A single shared worker hosts BOTH the encoder and decoder ONNX sessions.
 // Spawning two workers used to double the OpenCV + ONNX Runtime WASM footprint
 // for no functional gain (encoder/decoder always run sequentially anyway).
-const SEGMENT_ANYTHING_WORKER_QUERY_KEY = ['workers', 'SEGMENT_ANYTHING'] as const;
-
 const segmentAnythingWorkerQueryOptions = (enabled = true) =>
-    queryOptions({
-        queryKey: SEGMENT_ANYTHING_WORKER_QUERY_KEY,
+    queryOptions<{ worker: Worker; instance: SegmentAnythingRemoteInstance }>({
+        queryKey: ['workers', 'SEGMENT_ANYTHING'],
         queryFn: async () => {
-            const baseWorker = new Worker(new URL('../../webworkers/segment-anything.worker', import.meta.url), {
+            const worker = new Worker(new URL('../../webworkers/segment-anything.worker', import.meta.url), {
                 type: 'module',
             });
             try {
-                const samWorker = wrap<SegmentAnythingWorkerApi>(baseWorker);
-                const model = await executeWithTimeout(
+                const samWorker = wrap<SegmentAnythingWorkerApi>(worker);
+                const instance = await executeWithTimeout(
                     samWorker.build(),
                     'SAM worker build',
                     SAM_WORKER_BUILD_TIMEOUT_MS
@@ -52,14 +50,14 @@ const segmentAnythingWorkerQueryOptions = (enabled = true) =>
 
                 // Initialize encoder and decoder sessions in parallel inside the same worker.
                 await executeWithTimeout(
-                    Promise.all([model.init('SEGMENT_ANYTHING_ENCODER'), model.init('SEGMENT_ANYTHING_DECODER')]),
+                    Promise.all([instance.init('SEGMENT_ANYTHING_ENCODER'), instance.init('SEGMENT_ANYTHING_DECODER')]),
                     'SAM worker init',
                     SAM_WORKER_INIT_TIMEOUT_MS
                 );
 
-                return model;
+                return { worker, instance };
             } catch (error) {
-                baseWorker.terminate();
+                worker.terminate();
                 throw error;
             }
         },
@@ -94,7 +92,10 @@ export const segmentAnythingEncodingQueryOptions = (
     });
 
 export const useSegmentAnythingWorker = (enabled = true) => {
-    return useQuery(segmentAnythingWorkerQueryOptions(enabled));
+    return useQuery({
+        ...segmentAnythingWorkerQueryOptions(enabled),
+        select: (data) => data.instance,
+    });
 };
 
 const useEncodingQuery = (
