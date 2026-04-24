@@ -23,6 +23,7 @@ type BottomToolbarProps = {
     onSubsetChange?: (key: Key | null) => void;
     hideHotkeys?: boolean;
     isReadOnlySubset: boolean;
+    hasAnnotationStatus?: boolean;
 };
 
 export const BottomToolbar = ({
@@ -32,6 +33,7 @@ export const BottomToolbar = ({
     subset,
     onSubsetChange,
     isReadOnlySubset,
+    hasAnnotationStatus = true,
 }: BottomToolbarProps) => {
     const fileName = `${mediaItem.name}.${mediaItem.format} (${mediaItem.width} x ${mediaItem.height} px)`;
 
@@ -48,14 +50,16 @@ export const BottomToolbar = ({
                     <Toolbar.Section>
                         <Flex gap={'size-100'} alignItems={'center'} height={'100%'}>
                             <Text UNSAFE_className={classes.filename}>{fileName}</Text>
-                            <Tag
-                                className={clsx({
-                                    [classes.accepted]: isUserReviewed,
-                                    [classes.forReview]: !isUserReviewed,
-                                })}
-                                prefix={isUserReviewed ? <Accept /> : <Search />}
-                                text={isUserReviewed ? 'Accepted' : 'For Review'}
-                            />
+                            {hasAnnotationStatus && (
+                                <Tag
+                                    className={clsx({
+                                        [classes.accepted]: isUserReviewed,
+                                        [classes.forReview]: !isUserReviewed,
+                                    })}
+                                    prefix={isUserReviewed ? <Accept /> : <Search />}
+                                    text={isUserReviewed ? 'Accepted' : 'For Review'}
+                                />
+                            )}
 
                             {isReadOnlySubset ? (
                                 <Tag withDot={false} text={capitalize(subset)} id={'selected-subset-badge'} />

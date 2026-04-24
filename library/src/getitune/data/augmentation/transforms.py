@@ -166,21 +166,30 @@ class Resize(tvt_v2.Transform):
 
             # Transform masks
             masks = getattr(sample, "masks", None)
-            if masks is not None and len(masks) > 0:
-                # Resize masks
-                resized_masks = F.resize(
-                    masks,
-                    size=[new_h, new_w],
-                    interpolation=F.InterpolationMode.NEAREST,
-                    antialias=False,
-                )
-                # Pad masks
-                if pad_left > 0 or pad_top > 0 or pad_right > 0 or pad_bottom > 0:
-                    resized_masks = F.pad(
-                        resized_masks,
-                        padding=[pad_left, pad_top, pad_right, pad_bottom],
-                        fill=0,
+            if masks is not None:
+                if len(masks) > 0:
+                    resized_masks = F.resize(
+                        masks,
+                        size=[new_h, new_w],
+                        interpolation=F.InterpolationMode.NEAREST,
+                        antialias=False,
                     )
+                    # Pad masks
+                    if pad_left > 0 or pad_top > 0 or pad_right > 0 or pad_bottom > 0:
+                        resized_masks = F.pad(
+                            resized_masks,
+                            padding=[pad_left, pad_top, pad_right, pad_bottom],
+                            fill=0,
+                        )
+                else:
+                    # Empty mask: just reshape spatial dims to target size
+                    resized_masks = masks.new_zeros((0, new_h + pad_top + pad_bottom, new_w + pad_left + pad_right))
+                if resized_masks.shape[-2:] != sample.image.shape[-2:]:
+                    msg = (
+                        "Resized masks spatial dimensions must match the transformed image shape: "
+                        f"{resized_masks.shape[-2:]} != {sample.image.shape[-2:]}"
+                    )
+                    raise RuntimeError(msg)
                 sample.masks = (  # type: ignore[missing-attribute]
                     tv_tensors.Mask(resized_masks) if isinstance(masks, tv_tensors.Mask) else resized_masks
                 )

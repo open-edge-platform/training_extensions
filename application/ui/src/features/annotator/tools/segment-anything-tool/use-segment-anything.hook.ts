@@ -21,8 +21,10 @@ import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
 type SegmentAnythingRemoteInstance = Remote<SegmentAnythingWorkerInstance>;
-const SAM_TIMEOUT_MS = 5000;
+const SAM_DECODER_TIMEOUT_MS = 20000;
 const SAM_ENCODER_TIMEOUT_MS = 30000;
+const SAM_WORKER_BUILD_TIMEOUT_MS = 10000;
+const SAM_WORKER_INIT_TIMEOUT_MS = SAM_ENCODER_TIMEOUT_MS;
 
 const getSegmentAnythingWorkerQueryKey = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER') =>
     ['workers', algorithmType] as const;
@@ -39,9 +41,13 @@ const segmentAnythingWorkerQueryOptions = (
             });
             try {
                 const samWorker = wrap<SegmentAnythingWorkerApi>(baseWorker);
-                const model = await executeWithTimeout(samWorker.build(), 'SAM worker build', SAM_TIMEOUT_MS);
+                const model = await executeWithTimeout(
+                    samWorker.build(),
+                    'SAM worker build',
+                    SAM_WORKER_BUILD_TIMEOUT_MS
+                );
 
-                await executeWithTimeout(model.init(algorithmType), 'SAM worker init', SAM_TIMEOUT_MS);
+                await executeWithTimeout(model.init(algorithmType), 'SAM worker init', SAM_WORKER_INIT_TIMEOUT_MS);
 
                 return model;
             } catch (error) {
@@ -142,7 +148,7 @@ const useDecodingFn = (model: SegmentAnythingRemoteInstance | undefined, encodin
                 image: undefined,
             }),
             'SAM decoder',
-            SAM_TIMEOUT_MS
+            SAM_DECODER_TIMEOUT_MS
         );
 
         return shapes.map(convertToolShapeToGetiShape);

@@ -3,10 +3,12 @@
 
 import { toast } from '@geti/ui';
 import { useOverlayTriggerState } from '@react-stately/overlays';
+import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isFunction } from 'lodash-es';
 
 import { $api } from '../../../api/client';
+import { getQueryKey } from '../../../query-client/query-client';
 
 const useDeleteMediaItemMutation = (projectId: string) => {
     return $api.useMutation('delete', `/api/projects/{project_id}/dataset/media/{media_id}`, {
@@ -40,6 +42,7 @@ const useDeleteMediaItemMutation = (projectId: string) => {
 const isFulfilled = (response: PromiseSettledResult<{ itemId: string }>) => response.status === 'fulfilled';
 
 export const useDeleteMediaItem = () => {
+    const queryClient = useQueryClient();
     const projectId = useProjectIdentifier();
     const deleteMutation = useDeleteMediaItemMutation(projectId);
 
@@ -58,6 +61,14 @@ export const useDeleteMediaItem = () => {
 
         const responses = await Promise.allSettled(deleteItemPromises);
         const deletedIds = responses.filter(isFulfilled).map(({ value }) => value.itemId);
+
+        queryClient.invalidateQueries({
+            queryKey: getQueryKey([
+                'get',
+                '/api/projects/{project_id}/dataset/statistics',
+                { params: { path: { project_id: projectId } } },
+            ]),
+        });
 
         isFunction(onDeleted) && onDeleted(deletedIds);
 

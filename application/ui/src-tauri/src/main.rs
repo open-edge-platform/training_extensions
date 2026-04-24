@@ -6,7 +6,7 @@ use std::{
     process::{Child, Command},
     sync::{Arc, Mutex},
 };
-use tauri::RunEvent;
+use tauri::{Manager, RunEvent, WindowEvent};
 
 /// “geti-backend.exe” on Windows, “geti-backend” elsewhere.
 fn backend_filename() -> &'static str {
@@ -49,12 +49,21 @@ fn main() {
 
     // Build the app
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .setup({
             let child_handle = child_handle.clone();
             move |_app_handle| {
                 let child = spawn_backend().expect("Failed to spawn python backend");
                 *child_handle.lock().unwrap() = Some(child);
                 Ok(())
+            }
+        })
+        // Geti is a single-window utility app, so closing the main window
+        // should quit the whole process (default macOS behaviour is to keep
+        // the app alive in the dock, which leaks the backend side-car).
+        .on_window_event(|window, event| {
+            if let WindowEvent::CloseRequested { .. } = event {
+                window.app_handle().exit(0);
             }
         })
         .invoke_handler(tauri::generate_handler![])
