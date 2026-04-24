@@ -13,7 +13,7 @@ import { TaskType } from '../../../../../constants/shared-types';
 import { generateUniqueProjectName } from '../../../create/utils';
 import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
 import { validateProjectName } from '../../../validator';
-import { getRecommendedTaskType, TASK_SELECTION_FORM_ID } from './util';
+import { getAllowedTaskTypes, getRecommendedTaskType, TASK_SELECTION_FORM_ID } from './util';
 
 type ImportTaskSelectionProps = {
     stagedDatasetId: string;
@@ -48,8 +48,10 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
     const { data: projects } = useProjects();
     const { data: stagedDataset } = useStagedDatasetSuspense(stagedDatasetId);
 
+    const annotationType = stagedDataset?.metadata?.annotation_type;
     const isGetiFormat = stagedDataset.format === 'geti';
-    const defaultTaskType = isGetiFormat ? getRecommendedTaskType(stagedDataset?.metadata?.annotation_type) : undefined;
+    const allowedTaskTypes = getAllowedTaskTypes(annotationType);
+    const defaultTaskType = isGetiFormat ? getRecommendedTaskType(annotationType) : undefined;
 
     const [formState, submitAction] = useFormConfig(stagedDatasetId, defaultTaskType);
     const [name, setName] = useState(formState.name);
@@ -81,20 +83,26 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
                     label={'Task type'}
                     aria-label={'Task type'}
                     marginBottom={'size-150'}
-                    placeholder='select an option...'
+                    placeholder='Select task'
                     defaultSelectedKey={formState.task_type}
                 >
-                    <Item key={'detection'}>
-                        {defaultTaskType === 'detection' ? 'Object detection (Recommended)' : 'Object detection'}
-                    </Item>
-                    <Item key={'classification'}>
-                        {defaultTaskType === 'classification' ? 'Classification (Recommended)' : 'Classification'}
-                    </Item>
-                    <Item key={'instance_segmentation'}>
-                        {defaultTaskType === 'instance_segmentation'
-                            ? 'Instance segmentation (Recommended)'
-                            : 'Instance segmentation'}
-                    </Item>
+                    {allowedTaskTypes.includes('detection') ? (
+                        <Item key={'detection'}>
+                            {defaultTaskType === 'detection' ? 'Object detection (Recommended)' : 'Object detection'}
+                        </Item>
+                    ) : null}
+                    {allowedTaskTypes.includes('classification') ? (
+                        <Item key={'classification'}>
+                            {defaultTaskType === 'classification' ? 'Classification (Recommended)' : 'Classification'}
+                        </Item>
+                    ) : null}
+                    {allowedTaskTypes.includes('instance_segmentation') ? (
+                        <Item key={'instance_segmentation'}>
+                            {defaultTaskType === 'instance_segmentation'
+                                ? 'Instance segmentation (Recommended)'
+                                : 'Instance segmentation'}
+                        </Item>
+                    ) : null}
                 </Picker>
 
                 <Flex gap='size-100' alignItems={'center'}>
