@@ -55,16 +55,33 @@ interface AnnotatorModesProps {
 
 export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredictions }: AnnotatorModesProps) => {
     const [dismissedCues, setDismissedCues] = useState<Set<AnnotatorMode>>(new Set());
+
     const shouldDisplayAnnotationCue = mode === 'prediction' && hasAnnotations && !dismissedCues.has('annotation');
     const shouldDisplayPredictionCue =
         mode === 'annotation' && !hasAnnotations && hasPredictions && !dismissedCues.has('prediction');
 
     const handleModeChange = (nextMode: AnnotatorMode) => {
-        const hasContent = nextMode === 'annotation' ? hasAnnotations : hasPredictions;
-
-        if (hasContent) {
-            setDismissedCues((prev) => new Set(prev).add(nextMode));
+        if (mode === nextMode) {
+            return;
         }
+
+        setDismissedCues((prev) => {
+            const next = new Set(prev);
+
+            // user is leaving the current mode — if it had content they've seen it
+            const currentHasContent = mode === 'annotation' ? hasAnnotations : hasPredictions;
+            if (currentHasContent) {
+                next.add(mode);
+            }
+
+            // user is switching to the next mode — if it has content they're about to see it
+            const nextHasContent = nextMode === 'annotation' ? hasAnnotations : hasPredictions;
+            if (nextHasContent) {
+                next.add(nextMode);
+            }
+
+            return next;
+        });
 
         onModeChange(nextMode);
     };
