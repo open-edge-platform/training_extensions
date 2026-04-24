@@ -1,5 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from fractions import Fraction
 from pathlib import Path
 
 import av
@@ -16,14 +17,14 @@ class VideoMetadata(BaseModel):
     fps: float = Field(..., description="Video frames per second", ge=0)
 
 
-def _frame_index_from_pts(frame_pts: int, time_base: float, avg_rate: float) -> int:
+def _frame_index_from_pts(frame_pts: int, time_base: Fraction, avg_rate: Fraction) -> int:
     """Compute the zero-based frame index from a decoded frame's PTS."""
     return round(frame_pts * time_base * avg_rate)
 
 
-def _pts_from_index(index: int, time_base: float, avg_rate: float) -> int:
+def _pts_from_index(index: int, time_base: Fraction, avg_rate: Fraction) -> int:
     """Compute the approximate PTS value for a given frame index."""
-    return int(index / (avg_rate * time_base))
+    return int(Fraction(index) / (avg_rate * time_base))
 
 
 def _group_consecutive(sorted_indexes: list[int], gap: int = 8) -> list[list[int]]:
@@ -55,8 +56,8 @@ def _decode_group(
     stream: av.video.stream.VideoStream,
     group: list[int],
     result: dict[int, np.ndarray],
-    time_base: float,
-    avg_rate: float,
+    time_base: Fraction,
+    avg_rate: Fraction,
 ) -> None:
     """Seek once to the first index of *group* and decode forward, collecting all needed frames.
 
@@ -77,7 +78,7 @@ def _decode_group(
 
     for frame in container.decode(stream):
         if frame.pts is None:
-            logger.warning("Skipping frame %s (no PTS)", frame.pts)
+            logger.warning("Skipping frame with no PTS")
             continue
         frame_idx = _frame_index_from_pts(frame.pts, time_base, avg_rate)
         if frame_idx < first_target:
@@ -162,13 +163,16 @@ def extract_video_frames(
             stream.thread_type = ThreadType.AUTO
             if stream.time_base is None or stream.average_rate is None:
                 raise RuntimeError(f"Video stream is missing time_base or average_rate: {video_path}")
-            time_base = float(stream.time_base)
-            avg_rate = float(stream.average_rate)
+            time_base = Fraction(stream.time_base)
+            avg_rate = Fraction(stream.average_rate)
             for group in groups:
                 _decode_group(container, stream, group, frames, time_base, avg_rate)
-    except av.error.FileNotFoundError:
-        raise RuntimeError(f"Cannot open video: {video_path}")
-
+    except av.error.FileNotFoundError as exc:
+        logger.exception("Cannot open video: {}", video_path)
+        raise RuntimeError(f"Cannot open video: {video_path}") from exc
+    except (av.error.FFmpegError, IndexError, OSError) as exc:
+        logger.exception("Cannot extract frames from video {}: {}", video_path, exc)
+        raise RuntimeError(f"Cannot extract frames from video: {video_path}") from exc
     missing = set(sorted_indexes) - frames.keys()
     if missing:
         raise RuntimeError(f"Cannot read frames {sorted(missing)} from video: {video_path}")
