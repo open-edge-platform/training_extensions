@@ -10,8 +10,7 @@ export const usePreloadWebworkers = () => {
     const availableTools = useAvailableTools();
     const tools = new Set(availableTools.map((tool) => tool.type));
 
-    useSegmentAnythingWorker('SEGMENT_ANYTHING_ENCODER', tools.has('sam'));
-    useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER', tools.has('sam'));
+    useSegmentAnythingWorker(tools.has('sam'));
     useSSIMWorker(tools.has('ssim'));
     useIntelligentScissorsWorker(tools.has('magnetic-lasso'));
 };
