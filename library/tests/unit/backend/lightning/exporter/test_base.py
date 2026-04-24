@@ -167,8 +167,7 @@ class TestConvertOnnxToFloat16:
             pass  # Expected: upstream bug still present
         else:
             pytest.xfail(
-                "onnxconverter_common no longer crashes on multi-consumer Cast nodes; "
-                "consider removing our workaround"
+                "onnxconverter_common no longer crashes on multi-consumer Cast nodes; consider removing our workaround"
             )
 
     def test_original_function_restored_after_conversion(self):

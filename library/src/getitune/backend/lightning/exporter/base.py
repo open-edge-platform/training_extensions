@@ -417,9 +417,9 @@ class _CastNodeIndex:
                 if dn_node.op_type == "Cast" and dn_node in self.cast_node_list and cast_node in self.cast_node_list:
                     first_dtype = self._get_cast_target_dtype(cast_node)
                     second_dtype = self._get_cast_target_dtype(dn_node)
-                    if (
-                        first_dtype == onnx.TensorProto.FLOAT16 and second_dtype == onnx.TensorProto.FLOAT
-                    ) or (first_dtype == onnx.TensorProto.INT16 and second_dtype == onnx.TensorProto.INT32):
+                    if (first_dtype == onnx.TensorProto.FLOAT16 and second_dtype == onnx.TensorProto.FLOAT) or (
+                        first_dtype == onnx.TensorProto.INT16 and second_dtype == onnx.TensorProto.INT32
+                    ):
                         remove_candidate.append((cast_node, dn_node))
         return remove_candidate
 
