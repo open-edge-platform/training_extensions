@@ -65,18 +65,24 @@ class CLI:
         if run:
             self.run()
 
+    @property
+    def _effective_argv(self) -> list[str]:
+        """Return the effective argv, falling back to sys.argv if not set."""
+        return getattr(self, "_argv", None) or list(sys.argv)
+
     def _argv_contains(self, flag: str) -> bool:
         """Return True if *flag* is present in the effective argv."""
-        return flag in self._argv
+        return flag in self._effective_argv
 
     def _argv_value_after(self, flag: str) -> str | None:
         """Return the token immediately following *flag* in the effective argv."""
-        if flag not in self._argv:
+        argv = self._effective_argv
+        if flag not in argv:
             return None
-        idx = self._argv.index(flag)
-        if idx + 1 >= len(self._argv):
+        idx = argv.index(flag)
+        if idx + 1 >= len(argv):
             return None
-        return self._argv[idx + 1]
+        return argv[idx + 1]
 
     def init_parser(self) -> ArgumentParser:
         """Initialize the argument parser for the getitune CLI.
