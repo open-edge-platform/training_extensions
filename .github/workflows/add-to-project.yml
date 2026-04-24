@@ -4,24 +4,23 @@ on:
   issues:
     types: [opened, transferred]
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   add-to-project:
     name: Add issue to org project and set Squad
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     steps:
       - name: Add issue to project
         id: add-project
         uses: actions/add-to-project@244f685bbc3b7adfa8466e08b698b5577571133e # v1.0.2
         with:
           project-url: https://github.com/orgs/open-edge-platform/projects/7
-          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          github-token: ${{ secrets.ADD_TO_PROJECT_TOKEN }}
 
       - name: Set Squad field
         env:
-          GH_TOKEN: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          GH_TOKEN: ${{ secrets.ADD_TO_PROJECT_TOKEN }}
           ITEM_ID: ${{ steps.add-project.outputs.itemId }}
           PROJECT_ID: ${{ vars.PROJECT_ID }}
           SQUAD_FIELD_ID: ${{ vars.SQUAD_FIELD_ID }}
