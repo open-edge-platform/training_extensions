@@ -13,6 +13,7 @@ const DATASET_ITEMS_LIMIT = 20;
 interface UseGetDatasetMediaItemsOptions {
     subset?: DatasetSubset;
     annotationStatus?: DatasetItemAnnotationStatus;
+    labelIds?: string[];
 }
 
 const getMediaEntities = (items: MediaDTO[]): Media[] => {
@@ -43,6 +44,7 @@ export const useGetDatasetMediaItems = (options?: UseGetDatasetMediaItemsOptions
         limit: number;
         subset?: DatasetSubset;
         annotation_status?: DatasetItemAnnotationStatus;
+        labels?: string[];
     } = {
         offset: 0,
         limit: DATASET_ITEMS_LIMIT,
@@ -54,6 +56,10 @@ export const useGetDatasetMediaItems = (options?: UseGetDatasetMediaItemsOptions
 
     if (options?.annotationStatus !== undefined) {
         query.annotation_status = options.annotationStatus;
+    }
+
+    if (options?.labelIds !== undefined) {
+        query.labels = options.labelIds;
     }
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } = $api.useInfiniteQuery(

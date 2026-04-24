@@ -3,12 +3,13 @@
 
 import { useRef, useState } from 'react';
 
-import { Key, View } from '@geti/ui';
+import { Key, Loading, View } from '@geti/ui';
 
 import type { DatasetSubset, Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
+import { useIsFetchingAnyPredictions } from '../../annotator/api/use-media-predictions';
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
@@ -16,7 +17,7 @@ import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
-import { useNextMediaPrefetch } from './utils';
+import { useNextMediaPrefetch, usePlayPauseVideoBySystem } from './utils';
 
 const DATASET_SUBSETS: DatasetSubset[] = ['unassigned', 'training', 'validation', 'testing'];
 
@@ -78,8 +79,14 @@ const Annotator = ({
     onSelectedMediaItem,
     onChangeAnnotatorMode,
 }: AnnotatorProps) => {
+    const isAnnotationMode = mode === 'annotation';
+    const isPredictionMode = mode === 'prediction';
+
     const { nextMediaItem } = useNextMediaPrefetch(mediaItem, items);
     const { currentSubset, changeCurrentSubset, isReadOnlySubset } = useSubset(subset, mediaItem);
+    const isLoadingPredictions = useIsFetchingAnyPredictions(mediaItem.id) && isPredictionMode;
+
+    usePlayPauseVideoBySystem(isLoadingPredictions);
 
     const selectNextMediaItem = async () => {
         if (nextMediaItem === undefined) {
@@ -88,9 +95,6 @@ const Annotator = ({
 
         onSelectedMediaItem(nextMediaItem);
     };
-
-    const isAnnotationMode = mode === 'annotation';
-    const isPredictionMode = mode === 'prediction';
 
     return (
         <>
@@ -104,6 +108,8 @@ const Annotator = ({
                     onModeChange={onChangeAnnotatorMode}
                     onSelectNextMediaItem={selectNextMediaItem}
                     subset={currentSubset}
+                    hasSubsetChanged={currentSubset !== subset}
+                    isLoadingPredictions={isLoadingPredictions}
                 />
             </View>
 
@@ -129,7 +135,8 @@ const Annotator = ({
                 />
             </View>
 
-            <View gridArea={'canvas'} overflow={'hidden'}>
+            <View gridArea={'canvas'} overflow={'hidden'} position={'relative'}>
+                {isLoadingPredictions && <Loading mode={'overlay'} />}
                 <AnnotatorCanvasSettings>
                     <AnnotatorCanvas mediaItem={mediaItem} image={image} mode={mode} isReadOnly={isPredictionMode} />
                 </AnnotatorCanvasSettings>

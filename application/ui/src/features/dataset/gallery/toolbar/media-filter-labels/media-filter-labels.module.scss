@@ -1,0 +1,18 @@
+.filterContainer {
+    padding: var(--spectrum-global-dimension-size-40);
+    overflow: auto;
+    border: 1px solid var(--spectrum-alias-border-color);
+    border-radius: var(--spectrum-global-dimension-size-50);
+}
+
+.searchPlaceholder {
+    color: var(--placeholder-light);
+    margin-left: var(--spectrum-global-dimension-size-125);
+}
+
+.dialog {
+    & div[class*='spectrum-Dialog-grid'] {
+        --spectrum-dialog-padding-x: var(--spectrum-global-dimension-size-200);
+        --spectrum-dialog-padding-y: var(--spectrum-global-dimension-size-200);
+    }
+}

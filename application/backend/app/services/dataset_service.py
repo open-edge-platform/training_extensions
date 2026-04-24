@@ -265,15 +265,24 @@ class DatasetService(BaseSessionManagedService):
         for annotation in annotations:
             if isinstance(annotation.shape, Rectangle):
                 rect = annotation.shape
-                if rect.x > media.width or rect.x + rect.width > media.width:
-                    raise AnnotationValidationError("Rectangle coordinates are out of bounds")
-                if rect.y > media.height or rect.y + rect.height > media.height:
-                    raise AnnotationValidationError("Rectangle coordinates are out of bounds")
+                x1, x2 = rect.x, rect.x + rect.width
+                if x1 > media.width or x2 > media.width:
+                    raise AnnotationValidationError(
+                        f"Rectangle coordinates (x1={x1}, x2={x2}) are out of bounds for media width {media.width}"
+                    )
+                y1, y2 = rect.y, rect.y + rect.height
+                if y1 > media.height or y2 > media.height:
+                    raise AnnotationValidationError(
+                        f"Rectangle coordinates (y1={y1}, y2={y2}) are out of bounds for media height {media.height}"
+                    )
             if isinstance(annotation.shape, Polygon):
                 poly = annotation.shape
                 for point in poly.points:
                     if point.x > media.width or point.y > media.height:
-                        raise AnnotationValidationError("Polygon points are out of bounds")
+                        raise AnnotationValidationError(
+                            f"Polygon points (x={point.x}, y={point.y}) are out of bounds for media "
+                            f"({media.width}, {media.height})"
+                        )
 
     def set_dataset_item_annotations(
         self,

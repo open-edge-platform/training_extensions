@@ -72,7 +72,7 @@ export const ExportDatasetConfig = ({
                                     items={labels}
                                     maxHeight='size-2000'
                                     label='Filter annotations by label'
-                                    allSelectedByDefault
+                                    defaultSelectedKeys={new Set(labels.map(({ id }) => id))}
                                 />
 
                                 <Checkbox name='include_unannotated' defaultSelected={formState.include_unannotated}>

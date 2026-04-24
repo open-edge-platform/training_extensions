@@ -548,15 +548,54 @@ test.describe('Annotator', () => {
             });
         });
 
-        test('Automatically switches to annotation mode when there are annotations, no matter predictions', async ({
+        test('Displays cues for annotator modes only for the first time for one media, resets for next media', async ({
             annotatorPage,
+            page,
             network,
         }) => {
+            const mediaItems = [
+                getMockedMediaImage({ id: 'item-1', name: 'item-1.jpg', width: 1920, height: 1080 }),
+                getMockedMediaImage({ id: 'item-2', name: 'item-2.jpg', width: 1920, height: 1080 }),
+            ];
+
             network.use(
+                http.get('/api/projects/{project_id}/dataset/media', () => {
+                    return HttpResponse.json({
+                        items: mediaItems,
+                        pagination: {
+                            offset: 0,
+                            limit: 10,
+                            count: mediaItems.length,
+                            total: mediaItems.length,
+                        },
+                    });
+                }),
                 http.get('/api/projects/{project_id}/models', async () => {
                     return HttpResponse.json([getMockedModel()]);
                 }),
-                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
+                http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+                    return HttpResponse.json({
+                        predictions: [
+                            {
+                                media: {
+                                    id: '123',
+                                },
+                                prediction: predictions,
+                            },
+                        ],
+                    });
+                }),
+                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async ({ params }) => {
+                    if (params.media_id === mediaItems[0].id) {
+                        return HttpResponse.json(
+                            {
+                                // @ts-expect-error We care only about mocking detail
+                                detail: 'Media has not been annotated yet',
+                            },
+                            { status: 404 }
+                        );
+                    }
+
                     return HttpResponse.json({
                         annotations: [
                             {
@@ -573,25 +612,32 @@ test.describe('Annotator', () => {
                         user_reviewed: true,
                         subset: 'training',
                     });
-                }),
-                http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
-                    return HttpResponse.json({
-                        predictions: [
-                            {
-                                media: {
-                                    id: '123',
-                                },
-                                prediction: predictions,
-                            },
-                        ],
-                    });
                 })
             );
 
             await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
-            await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
-            await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'false');
+            await expect(page.getByLabel('Prediction available')).toBeVisible();
+
+            await annotatorPage.openPredictionMode();
+
+            await annotatorPage.openAnnotationMode();
+
+            await expect(page.getByLabel('Prediction available')).toBeHidden();
+
+            await annotatorPage.openPredictionMode();
+
+            await annotatorPage.selectMediaItem('item-2');
+
+            await expect(page.getByLabel('Annotation available')).toBeVisible();
+
+            await annotatorPage.openAnnotationMode();
+
+            await expect(page.getByLabel('Prediction available')).toBeHidden();
+
+            await annotatorPage.openPredictionMode();
+
+            await expect(page.getByLabel('Annotation available')).toBeHidden();
         });
 
         test('Displays "No object" when media:predict returns empty predictions', async ({
@@ -626,45 +672,10 @@ test.describe('Annotator', () => {
 
             await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
+            await annotatorPage.openPredictionMode();
+
             await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
             await expect(page.getByLabel('label No object background')).toHaveCount(1);
-        });
-
-        test('Automatically switches to prediction mode only when there are no annotations and there are predictions', async ({
-            annotatorPage,
-            network,
-        }) => {
-            network.use(
-                http.get('/api/projects/{project_id}/models', async () => {
-                    return HttpResponse.json([getMockedModel()]);
-                }),
-                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
-                    return HttpResponse.json(
-                        {
-                            // @ts-expect-error We care only about mocking detail
-                            detail: 'Media has not been annotated yet',
-                        },
-                        { status: 404 }
-                    );
-                }),
-                http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
-                    return HttpResponse.json({
-                        predictions: [
-                            {
-                                media: {
-                                    id: '123',
-                                },
-                                prediction: predictions,
-                            },
-                        ],
-                    });
-                })
-            );
-
-            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
-
-            await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'false');
-            await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
         });
     });
 

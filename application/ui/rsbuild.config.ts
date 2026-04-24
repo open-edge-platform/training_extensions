@@ -9,17 +9,33 @@ import { pluginSvgr } from '@rsbuild/plugin-svgr';
 
 const { publicVars } = loadEnv({ prefixes: ['PUBLIC_'] });
 
+const getPublicApiUrl = () => {
+    if (publicVars['import.meta.env.PUBLIC_API_BASE_URL'] !== undefined) {
+        return JSON.parse(publicVars['import.meta.env.PUBLIC_API_BASE_URL']);
+    }
+
+    return '';
+};
+
 // Platform target selection. When building for the Tauri desktop shell we
 // prepend `.tauri.*` extensions so the bundler resolves platform-specific
 // overrides (e.g. `foo.tauri.ts` wins over `foo.ts`). Files not shadowed by
 // a `.tauri.*` twin resolve as usual. This keeps Tauri-specific code out of
 // the web graph entirely, and removes the need for runtime `isTauri` checks.
 const isTauriBuild = process.env.BUILD_TARGET === 'tauri';
+
+// `TAURI_ENV_DEBUG` is set by the Tauri CLI: `tauri dev` / `start:desktop`
+// propagate it as `true`, and `tauri build` sets it to `false`. We disable
+// minification and emit inline JS source maps for debug desktop builds so
+// stack traces are readable inside the embedded WebView.
+const isTauriDebugBuild = isTauriBuild && process.env.TAURI_ENV_DEBUG === 'true';
+
 const platformExtensions = isTauriBuild ? ['.tauri.tsx', '.tauri.ts', '.tauri.jsx', '.tauri.js', '.tauri.scss'] : [];
 // `.scss` is appended unconditionally so extensionless SCSS imports (used
 // to opt in to the platform-override mechanism, e.g. `import './foo'`)
 // still resolve to `foo.scss` on the web build.
 const styleExtensions = ['.scss'];
+const publicApiUrl = getPublicApiUrl();
 
 export default defineConfig({
     plugins: [
@@ -43,14 +59,19 @@ export default defineConfig({
     ],
     output: {
         assetPrefix: process.env.ASSET_PREFIX,
+        minify: isTauriDebugBuild ? false : undefined,
+        sourceMap: isTauriDebugBuild
+            ? {
+                  js: 'inline-source-map',
+                  css: false,
+              }
+            : undefined,
     },
     source: {
         define: {
             ...publicVars,
-            'import.meta.env.PUBLIC_API_BASE_URL':
-                publicVars['import.meta.env.PUBLIC_API_BASE_URL'] ?? '"http://localhost:7860"',
-            'process.env.PUBLIC_API_BASE_URL':
-                publicVars['process.env.PUBLIC_API_BASE_URL'] ?? '"http://localhost:7860"',
+            'import.meta.env.PUBLIC_API_BASE_URL': publicVars['import.meta.env.PUBLIC_API_BASE_URL'] ?? '""',
+            'process.env.PUBLIC_API_BASE_URL': publicVars['import.meta.env.PUBLIC_API_BASE_URL'] ?? '""',
             // Needed to prevent an issue with spectrum's picker
             // eslint-disable-next-line max-len
             // https://github.com/adobe/react-spectrum/blob/6173beb4dad153aef74fc81575fd97f8afcf6cb3/packages/%40react-spectrum/overlays/src/OpenTransition.tsx#L40
@@ -97,9 +118,9 @@ export default defineConfig({
                 "default-src 'self'; " +
                 "script-src 'self' 'unsafe-eval' blob:; " +
                 "worker-src 'self' blob:; " +
-                "connect-src 'self' http://localhost:7860 data:; " +
-                "img-src 'self' http://localhost:7860 data: blob:; " +
-                "media-src 'self' http://localhost:7860 blob: data:; " +
+                `connect-src 'self' ${publicApiUrl} data:; ` +
+                `img-src 'self' ${publicApiUrl} data: blob:; ` +
+                `media-src 'self' ${publicApiUrl} blob: data:; ` +
                 "style-src 'self' 'unsafe-inline';",
         },
     },
