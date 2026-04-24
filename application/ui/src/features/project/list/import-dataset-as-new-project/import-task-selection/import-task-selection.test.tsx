@@ -88,7 +88,7 @@ describe('ImportTaskSelection', () => {
         const listButton = await screen.findByRole('button', { name: /Task type/i });
         expect(listButton).toBeVisible();
 
-        userEvent.click(listButton);
+        await userEvent.click(listButton);
         const container = await screen.findByRole('listbox');
 
         expect(within(container).getByText('Object detection (Recommended)')).toBeVisible();
@@ -102,7 +102,7 @@ describe('ImportTaskSelection', () => {
         const listButton = await screen.findByRole('button', { name: /Task type/i });
         expect(listButton).toBeVisible();
 
-        userEvent.click(listButton);
+        await userEvent.click(listButton);
         const container = await screen.findByRole('listbox');
 
         expect(within(container).getByText('Object detection')).toBeVisible();
@@ -116,7 +116,7 @@ describe('ImportTaskSelection', () => {
         const listButton = await screen.findByRole('button', { name: /Task type/i });
         expect(listButton).toBeVisible();
 
-        userEvent.click(listButton);
+        await userEvent.click(listButton);
         const container = await screen.findByRole('listbox');
 
         expect(within(container).getByText('Classification (Recommended)')).toBeVisible();
