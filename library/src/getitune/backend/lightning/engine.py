@@ -123,13 +123,22 @@ class LightningEngine(Engine):
         if task is not None and isinstance(data, DataModule) and task != data.task:
             msg = f"task and data.task should be the same, but got {task} and {data.task}"
             raise ValueError(msg)
-        self._auto_configurator = AutoConfigurator(
-            data_root=data if isinstance(data, (str, os.PathLike)) else None,
-            task=data.task if isinstance(data, DataModule) else task,
-            model=None if isinstance(model, LightningModel) else model,
+        # Only create AutoConfigurator when we need it to build a model or
+        # datamodule from paths.  When both are already instantiated, loading
+        # a recipe is unnecessary (and misleading — it loads the *default*
+        # recipe for the task, not the one that was actually used).
+        need_auto_cfg = not isinstance(model, LightningModel) or not isinstance(data, DataModule)
+        self._auto_configurator: AutoConfigurator | None = (
+            AutoConfigurator(
+                data_root=data if isinstance(data, (str, os.PathLike)) else None,
+                task=data.task if isinstance(data, DataModule) else task,
+                model=None if isinstance(model, LightningModel) else model,
+            )
+            if need_auto_cfg
+            else None
         )
         self._datamodule: DataModule = (
-            data if isinstance(data, DataModule) else self._auto_configurator.get_datamodule()
+            data if isinstance(data, DataModule) else self._auto_configurator.get_datamodule()  # type: ignore[union-attr]
         )
 
         self._trainer: Trainer | None = None
@@ -158,7 +167,7 @@ class LightningEngine(Engine):
                 params["intensity_config"] = asdict(_intensity_cfg)
             get_model_args["data_input_params"] = params
 
-            model = self._auto_configurator.get_model(**get_model_args)
+            model = self._auto_configurator.get_model(**get_model_args)  # type: ignore[union-attr]
 
         self._model: LightningModel = model
         self.task = self._model.task
