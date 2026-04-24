@@ -36,10 +36,14 @@ const SAM_ENCODING_GC_TIME_MS = 60_000;
 const segmentAnythingWorkerQueryOptions = (enabled = true) =>
     queryOptions<{ worker: Worker; instance: SegmentAnythingRemoteInstance }>({
         queryKey: ['workers', 'SEGMENT_ANYTHING'],
-        queryFn: async () => {
+        queryFn: async ({ signal }) => {
             const worker = new Worker(new URL('../../webworkers/segment-anything.worker', import.meta.url), {
                 type: 'module',
             });
+            // Terminate the worker if the query is cancelled (e.g. annotator unmounts)
+            // before build/init resolve, so we don't leak the in-flight worker.
+            signal.addEventListener('abort', worker.terminate, { once: true });
+
             try {
                 const samWorker = wrap<SegmentAnythingWorkerApi>(worker);
                 const instance = await executeWithTimeout(
@@ -55,9 +59,14 @@ const segmentAnythingWorkerQueryOptions = (enabled = true) =>
                     SAM_WORKER_INIT_TIMEOUT_MS
                 );
 
+                if (signal.aborted) {
+                    throw signal.reason;
+                }
+
                 return { worker, instance };
             } catch (error) {
                 worker.terminate();
+
                 throw error;
             }
         },

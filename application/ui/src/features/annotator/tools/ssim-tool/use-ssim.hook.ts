@@ -45,14 +45,27 @@ const INITIAL_SSIM_STATE: SSIMState = {
 export const useSSIMWorker = (enabled = true) => {
     const { data, isLoading, isError } = useQuery<{ worker: Worker; instance: Remote<SSIMWorkerInstance> }>({
         queryKey: ['workers', 'SSIM'],
-        queryFn: async () => {
+        queryFn: async ({ signal }) => {
             const worker = new Worker(new URL('../../webworkers/ssim-worker', import.meta.url), {
                 type: 'module',
             });
-            const ssimWorker = wrap<SSIMWorkerApi>(worker);
-            const instance = await ssimWorker.build();
+            // Terminate the worker if the query is cancelled (e.g. annotator unmounts)
+            // before build() resolves, so we don't leak the in-flight worker.
+            signal.addEventListener('abort', worker.terminate, { once: true });
 
-            return { worker, instance };
+            try {
+                const instance = await wrap<SSIMWorkerApi>(worker).build();
+
+                if (signal.aborted) {
+                    throw signal.reason;
+                }
+
+                return { worker, instance };
+            } catch (error) {
+                worker.terminate();
+
+                throw error;
+            }
         },
         staleTime: Infinity,
         enabled,
