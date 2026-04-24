@@ -59,7 +59,7 @@ export const DateFilter = () => {
                     ))}
 
                     {isEmpty(filteredLabels) && (
-                        <Text UNSAFE_className={classes.searchPlaceholder}>Filter by date</Text>
+                        <Text UNSAFE_className={classes.searchPlaceholder}>Filter by upload date</Text>
                     )}
                 </Flex>
             </PressableElement>

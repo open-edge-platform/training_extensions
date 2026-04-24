@@ -1,8 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { isEmpty, isNil } from 'lodash-es';
-import { useSearchParams } from 'react-router-dom';
+import { isEmpty } from 'lodash-es';
+import { useSearchParams, type SetURLSearchParams } from 'react-router-dom';
 import { parse, stringify } from 'zipson/lib';
 
 import type { DatasetItemAnnotationStatus, FilterByStatusKey } from '../constants/shared-types';
@@ -29,92 +29,62 @@ const parseAnnotationStatus = (value: string | null): DatasetItemAnnotationStatu
 // even when `atob` or `btoa` do not guarantee to work with UTF8 characters
 const decodeFromBinary = (str: string): string => {
     return decodeURIComponent(
-        Array.prototype.map
-            .call(atob(str), function (c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            })
-            .join('')
+        [...atob(str)].map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
     );
 };
 
-const encodeToBinary = (str: string): string => {
+export const encodeToBinary = (str: string): string => {
     return btoa(
-        encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (_match, p1) {
-            return String.fromCharCode(parseInt(p1, 16));
-        })
+        encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_match, p1) => String.fromCharCode(parseInt(p1, 16)))
     );
 };
 
-export const encodeFilterSearchParam = <T>(filterSearch: T): string => {
-    return encodeToBinary(encodeURIComponent(stringify(filterSearch)));
-};
-
-const getFilterParam = <T>(filterParam: string): T => {
+const decodeLabelsParam = (raw: string): string => {
     try {
         // This may fail if the user manually changes the filter parameter in the url,
         // in that case we ignore the filter
-        return (parse(decodeURIComponent(decodeFromBinary(filterParam ?? ''))) ?? {}) as T;
+        return (parse(decodeURIComponent(decodeFromBinary(raw ?? ''))) ?? '') as string;
     } catch {
-        return {} as T;
+        return '';
     }
+};
+
+const updateSearchParam = (setSearchParams: SetURLSearchParams, key: string, value: string | null) => {
+    setSearchParams((prev) => {
+        if (value === null || value === undefined) {
+            prev.delete(key);
+        } else {
+            prev.set(key, value);
+        }
+
+        return prev;
+    });
 };
 
 export const useDatasetFiltersSearchParams = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const labelsParam = searchParams.get(LABELS_PARAM);
-    const filterParam = getFilterParam<string>(labelsParam ?? '');
-    const selectedLabelIds = isNonEmptyString(filterParam) ? filterParam.split(',') : [];
+    const labelsFilterValue = decodeLabelsParam(searchParams.get(LABELS_PARAM) ?? '');
+    const selectedLabelIds = isNonEmptyString(labelsFilterValue) ? labelsFilterValue.split(',') : [];
     const annotationStatus = parseAnnotationStatus(searchParams.get(ANNOTATION_STATUS_PARAM));
     const startDate = searchParams.get(START_DATE_PARAM);
     const endDate = searchParams.get(END_DATE_PARAM);
 
     const setSelectedLabelIds = (ids: string[]) => {
-        setSearchParams((prev) => {
-            if (isEmpty(ids)) {
-                prev.delete(LABELS_PARAM);
-            } else {
-                prev.set(LABELS_PARAM, encodeFilterSearchParam(ids.join(',')));
-            }
-
-            return prev;
-        });
+        const newValue = isEmpty(ids) ? null : encodeToBinary(encodeURIComponent(stringify(ids.join(','))));
+        updateSearchParam(setSearchParams, LABELS_PARAM, newValue);
     };
 
     const setAnnotationStatus = (status: FilterByStatusKey | null) => {
-        setSearchParams((prev) => {
-            if (isNil(status)) {
-                prev.delete(ANNOTATION_STATUS_PARAM);
-            } else {
-                prev.set(ANNOTATION_STATUS_PARAM, status);
-            }
-
-            return prev;
-        });
+        updateSearchParam(setSearchParams, ANNOTATION_STATUS_PARAM, status);
     };
 
     const setStartDate = (date: string | null) => {
-        setSearchParams((prev) => {
-            if (isNil(date)) {
-                prev.delete(START_DATE_PARAM);
-            } else {
-                prev.set(START_DATE_PARAM, date);
-            }
-
-            return prev;
-        });
+        updateSearchParam(setSearchParams, START_DATE_PARAM, date);
     };
 
     const setEndDate = (date: string | null) => {
-        setSearchParams((prev) => {
-            if (isNil(date)) {
-                prev.delete(END_DATE_PARAM);
-            } else {
-                prev.set(END_DATE_PARAM, date);
-            }
-
-            return prev;
-        });
+        updateSearchParam(setSearchParams, END_DATE_PARAM, date);
     };
 
     return {
