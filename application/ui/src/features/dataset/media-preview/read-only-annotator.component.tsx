@@ -21,6 +21,7 @@ type ReadOnlyAnnotatorProps = {
     image: ImageData;
     onClose: () => void;
     subset: DatasetSubset;
+    hasAnnotationStatus?: boolean;
 };
 
 /**
@@ -34,7 +35,14 @@ type ReadOnlyAnnotatorProps = {
  * Note: This component renders into the parent grid layout from MediaPreview.
  * It uses the same gridArea structure as the normal annotator but with fewer elements.
  */
-export const ReadOnlyAnnotator = ({ mode, image, mediaItem, onClose, subset }: ReadOnlyAnnotatorProps) => {
+export const ReadOnlyAnnotator = ({
+    mode,
+    image,
+    mediaItem,
+    subset,
+    hasAnnotationStatus = true,
+    onClose,
+}: ReadOnlyAnnotatorProps) => {
     return (
         <>
             <View gridArea={'header'} UNSAFE_className={classes.toolbarContainer}>
@@ -65,7 +73,13 @@ export const ReadOnlyAnnotator = ({ mode, image, mediaItem, onClose, subset }: R
             )}
 
             <View gridArea={'bottom'}>
-                <BottomToolbar mediaItem={mediaItem} hideHotkeys subset={subset} isReadOnlySubset />
+                <BottomToolbar
+                    mediaItem={mediaItem}
+                    hideHotkeys
+                    subset={subset}
+                    isReadOnlySubset
+                    hasAnnotationStatus={hasAnnotationStatus}
+                />
             </View>
         </>
     );
