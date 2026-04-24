@@ -55,7 +55,7 @@ export const StagedImportDataset = ({
                 </>
             }
             bottomIcon={<InfoOutline width={16} height={16} />}
-            bottomLeftMessage={message}
+            bottomIconMessage={message}
         />
     );
 };
