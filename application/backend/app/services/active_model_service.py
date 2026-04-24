@@ -4,10 +4,11 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 from uuid import UUID
 
 from loguru import logger
-from model_api.adapters import create_core
+from model_api.adapters import OpenvinoAdapter, create_core
 from model_api.models import Model
 
 from app.db.engine import get_db_session
@@ -98,8 +99,8 @@ class ActiveModelService:
         Returns: Model for inference or None if no model is active, or if the model can't be loaded.
         """
         if force_reload:
+            self._unload_model()
             self._model_activation_state = self._load_state()
-            self._loaded_model = None
 
         if (
             self._model_activation_state.active_model_id is None
@@ -122,6 +123,7 @@ class ActiveModelService:
             logger.info(
                 "Loading model with ID '{}', variant '{}', on device '{}'", active_model_id, active_variant_id, device
             )
+            self._unload_model()
             try:
                 # Ensure all necessary model files exist before loading the model
                 model_xml_path = self._get_model_file_path(
@@ -155,3 +157,15 @@ class ActiveModelService:
                 device=device,
             )
         return self._loaded_model
+
+    def _unload_model(self) -> None:
+        """Release the currently loaded model and free its resources."""
+        if self._loaded_model is not None:
+            logger.debug("Unloading model '{}'", self._loaded_model.model_revision_id)
+            # Explicitly destroy OV native objects held by the adapter to release memory.
+            adapter = cast(OpenvinoAdapter, self._loaded_model.model.inference_adapter)
+            if hasattr(adapter, "async_queue"):
+                del adapter.async_queue
+            if hasattr(adapter, "compiled_model"):
+                del adapter.compiled_model
+            self._loaded_model = None
