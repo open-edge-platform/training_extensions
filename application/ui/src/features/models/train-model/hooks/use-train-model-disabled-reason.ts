@@ -73,7 +73,9 @@ export const useTrainModelDisabledReason = () => {
         } else if (reviewedUnassignedSubsetSize > 0) {
             assignmentDetail = `there are ${reviewedUnassignedSubsetSize} reviewed items left to assign`;
         } else if (unannotatedUnassignedSize > 0) {
-            assignmentDetail = `there are ${unannotatedUnassignedSize} items that still need annotation before they can be assigned`;
+            assignmentDetail =
+                `there are ${unannotatedUnassignedSize} items that still need annotation before they ` +
+                'can be assigned';
         } else {
             assignmentDetail = 'there are no unassigned items available to redistribute';
         }
