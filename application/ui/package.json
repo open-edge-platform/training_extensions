@@ -24,7 +24,7 @@
         "lint": "eslint \"src/**/*.ts*\" --max-warnings 0",
         "lint:fix": "eslint --fix \"./src/**/*.ts*\"",
         "preinstall": "npm run clone-geti-ui-packages",
-        "preview": "rsbuild preview",
+        "preview": "npm run build && rsbuild preview",
         "test:unit": "vitest --config vitest.config.ts",
         "test:unit:watch": "vitest --config vitest.config.ts --reporter=verbose --watch",
         "test:unit:coverage": "vitest --coverage",
