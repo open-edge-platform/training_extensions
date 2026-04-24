@@ -19,6 +19,7 @@ const loadHelpers = async (apiBaseUrl: string) => {
 
 describe.each([
     { name: 'absolute base (dev/preview)', base: 'http://localhost:7860', prefix: 'http://localhost:7860' },
+    { name: 'absolute base with trailing slash', base: 'http://localhost:7860/', prefix: 'http://localhost:7860' },
     { name: 'empty base (Docker, same origin)', base: '', prefix: '' },
 ])('media-url helpers with $name', ({ base, prefix }) => {
     it('does not throw when constructing URLs', async () => {

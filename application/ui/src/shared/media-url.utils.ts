@@ -6,7 +6,8 @@ import { API_BASE_URL } from '../api/client';
 // Use plain string concatenation instead of `new URL(path, base)`. The latter
 // requires an absolute base, but `API_BASE_URL` is an empty string when the UI
 // is served from the same origin as the backend (the default in Docker).
-const apiPath = (path: string) => `${API_BASE_URL}/api/${path}`;
+const normalizedBase = API_BASE_URL.replace(/\/$/, '');
+const apiPath = (path: string) => `${normalizedBase}/api/${path}`;
 
 export const getProjectThumbnailUrl = (projectId: string) => apiPath(`projects/${projectId}/thumbnail`);
 
