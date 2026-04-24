@@ -4,7 +4,12 @@
 import { act } from '@testing-library/react';
 
 import { renderHook } from '../test-utils/render';
-import { encodeFilterSearchParam, useDatasetFiltersSearchParams } from './use-dataset-filters-search-params.hook';
+import {
+    ANNOTATION_STATUS_PARAM,
+    encodeFilterSearchParam,
+    LABELS_PARAM,
+    useDatasetFiltersSearchParams,
+} from './use-dataset-filters-search-params.hook';
 
 describe('useDatasetFiltersSearchParams', () => {
     it('returns empty selectedLabelIds when no filter param is present', () => {
@@ -20,7 +25,7 @@ describe('useDatasetFiltersSearchParams', () => {
         const encoded = encodeFilterSearchParam('id-1,id-2,id-3');
 
         const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-            route: `/projects/123?filtersFiler=${encoded}`,
+            route: `/projects/123?${LABELS_PARAM}=${encoded}`,
             path: '/projects/:projectId',
         });
 
@@ -32,7 +37,7 @@ describe('useDatasetFiltersSearchParams', () => {
         const encoded = encodeFilterSearchParam(labelName);
 
         const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-            route: `/projects/123?filtersFiler=${encoded}`,
+            route: `/projects/123?${LABELS_PARAM}=${encoded}`,
             path: '/projects/:projectId',
         });
 
@@ -58,7 +63,7 @@ describe('useDatasetFiltersSearchParams', () => {
         const encoded = encodeFilterSearchParam(labelName);
 
         const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-            route: `/projects/123?filtersFiler=${encoded}`,
+            route: `/projects/123?${LABELS_PARAM}=${encoded}`,
             path: '/projects/:projectId',
         });
 
@@ -73,7 +78,7 @@ describe('useDatasetFiltersSearchParams', () => {
 
     it('returns empty array when filter param is malformed', () => {
         const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-            route: '/projects/123?filtersFiler=invalid-data',
+            route: `/projects/123?${LABELS_PARAM}=invalid-data`,
             path: '/projects/:projectId',
         });
 
@@ -93,7 +98,7 @@ describe('useDatasetFiltersSearchParams', () => {
         'returns annotationStatus "%s" from search param',
         (status) => {
             const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-                route: `/projects/123?annotationStatusFilter=${status}`,
+                route: `/projects/123?${ANNOTATION_STATUS_PARAM}=${status}`,
                 path: '/projects/:projectId',
             });
 
@@ -103,7 +108,7 @@ describe('useDatasetFiltersSearchParams', () => {
 
     it('returns null annotationStatus for invalid value', () => {
         const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-            route: '/projects/123?annotationStatusFilter=invalid',
+            route: `/projects/123?${ANNOTATION_STATUS_PARAM}=invalid`,
             path: '/projects/:projectId',
         });
 
@@ -125,7 +130,7 @@ describe('useDatasetFiltersSearchParams', () => {
 
     it('clears annotation status when set to null', () => {
         const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-            route: '/projects/123?annotationStatusFilter=reviewed',
+            route: `/projects/123?${ANNOTATION_STATUS_PARAM}=reviewed`,
             path: '/projects/:projectId',
         });
 

@@ -8,15 +8,16 @@ import { parse, stringify } from 'zipson/lib';
 import type { DatasetItemAnnotationStatus, FilterByStatusKey } from '../constants/shared-types';
 import { isNonEmptyString } from '../shared/util';
 
-const LABELS_PARAM = 'filtersFiler';
-const ANNOTATION_STATUS_PARAM = 'annotationStatusFilter';
+export const LABELS_PARAM = 'labelsFiler';
+export const ANNOTATION_STATUS_PARAM = 'annotationStatusFilter';
 
-const VALID_ANNOTATION_STATUSES: Set<string> = new Set<string>(['unannotated', 'reviewed', 'to_review']);
+const VALID_ANNOTATION_STATUSES = new Set<DatasetItemAnnotationStatus>(['unannotated', 'reviewed', 'to_review']);
 
 const parseAnnotationStatus = (value: string | null): DatasetItemAnnotationStatus | null => {
-    if (value !== null && VALID_ANNOTATION_STATUSES.has(value)) {
+    if (value !== null && VALID_ANNOTATION_STATUSES.has(value as DatasetItemAnnotationStatus)) {
         return value as DatasetItemAnnotationStatus;
     }
+
     return null;
 };
 

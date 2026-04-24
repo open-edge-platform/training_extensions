@@ -21,7 +21,7 @@ export const FilterByStatus = () => {
             maxWidth='size-3000'
             aria-label={'media status'}
             items={FILTER_BY_STATUS_OPTIONS}
-            defaultSelectedKey={annotationStatus ?? FILTER_BY_STATUS_OPTIONS[0].key}
+            selectedKey={annotationStatus ?? FILTER_BY_STATUS_OPTIONS[0].key}
             onSelectionChange={(status) => setAnnotationStatus(status as FilterByStatusKey)}
         >
             {(item) => <Item>{item.name}</Item>}

@@ -10,10 +10,6 @@ import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
 import { TotalItems } from './total-items.component';
 
-vi.mock('hooks/use-project-identifier.hook', () => ({
-    useProjectIdentifier: () => 'project-123',
-}));
-
 describe('TotalItems', () => {
     const renderTotalItems = async (totalSelectedElements: number, totalItems: number) => {
         server.use(
