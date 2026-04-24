@@ -56,7 +56,7 @@ overrides:
     - data.train_subset.augmentations_cpu
     - data.val_subset.augmentations_cpu
     - data.test_subset.augmentations_cpu
-  precision: 16
+  precision: 16-mixed
   max_epochs: 100
   gradient_clip_val: 35.0
 
