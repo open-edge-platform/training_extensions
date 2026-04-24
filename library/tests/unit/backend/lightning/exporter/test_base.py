@@ -1,7 +1,6 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import contextlib
 from unittest.mock import MagicMock
 
 import numpy as np
@@ -88,6 +87,7 @@ class TestLightningModelExporter:
             m.setattr(float16, "convert_float_to_float16", convert_float_to_float16_mock)
             result = exporter._postprocess_onnx_model(onnx_model, embed_metadata=True, precision=Precision.FP16)
             exporter._embed_onnx_metadata.assert_called_once()
+            convert_float_to_float16_mock.assert_called_once()
             assert result is onnx_model
 
 
@@ -155,11 +155,21 @@ class TestConvertOnnxToFloat16:
         onnx.checker.check_model(result)
 
     def test_upstream_remove_cast_crashes_on_multi_consumer(self):
-        """Verify the upstream bug actually exists (validates our workaround is needed)."""
+        """Verify the upstream bug actually exists (validates our workaround is needed).
+
+        If the upstream library fixes this, the test will xfail and we can
+        re-evaluate whether our workaround is still necessary.
+        """
         model = self._make_multi_consumer_cast_model()
-        # Run conversion *without* our fix to confirm the upstream bug
-        with contextlib.suppress(AttributeError):
+        try:
             float16.convert_float_to_float16(model)
+        except AttributeError:
+            pass  # Expected: upstream bug still present
+        else:
+            pytest.xfail(
+                "onnxconverter_common no longer crashes on multi-consumer Cast nodes; "
+                "consider removing our workaround"
+            )
 
     def test_original_function_restored_after_conversion(self):
         """Ensure we don't permanently modify the onnxconverter_common module."""

@@ -9,13 +9,14 @@ import logging as log
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Literal
 
+import onnx
+
 from getitune.types.export import ExportFormat, TaskLevelExportParameters
 from getitune.types.precision import Precision
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    import onnx
     import openvino
 
     from getitune.backend.lightning.models.base import DataInputParams, LightningModel
@@ -350,9 +351,9 @@ class _CastNodeIndex:
         self.cast_node_list: list[Any] = []
         self.input_name_to_cast: dict[str, Any] = {}
         self.output_name_to_cast: dict[str, Any] = {}
-        self.name_to_node: dict[str, Any] = {}
-        self.upstream: dict[str, Any] = {}
-        self.downstream: dict[str, Any] = {}
+        self.node_to_id: dict[int, Any] = {}
+        self.upstream: dict[int, Any] = {}
+        self.downstream: dict[int, Any] = {}
 
         self._index_cast_nodes(graph_proto)
         self._map_neighbors(graph_proto)
@@ -363,7 +364,7 @@ class _CastNodeIndex:
         for node in graph_proto.node:
             if node.op_type == "Cast":
                 self.cast_node_list.append(node)
-                self.name_to_node[node.name] = node
+                self.node_to_id[id(node)] = node
                 for inp in node.input:
                     self.input_name_to_cast[inp] = node
                 for out in node.output:
@@ -375,39 +376,50 @@ class _CastNodeIndex:
             for inp in current_node.input:
                 if inp in self.output_name_to_cast:
                     cast_node = self.output_name_to_cast[inp]
-                    existing = self.downstream.get(cast_node.name)
+                    nid = id(cast_node)
+                    existing = self.downstream.get(nid)
                     if existing is None:
-                        self.downstream[cast_node.name] = current_node
+                        self.downstream[nid] = current_node
                     elif isinstance(existing, list):
                         existing.append(current_node)
                     else:
-                        self.downstream[cast_node.name] = [existing, current_node]
+                        self.downstream[nid] = [existing, current_node]
 
             for out in current_node.output:
                 if out in self.input_name_to_cast:
                     cast_node = self.input_name_to_cast[out]
-                    self.upstream[cast_node.name] = current_node
+                    self.upstream[id(cast_node)] = current_node
 
     def _exclude_constant_upstream(self) -> None:
         """Exclude Cast nodes whose upstream is a Constant."""
-        for cast_name, up_node in self.upstream.items():
+        for nid, up_node in self.upstream.items():
             if up_node.op_type == "Constant":
-                cast_node = self.name_to_node[cast_name]
+                cast_node = self.node_to_id[nid]
                 if cast_node in self.cast_node_list:
                     self.cast_node_list.remove(cast_node)
+
+    @staticmethod
+    def _get_cast_target_dtype(node: onnx.NodeProto) -> int:
+        """Return the 'to' attribute value of a Cast node."""
+        for attr in node.attribute:
+            if attr.name == "to":
+                return attr.i
+        msg = f"Cast node missing 'to' attribute: {node.name or node.output}"
+        raise ValueError(msg)
 
     def find_removable_pairs(self) -> list[tuple[Any, Any]]:
         """Identify removable Cast16->Cast32 pairs."""
         remove_candidate: list[tuple[Any, Any]] = []
-        for cast_name, dn in self.downstream.items():
-            cast_node = self.name_to_node[cast_name]
+        for nid, dn in self.downstream.items():
+            cast_node = self.node_to_id[nid]
             dn_list = dn if isinstance(dn, list) else [dn]
             for dn_node in dn_list:
                 if dn_node.op_type == "Cast" and dn_node in self.cast_node_list and cast_node in self.cast_node_list:
-                    first_attr = cast_node.attribute[0].i
-                    second_attr = dn_node.attribute[0].i
-                    # fp16 (10) -> fp32 (1)  OR  int16 (16) -> int32 (32) style pairs
-                    if (first_attr == 10 and second_attr == 1) or (first_attr == 16 and second_attr == 32):
+                    first_dtype = self._get_cast_target_dtype(cast_node)
+                    second_dtype = self._get_cast_target_dtype(dn_node)
+                    if (
+                        first_dtype == onnx.TensorProto.FLOAT16 and second_dtype == onnx.TensorProto.FLOAT
+                    ) or (first_dtype == onnx.TensorProto.INT16 and second_dtype == onnx.TensorProto.INT32):
                         remove_candidate.append((cast_node, dn_node))
         return remove_candidate
 
@@ -417,19 +429,21 @@ class _CastNodeIndex:
         graph_proto: onnx.GraphProto,
     ) -> None:
         """Reconnect the graph to bypass each Cast pair and remove them."""
+        pairs_to_remove: list[tuple[Any, Any]] = []
         for first_cast, second_cast in remove_candidate:
             bypass_output = self._compute_bypass_output(first_cast, second_cast)
             if bypass_output is None:
                 continue
 
-            dn_raw = self.downstream.get(second_cast.name)
+            dn_raw = self.downstream.get(id(second_cast))
             dn_nodes = dn_raw if isinstance(dn_raw, list) else ([dn_raw] if dn_raw is not None else [])
             for dn_node in dn_nodes:
                 for i, inp in enumerate(dn_node.input):
                     if inp in list(second_cast.output):
                         dn_node.input[i] = bypass_output
+            pairs_to_remove.append((first_cast, second_cast))
 
-        for first_cast, second_cast in remove_candidate:
+        for first_cast, second_cast in pairs_to_remove:
             if first_cast in graph_proto.node:
                 graph_proto.node.remove(first_cast)
             if second_cast in graph_proto.node:
@@ -437,8 +451,8 @@ class _CastNodeIndex:
 
     def _compute_bypass_output(self, first_cast: onnx.NodeProto, second_cast: onnx.NodeProto) -> str | None:
         """Return the output name that should replace the cast pair's output."""
-        up_node = self.upstream.get(first_cast.name)
-        dn_raw = self.downstream.get(second_cast.name)
+        up_node = self.upstream.get(id(first_cast))
+        dn_raw = self.downstream.get(id(second_cast))
 
         if up_node is None and dn_raw is not None:
             return first_cast.input[0]
