@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import multiprocessing
 from copy import copy
 from typing import TYPE_CHECKING, Any
 
@@ -19,6 +20,8 @@ from getitune.backend.ultralytics.validators.instance_segmentation import Segmen
 
 if TYPE_CHECKING:
     from getitune.data.module import DataModule
+
+_MP_CONTEXT = multiprocessing.get_context("spawn")
 
 
 class SegmentationTrainer(_UltralyticsSegmentationTrainer):
@@ -77,14 +80,17 @@ class SegmentationTrainer(_UltralyticsSegmentationTrainer):
 
         dataset = self.build_dataset(dataset_path, mode, batch_size)
         shuffle = mode == "train"
+        nw = self.args.workers
         return DataLoader(
             dataset,
             batch_size=batch_size,
             shuffle=shuffle,
-            num_workers=self.args.workers,
+            num_workers=nw,
             collate_fn=ultralytics_collate_fn,
             pin_memory=True,
             drop_last=mode == "train",
+            multiprocessing_context=_MP_CONTEXT if nw > 0 else None,
+            persistent_workers=nw > 0,
         )
 
     def preprocess_batch(self, batch: dict[str, Any]) -> dict[str, Any]:
@@ -121,12 +127,14 @@ class SegmentationTrainer(_UltralyticsSegmentationTrainer):
             return super().get_validator()
 
         self.loss_names = ["box_loss", "seg_loss", "cls_loss", "dfl_loss", "sem_loss"]
-        return SegmentationValidator(
+        validator = SegmentationValidator(
             self.test_loader,
             save_dir=self.save_dir,
             args=copy(self.args),
             _callbacks=self.callbacks,
         )
+        validator._datamodule = self._datamodule  # noqa: SLF001
+        return validator
 
     # ------------------------------------------------------------------
     # Internal

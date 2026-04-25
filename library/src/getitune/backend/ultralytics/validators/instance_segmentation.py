@@ -13,7 +13,8 @@ from ultralytics.models.yolo.segment import SegmentationValidator as _Ultralytic
 from ultralytics.nn.autobackend import AutoBackend
 from ultralytics.utils import RANK, TQDM, callbacks
 from ultralytics.utils.checks import check_imgsz
-from ultralytics.utils.torch_utils import Profile, select_device, unwrap_model
+from ultralytics.utils.ops import Profile
+from ultralytics.utils.torch_utils import select_device, unwrap_model
 
 from getitune.backend.ultralytics.data.adapter import UltralyticsDatasetAdapter
 from getitune.backend.ultralytics.data.collate import ultralytics_collate_fn

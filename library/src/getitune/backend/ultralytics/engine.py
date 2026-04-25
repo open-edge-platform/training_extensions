@@ -69,7 +69,7 @@ class UltralyticsEngine(Engine):
             raise TypeError(msg)
 
         self._model = model
-        self._work_dir = Path(work_dir)
+        self._work_dir = Path(work_dir).resolve()
         self._work_dir.mkdir(parents=True, exist_ok=True)
         self._device = self._resolve_device(device)
         self._kwargs = kwargs
