@@ -20,8 +20,10 @@ class UltralyticsModel:
 
     Args:
         model_name: Model identifier (e.g. ``"yolo11s.pt"``).
-        label_info: Label metadata.
-        pretrained: Load pre-trained weights.
+        label_info: Label metadata used by the engine and DataModule bridge.
+        pretrained: Whether checkpoint-style model names are allowed. To train
+            from scratch, pass a model config (for example ``"yolo11s.yaml"``)
+            with ``pretrained=False``.
         imgsz: Image size for training / inference.
         extra_overrides: Extra Ultralytics config forwarded to train/val/export.
     """
@@ -50,6 +52,12 @@ class UltralyticsModel:
 
         if not self.model_name:
             msg = "model_name must be provided either directly or via the subclass default_model_name attribute."
+            raise ValueError(msg)
+        if not self.pretrained and self.model_name.endswith(".pt"):
+            msg = (
+                f"pretrained=False requires a model config, not checkpoint weights: {self.model_name}. "
+                "Use a .yaml model definition for scratch training."
+            )
             raise ValueError(msg)
 
         self._yolo: YOLO | None = None

@@ -9,20 +9,18 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Sequence
 
 import torch
 from torchvision import tv_tensors
 
 from getitune.data.entity.base import ImageInfo
-from getitune.data.entity.sample import Prediction
+from getitune.data.entity.sample import Prediction, SampleBatch
 from getitune.data.module import DataModule
 from getitune.engine.engine import Engine
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
 
-from .data.adapter import UltralyticsDatasetAdapter
-from .data.collate import ultralytics_collate_fn
 from .models.base import UltralyticsModel
 
 if TYPE_CHECKING:
@@ -36,6 +34,11 @@ _ULTRALYTICS_FORMAT_MAP: dict[ExportFormat, str] = {
     ExportFormat.OPENVINO: "openvino",
     ExportFormat.ONNX: "onnx",
 }
+
+
+class _UltralyticsResultLike(Protocol):
+    orig_img: Any
+    orig_shape: tuple[int, int]
 
 
 class UltralyticsEngine(Engine):
@@ -158,7 +161,7 @@ class UltralyticsEngine(Engine):
     def predict(self, **kwargs) -> ANNOTATIONS:
         """Run inference and return a list of :class:`Prediction` objects.
 
-        When a DataModule is attached, iterates its test/val subset.
+        When a DataModule is attached, iterates ``predict_dataloader()``.
         Otherwise uses ``yolo.predict(source=...)``.
 
         Args:
@@ -182,6 +185,7 @@ class UltralyticsEngine(Engine):
             name="predict",
             exist_ok=True,
             save=False,
+            **merged,  # pyrefly: ignore[bad-argument-type]
         )
 
         return self._convert_predictions(raw_results)  # pyrefly: ignore[bad-return]
@@ -281,23 +285,11 @@ class UltralyticsEngine(Engine):
         results = validator(model=self._model.yolo.model)
         return self._translate_metrics(results)
 
-    def _predict_with_datamodule(self, overrides: dict) -> list[Prediction]:
-        """Run inference by iterating the DataModule's test/val subset."""
-        from torch.utils.data import DataLoader
-
+    def _predict_with_datamodule(self, overrides: dict[str, Any]) -> list[Prediction]:
+        """Run inference through ``DataModule.predict_dataloader()``."""
         assert self._datamodule is not None  # guaranteed by caller  # noqa: S101
-        subset = self._datamodule.subsets.get("test") or self._datamodule.subsets["val"]
-        include_masks = self._model.task == "segment"
-        adapter = UltralyticsDatasetAdapter(subset, include_masks=include_masks)
-
-        batch_size = int(overrides.pop("batch", 1))
-        dataloader = DataLoader(
-            adapter,
-            batch_size=batch_size,
-            shuffle=False,
-            collate_fn=ultralytics_collate_fn,
-            pin_memory=True,
-        )
+        overrides.pop("batch", None)
+        dataloader = self._datamodule.predict_dataloader()
 
         yolo = self._model.yolo
         device = self._device
@@ -305,15 +297,20 @@ class UltralyticsEngine(Engine):
 
         predictions: list[Prediction] = []
         for batch in dataloader:
-            imgs = batch["img"].to(device)
+            if not isinstance(batch, SampleBatch):
+                msg = f"Expected DataModule.predict_dataloader() to yield SampleBatch, got {type(batch)}"
+                raise TypeError(msg)
+
+            imgs = self._batch_images_to_tensor(batch.images).to(device)
             raw_results = yolo.predict(  # pyrefly: ignore[bad-argument-type]
                 source=imgs,  # pyrefly: ignore[bad-argument-type]
                 device=device,
                 imgsz=self._model.imgsz,
                 save=False,
                 verbose=False,
+                **overrides,
             )
-            predictions.extend(self._convert_predictions(raw_results))
+            predictions.extend(self._convert_predictions(raw_results, images=batch.images, imgs_info=batch.imgs_info))
 
         return predictions
 
@@ -345,9 +342,9 @@ class UltralyticsEngine(Engine):
 
         return type(base_cls.__name__, (base_cls,), {"_datamodule": self._datamodule})
 
-    def _build_overrides(self, **kwargs) -> dict[str, object]:
+    def _build_overrides(self, **kwargs) -> dict[str, Any]:
         """Merge overrides: model defaults < engine kwargs < call kwargs."""
-        overrides: dict[str, object] = {}
+        overrides: dict[str, Any] = {}
         overrides.update(self._model.extra_overrides)
         overrides.update(self._kwargs)
         overrides.update(kwargs)
@@ -372,17 +369,16 @@ class UltralyticsEngine(Engine):
         return translated
 
     @staticmethod
-    def _convert_predictions(raw_results: list) -> list[Prediction]:
+    def _convert_predictions(
+        raw_results: list[Any],
+        images: torch.Tensor | tv_tensors.Image | list[torch.Tensor] | list[tv_tensors.Image] | None = None,
+        imgs_info: Sequence[ImageInfo | None] | None = None,
+    ) -> list[Prediction]:
         """Convert Ultralytics ``Results`` to getitune ``Prediction``."""
         predictions: list[Prediction] = []
         for idx, result in enumerate(raw_results):
-            img_tensor = torch.from_numpy(result.orig_img).permute(2, 0, 1).float() / 255.0
-            h, w = result.orig_shape[0], result.orig_shape[1]
-            img_info = ImageInfo(  # pyrefly: ignore[no-matching-overload]
-                img_idx=idx,
-                img_shape=(h, w),
-                ori_shape=(h, w),
-            )
+            img_tensor, img_info = UltralyticsEngine._resolve_prediction_input(idx, result, images, imgs_info)
+            h, w = img_info.ori_shape
 
             bboxes = None
             scores = None
@@ -414,6 +410,45 @@ class UltralyticsEngine(Engine):
             )
 
         return predictions
+
+    @staticmethod
+    def _batch_images_to_tensor(
+        images: torch.Tensor | tv_tensors.Image | list[torch.Tensor] | list[tv_tensors.Image],
+    ) -> torch.Tensor:
+        """Convert ``SampleBatch.images`` to a BCHW tensor."""
+        if isinstance(images, torch.Tensor):
+            return images
+        return torch.stack([torch.as_tensor(image) for image in images], dim=0)
+
+    @staticmethod
+    def _resolve_prediction_input(
+        idx: int,
+        result: _UltralyticsResultLike,
+        images: torch.Tensor | tv_tensors.Image | list[torch.Tensor] | list[tv_tensors.Image] | None,
+        imgs_info: Sequence[ImageInfo | None] | None,
+    ) -> tuple[torch.Tensor, ImageInfo]:
+        """Use batch inputs when available, otherwise fall back to Ultralytics results."""
+        if images is not None:
+            image = images[idx]
+            img_tensor = torch.as_tensor(image).detach().cpu().float()
+            img_info = imgs_info[idx] if imgs_info is not None else None
+            if img_info is None:
+                _, h, w = img_tensor.shape
+                img_info = ImageInfo(  # pyrefly: ignore[no-matching-overload]
+                    img_idx=idx,
+                    img_shape=(h, w),
+                    ori_shape=(h, w),
+                )
+            return img_tensor, img_info
+
+        img_tensor = torch.from_numpy(result.orig_img).permute(2, 0, 1).float() / 255.0
+        h, w = result.orig_shape[0], result.orig_shape[1]
+        img_info = ImageInfo(  # pyrefly: ignore[no-matching-overload]
+            img_idx=idx,
+            img_shape=(h, w),
+            ori_shape=(h, w),
+        )
+        return img_tensor, img_info
 
     def _normalize_openvino_export(self, export_path: Path) -> Path:
         """Copy OpenVINO export into work_dir and return the .xml path."""
