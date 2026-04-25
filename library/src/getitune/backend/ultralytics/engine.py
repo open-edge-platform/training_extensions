@@ -21,6 +21,8 @@ from getitune.engine.engine import Engine
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
 
+from .data.adapter import UltralyticsDatasetAdapter
+from .data.collate import ultralytics_collate_fn
 from .models.base import UltralyticsModel
 
 if TYPE_CHECKING:
@@ -39,7 +41,7 @@ _ULTRALYTICS_FORMAT_MAP: dict[ExportFormat, str] = {
 class UltralyticsEngine(Engine):
     """Engine backed by ``ultralytics.YOLO``.
 
-    Wraps an :class:`UltralyticsModel` and a getitune
+    Wraps an :class:`UltralyticsModel` and a
     :class:`~getitune.data.module.DataModule` (or data-root path).
     """
 
@@ -56,10 +58,10 @@ class UltralyticsEngine(Engine):
         """Initialize the engine.
 
         Args:
-            model: :class:`UltralyticsModel` (detection or instance-seg).
-            data: :class:`~getitune.data.module.DataModule` or data-root path.
+            model: Ultralytics model wrapper.
+            data: DataModule or filesystem data-root path.
             work_dir: Directory for checkpoints, exports, and logs.
-            device: Ultralytics device string (``"0"``, ``"cpu"``, ``"auto"``).
+            device: Device string (``"0"``, ``"cpu"``, ``"auto"``).
             **kwargs: Extra overrides forwarded to Ultralytics calls.
         """
         if not isinstance(model, UltralyticsModel):
@@ -89,13 +91,6 @@ class UltralyticsEngine(Engine):
     def train(self, **kwargs) -> METRICS:
         """Train the model via a custom Ultralytics trainer.
 
-        The engine instantiates the model's ``trainer_cls`` (a custom
-        Ultralytics trainer subclass) and routes training through it.
-        When a :class:`~getitune.data.module.DataModule` is attached,
-        the trainer receives a reference to it; Phase 2 overrides will
-        use it for data loading.  When a filesystem path is attached,
-        the default Ultralytics data loading is used.
-
         Args:
             **kwargs: Overrides forwarded to Ultralytics training.
 
@@ -105,15 +100,14 @@ class UltralyticsEngine(Engine):
         yolo = self._model.yolo
         merged = self._build_overrides(**kwargs)
 
-        # Resolve data source for Ultralytics
         if self._data_root is not None and "data" not in merged:
             merged["data"] = str(self._data_root)
 
         trainer_cls = self._make_bound_trainer()
 
-        model_name = self._model.model_name
         logger.info(
-            f"Starting Ultralytics training: model={model_name}, device={self._device}, imgsz={self._model.imgsz}"
+            f"Starting Ultralytics training: model={self._model.model_name}, "
+            f"device={self._device}, imgsz={self._model.imgsz}"
         )
 
         results = yolo.train(
@@ -130,19 +124,22 @@ class UltralyticsEngine(Engine):
     def test(self, **kwargs) -> METRICS:
         """Validate the model.
 
-        Uses ``yolo.val()`` under the hood.  When a data-root path is
-        attached, it is forwarded as the ``data`` argument.  DataModule-based
-        validation will be wired in Phase 2 (custom validator bridge).
+        When a DataModule is attached, a custom validator bypasses the
+        Ultralytics YAML data config and reads from the adapter pipeline.
+        When a data-root path is attached, ``yolo.val()`` is used directly.
 
         Args:
-            **kwargs: Overrides forwarded to ``yolo.val()``.
+            **kwargs: Overrides forwarded to validation.
 
         Returns:
             Translated metric dict.
         """
-        yolo = self._model.yolo
         merged = self._build_overrides(**kwargs)
 
+        if self._datamodule is not None:
+            return self._test_with_datamodule(merged)
+
+        yolo = self._model.yolo
         if self._data_root is not None and "data" not in merged:
             merged["data"] = str(self._data_root)
 
@@ -161,16 +158,18 @@ class UltralyticsEngine(Engine):
     def predict(self, **kwargs) -> ANNOTATIONS:
         """Run inference and return a list of :class:`Prediction` objects.
 
-        Currently uses ``yolo.predict(source=...)``.  DataModule-based
-        prediction (iterating ``DataModule.predict_dataloader()``) will
-        be wired in Phase 2.
+        When a DataModule is attached, iterates its test/val subset.
+        Otherwise uses ``yolo.predict(source=...)``.
 
         Args:
-            **kwargs: Overrides forwarded to ``yolo.predict()``.
+            **kwargs: Overrides forwarded to prediction.
         """
-        yolo = self._model.yolo
         merged = self._build_overrides(**kwargs)
 
+        if self._datamodule is not None and "source" not in merged:
+            return self._predict_with_datamodule(merged)  # pyrefly: ignore[bad-return]
+
+        yolo = self._model.yolo
         source: str | None = str(merged.pop("source")) if "source" in merged else None
         if source is None and self._data_root is not None:
             source = str(self._data_root)
@@ -195,20 +194,13 @@ class UltralyticsEngine(Engine):
     ) -> Path:
         """Export the model to OpenVINO IR or ONNX.
 
-        The exported artefacts are normalised into ``<work_dir>/`` and a
-        concrete file path is returned (not a directory).
-
-        Phase 4 will add full normalization; Phase 8 will add metadata
-        embedding for OVEngine / ModelAPI compatibility.
-
         Args:
-            export_format: Target format (``OPENVINO`` or ``ONNX``).
-            export_precision: Precision (``FP32`` or ``FP16``).
+            export_format: Target format.
+            export_precision: Precision (FP32 or FP16).
             **kwargs: Extra arguments for Ultralytics export.
 
         Returns:
-            Path to the exported model file (``.xml`` for OpenVINO,
-            ``.onnx`` for ONNX).
+            Path to the exported model file.
         """
         yolo = self._model.yolo
 
@@ -262,17 +254,75 @@ class UltralyticsEngine(Engine):
         raise RuntimeError(msg)
 
     # ------------------------------------------------------------------
+    # DataModule-aware test / predict
+    # ------------------------------------------------------------------
+
+    def _test_with_datamodule(self, overrides: dict) -> dict[str, float]:
+        """Run validation via a bound validator class with DataModule data."""
+        validator_cls = self._make_bound_validator()
+
+        args = {
+            "imgsz": self._model.imgsz,
+            "device": self._device,
+            "project": str(self._work_dir),
+            "name": "val",
+            "exist_ok": True,
+            **overrides,
+            "mode": "val",
+        }
+
+        logger.info(f"Starting DataModule validation: model={self._model.model_name}")
+
+        validator = validator_cls(
+            save_dir=self._work_dir / "val",
+            args=args,
+        )
+
+        results = validator(model=self._model.yolo.model)
+        return self._translate_metrics(results)
+
+    def _predict_with_datamodule(self, overrides: dict) -> list[Prediction]:
+        """Run inference by iterating the DataModule's test/val subset."""
+        from torch.utils.data import DataLoader
+
+        assert self._datamodule is not None  # guaranteed by caller  # noqa: S101
+        subset = self._datamodule.subsets.get("test") or self._datamodule.subsets["val"]
+        include_masks = self._model.task == "segment"
+        adapter = UltralyticsDatasetAdapter(subset, include_masks=include_masks)
+
+        batch_size = int(overrides.pop("batch", 1))
+        dataloader = DataLoader(
+            adapter,
+            batch_size=batch_size,
+            shuffle=False,
+            collate_fn=ultralytics_collate_fn,
+            pin_memory=True,
+        )
+
+        yolo = self._model.yolo
+        device = self._device
+        yolo.model.to(device).eval()  # pyrefly: ignore[missing-attribute]
+
+        predictions: list[Prediction] = []
+        for batch in dataloader:
+            imgs = batch["img"].to(device)
+            raw_results = yolo.predict(  # pyrefly: ignore[bad-argument-type]
+                source=imgs,  # pyrefly: ignore[bad-argument-type]
+                device=device,
+                imgsz=self._model.imgsz,
+                save=False,
+                verbose=False,
+            )
+            predictions.extend(self._convert_predictions(raw_results))
+
+        return predictions
+
+    # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
     def _make_bound_trainer(self) -> type:
-        """Return a trainer class with the current DataModule bound.
-
-        Creates a dynamic subclass of ``self._model.trainer_cls`` with the
-        DataModule set as a class attribute.  Ultralytics instantiates the
-        trainer class internally (fixed constructor signature), so this is
-        the way to inject external state.
-        """
+        """Return a trainer subclass with the DataModule bound as a class attr."""
         base_cls = self._model.trainer_cls
         if base_cls is None:
             msg = f"{type(self._model).__name__} does not define a trainer_cls"
@@ -281,7 +331,18 @@ class UltralyticsEngine(Engine):
         if self._datamodule is None:
             return base_cls
 
-        # Dynamic subclass with DataModule baked in as a class variable.
+        return type(base_cls.__name__, (base_cls,), {"_datamodule": self._datamodule})
+
+    def _make_bound_validator(self) -> type:
+        """Return a validator subclass with the DataModule bound as a class attr."""
+        base_cls = self._model.validator_cls
+        if base_cls is None:
+            msg = f"{type(self._model).__name__} does not define a validator_cls"
+            raise TypeError(msg)
+
+        if self._datamodule is None:
+            return base_cls
+
         return type(base_cls.__name__, (base_cls,), {"_datamodule": self._datamodule})
 
     def _build_overrides(self, **kwargs) -> dict[str, object]:
@@ -293,10 +354,7 @@ class UltralyticsEngine(Engine):
         return overrides
 
     def _translate_metrics(self, results: object) -> dict[str, float]:
-        """Map Ultralytics metric keys to getitune names.
-
-        Unknown keys are kept with an ``ultralytics/`` prefix.
-        """
+        """Map Ultralytics metric keys to getitune names."""
         if results is None:
             return {}
 
@@ -315,7 +373,7 @@ class UltralyticsEngine(Engine):
 
     @staticmethod
     def _convert_predictions(raw_results: list) -> list[Prediction]:
-        """Convert Ultralytics ``Results`` objects to getitune ``Prediction``."""
+        """Convert Ultralytics ``Results`` to getitune ``Prediction``."""
         predictions: list[Prediction] = []
         for idx, result in enumerate(raw_results):
             img_tensor = torch.from_numpy(result.orig_img).permute(2, 0, 1).float() / 255.0
@@ -374,7 +432,6 @@ class UltralyticsEngine(Engine):
                 raise FileNotFoundError(msg)
             return xml_files[0]
 
-        # Ultralytics returned a file path directly (unlikely for OV).
         return export_path
 
     def _normalize_onnx_export(self, export_path: Path) -> Path:
@@ -390,10 +447,7 @@ class UltralyticsEngine(Engine):
 
     @staticmethod
     def _resolve_device(device: str) -> str:
-        """Resolve ``"auto"`` to ``"0"`` (CUDA) or ``"cpu"``.
-
-        Phase 3 will add XPU resolution here.
-        """
+        """Resolve ``"auto"`` to ``"0"`` (CUDA) or ``"cpu"``."""
         if device == "auto":
             return "0" if torch.cuda.is_available() else "cpu"
         return device

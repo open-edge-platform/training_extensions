@@ -8,16 +8,18 @@ from __future__ import annotations
 from typing import ClassVar
 
 from getitune.backend.ultralytics.trainers.detection import DetectionTrainer
+from getitune.backend.ultralytics.validators.detection import DetectionValidator
 
 from .base import UltralyticsModel
 
 
 class UltralyticsDetectionModel(UltralyticsModel):
-    """YOLO model configured for object detection (default: ``yolo11s.pt``)."""
+    """YOLO detection model (default: ``yolo11s.pt``)."""
 
-    task: str = "detect"
-    default_model_name: str = "yolo11s.pt"
+    task: ClassVar[str] = "detect"
+    default_model_name: ClassVar[str] = "yolo11s.pt"
     trainer_cls: ClassVar[type] = DetectionTrainer
+    validator_cls: ClassVar[type] = DetectionValidator
 
     metric_keys: ClassVar[dict[str, str]] = {
         "metrics/mAP50(B)": "val/map_50",

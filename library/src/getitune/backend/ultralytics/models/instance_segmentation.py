@@ -8,16 +8,18 @@ from __future__ import annotations
 from typing import ClassVar
 
 from getitune.backend.ultralytics.trainers.instance_segmentation import SegmentationTrainer
+from getitune.backend.ultralytics.validators.instance_segmentation import SegmentationValidator
 
 from .base import UltralyticsModel
 
 
 class UltralyticsInstSegModel(UltralyticsModel):
-    """YOLO model configured for instance segmentation (default: ``yolo11s-seg.pt``)."""
+    """YOLO instance-segmentation model (default: ``yolo11s-seg.pt``)."""
 
-    task: str = "segment"
-    default_model_name: str = "yolo11s-seg.pt"
+    task: ClassVar[str] = "segment"
+    default_model_name: ClassVar[str] = "yolo11s-seg.pt"
     trainer_cls: ClassVar[type] = SegmentationTrainer
+    validator_cls: ClassVar[type] = SegmentationValidator
 
     metric_keys: ClassVar[dict[str, str]] = {
         "metrics/mAP50(B)": "val/map_50",

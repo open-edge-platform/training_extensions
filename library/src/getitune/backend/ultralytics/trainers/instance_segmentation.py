@@ -22,15 +22,10 @@ if TYPE_CHECKING:
 
 
 class SegmentationTrainer(_UltralyticsSegmentationTrainer):
-    """Instance-segmentation trainer bridging getitune DataModule.
+    """Instance-segmentation trainer that routes data through a getitune DataModule.
 
-    Inherits from the Ultralytics ``SegmentationTrainer`` (which itself
-    inherits from ``DetectionTrainer``).  The data overrides mirror those
-    in :class:`~getitune.backend.ultralytics.trainers.detection.DetectionTrainer`
-    but pass ``include_masks=True`` to the adapter.
-
-    When ``_datamodule is None``, falls back to default Ultralytics data
-    loading (requires a data YAML path).
+    Mirrors :class:`DetectionTrainer` but passes ``include_masks=True``
+    to the adapter.  Falls back to default Ultralytics loading otherwise.
     """
 
     _datamodule: DataModule | None = None
@@ -55,7 +50,13 @@ class SegmentationTrainer(_UltralyticsSegmentationTrainer):
         }
 
     def build_dataset(self, img_path: str, mode: str = "train", batch: int | None = None) -> UltralyticsDatasetAdapter:
-        """Return adapter wrapping the appropriate DataModule subset with masks."""
+        """Return adapter wrapping the appropriate DataModule subset with masks.
+
+        Args:
+            img_path: Ignored when DataModule is set.
+            mode: ``"train"`` or ``"val"``.
+            batch: Batch size (unused by adapter).
+        """
         if self._datamodule is None:
             return super().build_dataset(img_path, mode, batch)  # type: ignore[return-value]
 
@@ -103,13 +104,13 @@ class SegmentationTrainer(_UltralyticsSegmentationTrainer):
             self._disable_ultralytics_augmentations()
 
     def set_class_weights(self) -> None:
-        """Skip class-weight computation when using DataModule adapter."""
+        """Skip class-weight computation (adapter has no ``labels`` attr)."""
         if self._datamodule is not None:
             return
         super().set_class_weights()
 
     def plot_training_labels(self) -> None:
-        """Skip label plotting when using DataModule adapter."""
+        """Skip label plotting (adapter has no ``labels`` attr)."""
         if self._datamodule is not None:
             return
         super().plot_training_labels()
@@ -151,12 +152,15 @@ class SegmentationTrainer(_UltralyticsSegmentationTrainer):
         ):
             if hasattr(self.args, attr):
                 setattr(self.args, attr, 0.0)
+        # Prevent train_loader.reset() call — plain DataLoader has no reset().
+        if hasattr(self.args, "close_mosaic"):
+            self.args.close_mosaic = 0
         # v1: per-instance masks, no overlap.
         if hasattr(self.args, "overlap_mask"):
             self.args.overlap_mask = False
 
     def auto_batch(self) -> int:
-        """Skip auto-batch when using DataModule (batch size comes from config)."""
+        """Skip auto-batch when using DataModule."""
         if self._datamodule is not None:
             return self.batch_size
         return super().auto_batch()

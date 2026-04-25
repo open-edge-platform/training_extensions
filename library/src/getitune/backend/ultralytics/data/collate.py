@@ -11,20 +11,15 @@ import torch
 
 
 def ultralytics_collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
-    """Collate adapter dicts into an Ultralytics-compatible batch dict.
+    """Collate adapter dicts into an Ultralytics-compatible batch.
 
-    Stacks ``"img"`` into ``(B, C, H, W)``, concatenates per-sample
-    ``"cls"``, ``"bboxes"``, and ``"batch_idx"`` with correct per-image
-    indexing.  For segmentation, ``"masks"`` are also concatenated.
-
-    This intentionally does NOT route through getitune ``SampleBatch``.
+    Stacks images into ``(B, C, H, W)`` and concatenates per-sample
+    annotations with correct per-image ``batch_idx``.
     """
     new_batch: dict[str, Any] = {}
 
-    # Stack images -> (B, C, H, W)
     new_batch["img"] = torch.stack([b["img"] for b in batch], dim=0)
 
-    # Concatenate per-sample annotations with batch_idx offset.
     all_cls: list[torch.Tensor] = []
     all_bboxes: list[torch.Tensor] = []
     all_batch_idx: list[torch.Tensor] = []
@@ -41,7 +36,7 @@ def ultralytics_collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
     new_batch["bboxes"] = torch.cat(all_bboxes, dim=0) if all_bboxes else torch.zeros((0, 4), dtype=torch.float32)
     new_batch["batch_idx"] = torch.cat(all_batch_idx, dim=0) if all_batch_idx else torch.zeros(0, dtype=torch.float32)
 
-    # Passthrough geometry fields (lists, one per image in batch).
+    # Geometry fields (lists, one per image).
     new_batch["ori_shape"] = [b["ori_shape"] for b in batch]
     new_batch["resized_shape"] = [b["resized_shape"] for b in batch]
     new_batch["ratio_pad"] = [b["ratio_pad"] for b in batch]

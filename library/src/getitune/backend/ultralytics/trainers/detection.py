@@ -22,15 +22,11 @@ if TYPE_CHECKING:
 
 
 class DetectionTrainer(_UltralyticsDetectionTrainer):
-    """Detection trainer that can bridge a getitune DataModule.
+    """Detection trainer that routes data through a getitune DataModule.
 
-    When ``_datamodule`` is set (via the engine's dynamic subclass factory),
-    all data loading is routed through the getitune pipeline.  Ultralytics'
-    own augmentations are disabled and ``preprocess_batch`` skips ``/255``
-    because the data is already ``float32 [0, 1]``.
-
-    When ``_datamodule is None``, falls back to default Ultralytics data
-    loading (requires a data YAML path).
+    When ``_datamodule`` is set (via the engine's dynamic subclass),
+    data loading uses the getitune pipeline and ``preprocess_batch``
+    skips ``/255``.  Falls back to default Ultralytics loading otherwise.
     """
 
     _datamodule: DataModule | None = None
@@ -55,7 +51,13 @@ class DetectionTrainer(_UltralyticsDetectionTrainer):
         }
 
     def build_dataset(self, img_path: str, mode: str = "train", batch: int | None = None) -> UltralyticsDatasetAdapter:
-        """Return adapter wrapping the appropriate DataModule subset."""
+        """Return adapter wrapping the appropriate DataModule subset.
+
+        Args:
+            img_path: Ignored when DataModule is set.
+            mode: ``"train"`` or ``"val"``.
+            batch: Batch size (unused by adapter).
+        """
         if self._datamodule is None:
             return super().build_dataset(img_path, mode, batch)  # type: ignore[return-value]
 
@@ -94,7 +96,6 @@ class DetectionTrainer(_UltralyticsDetectionTrainer):
         for k, v in batch.items():
             if isinstance(v, torch.Tensor):
                 batch[k] = v.to(self.device, non_blocking=True)
-        # Images are already float32 [0, 1] — do NOT divide by 255.
         return batch
 
     def set_model_attributes(self) -> None:
@@ -104,21 +105,13 @@ class DetectionTrainer(_UltralyticsDetectionTrainer):
             self._disable_ultralytics_augmentations()
 
     def set_class_weights(self) -> None:
-        """Skip class-weight computation when using DataModule adapter.
-
-        Upstream reads ``self.train_loader.dataset.labels`` which doesn't
-        exist on our adapter.  Disabled for v1.
-        """
+        """Skip class-weight computation (adapter has no ``labels`` attr)."""
         if self._datamodule is not None:
             return
         super().set_class_weights()
 
     def plot_training_labels(self) -> None:
-        """Skip label plotting when using DataModule adapter.
-
-        Upstream reads ``self.train_loader.dataset.labels`` which doesn't
-        exist on our adapter.
-        """
+        """Skip label plotting (adapter has no ``labels`` attr)."""
         if self._datamodule is not None:
             return
         super().plot_training_labels()
@@ -160,9 +153,12 @@ class DetectionTrainer(_UltralyticsDetectionTrainer):
         ):
             if hasattr(self.args, attr):
                 setattr(self.args, attr, 0.0)
+        # Prevent train_loader.reset() call — plain DataLoader has no reset().
+        if hasattr(self.args, "close_mosaic"):
+            self.args.close_mosaic = 0
 
     def auto_batch(self) -> int:
-        """Skip auto-batch when using DataModule (batch size comes from config)."""
+        """Skip auto-batch when using DataModule."""
         if self._datamodule is not None:
             return self.batch_size
         return super().auto_batch()

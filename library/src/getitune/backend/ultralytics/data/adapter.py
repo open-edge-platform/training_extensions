@@ -5,37 +5,30 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset as TorchDataset
 
+from getitune.data.dataset.base import VisionDataset
 from getitune.data.entity.base import ImageInfo
 
 from .geometry import build_ratio_pad, xyxy_abs_to_xywh_norm
 
-logger = logging.getLogger(__name__)
 
-
-class UltralyticsDatasetAdapter(TorchDataset):
+class UltralyticsDatasetAdapter(torch.utils.data.Dataset):
     """Wraps a getitune ``VisionDataset`` and yields Ultralytics sample dicts.
 
-    Each call to ``__getitem__`` pulls an already-augmented sample
-    (float32 CHW ``[0, 1]``) from the underlying ``VisionDataset`` and
-    converts it to the dict format that Ultralytics trainers/validators
-    expect.
-
-    The adapter does **not** apply any additional augmentation.
+    Does NOT apply any additional augmentation — the upstream
+    ``VisionDataset`` already produces float32 CHW ``[0, 1]`` samples.
     """
 
-    def __init__(self, vision_dataset: TorchDataset, *, include_masks: bool = False) -> None:
+    def __init__(self, vision_dataset: VisionDataset, *, include_masks: bool = False) -> None:
         self._dataset = vision_dataset
         self._include_masks = include_masks
 
     def __len__(self) -> int:
-        return len(self._dataset)  # type: ignore[arg-type]
+        return len(self._dataset)
 
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Convert a single getitune sample to an Ultralytics sample dict."""
@@ -46,23 +39,28 @@ class UltralyticsDatasetAdapter(TorchDataset):
             msg = f"Expected 3-D image tensor (CHW), got shape {img.shape}"
             raise ValueError(msg)
 
-        _, h, w = img.shape
+        _, tensor_h, tensor_w = img.shape
 
         # --- Geometry from ImageInfo ---
         img_info: ImageInfo | None = getattr(sample, "img_info", None)
         if img_info is not None:
             ori_shape = img_info.ori_shape
+            # img_shape is the resized size *before* padding.
+            resized_shape = img_info.img_shape
             padding = img_info.padding
         else:
-            ori_shape = (h, w)
+            ori_shape = (tensor_h, tensor_w)
+            resized_shape = (tensor_h, tensor_w)
             padding = (0, 0, 0, 0)
 
-        ratio_pad = build_ratio_pad(ori_shape, (h, w), padding)
+        # Ultralytics validators use ratio_pad for bbox postprocessing.
+        ratio_pad = build_ratio_pad(ori_shape, resized_shape, padding)
 
-        # --- Bounding boxes ---
+        # --- Bounding boxes (XYXY absolute -> XYWH normalised) ---
+        # Ultralytics expects centre-xywh normalised by image dimensions.
         bboxes_raw = getattr(sample, "bboxes", None)
         if bboxes_raw is not None and len(bboxes_raw) > 0:
-            bboxes_xywh = xyxy_abs_to_xywh_norm(bboxes_raw, img_w=w, img_h=h)
+            bboxes_xywh = xyxy_abs_to_xywh_norm(bboxes_raw, img_w=tensor_w, img_h=tensor_h)
         else:
             bboxes_xywh = np.zeros((0, 4), dtype=np.float32)
 
@@ -83,9 +81,8 @@ class UltralyticsDatasetAdapter(TorchDataset):
             "img": img,
             "cls": cls,
             "bboxes": bboxes_xywh,
-            "batch_idx": torch.zeros(cls.shape[0], dtype=torch.float32),
             "ori_shape": ori_shape,
-            "resized_shape": (h, w),
+            "resized_shape": resized_shape,
             "ratio_pad": ratio_pad,
         }
 
@@ -94,15 +91,12 @@ class UltralyticsDatasetAdapter(TorchDataset):
             masks_raw = getattr(sample, "masks", None)
             if masks_raw is not None and len(masks_raw) > 0:
                 mask_tensor = masks_raw
-                if isinstance(mask_tensor, torch.Tensor):
-                    mask_np = mask_tensor.detach().cpu().numpy()
-                else:
-                    mask_np = np.asarray(mask_tensor)
-                # Ultralytics expects masks as (N, H, W) uint8.
-                if mask_np.ndim == 2:
-                    mask_np = mask_np[np.newaxis]
-                result["masks"] = torch.from_numpy(mask_np.astype(np.float32))
+                if not isinstance(mask_tensor, torch.Tensor):
+                    mask_tensor = torch.as_tensor(mask_tensor)
+                if mask_tensor.ndim == 2:
+                    mask_tensor = mask_tensor.unsqueeze(0)
+                result["masks"] = mask_tensor.float()
             else:
-                result["masks"] = torch.zeros((0, h, w), dtype=torch.float32)
+                result["masks"] = torch.zeros((0, tensor_h, tensor_w), dtype=torch.float32)
 
         return result
