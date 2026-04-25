@@ -18,8 +18,10 @@ from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import Prediction, SampleBatch
 from getitune.data.module import DataModule
 from getitune.engine.engine import Engine
+from getitune.types.device import DeviceType
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
+from getitune.utils.device import is_xpu_available
 
 from .models.base import UltralyticsModel
 
@@ -55,7 +57,7 @@ class UltralyticsEngine(Engine):
         model: UltralyticsModel,
         data: DataModule | PathLike,
         work_dir: PathLike = "./getitune-workspace",
-        device: str = "auto",
+        device: str | DeviceType = "auto",
         **kwargs,
     ) -> None:
         """Initialize the engine.
@@ -64,7 +66,8 @@ class UltralyticsEngine(Engine):
             model: Ultralytics model wrapper.
             data: DataModule or filesystem data-root path.
             work_dir: Directory for checkpoints, exports, and logs.
-            device: Device string (``"0"``, ``"cpu"``, ``"auto"``).
+            device: Device string or :class:`DeviceType` enum
+                (``"auto"``, ``"xpu"``, ``"0"``, ``"cpu"``, ``DeviceType.xpu``, etc.).
             **kwargs: Extra overrides forwarded to Ultralytics calls.
         """
         if not isinstance(model, UltralyticsModel):
@@ -481,8 +484,51 @@ class UltralyticsEngine(Engine):
         return target_file
 
     @staticmethod
-    def _resolve_device(device: str) -> str:
-        """Resolve ``"auto"`` to ``"0"`` (CUDA) or ``"cpu"``."""
+    def _resolve_device(device: str | DeviceType) -> torch.device:
+        """Resolve a device specification to a :class:`torch.device`.
+
+        Resolution order for ``"auto"`` / ``DeviceType.auto``:
+        XPU > CUDA > CPU (matches getitune convention).
+
+        We return a ``torch.device`` object rather than a plain string so that
+        Ultralytics' ``select_device()`` passes it through unchanged — its
+        validator only rejects *string* device names it doesn't recognise,
+        but accepts pre-constructed ``torch.device`` objects verbatim.
+
+        Args:
+            device: Raw string (``"auto"``, ``"xpu"``, ``"xpu:0"``, ``"cuda"``,
+                ``"cuda:0"``, ``"0"``, ``"cpu"``) or :class:`DeviceType` enum.
+
+        Returns:
+            Resolved ``torch.device``.
+        """
+        # Normalise DeviceType enum to string.
+        if isinstance(device, DeviceType):
+            device = {
+                DeviceType.auto: "auto",
+                DeviceType.xpu: "xpu",
+                DeviceType.gpu: "cuda",
+                DeviceType.cpu: "cpu",
+            }.get(device, str(device.value))
+
+        device = str(device).strip().lower()
+
         if device == "auto":
-            return "0" if torch.cuda.is_available() else "cpu"
-        return device
+            if is_xpu_available():
+                return torch.device("xpu:0")
+            if torch.cuda.is_available():
+                return torch.device("cuda:0")
+            return torch.device("cpu")
+
+        if device in ("xpu", "xpu:0"):
+            return torch.device(device if ":" in device else "xpu:0")
+
+        if device in ("cuda", "gpu"):
+            return torch.device("cuda:0")
+
+        # Bare integer index → CUDA device (Ultralytics convention).
+        if device.isdigit():
+            return torch.device(f"cuda:{device}")
+
+        # Anything else (e.g. "cuda:1", "cpu") — let torch.device parse it.
+        return torch.device(device)

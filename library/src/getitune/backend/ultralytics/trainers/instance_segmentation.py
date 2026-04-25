@@ -16,6 +16,7 @@ from ultralytics.models.yolo.segment import SegmentationValidator as _Ultralytic
 
 from getitune.backend.ultralytics.data.adapter import UltralyticsDatasetAdapter
 from getitune.backend.ultralytics.data.collate import ultralytics_collate_fn
+from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
 from getitune.backend.ultralytics.validators.instance_segmentation import SegmentationValidator
 
 if TYPE_CHECKING:
@@ -24,11 +25,13 @@ if TYPE_CHECKING:
 _MP_CONTEXT = multiprocessing.get_context("spawn")
 
 
-class SegmentationTrainer(_UltralyticsSegmentationTrainer):
+class SegmentationTrainer(XPUAwareTrainerMixin, _UltralyticsSegmentationTrainer):
     """Instance-segmentation trainer that routes data through a getitune DataModule.
 
     Mirrors :class:`DetectionTrainer` but passes ``include_masks=True``
     to the adapter.  Falls back to default Ultralytics loading otherwise.
+
+    Inherits :class:`XPUAwareTrainerMixin` for Intel XPU device support.
     """
 
     _datamodule: DataModule | None = None
@@ -98,9 +101,10 @@ class SegmentationTrainer(_UltralyticsSegmentationTrainer):
         if self._datamodule is None:
             return super().preprocess_batch(batch)
 
+        non_blocking = self.device.type in ("cuda", "xpu")
         for k, v in batch.items():
             if isinstance(v, torch.Tensor):
-                batch[k] = v.to(self.device, non_blocking=True)
+                batch[k] = v.to(self.device, non_blocking=non_blocking)
         return batch
 
     def set_model_attributes(self) -> None:
