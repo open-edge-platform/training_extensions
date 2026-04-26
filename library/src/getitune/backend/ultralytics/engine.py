@@ -26,6 +26,8 @@ from getitune.utils.device import is_xpu_available
 from .models.base import UltralyticsModel
 
 if TYPE_CHECKING:
+    from ultralytics import YOLO
+
     from getitune.types import PathLike
     from getitune.types.types import ANNOTATIONS, DATA, METRICS, MODEL
 
@@ -195,30 +197,42 @@ class UltralyticsEngine(Engine):
 
     def export(
         self,
+        checkpoint: PathLike | None = None,
         export_format: ExportFormat = ExportFormat.OPENVINO,
         export_precision: Precision = Precision.FP32,
         **kwargs,
     ) -> Path:
         """Export the model to OpenVINO IR or ONNX.
 
+        If *checkpoint* is ``None``, the engine tries (in order):
+
+        1. the ``best.pt`` written by the most recent ``train()`` call,
+        2. the currently loaded YOLO model weights.
+
         Args:
+            checkpoint: Path to a ``.pt`` checkpoint to export.  When given,
+                a fresh YOLO model is loaded from this file.
             export_format: Target format.
             export_precision: Precision (FP32 or FP16).
             **kwargs: Extra arguments for Ultralytics export.
 
         Returns:
-            Path to the exported model file.
+            Path to the exported model file (``.xml`` for OpenVINO,
+            ``.onnx`` for ONNX).
         """
-        yolo = self._model.yolo
-
         ultra_format = _ULTRALYTICS_FORMAT_MAP.get(export_format)
         if ultra_format is None:
             msg = f"Unsupported export format: {export_format}"
             raise ValueError(msg)
 
+        yolo = self._resolve_export_model(checkpoint)
         half = export_precision == Precision.FP16
 
-        logger.info(f"Exporting model: format={export_format.value}, precision={export_precision.value}")
+        logger.info(
+            f"Exporting model: format={export_format.value}, "
+            f"precision={export_precision.value}, "
+            f"checkpoint={checkpoint or 'current weights'}"
+        )
 
         export_result = yolo.export(
             format=ultra_format,
@@ -320,6 +334,39 @@ class UltralyticsEngine(Engine):
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    def _resolve_export_model(self, checkpoint: PathLike | None = None) -> YOLO:
+        """Return a YOLO model instance to export.
+
+        Resolution order:
+        1. Explicit *checkpoint* path → load fresh YOLO from file.
+        2. ``best.pt`` from the most recent ``train()`` call.
+        3. Currently loaded model weights.
+
+        Args:
+            checkpoint: Optional path to a ``.pt`` checkpoint.
+
+        Returns:
+            A ``YOLO`` model instance ready for export.
+        """
+        from ultralytics import YOLO
+
+        if checkpoint is not None:
+            ckpt = Path(checkpoint)
+            if not ckpt.exists():
+                msg = f"Checkpoint not found: {ckpt}"
+                raise FileNotFoundError(msg)
+            logger.info(f"Loading checkpoint for export: {ckpt}")
+            return YOLO(str(ckpt))
+
+        # Try best.pt from the most recent training run.
+        best_pt = self._work_dir / "train" / "weights" / "best.pt"
+        if best_pt.exists():
+            logger.info(f"Using best checkpoint from training: {best_pt}")
+            return YOLO(str(best_pt))
+
+        # Fall back to whatever is currently loaded.
+        return self._model.yolo
 
     def _make_bound_trainer(self) -> type:
         """Return a trainer subclass with the DataModule bound as a class attr."""
