@@ -1,0 +1,484 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Backend-local configurator for Ultralytics recipes.
+
+Owns recipe parsing, validation, model/engine instantiation, and the
+Geti bridge layer that translates between the Ultralytics-native recipe
+format and the config dict shape that ``GetiConfigConverter`` / the
+application trainer expects.
+"""
+
+from __future__ import annotations
+
+import copy
+import importlib
+import logging
+from collections.abc import Mapping
+from dataclasses import fields
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+import yaml
+
+from getitune.types.device import DeviceType
+from getitune.types.task import TaskType
+
+from .config import (
+    UltralyticsConfig,
+    UltralyticsEngineConfig,
+    UltralyticsExportConfig,
+    UltralyticsModelConfig,
+    UltralyticsTrainConfig,
+)
+from .engine import UltralyticsEngine
+from .models.base import UltralyticsModel
+
+if TYPE_CHECKING:
+    from getitune.data.module import DataModule
+    from getitune.types import PathLike
+    from getitune.types.label import LabelInfo
+
+logger = logging.getLogger(__name__)
+
+# Task string → default model wrapper class path.
+_TASK_TO_DEFAULT_CLASS_PATH: dict[str, str] = {
+    TaskType.DETECTION.value: "getitune.backend.ultralytics.models.detection.UltralyticsDetectionModel",
+    TaskType.INSTANCE_SEGMENTATION.value: (
+        "getitune.backend.ultralytics.models.instance_segmentation.UltralyticsInstSegModel"
+    ),
+}
+
+_SUPPORTED_TASKS: frozenset[str] = frozenset(_TASK_TO_DEFAULT_CLASS_PATH)
+
+
+class UltralyticsConfigurator:
+    """Parse Ultralytics recipes and construct model / engine instances.
+
+    Two usage modes:
+
+    1. **Library** — ``from_recipe()`` → ``create_model()`` / ``create_engine()``.
+    2. **Application bridge** — ``from_recipe()`` → ``apply_geti_overrides()`` →
+       ``to_geti_config()`` to produce a dict compatible with
+       ``GetiConfigConverter`` output.  In Phase 6 the converter dispatches
+       here when the recipe declares ``backend: ultralytics``.
+    """
+
+    def __init__(
+        self,
+        config: UltralyticsConfig,
+        data_config: dict[str, Any] | None = None,
+    ) -> None:
+        self._config = config
+        self._data_config: dict[str, Any] = data_config or {}
+        self._validate_backend()
+        self._validate_task()
+
+    # ------------------------------------------------------------------
+    # Construction
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def from_recipe(cls, recipe_path: PathLike) -> UltralyticsConfigurator:
+        """Load an Ultralytics recipe YAML.
+
+        Args:
+            recipe_path: Path to the recipe YAML file.
+
+        Returns:
+            Configured ``UltralyticsConfigurator`` instance.
+
+        Raises:
+            FileNotFoundError: If the recipe file does not exist.
+            ValueError: If the recipe has an invalid backend or task.
+        """
+        path = Path(recipe_path)
+        if not path.exists():
+            msg = f"Recipe file not found: {path}"
+            raise FileNotFoundError(msg)
+
+        with open(path) as f:  # noqa: PTH123
+            raw = yaml.safe_load(f)
+
+        if not isinstance(raw, dict):
+            msg = f"Recipe must be a YAML mapping, got {type(raw).__name__}"
+            raise TypeError(msg)
+
+        config = cls._parse_raw_config(raw)
+
+        # Resolve the data section (string reference or inline dict).
+        data_config = cls._resolve_data_config(raw.get("data"), path.parent)
+
+        # Apply inline data overrides (mirrors Lightning `overrides.data`).
+        overrides_data = raw.get("overrides", {}).get("data", {})
+        if overrides_data:
+            _deep_merge(data_config, overrides_data)
+
+        return cls(config, data_config=data_config)
+
+    # ------------------------------------------------------------------
+    # Properties
+    # ------------------------------------------------------------------
+
+    @property
+    def config(self) -> UltralyticsConfig:
+        """The parsed Ultralytics configuration."""
+        return self._config
+
+    @property
+    def data_config(self) -> dict[str, Any]:
+        """The resolved DataModule-compatible data configuration."""
+        return self._data_config
+
+    # ------------------------------------------------------------------
+    # Native overrides (library usage)
+    # ------------------------------------------------------------------
+
+    def apply_overrides(self, overrides: Mapping[str, Any] | None = None) -> None:
+        """Merge supported overrides into the current config.
+
+        Accepts dot-separated keys (``"training.epochs"``) or nested dicts
+        (``{"training": {"epochs": 50}}``).  Unknown keys raise ``ValueError``.
+        """
+        if not overrides:
+            return
+
+        flat = _flatten_overrides(overrides)
+        for key, value in flat.items():
+            self._apply_single_override(key, value)
+
+    # ------------------------------------------------------------------
+    # Geti application bridge
+    # ------------------------------------------------------------------
+
+    def apply_geti_overrides(self, hyper_parameters: dict[str, Any]) -> None:
+        """Map Geti UI ``hyper_parameters`` to Ultralytics config fields.
+
+        This replaces ``HyperparametersUpdater.update()`` for the Ultralytics
+        backend — the field names and config paths are different from Lightning.
+
+        Supported Geti keys (under ``hyper_parameters["training"]``):
+            learning_rate, batch_size, max_epochs, weight_decay,
+            input_size_height / input_size_width, early_stopping.
+        """
+        training = hyper_parameters.get("training", {})
+
+        lr = training.get("learning_rate")
+        if lr is not None:
+            self._config.training.lr0 = float(lr)
+
+        batch_size = training.get("batch_size")
+        if batch_size is not None:
+            self._config.training.batch = int(batch_size)
+            # Keep data config in sync for DataModule creation.
+            for subset in ("train_subset", "val_subset"):
+                if subset in self._data_config:
+                    self._data_config[subset]["batch_size"] = int(batch_size)
+
+        max_epochs = training.get("max_epochs")
+        if max_epochs is not None:
+            self._config.training.epochs = int(max_epochs)
+
+        weight_decay = training.get("weight_decay")
+        if weight_decay is not None:
+            self._config.training.weight_decay = float(weight_decay)
+
+        # Input size — Geti sends height/width separately.
+        h = training.get("input_size_height")
+        w = training.get("input_size_width")
+        if h is not None and w is not None:
+            self._config.model.imgsz = max(int(h), int(w))
+            self._data_config["input_size"] = [int(h), int(w)]
+
+        # Early stopping — maps to Ultralytics `patience` (0 = disabled).
+        es = training.get("early_stopping")
+        if isinstance(es, dict):
+            if es.get("enable") is True:
+                patience = es.get("patience")
+                if patience is not None:
+                    self._config.training.patience = int(patience)
+            elif es.get("enable") is False:
+                self._config.training.patience = 0
+
+    def to_geti_config(self) -> dict[str, Any]:
+        """Produce a config dict compatible with ``GetiConfigConverter`` output.
+
+        The dict has the top-level keys the application trainer expects
+        (``model``, ``data``, ``max_epochs``, ``callbacks``, ``engine``),
+        plus ``backend: "ultralytics"`` so the trainer knows to take the
+        Ultralytics code path.
+
+        The ``data`` section is a resolved copy of the DataModule-compatible
+        config (augmentations, batch sizes, input size, samplers).
+        """
+        return {
+            "backend": "ultralytics",
+            "task": self._config.task,
+            "model": {
+                "class_path": self._config.model.class_path,
+                "init_args": {
+                    "model_name": self._config.model.model_name,
+                    "pretrained": self._config.model.pretrained,
+                    "imgsz": self._config.model.imgsz,
+                },
+            },
+            "engine": {"device": self._config.engine.device},
+            "max_epochs": self._config.training.epochs,
+            "training": self._config.training.to_train_args(),
+            "export": {
+                "format": self._config.export.format,
+                "precision": self._config.export.precision,
+            },
+            "data": copy.deepcopy(self._data_config),
+            "callbacks": [],
+        }
+
+    # ------------------------------------------------------------------
+    # Model / engine instantiation (library usage)
+    # ------------------------------------------------------------------
+
+    def create_model(
+        self,
+        label_info: LabelInfo,
+        weights_path: PathLike | None = None,
+    ) -> UltralyticsModel:
+        """Instantiate the model from recipe config.
+
+        Args:
+            label_info: Label metadata for the dataset.
+            weights_path: Optional path to base weights — overrides the
+                recipe's ``model_name`` for manifest-provided weights.
+
+        Returns:
+            Configured ``UltralyticsModel`` subclass instance.
+        """
+        model_cls = self._resolve_model_wrapper_cls()
+        model_name = self._resolve_model_name(weights_path)
+
+        return model_cls(
+            model_name=model_name,
+            label_info=label_info,
+            pretrained=self._config.model.pretrained,
+            imgsz=self._config.model.imgsz,
+        )
+
+    def create_engine(
+        self,
+        model: UltralyticsModel,
+        data: DataModule | PathLike,
+        work_dir: PathLike,
+        device: str | DeviceType = DeviceType.auto,
+        **engine_kwargs: object,
+    ) -> UltralyticsEngine:
+        """Instantiate the engine from recipe config.
+
+        Training defaults from the recipe are passed as engine kwargs so they
+        flow through ``_build_overrides()`` into ``yolo.train()``.
+
+        Args:
+            model: Ultralytics model wrapper.
+            data: DataModule or filesystem data-root path.
+            work_dir: Directory for training artefacts.
+            device: Device specification (overrides recipe default when not
+                ``"auto"``).
+            **engine_kwargs: Extra kwargs forwarded to the engine constructor.
+        """
+        # Use caller-specified device when it is not "auto"; fall back to recipe.
+        resolved_device: str | DeviceType = device
+        if str(device) == str(DeviceType.auto) or str(device) == "auto":
+            resolved_device = self._config.engine.device
+
+        # Merge recipe training defaults < caller overrides.
+        merged_kwargs = {**self._config.training.to_train_args(), **engine_kwargs}
+
+        return UltralyticsEngine(
+            model=model,
+            data=data,
+            work_dir=work_dir,
+            device=resolved_device,
+            **merged_kwargs,
+        )
+
+    # ------------------------------------------------------------------
+    # Internal: validation
+    # ------------------------------------------------------------------
+
+    def _validate_backend(self) -> None:
+        if self._config.backend != "ultralytics":
+            msg = f"Expected backend 'ultralytics', got '{self._config.backend}'"
+            raise ValueError(msg)
+
+    def _validate_task(self) -> None:
+        if self._config.task not in _SUPPORTED_TASKS:
+            msg = f"Unsupported task '{self._config.task}'. Supported: {sorted(_SUPPORTED_TASKS)}"
+            raise ValueError(msg)
+
+    # ------------------------------------------------------------------
+    # Internal: model / class resolution
+    # ------------------------------------------------------------------
+
+    def _resolve_model_wrapper_cls(self) -> type[UltralyticsModel]:
+        """Return the model wrapper class from recipe ``class_path`` or task."""
+        class_path = self._config.model.class_path
+        if not class_path:
+            class_path = _TASK_TO_DEFAULT_CLASS_PATH.get(self._config.task, "")
+
+        if not class_path:
+            msg = f"Cannot resolve model class for task '{self._config.task}'"
+            raise ValueError(msg)
+
+        return _import_class(class_path)  # pyrefly: ignore[bad-return-type]
+
+    def _resolve_model_name(self, weights_path: PathLike | None) -> str:
+        """Return model name, preferring explicit *weights_path*."""
+        if weights_path is not None:
+            return str(weights_path)
+        return self._config.model.model_name
+
+    # ------------------------------------------------------------------
+    # Internal: override application
+    # ------------------------------------------------------------------
+
+    def _apply_single_override(self, key: str, value: object) -> None:
+        """Apply a single dot-separated override to the config."""
+        parts = key.split(".", 1)
+        expected_parts = 2
+        if len(parts) != expected_parts:
+            msg = f"Override key must be section.field, got '{key}'"
+            raise ValueError(msg)
+
+        section_name, field_name = parts
+
+        section_map: dict[str, object] = {
+            "training": self._config.training,
+            "model": self._config.model,
+            "engine": self._config.engine,
+            "export": self._config.export,
+        }
+
+        section = section_map.get(section_name)
+        if section is None:
+            msg = f"Unknown override section: '{section_name}'"
+            raise ValueError(msg)
+
+        if not hasattr(section, field_name):
+            msg = f"Unknown override: '{key}'"
+            raise ValueError(msg)
+
+        setattr(section, field_name, value)
+
+    # ------------------------------------------------------------------
+    # Internal: recipe parsing
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def _parse_raw_config(cls, raw: dict[str, Any]) -> UltralyticsConfig:
+        """Parse raw YAML dict into typed config dataclasses."""
+        model_raw = raw.get("model", {})
+        engine_raw = raw.get("engine", {})
+        training_raw = raw.get("training", {})
+        export_raw = raw.get("export", {})
+
+        # Model: flatten class_path + init_args.
+        model_init = model_raw.get("init_args", {})
+        model_config = UltralyticsModelConfig(
+            class_path=model_raw.get("class_path", ""),
+            model_name=model_init.get("model_name", ""),
+            pretrained=model_init.get("pretrained", True),
+            imgsz=model_init.get("imgsz", 640),
+        )
+
+        # Engine: accept both flat and nested init_args.
+        engine_init = engine_raw.get("init_args", engine_raw)
+        engine_config = UltralyticsEngineConfig(
+            device=engine_init.get("device", "auto"),
+        )
+
+        # Training: only accept known fields.
+        training_fields = {f.name for f in fields(UltralyticsTrainConfig)}
+        training_config = UltralyticsTrainConfig(
+            **{k: v for k, v in training_raw.items() if k in training_fields},
+        )
+
+        # Export: only accept known fields.
+        export_fields = {f.name for f in fields(UltralyticsExportConfig)}
+        export_config = UltralyticsExportConfig(
+            **{k: v for k, v in export_raw.items() if k in export_fields},
+        )
+
+        return UltralyticsConfig(
+            backend=raw.get("backend", "ultralytics"),
+            task=raw.get("task", ""),
+            model=model_config,
+            engine=engine_config,
+            training=training_config,
+            export=export_config,
+        )
+
+    @staticmethod
+    def _resolve_data_config(
+        data_ref: str | dict[str, Any] | None,
+        recipe_dir: Path,
+    ) -> dict[str, Any]:
+        """Resolve a data reference (relative YAML path) or inline dict."""
+        if data_ref is None:
+            return {}
+        if isinstance(data_ref, dict):
+            return dict(data_ref)
+
+        # String reference to a base YAML.
+        data_path = (recipe_dir / str(data_ref)).resolve()
+        if not data_path.exists():
+            logger.warning(f"Referenced data config not found: {data_path}")
+            return {}
+
+        with open(data_path) as f:  # noqa: PTH123
+            loaded = yaml.safe_load(f)
+        return loaded if isinstance(loaded, dict) else {}
+
+
+# ------------------------------------------------------------------
+# Module-level helpers
+# ------------------------------------------------------------------
+
+
+def _import_class(class_path: str) -> type:
+    """Import a class from a fully-qualified dotted path."""
+    module_path, _, class_name = class_path.rpartition(".")
+    if not module_path:
+        msg = f"Invalid class_path: '{class_path}' (no module prefix)"
+        raise ValueError(msg)
+
+    try:
+        module = importlib.import_module(module_path)
+    except ModuleNotFoundError as e:
+        msg = f"Cannot import module '{module_path}' from class_path '{class_path}'"
+        raise ValueError(msg) from e
+
+    cls = getattr(module, class_name, None)
+    if cls is None:
+        msg = f"Class '{class_name}' not found in module '{module_path}'"
+        raise ValueError(msg)
+
+    return cls
+
+
+def _flatten_overrides(overrides: Mapping[str, Any], prefix: str = "") -> dict[str, Any]:
+    """Flatten a nested dict into dot-separated keys."""
+    flat: dict[str, Any] = {}
+    for key, value in overrides.items():
+        full_key = f"{prefix}.{key}" if prefix else key
+        if isinstance(value, Mapping):
+            flat.update(_flatten_overrides(value, full_key))
+        else:
+            flat[full_key] = value
+    return flat
+
+
+def _deep_merge(base: dict[str, Any], overrides: dict[str, Any]) -> None:
+    """Deep-merge *overrides* into *base* in-place."""
+    for key, value in overrides.items():
+        if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+            _deep_merge(base[key], value)
+        else:
+            base[key] = value

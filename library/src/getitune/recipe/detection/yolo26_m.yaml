@@ -1,0 +1,42 @@
+backend: ultralytics
+task: DETECTION
+
+model:
+  class_path: getitune.backend.ultralytics.models.detection.UltralyticsDetectionModel
+  init_args:
+    model_name: yolo26m.pt
+    pretrained: true
+    imgsz: 640
+
+engine:
+  device: auto
+
+training:
+  epochs: 100
+  batch: 8
+  optimizer: auto
+  lr0: 0.01
+  lrf: 0.01
+  momentum: 0.937
+  weight_decay: 0.0005
+  warmup_epochs: 3.0
+  box: 7.5
+  cls: 0.5
+  dfl: 1.5
+  patience: 100
+  close_mosaic: 0
+
+export:
+  format: OPENVINO
+  precision: FP32
+
+data: ../_base_/data/ultralytics_detection.yaml
+
+overrides:
+  data:
+    train_subset:
+      batch_size: 8
+    val_subset:
+      batch_size: 8
+    test_subset:
+      batch_size: 8
