@@ -16,10 +16,13 @@ from datumaro.experimental.fields import Subset
 from getitune import TaskType
 from getitune.backend.lightning.engine import LightningEngine
 from getitune.backend.lightning.models.base import DataInputParams, LightningModel
+from getitune.backend.ultralytics.configurator import UltralyticsConfigurator
+from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.data.dataset.base import VisionDataset
 from getitune.data.factory import TransformLibFactory
 from getitune.data.module import DataModule
+from getitune.engine.engine import Engine
 from getitune.types.device import DeviceType as GetiTuneDeviceType
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
@@ -65,6 +68,7 @@ from app.services import (
 from .progress import TrainingProgressCallback
 
 MODEL_WEIGHTS_PATH = "model_weights_path"
+BACKEND_ULTRALYTICS = "ultralytics"
 
 
 # TODO: Consider adopting some lightweight DI framework
@@ -357,16 +361,8 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         model_id: UUID,
         device: DeviceInfo,
         has_parent_revision: bool,
-    ) -> tuple[Path, LightningEngine]:
+    ) -> tuple[Path, Engine]:
         """Execute model training."""
-        # TODO use weights path to initialize model from pre-downloaded weights
-        #  after resolving https://github.com/open-edge-platform/training_extensions/issues/5100
-        logger.warning(
-            "Argument 'weights_path' (value='{}') is not used in model training yet; "
-            "the weights location will be determined internally by getitune",
-            weights_path,
-        )
-
         # Build the DataModule
         logger.info("Preparing the DataModule for training (model_id={})", model_id)
         getitune_datamodule = DataModule.from_vision_datasets(
@@ -376,6 +372,24 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             train_subset=dataset_info.getitune_training_subset_config,
             val_subset=dataset_info.getitune_validation_subset_config,
             test_subset=dataset_info.getitune_testing_subset_config,
+        )
+
+        if training_config.get("backend") == BACKEND_ULTRALYTICS:
+            return self._train_ultralytics_model(
+                training_config=training_config,
+                datamodule=getitune_datamodule,
+                weights_path=weights_path,
+                model_id=model_id,
+                device=device,
+                has_parent_revision=has_parent_revision,
+            )
+
+        # TODO use weights path to initialize model from pre-downloaded weights
+        #  after resolving https://github.com/open-edge-platform/training_extensions/issues/5100
+        logger.warning(
+            "Argument 'weights_path' (value='{}') is not used in Lightning fresh training yet; "
+            "the weights location will be determined internally by getitune",
+            weights_path,
         )
 
         # Create the LightningModel according to the training configuration
@@ -432,10 +446,48 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)
         return trained_model_path, getitune_engine
 
+    def _train_ultralytics_model(
+        self,
+        training_config: dict,
+        datamodule: DataModule,
+        weights_path: Path,
+        model_id: UUID,
+        device: DeviceInfo,
+        has_parent_revision: bool,
+    ) -> tuple[Path, UltralyticsEngine]:
+        """Execute Ultralytics model training."""
+        logger.info("Instantiating the Ultralytics model for training (model_id={})", model_id)
+        configurator = self._build_ultralytics_configurator(training_config)
+        model = configurator.create_model(label_info=datamodule.label_info, weights_path=weights_path)
+
+        getitune_device_type = (
+            GetiTuneDeviceType.gpu if device.type is DeviceType.CUDA else GetiTuneDeviceType(device.type)
+        )
+        engine = configurator.create_engine(
+            model=model,
+            data=datamodule,
+            work_dir=self._data_dir / f"getitune-workspace-{model_id}",
+            device=getitune_device_type,
+        )
+
+        train_kwargs = dict(training_config.get("training", {}))
+        if device.type is not DeviceType.CPU and device.index:
+            train_kwargs["device"] = device.index
+        if has_parent_revision:
+            logger.info("Using parent Ultralytics weights as initialization, not resume state: {}", weights_path)
+
+        logger.info("Starting the Ultralytics training loop (model_id={})", model_id)
+        engine.train(**train_kwargs)
+        checkpoint = engine._last_train_checkpoint or Path(engine.work_dir) / "train" / "weights" / "best.pt"
+        if not checkpoint.exists():
+            raise FileNotFoundError(f"Ultralytics trained checkpoint not found at {checkpoint}")
+        logger.info("Ultralytics model training completed. Trained model saved at {}", checkpoint)
+        return checkpoint, engine
+
     @step("Evaluate Model", 95)
     def evaluate_model(
         self,
-        getitune_engine: LightningEngine,
+        getitune_engine: Engine,
         model_checkpoint_path: Path,
         task: Task,
         model_revision_id: UUID,
@@ -444,7 +496,10 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
     ) -> None:
         """Evaluate the trained model on the testing set"""
         logger.info("Evaluating the model on the testing set...")
-        metrics = getitune_engine.test(checkpoint=model_checkpoint_path, metric=get_metric_by_task(task))
+        if isinstance(getitune_engine, UltralyticsEngine):
+            metrics = getitune_engine.test(checkpoint=model_checkpoint_path)
+        else:
+            metrics = getitune_engine.test(checkpoint=model_checkpoint_path, metric=get_metric_by_task(task))
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
             self._model_service.save_evaluation_result(
@@ -458,7 +513,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             )
 
     @step("Export Model")
-    def export_model(self, getitune_engine: LightningEngine, model_checkpoint_path: Path) -> ExportedModels:
+    def export_model(self, getitune_engine: Engine, model_checkpoint_path: Path) -> ExportedModels:
         """Export the trained model to desired OpenVINO and ONNX formats"""
         logger.info("Exporting the model to OpenVINO format (FP16 precision)...")
         exported_ov_model_path = getitune_engine.export(
@@ -503,7 +558,8 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         # Copy PyTorch checkpoint
         pytorch_variant_dir = variants_dir / str(created_variants[ModelFormat.PYTORCH])
         pytorch_variant_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(trained_model_path, pytorch_variant_dir / "model.ckpt")
+        pytorch_model_name = "model.pt" if trained_model_path.suffix == ".pt" else "model.ckpt"
+        shutil.copyfile(trained_model_path, pytorch_variant_dir / pytorch_model_name)
         logger.info("Stored PyTorch variant at {}", pytorch_variant_dir)
 
         # Copy OpenVINO IR files
@@ -759,7 +815,31 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
     def __build_model_weights_path(cls, data_dir: Path, project_id: UUID, model_id: UUID, model_variant: UUID) -> Path:
         """Get the path to the PyTorch checkpoint from a model's variants directory."""
         model_dir = cls.__base_model_path(data_dir, project_id, model_id)
-        return model_dir / "variants" / str(model_variant) / "model.ckpt"
+        variant_dir = model_dir / "variants" / str(model_variant)
+        pt_path = variant_dir / "model.pt"
+        if pt_path.exists():
+            return pt_path
+        return variant_dir / "model.ckpt"
+
+    @staticmethod
+    def _build_ultralytics_configurator(training_config: dict) -> UltralyticsConfigurator:
+        """Build a library configurator from the application Ultralytics config."""
+        config = training_config["model"]
+        init_args = config.get("init_args", {})
+        return UltralyticsConfigurator.from_config_dict(
+            {
+                "backend": BACKEND_ULTRALYTICS,
+                "task": training_config["task"],
+                "model": {
+                    "class_path": config["class_path"],
+                    "init_args": init_args,
+                },
+                "engine": training_config.get("engine", {}),
+                "training": training_config.get("training", {}),
+                "export": training_config.get("export", {}),
+                "data": training_config.get("data", {}),
+            }
+        )
 
     @classmethod
     def __build_model_config_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:

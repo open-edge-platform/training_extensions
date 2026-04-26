@@ -1,0 +1,36 @@
+id: object-detection-yolo26-s
+name: YOLO26-S
+
+pretrained_weights:
+  url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s.pt
+  mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s.pt
+  sha_sum: 646f8bc3fe0a656803d95c294f7852321748cb29d13466a1af8862e2db384a1b
+
+description: "YOLO26-S is the small Ultralytics YOLO26 detection model. It provides a balanced accuracy/latency profile while using the Geti Tune data pipeline for preprocessing and dataset handling."
+stats:
+  gigaflops: 0.0
+  trainable_parameters: 0.0
+  benchmark_metrics:
+    coco_map_50_95: 0.0
+
+capabilities:
+  tiling: false
+
+hyperparameters:
+  training:
+    learning_rate: 0.01
+    weight_decay: 0.0005
+    batch_size: 16
+    input_size_width: 640
+    input_size_height: 640
+    allowed_values_input_size:
+      - 640
+  dataset_preparation:
+    augmentation:
+      tiling:
+        enable: false
+      random_horizontal_flip:
+        enable: true
+        probability: 0.5
+      iou_random_crop:
+        enable: true

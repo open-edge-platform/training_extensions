@@ -14,6 +14,7 @@ from datumaro.experimental import Dataset, LazyImage
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, Subset
 from getitune import TaskType as GetiTuneTaskType
+from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from getitune.metrics.types import MetricCallable
@@ -178,6 +179,54 @@ class TestGetiTuneTrainerPrepareWeights:
         )
         expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
         expected_weights_path.touch()
+        getitune_trainer = fxt_getitune_trainer()
+
+        getitune_trainer._model_service.get_model_variants.return_value = [
+            ModelVariant(
+                id=parent_model_variant_id,
+                model_revision_id=parent_model_revision_id,
+                format=ModelFormat.PYTORCH,
+                precision=ModelPrecision.FP32,
+            )
+        ]
+
+        # Act
+        weights_path = getitune_trainer.prepare_weights(training_params)
+
+        # Assert
+        assert weights_path == expected_weights_path
+
+    def test_prepare_weights_with_parent_model_prefers_pt(
+        self,
+        tmp_path: Path,
+        fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
+    ):
+        """Test preparing parent weights prefers Ultralytics model.pt over model.ckpt."""
+        # Arrange
+        project_id = uuid4()
+        parent_model_revision_id = uuid4()
+        parent_model_variant_id = uuid4()
+        training_params = TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
+            project_id=project_id,
+            model_architecture_id="object-detection-yolo26-n",
+            task=Task(task_type=TaskType.DETECTION),
+            parent_model_revision_id=parent_model_revision_id,
+            job_id=uuid4(),
+        )
+        variant_dir = (
+            tmp_path
+            / "projects"
+            / str(project_id)
+            / "models"
+            / str(parent_model_revision_id)
+            / "variants"
+            / str(parent_model_variant_id)
+        )
+        variant_dir.mkdir(parents=True, exist_ok=True)
+        expected_weights_path = variant_dir / "model.pt"
+        expected_weights_path.touch()
+        (variant_dir / "model.ckpt").touch()
         getitune_trainer = fxt_getitune_trainer()
 
         getitune_trainer._model_service.get_model_variants.return_value = [
@@ -827,6 +876,69 @@ class TestGetiTuneTrainerTrainModel:
         assert trained_model_path == expected_checkpoint_path
         assert returned_engine == mock_getitune_engine
 
+    def test_train_ultralytics_model_uses_pt_weights_without_resume(
+        self,
+        fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
+        tmp_path: Path,
+    ):
+        """Test Ultralytics training initializes from .pt weights without resuming optimizer state."""
+        # Arrange
+        getitune_trainer = fxt_getitune_trainer()
+        model_id = uuid4()
+        weights_path = tmp_path / "model.pt"
+        weights_path.touch()
+        expected_checkpoint_path = tmp_path / "best.pt"
+        expected_checkpoint_path.touch()
+        training_config: dict[str, Any] = {
+            "backend": "ultralytics",
+            "task": "DETECTION",
+            "model": {
+                "class_path": "getitune.backend.ultralytics.models.detection.UltralyticsDetectionModel",
+                "init_args": {"model_name": "yolo26n.pt"},
+            },
+            "training": {"epochs": 3, "batch": 2},
+        }
+        mock_dataset_info = Mock()
+        mock_dataset_info.getitune_training_dataset = Mock()
+        mock_dataset_info.getitune_validation_dataset = Mock()
+        mock_dataset_info.getitune_testing_dataset = Mock()
+        mock_dataset_info.getitune_training_subset_config = Mock()
+        mock_dataset_info.getitune_validation_subset_config = Mock()
+        mock_dataset_info.getitune_testing_subset_config = Mock()
+        mock_datamodule = Mock()
+        mock_datamodule.label_info = Mock()
+        mock_model = Mock()
+        mock_engine = Mock()
+        mock_engine._last_train_checkpoint = expected_checkpoint_path
+        mock_configurator = Mock()
+        mock_configurator.create_model.return_value = mock_model
+        mock_configurator.create_engine.return_value = mock_engine
+
+        with (
+            patch(
+                "app.execution.training.getitune_trainer.DataModule.from_vision_datasets", return_value=mock_datamodule
+            ),
+            patch.object(getitune_trainer, "_build_ultralytics_configurator", return_value=mock_configurator),
+        ):
+            # Act
+            trained_model_path, returned_engine = getitune_trainer.train_model(
+                training_config=training_config,
+                dataset_info=mock_dataset_info,
+                weights_path=weights_path,
+                model_id=model_id,
+                device=DeviceInfo(type=DeviceType.CPU, name="Intel Core", index=None, memory=None),
+                has_parent_revision=True,
+            )
+
+        # Assert
+        mock_configurator.create_model.assert_called_once_with(
+            label_info=mock_datamodule.label_info, weights_path=weights_path
+        )
+        mock_configurator.create_engine.assert_called_once()
+        mock_engine.train.assert_called_once_with(epochs=3, batch=2)
+        assert trained_model_path == expected_checkpoint_path
+        assert returned_engine == mock_engine
+
 
 class TestGetiTuneTrainerExecuteCancellation:
     """Tests for the GetiTuneTrainer.execute method handling CancelledExc."""
@@ -1053,6 +1165,37 @@ class TestGetiTuneTrainerEvaluateModel:
             rel=1e-6,
         )
 
+    def test_evaluate_ultralytics_model_without_lightning_metric(
+        self,
+        fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
+        tmp_path: Path,
+        fxt_model_service: Mock,
+    ):
+        """Test Ultralytics evaluation does not pass Lightning metric callables."""
+        # Arrange
+        getitune_trainer = fxt_getitune_trainer()
+        model_id = uuid4()
+        model_variant_id = uuid4()
+        dataset_revision_id = uuid4()
+        mock_getitune_engine = object.__new__(UltralyticsEngine)
+        mock_getitune_engine.test = Mock(return_value={"metrics/mAP50-95(B)": torch.tensor(0.42)})
+        model_checkpoint_path = tmp_path / "best.pt"
+        model_checkpoint_path.touch()
+
+        # Act
+        getitune_trainer.evaluate_model(
+            getitune_engine=mock_getitune_engine,
+            model_checkpoint_path=model_checkpoint_path,
+            task=Task(task_type=TaskType.DETECTION),
+            model_revision_id=model_id,
+            model_variant_id=model_variant_id,
+            dataset_revision_id=dataset_revision_id,
+        )
+
+        # Assert
+        mock_getitune_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path)
+        fxt_model_service.save_evaluation_result.assert_called_once()
+
 
 class TestGetiTuneTrainerExportModel:
     """Tests for the GetiTuneTrainer.export_model method."""
@@ -1101,11 +1244,18 @@ class TestGetiTuneTrainerExportModel:
 class TestGetiTuneTrainerStoreModelArtifacts:
     """Tests for the GetiTuneTrainer.store_model_artifacts method."""
 
+    @pytest.mark.parametrize(
+        ("checkpoint_name", "expected_pytorch_model_name"),
+        [("best_checkpoint.ckpt", "model.ckpt"), ("best.pt", "model.pt")],
+        ids=["Lightning", "Ultralytics"],
+    )
     def test_store_model_artifacts(
         self,
         fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
         fxt_model_service: Mock,
         tmp_path: Path,
+        checkpoint_name: str,
+        expected_pytorch_model_name: str,
     ):
         """Test successful storing of model artifacts and cleanup."""
         # Arrange
@@ -1133,7 +1283,7 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         getitune_work_dir.mkdir(parents=True)
 
         # Create model checkpoint
-        trained_model_path = getitune_work_dir / "best_checkpoint.ckpt"
+        trained_model_path = getitune_work_dir / checkpoint_name
         trained_model_path.write_text("checkpoint content")
 
         # Create exported model files
@@ -1173,8 +1323,8 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         # Check PyTorch variant
         pytorch_dir = variants_dir / str(pytorch_variant_id)
         assert pytorch_dir.exists()
-        assert (pytorch_dir / "model.ckpt").exists()
-        assert (pytorch_dir / "model.ckpt").read_text() == "checkpoint content"
+        assert (pytorch_dir / expected_pytorch_model_name).exists()
+        assert (pytorch_dir / expected_pytorch_model_name).read_text() == "checkpoint content"
 
         # Check OpenVINO variant
         openvino_dir = variants_dir / str(openvino_variant_id)

@@ -10,9 +10,12 @@ from pathlib import Path
 from typing import Any, ClassVar
 from warnings import warn
 
+import yaml
 from getitune.backend.lightning.cli.utils import get_getitune_root_path
 from getitune.tools.auto_configurator import AutoConfigurator
 from loguru import logger
+
+from app.execution.common.ultralytics_config_adapter import UltralyticsConfigAdapter
 
 RECIPE_PATH = get_getitune_root_path() / "recipe"
 
@@ -138,6 +141,21 @@ TEMPLATE_ID_MAPPING = {
     "object-detection-dinov3-detr-l": {
         "recipe_path": RECIPE_PATH / "detection" / "deimv2_l.yaml",
         "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "object-detection-yolo26-n": {
+        "recipe_path": RECIPE_PATH / "detection" / "yolo26_n.yaml",
+        "status": ModelStatus.SPEED,
+        "default": False,
+    },
+    "object-detection-yolo26-s": {
+        "recipe_path": RECIPE_PATH / "detection" / "yolo26_s.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": False,
+    },
+    "object-detection-yolo26-m": {
+        "recipe_path": RECIPE_PATH / "detection" / "yolo26_m.yaml",
+        "status": ModelStatus.ACCURACY,
         "default": False,
     },
     # INSTANCE_SEGMENTATION
@@ -698,11 +716,24 @@ class GetiConfigConverter:
             model_config_path = RECIPE_PATH / "classification" / sub_task_type.lower() / model_config_path.name
         if model_config_path.suffix != ".yaml":
             model_config_path = model_config_path / ".yaml"
+
+        if GetiConfigConverter._is_ultralytics_recipe(model_config_path):
+            adapter = UltralyticsConfigAdapter.from_recipe(model_config_path)
+            adapter.apply_hyper_parameters(hyper_parameters)
+            return adapter.to_training_config()
+
         default_config = AutoConfigurator(model=model_config_path).config
         if hyper_parameters:
             GetiConfigConverter._update_params(default_config, hyper_parameters)
         GetiConfigConverter._remove_unused_key(default_config)
         return default_config
+
+    @staticmethod
+    def _is_ultralytics_recipe(recipe_path: Path) -> bool:
+        """Return whether a recipe declares the Ultralytics backend."""
+        with recipe_path.open() as f:
+            recipe = yaml.safe_load(f)
+        return isinstance(recipe, dict) and recipe.get("backend") == "ultralytics"
 
     @staticmethod
     def _get_params(hyperparameters: dict) -> dict:

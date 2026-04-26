@@ -17,7 +17,7 @@ class TestModelArchitecturesEndpoint:
 
         data = response.json()
         assert "model_architectures" in data
-        assert len(data["model_architectures"]) == 16
+        assert len(data["model_architectures"]) == 19
 
         # Verify structure of first detection model
         detection_model = next(
@@ -50,14 +50,14 @@ class TestModelArchitecturesEndpoint:
         # Verify top picks
         assert "top_picks" in data
         top_picks = data["top_picks"]
-        assert top_picks["balance"] == "object-detection-dfine-m"
-        assert top_picks["speed"] == "object-detection-yolox-s"
-        assert top_picks["accuracy"] == "object-detection-dfine-l"
+        assert top_picks["balance"] == "object-detection-yolo26-s"
+        assert top_picks["speed"] == "object-detection-yolo26-n"
+        assert top_picks["accuracy"] == "object-detection-yolo26-m"
 
     @pytest.mark.parametrize(
         "task_filter, total_models",
         [
-            ("detection", 16),
+            ("detection", 19),
             ("instance_segmentation", 8),
             ("classification", 6),
         ],

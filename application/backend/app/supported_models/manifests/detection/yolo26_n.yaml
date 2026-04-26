@@ -1,0 +1,36 @@
+id: object-detection-yolo26-n
+name: YOLO26-N
+
+pretrained_weights:
+  url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt
+  mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt
+  sha_sum: 9b09cc8bf347f0fc8a5f7657480587f25db09b34bf33b0652110fb03a8ad4fef
+
+description: "YOLO26-N is the nano Ultralytics YOLO26 detection model. It is optimized for fast fine-tuning and low-latency inference while using the Geti Tune data pipeline for preprocessing and dataset handling."
+stats:
+  gigaflops: 0.0
+  trainable_parameters: 0.0
+  benchmark_metrics:
+    coco_map_50_95: 0.0
+
+capabilities:
+  tiling: false
+
+hyperparameters:
+  training:
+    learning_rate: 0.01
+    weight_decay: 0.0005
+    batch_size: 16
+    input_size_width: 640
+    input_size_height: 640
+    allowed_values_input_size:
+      - 640
+  dataset_preparation:
+    augmentation:
+      tiling:
+        enable: false
+      random_horizontal_flip:
+        enable: true
+        probability: 0.5
+      iou_random_crop:
+        enable: true

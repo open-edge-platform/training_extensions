@@ -135,6 +135,21 @@ class TestGetiConfigConverterConvert:
 
         assert result["model"]["init_args"]["optimizer"]["init_args"]["lr"] == 0.01
 
+    def test_convert_ultralytics_recipe_uses_backend_adapter(self) -> None:
+        geti_cfg = _make_geti_config(
+            model_manifest_id="object-detection-yolo26-n",
+            hyper_parameters={"training": {"learning_rate": 0.002, "batch_size": 4, "max_epochs": 10}},
+        )
+
+        result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["backend"] == "ultralytics"
+        assert result["model"]["init_args"]["model_name"] == "yolo26n.pt"
+        assert result["training"]["lr0"] == 0.002
+        assert result["training"]["batch"] == 4
+        assert result["training"]["epochs"] == 10
+        assert result["data"]["train_subset"]["batch_size"] == 4
+
     def test_convert_applies_batch_size(self) -> None:
         getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(hyper_parameters={"training": {"batch_size": 16}})

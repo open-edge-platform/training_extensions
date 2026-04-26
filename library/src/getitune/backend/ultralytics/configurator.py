@@ -100,6 +100,14 @@ class UltralyticsConfigurator:
 
         return cls(config, data_config=data_config)
 
+    @classmethod
+    def from_config_dict(cls, raw: dict[str, Any]) -> UltralyticsConfigurator:
+        """Build a configurator from an already-loaded recipe dictionary."""
+        config = cls._parse_raw_config(raw)
+        data_raw = raw.get("data")
+        data_config = dict(data_raw) if isinstance(data_raw, dict) else {}
+        return cls(config, data_config=data_config)
+
     # ------------------------------------------------------------------
     # Properties
     # ------------------------------------------------------------------
