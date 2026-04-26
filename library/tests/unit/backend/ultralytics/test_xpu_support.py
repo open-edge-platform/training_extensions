@@ -13,7 +13,6 @@ import torch
 from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.types.device import DeviceType
 
-
 # ------------------------------------------------------------------
 # _resolve_device() tests
 # ------------------------------------------------------------------
@@ -131,7 +130,7 @@ class TestXPUAwareTrainerMixin:
                 self.device = torch.device("xpu:0")
                 self.scaler = torch.amp.GradScaler("cuda", enabled=True)
 
-            def _setup_train(self):
+            def _setup_train(self) -> None:
                 pass  # parent does nothing in test
 
         class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
@@ -151,7 +150,7 @@ class TestXPUAwareTrainerMixin:
                 self.device = torch.device("cuda:0")
                 self.scaler = torch.amp.GradScaler("cuda", enabled=True)
 
-            def _setup_train(self):
+            def _setup_train(self) -> None:
                 pass
 
         class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
@@ -171,7 +170,7 @@ class TestXPUAwareTrainerMixin:
             def __init__(self):
                 self.device = torch.device("xpu:0")
 
-            def _get_memory(self, fraction=False):
+            def _get_memory(self, fraction: bool = False) -> float:
                 return 0.0
 
         class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
@@ -191,7 +190,7 @@ class TestXPUAwareTrainerMixin:
             def __init__(self):
                 self.device = torch.device("xpu:0")
 
-            def _get_memory(self, fraction=False):
+            def _get_memory(self, fraction: bool = False) -> float:
                 return 0.0
 
         class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
@@ -215,7 +214,7 @@ class TestXPUAwareTrainerMixin:
             def __init__(self):
                 self.device = torch.device("xpu:0")
 
-            def _clear_memory(self, threshold=None):
+            def _clear_memory(self, threshold: float | None = None) -> None:
                 pass
 
         class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
@@ -235,7 +234,7 @@ class TestXPUAwareTrainerMixin:
                 self.device = torch.device("cuda:0")
                 self.super_called = False
 
-            def _clear_memory(self, threshold=None):
+            def _clear_memory(self, threshold: float | None = None) -> None:
                 self.super_called = True
 
         class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
@@ -245,44 +244,31 @@ class TestXPUAwareTrainerMixin:
         trainer._clear_memory()
         assert trainer.super_called
 
-    def test_preprocess_batch_xpu_non_blocking(self) -> None:
-        """preprocess_batch should use non_blocking=True on XPU."""
+    def test_move_batch_to_device_uses_non_blocking_on_xpu(self) -> None:
+        """The helper should use non_blocking=True on XPU."""
         from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
 
         class FakeBaseTrainer:
             def __init__(self):
-                self.device = torch.device("cpu")
-
-            def preprocess_batch(self, batch):
-                return batch
+                self.device = torch.device("xpu:0")
 
         class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
             pass
 
-        # Test with XPU device
         trainer = TestTrainer()
-        trainer.device = torch.device("xpu:0")
 
         tensor = MagicMock(spec=torch.Tensor)
         tensor.to.return_value = tensor
-        isinstance_orig = isinstance.__class__
-
         batch = {"img": tensor, "non_tensor": "value"}
 
         with patch(
             "getitune.backend.ultralytics.trainers.xpu_mixin.isinstance",
             side_effect=lambda o, t: True if t is torch.Tensor and o is tensor else isinstance(o, t),
         ):
-            # Can't easily mock isinstance, so test the logic directly
-            pass
+            result = trainer._move_batch_to_device(batch)
 
-        # Simpler test: verify the method exists and processes correctly
-        trainer.device = torch.device("cpu")
-        cpu_tensor = torch.zeros(2, 3)
-        batch = {"img": cpu_tensor, "label": "test"}
-        result = trainer.preprocess_batch(batch)
-        assert isinstance(result["img"], torch.Tensor)
-        assert result["label"] == "test"
+        tensor.to.assert_called_once_with(torch.device("xpu:0"), non_blocking=True)
+        assert result["non_tensor"] == "value"
 
     def test_train_wraps_xpu_autocast(self) -> None:
         """On XPU, train() should wrap the call in xpu autocast."""
@@ -296,7 +282,7 @@ class TestXPUAwareTrainerMixin:
                 self.args = MagicMock()
                 self.args.amp = True
 
-            def train(self):
+            def train(self) -> None:
                 nonlocal autocast_entered
                 # Check if XPU autocast is active
                 autocast_entered = torch.is_autocast_enabled("xpu")
@@ -319,7 +305,7 @@ class TestXPUAwareTrainerMixin:
                 self.args.amp = True
                 self.train_called = False
 
-            def train(self):
+            def train(self) -> None:
                 self.train_called = True
 
         class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):

@@ -45,6 +45,10 @@ class XPUAwareTrainerMixin:
             ...
     """
 
+    args: Any
+    device: torch.device
+    scaler: Any
+
     # ------------------------------------------------------------------
     # Training entry point — XPU autocast wrapper
     # ------------------------------------------------------------------
@@ -58,7 +62,7 @@ class XPUAwareTrainerMixin:
         """
         if getattr(self, "device", None) is not None and self.device.type == "xpu":
             amp_enabled = bool(getattr(self.args, "amp", True))
-            logger.info("Enabling XPU autocast (bf16, enabled=%s) for training", amp_enabled)
+            logger.info(f"Enabling XPU autocast (bf16, enabled={amp_enabled}) for training")
             with torch.amp.autocast("xpu", enabled=amp_enabled, dtype=torch.bfloat16):
                 return super().train()  # type: ignore[misc]
         return super().train()  # type: ignore[misc]
@@ -109,12 +113,13 @@ class XPUAwareTrainerMixin:
     # Preprocessing helper
     # ------------------------------------------------------------------
 
-    def preprocess_batch(self, batch: dict[str, Any]) -> dict[str, Any]:  # type: ignore[override]
+    def _move_batch_to_device(self, batch: dict[str, Any]) -> dict[str, Any]:
         """Move tensors to device with ``non_blocking`` on CUDA and XPU.
 
-        Subclasses that override ``preprocess_batch`` for DataModule
-        integration should call ``super().preprocess_batch(batch)`` or
-        replicate the ``non_blocking`` logic.
+        This helper is for the DataModule bridge path only. Task-specific
+        fallback preprocessing must continue to use the upstream Ultralytics
+        trainer implementation so that image normalization and multi-scale
+        resizing remain unchanged for new model releases.
         """
         non_blocking = self.device.type in ("cuda", "xpu")
         for k, v in batch.items():

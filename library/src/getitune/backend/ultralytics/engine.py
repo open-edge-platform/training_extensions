@@ -53,6 +53,7 @@ class UltralyticsEngine(Engine):
     """
 
     _EXPORTED_MODEL_BASE_NAME: ClassVar[str] = "exported_model"
+    _LAST_TRAIN_CHECKPOINT_FILE: ClassVar[str] = ".last_train_checkpoint"
 
     def __init__(
         self,
@@ -81,6 +82,7 @@ class UltralyticsEngine(Engine):
         self._work_dir.mkdir(parents=True, exist_ok=True)
         self._device = self._resolve_device(device)
         self._kwargs = kwargs
+        self._last_train_checkpoint = self._load_last_train_checkpoint()
 
         if isinstance(data, DataModule):
             self._datamodule: DataModule | None = data
@@ -112,21 +114,23 @@ class UltralyticsEngine(Engine):
             merged["data"] = str(self._data_root)
 
         trainer_cls = self._make_bound_trainer()
+        train_args = {
+            "trainer": trainer_cls,
+            "device": self._device,
+            "imgsz": self._model.imgsz,
+            "project": str(self._work_dir),
+            "name": "train",
+            "exist_ok": True,
+            **merged,
+        }
 
         logger.info(
             f"Starting Ultralytics training: model={self._model.model_name}, "
             f"device={self._device}, imgsz={self._model.imgsz}"
         )
 
-        results = yolo.train(
-            trainer=trainer_cls,
-            device=self._device,
-            imgsz=self._model.imgsz,
-            project=str(self._work_dir),
-            name="train",
-            exist_ok=True,
-            **merged,
-        )
+        results = yolo.train(**train_args)
+        self._record_last_train_checkpoint(self._resolve_trainer_checkpoint(yolo))
         return self._translate_metrics(results)
 
     def test(self, **kwargs) -> METRICS:
@@ -151,16 +155,18 @@ class UltralyticsEngine(Engine):
         if self._data_root is not None and "data" not in merged:
             merged["data"] = str(self._data_root)
 
+        val_args = {
+            "device": self._device,
+            "imgsz": self._model.imgsz,
+            "project": str(self._work_dir),
+            "name": "val",
+            "exist_ok": True,
+            **merged,
+        }
+
         logger.info(f"Starting Ultralytics validation: model={self._model.model_name}")
 
-        results = yolo.val(
-            device=self._device,
-            imgsz=self._model.imgsz,
-            project=str(self._work_dir),
-            name="val",
-            exist_ok=True,
-            **merged,
-        )
+        results = yolo.val(**val_args)
         return self._translate_metrics(results)
 
     def predict(self, **kwargs) -> ANNOTATIONS:
@@ -182,16 +188,18 @@ class UltralyticsEngine(Engine):
         if source is None and self._data_root is not None:
             source = str(self._data_root)
 
-        raw_results = yolo.predict(  # pyrefly: ignore[bad-argument-type]
-            source=source,  # pyrefly: ignore[bad-argument-type]
-            device=self._device,
-            imgsz=self._model.imgsz,
-            project=str(self._work_dir),
-            name="predict",
-            exist_ok=True,
-            save=False,
-            **merged,  # pyrefly: ignore[bad-argument-type]
-        )
+        predict_args = {
+            "source": source,
+            "device": self._device,
+            "imgsz": self._model.imgsz,
+            "project": str(self._work_dir),
+            "name": "predict",
+            "exist_ok": True,
+            "save": False,
+            **merged,
+        }
+
+        raw_results = yolo.predict(**predict_args)  # pyrefly: ignore[bad-argument-type]
 
         return self._convert_predictions(raw_results)  # pyrefly: ignore[bad-return]
 
@@ -206,8 +214,9 @@ class UltralyticsEngine(Engine):
 
         If *checkpoint* is ``None``, the engine tries (in order):
 
-        1. the ``best.pt`` written by the most recent ``train()`` call,
-        2. the currently loaded YOLO model weights.
+        1. the explicit checkpoint recorded from the most recent ``train()`` call,
+        2. ``work_dir/train/weights/best.pt``,
+        3. the currently loaded YOLO model weights.
 
         Args:
             checkpoint: Path to a ``.pt`` checkpoint to export.  When given,
@@ -231,7 +240,7 @@ class UltralyticsEngine(Engine):
         logger.info(
             f"Exporting model: format={export_format.value}, "
             f"precision={export_precision.value}, "
-            f"checkpoint={checkpoint or 'current weights'}"
+            f"checkpoint={checkpoint or self._last_train_checkpoint or 'current weights'}"
         )
 
         export_result = yolo.export(
@@ -340,8 +349,9 @@ class UltralyticsEngine(Engine):
 
         Resolution order:
         1. Explicit *checkpoint* path → load fresh YOLO from file.
-        2. ``best.pt`` from the most recent ``train()`` call.
-        3. Currently loaded model weights.
+        2. Recorded checkpoint from the most recent ``train()`` call.
+        3. ``best.pt`` from the default training run directory.
+        4. Currently loaded model weights.
 
         Args:
             checkpoint: Optional path to a ``.pt`` checkpoint.
@@ -359,6 +369,14 @@ class UltralyticsEngine(Engine):
             logger.info(f"Loading checkpoint for export: {ckpt}")
             return YOLO(str(ckpt))
 
+        if self._last_train_checkpoint is not None:
+            if self._last_train_checkpoint.exists():
+                logger.info(f"Using recorded checkpoint from latest training run: {self._last_train_checkpoint}")
+                return YOLO(str(self._last_train_checkpoint))
+
+            logger.warning(f"Recorded checkpoint no longer exists: {self._last_train_checkpoint}")
+            self._record_last_train_checkpoint(None)
+
         # Try best.pt from the most recent training run.
         best_pt = self._work_dir / "train" / "weights" / "best.pt"
         if best_pt.exists():
@@ -367,6 +385,52 @@ class UltralyticsEngine(Engine):
 
         # Fall back to whatever is currently loaded.
         return self._model.yolo
+
+    def _resolve_trainer_checkpoint(self, yolo: YOLO) -> Path | None:
+        """Return the actual checkpoint produced by the latest training run."""
+        trainer = getattr(yolo, "trainer", None)
+        if trainer is None:
+            return None
+
+        for attr in ("best", "last"):
+            checkpoint = getattr(trainer, attr, None)
+            if checkpoint is None:
+                continue
+            checkpoint_path = Path(checkpoint).resolve()
+            if checkpoint_path.exists():
+                return checkpoint_path
+
+        return None
+
+    def _load_last_train_checkpoint(self) -> Path | None:
+        """Load the persisted latest-training checkpoint pointer, if present."""
+        checkpoint_file = self._work_dir / self._LAST_TRAIN_CHECKPOINT_FILE
+        if not checkpoint_file.exists():
+            return None
+
+        checkpoint_text = checkpoint_file.read_text(encoding="utf-8").strip()
+        if not checkpoint_text:
+            return None
+
+        checkpoint = Path(checkpoint_text).resolve()
+        if checkpoint.exists():
+            return checkpoint
+
+        logger.warning(f"Ignoring stale checkpoint pointer: {checkpoint}")
+        return None
+
+    def _record_last_train_checkpoint(self, checkpoint: Path | None) -> None:
+        """Persist the latest training checkpoint for later export resolution."""
+        checkpoint_file = self._work_dir / self._LAST_TRAIN_CHECKPOINT_FILE
+        if checkpoint is None:
+            self._last_train_checkpoint = None
+            if checkpoint_file.exists():
+                checkpoint_file.unlink()
+            return
+
+        resolved_checkpoint = checkpoint.resolve()
+        self._last_train_checkpoint = resolved_checkpoint
+        checkpoint_file.write_text(str(resolved_checkpoint), encoding="utf-8")
 
     def _make_bound_trainer(self) -> type:
         """Return a trainer subclass with the DataModule bound as a class attr."""

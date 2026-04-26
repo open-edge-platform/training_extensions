@@ -122,6 +122,49 @@ class TestResolveExportModel:
         mock_yolo_cls.assert_called_once_with(str(best_pt))
         assert result is mock_yolo_cls.return_value
 
+    def test_prefers_recorded_train_checkpoint(self, mocker, tmp_path) -> None:
+        """Recorded checkpoints from train() should win over hardcoded train/best.pt."""
+        engine, _ = _make_engine(tmp_path, mocker)
+
+        recorded_ckpt = tmp_path / "custom_run" / "weights" / "best.pt"
+        recorded_ckpt.parent.mkdir(parents=True)
+        recorded_ckpt.touch()
+        engine._record_last_train_checkpoint(recorded_ckpt)
+
+        fallback_best = tmp_path / "train" / "weights" / "best.pt"
+        fallback_best.parent.mkdir(parents=True)
+        fallback_best.touch()
+
+        mock_yolo_cls = MagicMock()
+        with patch("ultralytics.YOLO", mock_yolo_cls):
+            result = engine._resolve_export_model(checkpoint=None)
+
+        mock_yolo_cls.assert_called_once_with(str(recorded_ckpt))
+        assert result is mock_yolo_cls.return_value
+
+    def test_stale_recorded_checkpoint_falls_back_to_default_best(self, mocker, tmp_path) -> None:
+        """Missing recorded checkpoint should not block fallback to work_dir/train/weights/best.pt."""
+        engine, _ = _make_engine(tmp_path, mocker)
+
+        stale_ckpt = tmp_path / "custom_run" / "weights" / "best.pt"
+        engine._record_last_train_checkpoint(stale_ckpt)
+        stale_ckpt.parent.mkdir(parents=True)
+        checkpoint_file = tmp_path / ".last_train_checkpoint"
+        assert checkpoint_file.exists()
+
+        default_best = tmp_path / "train" / "weights" / "best.pt"
+        default_best.parent.mkdir(parents=True)
+        default_best.touch()
+
+        mock_yolo_cls = MagicMock()
+        with patch("ultralytics.YOLO", mock_yolo_cls):
+            result = engine._resolve_export_model(checkpoint=None)
+
+        mock_yolo_cls.assert_called_once_with(str(default_best))
+        assert result is mock_yolo_cls.return_value
+        assert engine._last_train_checkpoint is None
+        assert not checkpoint_file.exists()
+
     def test_fallback_to_current_model(self, mocker, tmp_path) -> None:
         """Without checkpoint or best.pt, the current model is returned."""
         engine, yolo = _make_engine(tmp_path, mocker)
@@ -282,6 +325,38 @@ class TestExport:
         _, call_kwargs = mock_yolo.export.call_args
         assert call_kwargs["simplify"] is True
         assert call_kwargs["dynamic"] is True
+
+    def test_train_records_actual_trainer_checkpoint(self, mocker, tmp_path) -> None:
+        """train() should persist the checkpoint chosen by the underlying trainer."""
+        engine, yolo = _make_engine(tmp_path, mocker)
+
+        best_ckpt = tmp_path / "custom_train" / "weights" / "best.pt"
+        best_ckpt.parent.mkdir(parents=True)
+        best_ckpt.touch()
+
+        trainer = SimpleNamespace(best=best_ckpt, last=tmp_path / "custom_train" / "weights" / "last.pt")
+        yolo.trainer = trainer
+        yolo.train.return_value = {"fitness": 0.1}
+
+        result = engine.train(name="custom_train")
+
+        assert result == {"ultralytics/fitness": 0.1}
+        assert engine._last_train_checkpoint == best_ckpt.resolve()
+        assert (tmp_path / ".last_train_checkpoint").read_text(encoding="utf-8").strip() == str(best_ckpt.resolve())
+
+    def test_engine_loads_persisted_checkpoint_pointer(self, mocker, tmp_path) -> None:
+        """Fresh engine instances should reuse the last recorded training checkpoint."""
+
+        recorded_ckpt = tmp_path / "custom_train" / "weights" / "best.pt"
+        recorded_ckpt.parent.mkdir(parents=True)
+        recorded_ckpt.touch()
+        (tmp_path / ".last_train_checkpoint").write_text(str(recorded_ckpt.resolve()), encoding="utf-8")
+
+        model = UltralyticsDetectionModel(label_info=_label_info())
+        datamodule = mocker.MagicMock(spec=DataModule)
+        engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
+
+        assert engine._last_train_checkpoint == recorded_ckpt.resolve()
 
 
 class TestNormalizeOpenvinoExport:

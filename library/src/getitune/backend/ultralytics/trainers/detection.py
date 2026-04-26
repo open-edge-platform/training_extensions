@@ -9,7 +9,6 @@ import multiprocessing
 from copy import copy
 from typing import TYPE_CHECKING, Any
 
-import torch
 from torch.utils.data import DataLoader
 from ultralytics.models.yolo.detect import DetectionTrainer as _UltralyticsDetectionTrainer
 from ultralytics.models.yolo.detect import DetectionValidator as _UltralyticsDetectionValidator
@@ -98,15 +97,10 @@ class DetectionTrainer(XPUAwareTrainerMixin, _UltralyticsDetectionTrainer):
         )
 
     def preprocess_batch(self, batch: dict[str, Any]) -> dict[str, Any]:
-        """Move tensors to device; skip ``/255`` (data is already float32 [0,1])."""
+        """Use upstream preprocessing unless the DataModule bridge is active."""
         if self._datamodule is None:
-            return super().preprocess_batch(batch)
-
-        non_blocking = self.device.type in ("cuda", "xpu")
-        for k, v in batch.items():
-            if isinstance(v, torch.Tensor):
-                batch[k] = v.to(self.device, non_blocking=non_blocking)
-        return batch
+            return _UltralyticsDetectionTrainer.preprocess_batch(self, batch)
+        return self._move_batch_to_device(batch)
 
     def set_model_attributes(self) -> None:
         """Set model attributes; disable Ultralytics augmentations when using DataModule."""
