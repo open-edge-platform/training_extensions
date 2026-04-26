@@ -173,12 +173,12 @@ class TestFromRecipe:
         assert cfg.data_config["train_subset"]["batch_size"] == 4
         assert cfg.data_config["train_subset"]["num_workers"] == 8  # preserved
 
-    def test_missing_data_ref_returns_empty(self, tmp_path: Path) -> None:
+    def test_missing_data_ref_raises(self, tmp_path: Path) -> None:
         recipe = _minimal_recipe()
         recipe["data"] = "nonexistent.yaml"
         path = _write_recipe(tmp_path, recipe)
-        cfg = UltralyticsConfigurator.from_recipe(path)
-        assert cfg.data_config == {}
+        with pytest.raises(FileNotFoundError, match="Referenced data config not found"):
+            UltralyticsConfigurator.from_recipe(path)
 
 
 class TestRealRecipes:
@@ -261,108 +261,6 @@ class TestApplyOverrides:
         assert cfg.config.training.epochs == original_epochs
 
 
-class TestApplyGetiOverrides:
-    def _load(self, tmp_path: Path) -> UltralyticsConfigurator:
-        recipe = _minimal_recipe()
-        recipe["data"] = {"input_size": [640, 640], "train_subset": {"batch_size": 8}, "val_subset": {"batch_size": 8}}
-        return UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, recipe))
-
-    def test_learning_rate(self, tmp_path: Path) -> None:
-        cfg = self._load(tmp_path)
-        cfg.apply_geti_overrides({"training": {"learning_rate": 0.002}})
-        assert cfg.config.training.lr0 == 0.002
-
-    def test_batch_size_syncs_data(self, tmp_path: Path) -> None:
-        cfg = self._load(tmp_path)
-        cfg.apply_geti_overrides({"training": {"batch_size": 32}})
-        assert cfg.config.training.batch == 32
-        assert cfg.data_config["train_subset"]["batch_size"] == 32
-        assert cfg.data_config["val_subset"]["batch_size"] == 32
-
-    def test_max_epochs(self, tmp_path: Path) -> None:
-        cfg = self._load(tmp_path)
-        cfg.apply_geti_overrides({"training": {"max_epochs": 200}})
-        assert cfg.config.training.epochs == 200
-
-    def test_weight_decay(self, tmp_path: Path) -> None:
-        cfg = self._load(tmp_path)
-        cfg.apply_geti_overrides({"training": {"weight_decay": 0.001}})
-        assert cfg.config.training.weight_decay == 0.001
-
-    def test_input_size(self, tmp_path: Path) -> None:
-        cfg = self._load(tmp_path)
-        cfg.apply_geti_overrides({"training": {"input_size_height": 320, "input_size_width": 320}})
-        assert cfg.config.model.imgsz == 320
-        assert cfg.data_config["input_size"] == [320, 320]
-
-    def test_early_stopping_patience(self, tmp_path: Path) -> None:
-        cfg = self._load(tmp_path)
-        cfg.apply_geti_overrides({"training": {"early_stopping": {"enable": True, "patience": 25}}})
-        assert cfg.config.training.patience == 25
-
-    def test_early_stopping_disable(self, tmp_path: Path) -> None:
-        cfg = self._load(tmp_path)
-        cfg.apply_geti_overrides({"training": {"early_stopping": {"enable": False}}})
-        assert cfg.config.training.patience == 0
-
-    def test_empty_overrides_noop(self, tmp_path: Path) -> None:
-        cfg = self._load(tmp_path)
-        original = cfg.config.training.lr0
-        cfg.apply_geti_overrides({})
-        assert cfg.config.training.lr0 == original
-
-
-class TestToGetiConfig:
-    def test_output_keys(self, tmp_path: Path) -> None:
-        recipe = _minimal_recipe()
-        recipe["data"] = {"input_size": [640, 640]}
-        cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, recipe))
-        geti = cfg.to_geti_config()
-
-        assert geti["backend"] == "ultralytics"
-        assert geti["task"] == "DETECTION"
-        assert "model" in geti
-        assert "data" in geti
-        assert "max_epochs" in geti
-        assert "training" in geti
-        assert "export" in geti
-        assert "callbacks" in geti
-        assert geti["callbacks"] == []
-
-    def test_model_shape(self, tmp_path: Path) -> None:
-        cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, _minimal_recipe()))
-        geti = cfg.to_geti_config()
-        model = geti["model"]
-        assert model["class_path"] == _DETECTION_CLASS_PATH
-        assert model["init_args"]["model_name"] == "yolo26n.pt"
-
-    def test_max_epochs_from_training(self, tmp_path: Path) -> None:
-        cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, _minimal_recipe()))
-        geti = cfg.to_geti_config()
-        assert geti["max_epochs"] == 50  # from recipe training.epochs
-
-    def test_data_is_deep_copy(self, tmp_path: Path) -> None:
-        recipe = _minimal_recipe()
-        recipe["data"] = {"input_size": [640, 640]}
-        cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, recipe))
-        geti = cfg.to_geti_config()
-        # Mutating output should not affect configurator state.
-        geti["data"]["input_size"] = [999, 999]
-        assert cfg.data_config["input_size"] == [640, 640]
-
-    def test_roundtrip_with_geti_overrides(self, tmp_path: Path) -> None:
-        recipe = _minimal_recipe()
-        recipe["data"] = {"input_size": [640, 640], "train_subset": {"batch_size": 8}, "val_subset": {"batch_size": 8}}
-        cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, recipe))
-        cfg.apply_geti_overrides({"training": {"learning_rate": 0.002, "batch_size": 4, "max_epochs": 10}})
-        geti = cfg.to_geti_config()
-
-        assert geti["max_epochs"] == 10
-        assert geti["training"]["lr0"] == 0.002
-        assert geti["training"]["batch"] == 4
-        assert geti["data"]["train_subset"]["batch_size"] == 4
-
-
 class TestCreateModel:
     def test_creates_detection_model(self, tmp_path: Path) -> None:
         cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, _minimal_recipe()))
@@ -398,6 +296,14 @@ class TestCreateModel:
         with pytest.raises(ValueError, match="Cannot import module"):
             cfg.create_model(_make_label_info())
 
+    def test_class_path_must_resolve_to_ultralytics_model(self, tmp_path: Path) -> None:
+        recipe = _minimal_recipe()
+        recipe["model"]["class_path"] = "pathlib.Path"
+        path = _write_recipe(tmp_path, recipe)
+        cfg = UltralyticsConfigurator.from_recipe(path)
+        with pytest.raises(TypeError, match="UltralyticsModel subclass"):
+            cfg.create_model(_make_label_info())
+
 
 class TestCreateEngine:
     def test_creates_engine(self, tmp_path: Path) -> None:
@@ -412,15 +318,15 @@ class TestCreateEngine:
         cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, _minimal_recipe()))
         model = cfg.create_model(_make_label_info())
         engine = cfg.create_engine(model, data=tmp_path, work_dir=tmp_path / "work")
-        # Training defaults should be in engine._kwargs.
-        assert engine._kwargs["epochs"] == 50
-        assert engine._kwargs["close_mosaic"] == 0
+        assert engine._train_args["epochs"] == 50
+        assert engine._train_args["close_mosaic"] == 0
 
     def test_engine_kwargs_override_recipe(self, tmp_path: Path) -> None:
         cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, _minimal_recipe()))
         model = cfg.create_model(_make_label_info())
         engine = cfg.create_engine(model, data=tmp_path, work_dir=tmp_path / "work", epochs=999)
         assert engine._kwargs["epochs"] == 999
+        assert engine._train_args["epochs"] == 50
 
     def test_device_override(self, tmp_path: Path) -> None:
         cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, _minimal_recipe()))

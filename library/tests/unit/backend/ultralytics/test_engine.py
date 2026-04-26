@@ -43,6 +43,32 @@ def _make_engine(tmp_path: Path, mocker) -> tuple[UltralyticsEngine, MagicMock]:
     return engine, yolo
 
 
+def test_train_args_are_train_only(mocker, tmp_path) -> None:
+    model = UltralyticsDetectionModel(label_info=_label_info())
+    datamodule = mocker.MagicMock(spec=DataModule)
+    engine = UltralyticsEngine(
+        model=model,
+        data=datamodule,
+        work_dir=tmp_path,
+        device="cpu",
+        train_args={"epochs": 7, "lr0": 0.01},
+    )
+
+    yolo = MagicMock()
+    model._yolo = yolo
+
+    engine.train()
+    _, train_kwargs = yolo.train.call_args
+    assert train_kwargs["epochs"] == 7
+    assert train_kwargs["lr0"] == 0.01
+
+    with patch.object(engine, "_test_with_datamodule", return_value={}) as test_with_datamodule:
+        engine.test()
+    test_args, _ = test_with_datamodule.call_args
+    assert "epochs" not in test_args[0]
+    assert "lr0" not in test_args[0]
+
+
 def test_ultralytics_engine_supports_ultralytics_model_with_datamodule(mocker) -> None:
     model = UltralyticsDetectionModel(label_info=_label_info())
     data = mocker.MagicMock(spec=DataModule)
@@ -343,6 +369,47 @@ class TestExport:
         assert result == {"ultralytics/fitness": 0.1}
         assert engine._last_train_checkpoint == best_ckpt.resolve()
         assert (tmp_path / ".last_train_checkpoint").read_text(encoding="utf-8").strip() == str(best_ckpt.resolve())
+
+    def test_test_with_datamodule_loads_explicit_checkpoint(self, mocker, tmp_path) -> None:
+        """test(checkpoint=...) should validate the requested checkpoint."""
+        engine, _ = _make_engine(tmp_path, mocker)
+        ckpt_file = tmp_path / "best.pt"
+        ckpt_file.touch()
+
+        validator_cls = MagicMock()
+        validator = MagicMock()
+        validator.return_value = {"metrics/mAP50(B)": 0.5}
+        validator_cls.return_value = validator
+
+        loaded_yolo = MagicMock()
+        loaded_yolo.model = MagicMock()
+
+        with (
+            patch.object(engine, "_make_bound_validator", return_value=validator_cls),
+            patch.object(engine, "_resolve_export_model", return_value=loaded_yolo) as resolve,
+        ):
+            metrics = engine.test(checkpoint=ckpt_file)
+
+        resolve.assert_called_once_with(ckpt_file)
+        validator.assert_called_once_with(model=loaded_yolo.model)
+        assert metrics == {"val/map_50": 0.5}
+
+    def test_test_with_data_root_loads_explicit_checkpoint(self, tmp_path) -> None:
+        """Filesystem validation should use a fresh YOLO model for explicit checkpoint."""
+        model = UltralyticsDetectionModel(label_info=_label_info())
+        engine = UltralyticsEngine(model=model, data=tmp_path, work_dir=tmp_path / "work", device="cpu")
+        ckpt_file = tmp_path / "best.pt"
+        ckpt_file.touch()
+
+        loaded_yolo = MagicMock()
+        loaded_yolo.val.return_value = {"metrics/mAP50(B)": 0.25}
+
+        with patch.object(engine, "_resolve_export_model", return_value=loaded_yolo) as resolve:
+            metrics = engine.test(checkpoint=ckpt_file)
+
+        resolve.assert_called_once_with(ckpt_file)
+        loaded_yolo.val.assert_called_once()
+        assert metrics == {"val/map_50": 0.25}
 
     def test_engine_loads_persisted_checkpoint_pointer(self, mocker, tmp_path) -> None:
         """Fresh engine instances should reuse the last recorded training checkpoint."""

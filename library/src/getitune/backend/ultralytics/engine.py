@@ -26,6 +26,8 @@ from getitune.utils.device import is_xpu_available
 from .models.base import UltralyticsModel
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from ultralytics import YOLO
 
     from getitune.types import PathLike
@@ -61,6 +63,7 @@ class UltralyticsEngine(Engine):
         data: DataModule | PathLike,
         work_dir: PathLike = "./getitune-workspace",
         device: str | DeviceType = "auto",
+        train_args: Mapping[str, Any] | None = None,
         **kwargs,
     ) -> None:
         """Initialize the engine.
@@ -71,6 +74,7 @@ class UltralyticsEngine(Engine):
             work_dir: Directory for checkpoints, exports, and logs.
             device: Device string or :class:`DeviceType` enum
                 (``"auto"``, ``"xpu"``, ``"0"``, ``"cpu"``, ``DeviceType.xpu``, etc.).
+            train_args: Train-only defaults forwarded to ``yolo.train()``.
             **kwargs: Extra overrides forwarded to Ultralytics calls.
         """
         if not isinstance(model, UltralyticsModel):
@@ -82,6 +86,7 @@ class UltralyticsEngine(Engine):
         self._work_dir.mkdir(parents=True, exist_ok=True)
         self._device = self._resolve_device(device)
         self._kwargs = kwargs
+        self._train_args = dict(train_args or {})
         self._last_train_checkpoint = self._load_last_train_checkpoint()
 
         if isinstance(data, DataModule):
@@ -108,7 +113,7 @@ class UltralyticsEngine(Engine):
             Translated metric dict.
         """
         yolo = self._model.yolo
-        merged = self._build_overrides(**kwargs)
+        merged = self._build_overrides(self._train_args, **kwargs)
 
         if self._data_root is not None and "data" not in merged:
             merged["data"] = str(self._data_root)
@@ -133,7 +138,7 @@ class UltralyticsEngine(Engine):
         self._record_last_train_checkpoint(self._resolve_trainer_checkpoint(yolo))
         return self._translate_metrics(results)
 
-    def test(self, **kwargs) -> METRICS:
+    def test(self, checkpoint: PathLike | None = None, **kwargs) -> METRICS:
         """Validate the model.
 
         When a DataModule is attached, a custom validator bypasses the
@@ -141,6 +146,7 @@ class UltralyticsEngine(Engine):
         When a data-root path is attached, ``yolo.val()`` is used directly.
 
         Args:
+            checkpoint: Optional ``.pt`` checkpoint to validate.
             **kwargs: Overrides forwarded to validation.
 
         Returns:
@@ -149,9 +155,9 @@ class UltralyticsEngine(Engine):
         merged = self._build_overrides(**kwargs)
 
         if self._datamodule is not None:
-            return self._test_with_datamodule(merged)
+            return self._test_with_datamodule(merged, checkpoint=checkpoint)
 
-        yolo = self._model.yolo
+        yolo = self._resolve_export_model(checkpoint) if checkpoint is not None else self._model.yolo
         if self._data_root is not None and "data" not in merged:
             merged["data"] = str(self._data_root)
 
@@ -287,7 +293,7 @@ class UltralyticsEngine(Engine):
     # DataModule-aware test / predict
     # ------------------------------------------------------------------
 
-    def _test_with_datamodule(self, overrides: dict) -> dict[str, float]:
+    def _test_with_datamodule(self, overrides: dict, checkpoint: PathLike | None = None) -> dict[str, float]:
         """Run validation via a bound validator class with DataModule data."""
         validator_cls = self._make_bound_validator()
 
@@ -308,7 +314,8 @@ class UltralyticsEngine(Engine):
             args=args,
         )
 
-        results = validator(model=self._model.yolo.model)
+        yolo = self._resolve_export_model(checkpoint) if checkpoint is not None else self._model.yolo
+        results = validator(model=yolo.model)
         return self._translate_metrics(results)
 
     def _predict_with_datamodule(self, overrides: dict[str, Any]) -> list[Prediction]:
@@ -456,11 +463,13 @@ class UltralyticsEngine(Engine):
 
         return type(base_cls.__name__, (base_cls,), {"_datamodule": self._datamodule})
 
-    def _build_overrides(self, **kwargs) -> dict[str, Any]:
-        """Merge overrides: model defaults < engine kwargs < call kwargs."""
+    def _build_overrides(self, defaults: Mapping[str, Any] | None = None, **kwargs) -> dict[str, Any]:
+        """Merge overrides: model defaults < engine kwargs < defaults < call kwargs."""
         overrides: dict[str, Any] = {}
         overrides.update(self._model.extra_overrides)
         overrides.update(self._kwargs)
+        if defaults is not None:
+            overrides.update(defaults)
         overrides.update(kwargs)
         return overrides
 

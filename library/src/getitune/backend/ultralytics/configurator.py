@@ -1,17 +1,10 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Backend-local configurator for Ultralytics recipes.
-
-Owns recipe parsing, validation, model/engine instantiation, and the
-Geti bridge layer that translates between the Ultralytics-native recipe
-format and the config dict shape that ``GetiConfigConverter`` / the
-application trainer expects.
-"""
+"""Backend-local configurator for Ultralytics recipes."""
 
 from __future__ import annotations
 
-import copy
 import importlib
 import logging
 from collections.abc import Mapping
@@ -53,16 +46,7 @@ _SUPPORTED_TASKS: frozenset[str] = frozenset(_TASK_TO_DEFAULT_CLASS_PATH)
 
 
 class UltralyticsConfigurator:
-    """Parse Ultralytics recipes and construct model / engine instances.
-
-    Two usage modes:
-
-    1. **Library** — ``from_recipe()`` → ``create_model()`` / ``create_engine()``.
-    2. **Application bridge** — ``from_recipe()`` → ``apply_geti_overrides()`` →
-       ``to_geti_config()`` to produce a dict compatible with
-       ``GetiConfigConverter`` output.  In Phase 6 the converter dispatches
-       here when the recipe declares ``backend: ultralytics``.
-    """
+    """Parse Ultralytics recipes and construct model / engine instances."""
 
     def __init__(
         self,
@@ -148,93 +132,7 @@ class UltralyticsConfigurator:
             self._apply_single_override(key, value)
 
     # ------------------------------------------------------------------
-    # Geti application bridge
-    # ------------------------------------------------------------------
-
-    def apply_geti_overrides(self, hyper_parameters: dict[str, Any]) -> None:
-        """Map Geti UI ``hyper_parameters`` to Ultralytics config fields.
-
-        This replaces ``HyperparametersUpdater.update()`` for the Ultralytics
-        backend — the field names and config paths are different from Lightning.
-
-        Supported Geti keys (under ``hyper_parameters["training"]``):
-            learning_rate, batch_size, max_epochs, weight_decay,
-            input_size_height / input_size_width, early_stopping.
-        """
-        training = hyper_parameters.get("training", {})
-
-        lr = training.get("learning_rate")
-        if lr is not None:
-            self._config.training.lr0 = float(lr)
-
-        batch_size = training.get("batch_size")
-        if batch_size is not None:
-            self._config.training.batch = int(batch_size)
-            # Keep data config in sync for DataModule creation.
-            for subset in ("train_subset", "val_subset"):
-                if subset in self._data_config:
-                    self._data_config[subset]["batch_size"] = int(batch_size)
-
-        max_epochs = training.get("max_epochs")
-        if max_epochs is not None:
-            self._config.training.epochs = int(max_epochs)
-
-        weight_decay = training.get("weight_decay")
-        if weight_decay is not None:
-            self._config.training.weight_decay = float(weight_decay)
-
-        # Input size — Geti sends height/width separately.
-        h = training.get("input_size_height")
-        w = training.get("input_size_width")
-        if h is not None and w is not None:
-            self._config.model.imgsz = max(int(h), int(w))
-            self._data_config["input_size"] = [int(h), int(w)]
-
-        # Early stopping — maps to Ultralytics `patience` (0 = disabled).
-        es = training.get("early_stopping")
-        if isinstance(es, dict):
-            if es.get("enable") is True:
-                patience = es.get("patience")
-                if patience is not None:
-                    self._config.training.patience = int(patience)
-            elif es.get("enable") is False:
-                self._config.training.patience = 0
-
-    def to_geti_config(self) -> dict[str, Any]:
-        """Produce a config dict compatible with ``GetiConfigConverter`` output.
-
-        The dict has the top-level keys the application trainer expects
-        (``model``, ``data``, ``max_epochs``, ``callbacks``, ``engine``),
-        plus ``backend: "ultralytics"`` so the trainer knows to take the
-        Ultralytics code path.
-
-        The ``data`` section is a resolved copy of the DataModule-compatible
-        config (augmentations, batch sizes, input size, samplers).
-        """
-        return {
-            "backend": "ultralytics",
-            "task": self._config.task,
-            "model": {
-                "class_path": self._config.model.class_path,
-                "init_args": {
-                    "model_name": self._config.model.model_name,
-                    "pretrained": self._config.model.pretrained,
-                    "imgsz": self._config.model.imgsz,
-                },
-            },
-            "engine": {"device": self._config.engine.device},
-            "max_epochs": self._config.training.epochs,
-            "training": self._config.training.to_train_args(),
-            "export": {
-                "format": self._config.export.format,
-                "precision": self._config.export.precision,
-            },
-            "data": copy.deepcopy(self._data_config),
-            "callbacks": [],
-        }
-
-    # ------------------------------------------------------------------
-    # Model / engine instantiation (library usage)
+    # Model / engine instantiation
     # ------------------------------------------------------------------
 
     def create_model(
@@ -272,8 +170,7 @@ class UltralyticsConfigurator:
     ) -> UltralyticsEngine:
         """Instantiate the engine from recipe config.
 
-        Training defaults from the recipe are passed as engine kwargs so they
-        flow through ``_build_overrides()`` into ``yolo.train()``.
+        Training defaults from the recipe are passed as train-only defaults.
 
         Args:
             model: Ultralytics model wrapper.
@@ -288,15 +185,13 @@ class UltralyticsConfigurator:
         if str(device) == str(DeviceType.auto) or str(device) == "auto":
             resolved_device = self._config.engine.device
 
-        # Merge recipe training defaults < caller overrides.
-        merged_kwargs = {**self._config.training.to_train_args(), **engine_kwargs}
-
         return UltralyticsEngine(
             model=model,
             data=data,
             work_dir=work_dir,
             device=resolved_device,
-            **merged_kwargs,
+            train_args=self._config.training.to_train_args(),
+            **engine_kwargs,
         )
 
     # ------------------------------------------------------------------
@@ -327,7 +222,11 @@ class UltralyticsConfigurator:
             msg = f"Cannot resolve model class for task '{self._config.task}'"
             raise ValueError(msg)
 
-        return _import_class(class_path)  # pyrefly: ignore[bad-return-type]
+        cls = _import_class(class_path)
+        if not issubclass(cls, UltralyticsModel):
+            msg = f"model.class_path must resolve to an UltralyticsModel subclass, got '{class_path}'"
+            raise TypeError(msg)
+        return cls
 
     def _resolve_model_name(self, weights_path: PathLike | None) -> str:
         """Return model name, preferring explicit *weights_path*."""
@@ -429,8 +328,8 @@ class UltralyticsConfigurator:
         # String reference to a base YAML.
         data_path = (recipe_dir / str(data_ref)).resolve()
         if not data_path.exists():
-            logger.warning(f"Referenced data config not found: {data_path}")
-            return {}
+            msg = f"Referenced data config not found: {data_path}"
+            raise FileNotFoundError(msg)
 
         with open(data_path) as f:  # noqa: PTH123
             loaded = yaml.safe_load(f)
