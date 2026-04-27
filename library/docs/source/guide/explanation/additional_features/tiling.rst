@@ -42,12 +42,12 @@ The tiling strategy is implemented in the OpenVINO Training Extensions through t
         ==== merge: 7.326097726821899 sec ====
 
 
-Enable Tiling via OTX Training
+Enable Tiling via Geti Library Training
 ==================================
 
 Currently, tiling is supported for both detection and instance segmentation models. Please refer to :doc:`../algorithms/object_detection/object_detection` and :doc:`../algorithms/segmentation/instance_segmentation` for more details.
 
-To enable tiling in OTX training, set ``data.tile_config.enable_tiler`` parameter to 1. Here's an example of enabling tiling:
+To enable tiling in Geti Library training, set ``data.tile_config.enable_tiler`` parameter to 1. Here's an example of enabling tiling:
 
 .. tab-set::
 
@@ -55,16 +55,16 @@ To enable tiling in OTX training, set ``data.tile_config.enable_tiler`` paramete
 
         .. code-block:: python
 
-            from otx.config.data import TileConfig
-            from otx.data.module import OTXDataModule
+            from getitune.config.data import TileConfig
+            from getitune.data.module import DataModule
 
-            datamodule = OTXDataModule(..., tile_config=TileConfig(enable_tiler=True))
+            datamodule = DataModule(..., tile_config=TileConfig(enable_tiler=True))
 
     .. tab-item:: CLI
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.tile_config.enable_tiler True
+            (getitune) ...$ getitune train ... --data.tile_config.enable_tiler True
 
 
 Tile Size and Tile Overlap Optimization
@@ -85,17 +85,17 @@ Here's an example of setting the object size ratio to 5%:
 
         .. code-block:: python
 
-            from otx.config.data import TileConfig
-            from otx.data.module import OTXDataModule
+            from getitune.config.data import TileConfig
+            from getitune.data.module import DataModule
 
             tile_config = TileConfig(enable_tiler=True, enable_adaptive_tiling=True, object_tile_ratio=0.05)
-            datamodule = OTXDataModule(..., tile_config=tile_config)
+            datamodule = DataModule(..., tile_config=tile_config)
 
     .. tab-item:: CLI
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.tile_config.enable_tiler True \             # enable tiling
+            (getitune) ...$ getitune train ... --data.tile_config.enable_tiler True \             # enable tiling
                                      --data.tile_config.enable_adaptive_tiling True \   # enable automatic tiling parameter optimization
                                      --data.tile_config.object_tile_ratio 0.05          # set the object size ratio to 5%
 
@@ -122,17 +122,17 @@ This can be configured with ``data.tile_config.enable_adaptive_tiling`` paramete
 
         .. code-block:: python
 
-            from otx.config.data import TileConfig
-            from otx.data.module import OTXDataModule
+            from getitune.config.data import TileConfig
+            from getitune.data.module import DataModule
 
             tile_config = TileConfig(enable_tiler=True, enable_adaptive_tiling=True, sampling_ratio=0.5)
-            datamodule = OTXDataModule(..., tile_config=tile_config)
+            datamodule = DataModule(..., tile_config=tile_config)
 
     .. tab-item:: CLI
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.tile_config.enable_tiler True
+            (getitune) ...$ getitune train ... --data.tile_config.enable_tiler True
                                      --data.tile_config.enable_adaptive_tiling True
                                      --data.tile_config.sampling_ratio 0.5
 
@@ -148,17 +148,17 @@ Users can disable adaptive tiling and customize the tiling process by setting th
 
         .. code-block:: python
 
-            from otx.config.data import TileConfig
-            from otx.data.module import OTXDataModule
+            from getitune.config.data import TileConfig
+            from getitune.data.module import DataModule
 
             tile_config = TileConfig(enable_tiler=True, enable_adaptive_tiling=False, tile_size=(512,512), tile_overlap=0.2)
-            datamodule = OTXDataModule(..., tile_config=tile_config)
+            datamodule = DataModule(..., tile_config=tile_config)
 
     .. tab-item:: CLI
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.tile_config.enable_tiler True
+            (getitune) ...$ getitune train ... --data.tile_config.enable_tiler True
                                      --data.tile_config.enable_adaptive_tiling False
                                      --data.tile_config.tile_size '[512,512]'
                                      --data.tile_config.tile_overlap 0.2
@@ -192,7 +192,7 @@ After training a model with tiling enabled, you can export the model to OpenVINO
 
         .. code-block:: shell
 
-            (otx) ...$ otx export ... --checkpoint <checkpoint-tiling-model>
+            (getitune) ...$ getitune export ... --checkpoint <checkpoint-tiling-model>
 
 After exporting the model, you can run inference on the exported model using the following command:
 
@@ -208,7 +208,7 @@ After exporting the model, you can run inference on the exported model using the
 
         .. code-block:: shell
 
-            (otx) ...$ otx test ... --checkpoint <checkpoint-tiling-IR-model>
+            (getitune) ...$ getitune test ... --checkpoint <checkpoint-tiling-IR-model>
 
 .. warning::
     When tiling is enabled, there is a trade-off between speed and accuracy as it increases the number of images to be processed.

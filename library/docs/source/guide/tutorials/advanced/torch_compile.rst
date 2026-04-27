@@ -7,7 +7,7 @@
 Overview
 --------
 
-OpenVINO™ Training Extensions now integrates the `torch.compile` feature from PyTorch, allowing users to optimize their models for better performance.
+Geti Library now integrates the `torch.compile` feature from PyTorch, allowing users to optimize their models for better performance.
 This feature compiles the model's operations into optimized lower-level code, which can significantly improve execution speed and reduce memory usage.
 
 Benefits of torch.compile
@@ -17,10 +17,10 @@ Benefits of torch.compile
 - **Reduced Memory Footprint**: Optimized models can use less memory, which is beneficial for deploying models on resource-constrained devices.
 For more information on the benefits of `torch.compile`, refer to the official `PyTorch documentation <https://pytorch.org/docs/stable/generated/torch.compile.html>`_.
 
-How to Use torch.compile in OpenVINO™ Training Extensions
+How to Use torch.compile in Geti Library
 ----------------------------------------------------------
 
-**Prepare OTXModel**: Ensure that model is compatible with `torch.compile`. When building the model, give the `torch_compile` option `True`.
+**Prepare Model**: Ensure that model is compatible with `torch.compile`. When building the model, give the `torch_compile` option `True`.
 
 .. tab-set::
 
@@ -28,7 +28,7 @@ How to Use torch.compile in OpenVINO™ Training Extensions
 
         .. code-block:: python
 
-            from otx.backend.native.models import VisionTransformerMulticlassCls
+            from getitune.backend.lightning.models import VisionTransformerMulticlassCls
 
             model = VisionTransformerMulticlassCls(..., torch_compile=True)
 
@@ -36,4 +36,4 @@ How to Use torch.compile in OpenVINO™ Training Extensions
 
         .. code-block:: bash
 
-            (otx) ...$ otx train ... --model.torch_compile True
+            (getitune) ...$ getitune train ... --model.torch_compile True

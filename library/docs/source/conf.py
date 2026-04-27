@@ -22,9 +22,9 @@ from getitune import __version__
 
 # -- Project information ----------------------------------------------------- #
 
-project = "OpenVINO™ Training Extensions"
-copyright = "2024, OpenVINO™ Training Extensions Contributors"
-author = "OpenVINO™ Training Extensions Contributors"
+project = "Geti Library"
+copyright = "2024, Geti Library Contributors"
+author = "Geti Library Contributors"
 release = __version__
 
 # -- General configuration --------------------------------------------------- #
@@ -99,8 +99,8 @@ html_theme_options = {
     ],
     "search_bar_text": "Search",
     "logo": {
-        "image_light": "logos/otx-logo.png",
-        "image_dark": "logos/otx-logo.png",
+        "image_light": "logos/getitune-logo.png",
+        "image_dark": "logos/getitune-logo.png",
     },
     "icon_links": [
         {
