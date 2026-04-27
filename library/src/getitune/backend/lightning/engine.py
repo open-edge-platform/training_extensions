@@ -855,6 +855,19 @@ class LightningEngine(Engine):
         self._cache.is_trainer_args_identical = False
 
     @property
+    def best_checkpoint(self) -> Path | None:
+        """Path to the best model checkpoint after training.
+
+        Returns the checkpoint recorded by the Lightning checkpoint callback,
+        or ``None`` if training has not been run.
+        """
+        if self.checkpoint is not None:
+            ckpt_path = Path(self.checkpoint)
+            if ckpt_path.exists():
+                return ckpt_path
+        return None
+
+    @property
     def device(self) -> DeviceConfig:
         """Device engine uses."""
         return self._device

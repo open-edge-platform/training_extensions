@@ -17,7 +17,6 @@ from getitune import TaskType
 from getitune.backend.lightning.engine import LightningEngine
 from getitune.backend.lightning.models.base import DataInputParams, LightningModel
 from getitune.backend.ultralytics.configurator import UltralyticsConfigurator
-from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.data.dataset.base import VisionDataset
 from getitune.data.factory import TransformLibFactory
@@ -384,6 +383,25 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
                 has_parent_revision=has_parent_revision,
             )
 
+        return self._train_lightning_model(
+            training_config=training_config,
+            datamodule=getitune_datamodule,
+            weights_path=weights_path,
+            model_id=model_id,
+            device=device,
+            has_parent_revision=has_parent_revision,
+        )
+
+    def _train_lightning_model(
+        self,
+        training_config: dict,
+        datamodule: DataModule,
+        weights_path: Path,
+        model_id: UUID,
+        device: DeviceInfo,
+        has_parent_revision: bool,
+    ) -> tuple[Path, LightningEngine]:
+        """Execute Lightning model training."""
         # TODO use weights path to initialize model from pre-downloaded weights
         #  after resolving https://github.com/open-edge-platform/training_extensions/issues/5100
         logger.warning(
@@ -395,17 +413,17 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         # Create the LightningModel according to the training configuration
         logger.info("Instantiating the LightningModel for training (model_id={})", model_id)
         model_cfg = training_config["model"]
-        model_cfg["init_args"]["label_info"] = getitune_datamodule.label_info.label_names
+        model_cfg["init_args"]["label_info"] = datamodule.label_info.label_names
         model_cfg["init_args"]["data_input_params"] = DataInputParams(
-            input_size=cast(tuple[int, int], getitune_datamodule.input_size),
-            mean=getitune_datamodule.input_mean if getitune_datamodule.input_mean is not None else (0.0, 0.0, 0.0),
-            std=getitune_datamodule.input_std if getitune_datamodule.input_std is not None else (1.0, 1.0, 1.0),
+            input_size=cast(tuple[int, int], datamodule.input_size),
+            mean=datamodule.input_mean if datamodule.input_mean is not None else (0.0, 0.0, 0.0),
+            std=datamodule.input_std if datamodule.input_std is not None else (1.0, 1.0, 1.0),
         ).as_dict()
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(LightningModel, "model", required=False, fail_untyped=False)
         getitune_model: LightningModel = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
         if hasattr(getitune_model, "tile_config"):
-            getitune_model.tile_config = getitune_datamodule.tile_config
+            getitune_model.tile_config = datamodule.tile_config
 
         # Set up the LightningEngine
         logger.info("Initializing the LightningEngine for training (model_id={})", model_id)
@@ -414,7 +432,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         )
         getitune_engine = LightningEngine(
             model=getitune_model,
-            data=getitune_datamodule,
+            data=datamodule,
             checkpoint=weights_path if has_parent_revision else None,
             work_dir=self._data_dir / f"getitune-workspace-{model_id}",
             device=getitune_device_type,
@@ -442,7 +460,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         if "precision" in training_config:
             train_kwargs["precision"] = training_config["precision"]
         getitune_engine.train(**train_kwargs)  # pyrefly: ignore[bad-argument-type]
-        trained_model_path = Path(getitune_engine.work_dir) / "best_checkpoint.ckpt"
+        trained_model_path = getitune_engine.best_checkpoint
+        if trained_model_path is None:
+            trained_model_path = Path(getitune_engine.work_dir) / "best_checkpoint.ckpt"
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)
         return trained_model_path, getitune_engine
 
@@ -454,7 +474,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         model_id: UUID,
         device: DeviceInfo,
         has_parent_revision: bool,
-    ) -> tuple[Path, UltralyticsEngine]:
+    ) -> tuple[Path, Engine]:
         """Execute Ultralytics model training."""
         logger.info("Instantiating the Ultralytics model for training (model_id={})", model_id)
         configurator = self._build_ultralytics_configurator(training_config)
@@ -478,9 +498,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
         logger.info("Starting the Ultralytics training loop (model_id={})", model_id)
         engine.train(**train_kwargs)
-        checkpoint = engine._last_train_checkpoint or Path(engine.work_dir) / "train" / "weights" / "best.pt"
-        if not checkpoint.exists():
-            raise FileNotFoundError(f"Ultralytics trained checkpoint not found at {checkpoint}")
+        checkpoint = engine.best_checkpoint
+        if checkpoint is None or not checkpoint.exists():
+            raise FileNotFoundError(f"Ultralytics trained checkpoint not found in {engine.work_dir}")
         logger.info("Ultralytics model training completed. Trained model saved at {}", checkpoint)
         return checkpoint, engine
 
@@ -496,10 +516,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
     ) -> None:
         """Evaluate the trained model on the testing set"""
         logger.info("Evaluating the model on the testing set...")
-        if isinstance(getitune_engine, UltralyticsEngine):
-            metrics = getitune_engine.test(checkpoint=model_checkpoint_path)
-        else:
-            metrics = getitune_engine.test(checkpoint=model_checkpoint_path, metric=get_metric_by_task(task))
+        metrics = getitune_engine.test(checkpoint=model_checkpoint_path, metric=get_metric_by_task(task))
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
             self._model_service.save_evaluation_result(

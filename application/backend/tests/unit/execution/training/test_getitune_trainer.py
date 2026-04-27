@@ -14,7 +14,6 @@ from datumaro.experimental import Dataset, LazyImage
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, Subset
 from getitune import TaskType as GetiTuneTaskType
-from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from getitune.metrics.types import MetricCallable
@@ -762,6 +761,7 @@ class TestGetiTuneTrainerTrainModel:
         # Create expected checkpoint file
         expected_checkpoint_path = Path(mock_getitune_engine.work_dir) / "best_checkpoint.ckpt"
         expected_checkpoint_path.touch()
+        mock_getitune_engine.best_checkpoint = expected_checkpoint_path
 
         with patch(
             "app.execution.training.getitune_trainer.DataModule.from_vision_datasets"
@@ -846,7 +846,7 @@ class TestGetiTuneTrainerTrainModel:
             "task": "DETECTION",
             "model": {
                 "class_path": "getitune.backend.ultralytics.models.detection.UltralyticsDetectionModel",
-                "init_args": {"model_name": "yolo26n.pt"},
+                "init_args": {"model_name": "yolo26n.yaml"},
             },
             "training": {"epochs": 3, "batch": 2},
         }
@@ -861,7 +861,7 @@ class TestGetiTuneTrainerTrainModel:
         mock_datamodule.label_info = Mock()
         mock_model = Mock()
         mock_engine = Mock()
-        mock_engine._last_train_checkpoint = expected_checkpoint_path
+        mock_engine.best_checkpoint = expected_checkpoint_path
         mock_configurator = Mock()
         mock_configurator.create_model.return_value = mock_model
         mock_configurator.create_engine.return_value = mock_engine
@@ -1123,13 +1123,13 @@ class TestGetiTuneTrainerEvaluateModel:
         tmp_path: Path,
         fxt_model_service: Mock,
     ):
-        """Test Ultralytics evaluation does not pass Lightning metric callables."""
+        """Test Ultralytics evaluation passes metric uniformly (engine ignores it)."""
         # Arrange
         getitune_trainer = fxt_getitune_trainer()
         model_id = uuid4()
         model_variant_id = uuid4()
         dataset_revision_id = uuid4()
-        mock_getitune_engine = object.__new__(UltralyticsEngine)
+        mock_getitune_engine = Mock()
         mock_getitune_engine.test = Mock(return_value={"metrics/mAP50-95(B)": torch.tensor(0.42)})
         model_checkpoint_path = tmp_path / "best.pt"
         model_checkpoint_path.touch()
@@ -1144,8 +1144,8 @@ class TestGetiTuneTrainerEvaluateModel:
             dataset_revision_id=dataset_revision_id,
         )
 
-        # Assert
-        mock_getitune_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path)
+        # Assert — metric is always passed uniformly; Ultralytics engines ignore it.
+        mock_getitune_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path, metric=MeanAPCallable)
         fxt_model_service.save_evaluation_result.assert_called_once()
 
 

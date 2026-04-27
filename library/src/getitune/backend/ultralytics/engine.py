@@ -138,7 +138,7 @@ class UltralyticsEngine(Engine):
         self._record_last_train_checkpoint(self._resolve_trainer_checkpoint(yolo))
         return self._translate_metrics(results)
 
-    def test(self, checkpoint: PathLike | None = None, **kwargs) -> METRICS:
+    def test(self, checkpoint: PathLike | None = None, metric: object | None = None, **kwargs) -> METRICS:
         """Validate the model.
 
         When a DataModule is attached, a custom validator bypasses the
@@ -147,11 +147,15 @@ class UltralyticsEngine(Engine):
 
         Args:
             checkpoint: Optional ``.pt`` checkpoint to validate.
+            metric: Accepted for API compatibility with ``LightningEngine``
+                but ignored — Ultralytics computes metrics internally.
             **kwargs: Overrides forwarded to validation.
 
         Returns:
             Translated metric dict.
         """
+        if metric is not None:
+            logger.debug("UltralyticsEngine ignores the 'metric' parameter; metrics are computed internally")
         merged = self._build_overrides(**kwargs)
 
         if self._datamodule is not None:
@@ -278,6 +282,20 @@ class UltralyticsEngine(Engine):
     def model(self) -> UltralyticsModel:
         """The wrapped :class:`UltralyticsModel`."""
         return self._model  # type: ignore[return-value]
+
+    @property
+    def best_checkpoint(self) -> Path | None:
+        """Path to the best model checkpoint after training.
+
+        Resolution order:
+        1. Recorded checkpoint from the most recent ``train()`` call.
+        2. ``best.pt`` from the default training run directory.
+        3. ``None`` if no checkpoint is available.
+        """
+        if self._last_train_checkpoint is not None and self._last_train_checkpoint.exists():
+            return self._last_train_checkpoint
+        default_best = self._work_dir / "train" / "weights" / "best.pt"
+        return default_best if default_best.exists() else None
 
     @property
     def datamodule(self) -> DATA:

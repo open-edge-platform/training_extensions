@@ -69,3 +69,13 @@ class Engine(ABC):
             DATA: datamodule object.
         """
         raise NotImplementedError
+
+    @property
+    def best_checkpoint(self) -> Path | None:
+        """Path to the best model checkpoint after training.
+
+        Returns ``None`` if training has not been run or no checkpoint was
+        produced.  Subclasses should override to expose their
+        backend-specific checkpoint resolution.
+        """
+        return None
