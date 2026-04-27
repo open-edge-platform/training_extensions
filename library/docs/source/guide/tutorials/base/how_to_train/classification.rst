@@ -116,7 +116,7 @@ The list of supported recipes for classification is available with the command l
       │ MULTI_CLASS_CLS │ dino_v2               │ src/otx/recipe/classification/multi_class_cls/dino_v2.yaml                                                  │
       │ MULTI_CLASS_CLS │ efficientnet_v2       │ src/otx/recipe/classification/multi_class_cls/efficientnet_v2.yaml                                          │
       │ MULTI_CLASS_CLS │ tv_efficientnet_b3    │ src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b3.yaml                                       │
-      │ MULTI_CLASS_CLS │ deit_tiny             │ src/otx/recipe/classification/multi_class_cls/deit_tiny.yaml                                                │
+      │ MULTI_CLASS_CLS │ vit_tiny              │ src/otx/recipe/classification/multi_class_cls/vit_tiny.yaml                                                 │
       │ MULTI_CLASS_CLS │ mobilenet_v3_large    │ src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml                                       │
       │ MULTI_CLASS_CLS │ efficientnet_b0       │ src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml                                          │
       │ MULTI_CLASS_CLS │ tv_mobilenet_v3_small │ src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml                                    │

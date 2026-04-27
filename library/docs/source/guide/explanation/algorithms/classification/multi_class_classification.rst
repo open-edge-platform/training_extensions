@@ -70,7 +70,7 @@ We support the following ready-to-use model recipes:
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+
 | `EfficientNet-V2-l <https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/recipe/classification/multi_class_cls/tv_efficientnet_v2_l.yaml>`_                                               | 48.92               | 117.23          |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+
-| `DeiT-Tiny <https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/recipe/classification/multi_class_cls/deit_tiny.yaml>`_                                                                  | 2.51                | 22.0            |
+| `ViT-Tiny <https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/recipe/classification/multi_class_cls/vit_tiny.yaml>`_                                                                    | 2.51                | 22.0            |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+
 | `DINO-V2 <https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/recipe/classification/multi_class_cls/dino_v2.yaml>`_                                                                      | 12.46               | 88.0            |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+
@@ -78,7 +78,7 @@ We support the following ready-to-use model recipes:
 `MobileNet-V3 <https://arxiv.org/abs/1905.02244>`_ is the best choice when training time and computational cost are in priority, nevertheless, this recipe provides competitive accuracy as well.
 `EfficientNet-B0/B3 <https://arxiv.org/abs/1905.11946>`_ consumes more Flops compared to MobileNet, providing better performance on large datasets.
 `EfficientNet-V2 <https://arxiv.org/abs/2104.00298>`_ has more parameters and Flops and needs more time to train, meanwhile providing superior classification performance.
-`DeiT-Tiny <https://arxiv.org/abs/2012.12877>`_ is a transformer-based model that provides a good trade-off between accuracy and computational cost.
+`ViT-Tiny <https://arxiv.org/abs/2010.11929>`_ is a lightweight transformer-based model that provides a good trade-off between accuracy and computational cost.
 `DINO-V2 <https://arxiv.org/abs/2304.07193>`_ produce high-performance visual features that can be directly employed with classifiers as simple as linear layers on a variety of computer vision tasks.
 
 To see which models are available for the task, the following command can be executed:

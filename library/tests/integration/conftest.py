@@ -20,7 +20,7 @@ RECIPE_PATH = get_getitune_root_path() / "recipe"
 CATEGORY_RECIPES_PER_TASK: dict[str, list[Path]] = {
     "multi_class_cls": [
         RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",  # speed
-        RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",  # balance
+        RECIPE_PATH / "classification" / "multi_class_cls" / "vit_tiny.yaml",  # balance
         RECIPE_PATH / "classification" / "multi_class_cls" / "dino_v2.yaml",  # accuracy
     ],
     "detection": [

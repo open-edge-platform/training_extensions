@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### New features
 
-- Add DoRA support for ViT classification model (DINOv2 and DeIT)
+- Add DoRA support for ViT classification model (DINOv2 and ViT)
   (<https://github.com/open-edge-platform/training_extensions/pull/4466>)
 - Add configurable augmentations for Geti
   (<https://github.com/open-edge-platform/training_extensions/pull/4577>)
@@ -432,7 +432,7 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3566>)
 - Decoupling mmaction for action classification (MoviNet, X3D)
   (<https://github.com/openvinotoolkit/training_extensions/pull/3582>)
-- Add Semi-SL Algorithms for mv3-large, effnet-v2, deit-tiny, dino-v2
+- Add Semi-SL Algorithms for mv3-large, effnet-v2, vit-tiny, dino-v2
   (<https://github.com/openvinotoolkit/training_extensions/pull/3602>)
 - RTMDet-tiny enablement for detection task (export/optimize)
   (<https://github.com/openvinotoolkit/training_extensions/pull/3564>)
@@ -788,7 +788,7 @@ All notable changes to this project will be documented in this file.
 ### Bug fixes
 
 - Fix F1 auto-threshold to choose best largest confidence (<https://github.com/openvinotoolkit/training_extensions/pull/2371>)
-- Fix IBLoss enablement with DeiT-Tiny when class incremental training (<https://github.com/openvinotoolkit/training_extensions/pull/2594>)
+- Fix IBLoss enablement with ViT-Tiny when class incremental training (<https://github.com/openvinotoolkit/training_extensions/pull/2594>)
 
 ### Known issues
 
@@ -806,7 +806,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug fixes
 
-- Fix IBLoss enablement with DeiT-Tiny when class incremental training (<https://github.com/openvinotoolkit/training_extensions/pull/2595>)
+- Fix IBLoss enablement with ViT-Tiny when class incremental training (<https://github.com/openvinotoolkit/training_extensions/pull/2595>)
 - Fix mmcls bug not wrapping model in DataParallel on CPUs (<https://github.com/openvinotoolkit/training_extensions/pull/2601>)
 - Fix h-label loss normalization issue w/ exclusive label group of singe label (<https://github.com/openvinotoolkit/training_extensions/pull/2604>)
 - Fix division by zero in class incremental learning for classification (<https://github.com/openvinotoolkit/training_extensions/pull/2606>)
@@ -976,7 +976,7 @@ All notable changes to this project will be documented in this file.
 - Add option to save images after inference in OTX CLI demo together with demo in exportable code (<https://github.com/openvinotoolkit/training_extensions/pull/2005>)
 - Support storage cache in Apache Arrow using Datumaro for cls, det, seg tasks (<https://github.com/openvinotoolkit/training_extensions/pull/2009>)
 - Add noisy label detection for multi-class classification task (<https://github.com/openvinotoolkit/training_extensions/pull/1985>, <https://github.com/openvinotoolkit/training_extensions/pull/2034>)
-- Add DeiT template for classification tasks as experimental template (<https://github.com/openvinotoolkit/training_extensions/pull/2093)
+- Add ViT-Tiny template for classification tasks as experimental template (<https://github.com/openvinotoolkit/training_extensions/pull/2093)
 
 ### Enhancements
 
