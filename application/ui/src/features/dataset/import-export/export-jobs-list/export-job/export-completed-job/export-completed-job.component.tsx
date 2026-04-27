@@ -33,7 +33,7 @@ export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps
         const url = `${API_BASE_URL}/api/staged_datasets/${job.metadata.dataset_id}/zip`;
 
         downloadFile(url, `dataset_${job.metadata.dataset_id}.zip`);
-        toast({ type: 'info', message: `Downloading ${datasetName} dataset started` });
+        toast({ type: 'info', message: 'Dataset download started' });
     };
 
     return (

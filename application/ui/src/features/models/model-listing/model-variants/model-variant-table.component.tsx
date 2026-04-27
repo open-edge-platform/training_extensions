@@ -103,7 +103,7 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
         const url = `${API_BASE_URL}/api/projects/${projectId}/models/${model.id}/variants/${modelVariantId}/binary`;
         downloadFile(url);
 
-        toast({ type: 'info', message: 'Downloading model started' });
+        toast({ type: 'info', message: 'Model download started' });
     };
 
     return (

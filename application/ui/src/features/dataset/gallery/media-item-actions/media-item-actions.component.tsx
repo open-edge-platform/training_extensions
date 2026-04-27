@@ -30,7 +30,7 @@ export const MediaItemActions = ({ id, onDeleted, mediaUrl, mediaFileName, onAnn
     const handleAction = (key: Key) => {
         if (key === MEDIA_ACTIONS.DOWNLOAD) {
             downloadFile(mediaUrl, mediaFileName);
-            toast({ type: 'info', message: `Downloading ${mediaFileName} started` });
+            toast({ type: 'info', message: `${mediaFileName} download has started` });
         } else if (key === MEDIA_ACTIONS.DELETE) {
             openDeleteDialog();
         } else if (key === MEDIA_ACTIONS.ANNOTATE) {
