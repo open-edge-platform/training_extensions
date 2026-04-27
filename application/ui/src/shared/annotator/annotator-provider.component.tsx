@@ -23,7 +23,7 @@ export const useAnnotator = () => {
     const context = use(AnnotatorContext);
 
     if (context === null) {
-        throw new Error('useAnnotator must be used as an AnnotatorProvider');
+        throw new Error('useAnnotator must be used within an AnnotatorProvider');
     }
 
     return context;
