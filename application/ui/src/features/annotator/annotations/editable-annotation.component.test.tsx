@@ -15,6 +15,7 @@ import {
     useAnnotationVisibility,
 } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
+import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { Annotation } from '../../../shared/types';
 import { CanvasSettingsProvider } from '../../dataset/media-preview/primary-toolbar/settings/canvas-settings-provider.component';
 import { AnnotatorLabelsProvider } from '../annotator-labels-provider.component';
@@ -85,17 +86,19 @@ const renderWithAnnotation = async (
     render(
         <svg>
             <ZoomProvider>
-                <AnnotationVisibilityProvider>
-                    <CanvasSettingsProvider>
-                        <AnnotatorLabelsProvider>
-                            <AnnotationContext.Provider value={annotation}>
-                                <EditableAnnotation>
-                                    <Child />
-                                </EditableAnnotation>
-                            </AnnotationContext.Provider>
-                        </AnnotatorLabelsProvider>
-                    </CanvasSettingsProvider>
-                </AnnotationVisibilityProvider>
+                <ToolProvider>
+                    <AnnotationVisibilityProvider>
+                        <CanvasSettingsProvider>
+                            <AnnotatorLabelsProvider>
+                                <AnnotationContext.Provider value={annotation}>
+                                    <EditableAnnotation>
+                                        <Child />
+                                    </EditableAnnotation>
+                                </AnnotationContext.Provider>
+                            </AnnotatorLabelsProvider>
+                        </CanvasSettingsProvider>
+                    </AnnotationVisibilityProvider>
+                </ToolProvider>
             </ZoomProvider>
         </svg>
     );

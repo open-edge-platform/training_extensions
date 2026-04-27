@@ -183,6 +183,7 @@ export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: 
                 style={{ position: 'relative', height: '100%', width: '100%' }}
                 onContextMenu={(event: MouseEvent): void => event.preventDefault()}
                 className={isReadOnly ? classes.readOnlyCanvas : undefined}
+                aria-label={'Annotator canvas'}
             >
                 <MediaImage image={image} mediaItem={mediaItem} />
                 <MediaAnnotations mediaItem={mediaItem} mode={mode} />
