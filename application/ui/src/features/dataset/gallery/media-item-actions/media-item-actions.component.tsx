@@ -3,7 +3,7 @@
 
 import { Key } from 'react';
 
-import { ActionButton, DialogContainer, Item, Menu, MenuTrigger } from '@geti/ui';
+import { ActionButton, DialogContainer, Item, Menu, MenuTrigger, toast } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
 import { downloadFile } from '../../../../shared/util';
@@ -30,6 +30,7 @@ export const MediaItemActions = ({ id, onDeleted, mediaUrl, mediaFileName, onAnn
     const handleAction = (key: Key) => {
         if (key === MEDIA_ACTIONS.DOWNLOAD) {
             downloadFile(mediaUrl, mediaFileName);
+            toast({ type: 'info', message: `Downloading ${mediaFileName} started` });
         } else if (key === MEDIA_ACTIONS.DELETE) {
             openDeleteDialog();
         } else if (key === MEDIA_ACTIONS.ANNOTATE) {
