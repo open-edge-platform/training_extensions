@@ -474,7 +474,6 @@ class TestModelServiceIntegration:
             (ModelFormat.OPENVINO, ["model.xml", "model.bin"], "fp16"),
             (ModelFormat.ONNX, ["model.onnx"], "fp16"),
             (ModelFormat.PYTORCH, ["model.ckpt"], "fp32"),
-            (ModelFormat.PYTORCH, ["model.pt"], "fp32"),
         ],
     )
     def test_get_model_binary_files(

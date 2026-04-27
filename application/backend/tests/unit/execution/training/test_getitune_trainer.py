@@ -196,54 +196,6 @@ class TestGetiTuneTrainerPrepareWeights:
         # Assert
         assert weights_path == expected_weights_path
 
-    def test_prepare_weights_with_parent_model_prefers_pt(
-        self,
-        tmp_path: Path,
-        fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
-    ):
-        """Test preparing parent weights prefers Ultralytics model.pt over model.ckpt."""
-        # Arrange
-        project_id = uuid4()
-        parent_model_revision_id = uuid4()
-        parent_model_variant_id = uuid4()
-        training_params = TrainingJobParams(
-            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
-            project_id=project_id,
-            model_architecture_id="object-detection-yolo26-n",
-            task=Task(task_type=TaskType.DETECTION),
-            parent_model_revision_id=parent_model_revision_id,
-            job_id=uuid4(),
-        )
-        variant_dir = (
-            tmp_path
-            / "projects"
-            / str(project_id)
-            / "models"
-            / str(parent_model_revision_id)
-            / "variants"
-            / str(parent_model_variant_id)
-        )
-        variant_dir.mkdir(parents=True, exist_ok=True)
-        expected_weights_path = variant_dir / "model.pt"
-        expected_weights_path.touch()
-        (variant_dir / "model.ckpt").touch()
-        getitune_trainer = fxt_getitune_trainer()
-
-        getitune_trainer._model_service.get_model_variants.return_value = [
-            ModelVariant(
-                id=parent_model_variant_id,
-                model_revision_id=parent_model_revision_id,
-                format=ModelFormat.PYTORCH,
-                precision=ModelPrecision.FP32,
-            )
-        ]
-
-        # Act
-        weights_path = getitune_trainer.prepare_weights(training_params)
-
-        # Assert
-        assert weights_path == expected_weights_path
-
     def test_prepare_weights_with_parent_model_no_variants(
         self,
         tmp_path: Path,
@@ -1245,8 +1197,8 @@ class TestGetiTuneTrainerStoreModelArtifacts:
     """Tests for the GetiTuneTrainer.store_model_artifacts method."""
 
     @pytest.mark.parametrize(
-        ("checkpoint_name", "expected_pytorch_model_name"),
-        [("best_checkpoint.ckpt", "model.ckpt"), ("best.pt", "model.pt")],
+        "checkpoint_name",
+        ["best_checkpoint.ckpt", "best.pt"],
         ids=["Lightning", "Ultralytics"],
     )
     def test_store_model_artifacts(
@@ -1255,7 +1207,6 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         fxt_model_service: Mock,
         tmp_path: Path,
         checkpoint_name: str,
-        expected_pytorch_model_name: str,
     ):
         """Test successful storing of model artifacts and cleanup."""
         # Arrange
@@ -1323,8 +1274,8 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         # Check PyTorch variant
         pytorch_dir = variants_dir / str(pytorch_variant_id)
         assert pytorch_dir.exists()
-        assert (pytorch_dir / expected_pytorch_model_name).exists()
-        assert (pytorch_dir / expected_pytorch_model_name).read_text() == "checkpoint content"
+        assert (pytorch_dir / "model.ckpt").exists()
+        assert (pytorch_dir / "model.ckpt").read_text() == "checkpoint content"
 
         # Check OpenVINO variant
         openvino_dir = variants_dir / str(openvino_variant_id)

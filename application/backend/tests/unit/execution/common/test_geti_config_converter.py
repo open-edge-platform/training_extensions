@@ -135,7 +135,8 @@ class TestGetiConfigConverterConvert:
 
         assert result["model"]["init_args"]["optimizer"]["init_args"]["lr"] == 0.01
 
-    def test_convert_ultralytics_recipe_uses_backend_adapter(self) -> None:
+    def test_convert_ultralytics_recipe_produces_backend_tagged_config(self) -> None:
+        """Ultralytics recipes are converted directly by GetiConfigConverter without a separate adapter."""
         geti_cfg = _make_geti_config(
             model_manifest_id="object-detection-yolo26-n",
             hyper_parameters={"training": {"learning_rate": 0.002, "batch_size": 4, "max_epochs": 10}},
