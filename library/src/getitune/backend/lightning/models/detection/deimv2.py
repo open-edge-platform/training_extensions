@@ -155,15 +155,10 @@ class DEIMV2(DEIMDFine):
             input_size=self.data_input_params.input_size[0],
         )
         model.init_weights()
-        # The DEIMTransformer decoder replaces nn.MultiheadAttention with a custom
-        # fused QKV self-attention implementation for memory efficiency. This changes
-        # parameter names: self_attn.in_proj_{weight,bias} -> qkv_proj.{weight,bias}
-        # and self_attn.out_proj.{weight,bias} -> out_proj.{weight,bias}.
-        # We scope the key mapping to decoder layers only to avoid accidentally
-        # remapping the encoder's nn.MultiheadAttention keys which already match.
+        # Remap decoder self-attention keys: checkpoint uses nn.MultiheadAttention naming,
+        # our decoder uses fused qkv_proj/out_proj. Scoped to decoder layers only.
         key_mapping: dict[str, str] = {}
-        max_decoder_layers = 6  # covers all variants (s/m: 4, l: 4, x: 6)
-        for i in range(max_decoder_layers):
+        for i in range(6):
             prefix = f"decoder.decoder.layers.{i}."
             key_mapping[f"{prefix}self_attn.in_proj_"] = f"{prefix}qkv_proj."
             key_mapping[f"{prefix}self_attn.out_proj."] = f"{prefix}out_proj."
