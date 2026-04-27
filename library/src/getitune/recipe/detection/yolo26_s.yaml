@@ -4,8 +4,8 @@ task: DETECTION
 model:
   class_path: getitune.backend.ultralytics.models.detection.UltralyticsDetectionModel
   init_args:
-    model_name: yolo26s.pt
-    pretrained: true
+    model_name: yolo26s.yaml
+    pretrained: false
     imgsz: 640
 
 engine:

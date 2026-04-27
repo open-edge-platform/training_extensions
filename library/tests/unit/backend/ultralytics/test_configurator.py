@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import yaml
@@ -19,6 +20,7 @@ from getitune.backend.ultralytics.configurator import (
     _deep_merge,
     _flatten_overrides,
 )
+from getitune.backend.ultralytics.models.base import UltralyticsModel
 from getitune.types.label import LabelInfo
 
 # ------------------------------------------------------------------
@@ -34,7 +36,8 @@ def _minimal_recipe(
     *,
     backend: str = "ultralytics",
     task: str = "DETECTION",
-    model_name: str = "yolo26n.pt",
+    model_name: str = "yolo26n.yaml",
+    pretrained: bool = False,
 ) -> dict:
     """Return a minimal valid recipe dict."""
     return {
@@ -44,7 +47,7 @@ def _minimal_recipe(
             "class_path": _DETECTION_CLASS_PATH,
             "init_args": {
                 "model_name": model_name,
-                "pretrained": True,
+                "pretrained": pretrained,
                 "imgsz": 640,
             },
         },
@@ -106,7 +109,7 @@ class TestFromRecipe:
         cfg = UltralyticsConfigurator.from_recipe(path)
         assert cfg.config.backend == "ultralytics"
         assert cfg.config.task == "DETECTION"
-        assert cfg.config.model.model_name == "yolo26n.pt"
+        assert cfg.config.model.model_name == "yolo26n.yaml"
         assert cfg.config.training.epochs == 50
         assert cfg.config.training.batch == 8
 
@@ -193,7 +196,8 @@ class TestRealRecipes:
         assert cfg.config.backend == "ultralytics"
         assert cfg.config.task == "DETECTION"
         assert cfg.config.model.class_path == _DETECTION_CLASS_PATH
-        assert cfg.config.model.pretrained is True
+        assert cfg.config.model.pretrained is False
+        assert cfg.config.model.model_name.endswith(".yaml")
         assert cfg.config.training.close_mosaic == 0
 
     @pytest.mark.parametrize("variant", ["yolo26_n", "yolo26_s", "yolo26_m"])
@@ -213,11 +217,11 @@ class TestRealRecipes:
 
         cfg = UltralyticsConfigurator.from_recipe(path)
         # Simulate switching to a different variant via override.
-        cfg.apply_overrides({"model.model_name": "yolo26x.pt"})
-        assert cfg.config.model.model_name == "yolo26x.pt"
+        cfg.apply_overrides({"model.model_name": "yolo26x.yaml"})
+        assert cfg.config.model.model_name == "yolo26x.yaml"
         # Model creation still works with the same class.
         model = cfg.create_model(_make_label_info())
-        assert model.model_name == "yolo26x.pt"
+        assert model.model_name == "yolo26x.yaml"
 
 
 class TestApplyOverrides:
@@ -265,16 +269,29 @@ class TestCreateModel:
     def test_creates_detection_model(self, tmp_path: Path) -> None:
         cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, _minimal_recipe()))
         model = cfg.create_model(_make_label_info())
-        assert model.model_name == "yolo26n.pt"
+        assert model.model_name == "yolo26n.yaml"
         assert model.label_info is not None
         assert model.label_info.num_classes == 5
-        assert model.pretrained is True
+        assert model.pretrained is False
         assert model.imgsz == 640
 
-    def test_weights_path_overrides_model_name(self, tmp_path: Path) -> None:
+    def test_weights_path_loads_checkpoint(self, tmp_path: Path) -> None:
         cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, _minimal_recipe()))
-        model = cfg.create_model(_make_label_info(), weights_path="/custom/weights.pt")
-        assert model.model_name == "/custom/weights.pt"
+        fake_weights = tmp_path / "weights.pt"
+        fake_weights.write_bytes(b"")  # placeholder file
+
+        with patch.object(UltralyticsModel, "load_checkpoint") as mock_load:
+            model = cfg.create_model(_make_label_info(), weights_path=fake_weights)
+
+        # Model name stays as config .yaml, weights loaded separately.
+        assert model.model_name == "yolo26n.yaml"
+        mock_load.assert_called_once_with(fake_weights)
+
+    def test_no_weights_path_skips_checkpoint(self, tmp_path: Path) -> None:
+        cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, _minimal_recipe()))
+        with patch.object(UltralyticsModel, "load_checkpoint") as mock_load:
+            cfg.create_model(_make_label_info())
+        mock_load.assert_not_called()
 
     def test_task_fallback_when_no_class_path(self, tmp_path: Path) -> None:
         recipe = _minimal_recipe()

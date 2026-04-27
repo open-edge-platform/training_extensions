@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any, ClassVar
 
 from ultralytics import YOLO
@@ -73,6 +74,26 @@ class UltralyticsModel:
         """Create the ``ultralytics.YOLO`` model."""
         logger.info(f"Building Ultralytics model: {self.model_name} (task={self.task})")
         return YOLO(self.model_name, task=self.task or None)
+
+    def load_checkpoint(self, weights_path: str | Path) -> None:
+        """Load pretrained weights from a local checkpoint file.
+
+        The model architecture must already be built (from a ``.yaml`` config).
+        Uses :meth:`ultralytics.YOLO.load` to inject checkpoint weights into
+        the existing model.
+
+        Args:
+            weights_path: Path to a ``.pt`` checkpoint file.
+
+        Raises:
+            FileNotFoundError: If the checkpoint file does not exist.
+        """
+        path = Path(weights_path)
+        if not path.exists():
+            msg = f"Checkpoint file not found: {path}"
+            raise FileNotFoundError(msg)
+        logger.info(f"Loading checkpoint weights from: {path}")
+        self.yolo.load(str(path))
 
     @property
     def num_classes(self) -> int | None:

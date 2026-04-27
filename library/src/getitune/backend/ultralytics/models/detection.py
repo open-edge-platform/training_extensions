@@ -14,10 +14,10 @@ from .base import UltralyticsModel
 
 
 class UltralyticsDetectionModel(UltralyticsModel):
-    """YOLO detection model (default: ``yolo11s.pt``)."""
+    """YOLO detection model (default: ``yolo11s.yaml``)."""
 
     task: ClassVar[str] = "detect"
-    default_model_name: ClassVar[str] = "yolo11s.pt"
+    default_model_name: ClassVar[str] = "yolo11s.yaml"
     trainer_cls: ClassVar[type] = DetectionTrainer
     validator_cls: ClassVar[type] = DetectionValidator
 

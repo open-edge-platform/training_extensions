@@ -150,23 +150,32 @@ class UltralyticsConfigurator:
     ) -> UltralyticsModel:
         """Instantiate the model from recipe config.
 
+        The model is always built from the recipe's ``.yaml`` architecture
+        config (no pretrained weights downloaded by Ultralytics).  When
+        *weights_path* is provided (e.g. from ``BaseWeightsService``), the
+        checkpoint is loaded into the model after construction.
+
         Args:
             label_info: Label metadata for the dataset.
-            weights_path: Optional path to base weights — overrides the
-                recipe's ``model_name`` for manifest-provided weights.
+            weights_path: Optional path to a local ``.pt`` checkpoint
+                (downloaded externally) that will be loaded into the model.
 
         Returns:
             Configured ``UltralyticsModel`` subclass instance.
         """
         model_cls = self._resolve_model_wrapper_cls()
-        model_name = self._resolve_model_name(weights_path)
 
-        return model_cls(
-            model_name=model_name,
+        model = model_cls(
+            model_name=self._config.model.model_name,
             label_info=label_info,
             pretrained=self._config.model.pretrained,
             imgsz=self._config.model.imgsz,
         )
+
+        if weights_path is not None:
+            model.load_checkpoint(weights_path)
+
+        return model
 
     def create_engine(
         self,
@@ -235,12 +244,6 @@ class UltralyticsConfigurator:
             msg = f"model.class_path must resolve to an UltralyticsModel subclass, got '{class_path}'"
             raise TypeError(msg)
         return cls
-
-    def _resolve_model_name(self, weights_path: PathLike | None) -> str:
-        """Return model name, preferring explicit *weights_path*."""
-        if weights_path is not None:
-            return str(weights_path)
-        return self._config.model.model_name
 
     # ------------------------------------------------------------------
     # Internal: override application
