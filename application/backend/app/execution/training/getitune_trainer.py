@@ -819,23 +819,8 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
     @staticmethod
     def _build_ultralytics_configurator(training_config: dict) -> UltralyticsConfigurator:
-        """Build a library configurator from the application Ultralytics config."""
-        config = training_config["model"]
-        init_args = config.get("init_args", {})
-        return UltralyticsConfigurator.from_config_dict(
-            {
-                "backend": BACKEND_ULTRALYTICS,
-                "task": training_config["task"],
-                "model": {
-                    "class_path": config["class_path"],
-                    "init_args": init_args,
-                },
-                "engine": training_config.get("engine", {}),
-                "training": training_config.get("training", {}),
-                "export": training_config.get("export", {}),
-                "data": training_config.get("data", {}),
-            }
-        )
+        """Build a library configurator from the serialised Ultralytics config dict."""
+        return UltralyticsConfigurator.from_config_dict(training_config)
 
     @classmethod
     def __build_model_config_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:

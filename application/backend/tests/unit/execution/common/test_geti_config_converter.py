@@ -136,7 +136,7 @@ class TestGetiConfigConverterConvert:
         assert result["model"]["init_args"]["optimizer"]["init_args"]["lr"] == 0.01
 
     def test_convert_ultralytics_recipe_produces_backend_tagged_config(self) -> None:
-        """Ultralytics recipes are converted directly by GetiConfigConverter without a separate adapter."""
+        """Ultralytics recipes are converted via the library-side UltralyticsConfigAdapter."""
         geti_cfg = _make_geti_config(
             model_manifest_id="object-detection-yolo26-n",
             hyper_parameters={"training": {"learning_rate": 0.002, "batch_size": 4, "max_epochs": 10}},
@@ -145,7 +145,7 @@ class TestGetiConfigConverterConvert:
         result = GetiConfigConverter.convert(geti_cfg)
 
         assert result["backend"] == "ultralytics"
-        assert result["model"]["init_args"]["model_name"] == "yolo26n.pt"
+        assert result["model"]["init_args"]["model_name"] == "yolo26n.yaml"
         assert result["training"]["lr0"] == 0.002
         assert result["training"]["batch"] == 4
         assert result["training"]["epochs"] == 10

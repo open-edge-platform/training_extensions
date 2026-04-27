@@ -5,16 +5,13 @@
 
 from __future__ import annotations
 
-import copy
 from enum import Enum
 from pathlib import Path
 from typing import Any, ClassVar
 from warnings import warn
 
-import yaml
 from getitune.backend.lightning.cli.utils import get_getitune_root_path
-from getitune.backend.ultralytics.config import UltralyticsConfig
-from getitune.backend.ultralytics.configurator import UltralyticsConfigurator
+from getitune.backend.ultralytics.config_adapter import UltralyticsConfigAdapter
 from getitune.tools.auto_configurator import AutoConfigurator
 from loguru import logger
 
@@ -719,7 +716,7 @@ class GetiConfigConverter:
             model_config_path = model_config_path / ".yaml"
 
         if GetiConfigConverter._is_ultralytics_recipe(model_config_path):
-            return GetiConfigConverter._convert_ultralytics(model_config_path, hyper_parameters)
+            return UltralyticsConfigAdapter.convert(model_config_path, hyper_parameters)
 
         default_config = AutoConfigurator(model=model_config_path).config
         if hyper_parameters:
@@ -730,187 +727,7 @@ class GetiConfigConverter:
     @staticmethod
     def _is_ultralytics_recipe(recipe_path: Path) -> bool:
         """Return whether a recipe declares the Ultralytics backend."""
-        with recipe_path.open() as f:
-            recipe = yaml.safe_load(f)
-        return isinstance(recipe, dict) and recipe.get("backend") == "ultralytics"
-
-    @staticmethod
-    def _convert_ultralytics(recipe_path: Path, hyper_parameters: dict | None) -> dict:
-        """Convert an Ultralytics recipe to a training config dict.
-
-        Uses the library ``UltralyticsConfigurator`` to parse the recipe and then
-        applies the same Geti ``hyper_parameters`` keys used by Lightning models
-        (learning_rate, batch_size, max_epochs, weight_decay, etc.) by mapping them
-        to Ultralytics config fields.
-        """
-        configurator = UltralyticsConfigurator.from_recipe(recipe_path)
-        cfg = configurator.config
-
-        # Apply hyper_parameters overrides
-        if hyper_parameters:
-            GetiConfigConverter._apply_ultralytics_hyper_parameters(configurator, hyper_parameters)
-
-        # Build the config dict consumed by GetiTuneTrainer
-        return {
-            "backend": "ultralytics",
-            "task": cfg.task,
-            "model": {
-                "class_path": cfg.model.class_path,
-                "init_args": {
-                    "model_name": cfg.model.model_name,
-                    "pretrained": cfg.model.pretrained,
-                    "imgsz": cfg.model.imgsz,
-                },
-            },
-            "engine": {"device": cfg.engine.device},
-            "training": cfg.training.to_train_args(),
-            "export": {
-                "format": cfg.export.format,
-                "precision": cfg.export.precision,
-            },
-            "data": copy.deepcopy(configurator.data_config),
-        }
-
-    @staticmethod
-    def _apply_ultralytics_hyper_parameters(
-        configurator: UltralyticsConfigurator,
-        hyper_parameters: dict,
-    ) -> None:
-        """Map Geti hyper_parameters to Ultralytics config fields.
-
-        This uses the **same** parameter names the application already uses for
-        Lightning models (learning_rate, batch_size, max_epochs, weight_decay,
-        input_size_height/width, early_stopping, augmentations).
-        """
-        training = hyper_parameters.get("training", {})
-        if training:
-            GetiConfigConverter._apply_ultralytics_training_params(configurator, training)
-
-        # Augmentation overrides
-        augmentations = hyper_parameters.get("dataset_preparation", {}).get("augmentation", {})
-        if augmentations:
-            GetiConfigConverter._apply_ultralytics_augmentations(configurator, augmentations)
-
-    @staticmethod
-    def _apply_ultralytics_training_params(
-        configurator: UltralyticsConfigurator,
-        training: dict,
-    ) -> None:
-        """Apply training-related hyper_parameters to the Ultralytics config."""
-        cfg = configurator.config
-
-        lr = training.get("learning_rate")
-        if lr is not None:
-            cfg.training.lr0 = float(lr)
-
-        weight_decay = training.get("weight_decay")
-        if weight_decay is not None:
-            cfg.training.weight_decay = float(weight_decay)
-
-        max_epochs = training.get("max_epochs")
-        if max_epochs is not None:
-            cfg.training.epochs = int(max_epochs)
-
-        batch_size = training.get("batch_size")
-        if batch_size is not None:
-            cfg.training.batch = int(batch_size)
-            # Propagate to data subsets
-            for subset in ("train_subset", "val_subset", "test_subset"):
-                if subset in configurator.data_config:
-                    configurator.data_config[subset]["batch_size"] = int(batch_size)
-
-        height = training.get("input_size_height")
-        width = training.get("input_size_width")
-        if height is not None and width is not None:
-            h, w = int(height), int(width)
-            cfg.model.imgsz = max(h, w)
-            configurator.data_config["input_size"] = [h, w]
-
-        GetiConfigConverter._apply_ultralytics_early_stopping(cfg, training.get("early_stopping"))
-
-    @staticmethod
-    def _apply_ultralytics_early_stopping(
-        cfg: UltralyticsConfig,
-        early_stopping: dict | None,
-    ) -> None:
-        """Apply early stopping overrides to an Ultralytics training config."""
-        if not isinstance(early_stopping, dict):
-            return
-        if early_stopping.get("enable") is False:
-            cfg.training.patience = 0
-        elif early_stopping.get("enable") is True and early_stopping.get("patience") is not None:
-            cfg.training.patience = int(early_stopping["patience"])
-
-    @staticmethod
-    def _apply_ultralytics_augmentations(
-        configurator: UltralyticsConfigurator,
-        augmentations: dict,
-    ) -> None:
-        """Apply augmentation overrides to an Ultralytics data config."""
-        tiling = augmentations.get("tiling")
-        if isinstance(tiling, dict):
-            data = configurator.data_config
-            tile_config = data.setdefault(
-                "tile_config",
-                {"enable_tiler": False, "enable_adaptive_tiling": False},
-            )
-            tile_config["enable_tiler"] = bool(tiling.get("enable", False))
-            if tile_config["enable_tiler"]:
-                tile_size = int(tiling.get("tile_size", 400))
-                tile_config["enable_adaptive_tiling"] = bool(tiling.get("enable_adaptive_tiling", True))
-                tile_config["tile_size"] = [tile_size, tile_size]
-                tile_config["overlap"] = float(tiling.get("tile_overlap", 0.2))
-
-        flip = augmentations.get("random_horizontal_flip")
-        if isinstance(flip, dict):
-            GetiConfigConverter._set_ultralytics_cpu_augmentation(
-                configurator,
-                class_path="torchvision.transforms.v2.RandomHorizontalFlip",
-                enabled=flip.get("enable", True),
-                init_args={"p": flip.get("probability", 0.5)},
-                insert_before="getitune.data.augmentation.transforms.Resize",
-            )
-
-        iou_crop = augmentations.get("iou_random_crop")
-        if isinstance(iou_crop, dict):
-            GetiConfigConverter._set_ultralytics_cpu_augmentation(
-                configurator,
-                class_path="getitune.data.augmentation.transforms.RandomIoUCrop",
-                enabled=iou_crop.get("enable", True),
-                init_args=None,
-                insert_before="getitune.data.augmentation.transforms.Resize",
-            )
-
-    @staticmethod
-    def _set_ultralytics_cpu_augmentation(
-        configurator: UltralyticsConfigurator,
-        class_path: str,
-        enabled: bool,
-        init_args: dict[str, Any] | None,
-        insert_before: str,
-    ) -> None:
-        """Add/remove/update a CPU augmentation in the Ultralytics data config."""
-        train_subset = configurator.data_config.get("train_subset", {})
-        aug_list = train_subset.setdefault("augmentations_cpu", [])
-        existing_idx = next((idx for idx, aug in enumerate(aug_list) if aug.get("class_path") == class_path), None)
-
-        if not enabled:
-            if existing_idx is not None:
-                aug_list.pop(existing_idx)
-            return
-
-        aug_config: dict[str, Any] = {"class_path": class_path}
-        if init_args is not None:
-            aug_config["init_args"] = {k: v for k, v in init_args.items() if v is not None}
-
-        if existing_idx is not None:
-            aug_list[existing_idx] = aug_config
-            return
-
-        insert_idx = next(
-            (idx for idx, aug in enumerate(aug_list) if aug.get("class_path") == insert_before), len(aug_list)
-        )
-        aug_list.insert(insert_idx, aug_config)
+        return UltralyticsConfigAdapter.is_ultralytics_recipe(recipe_path)
 
     @staticmethod
     def _get_params(hyperparameters: dict) -> dict:
