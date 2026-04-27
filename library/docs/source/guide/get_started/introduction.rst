@@ -1,7 +1,7 @@
 .. raw:: html
 
     <div style="margin-bottom:30px;">
-    <img src="../../_static/logos/getitune-logo-black.png" alt="Logo" width="900" style="display:block;margin:auto;background-color:white;">
+    <img src="../../_static/logos/geti-header.png" alt="Geti Library" width="900" style="display:block;margin:auto;">
     </div>
 
 Introduction

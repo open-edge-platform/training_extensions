@@ -99,8 +99,8 @@ html_theme_options = {
     ],
     "search_bar_text": "Search",
     "logo": {
-        "image_light": "logos/getitune-logo.png",
-        "image_dark": "logos/getitune-logo.png",
+        "image_light": "logos/geti-header.png",
+        "image_dark": "logos/geti-header.png",
     },
     "icon_links": [
         {
