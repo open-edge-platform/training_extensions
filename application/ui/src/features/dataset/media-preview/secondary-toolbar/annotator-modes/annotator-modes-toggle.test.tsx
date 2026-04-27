@@ -134,4 +134,22 @@ describe('AnnotatorModes', () => {
             expect(screen.queryByRole('status', { name: 'Prediction available' })).not.toBeInTheDocument();
         });
     });
+
+    describe('Pre-dismissed cues on mount', () => {
+        it('does not show annotation cue when starting in annotation mode with annotations, after switching to prediction', () => {
+            renderComponent({ mode: 'annotation', hasAnnotations: true, hasPredictions: false });
+
+            fireEvent.click(screen.getByRole('button', { name: 'Prediction' }));
+
+            expect(screen.queryByRole('status', { name: 'Annotation available' })).not.toBeInTheDocument();
+        });
+
+        it('does not show prediction cue when starting in prediction mode with predictions, after switching to annotation', () => {
+            renderComponent({ mode: 'prediction', hasPredictions: true, hasAnnotations: false });
+
+            fireEvent.click(screen.getByRole('button', { name: 'Annotation' }));
+
+            expect(screen.queryByRole('status', { name: 'Prediction available' })).not.toBeInTheDocument();
+        });
+    });
 });

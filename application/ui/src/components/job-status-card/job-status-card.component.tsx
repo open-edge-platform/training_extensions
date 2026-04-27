@@ -11,7 +11,8 @@ type JobStatusCardProps = {
     title: string;
     message?: string;
     bottomIcon?: ReactNode;
-    bottomLeftMessage: ReactNode;
+    bottomLeftMessage?: ReactNode;
+    bottomIconMessage?: ReactNode;
     bottomRightMessage?: string;
     actionButtons: ReactNode;
 };
@@ -20,6 +21,7 @@ export const JobStatusCard = ({
     title,
     message,
     actionButtons,
+    bottomIconMessage,
     bottomLeftMessage,
     bottomRightMessage,
     bottomIcon = null,
@@ -47,7 +49,10 @@ export const JobStatusCard = ({
 
             <Flex justifyContent='space-between'>
                 <Flex gap={'size-100'} direction={'column'}>
-                    {bottomIcon}
+                    <Flex gap={'size-100'} alignItems={'center'}>
+                        {bottomIcon}
+                        {isNonEmptyString(bottomIconMessage) ? <Text>{bottomIconMessage}</Text> : bottomIconMessage}
+                    </Flex>
 
                     {isNonEmptyString(bottomLeftMessage) ? <Text>{bottomLeftMessage}</Text> : bottomLeftMessage}
                 </Flex>
