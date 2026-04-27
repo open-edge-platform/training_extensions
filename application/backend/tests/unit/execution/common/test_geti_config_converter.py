@@ -136,7 +136,7 @@ class TestGetiConfigConverterConvert:
         assert result["model"]["init_args"]["optimizer"]["init_args"]["lr"] == 0.01
 
     def test_convert_ultralytics_recipe_produces_backend_tagged_config(self) -> None:
-        """Ultralytics recipes are converted via the library-side UltralyticsConfigAdapter."""
+        """Ultralytics recipes are converted via the library-side UltralyticsConfigurator."""
         geti_cfg = _make_geti_config(
             model_manifest_id="object-detection-yolo26-n",
             hyper_parameters={"training": {"learning_rate": 0.002, "batch_size": 4, "max_epochs": 10}},
@@ -150,6 +150,54 @@ class TestGetiConfigConverterConvert:
         assert result["training"]["batch"] == 4
         assert result["training"]["epochs"] == 10
         assert result["data"]["train_subset"]["batch_size"] == 4
+
+    def test_convert_ultralytics_applies_augmentations_via_transforms_updater(self) -> None:
+        """Augmentation hyper_parameters should flow through the shared TransformsUpdater for Ultralytics."""
+        geti_cfg = _make_geti_config(
+            model_manifest_id="object-detection-yolo26-n",
+            hyper_parameters={
+                "dataset_preparation": {
+                    "augmentation": {
+                        "iou_random_crop": {"enable": False},
+                    }
+                }
+            },
+        )
+
+        result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["backend"] == "ultralytics"
+        # iou_random_crop should have been removed by TransformsUpdater
+        cpu_augs = result["data"]["train_subset"]["augmentations_cpu"]
+        crop = [a for a in cpu_augs if "RandomIoUCrop" in a.get("class_path", "")]
+        assert len(crop) == 0
+
+    def test_convert_ultralytics_applies_tiling_via_transforms_updater(self) -> None:
+        """Tiling hyper_parameters should flow through the shared TransformsUpdater for Ultralytics."""
+        geti_cfg = _make_geti_config(
+            model_manifest_id="object-detection-yolo26-n",
+            hyper_parameters={
+                "dataset_preparation": {
+                    "augmentation": {
+                        "tiling": {
+                            "enable": True,
+                            "enable_adaptive_tiling": True,
+                            "tile_size": 512,
+                            "tile_overlap": 0.3,
+                        }
+                    }
+                }
+            },
+        )
+
+        result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["backend"] == "ultralytics"
+        tc = result["data"]["tile_config"]
+        assert tc["enable_tiler"] is True
+        assert tc["enable_adaptive_tiling"] is True
+        assert tc["tile_size"] == (512, 512)
+        assert tc["overlap"] == 0.3
 
     def test_convert_applies_batch_size(self) -> None:
         getitune_cfg = _make_getitune_config()

@@ -1,10 +1,18 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Backend-local configurator for Ultralytics recipes."""
+"""Backend-local configurator for Ultralytics recipes.
+
+This module is the single entry point for creating, configuring, and
+serialising Ultralytics training configs.  The application converter calls
+:meth:`UltralyticsConfigurator.convert` (or the lower-level
+:meth:`apply_hyper_parameters` + :meth:`to_config_dict`) — no
+backend-specific knowledge is required on the caller side.
+"""
 
 from __future__ import annotations
 
+import copy
 import importlib
 import logging
 from collections.abc import Mapping
@@ -46,7 +54,12 @@ _SUPPORTED_TASKS: frozenset[str] = frozenset(_TASK_TO_DEFAULT_CLASS_PATH)
 
 
 class UltralyticsConfigurator:
-    """Parse Ultralytics recipes and construct model / engine instances."""
+    """Parse Ultralytics recipes, apply hyper-parameters, and construct model / engine instances.
+
+    This class consolidates recipe loading, hyper-parameter translation
+    (Geti → Ultralytics naming), serialisation, and model/engine
+    instantiation in a single place.
+    """
 
     def __init__(
         self,
@@ -59,7 +72,7 @@ class UltralyticsConfigurator:
         self._validate_task()
 
     # ------------------------------------------------------------------
-    # Construction
+    # Construction helpers
     # ------------------------------------------------------------------
 
     @classmethod
@@ -121,6 +134,78 @@ class UltralyticsConfigurator:
     def data_config(self) -> dict[str, Any]:
         """The resolved DataModule-compatible data configuration."""
         return self._data_config
+
+    # ------------------------------------------------------------------
+    # High-level API (used by the application converter)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def is_ultralytics_recipe(recipe_path: Path) -> bool:
+        """Return whether *recipe_path* declares the Ultralytics backend."""
+        with recipe_path.open() as f:
+            recipe = yaml.safe_load(f)
+        return isinstance(recipe, dict) and recipe.get("backend") == "ultralytics"
+
+    @classmethod
+    def convert(cls, recipe_path: Path, hyper_parameters: dict | None = None) -> dict:
+        """Load an Ultralytics recipe, apply *hyper_parameters*, return a training config dict.
+
+        This is the single entry-point the application converter should call.
+
+        Args:
+            recipe_path: Path to the Ultralytics recipe YAML.
+            hyper_parameters: Standard Geti hyper_parameter dict (same keys as
+                Lightning: ``learning_rate``, ``batch_size``, ``max_epochs``, etc.).
+
+        Returns:
+            A serialised training config dict consumable by
+            :meth:`from_config_dict`.
+        """
+        configurator = cls.from_recipe(recipe_path)
+        if hyper_parameters:
+            configurator.apply_hyper_parameters(hyper_parameters)
+        return configurator.to_config_dict()
+
+    def apply_hyper_parameters(self, hyper_parameters: dict) -> None:
+        """Apply standard Geti *hyper_parameters* to this configurator.
+
+        Only handles the ``training`` section (learning rate, epochs, batch size,
+        etc.).  Augmentation and tiling updates are **not** applied here — they
+        flow through the standard ``TransformsUpdater`` in the application layer,
+        identically to Lightning recipes.
+        """
+        training = hyper_parameters.get("training", {})
+        if training:
+            self._apply_training_params(training)
+
+    def to_config_dict(self) -> dict:
+        """Serialise this configurator to the dict consumed by the trainer."""
+        cfg = self._config
+        data = copy.deepcopy(self._data_config)
+
+        # Ensure tile_config exists with defaults so the shared
+        # TransformsUpdater.update_tiling() can write to it.
+        data.setdefault("tile_config", {"enable_tiler": False, "enable_adaptive_tiling": False})
+
+        return {
+            "backend": "ultralytics",
+            "task": cfg.task,
+            "model": {
+                "class_path": cfg.model.class_path,
+                "init_args": {
+                    "model_name": cfg.model.model_name,
+                    "pretrained": cfg.model.pretrained,
+                    "imgsz": cfg.model.imgsz,
+                },
+            },
+            "engine": {"device": cfg.engine.device},
+            "training": cfg.training.to_train_args(),
+            "export": {
+                "format": cfg.export.format,
+                "precision": cfg.export.precision,
+            },
+            "data": data,
+        }
 
     # ------------------------------------------------------------------
     # Native overrides (library usage)
@@ -210,6 +295,56 @@ class UltralyticsConfigurator:
             train_args=self._config.training.to_train_args(),
             **engine_kwargs,
         )
+
+    # ------------------------------------------------------------------
+    # Internal: hyper-parameter translation
+    # ------------------------------------------------------------------
+
+    def _apply_training_params(self, training: dict) -> None:
+        """Map standard Geti training params to Ultralytics config fields."""
+        cfg = self._config
+
+        lr = training.get("learning_rate")
+        if lr is not None:
+            cfg.training.lr0 = float(lr)
+
+        weight_decay = training.get("weight_decay")
+        if weight_decay is not None:
+            cfg.training.weight_decay = float(weight_decay)
+
+        max_epochs = training.get("max_epochs")
+        if max_epochs is not None:
+            cfg.training.epochs = int(max_epochs)
+
+        batch_size = training.get("batch_size")
+        if batch_size is not None:
+            cfg.training.batch = int(batch_size)
+            # Propagate to data subsets so DataModule sees the same value.
+            for subset in ("train_subset", "val_subset", "test_subset"):
+                if subset in self._data_config:
+                    self._data_config[subset]["batch_size"] = int(batch_size)
+
+        height = training.get("input_size_height")
+        width = training.get("input_size_width")
+        if height is not None and width is not None:
+            h, w = int(height), int(width)
+            cfg.model.imgsz = max(h, w)
+            self._data_config["input_size"] = [h, w]
+
+        self._apply_early_stopping(cfg, training.get("early_stopping"))
+
+    @staticmethod
+    def _apply_early_stopping(
+        cfg: UltralyticsConfig,
+        early_stopping: dict | None,
+    ) -> None:
+        """Map early-stopping params to Ultralytics ``patience``."""
+        if not isinstance(early_stopping, dict):
+            return
+        if early_stopping.get("enable") is False:
+            cfg.training.patience = 0
+        elif early_stopping.get("enable") is True and early_stopping.get("patience") is not None:
+            cfg.training.patience = int(early_stopping["patience"])
 
     # ------------------------------------------------------------------
     # Internal: validation

@@ -11,7 +11,7 @@ from typing import Any, ClassVar
 from warnings import warn
 
 from getitune.backend.lightning.cli.utils import get_getitune_root_path
-from getitune.backend.ultralytics.config_adapter import UltralyticsConfigAdapter
+from getitune.backend.ultralytics.configurator import UltralyticsConfigurator
 from getitune.tools.auto_configurator import AutoConfigurator
 from loguru import logger
 
@@ -701,7 +701,21 @@ class GetiConfigConverter:
         hyper_parameters = config["hyper_parameters"]
 
         model_config_path: Path = TEMPLATE_ID_MAPPING[config["model_manifest_id"]]["recipe_path"]  # type: ignore[assignment]
-        # override necessary parameters for config
+
+        # Ultralytics recipes handle tiling through the data section (TransformsUpdater),
+        # not through separate _tile recipe files.  Dispatch early.
+        if model_config_path.suffix != ".yaml":
+            model_config_path = model_config_path / ".yaml"
+        if GetiConfigConverter._is_ultralytics_recipe(model_config_path):
+            config_dict = UltralyticsConfigurator.convert(model_config_path, hyper_parameters)
+            # Apply the standard augmentation / tiling updates to the data section.
+            # This is the same TransformsUpdater path that Lightning recipes use,
+            # so all augmentations are supported identically across backends.
+            if hyper_parameters:
+                GetiConfigConverter._update_data_transforms(config_dict, hyper_parameters)
+            return config_dict
+
+        # Lightning-specific: resolve tile recipe variant and sub-task type.
         tile_enabled = hyper_parameters and hyper_parameters.get("dataset_preparation", {}).get("augmentation", {}).get(
             "tiling",
             {},
@@ -712,11 +726,6 @@ class GetiConfigConverter:
         # classification task type can't be deducted from template name, try to extract from config
         if (sub_task_type := config["sub_task_type"]) and "_cls" in model_config_path.parent.name:
             model_config_path = RECIPE_PATH / "classification" / sub_task_type.lower() / model_config_path.name
-        if model_config_path.suffix != ".yaml":
-            model_config_path = model_config_path / ".yaml"
-
-        if GetiConfigConverter._is_ultralytics_recipe(model_config_path):
-            return UltralyticsConfigAdapter.convert(model_config_path, hyper_parameters)
 
         default_config = AutoConfigurator(model=model_config_path).config
         if hyper_parameters:
@@ -727,7 +736,7 @@ class GetiConfigConverter:
     @staticmethod
     def _is_ultralytics_recipe(recipe_path: Path) -> bool:
         """Return whether a recipe declares the Ultralytics backend."""
-        return UltralyticsConfigAdapter.is_ultralytics_recipe(recipe_path)
+        return UltralyticsConfigurator.is_ultralytics_recipe(recipe_path)
 
     @staticmethod
     def _get_params(hyperparameters: dict) -> dict:
@@ -817,3 +826,24 @@ class GetiConfigConverter:
         """
         config.pop("config")  # Remove config key that for CLI
         config["data"].pop("__path__", None)  # Remove __path__ key that for CLI overriding
+
+    @staticmethod
+    def _update_data_transforms(config: dict, param_dict: dict) -> None:
+        """Apply augmentation and tiling updates to the ``data`` section of *config*.
+
+        This is the shared path used by **all** backends — the same
+        ``TransformsUpdater`` logic that Lightning uses also runs for
+        Ultralytics configs, so every augmentation in the getitune pipeline
+        is supported identically.
+        """
+        augmentation_params = param_dict.get("dataset_preparation", {}).get("augmentation", {})
+        if not augmentation_params:
+            return
+
+        # Work on a copy so we don't mutate the caller's dict.
+        augmentation_params = dict(augmentation_params)
+        tiling = augmentation_params.pop("tiling", None)
+        augmentation_params.pop("deim_framework", None)  # Not applicable for Ultralytics
+
+        TransformsUpdater.update_tiling(tiling, config)
+        TransformsUpdater.update(augmentation_params, config)

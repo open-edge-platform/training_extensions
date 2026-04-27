@@ -62,6 +62,38 @@ def _minimal_recipe(
     }
 
 
+def _minimal_ultralytics_recipe() -> dict:
+    """Return a minimal valid Ultralytics recipe dict with data section."""
+    return {
+        "backend": "ultralytics",
+        "task": "DETECTION",
+        "model": {
+            "class_path": _DETECTION_CLASS_PATH,
+            "init_args": {
+                "model_name": "yolo26n.yaml",
+                "pretrained": False,
+                "imgsz": 640,
+            },
+        },
+        "engine": {"device": "auto"},
+        "training": {
+            "epochs": 100,
+            "batch": 16,
+            "lr0": 0.01,
+            "weight_decay": 0.0005,
+            "patience": 100,
+            "close_mosaic": 0,
+        },
+        "export": {"format": "OPENVINO", "precision": "FP32"},
+        "data": {
+            "input_size": [640, 640],
+            "train_subset": {"batch_size": 16, "augmentations_cpu": []},
+            "val_subset": {"batch_size": 16},
+            "test_subset": {"batch_size": 16},
+        },
+    }
+
+
 def _write_recipe(tmp_path: Path, recipe: dict, name: str = "recipe.yaml") -> Path:
     """Write a recipe dict to a YAML file and return the path."""
     path = tmp_path / name
@@ -71,6 +103,11 @@ def _write_recipe(tmp_path: Path, recipe: dict, name: str = "recipe.yaml") -> Pa
 
 def _make_label_info(num_classes: int = 5) -> LabelInfo:
     return LabelInfo.from_num_classes(num_classes)
+
+
+# ==================================================================
+# Config dataclass tests
+# ==================================================================
 
 
 class TestUltralyticsTrainConfig:
@@ -101,6 +138,30 @@ class TestUltralyticsConfig:
         assert cfg.model.pretrained is True
         assert cfg.engine.device == "auto"
         assert cfg.export.format == "OPENVINO"
+
+
+# ==================================================================
+# is_ultralytics_recipe
+# ==================================================================
+
+
+class TestIsUltralyticsRecipe:
+    def test_true_for_ultralytics_backend(self, tmp_path: Path) -> None:
+        path = _write_recipe(tmp_path, {"backend": "ultralytics", "task": "DETECTION"})
+        assert UltralyticsConfigurator.is_ultralytics_recipe(path) is True
+
+    def test_false_for_lightning_backend(self, tmp_path: Path) -> None:
+        path = _write_recipe(tmp_path, {"backend": "lightning", "task": "DETECTION"})
+        assert UltralyticsConfigurator.is_ultralytics_recipe(path) is False
+
+    def test_false_for_no_backend(self, tmp_path: Path) -> None:
+        path = _write_recipe(tmp_path, {"task": "DETECTION"})
+        assert UltralyticsConfigurator.is_ultralytics_recipe(path) is False
+
+
+# ==================================================================
+# from_recipe
+# ==================================================================
 
 
 class TestFromRecipe:
@@ -184,6 +245,132 @@ class TestFromRecipe:
             UltralyticsConfigurator.from_recipe(path)
 
 
+# ==================================================================
+# convert (full round-trip)
+# ==================================================================
+
+
+class TestConvert:
+    def test_convert_produces_backend_tagged_dict(self, tmp_path: Path) -> None:
+        path = _write_recipe(tmp_path, _minimal_ultralytics_recipe())
+        result = UltralyticsConfigurator.convert(path)
+        assert result["backend"] == "ultralytics"
+        assert result["task"] == "DETECTION"
+        assert result["model"]["init_args"]["model_name"] == "yolo26n.yaml"
+
+    def test_convert_applies_hyper_parameters(self, tmp_path: Path) -> None:
+        path = _write_recipe(tmp_path, _minimal_ultralytics_recipe())
+        result = UltralyticsConfigurator.convert(
+            path,
+            hyper_parameters={"training": {"learning_rate": 0.002, "batch_size": 4, "max_epochs": 10}},
+        )
+        assert result["training"]["lr0"] == 0.002
+        assert result["training"]["batch"] == 4
+        assert result["training"]["epochs"] == 10
+        assert result["data"]["train_subset"]["batch_size"] == 4
+
+    def test_convert_without_hyper_parameters(self, tmp_path: Path) -> None:
+        path = _write_recipe(tmp_path, _minimal_ultralytics_recipe())
+        result = UltralyticsConfigurator.convert(path, hyper_parameters=None)
+        assert result["training"]["lr0"] == 0.01
+        assert result["training"]["epochs"] == 100
+
+    def test_convert_roundtrips_through_from_config_dict(self, tmp_path: Path) -> None:
+        """Config dict from convert() must be consumable by from_config_dict()."""
+        path = _write_recipe(tmp_path, _minimal_ultralytics_recipe())
+        config_dict = UltralyticsConfigurator.convert(path)
+        configurator = UltralyticsConfigurator.from_config_dict(config_dict)
+        assert configurator.config.model.model_name == "yolo26n.yaml"
+        assert configurator.config.training.epochs == 100
+
+
+# ==================================================================
+# apply_hyper_parameters (instance method)
+# ==================================================================
+
+
+class TestApplyHyperParameters:
+    def _make_configurator(self, tmp_path: Path) -> UltralyticsConfigurator:
+        path = _write_recipe(tmp_path, _minimal_ultralytics_recipe())
+        return UltralyticsConfigurator.from_recipe(path)
+
+    def test_learning_rate(self, tmp_path: Path) -> None:
+        cfg = self._make_configurator(tmp_path)
+        cfg.apply_hyper_parameters({"training": {"learning_rate": 0.05}})
+        assert cfg.config.training.lr0 == 0.05
+
+    def test_weight_decay(self, tmp_path: Path) -> None:
+        cfg = self._make_configurator(tmp_path)
+        cfg.apply_hyper_parameters({"training": {"weight_decay": 0.001}})
+        assert cfg.config.training.weight_decay == 0.001
+
+    def test_max_epochs(self, tmp_path: Path) -> None:
+        cfg = self._make_configurator(tmp_path)
+        cfg.apply_hyper_parameters({"training": {"max_epochs": 50}})
+        assert cfg.config.training.epochs == 50
+
+    def test_batch_size_propagates_to_data(self, tmp_path: Path) -> None:
+        cfg = self._make_configurator(tmp_path)
+        cfg.apply_hyper_parameters({"training": {"batch_size": 8}})
+        assert cfg.config.training.batch == 8
+        assert cfg.data_config["train_subset"]["batch_size"] == 8
+        assert cfg.data_config["val_subset"]["batch_size"] == 8
+        assert cfg.data_config["test_subset"]["batch_size"] == 8
+
+    def test_input_size(self, tmp_path: Path) -> None:
+        cfg = self._make_configurator(tmp_path)
+        cfg.apply_hyper_parameters({"training": {"input_size_height": 320, "input_size_width": 320}})
+        assert cfg.config.model.imgsz == 320
+        assert cfg.data_config["input_size"] == [320, 320]
+
+    def test_early_stopping_disable(self, tmp_path: Path) -> None:
+        cfg = self._make_configurator(tmp_path)
+        cfg.apply_hyper_parameters({"training": {"early_stopping": {"enable": False}}})
+        assert cfg.config.training.patience == 0
+
+    def test_early_stopping_set_patience(self, tmp_path: Path) -> None:
+        cfg = self._make_configurator(tmp_path)
+        cfg.apply_hyper_parameters({"training": {"early_stopping": {"enable": True, "patience": 25}}})
+        assert cfg.config.training.patience == 25
+
+
+# ==================================================================
+# to_config_dict (instance method)
+# ==================================================================
+
+
+class TestToConfigDict:
+    def test_keys_present(self) -> None:
+        cfg = UltralyticsConfigurator.from_config_dict(_minimal_ultralytics_recipe())
+        result = cfg.to_config_dict()
+        assert set(result.keys()) == {"backend", "task", "model", "engine", "training", "export", "data"}
+
+    def test_model_section(self) -> None:
+        cfg = UltralyticsConfigurator.from_config_dict(_minimal_ultralytics_recipe())
+        result = cfg.to_config_dict()
+        assert result["model"]["init_args"]["model_name"] == "yolo26n.yaml"
+        assert result["model"]["init_args"]["pretrained"] is False
+
+    def test_data_is_deep_copy(self) -> None:
+        cfg = UltralyticsConfigurator.from_config_dict(_minimal_ultralytics_recipe())
+        result = cfg.to_config_dict()
+        # Mutating the output should not affect the configurator
+        result["data"]["input_size"] = [999, 999]
+        assert cfg.data_config["input_size"] == [640, 640]
+
+    def test_tile_config_defaults_present(self) -> None:
+        """to_config_dict() should ensure tile_config exists in the data section."""
+        cfg = UltralyticsConfigurator.from_config_dict(_minimal_ultralytics_recipe())
+        result = cfg.to_config_dict()
+        assert "tile_config" in result["data"]
+        assert result["data"]["tile_config"]["enable_tiler"] is False
+
+
+# ==================================================================
+# Real recipes (convert + configurator)
+# ==================================================================
+
+
 class TestRealRecipes:
     """Verify the shipped YOLO26 recipe files parse correctly."""
 
@@ -222,6 +409,32 @@ class TestRealRecipes:
         # Model creation still works with the same class.
         model = cfg.create_model(_make_label_info())
         assert model.model_name == "yolo26x.yaml"
+
+    @pytest.mark.parametrize("variant", ["yolo26_n", "yolo26_s", "yolo26_m"])
+    def test_convert_real_recipe(self, variant: str) -> None:
+        path = _RECIPE_DIR / "detection" / f"{variant}.yaml"
+        if not path.exists():
+            pytest.skip(f"Recipe not found: {path}")
+        result = UltralyticsConfigurator.convert(path)
+        assert result["backend"] == "ultralytics"
+        assert result["task"] == "DETECTION"
+        assert result["model"]["init_args"]["model_name"].endswith(".yaml")
+        assert result["model"]["init_args"]["pretrained"] is False
+
+    @pytest.mark.parametrize("variant", ["yolo26_n", "yolo26_s", "yolo26_m"])
+    def test_real_recipe_roundtrips(self, variant: str) -> None:
+        """Config from convert() can reconstruct a configurator."""
+        path = _RECIPE_DIR / "detection" / f"{variant}.yaml"
+        if not path.exists():
+            pytest.skip(f"Recipe not found: {path}")
+        config_dict = UltralyticsConfigurator.convert(path)
+        configurator = UltralyticsConfigurator.from_config_dict(config_dict)
+        assert configurator.config.backend == "ultralytics"
+
+
+# ==================================================================
+# apply_overrides
+# ==================================================================
 
 
 class TestApplyOverrides:
@@ -263,6 +476,11 @@ class TestApplyOverrides:
         original_epochs = cfg.config.training.epochs
         cfg.apply_overrides(None)
         assert cfg.config.training.epochs == original_epochs
+
+
+# ==================================================================
+# create_model
+# ==================================================================
 
 
 class TestCreateModel:
@@ -322,6 +540,11 @@ class TestCreateModel:
             cfg.create_model(_make_label_info())
 
 
+# ==================================================================
+# create_engine
+# ==================================================================
+
+
 class TestCreateEngine:
     def test_creates_engine(self, tmp_path: Path) -> None:
         cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, _minimal_recipe()))
@@ -352,6 +575,11 @@ class TestCreateEngine:
         import torch
 
         assert engine._device == torch.device("cpu")
+
+
+# ==================================================================
+# Module-level helpers
+# ==================================================================
 
 
 class TestFlattenOverrides:
