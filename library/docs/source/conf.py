@@ -23,7 +23,7 @@ from getitune import __version__
 # -- Project information ----------------------------------------------------- #
 
 project = "Geti Library"
-copyright = "2024, Geti Library Contributors"
+copyright = "2024-2026, Geti Library Contributors"
 author = "Geti Library Contributors"
 release = __version__
 
@@ -119,7 +119,7 @@ html_theme_options = {
 html_context = {
     "github_user": "open-edge-platform",
     "github_repo": "training_extensions",
-    "github_version": "master",
+    "github_version": "develop",
     "doc_path": "docs/source/",
 }
 
