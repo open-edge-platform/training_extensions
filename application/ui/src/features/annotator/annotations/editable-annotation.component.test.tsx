@@ -14,6 +14,7 @@ import {
     AnnotationVisibilityProvider,
     useAnnotationVisibility,
 } from '../../../shared/annotator/annotation-visibility-provider.component';
+import { AnnotatorProvider } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { Annotation } from '../../../shared/types';
@@ -86,19 +87,21 @@ const renderWithAnnotation = async (
     render(
         <svg>
             <ZoomProvider>
-                <ToolProvider>
-                    <AnnotationVisibilityProvider>
-                        <CanvasSettingsProvider>
-                            <AnnotatorLabelsProvider>
-                                <AnnotationContext.Provider value={annotation}>
-                                    <EditableAnnotation>
-                                        <Child />
-                                    </EditableAnnotation>
-                                </AnnotationContext.Provider>
-                            </AnnotatorLabelsProvider>
-                        </CanvasSettingsProvider>
-                    </AnnotationVisibilityProvider>
-                </ToolProvider>
+                <AnnotatorProvider>
+                    <ToolProvider>
+                        <AnnotationVisibilityProvider>
+                            <CanvasSettingsProvider>
+                                <AnnotatorLabelsProvider>
+                                    <AnnotationContext.Provider value={annotation}>
+                                        <EditableAnnotation>
+                                            <Child />
+                                        </EditableAnnotation>
+                                    </AnnotationContext.Provider>
+                                </AnnotatorLabelsProvider>
+                            </CanvasSettingsProvider>
+                        </AnnotationVisibilityProvider>
+                    </ToolProvider>
+                </AnnotatorProvider>
             </ZoomProvider>
         </svg>
     );

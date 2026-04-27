@@ -7,6 +7,7 @@ import { useEventListener } from 'hooks/event-listener.hook';
 
 import { useZoom } from '../../../components/zoom/zoom.provider';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
+import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { useTool } from '../../../shared/annotator/tool-provider.component';
 import { EditBoundingBox } from '../tools/edit-bounding-box/edit-bounding-box.component';
@@ -21,8 +22,7 @@ interface EditAnnotationProps {
 const useUnselectAnnotationOnOutsideClick = (ref: RefObject<SVGGElement | null>) => {
     const { selectedAnnotations, setSelectedAnnotations } = useSelectedAnnotations();
     const { activeTool } = useTool();
-
-    const canvas = document.querySelector("[aria-label='Annotator canvas']");
+    const { canvasRef } = useAnnotator();
 
     useEventListener(
         'pointerdown',
@@ -49,7 +49,7 @@ const useUnselectAnnotationOnOutsideClick = (ref: RefObject<SVGGElement | null>)
 
             setSelectedAnnotations(new Set());
         },
-        canvas
+        canvasRef
     );
 };
 
