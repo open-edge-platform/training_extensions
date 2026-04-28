@@ -72,3 +72,40 @@ class TestMaskRCNN:
         # fxt_model.explain_mode = True  # noqa: ERA001
         # output = fxt_model.forward_for_tracing(torch.randn(1, 3, 32, 32))  # noqa: ERA001
         # assert len(output) == 5  # noqa: ERA001
+
+    def test_maskrcnn_tv_optimization_config_excludes_mask_roi_pool(self) -> None:
+        """``MaskRCNNTV`` PTQ config must exclude ``mask_roi_pool``.
+
+        NNCF calibration on small datasets can leave scatter/slice nodes inside
+        ``roi_heads.mask_roi_pool`` without statistics, raising
+        ``InternalError: Statistics were not collected for the node
+        __module.model.roi_heads.mask_roi_pool/aten::scatter/Slice_3``.
+        Excluding the subgraph from PTQ keeps quantization stable.
+        """
+        model = MaskRCNNTV(
+            label_info=3,
+            model_name="maskrcnn_resnet_50",
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
+        cfg = model._optimization_config
+        assert "ignored_scope" in cfg
+        ignored = cfg["ignored_scope"]
+        assert "patterns" in ignored
+        assert any("mask_roi_pool" in p for p in ignored["patterns"])
+        assert ignored.get("validate") is False
+
+    @pytest.mark.parametrize("model_name", ["maskrcnn_efficientnet_b2b", "maskrcnn_swin_tiny"])
+    def test_maskrcnn_fpn_uses_static_scale_factor(self, model_name: str) -> None:
+        """Mask R-CNN FPNs must use ``scale_factor`` instead of dynamic ``size``.
+
+        With dynamic ``size`` the ``F.interpolate(mode='nearest')`` lowering
+        under ``torch.compile`` produces a Triton kernel whose ``XBLOCK``
+        exceeds the hardware maximum (``AssertionError: 'XBLOCK' too large.
+        Maximum: 4096``). Using a static ``scale_factor=2.0`` is mathematically
+        equivalent for these configs (inputs are divisible by 32) and keeps
+        the kernel size bounded.
+        """
+        from getitune.backend.lightning.models.detection.necks.fpn import FPN
+
+        cfg = FPN.FPN_CFG[model_name]
+        assert cfg.get("upsample_cfg") == {"scale_factor": 2.0, "mode": "nearest"}
