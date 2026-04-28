@@ -2,15 +2,15 @@ Using Tree-Path KL Divergence for Hierarchical Classification
 =============================================================
 
 This tutorial explains how to train hierarchical classification models in
-OpenVINO™ Training Extensions with **Tree-Path KL Divergence Loss**, a training-time
+Geti Library with **Tree-Path KL Divergence Loss**, a training-time
 regularizer that encourages consistent predictions along the taxonomy path
 from root to leaf. The method is implemented in:
 
-- :class:`otx.backend.native.models.classification.losses.tree_path_kl_divergence_loss.TreePathKLDivergenceLoss`
-- :class:`otx.backend.native.models.classification.classifier.h_label_classifier.KLHLabelClassifier`
+- :class:`getitune.backend.lightning.models.classification.losses.tree_path_kl_divergence_loss.TreePathKLDivergenceLoss`
+- :class:`getitune.backend.lightning.models.classification.classifier.h_label_classifier.KLHLabelClassifier`
 
 The feature is currently exposed by default in
-:class:`otx.backend.native.models.classification.hlabel_models.timm_model.TimmModelHLabelCls`.
+:class:`getitune.backend.lightning.models.classification.hlabel_models.timm_model.TimmModelHLabelCls`.
 Users may adapt other architectures with minimal modifications by adding the
 same wrapper (``KLHLabelClassifier``) in their model’s ``_finalize_model()``.
 
@@ -75,7 +75,7 @@ This recipe uses :class:`TimmModelHLabelCls` and exposes the argument
 
    task: H_LABEL_CLS
    model:
-     class_path: otx.backend.native.models.classification.hlabel_models.timm_model.TimmModelHLabelCls
+     class_path: getitune.backend.lightning.models.classification.hlabel_models.timm_model.TimmModelHLabelCls
      init_args:
        label_info: <LABEL-TREE-INFO>
        model_name: tf_efficientnetv2_s.in21k
@@ -99,7 +99,7 @@ A full training command example:
 
 .. code-block:: bash
 
-   (otx) $ otx train \
+   (getitune) $ getitune train \
        --config recipe/classification/h_label_cls/efficientnet_v2_kl.yaml \
        --data_root /path/to/dataset_with_annotations \
        --model.kl_weight 1.0
@@ -108,7 +108,7 @@ To disable Tree-Path KL Divergence and train a standard hierarchical model:
 
 .. code-block:: bash
 
-   (otx) $ otx train \
+   (getitune) $ getitune train \
        --config recipe/classification/h_label_cls/efficientnet_v2_kl.yaml \
        --model.kl_weight 0.0
 

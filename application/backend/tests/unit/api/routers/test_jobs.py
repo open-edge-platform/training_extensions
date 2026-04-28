@@ -83,7 +83,7 @@ class TestJobEndpoints:
                 "job_type": JobType.TRAIN,
                 "parameters": {
                     "device": "cpu",
-                    "model_architecture_id": "image-classification-deit-tiny",
+                    "model_architecture_id": "image-classification-vit-tiny",
                     "parent_model_revision_id": uuid4(),
                     "parent_model_variant_id": uuid4(),
                 },
@@ -99,7 +99,7 @@ class TestJobEndpoints:
         job_request = cast(TrainingRequest, job_request)
         fxt_project_service.get_project_by_id.assert_called_once_with(job_request.project_id)
         fxt_jobs_queue.submit.assert_called_once()
-        assert fxt_jobs_queue.submit.call_args[0][0].params.model_architecture_id == "image-classification-deit-tiny"
+        assert fxt_jobs_queue.submit.call_args[0][0].params.model_architecture_id == "image-classification-vit-tiny"
         assert fxt_jobs_queue.submit.call_args[0][0].params.task.task_type == TaskType.CLASSIFICATION
 
     def test_submit_quantize_job(self, tmp_path, fxt_client, fxt_jobs_queue, fxt_project_service):

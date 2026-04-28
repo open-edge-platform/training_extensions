@@ -36,4 +36,4 @@ To see which models are available for the task, the following command can be exe
 
 .. code-block:: shell
 
-        (otx) ...$ otx find --task MULTI_LABEL_CLS
+        (getitune) ...$ getitune find --task MULTI_LABEL_CLS

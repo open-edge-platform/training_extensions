@@ -10,7 +10,7 @@ Export
 
 .. note::
 
-    "export" method should be implemented within a framework engine like OTXEngine to be able to export the model. Optimization and validation steps are required to use OVEngine.
+    "export" method should be implemented within a framework engine like LightningEngine to be able to export the model. Optimization and validation steps are required to use OVEngine.
 
 1. Activate the virtual environment created in the previous step.
 
@@ -18,7 +18,7 @@ Export
 
     source .venv/bin/activate
 
-2. ``otx export`` returns an ``.onnx``, ``openvino.xml(.bin)`` and ``.zip``
+2. ``getitune export`` returns an ``.onnx``, ``openvino.xml(.bin)`` and ``.zip``
 exportable code with demo depending on the export type passed to CLI or API.
 
 You can export the model in OpenVINO format and FP32
@@ -30,27 +30,27 @@ using the command below. Specify the path to the trained PyTorch model using ``-
 
         .. code-block:: shell
 
-            (otx) ...$ otx export -c CONFIG --checkpoint CHECKPOINT --export_format {ONNX,OPENVINO} --export_precision {FP16,FP32} --work-dir WORK_DIR
+            (getitune) ...$ getitune export -c CONFIG --checkpoint CHECKPOINT --export_format {ONNX,OPENVINO} --export_precision {FP16,FP32} --work-dir WORK_DIR
 
     .. tab-item:: API
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
+            from getitune.backend.lightning.engine import LightningEngine
 
-            engine = OTXEngine(model="path/to/model.yaml", data="path/to/data_root", work_dir="otx-workspace")
+            engine = LightningEngine(model="path/to/model.yaml", data="path/to/data_root", work_dir="getitune-workspace")
             exported_model_path = engine.export()
 
 .. code-block:: shell
 
-    otx export -c CONFIG --checkpoint CHECKPOINT --export_format {ONNX,OPENVINO,EXPORTABLE_CODE} --export_precision {FP16,FP32} --work-dir WORK_DIR
+    getitune export -c CONFIG --checkpoint CHECKPOINT --export_format {ONNX,OPENVINO,EXPORTABLE_CODE} --export_precision {FP16,FP32} --work-dir WORK_DIR
 
 You can also specify ``export_format`` nad ``export_precision`` parameters.
 For example, to export a model with precision FP16 and format ONNX, execute:
 
 .. code-block:: shell
 
-    otx export -c CONFIG --checkpoint CHECKPOINT --export_format ONNX --export_precision FP16 --work-dir outputs/deploy
+    getitune export -c CONFIG --checkpoint CHECKPOINT --export_format ONNX --export_precision FP16 --work-dir outputs/deploy
 
 .. tab-set::
 
@@ -58,7 +58,7 @@ For example, to export a model with precision FP16 and format ONNX, execute:
 
         .. code-block:: shell
 
-            (otx) ...$ otx export --config CONFIG --checkpoint CHECKPOINT --export_format ONNX --export_precision FP16 --work-dir WORK_DIR
+            (getitune) ...$ getitune export --config CONFIG --checkpoint CHECKPOINT --export_format ONNX --export_precision FP16 --work-dir WORK_DIR
 
     .. tab-item:: API
 
@@ -75,7 +75,7 @@ For example, to export a model with precision FP16 and format ONNX, execute:
 
         .. code-block:: python
 
-            from otx.backend.openvino.engine import OVEngine
+            from getitune.backend.openvino.engine import OVEngine
 
             ov_engine = OVEngine(model=exported_model_path, data=engine.datamodule, work_dir=engine.work_dir)
             ov_engine.test()
@@ -88,7 +88,7 @@ If you also want to export ``saliency_map``, a feature related to explain, and `
 
         .. code-block:: shell
 
-            (otx) ...$ otx export ... --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_014.ckpt --explain True
+            (getitune) ...$ getitune export ... --checkpoint getitune-workspace/20240312_051135/checkpoints/epoch_014.ckpt --explain True
 
     .. tab-item:: API
 
@@ -114,9 +114,9 @@ To obtain list of predictions on the given test dataset, we can use the ``OVEngi
             # it is also possible to pass test datamodule or dataset for prediction
             predictions = engine.predict(checkpoint=exported_model_path, data="path/to/new/test/dataset")
             # or
-            from otx.data.datamodule import OTXDataModule
+            from getitune.data.module import DataModule
 
-            predictions = engine.predict(data=OTXDataModule(...))
+            predictions = engine.predict(data=DataModule(...))
 
 
 2. Similarly, it is possible to pass a list of
@@ -202,7 +202,7 @@ using the command below:
 
         .. code-block:: shell
 
-            (otx) ...$ otx export -c CONFIG
+            (getitune) ...$ getitune export -c CONFIG
                     --checkpoint {PYTORCH_CHECKPOINT}
                     --export_format OPENVINO
                     --export_demo_package True
@@ -215,7 +215,7 @@ Demonstration
 *************
 
 Using the exported demo, we're able to run the model in the demonstration mode outside of this repository, using only the ported ``.zip`` archive with minimum required packages.
-The demo allows us to apply our model on the custom data or the online footage from a web camera and see how it will work in a real-life scenario. It is not required to install OTX or PyTorch.
+The demo allows us to apply our model on the custom data or the online footage from a web camera and see how it will work in a real-life scenario. It is not required to install getitune or PyTorch.
 
 1. Unzip the ``exportable_code.zip``
 archive.
