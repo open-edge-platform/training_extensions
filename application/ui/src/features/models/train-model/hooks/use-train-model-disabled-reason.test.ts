@@ -102,7 +102,7 @@ describe('useTrainModelDisabledReason', () => {
             expect(result.current.reason).toBe(
                 'In order to train a model, each subset (training, validation, testing) needs at least one item. ' +
                     'This condition is currently not satisfiable, because the training, validation, and testing subsets are empty and ' +
-                    'there are 1 reviewed items ready to assign and ' +
+                    'there are 1 reviewed item ready to assign and ' +
                     '2 items that still need annotation before they can be assigned.'
             );
         });
@@ -122,7 +122,7 @@ describe('useTrainModelDisabledReason', () => {
             expect(result.current.reason).toBe(
                 'In order to train a model, each subset (training, validation, testing) needs at least one item. ' +
                     'This condition is currently not satisfiable, because the training and validation subsets are empty and ' +
-                    'there are 1 reviewed items ready to assign and 1 items that still need annotation before they can be assigned.'
+                    'there are 1 reviewed item ready to assign and 1 item that still need annotation before they can be assigned.'
             );
         });
 
@@ -142,6 +142,25 @@ describe('useTrainModelDisabledReason', () => {
                 'In order to train a model, each subset (training, validation, testing) needs at least one item. ' +
                     'This condition is currently not satisfiable, because the training and validation subsets are empty and ' +
                     'there are 3 items that still need annotation before they can be assigned.'
+            );
+        });
+
+        it('uses singular form for unannotated items when count is 1', () => {
+            mockDatasetItems({
+                total: 4,
+                training: 0,
+                testing: 1,
+                validation: 0,
+                reviewedUnassigned: 0,
+                unassigned: 1,
+            });
+
+            const { result } = renderHook(() => useTrainModelDisabledReason());
+
+            expect(result.current.reason).toBe(
+                'In order to train a model, each subset (training, validation, testing) needs at least one item. ' +
+                    'This condition is currently not satisfiable, because the training and validation subsets are empty and ' +
+                    'there is 1 item that still need annotation before they can be assigned.'
             );
         });
 

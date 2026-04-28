@@ -5,6 +5,10 @@ import { useGetDatasetItems } from 'hooks/use-get-dataset-items.hook';
 
 const MIN_NUMBER_OF_ANNOTATED_ITEMS = 3;
 const listFormatter = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' });
+const pluralRules = new Intl.PluralRules('en');
+
+const pluralizeItems = (count: number) => (pluralRules.select(count) === 'one' ? 'item' : 'items');
+const conjugateToBe = (count: number) => (pluralRules.select(count) === 'one' ? 'is' : 'are');
 
 export const useTrainModelDisabledReason = () => {
     const { totalCount, isPending: isTotalPending } = useGetDatasetItems({ annotationStatus: 'reviewed' });
@@ -71,13 +75,19 @@ export const useTrainModelDisabledReason = () => {
 
     if (reviewedUnassignedSubsetSize > 0 && unannotatedUnassignedSize > 0) {
         assignmentDetail =
-            `there are ${reviewedUnassignedSubsetSize} reviewed items ready to assign and ` +
-            `${unannotatedUnassignedSize} items that still need annotation before they can be assigned`;
+            `there are ${reviewedUnassignedSubsetSize} reviewed ${pluralizeItems(reviewedUnassignedSubsetSize)} ready` +
+            ' to assign and ' +
+            `${unannotatedUnassignedSize} ${pluralizeItems(unannotatedUnassignedSize)} that still need annotation ` +
+            'before they can be assigned';
     } else if (reviewedUnassignedSubsetSize > 0) {
-        assignmentDetail = `there are ${reviewedUnassignedSubsetSize} reviewed items left to assign`;
+        assignmentDetail =
+            `there are ${reviewedUnassignedSubsetSize} reviewed ` +
+            `${pluralizeItems(reviewedUnassignedSubsetSize)} left to assign`;
     } else if (unannotatedUnassignedSize > 0) {
         assignmentDetail =
-            `there are ${unannotatedUnassignedSize} items that still need annotation before they ` + 'can be assigned';
+            `there ${conjugateToBe(unannotatedUnassignedSize)} ${unannotatedUnassignedSize} ` +
+            `${pluralizeItems(unannotatedUnassignedSize)} that still need annotation before they ` +
+            'can be assigned';
     } else {
         assignmentDetail = 'there are no unassigned items available to redistribute';
     }
