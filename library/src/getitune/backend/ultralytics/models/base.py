@@ -100,6 +100,22 @@ class UltralyticsModel:
         """Number of classes from ``label_info``, or ``None``."""
         return self.label_info.num_classes if self.label_info is not None else None
 
+    @property
+    def export_model_type(self) -> str:
+        """ModelAPI ``model_type`` string for exported models.
+
+        Subclasses may override for task-specific model types.
+        """
+        return "YOLO11"
+
+    @property
+    def export_task_type(self) -> str:
+        """ModelAPI ``task_type`` string for exported models.
+
+        Subclasses may override for task-specific values.
+        """
+        return "detection"
+
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}("

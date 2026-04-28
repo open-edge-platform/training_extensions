@@ -17,11 +17,11 @@ from torchvision import tv_tensors
 from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.backend.ultralytics.models import UltralyticsDetectionModel
 from getitune.data.entity.base import ImageInfo
-from getitune.data.entity.sample import SampleBatch
-from getitune.data.module import DataModule
-from getitune.types.export import ExportFormat
+from getitune.data.entity.sample import OTXSampleBatch as SampleBatch
+from getitune.data.module import OTXDataModule as DataModule
+from getitune.types.export import OTXExportFormatType as ExportFormat
 from getitune.types.label import LabelInfo
-from getitune.types.precision import Precision
+from getitune.types.precision import OTXPrecisionType as Precision
 
 
 def _label_info() -> LabelInfo:
@@ -213,7 +213,7 @@ class TestExport:
             engine.export(export_format=bad_format)
 
     def test_export_openvino_fp32(self, mocker, tmp_path) -> None:
-        """OpenVINO FP32 export should call yolo.export with half=False."""
+        """OpenVINO FP32 export should call yolo.export with half=False and end2end=False."""
         engine, _ = _make_engine(tmp_path, mocker)
 
         # Set up the fake export output: a directory with a .xml file
@@ -225,7 +225,10 @@ class TestExport:
         mock_yolo = MagicMock()
         mock_yolo.export.return_value = str(export_dir)
 
-        with patch.object(engine, "_resolve_export_model", return_value=mock_yolo):
+        with (
+            patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
+            patch.object(engine, "_embed_export_metadata_openvino"),
+        ):
             result = engine.export(
                 export_format=ExportFormat.OPENVINO,
                 export_precision=Precision.FP32,
@@ -235,6 +238,7 @@ class TestExport:
             format="openvino",
             imgsz=engine._model.imgsz,
             half=False,
+            end2end=False,
         )
         assert result.suffix == ".xml"
         assert result.exists()
@@ -250,7 +254,10 @@ class TestExport:
         mock_yolo = MagicMock()
         mock_yolo.export.return_value = str(export_dir)
 
-        with patch.object(engine, "_resolve_export_model", return_value=mock_yolo):
+        with (
+            patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
+            patch.object(engine, "_embed_export_metadata_openvino"),
+        ):
             result = engine.export(
                 export_format=ExportFormat.OPENVINO,
                 export_precision=Precision.FP16,
@@ -260,6 +267,7 @@ class TestExport:
             format="openvino",
             imgsz=engine._model.imgsz,
             half=True,
+            end2end=False,
         )
         assert result.suffix == ".xml"
 
@@ -273,7 +281,10 @@ class TestExport:
         mock_yolo = MagicMock()
         mock_yolo.export.return_value = str(onnx_file)
 
-        with patch.object(engine, "_resolve_export_model", return_value=mock_yolo):
+        with (
+            patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
+            patch.object(engine, "_embed_export_metadata_onnx"),
+        ):
             result = engine.export(
                 export_format=ExportFormat.ONNX,
                 export_precision=Precision.FP32,
@@ -283,6 +294,7 @@ class TestExport:
             format="onnx",
             imgsz=engine._model.imgsz,
             half=False,
+            end2end=False,
         )
         assert result.suffix == ".onnx"
 
@@ -295,7 +307,10 @@ class TestExport:
         mock_yolo = MagicMock()
         mock_yolo.export.return_value = str(onnx_file)
 
-        with patch.object(engine, "_resolve_export_model", return_value=mock_yolo):
+        with (
+            patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
+            patch.object(engine, "_embed_export_metadata_onnx"),
+        ):
             result = engine.export(
                 export_format=ExportFormat.ONNX,
                 export_precision=Precision.FP16,
@@ -305,6 +320,7 @@ class TestExport:
             format="onnx",
             imgsz=engine._model.imgsz,
             half=True,
+            end2end=False,
         )
         assert result.suffix == ".onnx"
 
@@ -321,7 +337,10 @@ class TestExport:
         mock_yolo = MagicMock()
         mock_yolo.export.return_value = str(onnx_file)
 
-        with patch.object(engine, "_resolve_export_model", return_value=mock_yolo) as mock_resolve:
+        with (
+            patch.object(engine, "_resolve_export_model", return_value=mock_yolo) as mock_resolve,
+            patch.object(engine, "_embed_export_metadata_onnx"),
+        ):
             engine.export(
                 checkpoint=ckpt_file,
                 export_format=ExportFormat.ONNX,
@@ -340,7 +359,10 @@ class TestExport:
         mock_yolo = MagicMock()
         mock_yolo.export.return_value = str(onnx_file)
 
-        with patch.object(engine, "_resolve_export_model", return_value=mock_yolo):
+        with (
+            patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
+            patch.object(engine, "_embed_export_metadata_onnx"),
+        ):
             engine.export(
                 export_format=ExportFormat.ONNX,
                 export_precision=Precision.FP32,

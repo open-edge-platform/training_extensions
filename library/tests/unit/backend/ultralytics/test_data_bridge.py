@@ -13,7 +13,7 @@ import torch
 from torchvision import tv_tensors
 
 from getitune.backend.ultralytics.data import UltralyticsDatasetAdapter, ultralytics_collate_fn
-from getitune.data.dataset.base import VisionDataset
+from getitune.data.dataset.base import OTXDataset as VisionDataset
 from getitune.data.entity.base import ImageInfo
 
 

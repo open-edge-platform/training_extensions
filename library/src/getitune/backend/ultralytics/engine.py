@@ -15,12 +15,13 @@ import torch
 from torchvision import tv_tensors
 
 from getitune.data.entity.base import ImageInfo
-from getitune.data.entity.sample import Prediction, SampleBatch
-from getitune.data.module import DataModule
+from getitune.data.entity.sample import OTXPrediction as Prediction
+from getitune.data.entity.sample import OTXSampleBatch as SampleBatch
+from getitune.data.module import OTXDataModule as DataModule
 from getitune.engine.engine import Engine
 from getitune.types.device import DeviceType
-from getitune.types.export import ExportFormat
-from getitune.types.precision import Precision
+from getitune.types.export import OTXExportFormatType as ExportFormat
+from getitune.types.precision import OTXPrecisionType as Precision
 from getitune.utils.device import is_xpu_available
 
 from .models.base import UltralyticsModel
@@ -257,14 +258,19 @@ class UltralyticsEngine(Engine):
             format=ultra_format,
             imgsz=self._model.imgsz,
             half=half,
+            end2end=False,
             **kwargs,
         )
         export_path = Path(export_result)
 
         if export_format == ExportFormat.OPENVINO:
-            return self._normalize_openvino_export(export_path)
+            xml_path = self._normalize_openvino_export(export_path)
+            self._embed_export_metadata_openvino(xml_path)
+            return xml_path
         if export_format == ExportFormat.ONNX:
-            return self._normalize_onnx_export(export_path)
+            onnx_path = self._normalize_onnx_export(export_path)
+            self._embed_export_metadata_onnx(onnx_path)
+            return onnx_path
 
         return export_path
 
@@ -620,6 +626,26 @@ class UltralyticsEngine(Engine):
             logger.info(f"Exported model copied to {target_file}")
 
         return target_file
+
+    def _embed_export_metadata_openvino(self, xml_path: Path) -> None:
+        """Embed ModelAPI-compatible metadata into an exported OpenVINO IR."""
+        from .export import build_export_metadata, embed_openvino_metadata
+
+        metadata = build_export_metadata(
+            model=self._model,
+            task_type=self._model.export_task_type,
+        )
+        embed_openvino_metadata(xml_path, metadata)
+
+    def _embed_export_metadata_onnx(self, onnx_path: Path) -> None:
+        """Embed ModelAPI-compatible metadata into an exported ONNX model."""
+        from .export import build_export_metadata, embed_onnx_metadata
+
+        metadata = build_export_metadata(
+            model=self._model,
+            task_type=self._model.export_task_type,
+        )
+        embed_onnx_metadata(onnx_path, metadata)
 
     @staticmethod
     def _resolve_device(device: str | DeviceType) -> torch.device:

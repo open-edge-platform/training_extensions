@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 import torch
 
-from getitune.data.dataset.base import VisionDataset
+from getitune.data.dataset.base import OTXDataset as VisionDataset
 from getitune.data.entity.base import ImageInfo
 
 from .geometry import build_ratio_pad, xyxy_abs_to_xywh_norm
