@@ -89,31 +89,11 @@ describe('useTrainModelDisabledReason', () => {
 
         it('includes both reviewed and unannotated unassigned detail when both are present', () => {
             mockDatasetItems({
-                total: 5,
+                total: 4,
                 training: 0,
-                testing: 1,
-                validation: 1,
-                reviewedUnassigned: 2,
-                unassigned: 5,
-            });
-
-            const { result } = renderHook(() => useTrainModelDisabledReason());
-
-            expect(result.current.reason).toBe(
-                'In order to train a model, each subset (training, validation, testing) needs at least one item. ' +
-                    'This condition is currently not satisfiable, because the training subset is empty and ' +
-                    'there are 2 reviewed items ready to assign and ' +
-                    '3 items that still need annotation before they can be assigned.'
-            );
-        });
-
-        it('mentions only reviewed items when all unassigned items are reviewed', () => {
-            mockDatasetItems({
-                total: 5,
-                training: 0,
-                testing: 1,
-                validation: 1,
-                reviewedUnassigned: 3,
+                testing: 0,
+                validation: 0,
+                reviewedUnassigned: 1,
                 unassigned: 3,
             });
 
@@ -121,47 +101,97 @@ describe('useTrainModelDisabledReason', () => {
 
             expect(result.current.reason).toBe(
                 'In order to train a model, each subset (training, validation, testing) needs at least one item. ' +
-                    'This condition is currently not satisfiable, because the training subset is empty and ' +
-                    'there are 3 reviewed items left to assign.'
+                    'This condition is currently not satisfiable, because the training, validation, and testing subsets are empty and ' +
+                    'there are 1 reviewed item ready to assign and ' +
+                    '2 items that still need annotation before they can be assigned.'
+            );
+        });
+
+        it('mentions only reviewed items when all unassigned items are reviewed', () => {
+            mockDatasetItems({
+                total: 4,
+                training: 0,
+                testing: 1,
+                validation: 0,
+                reviewedUnassigned: 1,
+                unassigned: 2,
+            });
+
+            const { result } = renderHook(() => useTrainModelDisabledReason());
+
+            expect(result.current.reason).toBe(
+                'In order to train a model, each subset (training, validation, testing) needs at least one item. ' +
+                    'This condition is currently not satisfiable, because the training and validation subsets are empty and ' +
+                    'there are 1 reviewed item ready to assign and 1 item that still need annotation before they can be assigned.'
             );
         });
 
         it('mentions only unannotated items when no reviewed unassigned items exist', () => {
             mockDatasetItems({
-                total: 5,
+                total: 4,
                 training: 0,
                 testing: 1,
-                validation: 1,
+                validation: 0,
                 reviewedUnassigned: 0,
-                unassigned: 4,
+                unassigned: 3,
             });
 
             const { result } = renderHook(() => useTrainModelDisabledReason());
 
             expect(result.current.reason).toBe(
                 'In order to train a model, each subset (training, validation, testing) needs at least one item. ' +
-                    'This condition is currently not satisfiable, because the training subset is empty and ' +
-                    'there are 4 items that still need annotation before they can be assigned.'
+                    'This condition is currently not satisfiable, because the training and validation subsets are empty and ' +
+                    'there are 3 items that still need annotation before they can be assigned.'
             );
         });
 
-        it('mentions no unassigned items when both unassigned counts are 0', () => {
+        it('uses singular form for unannotated items when count is 1', () => {
+            mockDatasetItems({
+                total: 4,
+                training: 0,
+                testing: 1,
+                validation: 0,
+                reviewedUnassigned: 0,
+                unassigned: 1,
+            });
+
+            const { result } = renderHook(() => useTrainModelDisabledReason());
+
+            expect(result.current.reason).toBe(
+                'In order to train a model, each subset (training, validation, testing) needs at least one item. ' +
+                    'This condition is currently not satisfiable, because the training and validation subsets are empty and ' +
+                    'there is 1 item that still need annotation before they can be assigned.'
+            );
+        });
+
+        it('returns undefined reason when empty subsets count does not exceed reviewed unassigned items', () => {
+            mockDatasetItems({
+                total: 4,
+                training: 0,
+                testing: 1,
+                validation: 1,
+                reviewedUnassigned: 1,
+                unassigned: 1,
+            });
+
+            const { result } = renderHook(() => useTrainModelDisabledReason());
+
+            expect(result.current.reason).toBeUndefined();
+        });
+
+        it('returns undefined reason when two subsets are empty but enough reviewed unassigned items to cover both', () => {
             mockDatasetItems({
                 total: 5,
                 training: 0,
                 testing: 1,
-                validation: 1,
-                reviewedUnassigned: 0,
-                unassigned: 0,
+                validation: 0,
+                reviewedUnassigned: 2,
+                unassigned: 2,
             });
 
             const { result } = renderHook(() => useTrainModelDisabledReason());
 
-            expect(result.current.reason).toBe(
-                'In order to train a model, each subset (training, validation, testing) needs at least one item. ' +
-                    'This condition is currently not satisfiable, because the training subset is empty and ' +
-                    'there are no unassigned items available to redistribute.'
-            );
+            expect(result.current.reason).toBeUndefined();
         });
 
         it('uses plural form when two subsets are empty', () => {
