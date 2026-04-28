@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from typing import Literal
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -62,9 +63,11 @@ class TestDEIMV2:
         # Verify load_checkpoint was called (may be called multiple times for backbone and model)
         assert mock_load_checkpoint.call_count >= 1
 
-    @pytest.mark.parametrize("model_name", ["deimv2_s", "deimv2_m"])
+    @pytest.mark.parametrize("model_name", ["deimv2_s", "deimv2_m", "deimv2_l"])
     @patch("getitune.backend.lightning.models.detection.deimv2.load_checkpoint")
-    def test_create_model_passes_decoder_key_mapping(self, mock_load_checkpoint: MagicMock, model_name: str) -> None:
+    def test_create_model_passes_decoder_key_mapping(
+        self, mock_load_checkpoint: MagicMock, model_name: Literal["deimv2_s", "deimv2_m", "deimv2_l"]
+    ) -> None:
         """Test that _create_model passes decoder self-attention key_mapping to load_checkpoint."""
         mock_load_checkpoint.return_value = None
 
@@ -75,7 +78,7 @@ class TestDEIMV2:
         final_call = mock_load_checkpoint.call_args
         key_mapping = final_call.kwargs.get("key_mapping", {})
 
-        num_layers = created_model.decoder.num_layers
+        num_layers: int = created_model.decoder.num_layers  # type: ignore[assignment]
         for i in range(num_layers):
             prefix = f"decoder.decoder.layers.{i}."
             assert f"{prefix}self_attn.in_proj_" in key_mapping
