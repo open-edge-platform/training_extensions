@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import torch
 
+from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import DataInputParams
 from getitune.backend.lightning.models.instance_segmentation.rfdetr_inst import RFDETRInst
 from getitune.data.entity import PredictionBatch
@@ -153,8 +154,30 @@ class TestRFDETRInst:
 
         # Test export forward pass
         output = model.forward_for_tracing(torch.randn(1, 3, 312, 312))
-        # Should return boxes, labels, scores, masks
-        assert len(output) == 4
+        # Should return (boxes, labels, masks) where ``boxes`` has scores
+        # concatenated as the 5th column to match the OpenVINO ``MaskRCNN``
+        # model_api wrapper's expectation of ``boxes[:, 4]`` being the score.
+        assert len(output) == 3
+        boxes, labels, masks = output
+        assert boxes.ndim == 3
+        assert boxes.shape[-1] == 5  # x1, y1, x2, y2, score
+        assert labels.shape[:2] == boxes.shape[:2]
+        assert masks.shape[:2] == boxes.shape[:2]
+
+    def test_exporter_output_names(self) -> None:
+        """Exporter must publish ``boxes``/``labels``/``masks`` (no standalone ``scores``).
+
+        The OpenVINO ``MaskRCNN`` model_api wrapper used at test/optimize time
+        reads ``outputs["boxes"][:, 4]`` for the score; emitting a separate
+        ``scores`` output and a 4-column ``boxes`` tensor would raise
+        ``IndexError: index 4 is out of bounds for axis 1 with size 4``.
+        """
+        model = RFDETRInst(model_name="rfdetr_seg_n", label_info=3)
+        exporter = model._exporter
+        assert exporter.output_names == ["boxes", "labels", "masks"]
+        assert isinstance(exporter, LightningModelExporter)
+        onnx_cfg = exporter.onnx_export_configuration
+        assert onnx_cfg["output_names"] == ["boxes", "labels", "masks"]
 
     def test_customize_inputs(self, fxt_instance_seg_batch) -> None:
         """Test input customization for RF-DETR format."""

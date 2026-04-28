@@ -237,8 +237,18 @@ class FPN:
             "add_extra_convs": "on_output",
             "relu_before_extra_convs": True,
         },
-        "maskrcnn_efficientnet_b2b": {"in_channels": [24, 48, 120, 352], "out_channels": 80, "num_outs": 5},
-        "maskrcnn_swin_tiny": {"in_channels": [96, 192, 384, 768], "out_channels": 256, "num_outs": 5},
+        "maskrcnn_efficientnet_b2b": {
+            "in_channels": [24, 48, 120, 352],
+            "out_channels": 80,
+            "num_outs": 5,
+            "upsample_cfg": {"scale_factor": 2.0, "mode": "nearest"},
+        },
+        "maskrcnn_swin_tiny": {
+            "in_channels": [96, 192, 384, 768],
+            "out_channels": 256,
+            "num_outs": 5,
+            "upsample_cfg": {"scale_factor": 2.0, "mode": "nearest"},
+        },
     }
 
     def __new__(cls, model_name: str) -> FPNModule:
