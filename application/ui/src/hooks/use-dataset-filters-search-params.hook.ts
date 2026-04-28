@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { parseDate } from '@internationalized/date';
+import dayjs from 'dayjs';
 import { isEmpty } from 'lodash-es';
 import { useSearchParams, type SetURLSearchParams } from 'react-router-dom';
 import { parse, stringify } from 'zipson/lib';
@@ -67,14 +67,7 @@ const parseDateFromURL = (date: string | null) => {
         return null;
     }
 
-    try {
-        // NOTE: Make sure the date is valid
-        parseDate(date);
-
-        return date;
-    } catch {
-        return null;
-    }
+    return dayjs(date).isValid() ? date : null;
 };
 
 export const useDatasetFiltersSearchParams = () => {

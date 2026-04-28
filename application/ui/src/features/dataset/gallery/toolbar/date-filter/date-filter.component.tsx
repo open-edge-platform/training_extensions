@@ -15,6 +15,7 @@ const MIN_DATE = parseDate('2020-01-30');
 const MAX_DATE = parseDate('9999-11-30');
 
 const formatToLocalDate = (date: string) => dayjs(date).format('DD/MM/YYYY');
+const toCalendarDate = (date: string) => parseDate(dayjs(date).format('YYYY-MM-DD'));
 
 export const DateFilter = () => {
     const { startDate, endDate, setStartDate, setEndDate } = useDatasetFiltersSearchParams();
@@ -36,8 +37,9 @@ export const DateFilter = () => {
         if (date === null) {
             return;
         }
+        const endOfDay = dayjs(date.toString()).endOf('day').format('YYYY-MM-DDTHH:mm:ss');
 
-        setEndDate(date.toString());
+        setEndDate(endOfDay);
     };
 
     const handleRemoveFilter = (id: string) => {
@@ -75,16 +77,16 @@ export const DateFilter = () => {
                             width={'100%'}
                             label='Start date'
                             minValue={MIN_DATE}
-                            maxValue={endDate === null ? MAX_DATE : parseDate(endDate)}
-                            defaultValue={startDate === null ? null : parseDate(startDate)}
+                            maxValue={endDate === null ? MAX_DATE : toCalendarDate(endDate)}
+                            defaultValue={startDate === null ? null : toCalendarDate(startDate)}
                             onChange={handleStartDateChange}
                         />
                         <DatePicker
                             width={'100%'}
                             label='End date'
-                            minValue={startDate === null ? MIN_DATE : parseDate(startDate)}
+                            minValue={startDate === null ? MIN_DATE : toCalendarDate(startDate)}
                             maxValue={MAX_DATE}
-                            value={endDate === null ? null : parseDate(endDate)}
+                            value={endDate === null ? null : toCalendarDate(endDate)}
                             onChange={handleEndDateChange}
                         />
                     </Flex>
