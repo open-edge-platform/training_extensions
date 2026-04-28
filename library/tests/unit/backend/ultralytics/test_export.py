@@ -15,6 +15,8 @@ from getitune.backend.ultralytics.export import (
     _YOLO_RESIZE_TYPE,
     _YOLO_SCALE,
     build_export_metadata,
+    cast_onnx_outputs_to_fp32,
+    cast_openvino_outputs_to_fp32,
     embed_onnx_metadata,
     embed_openvino_metadata,
 )
@@ -132,11 +134,11 @@ class TestBuildExportMetadata:
         assert metadata[("model_info", "iou_threshold")] == "0.7"
 
     def test_default_thresholds(self) -> None:
-        """Default thresholds should be 0.35 confidence and 0.5 IoU."""
+        """Default thresholds should match YOLO11 ModelAPI defaults."""
         model = _make_mock_model(label_names=["a"])
         metadata = build_export_metadata(model)
-        assert metadata[("model_info", "confidence_threshold")] == "0.35"
-        assert metadata[("model_info", "iou_threshold")] == "0.5"
+        assert metadata[("model_info", "confidence_threshold")] == "0.25"
+        assert metadata[("model_info", "iou_threshold")] == "0.7"
 
     def test_all_values_are_strings(self) -> None:
         """All metadata values should be strings."""
@@ -186,6 +188,68 @@ class TestEmbedOpenvinoMetadata:
         mock_openvino.save_model.assert_called_once_with(mock_ov_model, str(xml_path))
         assert result == xml_path
 
+
+class TestCastOpenvinoOutputsToFp32:
+    """Tests for cast_openvino_outputs_to_fp32."""
+
+    def test_converts_non_fp32_outputs(self, tmp_path: Path) -> None:
+        """Non-f32 result inputs should be converted before saving."""
+        xml_path = tmp_path / "model.xml"
+        xml_path.touch()
+
+        mock_result = MagicMock()
+        mock_result.get_input_element_type.return_value = "f16"
+        mock_result.input_value.return_value = "source_output"
+        mock_result.input.return_value = MagicMock()
+
+        mock_ov_model = MagicMock()
+        mock_ov_model.get_results.return_value = [mock_result]
+
+        mock_core = MagicMock()
+        mock_core.read_model.return_value = mock_ov_model
+
+        mock_converted = MagicMock()
+        mock_converted.output.return_value = "converted_output"
+
+        with (
+            patch("openvino.Core", return_value=mock_core),
+            patch("openvino.Type.f32", "f32"),
+            patch("openvino.save_model") as mock_save,
+            patch("openvino.opset13.convert", return_value=mock_converted) as mock_convert,
+        ):
+            result = cast_openvino_outputs_to_fp32(xml_path)
+
+        mock_convert.assert_called_once_with("source_output", "f32")
+        mock_result.input.return_value.replace_source_output.assert_called_once_with("converted_output")
+        mock_ov_model.validate_nodes_and_infer_types.assert_called_once_with()
+        mock_save.assert_called_once_with(mock_ov_model, str(xml_path))
+        assert result == xml_path
+
+    def test_skips_existing_fp32_outputs(self, tmp_path: Path) -> None:
+        """Existing f32 outputs should not force a save."""
+        xml_path = tmp_path / "model.xml"
+        xml_path.touch()
+
+        mock_result = MagicMock()
+        mock_result.get_input_element_type.return_value = "f32"
+        mock_ov_model = MagicMock()
+        mock_ov_model.get_results.return_value = [mock_result]
+
+        mock_core = MagicMock()
+        mock_core.read_model.return_value = mock_ov_model
+
+        with (
+            patch("openvino.Core", return_value=mock_core),
+            patch("openvino.Type.f32", "f32"),
+            patch("openvino.save_model") as mock_save,
+            patch("openvino.opset13.convert") as mock_convert,
+        ):
+            result = cast_openvino_outputs_to_fp32(xml_path)
+
+        mock_convert.assert_not_called()
+        mock_save.assert_not_called()
+        assert result == xml_path
+
     def test_returns_same_path(self, tmp_path: Path) -> None:
         """Should return the same xml_path that was passed in."""
         xml_path = tmp_path / "model.xml"
@@ -202,6 +266,92 @@ class TestEmbedOpenvinoMetadata:
             result = embed_openvino_metadata(xml_path, {})
 
         assert result == xml_path
+
+
+class TestCastOnnxOutputsToFp32:
+    """Tests for cast_onnx_outputs_to_fp32."""
+
+    def test_adds_cast_for_fp16_outputs(self, tmp_path: Path) -> None:
+        """Float16 graph outputs should be rewired through a Cast node."""
+        onnx_path = tmp_path / "model.onnx"
+        onnx_path.touch()
+
+        tensor_type = MagicMock()
+        tensor_type.elem_type = 10
+        output = MagicMock()
+        output.name = "output"
+        output.type.tensor_type = tensor_type
+
+        graph = MagicMock()
+        graph.output = [output]
+        graph.node = []
+        mock_model = MagicMock()
+        mock_model.graph = graph
+
+        mock_tensor_proto = MagicMock()
+        mock_tensor_proto.FLOAT16 = 10
+        mock_tensor_proto.FLOAT = 1
+        mock_helper = MagicMock()
+        mock_helper.make_node.return_value = "cast_node"
+        mock_onnx = MagicMock()
+        mock_onnx.load.return_value = mock_model
+        mock_onnx.TensorProto = mock_tensor_proto
+        mock_onnx.helper = mock_helper
+
+        with patch.dict(
+            "sys.modules",
+            {
+                "onnx": mock_onnx,
+                "onnx.TensorProto": mock_tensor_proto,
+                "onnx.helper": mock_helper,
+            },
+        ):
+            result = cast_onnx_outputs_to_fp32(onnx_path)
+
+        mock_helper.make_node.assert_called_once_with(
+            "Cast",
+            inputs=["output"],
+            outputs=["output_fp32"],
+            name="output_to_fp32",
+            to=1,
+        )
+        assert graph.node == ["cast_node"]
+        assert output.name == "output_fp32"
+        assert tensor_type.elem_type == 1
+        mock_onnx.save.assert_called_once_with(mock_model, str(onnx_path))
+        assert result == onnx_path
+
+    def test_skips_existing_fp32_outputs(self, tmp_path: Path) -> None:
+        """Non-float16 graph outputs should not be changed."""
+        onnx_path = tmp_path / "model.onnx"
+        onnx_path.touch()
+
+        tensor_type = MagicMock()
+        tensor_type.elem_type = 1
+        output = MagicMock()
+        output.name = "output"
+        output.type.tensor_type = tensor_type
+
+        graph = MagicMock()
+        graph.output = [output]
+        graph.node = []
+        mock_model = MagicMock()
+        mock_model.graph = graph
+
+        mock_tensor_proto = MagicMock()
+        mock_tensor_proto.FLOAT16 = 10
+        mock_tensor_proto.FLOAT = 1
+        mock_onnx = MagicMock()
+        mock_onnx.load.return_value = mock_model
+        mock_onnx.TensorProto = mock_tensor_proto
+        mock_onnx.helper = MagicMock()
+
+        with patch.dict("sys.modules", {"onnx": mock_onnx}):
+            result = cast_onnx_outputs_to_fp32(onnx_path)
+
+        assert graph.node == []
+        mock_onnx.save.assert_not_called()
+        assert result == onnx_path
 
 
 class TestEmbedOnnxMetadata:

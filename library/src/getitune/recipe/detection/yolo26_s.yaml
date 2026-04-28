@@ -29,6 +29,8 @@ training:
 export:
   format: OPENVINO
   precision: FP32
+  confidence_threshold: 0.25
+  iou_threshold: 0.7
 
 data: ../_base_/data/detection.yaml
 

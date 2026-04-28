@@ -44,8 +44,8 @@ _YOLO_REVERSE_INPUT_CHANNELS = True
 def build_export_metadata(
     model: UltralyticsModel,
     task_type: str = "detection",
-    confidence_threshold: float = 0.35,
-    iou_threshold: float = 0.5,
+    confidence_threshold: float = 0.25,
+    iou_threshold: float = 0.7,
 ) -> dict[tuple[str, str], str]:
     """Construct metadata dict for embedding into exported IR/ONNX.
 
@@ -149,4 +149,79 @@ def embed_onnx_metadata(onnx_path: Path, metadata: dict[tuple[str, str], str]) -
 
     onnx.save(onnx_model, str(onnx_path))
     logger.info(f"Embedded {len(metadata)} metadata entries into {onnx_path}")
+    return onnx_path
+
+
+def cast_openvino_outputs_to_fp32(xml_path: Path) -> Path:
+    """Cast OpenVINO model outputs to f32 in-place.
+
+    Ultralytics FP16 export can produce FP16 outputs, while ModelAPI's YOLO11
+    wrapper requires output tensors to be f32. Keeping the internal graph FP16
+    and only converting result nodes preserves FP16 export support without a
+    custom ModelAPI wrapper.
+    """
+    import openvino
+    from openvino import opset13 as opset
+
+    core = openvino.Core()
+    ov_model = core.read_model(str(xml_path))
+
+    changed = False
+    for result in ov_model.get_results():
+        if result.get_input_element_type(0) == openvino.Type.f32:
+            continue
+        converted = opset.convert(result.input_value(0), openvino.Type.f32)
+        result.input(0).replace_source_output(converted.output(0))
+        changed = True
+
+    if changed:
+        ov_model.validate_nodes_and_infer_types()
+        openvino.save_model(ov_model, str(xml_path))
+        logger.info(f"Casted OpenVINO output tensors to f32 in {xml_path}")
+    return xml_path
+
+
+def cast_onnx_outputs_to_fp32(onnx_path: Path) -> Path:
+    """Cast ONNX graph outputs to f32 in-place.
+
+    Adds a Cast node after every float16 graph output and rewires that output
+    to the cast result. This keeps FP16 internals while exposing f32 outputs to
+    ModelAPI's YOLO11 wrapper.
+    """
+    import onnx
+    from onnx import TensorProto, helper
+
+    onnx_model = onnx.load(str(onnx_path))
+    graph = onnx_model.graph
+
+    changed = False
+    existing_names = {output.name for output in graph.output}
+    for output in graph.output:
+        tensor_type = output.type.tensor_type
+        if tensor_type.elem_type != TensorProto.FLOAT16:
+            continue
+
+        original_name = output.name
+        cast_output_name = f"{original_name}_fp32"
+        suffix = 1
+        while cast_output_name in existing_names:
+            cast_output_name = f"{original_name}_fp32_{suffix}"
+            suffix += 1
+        existing_names.add(cast_output_name)
+
+        cast_node = helper.make_node(
+            "Cast",
+            inputs=[original_name],
+            outputs=[cast_output_name],
+            name=f"{original_name}_to_fp32",
+            to=TensorProto.FLOAT,
+        )
+        graph.node.append(cast_node)
+        output.name = cast_output_name
+        tensor_type.elem_type = TensorProto.FLOAT
+        changed = True
+
+    if changed:
+        onnx.save(onnx_model, str(onnx_path))
+        logger.info(f"Casted ONNX output tensors to f32 in {onnx_path}")
     return onnx_path

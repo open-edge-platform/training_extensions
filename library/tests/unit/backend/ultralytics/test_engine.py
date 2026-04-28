@@ -15,7 +15,7 @@ import torch
 from torchvision import tv_tensors
 
 from getitune.backend.ultralytics.engine import UltralyticsEngine
-from getitune.backend.ultralytics.models import UltralyticsDetectionModel
+from getitune.backend.ultralytics.models import UltralyticsDetectionModel, UltralyticsInstSegModel
 from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import OTXSampleBatch as SampleBatch
 from getitune.data.module import OTXDataModule as DataModule
@@ -256,6 +256,7 @@ class TestExport:
 
         with (
             patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
+            patch.object(engine, "_cast_openvino_outputs_to_fp32") as mock_cast_outputs,
             patch.object(engine, "_embed_export_metadata_openvino"),
         ):
             result = engine.export(
@@ -269,7 +270,31 @@ class TestExport:
             half=True,
             end2end=False,
         )
+        mock_cast_outputs.assert_called_once_with(result)
         assert result.suffix == ".xml"
+
+    def test_export_openvino_fp32_does_not_cast_outputs(self, mocker, tmp_path) -> None:
+        """OpenVINO FP32 export should not add an output cast."""
+        engine, _ = _make_engine(tmp_path, mocker)
+
+        export_dir = tmp_path / "fake_export"
+        export_dir.mkdir()
+        (export_dir / "model.xml").touch()
+
+        mock_yolo = MagicMock()
+        mock_yolo.export.return_value = str(export_dir)
+
+        with (
+            patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
+            patch.object(engine, "_cast_openvino_outputs_to_fp32") as mock_cast_outputs,
+            patch.object(engine, "_embed_export_metadata_openvino"),
+        ):
+            engine.export(
+                export_format=ExportFormat.OPENVINO,
+                export_precision=Precision.FP32,
+            )
+
+        mock_cast_outputs.assert_not_called()
 
     def test_export_onnx_fp32(self, mocker, tmp_path) -> None:
         """ONNX FP32 export should call yolo.export with half=False."""
@@ -309,6 +334,7 @@ class TestExport:
 
         with (
             patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
+            patch.object(engine, "_cast_onnx_outputs_to_fp32") as mock_cast_outputs,
             patch.object(engine, "_embed_export_metadata_onnx"),
         ):
             result = engine.export(
@@ -322,6 +348,7 @@ class TestExport:
             half=True,
             end2end=False,
         )
+        mock_cast_outputs.assert_called_once_with(result)
         assert result.suffix == ".onnx"
 
     def test_export_with_explicit_checkpoint(self, mocker, tmp_path) -> None:
@@ -373,6 +400,38 @@ class TestExport:
         _, call_kwargs = mock_yolo.export.call_args
         assert call_kwargs["simplify"] is True
         assert call_kwargs["dynamic"] is True
+
+    def test_export_passes_configured_thresholds_to_metadata(self, mocker, tmp_path) -> None:
+        """Export metadata should use thresholds configured on the engine."""
+        model = UltralyticsDetectionModel(label_info=_label_info())
+        datamodule = mocker.MagicMock(spec=DataModule)
+        engine = UltralyticsEngine(
+            model=model,
+            data=datamodule,
+            work_dir=tmp_path,
+            device="cpu",
+            export_args={"confidence_threshold": 0.4, "iou_threshold": 0.6},
+        )
+
+        with (
+            patch("getitune.backend.ultralytics.export.build_export_metadata") as mock_build,
+            patch("getitune.backend.ultralytics.export.embed_openvino_metadata"),
+        ):
+            mock_build.return_value = {}
+            engine._embed_export_metadata_openvino(tmp_path / "model.xml")
+
+        _, kwargs = mock_build.call_args
+        assert kwargs["confidence_threshold"] == 0.4
+        assert kwargs["iou_threshold"] == 0.6
+
+    def test_instance_segmentation_export_is_blocked(self, mocker, tmp_path) -> None:
+        """Segmentation export should fail until a compatible wrapper is validated."""
+        model = UltralyticsInstSegModel(label_info=_label_info())
+        datamodule = mocker.MagicMock(spec=DataModule)
+        engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
+
+        with pytest.raises(NotImplementedError, match="instance-segmentation export"):
+            engine.export(export_format=ExportFormat.OPENVINO, export_precision=Precision.FP32)
 
     def test_train_records_actual_trainer_checkpoint(self, mocker, tmp_path) -> None:
         """train() should persist the checkpoint chosen by the underlying trainer."""

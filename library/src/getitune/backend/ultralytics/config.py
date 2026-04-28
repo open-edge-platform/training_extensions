@@ -73,6 +73,8 @@ class UltralyticsExportConfig:
 
     format: str = "OPENVINO"
     precision: str = "FP32"
+    confidence_threshold: float = 0.25
+    iou_threshold: float = 0.7
 
 
 @dataclass

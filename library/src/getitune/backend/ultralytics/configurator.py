@@ -293,6 +293,10 @@ class UltralyticsConfigurator:
             work_dir=work_dir,
             device=resolved_device,
             train_args=self._config.training.to_train_args(),
+            export_args={
+                "confidence_threshold": self._config.export.confidence_threshold,
+                "iou_threshold": self._config.export.iou_threshold,
+            },
             **engine_kwargs,
         )
 

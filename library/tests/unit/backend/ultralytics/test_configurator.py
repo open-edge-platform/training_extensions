@@ -13,6 +13,7 @@ import yaml
 
 from getitune.backend.ultralytics.config import (
     UltralyticsConfig,
+    UltralyticsExportConfig,
     UltralyticsTrainConfig,
 )
 from getitune.backend.ultralytics.configurator import (
@@ -138,6 +139,13 @@ class TestUltralyticsConfig:
         assert cfg.model.pretrained is True
         assert cfg.engine.device == "auto"
         assert cfg.export.format == "OPENVINO"
+
+
+class TestUltralyticsExportConfig:
+    def test_default_thresholds_match_yolo11_modelapi(self) -> None:
+        cfg = UltralyticsExportConfig()
+        assert cfg.confidence_threshold == 0.25
+        assert cfg.iou_threshold == 0.7
 
 
 # ==================================================================
@@ -560,6 +568,20 @@ class TestCreateEngine:
         engine = cfg.create_engine(model, data=tmp_path, work_dir=tmp_path / "work")
         assert engine._train_args["epochs"] == 50
         assert engine._train_args["close_mosaic"] == 0
+
+    def test_export_defaults_forwarded(self, tmp_path: Path) -> None:
+        recipe = _minimal_recipe()
+        recipe["export"] = {
+            "format": "OPENVINO",
+            "precision": "FP32",
+            "confidence_threshold": 0.4,
+            "iou_threshold": 0.6,
+        }
+        cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, recipe))
+        model = cfg.create_model(_make_label_info())
+        engine = cfg.create_engine(model, data=tmp_path, work_dir=tmp_path / "work")
+        assert engine._export_args["confidence_threshold"] == 0.4
+        assert engine._export_args["iou_threshold"] == 0.6
 
     def test_engine_kwargs_override_recipe(self, tmp_path: Path) -> None:
         cfg = UltralyticsConfigurator.from_recipe(_write_recipe(tmp_path, _minimal_recipe()))

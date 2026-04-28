@@ -65,6 +65,7 @@ class UltralyticsEngine(Engine):
         work_dir: PathLike = "./getitune-workspace",
         device: str | DeviceType = "auto",
         train_args: Mapping[str, Any] | None = None,
+        export_args: Mapping[str, Any] | None = None,
         **kwargs,
     ) -> None:
         """Initialize the engine.
@@ -76,6 +77,7 @@ class UltralyticsEngine(Engine):
             device: Device string or :class:`DeviceType` enum
                 (``"auto"``, ``"xpu"``, ``"0"``, ``"cpu"``, ``DeviceType.xpu``, etc.).
             train_args: Train-only defaults forwarded to ``yolo.train()``.
+            export_args: Export metadata defaults, such as inference thresholds.
             **kwargs: Extra overrides forwarded to Ultralytics calls.
         """
         if not isinstance(model, UltralyticsModel):
@@ -88,6 +90,7 @@ class UltralyticsEngine(Engine):
         self._device = self._resolve_device(device)
         self._kwargs = kwargs
         self._train_args = dict(train_args or {})
+        self._export_args = dict(export_args or {})
         self._last_train_checkpoint = self._load_last_train_checkpoint()
 
         if isinstance(data, DataModule):
@@ -244,6 +247,12 @@ class UltralyticsEngine(Engine):
         if ultra_format is None:
             msg = f"Unsupported export format: {export_format}"
             raise ValueError(msg)
+        if self._model.task == "segment":
+            msg = (
+                "Ultralytics instance-segmentation export is not supported yet. "
+                "YOLO segmentation outputs require a validated ModelAPI wrapper."
+            )
+            raise NotImplementedError(msg)
 
         yolo = self._resolve_export_model(checkpoint)
         half = export_precision == Precision.FP16
@@ -265,10 +274,14 @@ class UltralyticsEngine(Engine):
 
         if export_format == ExportFormat.OPENVINO:
             xml_path = self._normalize_openvino_export(export_path)
+            if half:
+                self._cast_openvino_outputs_to_fp32(xml_path)
             self._embed_export_metadata_openvino(xml_path)
             return xml_path
         if export_format == ExportFormat.ONNX:
             onnx_path = self._normalize_onnx_export(export_path)
+            if half:
+                self._cast_onnx_outputs_to_fp32(onnx_path)
             self._embed_export_metadata_onnx(onnx_path)
             return onnx_path
 
@@ -634,6 +647,8 @@ class UltralyticsEngine(Engine):
         metadata = build_export_metadata(
             model=self._model,
             task_type=self._model.export_task_type,
+            confidence_threshold=float(self._export_args.get("confidence_threshold", 0.25)),
+            iou_threshold=float(self._export_args.get("iou_threshold", 0.7)),
         )
         embed_openvino_metadata(xml_path, metadata)
 
@@ -644,8 +659,24 @@ class UltralyticsEngine(Engine):
         metadata = build_export_metadata(
             model=self._model,
             task_type=self._model.export_task_type,
+            confidence_threshold=float(self._export_args.get("confidence_threshold", 0.25)),
+            iou_threshold=float(self._export_args.get("iou_threshold", 0.7)),
         )
         embed_onnx_metadata(onnx_path, metadata)
+
+    @staticmethod
+    def _cast_openvino_outputs_to_fp32(xml_path: Path) -> None:
+        """Cast OpenVINO model outputs to f32 for ModelAPI YOLO compatibility."""
+        from .export import cast_openvino_outputs_to_fp32
+
+        cast_openvino_outputs_to_fp32(xml_path)
+
+    @staticmethod
+    def _cast_onnx_outputs_to_fp32(onnx_path: Path) -> None:
+        """Cast ONNX model outputs to f32 for ModelAPI YOLO compatibility."""
+        from .export import cast_onnx_outputs_to_fp32
+
+        cast_onnx_outputs_to_fp32(onnx_path)
 
     @staticmethod
     def _resolve_device(device: str | DeviceType) -> torch.device:
