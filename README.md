@@ -68,6 +68,116 @@ As a product, Geti™ consists of two components:
   RTSP stream, ...). The predictions are visualized directly in the web application, and you can also configure it
   to forward the results to different destinations (folder, MQTT, webhook, ...) for easy integration with other systems.
 
+## Supported tasks and models
+
+Below is a list of tasks and templates supported by the Geti™ library and/or application.
+Would you like to see a specific model added to the list? Let us know by opening a [GitHub issue](https://github.com/open-edge-platform/training_extensions/issues)!
+
+### Image Classification
+
+| Library: ✅ | Application: ✅ |
+| ----------- | --------------- |
+
+<details>
+<summary>Show models</summary>
+
+| Model Architecture    | Paper                                              |
+| --------------------- | -------------------------------------------------- |
+| ViT Tiny              | [ViT](https://arxiv.org/abs/2010.11929)            |
+| DINOv2 Small          | [DINOv2](https://arxiv.org/abs/2304.07193)         |
+| EfficientNet B0 / B3  | [EfficientNet](https://arxiv.org/abs/1905.11946)   |
+| EfficientNet V2 Small | [EfficientNetV2](https://arxiv.org/abs/2104.00298) |
+| MobileNet V3 Large    | [MobileNetV3](https://arxiv.org/abs/1905.02244)    |
+
+</details>
+
+> [!NOTE]
+> Both library and application support **multi-class** and **multi-label** classification.
+> In addition, the library offers **hierarchical** classification too.\_
+
+### Object Detection
+
+| Library: ✅ | Application: ✅ |
+| ----------- | --------------- |
+
+<details>
+<summary>Show models</summary>
+
+| Model Architecture     | Paper                                                                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| D-FINE M / L / X       | [DEIM](https://arxiv.org/abs/2412.04234) + [D-FINE](https://arxiv.org/abs/2410.13842)                                                 |
+| DINOv3 DETR S / M / L  | [DINOv3](https://arxiv.org/abs/2508.10104) + [DEIMv2](https://arxiv.org/html/2509.20787v4) + [DETR](https://arxiv.org/abs/2005.12872) |
+| MobileNet V2 ATSS      | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [ATSS](https://arxiv.org/abs/1912.02424)                                            |
+| MobileNet V2 SSD       | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [SSD](https://arxiv.org/abs/1512.02325)                                             |
+| RF-DETR S / M / L      | [RF-DETR](https://arxiv.org/abs/2511.09554)                                                                                           |
+| RT-DETR R50            | [RT-DETR](https://arxiv.org/abs/2304.08069)                                                                                           |
+| YOLOX Tiny / S / L / X | [YOLOX](https://arxiv.org/abs/2107.08430)                                                                                             |
+
+</details>
+
+### Instance Segmentation
+
+| Library: ✅ | Application: ✅ |
+| ----------- | --------------- |
+
+<details>
+<summary>Show models</summary>
+
+| Model Architecture        | Paper                                                                                                 |
+| ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| RTMDet Tiny               | [RTMDet](https://arxiv.org/abs/2212.07784)                                                            |
+| Mask-RCNN EfficientNet B2 | [EfficientNet](https://arxiv.org/abs/1905.11946) + [Mask R-CNN](https://arxiv.org/abs/1703.06870)     |
+| Mask-RCNN ResNet50        | [ResNet](https://arxiv.org/abs/1512.03385) + [Mask R-CNN](https://arxiv.org/abs/1703.06870)           |
+| Mask-RCNN Swin-T          | [Swin Transformer](https://arxiv.org/abs/2103.14030) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
+| RF-DETR S / M / L         | [RF-DETR](https://arxiv.org/abs/2511.09554)                                                           |
+
+</details>
+
+### Semantic Segmentation
+
+| Library: ✅ | Application: ✖️ |
+| ----------- | --------------- |
+
+<details>
+<summary>Show models</summary>
+
+| Model Architecture          | Paper                                          |
+| --------------------------- | ---------------------------------------------- |
+| DINOv2 Small                | [DINOv2](https://arxiv.org/abs/2304.07193)     |
+| Lite-HRNet 18 / S / X       | [Lite-HRNet](https://arxiv.org/abs/2104.06403) |
+| SegNeXt Tiny / Small / Base | [SegNeXt](https://arxiv.org/abs/2209.08575)    |
+
+</details>
+
+### Rotated Detection
+
+| Library: ✅ | Application: ✖️ |
+| ----------- | --------------- |
+
+<details>
+<summary>Show models</summary>
+
+| Model Architecture        | Paper                                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------------- |
+| Mask-RCNN EfficientNet B2 | [EfficientNet](https://arxiv.org/abs/1905.11946) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
+| Mask-RCNN ResNet50        | [ResNet](https://arxiv.org/abs/1512.03385) + [Mask R-CNN](https://arxiv.org/abs/1703.06870)       |
+
+</details>
+
+### Keypoint Detection
+
+| Library: ✅ | Application: ✖️ |
+| ----------- | --------------- |
+
+<details>
+<summary>Show models</summary>
+
+| Model Architecture | Paper                                       |
+| ------------------ | ------------------------------------------- |
+| RTMPose Tiny       | [RTMPose](https://arxiv.org/abs/2212.07784) |
+
+</details>
+
 ## Documentation
 
 | Component       | README                                         | Documentation |
