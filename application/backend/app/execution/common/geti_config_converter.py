@@ -29,8 +29,8 @@ class ModelStatus(str, Enum):
 
 TEMPLATE_ID_MAPPING = {
     # MULTI_CLASS_CLS
-    "image-classification-deit-tiny": {
-        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",
+    "image-classification-vit-tiny": {
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "vit_tiny.yaml",
         "status": ModelStatus.BALANCE,
         "default": False,
     },

@@ -21,7 +21,7 @@ Setup virtual environment
 *************************
 
 1. You can follow the installation process from a :doc:`quick start guide <../../../get_started/installation>`
-to create a universal virtual environment for OpenVINO™ Training Extensions.
+to create a universal virtual environment for Geti Library.
 
 2. Activate your virtual environment:
 
@@ -53,33 +53,33 @@ The list of supported recipes for semantic segmentation is available with the co
 
         .. code-block:: shell
 
-          (otx) ...$ otx find --task SEMANTIC_SEGMENTATION
+          (getitune) ...$ getitune find --task SEMANTIC_SEGMENTATION
 
           ┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
           ┃ Task                  ┃ Model Name        ┃ Recipe Path                                                                                    ┃
           ┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-          │ SEMANTIC_SEGMENTATION │ litehrnet_x_tile  │ src/otx/recipe/semantic_segmentation/litehrnet_x_tile.yaml                                     │
-          │ SEMANTIC_SEGMENTATION │ openvino_model    │ src/otx/recipe/semantic_segmentation/openvino_model.yaml                                       │
-          │ SEMANTIC_SEGMENTATION │ dino_v2_tile      │ src/otx/recipe/semantic_segmentation/dino_v2_tile.yaml                                         │
-          │ SEMANTIC_SEGMENTATION │ litehrnet_s       │ src/otx/recipe/semantic_segmentation/litehrnet_s.yaml                                          │
-          │ SEMANTIC_SEGMENTATION │ segnext_b         │ src/otx/recipe/semantic_segmentation/segnext_b.yaml                                            │
-          │ SEMANTIC_SEGMENTATION │ litehrnet_18_tile │ src/otx/recipe/semantic_segmentation/litehrnet_18_tile.yaml                                    │
-          │ SEMANTIC_SEGMENTATION │ dino_v2           │ src/otx/recipe/semantic_segmentation/dino_v2.yaml                                              │
-          │ SEMANTIC_SEGMENTATION │ segnext_s         │ src/otx/recipe/semantic_segmentation/segnext_s.yaml                                            │
-          │ SEMANTIC_SEGMENTATION │ segnext_b_tile    │ src/otx/recipe/semantic_segmentation/segnext_b_tile.yaml                                       │
-          │ SEMANTIC_SEGMENTATION │ segnext_t         │ src/otx/recipe/semantic_segmentation/segnext_t.yaml                                            │
-          │ SEMANTIC_SEGMENTATION │ segnext_t_tile    │ src/otx/recipe/semantic_segmentation/segnext_t_tile.yaml                                       │
-          │ SEMANTIC_SEGMENTATION │ litehrnet_18      │ src/otx/recipe/semantic_segmentation/litehrnet_18.yaml                                         │
-          │ SEMANTIC_SEGMENTATION │ segnext_s_tile    │ src/otx/recipe/semantic_segmentation/segnext_s_tile.yaml                                       │
-          │ SEMANTIC_SEGMENTATION │ litehrnet_x       │ src/otx/recipe/semantic_segmentation/litehrnet_x.yaml                                          │
-          │ SEMANTIC_SEGMENTATION │ litehrnet_s_tile  │ src/otx/recipe/semantic_segmentation/litehrnet_s_tile.yaml                                     │
+          │ SEMANTIC_SEGMENTATION │ litehrnet_x_tile  │ src/getitune/recipe/semantic_segmentation/litehrnet_x_tile.yaml                                     │
+          │ SEMANTIC_SEGMENTATION │ openvino_model    │ src/getitune/recipe/semantic_segmentation/openvino_model.yaml                                       │
+          │ SEMANTIC_SEGMENTATION │ dino_v2_tile      │ src/getitune/recipe/semantic_segmentation/dino_v2_tile.yaml                                         │
+          │ SEMANTIC_SEGMENTATION │ litehrnet_s       │ src/getitune/recipe/semantic_segmentation/litehrnet_s.yaml                                          │
+          │ SEMANTIC_SEGMENTATION │ segnext_b         │ src/getitune/recipe/semantic_segmentation/segnext_b.yaml                                            │
+          │ SEMANTIC_SEGMENTATION │ litehrnet_18_tile │ src/getitune/recipe/semantic_segmentation/litehrnet_18_tile.yaml                                    │
+          │ SEMANTIC_SEGMENTATION │ dino_v2           │ src/getitune/recipe/semantic_segmentation/dino_v2.yaml                                              │
+          │ SEMANTIC_SEGMENTATION │ segnext_s         │ src/getitune/recipe/semantic_segmentation/segnext_s.yaml                                            │
+          │ SEMANTIC_SEGMENTATION │ segnext_b_tile    │ src/getitune/recipe/semantic_segmentation/segnext_b_tile.yaml                                       │
+          │ SEMANTIC_SEGMENTATION │ segnext_t         │ src/getitune/recipe/semantic_segmentation/segnext_t.yaml                                            │
+          │ SEMANTIC_SEGMENTATION │ segnext_t_tile    │ src/getitune/recipe/semantic_segmentation/segnext_t_tile.yaml                                       │
+          │ SEMANTIC_SEGMENTATION │ litehrnet_18      │ src/getitune/recipe/semantic_segmentation/litehrnet_18.yaml                                         │
+          │ SEMANTIC_SEGMENTATION │ segnext_s_tile    │ src/getitune/recipe/semantic_segmentation/segnext_s_tile.yaml                                       │
+          │ SEMANTIC_SEGMENTATION │ litehrnet_x       │ src/getitune/recipe/semantic_segmentation/litehrnet_x.yaml                                          │
+          │ SEMANTIC_SEGMENTATION │ litehrnet_s_tile  │ src/getitune/recipe/semantic_segmentation/litehrnet_s_tile.yaml                                     │
           └───────────────────────┴───────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────┘
 
     .. tab-item:: API
 
         .. code-block:: python
 
-          from otx.backend.native.cli.utils import list_models
+          from getitune.backend.lightning.cli.utils import list_models
 
           model_lists = list_models(task="SEMANTIC_SEGMENTATION")
           print(model_lists)
@@ -109,16 +109,16 @@ with:
 - all necessary configs for litehrnet_18
 - train/validation sets, based on provided annotation.
 
-Let's prepare an OpenVINO™ Training Extensions semantic segmentation workspace running the following command:
+Let's prepare an Geti Library semantic segmentation workspace running the following command:
 
 .. code-block:: shell
 
   # or its config path
-  (otx) ...$ otx train --config src/otx/recipe/semantic_segmentation/litehrnet_18.yaml --data_root tests/assets/common_semantic_segmentation_dataset --print_config
+  (getitune) ...$ getitune train --config src/getitune/recipe/semantic_segmentation/litehrnet_18.yaml --data_root tests/assets/common_semantic_segmentation_dataset --print_config
 
   ...
   data_root: tests/assests/common_semantic_segmentation_dataset
-  work_dir: otx-workspace
+  work_dir: getitune-workspace
   callback_monitor: val/Dice
   disable_infer_num_classes: false
   engine:
@@ -133,11 +133,11 @@ Let's prepare an OpenVINO™ Training Extensions semantic segmentation workspace
 
   .. code-block:: shell
 
-    (otx) ...$ otx train --config src/otx/recipe/semantic_segmentation/litehrnet_18.yaml --data_root tests/assests/common_semantic_segmentation_dataset --print_config > configs.yaml
+    (getitune) ...$ getitune train --config src/getitune/recipe/semantic_segmentation/litehrnet_18.yaml --data_root tests/assests/common_semantic_segmentation_dataset --print_config > configs.yaml
     # Update configs.yaml & Train configs.yaml
-    (otx) ...$ otx train --config configs.yaml
+    (getitune) ...$ getitune train --config configs.yaml
 
-3. To start training we need to call ``otx train``
+3. To start training we need to call ``getitune train``
 
 Here are the main outputs can expect with CLI:
 - ``{work_dir}/{timestamp}/checkpoints/epoch_*.ckpt`` - a model checkpoint file.
@@ -150,27 +150,27 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: shell
 
-            (otx) ...$ otx train --config src/otx/recipe/semantic_segmentation/litehrnet_18.yaml --data_root tests/assests/common_semantic_segmentation_dataset
+            (getitune) ...$ getitune train --config src/getitune/recipe/semantic_segmentation/litehrnet_18.yaml --data_root tests/assests/common_semantic_segmentation_dataset
 
     .. tab-item:: API (from_config)
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
+            from getitune.backend.lightning.engine import LightningEngine
 
             data_root = "tests/assests/common_semantic_segmentation_dataset"
-            recipe = "src/otx/recipe/semantic_segmentation/litehrnet_18.yaml"
+            recipe = "src/getitune/recipe/semantic_segmentation/litehrnet_18.yaml"
 
-            engine = OTXEngine.from_config(
+            engine = LightningEngine.from_config(
                       config_path=recipe,
                       data_root=data_root,
-                      work_dir="otx-workspace",
+                      work_dir="getitune-workspace",
                     )
 
 
             # one more possibility to obtain the right engine by the given model/dataset
             # using "create_engine" function
-            from otx.engine import create_engine
+            from getitune.engine import create_engine
             engine = create_engine(
                       model=recipe,
                       data=data_root,
@@ -182,8 +182,8 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
-            from otx.backend.native.models import LiteHRNet
+            from getitune.backend.lightning.engine import LightningEngine
+            from getitune.backend.lightning.models.segmentation.litehrnet import LiteHRNet
 
             data_root = "tests/assests/common_semantic_segmentation_dataset"
             model = LiteHRNet(
@@ -196,15 +196,15 @@ Here are the main outputs can expect with CLI:
                                      "std": [58.395, 57.12, 57.375]}
             )
 
-            engine = OTXEngine(
+            engine = LightningEngine(
                       model=model,
-                      data_root=data_root,
-                      work_dir="otx-workspace",
+                      data=data_root,
+                      work_dir="getitune-workspace",
                     )
 
             # one more possibility to obtain the right engine by the given model/dataset
             # using "create_engine" function
-            from otx.engine import create_engine
+            from getitune.engine import create_engine
             engine = create_engine(
                       model=model,
                       data=data_root,
@@ -215,7 +215,7 @@ Here are the main outputs can expect with CLI:
 The training time highly relies on the hardware characteristics, for example on 1 NVIDIA GeForce RTX 3090 the training took about 18 seconds with full dataset.
 
 4. ``(Optional)`` Additionally, we can tune training parameters such as batch size, learning rate, patience epochs or warm-up iterations.
-Learn more about recipe-specific parameters using ``otx train params --help``.
+Learn more about recipe-specific parameters using ``getitune train params --help``.
 
 It can be done by manually updating parameters in the ``configs.yaml`` file in your workplace or via the command line.
 
@@ -227,20 +227,20 @@ For example, to decrease the batch size to 4, fix the number of epochs to 100 an
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.train_subset.batch_size 4 \
+            (getitune) ...$ getitune train ... --data.train_subset.batch_size 4 \
                                      --max_epochs 100
 
     .. tab-item:: API
 
         .. code-block:: python
 
-            from otx.config.data import SubsetConfig
-            from otx.data.module import OTXDataModule
-            from otx.backend.native.engine import OTXEngine
+            from getitune.config.data import SubsetConfig
+            from getitune.data.module import DataModule
+            from getitune.backend.lightning.engine import LightningEngine
 
-            datamodule = OTXDataModule(..., train_subset=SubsetConfig(..., batch_size=4))
+            datamodule = DataModule(..., train_subset=SubsetConfig(..., batch_size=4))
 
-            engine = OTXEngine(..., data=datamodule)
+            engine = LightningEngine(..., data=datamodule)
 
             engine.train(max_epochs=100)
 
@@ -253,7 +253,7 @@ while training logs can be found in the ``{work_dir}/{timestamp}`` dir.
 
 .. code-block::
 
-  otx-workspace
+  getitune-workspace
     ├── 20240403_134256/
     |   ├── csv/
     |   ├── checkpoints/
@@ -264,7 +264,7 @@ while training logs can be found in the ``{work_dir}/{timestamp}`` dir.
         └── train/
   ...
 
-After that, we have the PyTorch semantic segmentation model trained with OpenVINO™ Training Extensions, which we can use for evaluation, export, optimization and deployment.
+After that, we have the PyTorch semantic segmentation model trained with Geti Library, which we can use for evaluation, export, optimization and deployment.
 
 6. It is also possible to resume training from the last checkpoint.
 For this, we can use the ``--resume`` parameter with the path to the checkpoint file.
@@ -275,9 +275,9 @@ For this, we can use the ``--resume`` parameter with the path to the checkpoint 
 
         .. code-block:: shell
 
-            (otx) ...$ otx train --config src/otx/recipe/semantic_segmentation/litehrnet_18.yaml \
+            (getitune) ...$ getitune train --config src/getitune/recipe/semantic_segmentation/litehrnet_18.yaml \
                                   --data_root tests/assets/common_semantic_segmentation_dataset \
-                                  --checkpoint otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt \
+                                  --checkpoint getitune-workspace/20240403_134256/checkpoints/epoch_014.ckpt \
                                   --resume True
 
     .. tab-item:: API
@@ -285,21 +285,21 @@ For this, we can use the ``--resume`` parameter with the path to the checkpoint 
         .. code-block:: python
 
             engine.train(resume=True,
-                         checkpoint="otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt")
+                         checkpoint="getitune-workspace/20240403_134256/checkpoints/epoch_014.ckpt")
 
 ***********
 Validation
 ***********
 
-1. ``otx test`` runs evaluation of a trained
+1. ``getitune test`` runs evaluation of a trained
 model on a specific dataset.
 
 The test function receives test annotation information and model snapshot, trained in the previous step.
 
-``otx test`` will output a Dice for semantic segmentation.
+``getitune test`` will output a Dice for semantic segmentation.
 
 2. The command below will run validation on our dataset
-and save performance results in ``otx-workspace``:
+and save performance results in ``getitune-workspace``:
 
 .. tab-set::
 
@@ -307,7 +307,7 @@ and save performance results in ``otx-workspace``:
 
         .. code-block:: shell
 
-            (otx) ...$ otx test --work_dir otx-workspace
+            (getitune) ...$ getitune test --work_dir getitune-workspace
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
             ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -318,9 +318,9 @@ and save performance results in ``otx-workspace``:
 
         .. code-block:: shell
 
-            (otx) ...$ otx test --config  src/otx/recipe/semantic_segmentation/maskrcnn_r50.yaml \
+            (getitune) ...$ getitune test --config  src/getitune/recipe/semantic_segmentation/maskrcnn_r50.yaml \
                                 --data_root tests/assets/common_semantic_segmentation_dataset \
-                                --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_059.ckpt
+                                --checkpoint getitune-workspace/20240312_051135/checkpoints/epoch_059.ckpt
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
             ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩

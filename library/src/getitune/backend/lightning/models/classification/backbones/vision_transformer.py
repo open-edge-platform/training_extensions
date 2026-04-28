@@ -302,7 +302,7 @@ class VisionTransformerBackbone(BaseModule):
     def load_pretrained(self, checkpoint_path: Path, prefix: str = "") -> None:
         """Loads the pretrained weight to the VisionTransformer."""
         checkpoint_ext = checkpoint_path.suffix
-        if checkpoint_ext == ".npz":  # deit models
+        if checkpoint_ext == ".npz":  # ViT models (JAX format)
             self._load_npz_weights(self, checkpoint_path, prefix)
         elif checkpoint_ext == ".pth":  # dinov2 models
 
@@ -355,13 +355,13 @@ class VisionTransformerBackbone(BaseModule):
             to_cat.append(self.reg_token.expand(x.shape[0], -1, -1))
 
         if self.no_embed_class:
-            # deit-3, updated JAX (big vision)
+            # ViT with no_embed_class, updated JAX (big vision)
             # position embedding does not overlap with class token, add then concat
             x = x + pos_embed
             if to_cat:
                 x = torch.cat(to_cat + [x], dim=1)  # noqa: RUF005
         else:
-            # original timm, JAX, and deit vit impl
+            # original timm, JAX, and ViT impl
             # pos_embed has entry for class token, concat then add
             if to_cat:
                 x = torch.cat(to_cat + [x], dim=1)  # noqa: RUF005

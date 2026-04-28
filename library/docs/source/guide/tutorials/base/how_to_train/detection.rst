@@ -24,7 +24,7 @@ Setup virtual environment
 *************************
 
 1. You can follow the installation process from a :doc:`quick start guide <../../../get_started/installation>`
-to create a universal virtual environment for OpenVINO™ Training Extensions.
+to create a universal virtual environment for Geti Library.
 
 2. Activate your virtual environment:
 
@@ -126,21 +126,21 @@ The list of supported recipes for object detection is available with the command
 
         .. code-block:: shell
 
-            (otx) ...$ otx find --task DETECTION --pattern atss
+            (getitune) ...$ getitune find --task DETECTION --pattern atss
             ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃ Task      ┃ Model Name            ┃ Recipe Path                                                    ┃
             ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-            │ DETECTION │ atss_mobilenetv2_tile │ src/otx/recipe/detection/atss_mobilenetv2_tile.yaml            │
-            │ DETECTION │ atss_resnext101       │ src/otx/recipe/detection/atss_resnext101.yaml                  │
-            │ DETECTION │ atss_resnext101_tile  │ src/otx/recipe/detection/atss_resnext101_tile.yaml             │
-            │ DETECTION │ atss_mobilenetv2      │ src/otx/recipe/detection/atss_mobilenetv2.yaml                 │
+            │ DETECTION │ atss_mobilenetv2_tile │ src/getitune/recipe/detection/atss_mobilenetv2_tile.yaml            │
+            │ DETECTION │ atss_resnext101       │ src/getitune/recipe/detection/atss_resnext101.yaml                  │
+            │ DETECTION │ atss_resnext101_tile  │ src/getitune/recipe/detection/atss_resnext101_tile.yaml             │
+            │ DETECTION │ atss_mobilenetv2      │ src/getitune/recipe/detection/atss_mobilenetv2.yaml                 │
             └───────────┴───────────────────────┴────────────────────────────────────────────────────────────────┘
 
     .. tab-item:: API
 
         .. code-block:: python
 
-            from otx.backend.native.cli.utils import list_models
+            from getitune.backend.lightning.cli.utils import list_models
 
             model_lists = list_models(task="DETECTION", pattern="atss")
             print(model_lists)
@@ -169,14 +169,14 @@ Let's check the object detection configuration running the following command:
 .. code-block:: shell
 
     # or its config path
-    (otx) ...$ otx train --config  src/otx/recipe/detection/atss_mobilenetv2.yaml \
+    (getitune) ...$ getitune train --config  src/getitune/recipe/detection/atss_mobilenetv2.yaml \
                          --data_root data/wgisd \
-                         --work_dir otx-workspace \
+                         --work_dir getitune-workspace \
                          --print_config
 
     ...
     data_root: data/wgisd
-    work_dir: otx-workspace
+    work_dir: getitune-workspace
     callback_monitor: val/map_50
     disable_infer_num_classes: false
     engine:
@@ -191,12 +191,12 @@ Let's check the object detection configuration running the following command:
 
     .. code-block:: shell
 
-        (otx) ...$ otx train --config  src/otx/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd --print_config > configs.yaml
+        (getitune) ...$ getitune train --config  src/getitune/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd --print_config > configs.yaml
         # Update configs.yaml & Train configs.yaml
-        (otx) ...$ otx train --config configs.yaml
+        (getitune) ...$ getitune train --config configs.yaml
 
 
-3. ``otx train`` trains a model (a particular model recipe)
+3. ``getitune train`` trains a model (a particular model recipe)
 on a dataset and results:
 
 Here are the main outputs can expect with CLI:
@@ -210,42 +210,42 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: shell
 
-            (otx) ...$ otx train --data_root data/wgisd
+            (getitune) ...$ getitune train --data_root data/wgisd
 
     .. tab-item:: CLI (with config)
 
         .. code-block:: shell
 
-            (otx) ...$ otx train --config src/otx/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd
+            (getitune) ...$ getitune train --config src/getitune/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd
 
     .. tab-item:: API (from_config)
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
+            from getitune.backend.lightning.engine import LightningEngine
 
             data_root = "data/wgisd"
-            recipe = "src/otx/recipe/detection/atss_mobilenetv2.yaml"
+            recipe = "src/getitune/recipe/detection/atss_mobilenetv2.yaml"
 
-            engine = OTXEngine.from_config(
+            engine = LightningEngine.from_config(
                       config_path=recipe,
                       data_root=data_root,
-                      work_dir="otx-workspace",
+                      work_dir="getitune-workspace",
                     )
 
             # it is also possible to pass a config as a model to the Engine directly
-            engine = OTXEngine(
+            engine = LightningEngine(
                       model=recipe,
                       data=data_root,
-                      work_dir="otx-workspace",
+                      work_dir="getitune-workspace",
                     )
 
             # one more possibility to obtain the right engine by the given model/dataset
-            from otx.engine import create_engine
+            from getitune.engine import create_engine
             engine = create_engine(
                       model=recipe,
                       data=data_root,
-                      work_dir="otx-workspace",
+                      work_dir="getitune-workspace",
                     )
 
             engine.train(...)
@@ -254,8 +254,8 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
-            from otx.backend.native.models import ATSS
+            from getitune.backend.lightning.engine import LightningEngine
+            from getitune.backend.lightning.models.detection.atss import ATSS
 
             data_root = "data/wgisd"
             model = ATSS(
@@ -268,26 +268,25 @@ Here are the main outputs can expect with CLI:
                                             "std": [255.0, 255.0, 255.0]}
                     )
 
-            engine = OTXEngine(
+            engine = LightningEngine(
                       model=model,
-                      data_root=data_root,
-                      work_dir="otx-workspace",
+                      data=data_root,
+                      work_dir="getitune-workspace",
                     )
 
             # one more possibility to obtain the right engine by the given model/dataset
             # using "create_engine" function
-            from otx.engine import create_engine
+            from getitune.engine import create_engine
             engine = create_engine(
                       model=model,
                       data=data_root,
-                      work_dir="otx-workspace",
                     )
 
             engine.train(...)
 
 
 4. ``(Optional)`` Additionally, we can tune training parameters such as batch size, learning rate, patience epochs or warm-up iterations.
-Learn more about specific parameters using ``otx train --help -v`` or ``otx train --help -vv``.
+Learn more about specific parameters using ``getitune train --help -v`` or ``getitune train --help -vv``.
 
 For example, to decrease the batch size to 4, fix the number of epochs to 100, extend the command line above with the following line.
 
@@ -297,20 +296,20 @@ For example, to decrease the batch size to 4, fix the number of epochs to 100, e
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.train_subset.batch_size 4 \
+            (getitune) ...$ getitune train ... --data.train_subset.batch_size 4 \
                                      --max_epochs 100
 
     .. tab-item:: API
 
         .. code-block:: python
 
-            from otx.config.data import SubsetConfig
-            from otx.data.module import OTXDataModule
-            from otx.backend.native.engine import OTXEngine
+            from getitune.config.data import SubsetConfig
+            from getitune.data.module import DataModule
+            from getitune.backend.lightning.engine import LightningEngine
 
-            datamodule = OTXDataModule(..., train_subset=SubsetConfig(..., batch_size=4))
+            datamodule = DataModule(..., train_subset=SubsetConfig(..., batch_size=4))
 
-            engine = OTXEngine(..., datamodule=datamodule)
+            engine = LightningEngine(..., data=datamodule)
 
             engine.train(max_epochs=100)
 
@@ -323,7 +322,7 @@ while training logs can be found in the ``{work_dir}/{timestamp}`` dir.
 
 .. code-block::
 
-    otx-workspace
+    getitune-workspace
     ├── 20240403_134256/
         ├── csv/
         ├── checkpoints/
@@ -336,7 +335,7 @@ while training logs can be found in the ``{work_dir}/{timestamp}`` dir.
 
 The training time highly relies on the hardware characteristics, for example on 1 NVIDIA GeForce RTX 3090 the training took about 3 minutes.
 
-After that, we have the PyTorch object detection model trained with OpenVINO™ Training Extensions, which we can use for evaluation, export, optimization and deployment.
+After that, we have the PyTorch object detection model trained with Geti Library, which we can use for evaluation, export, optimization and deployment.
 
 6. It is also possible to resume training from the last checkpoint.
 For this, we can use the ``--resume`` parameter with the path to the checkpoint file.
@@ -347,9 +346,9 @@ For this, we can use the ``--resume`` parameter with the path to the checkpoint 
 
         .. code-block:: shell
 
-            (otx) ...$ otx train --config src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml \
+            (getitune) ...$ getitune train --config src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml \
                                   --data_root data/flower_photos \
-                                  --checkpoint otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt \
+                                  --checkpoint getitune-workspace/20240403_134256/checkpoints/epoch_014.ckpt \
                                   --resume True
 
     .. tab-item:: API
@@ -357,21 +356,21 @@ For this, we can use the ``--resume`` parameter with the path to the checkpoint 
         .. code-block:: python
 
             engine.train(resume=True,
-                         checkpoint="otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt")
+                         checkpoint="getitune-workspace/20240403_134256/checkpoints/epoch_014.ckpt")
 
 ***********
 Evaluation
 ***********
 
-1. ``otx test`` runs evaluation of a
+1. ``getitune test`` runs evaluation of a
 trained model on a particular dataset.
 
 Test function receives test annotation information and model snapshot, trained in previous step.
 
 The default metric is mAP_50 measure.
 
-2. That's how we can evaluate the snapshot in ``otx-workspace``
-folder on WGISD dataset and save results to ``otx-workspace``:
+2. That's how we can evaluate the snapshot in ``getitune-workspace``
+folder on WGISD dataset and save results to ``getitune-workspace``:
 
 .. tab-set::
 
@@ -379,7 +378,7 @@ folder on WGISD dataset and save results to ``otx-workspace``:
 
         .. code-block:: shell
 
-            (otx) ...$ otx test --work_dir otx-workspace
+            (getitune) ...$ getitune test --work_dir getitune-workspace
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
             ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -392,9 +391,9 @@ folder on WGISD dataset and save results to ``otx-workspace``:
 
         .. code-block:: shell
 
-            (otx) ...$ otx test --config  src/otx/recipe/detection/atss_mobilenetv2.yaml \
+            (getitune) ...$ getitune test --config  src/getitune/recipe/detection/atss_mobilenetv2.yaml \
                                 --data_root data/wgisd \
-                                --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_033.ckpt
+                                --checkpoint getitune-workspace/20240312_051135/checkpoints/epoch_033.ckpt
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
             ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩

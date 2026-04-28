@@ -77,9 +77,9 @@ class TestAutoConfigurator:
 
         # getitune-Mobilenet-v2
         # new_config
-        model_name = "deit_tiny"
+        model_name = "vit_tiny"
         new_config = auto_configurator._load_default_config(
-            config_path="src/getitune/recipe/classification/multi_class_cls/deit_tiny.yaml",
+            config_path="src/getitune/recipe/classification/multi_class_cls/vit_tiny.yaml",
         )
         new_path = str(target_config).split("/")
         new_path[-1] = f"{model_name}.yaml"

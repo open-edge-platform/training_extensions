@@ -7,14 +7,14 @@ This flexibility enables users to tailor the input size to their specific needs 
 the data pipeline configurations.
 
 To utilize this feature, simply specify the desired input size as an argument during the train command.
-Additionally, OTX ensures compatibility with model trained on non-default input sizes by automatically adjusting
+Additionally, Geti Library ensures compatibility with model trained on non-default input sizes by automatically adjusting
 the data pipeline to match the input size during other engine entry points.
 
 Usage example:
 
 .. code-block::
 
-    $ otx train \
+    $ getitune train \
         --config ... \
 
 .. tab-set::
@@ -23,34 +23,34 @@ Usage example:
 
         .. code-block:: python
 
-            from otx.backend.native.models.detection.yolox import YOLOXS
-            from otx.data.module import OTXDataModule
-            from otx.backend.native.engine import OTXEngine
+            from getitune.backend.lightning.models.detection.yolox import YOLOXS
+            from getitune.data.module import DataModule
+            from getitune.backend.lightning.engine import LightningEngine
 
             input_size = (512, 512)
             model = YOLOXS(label_info=5, data_input_params=DataInputParams(input_size=(512, 512),
                                                                            mean=(0.,0.,0.),
                                                                            std=(1.,1.,1.)))
-            datamodule = OTXDataModule(..., input_size=input_size)
-            engine = OTXEngine(model=model, datamodule=datamodule)
+            datamodule = DataModule(..., input_size=input_size)
+            engine = LightningEngine(model=model, data=datamodule)
             engine.train()
 
     .. tab-item:: API 2
 
         .. code-block:: python
 
-            from otx.data.module import OTXDataModule
-            from otx.backend.native.engine import OTXEngine
+            from getitune.data.module import DataModule
+            from getitune.backend.lightning.engine import LightningEngine
 
-            datamodule = OTXDataModule(..., input_size=(512, 512))
-            engine = OTXEngine(model="src/otx/recipe/detection/yolox_s.yaml", datamodule=datamodule)  # model input size, mean and std values will be aligned with the datamodule
+            datamodule = DataModule(..., input_size=(512, 512))
+            engine = LightningEngine(model="src/getitune/recipe/detection/yolox_s.yaml", data=datamodule)  # model input size, mean and std values will be aligned with the datamodule
             engine.train()
 
     .. tab-item:: CLI
 
         .. code-block:: bash
 
-            (otx) ...$ otx train ... --data.input_size [512,512]
+            (getitune) ...$ getitune train ... --data.input_size [512,512]
 
 .. _adaptive-input-size:
 
@@ -72,11 +72,11 @@ To activate this feature, use the following command with the desired mode:
 
         .. code-block:: python
 
-            from otx.backend.native.models.detection.yolox import YOLOXS
-            from otx.data.module import OTXDataModule
-            from otx.backend.native.engine import OTXEngine
+            from getitune.backend.lightning.models.detection.yolox import YOLOXS
+            from getitune.data.module import DataModule
+            from getitune.backend.lightning.engine import LightningEngine
 
-            datamodule = OTXDataModule(
+            datamodule = DataModule(
                 ...
                 input_size="auto",  # auto or downscale
                 input_size_multiplier=YOLOXS.input_size_multiplier, # should set the input_size_multiplier of the model
@@ -84,18 +84,18 @@ To activate this feature, use the following command with the desired mode:
             model = YOLOXS(label_info=5, input_size=DataInputParams(input_size=datamodule.input_size,
                                                                     mean=datamodule.input_mean,
                                                                     std=datamodule.input_std))
-            engine = OTXEngine(model=model, data=datamodule)
+            engine = LightningEngine(model=model, data=datamodule)
             engine.train()
 
     .. tab-item:: CLI
 
         .. code-block:: bash
 
-            (otx) ...$ otx train ... --data.input_size "auto"
+            (getitune) ...$ getitune train ... --data.input_size "auto"
 
 The adaptive process includes the following steps:
 
-1. OTX computes robust statistics from the input dataset.
+1. Geti Library computes robust statistics from the input dataset.
 
 2. The initial input size is set based on the typical large image size within the dataset.
 

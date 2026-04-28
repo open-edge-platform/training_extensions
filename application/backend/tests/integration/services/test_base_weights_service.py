@@ -13,7 +13,7 @@ from app.services.model_manifest_service import ManifestNotFoundException
 
 DETECTION_MODEL_MANIFEST_ID = "object-detection-ssd-mobilenet-v2"
 DETECTION_WEIGHTS_FILENAME = "mobilenet_v2-2s_ssd-992x736.pth"
-CLASSIFICATION_MODEL_MANIFEST_ID = "image-classification-deit-tiny"
+CLASSIFICATION_MODEL_MANIFEST_ID = "image-classification-vit-tiny"
 
 
 @pytest.fixture()
