@@ -2,12 +2,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { act } from '@testing-library/react';
-import { getMockedAnnotation } from 'mocks/mock-annotation';
 import { getMockedMediaImage, getMockedVideoFrame, getMultipleMockedMediaImage } from 'mocks/mock-media';
 import { renderHook } from 'test-utils/render';
 
 import type { AnnotationDTO } from '../../../constants/shared-types';
-import { getInitialAnnotations, getNextMediaItem, useAnnotatorMode } from './utils';
+import { useVideoPlayerContext } from '../../annotator/video-player/video-player-provider.component';
+import { getInitialAnnotations, getNextMediaItem, usePlayPauseVideoBySystem } from './utils';
+
+vi.mock('../../annotator/video-player/video-player-provider.component', () => ({
+    useVideoPlayerContext: vi.fn(),
+}));
+
+const mockUseVideoPlayerContext = vi.mocked(useVideoPlayerContext);
+
+const createVideoPlayerContext = (isPlaying: boolean) => {
+    const play = vi.fn().mockResolvedValue(undefined);
+    const pause = vi.fn();
+    return {
+        videoControls: { isPlaying, play, pause },
+    };
+};
 
 describe('getInitialAnnotations', () => {
     const mockAnnotations: AnnotationDTO[] = [
@@ -105,67 +119,71 @@ describe('getNextMediaItem', () => {
     });
 });
 
-describe('useAnnotatorMode', () => {
+describe('usePlayPauseVideoBySystem', () => {
     beforeEach(() => {
-        localStorage.clear();
+        mockUseVideoPlayerContext.mockReturnValue(null);
     });
 
-    it('sets mode to "annotation" when there are no annotations and no predictions', () => {
-        const { result } = renderHook(() => useAnnotatorMode({ predictions: [], annotations: [] }));
+    it('does not call play or pause when not loading and video is not playing', () => {
+        const context = createVideoPlayerContext(false);
+        mockUseVideoPlayerContext.mockReturnValue(context as never);
 
-        expect(result.current[0]).toBe('annotation');
+        renderHook(() => usePlayPauseVideoBySystem(false));
+
+        expect(context.videoControls.play).not.toHaveBeenCalled();
+        expect(context.videoControls.pause).not.toHaveBeenCalled();
     });
 
-    it('sets mode to "annotation" when there are annotations and predictions', () => {
-        const { result } = renderHook(() =>
-            useAnnotatorMode({
-                predictions: [getMockedAnnotation({ id: '1' })],
-                annotations: [getMockedAnnotation({ id: '2' })],
-            })
-        );
+    it('calls pause when isLoadingPredictions becomes true and video is playing', () => {
+        const context = createVideoPlayerContext(true);
+        mockUseVideoPlayerContext.mockReturnValue(context as never);
 
-        expect(result.current[0]).toBe('annotation');
+        renderHook(() => usePlayPauseVideoBySystem(true));
+
+        expect(context.videoControls.pause).toHaveBeenCalledTimes(1);
+        expect(context.videoControls.play).not.toHaveBeenCalled();
     });
 
-    it('sets mode to "annotation" when there are annotations and no predictions', () => {
-        const { result } = renderHook(() =>
-            useAnnotatorMode({
-                predictions: [],
-                annotations: [getMockedAnnotation({ id: '1' })],
-            })
-        );
+    it('calls play when isLoadingPredictions becomes false after system paused the video', () => {
+        const context = createVideoPlayerContext(true);
+        mockUseVideoPlayerContext.mockReturnValue(context as never);
 
-        expect(result.current[0]).toBe('annotation');
-    });
+        let isLoading = true;
+        const { rerender } = renderHook(() => usePlayPauseVideoBySystem(isLoading));
 
-    it('sets mode to "prediction" when there are no annotations and there are predictions', () => {
-        const { result } = renderHook(() =>
-            useAnnotatorMode({
-                predictions: [getMockedAnnotation({ id: '1' })],
-                annotations: [],
-            })
-        );
-
-        expect(result.current[0]).toBe('prediction');
-    });
-
-    it('updates mode manually properly', async () => {
-        const { result } = renderHook(() => useAnnotatorMode({ predictions: [], annotations: [] }));
-
-        const [_, setMode] = result.current;
-
-        expect(result.current[0]).toBe('annotation');
+        expect(context.videoControls.pause).toHaveBeenCalledTimes(1);
 
         act(() => {
-            setMode('prediction');
+            isLoading = false;
+            rerender();
         });
 
-        expect(result.current[0]).toBe('prediction');
+        expect(context.videoControls.play).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call play when isLoadingPredictions becomes false but video was paused by user', () => {
+        const context = createVideoPlayerContext(false);
+        mockUseVideoPlayerContext.mockReturnValue(context as never);
+
+        let isLoading = true;
+        const { rerender } = renderHook(() => usePlayPauseVideoBySystem(isLoading));
+
+        expect(context.videoControls.pause).not.toHaveBeenCalled();
 
         act(() => {
-            setMode('annotation');
+            isLoading = false;
+            rerender();
         });
 
-        expect(result.current[0]).toBe('annotation');
+        expect(context.videoControls.play).not.toHaveBeenCalled();
+    });
+
+    it('does not call pause when video is not playing and isLoadingPredictions becomes true', () => {
+        const context = createVideoPlayerContext(false);
+        mockUseVideoPlayerContext.mockReturnValue(context as never);
+
+        renderHook(() => usePlayPauseVideoBySystem(true));
+
+        expect(context.videoControls.pause).not.toHaveBeenCalled();
     });
 });

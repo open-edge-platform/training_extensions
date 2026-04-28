@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""API for OTX Entry-Point User."""
+"""API for getitune Entry-Point User."""
 
 from __future__ import annotations
 
@@ -27,10 +27,10 @@ def create_engine(model: MODEL, data: DATA, **kwargs) -> Engine:
     Raises:
         ValueError: If no compatible engine is found
     """
-    from getitune.backend.native.engine import OTXEngine
+    from getitune.backend.lightning.engine import LightningEngine
     from getitune.backend.openvino.engine import OVEngine
 
-    supported_engines = [OTXEngine, OVEngine]
+    supported_engines = [LightningEngine, OVEngine]
     # Dynamically discover all custom subclasses of Engine
     for child_engines in Engine.__subclasses__():
         if child_engines not in supported_engines:

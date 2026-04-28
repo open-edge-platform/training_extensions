@@ -1,6 +1,6 @@
 task: INSTANCE_SEGMENTATION
 model:
-  class_path: getitune.backend.native.models.instance_segmentation.maskrcnn.MaskRCNN
+  class_path: getitune.backend.lightning.models.instance_segmentation.maskrcnn.MaskRCNN
   init_args:
     model_name: maskrcnn_efficientnet_b2b
     label_info: 80
@@ -13,7 +13,7 @@ model:
         weight_decay: 0.001
 
     scheduler:
-      class_path: getitune.backend.native.schedulers.LinearWarmupSchedulerCallable
+      class_path: getitune.backend.lightning.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 100
         main_scheduler_callable:
@@ -32,7 +32,7 @@ callback_monitor: val/map_50
 data: ../_base_/data/instance_segmentation.yaml
 
 callbacks:
-  - class_path: getitune.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: getitune.backend.lightning.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
       patience: 10
@@ -61,12 +61,25 @@ overrides:
         - class_path: kornia.augmentation.RandomHorizontalFlip
           init_args:
             p: 0.5
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.485, 0.456, 0.406]
+            std: [1.0, 1.0, 1.0]
       sampler:
         class_path: getitune.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
       num_workers: 4
-      augmentations_gpu: []
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.485, 0.456, 0.406]
+            std: [1.0, 1.0, 1.0]
     test_subset:
       num_workers: 4
-      augmentations_gpu: []
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.485, 0.456, 0.406]
+            std: [1.0, 1.0, 1.0]
+            

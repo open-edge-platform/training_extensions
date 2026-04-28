@@ -22,6 +22,7 @@ import { incrementCachedAnnotatedFrameCount } from './util';
 type AnnotationsContextValue = {
     annotations: Annotation[];
     canSubmit: boolean;
+    hasInvalidAnnotation: boolean;
     addAnnotations: (shapes: Shape[], labels: Label[]) => string[];
     addAnnotationWithEmptyLabel: (label: Label) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
@@ -32,6 +33,8 @@ type AnnotationsContextValue = {
     isUserReviewed: boolean;
     isSaving: boolean;
     isReadOnlyMode: boolean;
+    initialAnnotations: Annotation[];
+    initialPredictions: Annotation[];
 };
 
 const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
@@ -208,7 +211,14 @@ export const AnnotationActionsProvider = ({
         return annotations.some((annotation) => annotation.labels.some((label) => label.id === EMPTY_LABEL_ID));
     }, [annotations]);
 
-    const canSubmit = mode === 'prediction' ? predictions.length > 0 : hasChangedAnnotations || hasEmptyLabelSelection;
+    const hasInvalidAnnotation = useMemo(() => {
+        return annotations.some((annotation) => annotation.labels.length === 0);
+    }, [annotations]);
+
+    const canSubmit =
+        mode === 'prediction'
+            ? predictions.length > 0
+            : !hasInvalidAnnotation && (hasChangedAnnotations || hasEmptyLabelSelection);
 
     const annotationsToRender = mode === 'annotation' ? annotations : predictions;
     const isReadOnlyMode = isReadOnly || mode === 'prediction';
@@ -219,6 +229,7 @@ export const AnnotationActionsProvider = ({
                 isUserReviewed,
                 annotations: annotationsToRender,
                 canSubmit,
+                hasInvalidAnnotation,
 
                 // Local
                 addAnnotations,
@@ -227,6 +238,8 @@ export const AnnotationActionsProvider = ({
                 addAnnotationWithEmptyLabel,
                 resetAnnotations,
                 replaceAnnotations,
+                initialAnnotations,
+                initialPredictions: predictions,
 
                 // Remote
                 submitAnnotations,

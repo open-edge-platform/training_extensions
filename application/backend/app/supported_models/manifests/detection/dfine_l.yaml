@@ -2,7 +2,8 @@ id: object-detection-dfine-l
 name: D-FINE-L
 
 pretrained_weights:
-  url: https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_l_coco_50e.pth
+  url: https://storage.geti.intel.com/weights/deim_dfine_hgnetv2_l_coco_50e.pth
+  mirror_url: https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_l_coco_50e.pth
   sha_sum: a9ac1f9bf51a41a7ec02c373c85e0109f84908dde11d80759b43248dcb638baa
 
 description: "D-FINE is a powerful real-time object detector that redefines the bounding box regression task in DETRs as Fine-grained Distribution Refinement (FDR). Combined with the DEIM adaptive augmentation scheduling framework (enabled by default), it achieves outstanding performance with faster convergence."

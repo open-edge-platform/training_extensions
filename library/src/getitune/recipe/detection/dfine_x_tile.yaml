@@ -1,6 +1,6 @@
 task: DETECTION
 model:
-  class_path: getitune.backend.native.models.detection.d_fine.DFine
+  class_path: getitune.backend.lightning.models.detection.d_fine.DFine
   init_args:
     model_name: dfine_hgnetv2_x
     label_info: 80
@@ -14,7 +14,7 @@ model:
         weight_decay: 0.000125
 
     scheduler:
-      class_path: getitune.backend.native.schedulers.LinearWarmupSchedulerCallable
+      class_path: getitune.backend.lightning.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 20
         main_scheduler_callable:
@@ -33,7 +33,7 @@ callback_monitor: val/map_50
 data: ../_base_/data/detection_tile.yaml
 
 callbacks:
-  - class_path: getitune.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: getitune.backend.lightning.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
       patience: 10

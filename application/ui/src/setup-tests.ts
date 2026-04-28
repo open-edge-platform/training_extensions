@@ -10,8 +10,6 @@ import { server } from './msw-node-setup';
 
 import './test-utils/mock-event-source';
 
-process.env.PUBLIC_API_BASE_URL = 'http://localhost:7860';
-
 beforeAll(() => {
     server.listen({ onUnhandledRequest: 'bypass' });
 });

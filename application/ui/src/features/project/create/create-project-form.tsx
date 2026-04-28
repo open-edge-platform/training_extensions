@@ -37,15 +37,20 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
     const navigate = useNavigate();
     const createProjectMutation = useCreateProject();
 
-    const validationErrorMessage = validateProjectName(
-        name,
-        projects.map((project) => project.name)
-    );
+    const isSubmitting = createProjectMutation.isPending || createProjectMutation.isSuccess;
+
+    const validationErrorMessage = isSubmitting
+        ? undefined
+        : validateProjectName(
+              name,
+              projects.map((project) => project.name)
+          );
 
     const isSingleLabelClassification = isClassificationTask(selectedTask) && classificationTaskType === 'single-label';
     const needsMinimumNumberOfLabels = isSingleLabelClassification && labels.length < 2;
 
     const isCreateProjectDisabled =
+        isSubmitting ||
         selectedTask === null ||
         validationErrorMessage !== undefined ||
         labels.length === 0 ||

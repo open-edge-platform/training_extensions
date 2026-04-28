@@ -13,14 +13,14 @@ from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from datumaro.experimental.fields import Subset
 from torchvision import tv_tensors
 
-from getitune.data.dataset import OTXMulticlassClsDataset
-from getitune.data.dataset.base import OTXDataset
+from getitune.data.dataset import MulticlassClsDataset
+from getitune.data.dataset.base import VisionDataset
 from getitune.data.entity.sample import ClassificationSample
 from getitune.data.samplers.balanced_sampler import BalancedSampler
 
 
 @pytest.fixture
-def fxt_imbalanced_dataset() -> OTXDataset:
+def fxt_imbalanced_dataset() -> VisionDataset:
     categories = {"label": LabelCategories(labels=("0", "1"))}
     dm_dataset = Dataset(ClassificationSample, categories=categories)  # type: ignore[arg-type]
 
@@ -43,7 +43,7 @@ def fxt_imbalanced_dataset() -> OTXDataset:
             ),
         )
 
-    return OTXMulticlassClsDataset(dm_subset=dm_dataset, transforms=[])
+    return MulticlassClsDataset(dm_subset=dm_dataset, transforms=[])
 
 
 class TestBalancedSampler:

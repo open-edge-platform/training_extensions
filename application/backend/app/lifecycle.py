@@ -21,9 +21,9 @@ from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
 from app.execution import (
     ExportDataset,
+    GetiTuneQuantizer,
+    GetiTuneTrainer,
     ImportDatasetToProject,
-    OTXQuantizer,
-    OTXTrainer,
     PrepareDataset,
     QuantizationDependencies,
     TrainingDependencies,
@@ -85,7 +85,7 @@ def setup_job_controller(
     job_runnable_factory.register(
         JobType.TRAIN,
         partial(
-            OTXTrainer,
+            GetiTuneTrainer,
             training_deps=TrainingDependencies(
                 base_weights_service=BaseWeightsService(data_dir=data_dir),
                 subset_service=SubsetService(),
@@ -102,7 +102,7 @@ def setup_job_controller(
     job_runnable_factory.register(
         JobType.QUANTIZE,
         partial(
-            OTXQuantizer,
+            GetiTuneQuantizer,
             quantization_deps=QuantizationDependencies(
                 data_dir=data_dir,
                 model_service=ModelService(data_dir=data_dir),

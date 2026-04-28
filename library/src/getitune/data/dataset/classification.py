@@ -1,7 +1,7 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTXClassificationDatasets using new Datumaro experimental Dataset."""
+"""Module for ClassificationDatasets using new Datumaro experimental Dataset."""
 
 from __future__ import annotations
 
@@ -11,25 +11,25 @@ import torch
 from torch.nn import functional
 
 from getitune import HLabelInfo, LabelInfo
-from getitune.data.dataset.base import OTXDataset, Transforms
+from getitune.data.dataset.base import Transforms, VisionDataset
 from getitune.data.entity.sample import (
     ClassificationHierarchicalSample,
     ClassificationMultiLabelSample,
     ClassificationSample,
 )
 from getitune.data.entity.utils import with_image_dtype
-from getitune.types import OTXTaskType
+from getitune.types import TaskType
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
     from datumaro.experimental.categories import HierarchicalLabelCategories
 
 
-class OTXMulticlassClsDataset(OTXDataset):
-    """OTX Dataset for multi-class classification tasks.
+class MulticlassClsDataset(VisionDataset):
+    """getitune Dataset for multi-class classification tasks.
 
     This dataset handles single-label classification where each image belongs to exactly one class.
-    It processes Datumaro dataset items and converts them into OTXSample format suitable for
+    It processes Datumaro dataset items and converts them into BaseSample format suitable for
     multi-class classification training and inference.
 
     Args:
@@ -43,8 +43,8 @@ class OTXMulticlassClsDataset(OTXDataset):
         ValueError: If an image has multiple labels (multi-label case).
 
     Example:
-        >>> from getitune.data.dataset.classification import OTXMulticlassClsDataset
-        >>> dataset = OTXMulticlassClsDataset(
+        >>> from getitune.data.dataset.classification import MulticlassClsDataset
+        >>> dataset = MulticlassClsDataset(
         ...     dm_subset=my_dm_subset,
         ...     transforms=my_transforms,
         ... )
@@ -92,20 +92,20 @@ class OTXMulticlassClsDataset(OTXDataset):
         return idx_list_per_classes
 
     @property
-    def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+    def task_type(self) -> TaskType:
+        """Getitune Task Type for the dataset.
 
         Returns:
-            OTXTaskType: The multi-class classification task type.
+            TaskType: The multi-class classification task type.
         """
-        return OTXTaskType.MULTI_CLASS_CLS
+        return TaskType.MULTI_CLASS_CLS
 
 
-class OTXMultilabelClsDataset(OTXDataset):
-    """OTX Dataset for multi-label classification tasks.
+class MultilabelClsDataset(VisionDataset):
+    """getitune Dataset for multi-label classification tasks.
 
     This dataset handles multi-label classification where each image can belong to multiple classes
-    simultaneously. It processes Datumaro dataset items and converts them into OTXSample format
+    simultaneously. It processes Datumaro dataset items and converts them into BaseSample format
     with one-hot encoded labels suitable for multi-label classification training and inference.
 
     Args:
@@ -119,8 +119,8 @@ class OTXMultilabelClsDataset(OTXDataset):
         num_classes (int): Number of classes in the dataset.
 
     Example:
-        >>> from getitune.data.dataset.classification import OTXMultilabelClsDataset
-        >>> dataset = OTXMultilabelClsDataset(
+        >>> from getitune.data.dataset.classification import MultilabelClsDataset
+        >>> dataset = MultilabelClsDataset(
         ...     dm_subset=my_dm_subset,
         ...     transforms=my_transforms,
         ... )
@@ -193,23 +193,23 @@ class OTXMultilabelClsDataset(OTXDataset):
         return idx_list_per_classes
 
     @property
-    def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+    def task_type(self) -> TaskType:
+        """Getitune Task Type for the dataset.
 
         Returns:
-            OTXTaskType: The multi-label classification task type.
+            TaskType: The multi-label classification task type.
         """
-        return OTXTaskType.MULTI_LABEL_CLS
+        return TaskType.MULTI_LABEL_CLS
 
 
-class OTXHlabelClsDataset(OTXDataset):
-    """OTX Dataset for hierarchical label classification tasks.
+class HlabelClsDataset(VisionDataset):
+    """getitune Dataset for hierarchical label classification tasks.
 
     This dataset handles hierarchical classification where labels are organized in a tree structure
     with multiple classification heads. It supports both multiclass heads (where one class per head
     is selected) and multilabel heads (where multiple classes can be selected simultaneously).
 
-    The dataset processes Datumaro dataset items and converts them into OTXSample format with
+    The dataset processes Datumaro dataset items and converts them into BaseSample format with
     hierarchical label encoding suitable for H-label classification training and inference.
 
     Args:
@@ -228,8 +228,8 @@ class OTXHlabelClsDataset(OTXDataset):
         TypeError: If label_info is not of type HLabelInfo.
 
     Example:
-        >>> from getitune.data.dataset.classification import OTXHlabelClsDataset
-        >>> dataset = OTXHlabelClsDataset(
+        >>> from getitune.data.dataset.classification import HlabelClsDataset
+        >>> dataset = HlabelClsDataset(
         ...     dm_subset=my_dm_subset,
         ...     transforms=my_transforms,
         ... )
@@ -344,10 +344,10 @@ class OTXHlabelClsDataset(OTXDataset):
         return idx_list_per_classes
 
     @property
-    def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+    def task_type(self) -> TaskType:
+        """Getitune Task Type for the dataset.
 
         Returns:
-            OTXTaskType: The hierarchical label classification task type.
+            TaskType: The hierarchical label classification task type.
         """
-        return OTXTaskType.H_LABEL_CLS
+        return TaskType.H_LABEL_CLS

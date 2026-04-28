@@ -24,8 +24,7 @@ type UseLabelsOptions = {
 export const useLabels = ({ isClassification = false, isMultiLabel = false }: UseLabelsOptions = {}) => {
     const { selectedLabelId, setSelectedLabelId, labels } = useAnnotatorLabels();
     const { selectedAnnotations } = useSelectedAnnotations();
-    const { annotations, addAnnotations, updateAnnotations, deleteAnnotations, addAnnotationWithEmptyLabel } =
-        useAnnotationActions();
+    const { annotations, addAnnotations, updateAnnotations, addAnnotationWithEmptyLabel } = useAnnotationActions();
 
     const projectId = useProjectIdentifier();
     const updateLabelMutation = useUpdateLabel();
@@ -65,20 +64,14 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
                 labels: toggleLabel(label, annotation.labels),
             }));
 
-            const hasNoLabels = updatedAnnotations.every(({ labels: annotationLabels }) => isEmpty(annotationLabels));
-
-            if (hasNoLabels) {
-                deleteAnnotations(updatedAnnotations.map(({ id }) => id));
-            } else {
-                updateAnnotations(updatedAnnotations);
-            }
+            updateAnnotations(updatedAnnotations);
         } else {
             const isAlreadySelected = annotations.some((annotation) =>
                 annotation.labels.some((l) => l.id === label.id)
             );
 
             if (isAlreadySelected) {
-                deleteAnnotations(annotations.map(({ id }) => id));
+                updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels: [] })));
             } else {
                 updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels: [label] })));
             }

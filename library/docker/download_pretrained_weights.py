@@ -9,7 +9,7 @@ from pathlib import Path
 from importlib_resources import files
 from omegaconf import OmegaConf
 
-from getitune.backend.native.utils.instantiators import partial_instantiate_class
+from getitune.backend.lightning.utils.instantiators import partial_instantiate_class
 
 logging.basicConfig(
     level=logging.INFO,
@@ -35,7 +35,10 @@ def download_all() -> None:
             continue
 
         config = OmegaConf.load(config_path)
-        init_model = next(iter(partial_instantiate_class(config.model)))
+        model_partials = partial_instantiate_class(config.model)
+        if model_partials is None:
+            continue
+        init_model = next(iter(model_partials))
         try:
             model = init_model()
             msg = f"Downloaded pre-trained model weight of {model!s}"

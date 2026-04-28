@@ -27,8 +27,8 @@ describe('InferenceDevices', () => {
         server.use(
             http.get('/api/system/devices/inference', () => HttpResponse.json(devicesResponse)),
             http.get('/api/projects/{project_id}/pipeline', () => HttpResponse.json(pipelineResponse)),
-            http.patch('/api/projects/{project_id}/pipeline', () => {
-                pipelinePatchSpy();
+            http.patch('/api/projects/{project_id}/pipeline', async ({ request }) => {
+                pipelinePatchSpy(await request.json());
                 return HttpResponse.json(
                     {
                         project_id: '',
@@ -95,5 +95,30 @@ describe('InferenceDevices', () => {
         await screen.findByLabelText('toast');
 
         expect(await screen.findByLabelText('inference compute')).toHaveTextContent('CPU');
+    });
+
+    it('renders devices with same type and name correctly', async () => {
+        const devicesResponse = [
+            { type: 'cpu' as const, name: 'CPU', memory: null, index: null },
+            { type: 'xpu' as const, name: 'Intel(R) Graphics [0xe216]', memory: 21359386624, index: 0 },
+            { type: 'xpu' as const, name: 'Intel(R) Graphics [0xe216]', memory: 21359386624, index: 1 },
+        ];
+        const pipelinePatchSpy = renderApp(200, devicesResponse, { ...mockPipeline, device: 'cpu' });
+
+        await screen.findByLabelText('inference compute');
+        await userEvent.click(screen.getByRole('button', { name: /inference compute/i }));
+
+        const options = await screen.findAllByRole('option');
+        expect(options).toHaveLength(3);
+        expect(options[0]).toHaveTextContent('CPU');
+        expect(options[1]).toHaveTextContent('Intel(R) Graphics [0xe216]');
+        expect(options[2]).toHaveTextContent('Intel(R) Graphics [0xe216]');
+
+        // Pick the first xpu (index 0) and verify the patch uses 'xpu-0' (guards against falsy-check regressions)
+        await userEvent.click(options[1]);
+
+        await waitFor(() => {
+            expect(pipelinePatchSpy).toHaveBeenCalledWith({ device: 'xpu-0' });
+        });
     });
 });

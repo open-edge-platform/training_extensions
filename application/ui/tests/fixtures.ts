@@ -16,7 +16,7 @@ import { handlers, http } from '../src/api/utils';
 import { BoundingBoxToolPage } from './annotator/bounding-box-tool-page';
 import { PolygonToolPage } from './annotator/polygon-tool-page';
 import { SSIMToolPage } from './annotator/ssim-tool-page';
-import { VideoPage } from './annotator/video-page';
+import { VideoPage } from './annotator/video/video-page';
 import { AnnotatorPage } from './datasets/annotator-page';
 import { DatasetPage } from './datasets/dataset-page';
 import { ImportDatasetPage } from './datasets/import-dataset-page';

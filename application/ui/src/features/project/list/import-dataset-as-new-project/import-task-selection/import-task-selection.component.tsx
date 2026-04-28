@@ -10,23 +10,39 @@ import { useStagedDatasetSuspense } from 'hooks/api/staged-dataset.hook';
 import { useImportDatasetAsNewProject } from 'hooks/storage/use-import-dataset-as-new-project.hook';
 
 import { TaskType } from '../../../../../constants/shared-types';
+import { generateUniqueProjectName } from '../../../create/utils';
 import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
 import { validateProjectName } from '../../../validator';
-import { getRecommendedTaskType, TASK_SELECTION_FORM_ID } from './util';
+import { getAllowedTaskTypes, getRecommendedTaskType, TASK_SELECTION_FORM_ID } from './util';
 
 type ImportTaskSelectionProps = {
     stagedDatasetId: string;
 };
 
-const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType | undefined) => {
+const TASK_LABELS: Record<TaskType, string> = {
+    detection: 'Object detection',
+    classification: 'Classification',
+    instance_segmentation: 'Instance segmentation',
+};
+
+const useFormConfig = (
+    stagedDatasetId: string,
+    defaultTaskType: TaskType | undefined,
+    allowedTaskTypes: TaskType[]
+) => {
     const { data: projects } = useProjects();
     const { setCurrentStep } = useImportDatasetDialog();
     const { getImportEntry, updateImportEntry } = useImportDatasetAsNewProject();
     const importEntry = getImportEntry(stagedDatasetId);
 
+    const uniqueProjectName = generateUniqueProjectName(projects.map((project) => project.name));
+
+    const taskType = importEntry?.project?.task_type;
+    const finalTaskType = taskType && allowedTaskTypes.includes(taskType) ? taskType : defaultTaskType;
+
     const initialFormState = {
-        name: importEntry?.project?.name ?? `Project #${projects.length + 1}`,
-        task_type: importEntry?.project?.task_type ?? defaultTaskType,
+        name: importEntry?.project?.name ?? uniqueProjectName,
+        task_type: finalTaskType,
     };
 
     return useActionState<{ name: string; task_type: TaskType | undefined }, FormData>(async (_prevState, formData) => {
@@ -45,16 +61,23 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
     const { data: projects } = useProjects();
     const { data: stagedDataset } = useStagedDatasetSuspense(stagedDatasetId);
 
+    const annotationType = stagedDataset?.metadata?.annotation_type;
     const isGetiFormat = stagedDataset.format === 'geti';
-    const defaultTaskType = isGetiFormat ? getRecommendedTaskType(stagedDataset?.metadata?.annotation_type) : undefined;
+    const allowedTaskTypes = getAllowedTaskTypes(annotationType);
+    const defaultTaskType = isGetiFormat ? getRecommendedTaskType(annotationType) : undefined;
 
-    const [formState, submitAction] = useFormConfig(stagedDatasetId, defaultTaskType);
+    const [formState, submitAction] = useFormConfig(stagedDatasetId, defaultTaskType, allowedTaskTypes);
     const [name, setName] = useState(formState.name);
 
     const validationErrorMessage = validateProjectName(
         name.trim(),
         projects.map((project) => project.name)
     );
+
+    const items = allowedTaskTypes.map((taskType) => ({
+        key: taskType,
+        label: defaultTaskType === taskType ? `${TASK_LABELS[taskType]} (Recommended)` : TASK_LABELS[taskType],
+    }));
 
     return (
         <View backgroundColor={'gray-75'} margin={'size-300'} padding={'size-300'}>
@@ -74,24 +97,15 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
 
                 <Picker
                     isRequired
+                    items={items}
                     name={'task_type'}
                     label={'Task type'}
                     aria-label={'Task type'}
                     marginBottom={'size-150'}
-                    placeholder='select an option...'
+                    placeholder='Select task'
                     defaultSelectedKey={formState.task_type}
                 >
-                    <Item key={'detection'}>
-                        {defaultTaskType === 'detection' ? 'Object detection (Recommended)' : 'Object detection'}
-                    </Item>
-                    <Item key={'classification'}>
-                        {defaultTaskType === 'classification' ? 'Classification (Recommended)' : 'Classification'}
-                    </Item>
-                    <Item key={'instance_segmentation'}>
-                        {defaultTaskType === 'instance_segmentation'
-                            ? 'Instance segmentation (Recommended)'
-                            : 'Instance segmentation'}
-                    </Item>
+                    {(item) => <Item>{item.label}</Item>}
                 </Picker>
 
                 <Flex gap='size-100' alignItems={'center'}>

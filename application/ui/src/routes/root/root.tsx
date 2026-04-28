@@ -3,7 +3,7 @@
 
 import { ReactNode, Suspense } from 'react';
 
-import { IntelBrandedLoading } from '@geti/ui';
+import { Flex, Heading, IntelBrandedLoading } from '@geti/ui';
 import { Outlet } from 'react-router';
 
 import { $api } from '../../api/client';
@@ -11,20 +11,27 @@ import { License } from '../../features/license/license.component';
 import { ServerErrorFallback } from './server-error-fallback.component';
 
 const REFETCH_INTERVAL = 5000;
-const RETRY_DELAY = 5000;
-const MAX_RETRIES = 5;
+const MAX_RETRIES = 30;
+const retryDelay = (attempt: number) => Math.min(1000 * 2 ** attempt, 5000);
 
 const HealthCheck = ({ children }: { children: ReactNode }) => {
     const { data, isPending, isError } = $api.useQuery('get', '/health', undefined, {
         retry: MAX_RETRIES,
-        retryDelay: RETRY_DELAY,
+        retryDelay,
         refetchInterval: (query) => {
             return query.state.data?.status === 'ok' ? false : REFETCH_INTERVAL;
         },
     });
 
     if (isPending) {
-        return <IntelBrandedLoading />;
+        return (
+            <Flex direction={'column'} justifyContent={'center'} alignItems={'center'} height={'100vh'}>
+                <IntelBrandedLoading height={'auto'} />
+                <Heading bottom={'size-4600'} level={2}>
+                    Loading...Please wait.
+                </Heading>
+            </Flex>
+        );
     }
 
     if (isError) {
