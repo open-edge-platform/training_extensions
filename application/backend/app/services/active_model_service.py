@@ -7,7 +7,7 @@ from pathlib import Path
 from uuid import UUID
 
 from loguru import logger
-from model_api.adapters import create_core
+from model_api.adapters import OpenvinoAdapter, create_core
 from model_api.models import Model
 
 from app.db.engine import get_db_session
@@ -15,7 +15,6 @@ from app.models.model_activation import ModelActivationState
 from app.models.model_revision import ModelFormat, ModelPrecision, TrainingStatus
 from app.repositories import ModelRevisionRepository, ModelVariantRepository
 from app.repositories.active_model_repo import ActiveModelRepo
-from app.utils.ir_format import FP32OpenvinoAdapter
 
 from .system_service import SystemService
 
@@ -137,7 +136,7 @@ class ActiveModelService:
                     extension="bin",
                 )
                 ie = create_core()
-                adapter = FP32OpenvinoAdapter(
+                adapter = OpenvinoAdapter(
                     ie,
                     str(model_xml_path),
                     device=device,

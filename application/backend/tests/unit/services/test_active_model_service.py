@@ -93,7 +93,7 @@ class TestActiveModelServiceUnit:
                 new=lambda project_id, model_id, variant_id, extension: Path(f"model.{extension}"),
             ),
             patch("app.services.active_model_service.create_core"),
-            patch("app.services.active_model_service.FP32OpenvinoAdapter"),
+            patch("app.services.active_model_service.OpenvinoAdapter"),
         ):
             loaded = fxt_active_model_service.get_loaded_inference_model(force_reload=True)
             assert isinstance(loaded, LoadedModel)

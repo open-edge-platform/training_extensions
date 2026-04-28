@@ -43,7 +43,7 @@ class TestInferenceServer:
                 return_value=(True, (tmp_path / "model.xml", tmp_path / "model.bin")),
             ) as mock_get_model_binary_files,
             patch("app.services.inference.inference_server.create_core") as mock_create_core,
-            patch("app.services.inference.inference_server.FP32OpenvinoAdapter") as mock_fp32_adapter,
+            patch("app.services.inference.inference_server.OpenvinoAdapter") as mock_adapter,
         ):
             model_loaded = inference_server.set_inference_model(
                 project_id=project_id, model_id=model_id, device=device, ttl=60
@@ -61,13 +61,13 @@ class TestInferenceServer:
             mock_get_model_binary_files.assert_called_once_with(
                 project_id=project_id, model_id=model_id, model_variant_id=model_variant_id
             )
-            mock_fp32_adapter.assert_called_once_with(
+            mock_adapter.assert_called_once_with(
                 mock_create_core.return_value,
                 str(tmp_path / "model.xml"),
                 device=device.as_openvino,
                 max_num_requests=2,
             )
-            mock_create_model.assert_called_once_with(mock_fp32_adapter.return_value)
+            mock_create_model.assert_called_once_with(mock_adapter.return_value)
 
     def test_set_inference_model_already_loaded(self, tmp_path) -> None:
         project_id = uuid4()
@@ -166,8 +166,8 @@ class TestInferenceServer:
             mock_convert_prediction.return_value = [annotation]
             inference_server.infer_batch(labels=[label], inputs=[input])
 
-        # Images are always scaled to float32 [0, 1]
+        # Raw images are passed directly to model_api (preprocessing is handled by the model)
         (passed_batch,) = model.infer_batch.call_args.args
         assert len(passed_batch) == 1
-        np.testing.assert_array_almost_equal(passed_batch[0], raw_uint8.astype(np.float32) / 255.0)
-        assert passed_batch[0].dtype == np.float32
+        np.testing.assert_array_equal(passed_batch[0], raw_uint8)
+        assert passed_batch[0].dtype == np.uint8
