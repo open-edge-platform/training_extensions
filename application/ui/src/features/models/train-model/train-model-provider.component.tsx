@@ -17,6 +17,7 @@ import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-archite
 import { useGetSuccessfulModels } from '../hooks/api/use-get-models.hook';
 import { useGetTrainingDevices } from './api/use-get-training-devices';
 import { useTrainingConfiguration } from './hooks/use-training-configuration';
+import { getDefaultTrainingDevice } from './select-training-device/utils';
 
 type DatasetRevisionWithValue = Pick<DatasetRevision, 'id' | 'name'> & { value: string | null };
 type ModelRevisionWithValue = Pick<Model, 'id' | 'name' | 'architecture'> & { value: string | null };
@@ -124,9 +125,10 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
         activeModelArchitecture?.id ?? null
     );
 
-    const [selectedTrainingDevice, setSelectedTrainingDevice] = useState<string | null>(
-        trainingDevices.at(0) ? createTrainingDeviceKey(trainingDevices[0]) : null
-    );
+    const [selectedTrainingDevice, setSelectedTrainingDevice] = useState<string | null>(() => {
+        const defaultDevice = getDefaultTrainingDevice(trainingDevices);
+        return defaultDevice ? createTrainingDeviceKey(defaultDevice) : null;
+    });
     const [selectedDatasetRevisionId, setSelectedDatasetRevisionId] = useState<string | null>(
         datasetRevisions?.at(0)?.id ?? null
     );
