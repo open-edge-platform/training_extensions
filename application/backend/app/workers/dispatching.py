@@ -9,7 +9,7 @@ import numpy as np
 from loguru import logger
 
 from app.db import get_db_session
-from app.models import DisconnectedSinkConfig, Sink, SinkType
+from app.models import Sink, SinkType
 from app.services import DispatchService, SinkService
 from app.services.data_collect import DataCollector
 from app.services.dispatchers import Dispatcher
@@ -42,7 +42,7 @@ class DispatchingWorker(BaseThreadWorker):
 
         self._data_collector = data_collector
 
-        self._sink: Sink
+        self._sink: Sink | None
         self._destinations: list[Dispatcher] = []
 
         self._sink, self._destinations = self._load_sink()
@@ -55,11 +55,10 @@ class DispatchingWorker(BaseThreadWorker):
     def setup(self) -> None:
         pass
 
-    def _load_sink(self) -> tuple[Sink, list[Dispatcher]]:
+    def _load_sink(self) -> tuple[Sink | None, list[Dispatcher]]:
         with get_db_session() as db:
-            active_sink = SinkService(event_bus=self._event_bus, db_session=db).get_active_sink()
-        sink = active_sink if active_sink is not None else DisconnectedSinkConfig()
-        destinations = DispatchService.get_destinations(output_configs=[sink])
+            sink = SinkService(event_bus=self._event_bus, db_session=db).get_active_sink()
+        destinations = DispatchService.get_destinations(output_configs=[sink]) if sink is not None else []
         return sink, destinations
 
     def _reload_sink(self) -> None:
@@ -68,7 +67,8 @@ class DispatchingWorker(BaseThreadWorker):
 
     def run_loop(self) -> None:
         while not self.should_stop():
-            if self._sink.sink_type == SinkType.DISCONNECTED:
+            if self._sink is None:
+                # No sink configuration at all (e.g. no active pipeline): wait and retry.
                 logger.debug("No sink available... retrying in 1 second")
                 self.stop_aware_sleep(1)
                 continue
@@ -91,13 +91,17 @@ class DispatchingWorker(BaseThreadWorker):
 
             image_with_visualization = inference_data.visualized_prediction
             prediction = inference_data.prediction
-            # Postprocess and dispatch results
-            for destination in self._destinations:
-                destination.dispatch(
-                    original_image=stream_data.frame_data,
-                    image_with_visualization=image_with_visualization,
-                    predictions=prediction,
-                )
+
+            # Postprocess and dispatch results to external destinations.
+            # When the "disconnected" (black-hole) sink is selected, predictions are simply discarded:
+            # we still consume the queue so that WebRTC streaming and data collection keep working.
+            if self._sink.sink_type != SinkType.DISCONNECTED:
+                for destination in self._destinations:
+                    destination.dispatch(
+                        original_image=stream_data.frame_data,
+                        image_with_visualization=image_with_visualization,
+                        predictions=prediction,
+                    )
 
             # Dispatch to WebRTC stream
             self._rtc_stream_broadcaster.broadcast(image_with_visualization)

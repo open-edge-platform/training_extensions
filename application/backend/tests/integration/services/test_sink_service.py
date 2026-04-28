@@ -131,10 +131,13 @@ class TestSinkServiceIntegration:
 
         db_sinks = fxt_sink_service.list_all()
 
-        assert len(db_sinks) == len(fxt_db_sinks)
-        for i, sink in enumerate(db_sinks):
+        # The built-in "disconnected" (black-hole) sink is always appended at the end.
+        assert len(db_sinks) == len(fxt_db_sinks) + 1
+        for i, sink in enumerate(db_sinks[:-1]):
             assert str(sink.id) == fxt_db_sinks[i].id
             assert sink.name == fxt_db_sinks[i].name
+        assert str(db_sinks[-1].id) == "00000000-0000-0000-0000-000000000000"
+        assert db_sinks[-1].sink_type.value == "disconnected"
 
     def test_get_sink(self, fxt_db_sinks, fxt_sink_service, db_session):
         """Test retrieving a sink by ID."""

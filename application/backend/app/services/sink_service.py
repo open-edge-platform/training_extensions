@@ -6,9 +6,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.schema import SinkDB
-from app.models import OutputFormat, Sink, SinkAdapter, SinkType
+from app.models import DisconnectedSinkConfig, OutputFormat, Sink, SinkAdapter, SinkType
 from app.models.sink import SinkConfig
-from app.repositories import SinkRepository
+from app.repositories import PipelineRepository, SinkRepository
 from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 
 from .base import (
@@ -20,6 +20,8 @@ from .base import (
 )
 from .event.event_bus import EventBus, EventType
 from .parent_process_guard import parent_process_only
+
+DISCONNECTED_SINK_ID = UUID("00000000-0000-0000-0000-000000000000")
 
 
 class SinkService:
@@ -82,16 +84,21 @@ class SinkService:
             raise ResourceWithNameAlreadyExistsError(ResourceType.SINK, new_name)  # type: ignore[arg-type]
 
     def get_by_id(self, sink_id: UUID) -> Sink:
+        if sink_id == DISCONNECTED_SINK_ID:
+            return DisconnectedSinkConfig()
         db_sink = SinkRepository(self._db_session).get_by_id(str(sink_id))
         if not db_sink:
             raise ResourceNotFoundError(ResourceType.SINK, str(sink_id))
         return SinkAdapter.validate_python(db_sink, from_attributes=True)
 
     def list_all(self) -> list[Sink]:
-        return [
+        sinks: list[Sink] = [
             SinkAdapter.validate_python(db_sink, from_attributes=True)
             for db_sink in SinkRepository(self._db_session).list_all()
         ]
+        # Always expose the built-in "disconnected" (black-hole) sink so that the UI can select it.
+        sinks.append(DisconnectedSinkConfig())
+        return sinks
 
     @parent_process_only
     def delete_sink(self, sink: Sink) -> None:
@@ -103,9 +110,18 @@ class SinkService:
             raise ResourceInUseError(ResourceType.SINK, str(sink.id))
 
     def get_active_sink(self) -> Sink | None:
+        active_sink_id = self.get_active_sink_id()
+        if active_sink_id is None:
+            return None
+        if active_sink_id == DISCONNECTED_SINK_ID:
+            return DisconnectedSinkConfig()
         db_sink = SinkRepository(self._db_session).get_active_sink()
         return SinkAdapter.validate_python(db_sink, from_attributes=True) if db_sink else None
 
     def get_active_sink_id(self) -> UUID | None:
-        id = SinkRepository(self._db_session).get_active_sink_id()
-        return UUID(id) if id else None
+        # Read the sink_id from the active pipeline directly so that the built-in disconnected sink
+        # (which is not stored in the sinks table) is also reported as "active" when selected.
+        active_pipeline = PipelineRepository(self._db_session).get_active_pipeline()
+        if active_pipeline is None or active_pipeline.sink_id is None:
+            return None
+        return UUID(active_pipeline.sink_id)
