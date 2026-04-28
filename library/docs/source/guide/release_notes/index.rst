@@ -1,6 +1,11 @@
 Releases
 ########
 
+.. note::
+
+    Releases prior to v3.0 were published under the name **OTX** (OpenVINO Training Extensions).
+    The package has been renamed to **getitune** (Geti Library).
+
 .. toctree::
   :maxdepth: 1
 

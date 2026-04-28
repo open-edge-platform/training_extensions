@@ -12,19 +12,36 @@ import type {
 type IntelligentScissorsRemoteInstance = Remote<IntelligentScissorsWorkerInstance>;
 
 export const useIntelligentScissorsWorker = (enabled = true) => {
-    const { data, isLoading, isSuccess, isError } = useQuery<IntelligentScissorsRemoteInstance>({
+    const { data, isLoading, isSuccess, isError } = useQuery<{
+        worker: Worker;
+        instance: IntelligentScissorsRemoteInstance;
+    }>({
         queryKey: ['workers', 'INTELLIGENT_SCISSORS'],
-        queryFn: async () => {
-            const baseWorker = new Worker(new URL('../../webworkers/intelligent-scissors.worker', import.meta.url), {
+        queryFn: async ({ signal }) => {
+            const worker = new Worker(new URL('../../webworkers/intelligent-scissors.worker', import.meta.url), {
                 type: 'module',
             });
-            const intelligentScissorsWorker = wrap<IntelligentScissorsWorkerApi>(baseWorker);
+            // Terminate the worker if the query is cancelled (e.g. annotator unmounts)
+            // before build() resolves, so we don't leak the in-flight worker.
+            signal.addEventListener('abort', worker.terminate, { once: true });
 
-            return intelligentScissorsWorker.build();
+            try {
+                const instance = await wrap<IntelligentScissorsWorkerApi>(worker).build();
+
+                if (signal.aborted) {
+                    throw signal.reason;
+                }
+
+                return { worker, instance };
+            } catch (error) {
+                worker.terminate();
+
+                throw error;
+            }
         },
         staleTime: Infinity,
         enabled,
     });
 
-    return { worker: data, isLoading, isSuccess, isError };
+    return { worker: data?.instance, isLoading, isSuccess, isError };
 };

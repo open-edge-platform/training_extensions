@@ -1,14 +1,14 @@
 :octicon:`code-square;1em` API Quick-Guide
 ==============================================
 
-Besides CLI functionality, The OpenVINO™ Training Extension provides APIs that help developers to integrate OpenVINO™ Training Extensions models into their projects.
+Besides CLI functionality, The Geti Library provides APIs that help developers to integrate Geti Library models into their projects.
 This tutorial intends to show how to create a dataset, model and use all of the CLI functionality through APIs.
 
 For demonstration purposes we will use the Object Detection ATSS model with `WGISD <https://github.com/thsant/wgisd>`_ public dataset as we did for the :doc:`CLI tutorial <../tutorials/base/how_to_train/detection>`.
 
 .. note::
 
-    To start with we need to `install OpenVINO™ Training Extensions <https://github.com/open-edge-platform/training_extensions/blob/develop/QUICK_START_GUIDE.md#setup-openvino-training-extensions>`_.
+    To start with we need to `install Geti Library <https://github.com/open-edge-platform/training_extensions/blob/develop/QUICK_START_GUIDE.md#setup-openvino-training-extensions>`_.
 
 *******************
 Dataset preparation
@@ -25,13 +25,13 @@ with `WGISD dataset <https://github.com/thsant/wgisd>`_.
     git checkout 6910edc5ae3aae8c20062941b1641821f0c30127
 
 2. We need to rename annotations to
-be distinguished by OpenVINO™ Training Extensions Datumaro manager:
+be distinguished by Geti Library Datumaro manager:
 
 .. code-block:: shell
 
     mv data images && mv coco_annotations annotations && mv annotations/train_bbox_instances.json instances_train.json && mv annotations/test_bbox_instances.json instances_val.json
 
-Now it is all set to use this dataset inside OpenVINO™ Training Extensions
+Now it is all set to use this dataset inside Geti Library
 
 ************
 Quick Start
@@ -42,9 +42,9 @@ The following code snippet demonstrates how to do that:
 
 .. code-block:: python
 
-    from otx.engine import Engine
+    from getitune.engine import create_engine
 
-    engine = Engine(data="data/wgisd", model="src/otx/recipe/detection/atss_mobilenetv2.yaml")
+    engine = create_engine(model="src/getitune/recipe/detection/atss_mobilenetv2.yaml", data="data/wgisd")
     engine.train()
 
 
@@ -54,19 +54,19 @@ The following code snippet demonstrates how to do that:
 
     .. code-block:: python
 
-        from otx.engine import Engine
-        from otx.backend.native.models.detection.atss import ATSS
-        from otx.data import OTXDataModule
+        from getitune.backend.lightning.engine import LightningEngine
+        from getitune.backend.lightning.models.detection.atss import ATSS
+        from getitune.data.module import DataModule
 
         model = ATSS(label_info=5, model_name="mobilenetv2", data_input_params=DataInputParams(input_size=(512, 512), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)))
-        datamodule = OTXDataModule(task="DETECTION", data_root="data/wgisd")
-        engine = Engine(data=datamodule, model=model)
+        datamodule = DataModule(task="DETECTION", data_root="data/wgisd")
+        engine = LightningEngine(data=datamodule, model=model)
 
 **********************************
 Check Available Model Recipes
 **********************************
 
-If you want to use other models offered by OpenVINO™ Training Extension, you can get a list of available models as shown below.
+If you want to use other models offered by Geti Library, you can get a list of available models as shown below.
 
 .. tab-set::
 
@@ -74,7 +74,7 @@ If you want to use other models offered by OpenVINO™ Training Extension, you c
 
         .. code-block:: python
 
-            from otx.engine.utils.api import list_models
+            from getitune.backend.lightning.cli.utils import list_models
 
             model_lists = list_models(task="DETECTION")
             print(model_lists)
@@ -113,7 +113,7 @@ If you want to use other models offered by OpenVINO™ Training Extension, you c
 
         .. code-block:: python
 
-            from otx.engine.utils.api import list_models
+            from getitune.backend.lightning.cli.utils import list_models
 
             model_lists = list_models(task="DETECTION", print_table=True)
 
@@ -121,7 +121,7 @@ If you want to use other models offered by OpenVINO™ Training Extension, you c
             ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃ Task      ┃ Model Name            ┃ Recipe Path                                                    ┃
             ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-            │ DETECTION │ yolox_tiny            │ src/otx/recipe/detection/yolox_tiny.yaml                       │
+            │ DETECTION │ yolox_tiny            │ src/getitune/recipe/detection/yolox_tiny.yaml                       │
             │ ...       │                       │                                                                │
             └───────────┴───────────────────────┴────────────────────────────────────────────────────────────────┘
             '''
@@ -132,7 +132,7 @@ If you want to use other models offered by OpenVINO™ Training Extension, you c
 
     .. code-block:: python
 
-        from otx.engine.utils.api import list_models
+        from getitune.backend.lightning.cli.utils import list_models
 
         model_lists = list_models(task="DETECTION", pattern="tile")
         print(model_lists)
@@ -154,55 +154,56 @@ If you want to use other models offered by OpenVINO™ Training Extension, you c
         '''
 
 
-You can also find the available model recipes in YAML form in the folder ``otx/recipe``.
+You can also find the available model recipes in YAML form in the folder ``getitune/recipe``.
 
 *********
 Engine
 *********
 
-The ``otx.engine.Engine`` class is the main entry point for using OpenVINO™ Training Extensions APIs.
+The ``getitune.backend.lightning.engine.LightningEngine`` class is the main entry point for using Geti Library APIs.
+You can also use the ``create_engine()`` factory which automatically selects the right backend.
 
 1. Setting ``work_dir``
 
 Specify ``work_dir``. This is the workspace for that ``Engine``, and where output is stored.
-The default value is currently ``./otx-workspace``.
+The default value is currently ``./getitune-workspace``.
 
 .. code-block:: python
 
-    from otx.engine import Engine
+    from getitune.backend.lightning.engine import LightningEngine
 
-    engine = Engine(work_dir="work_dir")
+    engine = LightningEngine(model="atss_mobilenetv2", data="data/wgisd", work_dir="work_dir")
 
 
 2. Setting device
 
-You can set the device by referencing the ``DeviceType`` in ``otx.types.device``.
+You can set the device by referencing the ``DeviceType`` in ``getitune.types.device``.
 The current default setting is ``auto``.
 
 .. code-block:: python
 
-    from otx.types.device import DeviceType
-    from otx.engine import Engine
+    from getitune.types.device import DeviceType
+    from getitune.backend.lightning.engine import LightningEngine
 
-    engine = Engine(device=DeviceType.gpu)
+    engine = LightningEngine(model="atss_mobilenetv2", data="data/wgisd", device=DeviceType.gpu)
     # or
-    engine = Engine(device="gpu")
+    engine = LightningEngine(model="atss_mobilenetv2", data="data/wgisd", device="gpu")
 
 
-In addition, the ``Engine`` constructor can be associated with the Trainer's constructor arguments to control the Trainer's functionality.
+In addition, the ``LightningEngine`` constructor can be associated with the Trainer's constructor arguments to control the Trainer's functionality.
 Refer `lightning.Trainer <https://lightning.ai/docs/pytorch/stable/common/trainer.html>`_.
 
-3. Using the OpenVINO™ Training Extension configuration we can configure the Engine.
+3. Using the Geti Library configuration we can configure the Engine.
 
 .. code-block:: python
 
-    from otx.engine import Engine
+    from getitune.backend.lightning.engine import LightningEngine
 
-    recipe = "src/otx/recipe/detection/atss_mobilenetv2.yaml"
-    engine = Engine.from_config(
+    recipe = "src/getitune/recipe/detection/atss_mobilenetv2.yaml"
+    engine = LightningEngine.from_config(
         config_path=recipe,
         data_root="data/wgisd",
-        work_dir="./otx-workspace",
+        work_dir="./getitune-workspace",
     )
 
 
@@ -212,34 +213,34 @@ Training
 
 Create an output model and start actual training:
 
-1. Below is an example using the ``atss_mobilenetv2`` model provided by OpenVINO™ Training Extension.
+1. Below is an example using the ``atss_mobilenetv2`` model provided by Geti Library.
 
 .. code-block:: python
 
-    from otx.engine import Engine
+    from getitune.engine import create_engine
 
-    engine = Engine(data_root="data/wgisd", model="atss_mobilenetv2")
+    engine = create_engine(data="data/wgisd", model="atss_mobilenetv2")
     engine.train()
 
 2. Alternatively, we can use the configuration file.
 
 .. code-block:: python
 
-    from otx.engine import Engine
+    from getitune.backend.lightning.engine import LightningEngine
 
-    config = "src/otx/recipe/detection/atss_mobilenetv2.yaml"
+    config = "src/getitune/recipe/detection/atss_mobilenetv2.yaml"
 
-    engine = Engine.from_config(config_path=config, data_root="data/wgisd")
+    engine = LightningEngine.from_config(config_path=config, data_root="data/wgisd")
     engine.train()
 
 .. note::
 
-    This can use callbacks provided by OpenVINO™ Training Extension and several training techniques.
+    This can use callbacks provided by Geti Library and several training techniques.
     However, in this case, no arguments are specified for train.
 
 3. If you want to specify the model, you can do so as shown below:
 
-The model used by the Engine is of type ``otx.model.entity.base.OTXModel``.
+The model used by the Engine is of type ``getitune.backend.lightning.models.base.LightningModel``.
 
 .. tab-set::
 
@@ -247,24 +248,25 @@ The model used by the Engine is of type ``otx.model.entity.base.OTXModel``.
 
         .. code-block:: python
 
-            from otx.backend.native.models.detection.atss import ATSS
-            from otx.engine import Engine
+            from getitune.backend.lightning.models.detection.atss import ATSS
+            from getitune.backend.lightning.engine import LightningEngine
+            from getitune.data.module import DataModule
 
             model = ATSS(label_info=5, model_name="mobilenetv2", data_input_params=DataInputParams(input_size=(512, 512), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)))
 
-            engine = Engine(data_root="data/wgisd", model=model)
+            engine = LightningEngine(data="data/wgisd", model=model)
             engine.train()
 
     .. tab-item:: Custom Model with checkpoint
 
         .. code-block:: python
 
-            from otx.backend.native.models.detection.atss import ATSS
-            from otx.engine import Engine
+            from getitune.backend.lightning.models.detection.atss import ATSS
+            from getitune.backend.lightning.engine import LightningEngine
 
             model = ATSS(label_info=5, model_name="mobilenetv2")
 
-            engine = Engine(data_root="data/wgisd", model=model, checkpoint="<path/to/checkpoint>")
+            engine = LightningEngine(data="data/wgisd", model=model, checkpoint="<path/to/checkpoint>")
             engine.train()
 
     .. tab-item:: Custom Optimizer & Scheduler
@@ -273,14 +275,14 @@ The model used by the Engine is of type ``otx.model.entity.base.OTXModel``.
 
             from torch.optim import SGD
             from torch.optim.lr_scheduler import CosineAnnealingLR
-            from otx.backend.native.models.detection.atss import ATSS
-            from otx.engine import Engine
+            from getitune.backend.lightning.models.detection.atss import ATSS
+            from getitune.backend.lightning.engine import LightningEngine
 
             model = ATSS(label_info=5, model_name="mobilenetv2")
             optimizer = SGD(model.parameters(), lr=0.01, weight_decay=1e-4, momentum=0.9)
             scheduler = CosineAnnealingLR(optimizer, T_max=10000, eta_min=0)
 
-            engine = Engine(
+            engine = LightningEngine(
                 ...,
                 model=model,
                 optimizer=optimizer,
@@ -290,17 +292,17 @@ The model used by the Engine is of type ``otx.model.entity.base.OTXModel``.
 
 4. If you want to specify the datamodule, you can do so as shown below:
 
-The datamodule used by the Engine is of type ``otx.data.module.OTXDataModule``.
+The datamodule used by the Engine is of type ``getitune.data.module.DataModule``.
 
 .. code-block:: python
 
-    from otx.data.module import OTXDataModule
-    from otx.engine import Engine
+    from getitune.data.module import DataModule
+    from getitune.backend.lightning.engine import LightningEngine
 
     # default data module for the task
-    datamodule = OTXDataModule(data_root="data/wgisd", task="DETECTION")
+    datamodule = DataModule(data_root="data/wgisd", task="DETECTION")
 
-    engine = Engine(data=datamodule, model=...)
+    engine = LightningEngine(data=datamodule, model=...)
     engine.train()
 
 The command above will create a default ``DataModule``. You can modify parameters for dataset constructing using ``SubsetConfig``:
@@ -309,9 +311,9 @@ The command above will create a default ``DataModule``. You can modify parameter
 
     import torchvision.transforms.v2 as v2
 
-    from otx.data.module import OTXDataModule
-    from otx.config.data import SubsetConfig
-    from otx.engine import Engine
+    from getitune.data.module import DataModule
+    from getitune.config.data import SubsetConfig
+    from getitune.engine import Engine
 
     train_subset_config = SubsetConfig(
         batch_size=64,
@@ -324,7 +326,7 @@ The command above will create a default ``DataModule``. You can modify parameter
         num_workers=4,
     )
 
-    datamodule = OTXDataModule(
+    datamodule = DataModule(
         task="DETECTION",
         data_root="data/wgisd",
         train_subset=train_subset_config
@@ -338,23 +340,23 @@ Similarly, you can modify ``val_subset_config`` and ``test_subset_config``:
 
     .. code-block:: python
 
-        from otx.tools.auto_configuration import AutoConfigurator
+        from getitune.tools.auto_configurator import AutoConfigurator
 
         # specific data pipeline for the model
-        datamodule = AutoConfigurator(data_root="data/wgisd", model_config="src/otx/recipe/detection/atss_mobilenetv2.yaml").get_datamodule()
+        datamodule = AutoConfigurator(data_root="data/wgisd", model_config="src/getitune/recipe/detection/atss_mobilenetv2.yaml").get_datamodule()
 
         # default for the task
         datamodule = AutoConfigurator(data_root="data/wgisd").get_datamodule()
 
-You can also create ``OTXDataset`` independently and then call  ``from_otx_datasets`` method to construct  ``OTXDataModule``:
+You can also create a ``VisionDataset`` independently and then call ``from_vision_datasets`` method to construct a ``DataModule``:
 
 .. code-block:: python
 
     import torchvision.transforms.v2 as v2
 
-    from otx.data.module import OTXDataModule
-    from otx.config.data import SubsetConfig
-    from otx.data.dataset import OTXDetectionDataset
+    from getitune.data.module import DataModule
+    from getitune.config.data import SubsetConfig
+    from getitune.data.dataset.detection import DetectionDataset
 
     train_subset_config = SubsetConfig(
         batch_size=64,
@@ -378,22 +380,22 @@ You can also create ``OTXDataset`` independently and then call  ``from_otx_datas
     val_dm_subset = dm_dataset.subsets()["val"]
     test_dm_subset = dm_dataset.subsets()["test"]
 
-    # setup OTX dataset
-    train_dataset = OTXDetectionDataset(
+    # setup dataset
+    train_dataset = DetectionDataset(
         train_dm_subset,
         transforms
     )
-    val_dataset = OTXDetectionDataset(
+    val_dataset = DetectionDataset(
         val_dm_subset,
         transforms
     )
-    test_dataset = OTXDetectionDataset(
+    test_dataset = DetectionDataset(
         test_dm_subset,
         transforms
     )
 
-    # create OTXDataModule
-    datamodule = OTXDataModule.from_otx_datasets(
+    # create DataModule
+    datamodule = DataModule.from_vision_datasets(
         train_dataset = train_dataset,
         val_dataset = val_dataset,
         test_dataset = test_dataset,
@@ -434,7 +436,7 @@ You can also create ``OTXDataset`` independently and then call  ``from_otx_datas
 
         .. code-block:: python
 
-            from otx.metrics.fmeasure import FMeasure
+            from getitune.metrics.fmeasure import FMeasure
 
             metric = FMeasure(label_info=5)
             engine.train(metric=metric)
@@ -487,16 +489,16 @@ If the training is already in place, we just need to use the code below:
 
         .. code-block:: python
 
-            from otx.data.module import OTXDataModule
+            from getitune.data.module import DataModule
 
-            datamodule = OTXDataModule(data_root="data/wgisd")
+            datamodule = DataModule(data_root="data/wgisd")
             engine.test(datamodule=datamodule)
 
     .. tab-item:: Evaluate Model with different metrics
 
         .. code-block:: python
 
-            from otx.metrics.fmeasure import FMeasure
+            from getitune.metrics.fmeasure import FMeasure
 
             metric = FMeasure(label_info=5)
             engine.test(metric=metric)
@@ -560,23 +562,26 @@ To run the XAI with the OpenVINO™ IR model, we need to create an output model 
     .. tab-item:: Run XAI
 
         .. code-block:: python
-            engine = OVEngine(model="exported_model.xml", ...)
+
+            from getitune.backend.openvino.engine import OVEngine
+
+            engine = OVEngine(model="exported_model.xml", data="data/wgisd")
             engine.predict(explain=True)
 
     .. tab-item:: Evaluate Model with different datamodule or dataloader
 
         .. code-block:: python
 
-            from otx.data.module import OTXDataModule
+            from getitune.data.module import DataModule
 
-            datamodule = OTXDataModule(data_root="data/wgisd")
+            datamodule = DataModule(data_root="data/wgisd")
             engine.predict(..., datamodule=datamodule, explain=True)
 
     .. tab-item:: Use ExplainConfig
 
         .. code-block:: python
 
-            from otx.config.explain import ExplainConfig
+            from getitune.config.explain import ExplainConfig
 
             engine.predict(..., explain=True, explain_config=ExplainConfig(postprocess=True))
 
@@ -585,7 +590,7 @@ To run the XAI with the OpenVINO™ IR model, we need to create an output model 
 Optimization
 ************
 
-To run the optimization with PTQ on the OpenVINO™ IR model, we need to create an output model and run the optimization procedure:
+To run PTQ optimization on an OpenVINO™ IR model, use the ``OVEngine``:
 
 .. tab-set::
 
@@ -593,19 +598,24 @@ To run the optimization with PTQ on the OpenVINO™ IR model, we need to create 
 
         .. code-block:: python
 
-            engine.optimize(checkpoint="<path/to/ir/xml>")
+            from getitune.backend.openvino.engine import OVEngine
 
-    .. tab-item:: Evaluate Model with different datamodule or dataloader
+            engine = OVEngine(model="<path/to/exported_model.xml>", data="data/wgisd")
+            engine.optimize()
+
+    .. tab-item:: Optimize with different datamodule
 
         .. code-block:: python
 
-            from otx.data.module import OTXDataModule
+            from getitune.data.module import DataModule
+            from getitune.backend.openvino.engine import OVEngine
 
-            datamodule = OTXDataModule(data_root="data/wgisd")
-            engine.optimize(..., datamodule=datamodule)
+            datamodule = DataModule(data_root="data/wgisd", task="DETECTION")
+            engine = OVEngine(model="<path/to/exported_model.xml>", data=datamodule)
+            engine.optimize()
 
 
-You can validate the optimized model as the usual model. For example for the NNCF model it will look like this:
+You can validate the optimized model as usual:
 
 .. code-block:: python
 
@@ -615,9 +625,7 @@ You can validate the optimized model as the usual model. For example for the NNC
 Benchmarking
 ************
 
-``Engine`` allows to perform benchmarking of the trained model, and provide theoretical complexity information in case of torch model.
-The estimated by ``Engine.benchmark()`` performance may differ from the performance of the deployed model, since the measurements are conducted
-via OTX inference API, which can introduce additional burden.
+``LightningEngine`` allows performing micro-benchmarking of the trained model, and provides theoretical complexity information for torch models.
 
 .. tab-set::
 
@@ -639,4 +647,4 @@ via OTX inference API, which can introduce additional burden.
 
 Conclusion
 """""""""""
-That's it! Now, we can use OpenVINO™ Training Extensions APIs to create, train, and deploy deep learning models using the OpenVINO™ Training Extensions.
+That's it! Now, we can use Geti Library APIs to create, train, and deploy deep learning models using the Geti Library.

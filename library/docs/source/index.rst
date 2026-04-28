@@ -1,5 +1,5 @@
-Welcome to Intel OpenVINO Training Extensions's develop documentation!
-======================================================================
+Welcome to Geti Library (getitune) documentation!
+==================================================
 
 .. toctree::
    :hidden:

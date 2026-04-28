@@ -16,7 +16,7 @@ It looks like a heatmap, where warm-colored areas represent the areas with main 
   These images are taken from `D-RISE paper <https://arxiv.org/abs/2006.03204>`_.
 
 
-We can generate saliency maps for a certain model that was trained in OpenVINO™ Training Extensions, using ``otx predict --explain True`` command line. Learn more about its usage in  :doc:`../../tutorials/base/explain` tutorial.
+We can generate saliency maps for a certain model that was trained in Geti Library, using ``getitune predict --explain True`` command line. Learn more about its usage in  :doc:`../../tutorials/base/explain` tutorial.
 
 *********************************
 XAI algorithms for classification
@@ -110,14 +110,14 @@ For instance segmentation networks the following algorithm is used to generate s
         .. code-block:: python
 
             engine.predict(
-              checkpoint="checkpoint.pth", # Use .pth when instantiating the engine with OTXEngine
-              datamodule=OTXDataModule(), # The data module to use for predictions
+              checkpoint="checkpoint.pth", # Use .pth when instantiating the engine with LightningEngine
+              datamodule=DataModule(), # The data module to use for predictions
               explain=True # Enable explainability features
               )
             
             engine.predict(
               checkpoint="exported_model.xml", # Use .xml when instantiating the engine with OVEngine
-              datamodule=OTXDataModule(), # The data module to use for predictions
+              datamodule=DataModule(), # The data module to use for predictions
               explain=True # Enable explainability features
             )
 
@@ -125,6 +125,6 @@ For instance segmentation networks the following algorithm is used to generate s
 
         .. code-block:: bash
 
-            (otx) ...$ otx predict ... --checkpoint <checkpoint-path> # .pth or .xml weights of the model
+            (getitune) ...$ getitune predict ... --checkpoint <checkpoint-path> # .pth or .xml weights of the model
                                        --data_root <dataset_path> # Path to data folder or single image
                                        --explain True # Enable explainability features 

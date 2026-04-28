@@ -9,14 +9,6 @@ import { pluginSvgr } from '@rsbuild/plugin-svgr';
 
 const { publicVars } = loadEnv({ prefixes: ['PUBLIC_'] });
 
-const getPublicApiUrl = () => {
-    if (publicVars['import.meta.env.PUBLIC_API_BASE_URL'] !== undefined) {
-        return JSON.parse(publicVars['import.meta.env.PUBLIC_API_BASE_URL']);
-    }
-
-    return '';
-};
-
 // Platform target selection. When building for the Tauri desktop shell we
 // prepend `.tauri.*` extensions so the bundler resolves platform-specific
 // overrides (e.g. `foo.tauri.ts` wins over `foo.ts`). Files not shadowed by
@@ -35,7 +27,25 @@ const platformExtensions = isTauriBuild ? ['.tauri.tsx', '.tauri.ts', '.tauri.js
 // to opt in to the platform-override mechanism, e.g. `import './foo'`)
 // still resolve to `foo.scss` on the web build.
 const styleExtensions = ['.scss'];
+
+// API base URL injected into the bundle. Web builds resolve to '' (relative
+// paths, served same-origin behind a reverse proxy). Tauri builds load the
+// frontend from a custom protocol (`tauri://localhost`) that has no API, so
+// fetches must point at the absolute backend URL — the sidecar always binds
+// to localhost:7860. The web dev server reads the same value from .env.development.
+const getPublicApiUrl = () => {
+    if (publicVars['import.meta.env.PUBLIC_API_BASE_URL'] !== undefined) {
+        return JSON.parse(publicVars['import.meta.env.PUBLIC_API_BASE_URL']);
+    }
+
+    if (isTauriBuild) {
+        return 'http://localhost:7860';
+    }
+
+    return '';
+};
 const publicApiUrl = getPublicApiUrl();
+const publicApiUrlJson = JSON.stringify(publicApiUrl);
 
 export default defineConfig({
     plugins: [
@@ -70,8 +80,8 @@ export default defineConfig({
     source: {
         define: {
             ...publicVars,
-            'import.meta.env.PUBLIC_API_BASE_URL': publicVars['import.meta.env.PUBLIC_API_BASE_URL'] ?? '""',
-            'process.env.PUBLIC_API_BASE_URL': publicVars['import.meta.env.PUBLIC_API_BASE_URL'] ?? '""',
+            'import.meta.env.PUBLIC_API_BASE_URL': publicApiUrlJson,
+            'process.env.PUBLIC_API_BASE_URL': publicApiUrlJson,
             // Needed to prevent an issue with spectrum's picker
             // eslint-disable-next-line max-len
             // https://github.com/adobe/react-spectrum/blob/6173beb4dad153aef74fc81575fd97f8afcf6cb3/packages/%40react-spectrum/overlays/src/OpenTransition.tsx#L40
