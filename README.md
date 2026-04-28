@@ -70,13 +70,32 @@ As a product, Geti™ consists of two components:
 
 ## Supported tasks and models
 
-Below is a list of tasks and templates supported by the Geti™ library and/or application.
+Below is a list of tasks and model architectures supported by Geti™.
 Would you like to see a specific model added to the list? Let us know by opening a [GitHub issue](https://github.com/open-edge-platform/training_extensions/issues)!
 
-### Image Classification
+<!-- markdownlint-disable MD060 -->
 
-| Library: ✅ | Application: ✅ |
-| ----------- | --------------- |
+| Task                        | Library Support | Application Support |
+| --------------------------- | --------------- | ------------------- |
+| Multiclass Classification   | ✅              | ✅                  |
+| Multilabel Classification   | ✅              | ✅                  |
+| Hierarchical Classification | ✅              | ✖️                  |
+| Object Detection            | ✅              | ✅                  |
+| Instance Segmentation       | ✅              | ✅                  |
+| Semantic Segmentation       | ✅              | ✖️                  |
+| Rotated Detection           | ✅              | ✖️                  |
+| Keypoint Detection          | ✅              | ✖️                  |
+
+<!-- markdownlint-enable MD060 -->
+
+> [!TIP]
+> Other projects of the Open Edge Platform enable even more tasks and models, check them:
+>
+> - [Anomalib (Studio)](https://github.com/open-edge-platform/anomalib) → anomaly detection
+> - [Physical AI Studio](https://github.com/open-edge-platform/physical-ai-studio) → robot learning, VLA (Vision-Language-Action)
+> - [Instant Learn](https://github.com/open-edge-platform/instant-learn) → visual prompting
+
+### Image Classification
 
 <details>
 <summary>Show models</summary>
@@ -91,14 +110,7 @@ Would you like to see a specific model added to the list? Let us know by opening
 
 </details>
 
-> [!NOTE]
-> Both library and application support **multi-class** and **multi-label** classification.
-> In addition, the library offers **hierarchical** classification too.\_
-
 ### Object Detection
-
-| Library: ✅ | Application: ✅ |
-| ----------- | --------------- |
 
 <details>
 <summary>Show models</summary>
@@ -117,9 +129,6 @@ Would you like to see a specific model added to the list? Let us know by opening
 
 ### Instance Segmentation
 
-| Library: ✅ | Application: ✅ |
-| ----------- | --------------- |
-
 <details>
 <summary>Show models</summary>
 
@@ -135,9 +144,6 @@ Would you like to see a specific model added to the list? Let us know by opening
 
 ### Semantic Segmentation
 
-| Library: ✅ | Application: ✖️ |
-| ----------- | --------------- |
-
 <details>
 <summary>Show models</summary>
 
@@ -151,9 +157,6 @@ Would you like to see a specific model added to the list? Let us know by opening
 
 ### Rotated Detection
 
-| Library: ✅ | Application: ✖️ |
-| ----------- | --------------- |
-
 <details>
 <summary>Show models</summary>
 
@@ -165,9 +168,6 @@ Would you like to see a specific model added to the list? Let us know by opening
 </details>
 
 ### Keypoint Detection
-
-| Library: ✅ | Application: ✖️ |
-| ----------- | --------------- |
 
 <details>
 <summary>Show models</summary>
