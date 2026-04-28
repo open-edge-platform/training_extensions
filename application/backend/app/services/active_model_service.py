@@ -1,34 +1,20 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import os
-from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
 from uuid import UUID
 
 from loguru import logger
-from model_api.adapters import OpenvinoAdapter, create_core
-from model_api.models import Model
 
 from app.db.engine import get_db_session
 from app.models.model_activation import ModelActivationState
 from app.models.model_revision import ModelFormat, ModelPrecision, TrainingStatus
+from app.models.system import DeviceInfo, DeviceType
 from app.repositories import ModelRevisionRepository, ModelVariantRepository
 from app.repositories.active_model_repo import ActiveModelRepo
-from app.utils.ir_format import FP32OpenvinoAdapter
+from app.services.inference.model_loader import LoadedModelHandle, ModelLoader
 
 from .system_service import SystemService
-
-MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
-
-
-@dataclass(frozen=True)
-class LoadedModel:
-    model_revision_id: UUID
-    model_variant_id: UUID
-    model: Model
-    device: str
 
 
 class ActiveModelService:
@@ -41,11 +27,11 @@ class ActiveModelService:
     def __init__(self, data_dir: Path) -> None:
         self.projects_dir = data_dir / "projects"
         self._model_activation_state: ModelActivationState = self._load_state()
-        self._loaded_model: LoadedModel | None = None
+        self._loaded_model: LoadedModelHandle | None = None
 
     @staticmethod
     def _load_state() -> ModelActivationState:
-        """Load the state from the file if it exists, otherwise initialize an empty state"""
+        """Load the state from the DB if it exists, otherwise initialize an empty state"""
         with get_db_session() as db:
             active_model_repo = ActiveModelRepo(db=db)
             active_model = active_model_repo.get_active_revision()
@@ -55,7 +41,7 @@ class ActiveModelService:
                     active_model_id=None,
                     active_model_variant_id=None,
                     available_models=[],
-                    device="",
+                    device=DeviceInfo(type=DeviceType.CPU, name="cpu"),
                 )
             model_rev_repo = ModelRevisionRepository(project_id=str(active_model.project_id), db=db)
             available_models = model_rev_repo.list_all(training_status=TrainingStatus.SUCCESSFUL)
@@ -79,7 +65,7 @@ class ActiveModelService:
                 active_model_id=UUID(active_model.id),
                 active_model_variant_id=UUID(active_variant_id),
                 available_models=[UUID(m.id) for m in available_models],
-                device=geti_device.as_openvino,
+                device=geti_device,
             )
 
     def _get_model_file_path(self, project_id: UUID, model_id: UUID, variant_id: UUID, extension: str = "xml") -> Path:
@@ -88,7 +74,7 @@ class ActiveModelService:
             return file_path
         raise FileNotFoundError(f"Model file not found: {file_path}")
 
-    def get_loaded_inference_model(self, force_reload: bool = False) -> LoadedModel | None:
+    def get_loaded_inference_model(self, force_reload: bool = False) -> LoadedModelHandle | None:
         """
         Get the currently active model for inference.
 
@@ -115,8 +101,8 @@ class ActiveModelService:
         device = self._model_activation_state.device
         needs_reload = (
             self._loaded_model is None
-            or self._loaded_model.model_revision_id != active_model_id
-            or self._loaded_model.model_variant_id != active_variant_id
+            or self._loaded_model.model_id != active_model_id
+            or self._loaded_model.variant_id != active_variant_id
             or self._loaded_model.device != device
         )
         if needs_reload:
@@ -138,34 +124,18 @@ class ActiveModelService:
                     variant_id=active_variant_id,
                     extension="bin",
                 )
-                ie = create_core()
-                adapter = FP32OpenvinoAdapter(
-                    ie,
-                    str(model_xml_path),
-                    device=device,
-                    max_num_requests=int(MODELAPI_NSTREAMS),
+                self._loaded_model = ModelLoader.load(
+                    model_id=active_model_id, variant_id=active_variant_id, model_xml_path=model_xml_path, device=device
                 )
-                mapi_model = Model.create_model(adapter)
             except FileNotFoundError:
                 logger.exception("Failed to load model with ID '{}'", active_model_id)
                 return None
 
-            self._loaded_model = LoadedModel(
-                model_revision_id=self._model_activation_state.active_model_id,
-                model=mapi_model,
-                model_variant_id=active_variant_id,
-                device=device,
-            )
         return self._loaded_model
 
     def _unload_model(self) -> None:
         """Release the currently loaded model and free its resources."""
         if self._loaded_model is not None:
-            logger.debug("Unloading model '{}'", self._loaded_model.model_revision_id)
-            # Explicitly destroy OV native objects held by the adapter to release memory.
-            adapter = cast(OpenvinoAdapter, self._loaded_model.model.inference_adapter)
-            if hasattr(adapter, "async_queue"):
-                del adapter.async_queue
-            if hasattr(adapter, "compiled_model"):
-                del adapter.compiled_model
+            logger.debug("Unloading model '{}'", self._loaded_model.model_id)
+            ModelLoader.unload(self._loaded_model)
             self._loaded_model = None

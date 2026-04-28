@@ -2,16 +2,18 @@
 # SPDX-License-Identifier: Apache-2.0
 import tempfile
 from collections.abc import Iterator
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import Mock, patch
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from model_api.models import Model
 
 from app.models.model_activation import ModelActivationState
+from app.models.system import DeviceInfo, DeviceType
 from app.services import ActiveModelService
-from app.services.active_model_service import LoadedModel
+from app.services.inference.model_loader import LoadedModelHandle
 
 
 @pytest.fixture
@@ -27,7 +29,7 @@ def fxt_model_activation_state() -> ModelActivationState:
         active_model_id=active_model_id,
         active_model_variant_id=active_variant_id,
         available_models=available_models,
-        device="CPU",
+        device=DeviceInfo(type=DeviceType.CPU, name="cpu"),
     )
 
 
@@ -81,22 +83,52 @@ class TestActiveModelServiceUnit:
                 extension=extension,
             )
 
-    def test_get_loaded_inference_model(self, fxt_active_model_service, fxt_model_activation_state, monkeypatch):
+    def test_get_loaded_inference_model(self, fxt_active_model_service, fxt_model_activation_state):
         """Test loading the active inference model."""
-        dummy_model = Mock(spec=Model)
 
         with (
-            patch.object(Model, "create_model", return_value=dummy_model),
             patch.object(
                 fxt_active_model_service,
                 "_get_model_file_path",
                 new=lambda project_id, model_id, variant_id, extension: Path(f"model.{extension}"),
             ),
-            patch("app.services.active_model_service.create_core"),
-            patch("app.services.active_model_service.FP32OpenvinoAdapter"),
+            patch("app.services.inference.model_loader.ModelLoader.load") as mock_load_model,
         ):
-            loaded = fxt_active_model_service.get_loaded_inference_model(force_reload=True)
-            assert isinstance(loaded, LoadedModel)
-            assert loaded.model_revision_id == fxt_model_activation_state.active_model_id
-            assert loaded.model is dummy_model
-            assert loaded.device == fxt_model_activation_state.device
+            fxt_active_model_service.get_loaded_inference_model(force_reload=True)
+
+            mock_load_model.assert_called_once_with(
+                model_id=fxt_model_activation_state.active_model_id,
+                variant_id=fxt_model_activation_state.active_model_variant_id,
+                model_xml_path=Path("model.xml"),
+                device=fxt_model_activation_state.device,
+            )
+
+    def test_force_reload_triggers_unload(self, fxt_active_model_service, tmp_path):
+        """
+        When force_reload=True is called on a service that already holds a loaded model, model unload must be invoked.
+        """
+        # Build a fake adapter with the OV native attributes we expect to be cleaned up
+        fake_adapter = Mock()
+        fake_adapter.async_queue = Mock()
+        fake_adapter.compiled_model = Mock()
+
+        fake_model = Mock(spec=Model)
+        fake_model.inference_adapter = fake_adapter
+
+        # Inject a pre-loaded model into the service as if inference already ran
+        fxt_active_model_service._loaded_model = LoadedModelHandle(
+            model_id=uuid4(),
+            variant_id=uuid4(),
+            model=fake_model,
+            device=DeviceInfo(type=DeviceType.CPU, name="cpu"),
+            loaded_at=datetime.now(),
+        )
+
+        with (
+            patch("app.services.inference.model_loader.ModelLoader.load") as mock_load_model,
+            patch("app.services.inference.model_loader.ModelLoader.unload") as mock_unload_model,
+            patch.object(fxt_active_model_service, "_get_model_file_path", return_value=tmp_path / "model.xml"),
+        ):
+            fxt_active_model_service.get_loaded_inference_model(force_reload=True)
+            mock_unload_model.assert_called_once()
+            mock_load_model.assert_called_once()
