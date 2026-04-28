@@ -166,7 +166,6 @@ class TestInferenceServer:
             mock_convert_prediction.return_value = [annotation]
             inference_server.infer_batch(labels=[label], inputs=[input])
 
-        # Raw images are passed directly to model_api (preprocessing is handled by the model)
         (passed_batch,) = model.infer_batch.call_args.args
         assert len(passed_batch) == 1
         np.testing.assert_array_equal(passed_batch[0], raw_uint8)
