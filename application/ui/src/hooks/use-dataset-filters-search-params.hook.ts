@@ -1,6 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { parseDate } from '@internationalized/date';
 import { isEmpty } from 'lodash-es';
 import { useSearchParams, type SetURLSearchParams } from 'react-router-dom';
 import { parse, stringify } from 'zipson/lib';
@@ -61,14 +62,29 @@ const updateSearchParam = (setSearchParams: SetURLSearchParams, key: string, val
     });
 };
 
+const parseDateFromURL = (date: string | null) => {
+    if (date === null) {
+        return null;
+    }
+
+    try {
+        // NOTE: Make sure the date is valid
+        parseDate(date);
+
+        return date;
+    } catch {
+        return null;
+    }
+};
+
 export const useDatasetFiltersSearchParams = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     const labelsFilterValue = decodeLabelsParam(searchParams.get(LABELS_PARAM) ?? '');
     const selectedLabelIds = isNonEmptyString(labelsFilterValue) ? labelsFilterValue.split(',') : [];
     const annotationStatus = parseAnnotationStatus(searchParams.get(ANNOTATION_STATUS_PARAM));
-    const startDate = searchParams.get(START_DATE_PARAM);
-    const endDate = searchParams.get(END_DATE_PARAM);
+    const startDate = parseDateFromURL(searchParams.get(START_DATE_PARAM));
+    const endDate = parseDateFromURL(searchParams.get(END_DATE_PARAM));
 
     const setSelectedLabelIds = (ids: string[]) => {
         const newValue = isEmpty(ids) ? null : encodeToBinary(encodeURIComponent(stringify(ids.join(','))));
