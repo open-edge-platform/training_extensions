@@ -15,7 +15,7 @@ class ModelActivationState(BaseModel):
         ..., description="ID of the model variant that is currently used for inference"
     )
     available_models: list[UUID] = Field(..., description="List of all available model IDs that can be activated")
-    device: DeviceInfo = Field(..., description="Device to use for inference (e.g., 'cpu', 'gpu')")
+    device: DeviceInfo = Field(..., description="Device information for inference")
 
     @field_validator("active_model_id")
     @classmethod

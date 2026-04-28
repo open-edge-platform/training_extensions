@@ -59,12 +59,6 @@ class InferenceServer:
         Returns:
             True, if the model has been loaded, False if model has not been changed.
         """
-        # Optimization: if the given model is already loaded on the given device, return immediately without acquiring
-        # the lock
-        loaded_model = self._loaded_model  # use a variable to avoid multiple unprotected reads of self._loaded_model
-        if loaded_model and loaded_model.model_id == model_id and loaded_model.device == device:
-            return False  # same model and device, no need to reload
-
         self._lock.acquire()
         try:
             if self._loaded_model and self._loaded_model.model_id == model_id and self._loaded_model.device == device:
@@ -100,6 +94,7 @@ class InferenceServer:
 
                 if self._loaded_model is not None:
                     ModelLoader.unload(self._loaded_model)
+                    self._loaded_model = None
                 self._loaded_model = ModelLoader.load(
                     model_id=model_id, variant_id=model_variant.id, model_xml_path=model_xml_path, device=device
                 )

@@ -61,7 +61,7 @@ class TestModelLoader:
                 mock_create_core.return_value,
                 str(tmp_path / "model.xml"),
                 device="CPU",
-                max_num_requests=MODELAPI_NSTREAMS,
+                max_num_requests=int(MODELAPI_NSTREAMS),
             )
             mock_create_model.assert_called_once_with(fake_adapter)
 

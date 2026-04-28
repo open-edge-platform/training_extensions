@@ -17,7 +17,7 @@ from model_api.models import Model
 from app.models.system import DeviceInfo
 from app.utils.ir_format import FP32OpenvinoAdapter
 
-MODELAPI_NSTREAMS = int(os.getenv("MODELAPI_NSTREAMS", "2"))
+MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
 
 @dataclass(frozen=True)
@@ -59,7 +59,7 @@ class ModelLoader:
             ie,
             str(model_xml_path),
             device=device.as_openvino,
-            max_num_requests=MODELAPI_NSTREAMS,
+            max_num_requests=int(MODELAPI_NSTREAMS),
         )
         model = Model.create_model(adapter)
         return LoadedModelHandle(
