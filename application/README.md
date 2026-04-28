@@ -162,7 +162,7 @@ instance segmentation tasks. Would you like to see a specific model added to the
 
 | Model Architecture    | Paper                                              |
 | --------------------- | -------------------------------------------------- |
-| DeiT Tiny             | [DeiT](https://arxiv.org/abs/2012.12877)           |
+| ViT Tiny              | [ViT](https://arxiv.org/abs/2010.11929)            |
 | DINOv2 Small          | [DINOv2](https://arxiv.org/abs/2304.07193)         |
 | EfficientNet B0 / B3  | [EfficientNet](https://arxiv.org/abs/1905.11946)   |
 | EfficientNet V2 Small | [EfficientNetV2](https://arxiv.org/abs/2104.00298) |
