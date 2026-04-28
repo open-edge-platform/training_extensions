@@ -203,27 +203,30 @@ CMD ["python", "app/main.py"]
 
 FROM cuda-base AS cuda-clean
 
-RUN echo "Removing non-redistributable CUDA components per NVIDIA EULA..." && \
+RUN set -eu; \
+    CLEANUP_ROOT="$("/application/backend/.venv/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    [ -n "$CLEANUP_ROOT" ] && [ -d "$CLEANUP_ROOT" ]; \
+    echo "Removing non-redistributable CUDA components per NVIDIA EULA from ${CLEANUP_ROOT}..." && \
     # Remove headers and include directories (non-redistributable)
-    find "$PYTHONPATH" -type d \( \
+    find "$CLEANUP_ROOT" -type d \( \
     -name "include" -o \
     -name "headers" \
     \) -path "*cuda*" -exec rm -rf {} + 2>/dev/null || true && \
     # Remove NVIDIA package includes specifically
-    find "$PYTHONPATH" -type d -path "*/nvidia/*/include" -exec rm -rf {} + 2>/dev/null || true && \
+    find "$CLEANUP_ROOT" -type d -path "*/nvidia/*/include" -exec rm -rf {} + 2>/dev/null || true && \
     # Remove static libraries (typically non-redistributable)
-    find "$PYTHONPATH" -name "*.a" \( -path "*cuda*" -o -path "*nvidia*" \) -delete 2>/dev/null || true && \
+    find "$CLEANUP_ROOT" -name "*.a" \( -path "*cuda*" -o -path "*nvidia*" \) -delete 2>/dev/null || true && \
     # Remove Triton NVIDIA backends (development components)
-    find "$PYTHONPATH" -type d -path "*/triton/backends/nvidia" -exec rm -rf {} + 2>/dev/null || true && \
+    find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia" -exec rm -rf {} + 2>/dev/null || true && \
     # Remove specific non-redistributable CUPTI components
-    find "$PYTHONPATH" -type f \( \
+    find "$CLEANUP_ROOT" -type f \( \
     -name "libcheckpoint.so*" -o \
     -name "libnvperf_host.so*" -o \
     -name "libnvperf_target.so*" -o \
     -name "libpcsamplingutil.so*" \
     \) -path "*cupti*" -delete 2>/dev/null || true && \
     # Remove cuSolver MG libraries (enterprise feature)
-    find "$PYTHONPATH" -name "libcusolverMg.so*" -delete 2>/dev/null || true
+    find "$CLEANUP_ROOT" -name "libcusolverMg.so*" -delete 2>/dev/null || true
 
 ######################
 # Server (CPU version)
