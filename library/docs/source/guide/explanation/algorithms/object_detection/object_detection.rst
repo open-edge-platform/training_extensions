@@ -12,12 +12,12 @@ Additionally, some architectures use `Feature Pyramid Network (FPN) <https://arx
 Training Pipeline
 *******************
 
-OTX supports various training configurations that can be customized per model. The default settings vary by model architecture
+Geti Library supports various training configurations that can be customized per model. The default settings vary by model architecture
 and are defined in the respective recipe files. To see the exact configuration for a specific model, run:
 
 .. code-block:: shell
 
-    (otx) ...$ otx train --config <recipe_path> --print_config
+    (getitune) ...$ getitune train --config <recipe_path> --print_config
 
 .. _od_supervised_pipeline:
 
@@ -78,7 +78,7 @@ We support the following ready-to-use model recipes:
 
 .. note::
 
-    For the most up-to-date list of available models, run ``otx find --task DETECTION``.
+    For the most up-to-date list of available models, run ``getitune find --task DETECTION``.
 
 Transformer-based Models (DETR Family)
 --------------------------------------
@@ -88,25 +88,25 @@ These models use the Detection Transformer (DETR) paradigm with end-to-end objec
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
 | Recipe                                                                                                                        | Name                | Complexity (GFLOPs) | Model size (MB) |
 +===============================================================================================================================+=====================+=====================+=================+
-| `deimv2_s <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/deimv2_s.yaml>`_   | DEIMv2-S            | ~15                 | ~25             |
+| `deimv2_s <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/deimv2_s.yaml>`_   | DEIMv2-S            | ~15                 | ~25             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `deimv2_m <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/deimv2_m.yaml>`_   | DEIMv2-M            | ~25                 | ~35             |
+| `deimv2_m <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/deimv2_m.yaml>`_   | DEIMv2-M            | ~25                 | ~35             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `deimv2_l <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/deimv2_l.yaml>`_   | DEIMv2-L            | ~50                 | ~60             |
+| `deimv2_l <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/deimv2_l.yaml>`_   | DEIMv2-L            | ~50                 | ~60             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `deimv2_x <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/deimv2_x.yaml>`_   | DEIMv2-X            | ~80                 | ~90             |
+| `deimv2_x <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/deimv2_x.yaml>`_   | DEIMv2-X            | ~80                 | ~90             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `deim_dfine_m <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/deim_dfine_m.yaml>`_ | DEIM-DFine-M   | ~34                 | ~52             |
+| `deim_dfine_m <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/deim_dfine_m.yaml>`_ | DEIM-DFine-M   | ~34                 | ~52             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `deim_dfine_l <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/deim_dfine_l.yaml>`_ | DEIM-DFine-L   | ~91                 | ~124            |
+| `deim_dfine_l <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/deim_dfine_l.yaml>`_ | DEIM-DFine-L   | ~91                 | ~124            |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `deim_dfine_x <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/deim_dfine_x.yaml>`_ | DEIM-DFine-X   | ~202                | ~240            |
+| `deim_dfine_x <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/deim_dfine_x.yaml>`_ | DEIM-DFine-X   | ~202                | ~240            |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `dfine_x <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/dfine_x.yaml>`_     | D-Fine X            | 202.5               | 240             |
+| `dfine_x <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/dfine_x.yaml>`_     | D-Fine X            | 202.5               | 240             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `rtdetr_18 <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/rtdetr_18.yaml>`_ | RT-DETR-18          | ~60                 | ~80             |
+| `rtdetr_18 <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/rtdetr_18.yaml>`_ | RT-DETR-18          | ~60                 | ~80             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `rtdetr_50 <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/rtdetr_50.yaml>`_ | RT-DETR-50          | ~136                | ~170            |
+| `rtdetr_50 <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/rtdetr_50.yaml>`_ | RT-DETR-50          | ~136                | ~170            |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
 
 **DEIM Family Models:**
@@ -124,21 +124,21 @@ Traditional CNN-based detectors with anchor-based or anchor-free designs.
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
 | Recipe                                                                                                                        | Name                | Complexity (GFLOPs) | Model size (MB) |
 +===============================================================================================================================+=====================+=====================+=================+
-| `yolox_tiny <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/yolox_tiny.yaml>`_       | YOLOX-TINY          | 6.5                 | 20.4            |
+| `yolox_tiny <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/yolox_tiny.yaml>`_       | YOLOX-TINY          | 6.5                 | 20.4            |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `yolox_s <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/yolox_s.yaml>`_             | YOLOX-S             | 33.5                | 46              |
+| `yolox_s <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/yolox_s.yaml>`_             | YOLOX-S             | 33.5                | 46              |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `yolox_l <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/yolox_l.yaml>`_             | YOLOX-L             | 194.6               | 207             |
+| `yolox_l <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/yolox_l.yaml>`_             | YOLOX-L             | 194.6               | 207             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `yolox_x <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/yolox_x.yaml>`_             | YOLOX-X             | 352.4               | 378             |
+| `yolox_x <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/yolox_x.yaml>`_             | YOLOX-X             | 352.4               | 378             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `ssd_mobilenetv2 <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/ssd_mobilenetv2.yaml>`_         | SSD-MobileNetV2     | 9.4                 | 7.6             |
+| `ssd_mobilenetv2 <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/ssd_mobilenetv2.yaml>`_         | SSD-MobileNetV2     | 9.4                 | 7.6             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `atss_mobilenetv2 <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/atss_mobilenetv2.yaml>`_       | ATSS-MobileNetV2    | 20.6                | 9.1             |
+| `atss_mobilenetv2 <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/atss_mobilenetv2.yaml>`_       | ATSS-MobileNetV2    | 20.6                | 9.1             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `atss_resnext101 <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/atss_resnext101.yaml>`_         | ATSS-ResNeXt101     | 434.8               | 344             |
+| `atss_resnext101 <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/atss_resnext101.yaml>`_         | ATSS-ResNeXt101     | 434.8               | 344             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `rtmdet_tiny <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/otx/recipe/detection/rtmdet_tiny.yaml>`_     | RTMDet-Tiny         | ~8                  | ~15             |
+| `rtmdet_tiny <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/detection/rtmdet_tiny.yaml>`_     | RTMDet-Tiny         | ~8                  | ~15             |
 +-------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
 
 Model Selection Guide

@@ -22,7 +22,7 @@ Setup virtual environment
 *************************
 
 1. You can follow the installation process from a :doc:`quick start guide <../../../get_started/installation>`
-to create a universal virtual environment for OpenVINO™ Training Extensions.
+to create a universal virtual environment for Geti Library.
 
 2. Activate your virtual environment:
 
@@ -123,27 +123,27 @@ The list of supported recipes for instance segmentation is available with the co
 
         .. code-block:: shell
 
-          (otx) ...$ otx find --task INSTANCE_SEGMENTATION
+          (getitune) ...$ getitune find --task INSTANCE_SEGMENTATION
 
           ┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
           ┃ Task                  ┃ Model Name                    ┃ Recipe Path                                                                        ┃
           ┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-          │ INSTANCE_SEGMENTATION │ openvino_model                │ src/otx/recipe/instance_segmentation/openvino_model.yaml                           │
-          │ INSTANCE_SEGMENTATION │ maskrcnn_r50                  │ src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml                             │
-          │ INSTANCE_SEGMENTATION │ maskrcnn_r50_tile             │ src/otx/recipe/instance_segmentation/maskrcnn_r50_tile.yaml                        │
-          │ INSTANCE_SEGMENTATION │ maskrcnn_swint                │ src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml                           │
-          │ INSTANCE_SEGMENTATION │ maskrcnn_efficientnetb2b      │ src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml                 │
-          │ INSTANCE_SEGMENTATION │ rtmdet_inst_tiny              │ src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml                         │
-          │ INSTANCE_SEGMENTATION │ rtmdet_inst_tiny_tile         │ src/otx/recipe/instance_segmentation/rtmdet_inst_tiny_tile.yaml                    │
-          │ INSTANCE_SEGMENTATION │ maskrcnn_efficientnetb2b_tile │ src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b_tile.yaml            │
-          │ INSTANCE_SEGMENTATION │ maskrcnn_swint_tile           │ src/otx/recipe/instance_segmentation/maskrcnn_swint_tile.yaml                      │
+          │ INSTANCE_SEGMENTATION │ openvino_model                │ src/getitune/recipe/instance_segmentation/openvino_model.yaml                           │
+          │ INSTANCE_SEGMENTATION │ maskrcnn_r50                  │ src/getitune/recipe/instance_segmentation/maskrcnn_r50.yaml                             │
+          │ INSTANCE_SEGMENTATION │ maskrcnn_r50_tile             │ src/getitune/recipe/instance_segmentation/maskrcnn_r50_tile.yaml                        │
+          │ INSTANCE_SEGMENTATION │ maskrcnn_swint                │ src/getitune/recipe/instance_segmentation/maskrcnn_swint.yaml                           │
+          │ INSTANCE_SEGMENTATION │ maskrcnn_efficientnetb2b      │ src/getitune/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml                 │
+          │ INSTANCE_SEGMENTATION │ rtmdet_inst_tiny              │ src/getitune/recipe/instance_segmentation/rtmdet_inst_tiny.yaml                         │
+          │ INSTANCE_SEGMENTATION │ rtmdet_inst_tiny_tile         │ src/getitune/recipe/instance_segmentation/rtmdet_inst_tiny_tile.yaml                    │
+          │ INSTANCE_SEGMENTATION │ maskrcnn_efficientnetb2b_tile │ src/getitune/recipe/instance_segmentation/maskrcnn_efficientnetb2b_tile.yaml            │
+          │ INSTANCE_SEGMENTATION │ maskrcnn_swint_tile           │ src/getitune/recipe/instance_segmentation/maskrcnn_swint_tile.yaml                      │
           └───────────────────────┴───────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────┘
 
     .. tab-item:: API
 
         .. code-block:: python
 
-          from otx.backend.native.cli.utils import list_models
+          from getitune.backend.lightning.cli.utils import list_models
 
           model_lists = list_models(task="INSTANCE_SEGMENTATION")
           print(model_lists)
@@ -175,14 +175,14 @@ Let's check the object detection configuration running the following command:
 .. code-block:: shell
 
   # or its config path
-  (otx) ...$ otx train --config  src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml \
+  (getitune) ...$ getitune train --config  src/getitune/recipe/instance_segmentation/maskrcnn_r50.yaml \
                        --data_root data/wgisd \
-                       --work_dir otx-workspace \
+                       --work_dir getitune-workspace \
                        --print_config
 
   ...
   data_root: data/wgisd
-  work_dir: otx-workspace
+  work_dir: getitune-workspace
   callback_monitor: val/map_50
   disable_infer_num_classes: false
   engine:
@@ -197,11 +197,11 @@ Let's check the object detection configuration running the following command:
 
   .. code-block:: shell
 
-    (otx) ...$ otx train --config src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml --data_root data/wgisd --print_config > configs.yaml
+    (getitune) ...$ getitune train --config src/getitune/recipe/instance_segmentation/maskrcnn_r50.yaml --data_root data/wgisd --print_config > configs.yaml
     # Update configs.yaml & Train configs.yaml
-    (otx) ...$ otx train --config configs.yaml
+    (getitune) ...$ getitune train --config configs.yaml
 
-3. To start training we need to call ``otx train``
+3. To start training we need to call ``getitune train``
 
 Here are the main outputs can expect with CLI:
 - ``{work_dir}/{timestamp}/checkpoints/epoch_*.ckpt`` - a model checkpoint file.
@@ -214,32 +214,32 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: shell
 
-            (otx) ...$ otx train --config src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml --data_root data/wgisd
+            (getitune) ...$ getitune train --config src/getitune/recipe/instance_segmentation/maskrcnn_r50.yaml --data_root data/wgisd
 
     .. tab-item:: API (from_config)
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
+            from getitune.backend.lightning.engine import LightningEngine
 
             data_root = "data/wgisd"
-            recipe = "src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml"
+            recipe = "src/getitune/recipe/instance_segmentation/maskrcnn_r50.yaml"
 
-            engine = OTXEngine.from_config(
+            engine = LightningEngine.from_config(
                       config_path=recipe,
                       data_root=data_root,
-                      work_dir="otx-workspace",
+                      work_dir="getitune-workspace",
                     )
 
-            # it is also possible to pass a config as a model to the OTXEngine directly
-            engine = OTXEngine(
+            # it is also possible to pass a config as a model to the LightningEngine directly
+            engine = LightningEngine(
                       model=recipe,
                       data=data_root,
-                      work_dir="otx-workspace",
+                      work_dir="getitune-workspace",
                     )
 
             # one more possibility to obtain the right engine by the given model/dataset
-            from otx.engine import create_engine
+            from getitune.engine import create_engine
             engine = create_engine(
                       model=recipe,
                       data=data_root,
@@ -251,8 +251,8 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
-            from otx.backend.native.models import MaskRCNN
+            from getitune.backend.lightning.engine import LightningEngine
+            from getitune.backend.lightning.models.instance_segmentation.maskrcnn import MaskRCNN
 
             data_root = "data/wgisd"
             model = MaskRCNN(
@@ -265,15 +265,15 @@ Here are the main outputs can expect with CLI:
                                             "std": [255.0, 255.0, 255.0]}
                     )
 
-            engine = OTXEngine(
+            engine = LightningEngine(
                       model=model,
-                      data_root=data_root,
-                      work_dir="otx-workspace",
+                      data=data_root,
+                      work_dir="getitune-workspace",
                     )
 
             # one more possibility to obtain the right engine by the given model/dataset
             # using "create_engine" function
-            from otx.engine import create_engine
+            from getitune.engine import create_engine
             engine = create_engine(
                       model=model,
                       data=data_root,
@@ -285,7 +285,7 @@ Here are the main outputs can expect with CLI:
 The training time highly relies on the hardware characteristics, for example on 1 NVIDIA GeForce RTX 3090 the training took about 10 minutes with full dataset.
 
 4. ``(Optional)`` Additionally, we can tune training parameters such as batch size, learning rate, patience epochs or warm-up iterations.
-Learn more about recipe-specific parameters using ``otx train params --help``.
+Learn more about recipe-specific parameters using ``getitune train params --help``.
 
 It can be done by manually updating parameters in the ``configs.yaml`` file in your workplace or via the command line.
 
@@ -297,20 +297,20 @@ For example, to decrease the batch size to 4, fix the number of epochs to 100 an
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.train_subset.batch_size 4 \
+            (getitune) ...$ getitune train ... --data.train_subset.batch_size 4 \
                                      --max_epochs 100
 
     .. tab-item:: API
 
         .. code-block:: python
 
-            from otx.config.data import SubsetConfig
-            from otx.data.module import OTXDataModule
-            from otx.backend.native.engine import OTXEngine
+            from getitune.config.data import SubsetConfig
+            from getitune.data.module import DataModule
+            from getitune.backend.lightning.engine import LightningEngine
 
-            datamodule = OTXDataModule(..., train_subset=SubsetConfig(..., batch_size=4))
+            datamodule = DataModule(..., train_subset=SubsetConfig(..., batch_size=4))
 
-            engine = OTXEngine(..., data=datamodule)
+            engine = LightningEngine(..., data=datamodule)
 
             engine.train(max_epochs=100)
 
@@ -323,7 +323,7 @@ while training logs can be found in the ``{work_dir}/{timestamp}`` dir.
 
 .. code-block::
 
-  otx-workspace
+  getitune-workspace
     ├── 20240403_134256/
     |   ├── csv/
     |   ├── checkpoints/
@@ -334,7 +334,7 @@ while training logs can be found in the ``{work_dir}/{timestamp}`` dir.
         └── train/
   ...
 
-After that, we have the PyTorch instance segmentation model trained with OpenVINO™ Training Extensions, which we can use for evaluation, export, optimization and deployment.
+After that, we have the PyTorch instance segmentation model trained with Geti Library, which we can use for evaluation, export, optimization and deployment.
 
 6. It is also possible to resume training from the last checkpoint.
 For this, we can use the ``--resume`` parameter with the path to the checkpoint file.
@@ -345,32 +345,32 @@ For this, we can use the ``--resume`` parameter with the path to the checkpoint 
 
         .. code-block:: shell
 
-            (otx) ...$ otx train --config src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml \
+            (getitune) ...$ getitune train --config src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml \
                                   --data_root data/flower_photos \
-                                  --checkpoint otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt \
+                                  --checkpoint getitune-workspace/20240403_134256/checkpoints/epoch_014.ckpt \
                                   --resume True
 
     .. tab-item:: API
 
         .. code-block:: python
-            from otx.backend.native.engine import OTXEngine
-            engine = OTXEngine(model="src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml", data="data/wgisd", work_dir="otx-workspace")
+            from getitune.backend.lightning.engine import LightningEngine
+            engine = LightningEngine(model="src/getitune/recipe/instance_segmentation/maskrcnn_r50.yaml", data="data/wgisd", work_dir="getitune-workspace")
             engine.train(resume=True,
-                         checkpoint="otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt")
+                         checkpoint="getitune-workspace/20240403_134256/checkpoints/epoch_014.ckpt")
 
 ***********
 Validation
 ***********
 
-1. ``otx test`` runs evaluation of a trained
+1. ``getitune test`` runs evaluation of a trained
 model on a specific dataset.
 
 The test function receives test annotation information and model snapshot, trained in the previous step.
 
-``otx test`` will output a mAP_50 for instance segmentation.
+``getitune test`` will output a mAP_50 for instance segmentation.
 
 2. The command below will run validation on our dataset
-and save performance results in ``otx-workspace``:
+and save performance results in ``getitune-workspace``:
 
 .. tab-set::
 
@@ -378,7 +378,7 @@ and save performance results in ``otx-workspace``:
 
         .. code-block:: shell
 
-            (otx) ...$ otx test --work_dir otx-workspace
+            (getitune) ...$ getitune test --work_dir getitune-workspace
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
             ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -393,9 +393,9 @@ and save performance results in ``otx-workspace``:
 
         .. code-block:: shell
 
-            (otx) ...$ otx test --config  src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml \
+            (getitune) ...$ getitune test --config  src/getitune/recipe/instance_segmentation/maskrcnn_r50.yaml \
                                 --data_root data/wgisd \
-                                --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_059.ckpt
+                                --checkpoint getitune-workspace/20240312_051135/checkpoints/epoch_059.ckpt
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
             ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩

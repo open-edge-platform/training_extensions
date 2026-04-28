@@ -1,7 +1,7 @@
 Models Optimization
 ===================
 
-OpenVINO™ Training Extensions provides optimization algorithm: `Post-Training Quantization tool (PTQ) <https://github.com/openvinotoolkit/nncf#post-training-quantization>`_.
+Geti Library provides optimization algorithm: `Post-Training Quantization tool (PTQ) <https://github.com/openvinotoolkit/nncf#post-training-quantization>`_.
 
 *******************************
 Post-Training Quantization Tool
@@ -20,7 +20,7 @@ Please, refer to our :doc:`dedicated tutorials <../../tutorials/base/export>` on
 
         .. code-block:: python
 
-            from otx.backend.openvino.engine import OVEngine
+            from getitune.backend.openvino.engine import OVEngine
 
             ov_engine = OVEngine(model="path/to/your/model.xml", data="path/to/your/data")
             OVEngine.optimize()

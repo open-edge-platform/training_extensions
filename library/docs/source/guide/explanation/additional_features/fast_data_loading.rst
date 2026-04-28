@@ -1,7 +1,7 @@
 Fast Data Loading
 =================
 
-OpenVINO™ Training Extensions provides several ways to boost model training speed,
+Geti Library provides several ways to boost model training speed,
 one of which is fast data loading.
 
 
@@ -13,7 +13,7 @@ Caching
 *****************
 In-Memory Caching
 *****************
-OpenVINO™ Training Extensions provides in-memory caching for decoded images in main memory.
+Geti Library provides in-memory caching for decoded images in main memory.
 If the batch size is large, such as for classification tasks, or if dataset contains
 high-resolution images, image decoding can account for a non-negligible overhead
 in data pre-processing.
@@ -27,12 +27,12 @@ training time in those cases.
 
       .. code-block:: python
 
-         from otx.data.module import OTXDataModule
+         from getitune.data.module import DataModule
 
-         datamodule = OTXDataModule(..., mem_cache_size="8GB")
+         datamodule = DataModule(..., mem_cache_size="8GB")
 
    .. tab-item:: CLI
 
       .. code-block:: shell
 
-         (otx) ...$ otx train ... --data.mem_cache_size 8GB
+         (getitune) ...$ getitune train ... --data.mem_cache_size 8GB

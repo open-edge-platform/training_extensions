@@ -26,15 +26,14 @@ Setup virtual environment
 *************************
 
 1. You can follow the installation process from a :doc:`quick start guide <../../../get_started/installation>`
-to create a universal virtual environment for OpenVINO™ Training Extensions.
+to create a universal virtual environment for Geti Library.
 
 2. Activate your virtual
 environment:
 
 .. code-block:: shell
 
-  .otx/bin/activate
-  . venv/otx/bin/activate
+  .venv/bin/activate
 
 ***************************
 Dataset preparation
@@ -54,7 +53,7 @@ Since this is just example, we'll use the same train/val/test datasets.
   wget http://download.tensorflow.org/example_images/flower_photos.tgz
   tar -xzvf flower_photos.tgz
 
-  # construct the data structure to insert to the OTX
+  # construct the data structure to use with getitune
   cd flower_photos
   mkdir train
   mv daisy dandelion roses sunflowers tulips train
@@ -107,26 +106,26 @@ The list of supported recipes for classification is available with the command l
 
     .. code-block:: shell
 
-      (otx) ...$ otx find --task MULTI_CLASS_CLS
+      (getitune) ...$ getitune find --task MULTI_CLASS_CLS
       ┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
       ┃ Task            ┃ Model Name            ┃ Recipe Path                                                                                                 ┃
       ┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-      │ MULTI_CLASS_CLS │ openvino_model        │ src/otx/recipe/classification/multi_class_cls/openvino_model.yaml                                           │
-      │ MULTI_CLASS_CLS │ tv_efficientnet_v2_l  │ src/otx/recipe/classification/multi_class_cls/tv_efficientnet_v2_l.yaml                                     │
-      │ MULTI_CLASS_CLS │ dino_v2               │ src/otx/recipe/classification/multi_class_cls/dino_v2.yaml                                                  │
-      │ MULTI_CLASS_CLS │ efficientnet_v2       │ src/otx/recipe/classification/multi_class_cls/efficientnet_v2.yaml                                          │
-      │ MULTI_CLASS_CLS │ tv_efficientnet_b3    │ src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b3.yaml                                       │
-      │ MULTI_CLASS_CLS │ deit_tiny             │ src/otx/recipe/classification/multi_class_cls/deit_tiny.yaml                                                │
-      │ MULTI_CLASS_CLS │ mobilenet_v3_large    │ src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml                                       │
-      │ MULTI_CLASS_CLS │ efficientnet_b0       │ src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml                                          │
-      │ MULTI_CLASS_CLS │ tv_mobilenet_v3_small │ src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml                                    │
+      │ MULTI_CLASS_CLS │ openvino_model        │ src/getitune/recipe/classification/multi_class_cls/openvino_model.yaml                                           │
+      │ MULTI_CLASS_CLS │ tv_efficientnet_v2_l  │ src/getitune/recipe/classification/multi_class_cls/tv_efficientnet_v2_l.yaml                                     │
+      │ MULTI_CLASS_CLS │ dino_v2               │ src/getitune/recipe/classification/multi_class_cls/dino_v2.yaml                                                  │
+      │ MULTI_CLASS_CLS │ efficientnet_v2       │ src/getitune/recipe/classification/multi_class_cls/efficientnet_v2.yaml                                          │
+      │ MULTI_CLASS_CLS │ tv_efficientnet_b3    │ src/getitune/recipe/classification/multi_class_cls/tv_efficientnet_b3.yaml                                       │
+      │ MULTI_CLASS_CLS │ deit_tiny             │ src/getitune/recipe/classification/multi_class_cls/deit_tiny.yaml                                                │
+      │ MULTI_CLASS_CLS │ mobilenet_v3_large    │ src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml                                       │
+      │ MULTI_CLASS_CLS │ efficientnet_b0       │ src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml                                          │
+      │ MULTI_CLASS_CLS │ tv_mobilenet_v3_small │ src/getitune/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml                                    │
       └─────────────────┴───────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
   .. tab-item:: API
 
     .. code-block:: python
 
-      from otx.backend.native.cli.utils import list_models
+      from getitune.backend.lightning.cli.utils import list_models
 
       model_lists = list_models(task="MULTI_CLASS_CLS", pattern="*efficient")
       print(model_lists)
@@ -142,7 +141,7 @@ The list of supported recipes for classification is available with the command l
 1. On this step we will prepare custom configuration
 with:
 
-- all necessary configs for otx_efficientnet_b0
+- all necessary configs for efficientnet_b0
 - train/validation sets, based on provided annotation.
 
 It may be counterintuitive, but for ``--data_root`` we need to pass the path to the dataset folder root (in our case it's ``data/flower_photos``) instead of the folder with validation images.
@@ -152,11 +151,11 @@ Let's check the multi-class classification configuration running the following c
 
 .. code-block:: shell
 
-  (otx) ...$ otx train --config src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml  --data_root data/flower_photos --print_config
+  (getitune) ...$ getitune train --config src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml  --data_root data/flower_photos --print_config
 
   ...
   data_root: data/flower_photos
-  work_dir: otx-workspace
+  work_dir: getitune-workspace
   callback_monitor: val/accuracy
   disable_infer_num_classes: false
   engine:
@@ -171,12 +170,12 @@ Let's check the multi-class classification configuration running the following c
 
     .. code-block:: shell
 
-        (otx) ...$ otx train --config  src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml --data_root data/flower_photos --print_config > configs.yaml
+        (getitune) ...$ getitune train --config  src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml --data_root data/flower_photos --print_config > configs.yaml
         # Update configs.yaml & Train configs.yaml
-        (otx) ...$ otx train --config configs.yaml
+        (getitune) ...$ getitune train --config configs.yaml
 
 
-3. ``otx train`` trains a model (a particular model recipe)
+3. ``getitune train`` trains a model (a particular model recipe)
 on a dataset and results:
 
 Here are the main outputs can expect with CLI:
@@ -190,33 +189,33 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: shell
 
-            (otx) ...$ otx train --config src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml --data_root data/flower_photos
+            (getitune) ...$ getitune train --config src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml --data_root data/flower_photos
 
     .. tab-item:: API (from_config)
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
+            from getitune.backend.lightning.engine import LightningEngine
 
             data_root = "data/flower_photos"
-            recipe = "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
+            recipe = "src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
 
-            engine = OTXEngine.from_config(
+            engine = LightningEngine.from_config(
                       config_path=recipe,
                       data_root=data_root,
-                      work_dir="otx-workspace",
+                      work_dir="getitune-workspace",
                     )
 
             # it is also possible to pass a config as a model to the Engine directly
-            engine = OTXEngine(
+            engine = LightningEngine(
                       model=recipe,
                       data=data_root,
-                      work_dir="otx-workspace",
+                      work_dir="getitune-workspace",
                     )
 
             # one more possibility to obtain the right engine by the given model/dataset
             # using "create_engine" function
-            from otx.engine import create_engine
+            from getitune.engine import create_engine
             engine = create_engine(
                       model=recipe,
                       data=data_root,
@@ -228,8 +227,8 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
-            from otx.backend.native.models import MobileNetV3MulticlassCls
+            from getitune.backend.lightning.engine import LightningEngine
+            from getitune.backend.lightning.models.classification.multiclass_models.mobilenet_v3 import MobileNetV3MulticlassCls
 
             data_root = "data/flower_photos"
             model = MobileNetV3MulticlassCls(label_info = {"label_names": ["daisy", "dandelion", "roses", "sunflowers", "tulips"],
@@ -239,15 +238,15 @@ Here are the main outputs can expect with CLI:
                                                          "mean": [123.675, 116.28, 103.53],
                                                          "std": [58.395, 57.12, 57.375]})
 
-            engine = OTXEngine(
+            engine = LightningEngine(
                       model=model,
                       data=data_root,
-                      work_dir="otx-workspace",
+                      work_dir="getitune-workspace",
                     )
 
             # one more possibility to obtain the right engine by the given model/dataset
             # using "create_engine" function
-            from otx.engine import create_engine
+            from getitune.engine import create_engine
             engine = create_engine(
                       model=model,
                       data=data_root,
@@ -257,7 +256,7 @@ Here are the main outputs can expect with CLI:
 
 
 4. ``(Optional)`` Additionally, we can tune training parameters such as batch size, learning rate, patience epochs or warm-up iterations.
-Learn more about specific parameters using ``otx train --help -v`` or ``otx train --help -vv``.
+Learn more about specific parameters using ``getitune train --help -v`` or ``getitune train --help -vv``.
 
 For example, to decrease the batch size to 4, fix the number of epochs to 100, extend the command line above with the following line.
 
@@ -267,20 +266,20 @@ For example, to decrease the batch size to 4, fix the number of epochs to 100, e
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.train_subset.batch_size 4 \
+            (getitune) ...$ getitune train ... --data.train_subset.batch_size 4 \
                                      --max_epochs 100
 
     .. tab-item:: API
 
         .. code-block:: python
 
-            from otx.config.data import SubsetConfig
-            from otx.data.module import OTXDataModule
-            from otx.backend.native.engine import OTXEngine
+            from getitune.config.data import SubsetConfig
+            from getitune.data.module import DataModule
+            from getitune.backend.lightning.engine import LightningEngine
 
-            datamodule = OTXDataModule(..., train_subset=SubsetConfig(..., batch_size=4))
+            datamodule = DataModule(..., train_subset=SubsetConfig(..., batch_size=4))
 
-            engine = OTXEngine(..., data=datamodule)
+            engine = LightningEngine(..., data=datamodule)
 
             engine.train(max_epochs=100)
 
@@ -293,7 +292,7 @@ while training logs can be found in the ``{work_dir}/{timestamp}`` dir.
 
 .. code-block::
 
-    otx-workspace
+    getitune-workspace
     ├── 20240403_134256/
         ├── csv/
         ├── checkpoints/
@@ -306,7 +305,7 @@ while training logs can be found in the ``{work_dir}/{timestamp}`` dir.
 
 The training time highly relies on the hardware characteristics, for example on 1 NVIDIA GeForce RTX 3090 the training took about 3 minutes.
 
-After that, we have the PyTorch multi-class classification model trained with OpenVINO™ Training Extensions, which we can use for evaluation, export, optimization and deployment.
+After that, we have the PyTorch multi-class classification model trained with Geti Library, which we can use for evaluation, export, optimization and deployment.
 
 6. It is also possible to resume training from the last checkpoint.
 For this, we can use the ``--resume`` parameter with the path to the checkpoint file.
@@ -317,34 +316,34 @@ For this, we can use the ``--resume`` parameter with the path to the checkpoint 
 
         .. code-block:: shell
 
-            (otx) ...$ otx train --config src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml \
+            (getitune) ...$ getitune train --config src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml \
                                   --data_root data/flower_photos \
-                                  --checkpoint otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt \
+                                  --checkpoint getitune-workspace/20240403_134256/checkpoints/epoch_014.ckpt \
                                   --resume True
 
     .. tab-item:: API
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
-            engine = OTXEngine(model="src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml", data="data/flower_photos", work_dir="otx-workspace")
+            from getitune.backend.lightning.engine import LightningEngine
+            engine = LightningEngine(model="src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml", data="data/flower_photos", work_dir="getitune-workspace")
 
             engine.train(resume=True,
-                         checkpoint="otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt")
+                         checkpoint="getitune-workspace/20240403_134256/checkpoints/epoch_014.ckpt")
 
 ***********
 Evaluation
 ***********
 
-1. ``otx test`` runs evaluation of a
+1. ``getitune test`` runs evaluation of a
 trained model on a particular dataset.
 
 Test function receives test annotation information and model snapshot, trained in previous step.
 
 The default metric is accuracy measure.
 
-2. That's how we can evaluate the snapshot in ``otx-workspace``
-folder on flower_photos dataset and save results to ``otx-workspace``:
+2. That's how we can evaluate the snapshot in ``getitune-workspace``
+folder on flower_photos dataset and save results to ``getitune-workspace``:
 
 .. tab-set::
 
@@ -352,7 +351,7 @@ folder on flower_photos dataset and save results to ``otx-workspace``:
 
         .. code-block:: shell
 
-            (otx) ...$ otx test --work_dir otx-workspace
+            (getitune) ...$ getitune test --work_dir getitune-workspace
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
             ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -365,9 +364,9 @@ folder on flower_photos dataset and save results to ``otx-workspace``:
 
         .. code-block:: shell
 
-            (otx) ...$ otx test --config  src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml \
+            (getitune) ...$ getitune test --config  src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml \
                                 --data_root data/flower_photos \
-                                --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_014.ckpt
+                                --checkpoint getitune-workspace/20240312_051135/checkpoints/epoch_014.ckpt
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
             ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩

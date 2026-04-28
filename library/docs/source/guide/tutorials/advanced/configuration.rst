@@ -1,4 +1,4 @@
-How to write OTX Configuration (recipe)
+How to write Geti Library Configuration (recipe)
 ==========================================
 
 ***************
@@ -11,7 +11,7 @@ Example of ``recipe/classification/multi_class_cls/mobilenet_v3_large.yaml ``
 
   task: MULTI_CLASS_CLS
   model:
-    class_path: otx.backend.native.models.classification.multiclass_models.mobilenet_v3.MobileNetV3MulticlassCls
+    class_path: getitune.backend.lightning.models.classification.multiclass_models.mobilenet_v3.MobileNetV3MulticlassCls
     init_args:
       model_name: mobilenetv3_large
       label_info: 1000
@@ -24,7 +24,7 @@ Example of ``recipe/classification/multi_class_cls/mobilenet_v3_large.yaml ``
           weight_decay: 0.0001
 
       scheduler:
-        class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
+        class_path: getitune.backend.lightning.schedulers.warmup_schedulers.LinearWarmupSchedulerCallable
         init_args:
           num_warmup_steps: 10
           main_scheduler_callable:
@@ -45,7 +45,7 @@ Example of ``recipe/classification/multi_class_cls/mobilenet_v3_large.yaml ``
     max_epochs: 90
 
     callbacks:
-      - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+      - class_path: getitune.backend.lightning.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
         init_args:
           patience: 5
 
@@ -95,7 +95,7 @@ If you want to add new configuration which isn't set before, just set them in th
 
   .. code-block:: shell
 
-      $ otx train --config <config-file-path> --print_config
+      $ getitune train --config <config-file-path> --print_config
 
 
 --------------
@@ -105,7 +105,7 @@ Data overrides
 ``data`` can currently be provided as a list of different transforms.
 The way to override this is as follows.
 
-Let's try to change the size of Resize and the prob of RandomFlip which are already set in `base data configuration of instance segmentation <https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/recipe/_base_/data/instance_segmentation.yaml>`_.
+Let's try to change the size of Resize and the prob of RandomHorizontalFlip which are already set in `base data configuration of instance segmentation <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/_base_/data/instance_segmentation.yaml>`_.
 To change them, you can just set the values in the overrides.
 
 .. code-block:: yaml
@@ -115,15 +115,15 @@ To change them, you can just set the values in the overrides.
       data:
         train_subset:
           transforms:
-            - class_path: otx.data.transform_libs.torchvision.Resize
+            - class_path: getitune.data.augmentation.transforms.Resize
               init_args:
                 size: # update `size` from 1024 to 512
                   - 512
                   - 512
             # Pad is used as is because it is not set here
-            - class_path: otx.data.transform_libs.torchvision.RandomFlip
+            - class_path: kornia.augmentation.RandomHorizontalFlip
               init_args:
-                prob: 0 # update `prob` from 0.5 to 0
+                p: 0 # update `p` from 0.5 to 0
             # ToDtype and Normalize are used as is because they are not set here
     ...
 
@@ -166,7 +166,7 @@ Reset overrides
 If you want to **reset** the configurations to the default values, especially ``data``, ``callbacks``, or ``logger`` that are difficult to be reset, you can use the ``reset`` keyword.
 The way to override this is as follows.
 
-Let's try to reset all transforms which are already set in `base data configuration of instance segmentation <https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/recipe/_base_/data/instance_segmentation.yaml>`_.
+Let's try to reset all transforms which are already set in `base data configuration of instance segmentation <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/_base_/data/instance_segmentation.yaml>`_.
 To reset them, you can just add the keys in ``reset`` in the overrides.
 ``reset`` also supports both types, string and list.
 If you want to reset single one, string or list can be used.
