@@ -10,6 +10,9 @@ jobs:
   add-to-project:
     name: Add issue to org project and set Squad
     runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    environment:
+      name: auto-add-new-issue-to-project
+      deployment: false
     steps:
       - name: Add issue to project
         id: add-project
