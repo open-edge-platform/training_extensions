@@ -6,3 +6,9 @@
 # PyInstaller backend sidecar (per-host symlinks; see README §"Backend sidecar")
 /_internal
 /geti-backend-*
+
+# Stale per-host backend output. The sidecar now writes to per-user OS dirs
+# (see `apply_default_env` in src/backend.rs); these only appear if someone
+# runs the sidecar directly from this folder.
+/data/
+/logs/
