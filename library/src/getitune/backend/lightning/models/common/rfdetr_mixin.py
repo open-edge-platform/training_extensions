@@ -287,6 +287,14 @@ class RFDETRMixin:
         """Forward pass used for model tracing/export."""
         return self.model.export(inputs)  # type: ignore[attr-defined]  # pyrefly: ignore[not-callable]
 
+    @staticmethod
+    def _restore_forward_methods(module: torch.nn.Module) -> None:
+        """Undo ``module.export()`` forward monkey-patching on all sub-modules."""
+        for m in module.modules():
+            if getattr(m, "_export", False) and hasattr(m, "_forward_origin"):
+                m.forward = m._forward_origin  # noqa: SLF001  # pyrefly: ignore[bad-assignment]
+                m._export = False  # noqa: SLF001  # pyrefly: ignore[bad-argument-type]
+
     def export(
         self,
         output_dir: Path,
@@ -294,14 +302,7 @@ class RFDETRMixin:
         export_format: ExportFormat,
         precision: Precision = Precision.FP32,
     ) -> Path:
-        """Export the model to the requested format.
-
-        Note:
-            ``lwdetr.export()`` permanently mutates the model by replacing
-            ``forward`` with ``forward_export``. If the subsequent ONNX/OV
-            export fails, we attempt to restore the original forward method
-            so the model instance remains usable.
-        """
+        """Export the model to the requested format."""
         if self.explain_mode:  # pyrefly: ignore[missing-attribute]
             msg = "Explain mode is not supported for RF-DETR model."
             raise ValueError(msg)
@@ -310,14 +311,10 @@ class RFDETRMixin:
         try:
             return super().export(output_dir, base_name, export_format, precision)  # type: ignore[misc]
         except Exception:
-            # Restore original forward methods if export fails
-            if hasattr(lwdetr, "_forward_origin"):
-                lwdetr.forward = lwdetr._forward_origin  # noqa: SLF001
-                lwdetr._export = False  # noqa: SLF001
+            self._restore_forward_methods(lwdetr)
             raise
         finally:
-            lwdetr._export = False  # noqa: SLF001
-            lwdetr.forward = lwdetr._forward_origin  # noqa: SLF001
+            self._restore_forward_methods(lwdetr)
 
     @property
     def _optimization_config(self) -> dict[str, Any]:

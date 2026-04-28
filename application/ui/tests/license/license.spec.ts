@@ -18,6 +18,9 @@ test.describe('License agreement', () => {
                 licenseAccepted = true;
 
                 return response(200).json({ license_accepted: true });
+            }),
+            http.get('/api/projects', ({ response }) => {
+                return response(200).json([]);
             })
         );
 
@@ -29,10 +32,11 @@ test.describe('License agreement', () => {
             await expect(page.getByRole('link', { name: /Apache License 2\.0/i })).toBeVisible();
         });
 
-        await test.step('accepting the license hides the license screen', async () => {
+        await test.step('accepting the license redirects to the projects page', async () => {
             await page.getByRole('button', { name: /Accept and continue/i }).click();
 
             await expect(page.getByRole('heading', { name: /License Agreement/i })).toBeHidden();
+            await expect(page).toHaveURL(/\/projects$/);
         });
     });
 

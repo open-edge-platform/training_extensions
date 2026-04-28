@@ -10,7 +10,6 @@
 import sys
 
 if getattr(sys, "frozen", False) and __name__ == "__main__":
-    print("Calling multiprocessing.freeze_support()")
     import multiprocessing
 
     # Pyinstaller requires this method to be called in "frozen" applications if multiprocessing module is

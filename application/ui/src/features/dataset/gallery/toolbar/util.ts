@@ -3,9 +3,6 @@
 
 import { Key, Selection } from '@geti/ui';
 
-import { Media } from '../../../../constants/shared-types';
-import { isVideo } from '../../../../shared/media-item-utils';
-
 export const toggleMultipleSelection =
     (items: Key[]) =>
     (selectedItems: Selection): Selection => {
@@ -22,25 +19,3 @@ export const toggleMultipleSelection =
 
         return new Set();
     };
-
-export const getNumberOfImagesAndVideosMessage = (mediaItems: Media[]) => {
-    const numberOfVideos = mediaItems.filter(isVideo).length;
-    const numberOfImages = mediaItems.length - numberOfVideos;
-
-    const imagesMessage = `${numberOfImages} image${numberOfImages === 1 ? '' : 's'}`;
-    const videosMessage = `${numberOfVideos} video${numberOfVideos == 1 ? '' : 's'}`;
-
-    if (numberOfImages > 0 && numberOfVideos > 0) {
-        return `${imagesMessage}, ${videosMessage}`;
-    }
-
-    if (numberOfImages > 0) {
-        return imagesMessage;
-    }
-
-    if (numberOfVideos > 0) {
-        return videosMessage;
-    }
-
-    return '';
-};
