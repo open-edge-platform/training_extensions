@@ -158,7 +158,7 @@ class DEIMV2(DEIMDFine):
         # Remap decoder self-attention keys: checkpoint uses nn.MultiheadAttention naming,
         # our decoder uses fused qkv_proj/out_proj. Scoped to decoder layers only.
         key_mapping: dict[str, str] = {}
-        for i in range(6):
+        for i in range(model.decoder.num_layers):
             prefix = f"decoder.decoder.layers.{i}."
             key_mapping[f"{prefix}self_attn.in_proj_"] = f"{prefix}qkv_proj."
             key_mapping[f"{prefix}self_attn.out_proj."] = f"{prefix}out_proj."
