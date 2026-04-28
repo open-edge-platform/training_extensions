@@ -4896,7 +4896,18 @@
       "concise_description": "Argument `DataAugSwitch | None` is not assignable to parameter `data_aug_switch` with type `DataAugSwitch` in function `getitune.data.dataset.mixins.DataAugSwitchMixin.set_data_aug_switch`",
       "severity": "error"
     },
-
+    {
+      "line": 129,
+      "column": 34,
+      "stop_line": 129,
+      "stop_column": 46,
+      "path": "src/getitune/backend/lightning/exporter/native.py",
+      "code": -2,
+      "name": "bad-argument-type",
+      "description": "Argument `Tensor` is not assignable to parameter `args` with type `tuple[Any, ...]` in function `torch.onnx.export`",
+      "concise_description": "Argument `Tensor` is not assignable to parameter `args` with type `tuple[Any, ...]` in function `torch.onnx.export`",
+      "severity": "error"
+    },
     {
       "line": 112,
       "column": 5,
