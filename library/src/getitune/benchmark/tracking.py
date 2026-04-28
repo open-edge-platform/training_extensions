@@ -215,6 +215,101 @@ def _rewrite_metric_key(key: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Per-class metric filtering
+# ---------------------------------------------------------------------------
+
+# Metric keys whose underlying value is logically a per-class array but which
+# the executor flattens to a scalar sentinel (``-1``) when no per-class data
+# is available. Logging such sentinels as numeric metrics is misleading and
+# pollutes downstream CSV exports (Excel even quote-escapes them as ``'-1``),
+# so we drop them on the way into MLflow.
+_PER_CLASS_SENTINEL_KEYS: frozenset[str] = frozenset(
+    {
+        "training:val/map_per_class",
+        "training:val/mar_100_per_class",
+    }
+)
+
+
+def _is_per_class_sentinel(key: str, value: float) -> bool:
+    """Return True for the ``-1`` sentinel emitted by per-class metrics."""
+    return key in _PER_CLASS_SENTINEL_KEYS and value == -1
+
+
+# ---------------------------------------------------------------------------
+# Error sanitization
+# ---------------------------------------------------------------------------
+
+# Maximum length of the single-line error tag stored on a failed run.
+_ERROR_TAG_MAX_LEN = 250
+
+# Coarse classification of *which phase* an error originated in, derived from
+# the traceback. Order matters: the first matching pattern wins. We bias
+# toward the most specific markers (file paths inside the runner / executor).
+_ERROR_PHASE_PATTERNS: tuple[tuple[str, str], ...] = (
+    ("optimize", "optimize"),
+    ("nncf", "optimize"),
+    ("ptq", "optimize"),
+    ("export", "export"),
+    ("openvino", "export"),
+    ("test_export", "test/export"),
+    ("test_optimize", "test/optimize"),
+    ("test_torch", "test/torch"),
+    ("/test/", "test"),
+    ("/train/", "train"),
+    ("trainer.fit", "train"),
+)
+
+
+def _sanitize_error_message(error: str) -> str:
+    """Return a single-line, CSV-safe summary of an error string.
+
+    The raw ``error`` field on a failed :class:`ExperimentResult` is
+    typically ``"<ExceptionType>: <message>"`` which can itself span
+    multiple lines (e.g. nested tracebacks for subprocess failures).
+    Storing such a value verbatim as an MLflow tag has two problems:
+
+    1. MLflow happily round-trips embedded newlines/quotes; downstream
+       CSV exporters then produce mangled, unparseable rows.
+    2. Hard truncation at a fixed length frequently chops the message
+       mid-token, hiding the actually informative first line.
+
+    This helper keeps only the first non-empty line, collapses runs of
+    whitespace, strips problematic quote characters, and finally caps
+    the result at :data:`_ERROR_TAG_MAX_LEN` characters with an ellipsis
+    when truncation occurred.
+    """
+    if not error:
+        return ""
+    first_line = next((ln.strip() for ln in error.splitlines() if ln.strip()), "")
+    cleaned = re.sub(r"\s+", " ", first_line).replace('"', "'").strip()
+    if len(cleaned) > _ERROR_TAG_MAX_LEN:
+        cleaned = cleaned[: _ERROR_TAG_MAX_LEN - 1].rstrip() + "…"
+    return cleaned
+
+
+def _classify_error(error: str | None, traceback: str | None) -> tuple[str, str]:
+    """Best-effort ``(error_type, error_phase)`` classification.
+
+    ``error_type`` is the leading exception class name (everything before the
+    first ``": "``), or ``"Unknown"`` when the message is malformed.
+    ``error_phase`` is one of ``train|test|export|optimize|unknown`` based on
+    keyword matching against the traceback.
+    """
+    error_type = "Unknown"
+    if error:
+        head = error.split(":", 1)[0].strip()
+        if head and " " not in head:
+            error_type = head
+
+    haystack = (traceback or error or "").lower()
+    for needle, phase in _ERROR_PHASE_PATTERNS:
+        if needle in haystack:
+            return error_type, phase
+    return error_type, "unknown"
+
+
+# ---------------------------------------------------------------------------
 # MLflow tracker
 # ---------------------------------------------------------------------------
 
@@ -496,6 +591,10 @@ class BenchmarkTracker:
                 for k, v in all_metrics.items():
                     if not isinstance(v, (int, float)):
                         continue
+                    # Skip the ``-1`` sentinel emitted for empty per-class
+                    # metric arrays — see ``_is_per_class_sentinel``.
+                    if _is_per_class_sentinel(k, float(v)):
+                        continue
                     numeric_metrics[_rewrite_metric_key(k)] = _round_metric(v)
 
                 if numeric_metrics:
@@ -508,13 +607,34 @@ class BenchmarkTracker:
                     if isinstance(value, (int, float)):
                         mlflow.log_metric("primary_metric", _round_metric(value))
             elif result.error:
-                mlflow.set_tag("error", result.error[:250])
+                # Structured failure tags: keep ``error`` as a one-line
+                # human-readable summary, plus separate ``error_type`` /
+                # ``error_phase`` tags so the run table can be filtered
+                # and grouped by failure mode.
+                error_type, error_phase = _classify_error(result.error, getattr(result, "traceback", None))
+                mlflow.set_tag("error", _sanitize_error_message(result.error))
+                mlflow.set_tag("error_type", error_type)
+                mlflow.set_tag("error_phase", error_phase)
+
+                # Upload the full traceback as an artifact so the truncated
+                # tag never has to carry the whole stack trace.
+                tb = getattr(result, "traceback", None)
+                if tb:
+                    try:
+                        mlflow.log_text(tb, "traceback.txt")
+                    except Exception:
+                        logger.debug("Could not log traceback artifact.", exc_info=True)
+
+            # Total wall-clock duration as a real numeric metric, so
+            # consumers don't have to parse strings like ``"21.7min"``.
+            total_wall_time = sum(p.wall_time for p in result.phases)
+            if total_wall_time > 0:
+                mlflow.log_metric("duration_seconds", _round_metric(total_wall_time))
 
             logger.info("Logged MLflow run %s (id=%s)", run_name, run.info.run_id)
 
         # Adjust the run's end time so the "Duration" column in the MLflow UI
         # reflects the actual experiment wall time, not just the logging time.
-        total_wall_time = sum(p.wall_time for p in result.phases)
         if total_wall_time > 0:
             try:
                 client = mlflow.tracking.MlflowClient(self.config.tracking_uri)

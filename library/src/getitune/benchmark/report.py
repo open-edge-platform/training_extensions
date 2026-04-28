@@ -585,13 +585,67 @@ def _detect_metric_columns(
 # ---------------------------------------------------------------------------
 
 
+# Per-class metrics whose underlying value is a list; the executor flattens
+# them to a scalar ``-1`` sentinel when no per-class data is available, which
+# pollutes downstream CSVs (Excel quote-escapes them as ``'-1``). Mirror the
+# filter used in ``tracking.py`` so the report-level CSVs are also clean.
+_PER_CLASS_SENTINEL_KEYS: frozenset[str] = frozenset(
+    {
+        "training:val/map_per_class",
+        "training:val/mar_100_per_class",
+    }
+)
+
+
+def _drop_constant_columns(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Remove columns whose value is identical (or always empty) across rows.
+
+    Greatly reduces noise when every run shares the same branch / accelerator
+    / dataset / scenario etc., as is the case for a single benchmark
+    invocation.
+    """
+    if len(rows) <= 1:
+        return rows
+    keys = {k for row in rows for k in row}
+    constant: set[str] = set()
+    for k in keys:
+        seen: set[Any] = set()
+        for row in rows:
+            v = row.get(k, "")
+            seen.add(v)
+            if len(seen) > 1:
+                break
+        if len(seen) <= 1:
+            constant.add(k)
+    if not constant:
+        return rows
+    return [{k: v for k, v in row.items() if k not in constant} for row in rows]
+
+
+def _is_clean_metric(key: str, value: object) -> bool:
+    """Return True if ``(key, value)`` should appear in the cleaned CSV."""
+    if not isinstance(value, (int, float)):
+        return False
+    return not (key in _PER_CLASS_SENTINEL_KEYS and value == -1)
+
+
 def generate_csv(report: BenchmarkReport, output_path: Path) -> None:
-    """Write an aggregated CSV file with all results and comparisons."""
+    """Write an aggregated CSV file with all results and comparisons.
+
+    The output is optimized for downstream analysis:
+
+    - Only numeric metric values are written (no ``'-1`` per-class sentinels).
+    - Columns that have a single constant value across every row are dropped.
+    - Failures are emitted with structured ``error_type`` / ``error_phase``
+      columns alongside a one-line ``error`` summary; full tracebacks are
+      written to ``failed_experiments.json`` only.
+    """
     import csv
 
     rows: list[dict[str, Any]] = []
     for comp in report.comparisons:
         row: dict[str, Any] = {
+            "run_type": "aggregate",
             "task": comp.task,
             "model": comp.model,
             "dataset": comp.dataset,
@@ -601,34 +655,41 @@ def generate_csv(report: BenchmarkReport, output_path: Path) -> None:
             "git_sha": report.git_sha,
             "accelerator": report.accelerator,
         }
-        # Add all current metrics
         for k, v in sorted(comp.current_metrics.items()):
-            row[f"current:{k}"] = v
-        # Add baseline metrics
+            if _is_clean_metric(k, v):
+                row[f"current:{k}"] = v
         if comp.baseline_metrics:
             for k, v in sorted(comp.baseline_metrics.items()):
-                row[f"baseline:{k}"] = v
+                if _is_clean_metric(k, v):
+                    row[f"baseline:{k}"] = v
         rows.append(row)
 
-    # Add failures
-    rows.extend(
-        {
-            "task": f.task,
-            "model": f.model,
-            "dataset": f.dataset,
-            "scenario": f.scenario,
-            "status": "failed",
-            "error": f.error,
-            "branch": report.branch,
-            "git_sha": report.git_sha,
-            "accelerator": report.accelerator,
-        }
-        for f in report.failures
-    )
+    for f in report.failures:
+        error_one_line = (f.error or "").splitlines()[0:1]
+        error_short = error_one_line[0].strip() if error_one_line else ""
+        error_type = error_short.split(":", 1)[0].strip() if ":" in error_short else "Unknown"
+        rows.append(
+            {
+                "run_type": "failure",
+                "task": f.task,
+                "model": f.model,
+                "dataset": f.dataset,
+                "scenario": f.scenario,
+                "seed": f.seed,
+                "status": "failed",
+                "error_type": error_type,
+                "error": error_short[:250],
+                "branch": report.branch,
+                "git_sha": report.git_sha,
+                "accelerator": report.accelerator,
+            }
+        )
 
     if not rows:
         logger.warning("No results to write to CSV.")
         return
+
+    rows = _drop_constant_columns(rows)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     all_fields = list(dict.fromkeys(k for row in rows for k in row))

@@ -13,10 +13,13 @@ from getitune.benchmark.tracking import (
     BenchmarkTracker,
     RunTags,
     TrackingConfig,
+    _classify_error,
     _get_cpu_info,
     _get_getitune_version,
     _get_git_branch,
     _get_git_sha,
+    _is_per_class_sentinel,
+    _sanitize_error_message,
 )
 
 # ---------------------------------------------------------------------------
@@ -225,11 +228,15 @@ class TestBenchmarkTrackerLogRun:
 
         tracker.log_run(result, experiment)
 
-        # Should have called set_tags and set_tag for the error
+        # Should have called set_tags and structured error tags
         mock_mlflow.set_tags.assert_called_once()
         tags_dict = mock_mlflow.set_tags.call_args[0][0]
         assert tags_dict["status"] == "failed"
-        mock_mlflow.set_tag.assert_called_once_with("error", "RuntimeError: OOM")
+        # Structured failure tags: one-line summary + classification
+        set_tag_calls = {call.args[0]: call.args[1] for call in mock_mlflow.set_tag.call_args_list}
+        assert set_tag_calls["error"] == "RuntimeError: OOM"
+        assert set_tag_calls["error_type"] == "RuntimeError"
+        assert "error_phase" in set_tag_calls
 
 
 # ---------------------------------------------------------------------------
@@ -444,3 +451,60 @@ class TestPurgeOldRuns:
 
         assert deleted == 1
         mock_client.delete_run.assert_not_called()  # dry run — no actual delete
+
+
+# ---------------------------------------------------------------------------
+# Helpers: error sanitization, classification, per-class sentinels
+# ---------------------------------------------------------------------------
+
+
+class TestSanitizeErrorMessage:
+    def test_empty(self) -> None:
+        assert _sanitize_error_message("") == ""
+
+    def test_single_line_passthrough(self) -> None:
+        assert _sanitize_error_message("RuntimeError: OOM") == "RuntimeError: OOM"
+
+    def test_keeps_only_first_non_empty_line(self) -> None:
+        msg = "\n\nRuntimeError: boom\nTraceback (most recent call last):\n  File 'x'"
+        assert _sanitize_error_message(msg) == "RuntimeError: boom"
+
+    def test_collapses_whitespace_and_strips_quotes(self) -> None:
+        assert _sanitize_error_message('Error:   "bad"   quoted') == "Error: 'bad' quoted"
+
+    def test_truncates_long_messages(self) -> None:
+        msg = "RuntimeError: " + ("x" * 500)
+        out = _sanitize_error_message(msg)
+        assert len(out) <= 250
+        assert out.endswith("…")
+
+
+class TestClassifyError:
+    def test_extracts_exception_type(self) -> None:
+        et, _ = _classify_error("RuntimeError: OOM", None)
+        assert et == "RuntimeError"
+
+    def test_unknown_when_malformed(self) -> None:
+        et, _ = _classify_error("not an exception line", None)
+        assert et == "Unknown"
+
+    def test_phase_from_traceback(self) -> None:
+        tb = 'File "/x/getitune/optimize/runner.py", line 1\n'
+        _, phase = _classify_error("RuntimeError: x", tb)
+        assert phase == "optimize"
+
+    def test_phase_unknown_fallback(self) -> None:
+        _, phase = _classify_error("ValueError: bad", "no markers here")
+        assert phase == "unknown"
+
+
+class TestPerClassSentinel:
+    def test_sentinel_value_dropped(self) -> None:
+        assert _is_per_class_sentinel("training:val/map_per_class", -1.0) is True
+        assert _is_per_class_sentinel("training:val/mar_100_per_class", -1.0) is True
+
+    def test_real_value_kept(self) -> None:
+        assert _is_per_class_sentinel("training:val/map_per_class", 0.42) is False
+
+    def test_unrelated_key_kept(self) -> None:
+        assert _is_per_class_sentinel("training:val/map_50", -1.0) is False
