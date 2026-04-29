@@ -113,28 +113,49 @@ def _resolve_script_path(script: str) -> Path:
 
 
 def _run_script(script_path: Path, data_root: Path, name: str) -> None:
-    """Execute a dataset preparation script."""
+    """Execute a dataset preparation script and stream its output in real time.
+
+    The child's stdout/stderr are merged and forwarded line-by-line to the
+    logger so that long-running download/extract steps are visible to the
+    user.
+
+    The call blocks until the child exits; a non-zero exit code raises
+    :class:`RuntimeError`.
+    """
     logger.info("Running preparation script: %s (dataset=%s)", script_path, name)
 
-    result = subprocess.run(  # noqa: S603, PLW1510
-        [sys.executable, str(script_path), "--output-dir", str(data_root), "--name", name],
-        capture_output=True,
+    cmd = [
+        sys.executable,
+        "-u",
+        str(script_path),
+        "--output-dir",
+        str(data_root),
+        "--name",
+        name,
+    ]
+
+    # Merge stderr into stdout so log ordering matches the child's own
+    # write order (and so a single reader loop is sufficient).
+    proc = subprocess.Popen(  # noqa: S603
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         text=True,
+        bufsize=1,  # line-buffered
     )
 
-    if result.stdout:
-        for line in result.stdout.strip().splitlines():
-            logger.info("  [script] %s", line)
-    if result.stderr:
-        for line in result.stderr.strip().splitlines():
-            logger.warning("  [script stderr] %s", line)
+    assert proc.stdout is not None  # noqa: S101 - guaranteed by PIPE above
+    try:
+        for raw_line in proc.stdout:
+            line = raw_line.rstrip()
+            if line:
+                logger.info("  [%s] %s", name, line)
+    finally:
+        # Always wait for the child so we never return before it finishes.
+        returncode = proc.wait()
 
-    if result.returncode != 0:
-        msg = (
-            f"Preparation script for dataset '{name}' failed with exit code {result.returncode}.\n"
-            f"Script: {script_path}\n"
-            f"stderr: {result.stderr}"
-        )
+    if returncode != 0:
+        msg = f"Preparation script for dataset '{name}' failed with exit code {returncode}.\nScript: {script_path}"
         raise RuntimeError(msg)
 
 
@@ -146,16 +167,26 @@ def _run_script(script_path: Path, data_root: Path, name: str) -> None:
 def provision_dataset(entry: DatasetEntry, data_root: Path) -> Path:
     """Ensure a single dataset is prepared and ready.
 
-    If the dataset directory already exists, the script is skipped.
-    Otherwise the preparation script is executed to produce it.
+    A ``.ready`` sentinel file is written inside the dataset directory once
+    the preparation script finishes successfully. On subsequent runs the
+    sentinel is what we check — a stale, half-populated directory left
+    behind by a crashed prep run is therefore treated as "not ready" and
+    the script is re-executed.
 
     Returns the path to the prepared dataset directory.
     """
     dataset_dir = data_root / entry.relative_path
+    ready_marker = dataset_dir / ".ready"
 
-    if dataset_dir.exists():
+    if ready_marker.exists():
         logger.info("Dataset '%s' already exists, skipping.", entry.name)
         return dataset_dir
+
+    if dataset_dir.exists():
+        logger.warning(
+            "Dataset '%s' directory exists but is missing the readiness marker; re-running prep.",
+            entry.name,
+        )
 
     script_path = _resolve_script_path(entry.script)
 
@@ -168,6 +199,10 @@ def provision_dataset(entry: DatasetEntry, data_root: Path) -> Path:
     if not dataset_dir.exists():
         msg = f"Preparation script for '{entry.name}' did not create expected directory: {dataset_dir}"
         raise RuntimeError(msg)
+
+    # Write the readiness sentinel only after a clean run so an interrupted
+    # prep is never mistaken for a successful one on a later resume.
+    ready_marker.touch()
 
     return dataset_dir
 
