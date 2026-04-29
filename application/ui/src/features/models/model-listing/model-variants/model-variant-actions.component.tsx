@@ -38,7 +38,7 @@ export const ModelVariantActions = ({ modelVariant, onDownload }: ModelVariantAc
 
     return (
         <MenuTrigger>
-            <ActionButton isQuiet aria-label={'Model actions'}>
+            <ActionButton isQuiet aria-label={`Model variant actions ${modelVariant.id}`}>
                 <MoreMenu />
             </ActionButton>
             <Menu onAction={handleAction} aria-label={'Model actions menu'}>
