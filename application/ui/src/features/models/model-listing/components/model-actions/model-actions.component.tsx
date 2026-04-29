@@ -47,7 +47,7 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
     if (disableRenameAndActive) disabledKeys.push(MODEL_ACTIONS.ACTIVATE, MODEL_ACTIONS.RENAME);
     if (isTrainingModel(model)) disabledKeys.push(MODEL_ACTIONS.VIEW_LOGS);
     if (hasDeletedWeights(model))
-        disabledKeys.push(...[MODEL_ACTIONS.DELETE_WEIGHTS, MODEL_ACTIONS.VIEW_LOGS, MODEL_ACTIONS.ACTIVATE]);
+        disabledKeys.push(MODEL_ACTIONS.DELETE_WEIGHTS, MODEL_ACTIONS.VIEW_LOGS, MODEL_ACTIONS.ACTIVATE);
 
     const handleAction = (key: Key) => {
         if (key === MODEL_ACTIONS.ACTIVATE) {
