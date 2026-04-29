@@ -173,11 +173,11 @@ class OVHlabelClassificationModel(OVModel):
         Raises:
             ValueError: If label information cannot be constructed from the OpenVINO IR.
         """
-        ov_model = self.model.get_model()
-
-        if ov_model.has_rt_info(["model_info", "label_info"]):
-            serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
+        try:
+            serialized = self.model.inference_adapter.get_rt_info(["model_info", "label_info"]).astype(str)
             return HLabelInfo.from_json(serialized)
+        except RuntimeError:
+            pass
 
-        msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by getitune."
+        msg = "Cannot construct LabelInfo from model metadata. Please check this model is trained by getitune."
         raise ValueError(msg)

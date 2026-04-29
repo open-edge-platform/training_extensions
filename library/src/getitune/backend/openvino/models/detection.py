@@ -122,10 +122,10 @@ class OVDetectionModel(OVModel):
         Args:
             model_adapter (OpenvinoAdapter): target adapter to read the config
         """
-        if model_adapter.model.has_rt_info(["model_info", "confidence_threshold"]):
-            best_confidence_threshold = model_adapter.model.get_rt_info(["model_info", "confidence_threshold"]).value
+        try:
+            best_confidence_threshold = model_adapter.get_rt_info(["model_info", "confidence_threshold"]).astype(str)
             self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
-        else:
+        except RuntimeError:
             msg = (
                 "Cannot get best_confidence_threshold from OpenVINO IR's rt_info. "
                 "Please check whether this model is trained by getitune or not. "
@@ -153,7 +153,10 @@ class OVDetectionModel(OVModel):
 
         Notes:
             - Adjusts label indices based on whether the first label is "background".
-            - Converts bounding boxes to the "XYXY" format and aligns them with the input image shape.
+            - Converts bounding boxes to the "XYXY" format and aligns them with the original image shape.
+            - Rescales predicted bboxes from model input coordinates (img_shape) to original image
+              coordinates (ori_shape) when they differ, ensuring alignment with ground truth targets
+              that are not resized (resize_targets=false).
             - Handles optional saliency maps and feature vectors if present in the outputs.
         """
         # add label index
@@ -173,11 +176,26 @@ class OVDetectionModel(OVModel):
             log.warning(f"label_shift: {label_shift}")
 
         for i, output in enumerate(outputs):
+            img_h, img_w = inputs.imgs_info[i].img_shape  # type: ignore[union-attr, index]
+            ori_h, ori_w = inputs.imgs_info[i].ori_shape  # type: ignore[union-attr, index]
+
+            bboxes_data = torch.as_tensor(output.bboxes, dtype=torch.float32)
+
+            # ModelAPI maps predictions to the input image coordinate space (img_shape)
+            # because OV transforms resize images before they reach ModelAPI.  When
+            # targets are kept in the original coordinate space (resize_targets=false),
+            # we must rescale predictions to ori_shape so metrics compare like-for-like.
+            if (img_h, img_w) != (ori_h, ori_w) and bboxes_data.numel() > 0:
+                scale_x = ori_w / img_w
+                scale_y = ori_h / img_h
+                bboxes_data[:, 0::2] *= scale_x  # x coordinates (x_min, x_max)
+                bboxes_data[:, 1::2] *= scale_y  # y coordinates (y_min, y_max)
+
             bboxes.append(
                 tv_tensors.BoundingBoxes(
-                    data=output.bboxes,
+                    data=bboxes_data,
                     format="XYXY",
-                    canvas_size=inputs.imgs_info[i].img_shape,  # type: ignore[union-attr, index]
+                    canvas_size=(ori_h, ori_w),
                     dtype=torch.float32,
                 ),
             )

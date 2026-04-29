@@ -577,7 +577,7 @@ class OVModel:
         return self._task
 
     def _create_label_info_from_ov_ir(self) -> LabelInfo:
-        """Create label information from the OpenVINO IR.
+        """Create label information from the OpenVINO IR or ONNX model metadata.
 
         Returns:
             LabelInfo: Label information.
@@ -585,17 +585,19 @@ class OVModel:
         Raises:
             ValueError: If label information cannot be constructed.
         """
-        ov_model = self.model.get_model()
-
-        if ov_model.has_rt_info(["model_info", "label_info"]):
-            serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
+        # Use the adapter's get_rt_info which handles both .xml (via ov_model.get_rt_info)
+        # and .onnx (via parsed metadata_props) transparently.
+        try:
+            serialized = self.model.inference_adapter.get_rt_info(["model_info", "label_info"]).astype(str)
             return LabelInfo.from_json(serialized)
+        except RuntimeError:
+            pass
 
         mapi_model: Model = self.model
 
         if label_names := getattr(mapi_model, "labels", None):
             msg = (
-                'Cannot find "label_info" from OpenVINO IR. '
+                'Cannot find "label_info" from model metadata. '
                 "However, we found labels attributes from ModelAPI. "
                 "Construct LabelInfo from it."
             )
@@ -603,7 +605,7 @@ class OVModel:
             logger.warning(msg)
             return LabelInfo(label_names=label_names, label_groups=[label_names], label_ids=[])
 
-        msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by getitune."
+        msg = "Cannot construct LabelInfo from model metadata. Please check this model is trained by getitune."
         raise ValueError(msg)
 
     def get_dummy_input(self, batch_size: int = 1) -> SampleBatch:

@@ -145,21 +145,23 @@ class OVSegmentationModel(OVModel):
         ]
 
     def _create_label_info_from_ov_ir(self) -> SegLabelInfo:
-        """Create label information from OpenVINO IR.
+        """Create label information from OpenVINO IR or ONNX model metadata.
 
-        Extracts label information from the OpenVINO IR model if available.
+        Extracts label information from the model metadata if available.
+        Uses the adapter's get_rt_info which handles both .xml and .onnx transparently.
 
         Returns:
             SegLabelInfo: Label information extracted from the model.
 
         Raises:
-            ValueError: If label information cannot be constructed from the OpenVINO IR model.
+            ValueError: If label information cannot be constructed from the model metadata.
         """
-        ov_model = self.model.get_model()
-
-        if ov_model.has_rt_info(["model_info", "label_info"]):
-            label_info = json.loads(ov_model.get_rt_info(["model_info", "label_info"]).value)
+        try:
+            serialized = self.model.inference_adapter.get_rt_info(["model_info", "label_info"]).astype(str)
+            label_info = json.loads(serialized)
             return SegLabelInfo(**label_info)
+        except RuntimeError:
+            pass
 
-        msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by getitune."
+        msg = "Cannot construct LabelInfo from model metadata. Please check this model is trained by getitune."
         raise ValueError(msg)

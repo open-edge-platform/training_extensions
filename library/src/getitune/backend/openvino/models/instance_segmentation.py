@@ -92,10 +92,10 @@ class OVInstanceSegmentationModel(OVModel):
         This method reads the confidence threshold from the model's runtime information
         and updates the hyperparameters accordingly.
         """
-        if model_adapter.model.has_rt_info(["model_info", "confidence_threshold"]):
-            best_confidence_threshold = model_adapter.model.get_rt_info(["model_info", "confidence_threshold"]).value
+        try:
+            best_confidence_threshold = model_adapter.get_rt_info(["model_info", "confidence_threshold"]).astype(str)
             self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
-        else:
+        except RuntimeError:
             msg = (
                 "Cannot get best_confidence_threshold from OpenVINO IR's rt_info. "
                 "Please check whether this model is trained by getitune or not. "
@@ -233,15 +233,15 @@ class OVInstanceSegmentationModel(OVModel):
         Returns:
             LabelInfo: Label information extracted from the OpenVINO IR model.
         """
-        ov_model = self.model.get_model()
-
-        if ov_model.has_rt_info(["model_info", "label_info"]):
-            serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
+        try:
+            serialized = self.model.inference_adapter.get_rt_info(["model_info", "label_info"]).astype(str)
             ir_label_info = LabelInfo.from_json(serialized)
             if ir_label_info.label_names[0] == "getitune_empty_lbl":
                 ir_label_info.label_names.pop(0)
                 ir_label_info.label_ids.pop(0)
                 ir_label_info.label_groups[0].pop(0)
             return ir_label_info
+        except RuntimeError:
+            pass
 
         return super()._create_label_info_from_ov_ir()
