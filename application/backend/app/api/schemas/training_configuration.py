@@ -326,6 +326,9 @@ class TrainingConfigurationView(BaseModel):
             allowed_values_from = cast(str | None, field_info.json_schema_extra.get("allowed_values_from"))
             if allowed_values_from is not None:
                 allowed_values = getattr(model, allowed_values_from, None)
+            read_only = cast(bool | None, field_info.json_schema_extra.get("read_only"))
+            if read_only:
+                allowed_values = [str(field_info.default)]
 
         if allowed_values is None:
             annotation = field_info.annotation
