@@ -163,21 +163,26 @@ class OVHlabelClassificationModel(OVModel):
         }
 
     def _create_label_info_from_ov_ir(self) -> HLabelInfo:
-        """Create hierarchical label information from OpenVINO IR.
+        """Create hierarchical label information from OpenVINO IR or ONNX model metadata.
 
-        Extracts label information from the OpenVINO IR model if available.
+        Extracts label information from the model metadata if available.
 
         Returns:
             HLabelInfo: Hierarchical label information.
 
         Raises:
-            ValueError: If label information cannot be constructed from the OpenVINO IR.
+            ValueError: If label information cannot be constructed from the model metadata.
         """
-        try:
+        if self._is_onnx:
+            # For ONNX models, the adapter parses metadata_props into rt_info.
             serialized = self.model.inference_adapter.get_rt_info(["model_info", "label_info"]).astype(str)
             return HLabelInfo.from_json(serialized)
-        except RuntimeError:
-            pass
+
+        # For OV IR models, use the explicit has_rt_info check.
+        ov_model = self.model.get_model()
+        if ov_model.has_rt_info(["model_info", "label_info"]):
+            serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
+            return HLabelInfo.from_json(serialized)
 
         msg = "Cannot construct LabelInfo from model metadata. Please check this model is trained by getitune."
         raise ValueError(msg)

@@ -33,7 +33,7 @@ class TestOVDetectionModelCoordinateRescaling:
     @pytest.fixture
     def detection_model(self):
         """Create a minimally mocked OVDetectionModel (no real IR needed)."""
-        with patch.object(OVDetectionModel, "__init__", lambda self, **kw: None):
+        with patch.object(OVDetectionModel, "__init__", lambda *_args, **_kwargs: None):
             model = OVDetectionModel.__new__(OVDetectionModel)
             # Mock the model attribute that _customize_outputs uses for label names
             mock_model = MagicMock()

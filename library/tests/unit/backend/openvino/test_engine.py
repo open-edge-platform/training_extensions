@@ -24,10 +24,10 @@ def fxt_ov_model(tmp_path, get_dummy_ov_cls_model) -> OVModel:
 def fxt_onnx_model_path(tmp_path) -> str:
     """Create a minimal ONNX model with getitune metadata embedded."""
     # Create a minimal ONNX model (identity)
-    X = helper.make_tensor_value_info("input", TensorProto.FLOAT, [1, 3, 224, 224])
-    Y = helper.make_tensor_value_info("output", TensorProto.FLOAT, [1, 3, 224, 224])
+    x_input = helper.make_tensor_value_info("input", TensorProto.FLOAT, [1, 3, 224, 224])
+    y_output = helper.make_tensor_value_info("output", TensorProto.FLOAT, [1, 3, 224, 224])
     node = helper.make_node("Identity", inputs=["input"], outputs=["output"])
-    graph = helper.make_graph([node], "test_graph", [X], [Y])
+    graph = helper.make_graph([node], "test_graph", [x_input], [y_output])
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 18)])
 
     # Embed getitune metadata (same format as _embed_onnx_metadata)
@@ -51,10 +51,10 @@ def fxt_onnx_model_path(tmp_path) -> str:
 @pytest.fixture
 def fxt_onnx_classification_model_path(tmp_path) -> str:
     """Create a minimal ONNX model with classification metadata."""
-    X = helper.make_tensor_value_info("input", TensorProto.FLOAT, [1, 3, 224, 224])
-    Y = helper.make_tensor_value_info("output", TensorProto.FLOAT, [1, 3, 224, 224])
+    x_input = helper.make_tensor_value_info("input", TensorProto.FLOAT, [1, 3, 224, 224])
+    y_output = helper.make_tensor_value_info("output", TensorProto.FLOAT, [1, 3, 224, 224])
     node = helper.make_node("Identity", inputs=["input"], outputs=["output"])
-    graph = helper.make_graph([node], "test_graph", [X], [Y])
+    graph = helper.make_graph([node], "test_graph", [x_input], [y_output])
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 18)])
 
     metadata = {
@@ -223,17 +223,26 @@ class TestEngine:
         with pytest.raises(RuntimeError, match="does not support ONNX models"):
             fxt_engine.optimize(checkpoint=fxt_onnx_model_path)
 
+    def test_optimize_rejects_loaded_onnx_model(self, fxt_engine, fxt_onnx_model_path) -> None:
+        """Test that optimize() raises RuntimeError when engine holds an ONNX model."""
+        mock_model = MagicMock()
+        mock_model.model_path = fxt_onnx_model_path
+        fxt_engine._model = mock_model
+        with pytest.raises(RuntimeError, match="does not support ONNX models"):
+            fxt_engine.optimize()
+
 
 class TestONNXSupport:
     """Tests for ONNX model support in OVEngine."""
 
-    def test_is_supported_onnx(self) -> None:
+    def test_is_supported_onnx(self, tmp_path) -> None:
         """Test that is_supported returns True for .onnx path with valid data."""
         from getitune.data.module import DataModule
 
         mock_datamodule = MagicMock(spec=DataModule)
+        nonexistent_data_dir = tmp_path / "nonexistent_data_dir"
         assert OVEngine.is_supported("path/to/model.onnx", mock_datamodule) is True
-        assert OVEngine.is_supported("path/to/model.onnx", "/path/to/data") is False  # dir doesn't exist
+        assert OVEngine.is_supported("path/to/model.onnx", str(nonexistent_data_dir)) is False
 
     def test_is_supported_xml(self) -> None:
         """Test that is_supported still works for .xml paths."""
@@ -269,10 +278,10 @@ class TestONNXSupport:
     def test_derive_task_from_onnx_missing_metadata(self, tmp_path) -> None:
         """Test that _derive_task_from_onnx raises ValueError for models without metadata."""
         # Create ONNX model without metadata
-        X = helper.make_tensor_value_info("input", TensorProto.FLOAT, [1, 3, 224, 224])
-        Y = helper.make_tensor_value_info("output", TensorProto.FLOAT, [1, 3, 224, 224])
+        x_input = helper.make_tensor_value_info("input", TensorProto.FLOAT, [1, 3, 224, 224])
+        y_output = helper.make_tensor_value_info("output", TensorProto.FLOAT, [1, 3, 224, 224])
         node = helper.make_node("Identity", inputs=["input"], outputs=["output"])
-        graph = helper.make_graph([node], "test_graph", [X], [Y])
+        graph = helper.make_graph([node], "test_graph", [x_input], [y_output])
         model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 18)])
         onnx_path = f"{tmp_path}/no_meta.onnx"
         onnx.save(model, onnx_path)

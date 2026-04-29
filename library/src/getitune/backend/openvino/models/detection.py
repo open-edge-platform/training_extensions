@@ -122,10 +122,14 @@ class OVDetectionModel(OVModel):
         Args:
             model_adapter (OpenvinoAdapter): target adapter to read the config
         """
-        try:
+        if self._is_onnx:
+            # For ONNX models, the adapter parses metadata_props into rt_info.
             best_confidence_threshold = model_adapter.get_rt_info(["model_info", "confidence_threshold"]).astype(str)
             self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
-        except RuntimeError:
+        elif model_adapter.model.has_rt_info(["model_info", "confidence_threshold"]):
+            best_confidence_threshold = model_adapter.model.get_rt_info(["model_info", "confidence_threshold"]).value
+            self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
+        else:
             msg = (
                 "Cannot get best_confidence_threshold from OpenVINO IR's rt_info. "
                 "Please check whether this model is trained by getitune or not. "
@@ -179,7 +183,7 @@ class OVDetectionModel(OVModel):
             img_h, img_w = inputs.imgs_info[i].img_shape  # type: ignore[union-attr, index]
             ori_h, ori_w = inputs.imgs_info[i].ori_shape  # type: ignore[union-attr, index]
 
-            bboxes_data = torch.as_tensor(output.bboxes, dtype=torch.float32)
+            bboxes_data = torch.as_tensor(output.bboxes, dtype=torch.float32).clone()
 
             # ModelAPI maps predictions to the input image coordinate space (img_shape)
             # because OV transforms resize images before they reach ModelAPI.  When

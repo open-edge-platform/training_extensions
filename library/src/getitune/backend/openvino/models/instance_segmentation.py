@@ -92,10 +92,14 @@ class OVInstanceSegmentationModel(OVModel):
         This method reads the confidence threshold from the model's runtime information
         and updates the hyperparameters accordingly.
         """
-        try:
+        if self._is_onnx:
+            # For ONNX models, the adapter parses metadata_props into rt_info.
             best_confidence_threshold = model_adapter.get_rt_info(["model_info", "confidence_threshold"]).astype(str)
             self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
-        except RuntimeError:
+        elif model_adapter.model.has_rt_info(["model_info", "confidence_threshold"]):
+            best_confidence_threshold = model_adapter.model.get_rt_info(["model_info", "confidence_threshold"]).value
+            self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
+        else:
             msg = (
                 "Cannot get best_confidence_threshold from OpenVINO IR's rt_info. "
                 "Please check whether this model is trained by getitune or not. "
@@ -123,12 +127,25 @@ class OVInstanceSegmentationModel(OVModel):
         scores = []
         labels = []
         masks = []
-        for output in outputs:
+        for i, output in enumerate(outputs):
+            img_h, img_w = inputs.imgs_info[i].img_shape  # type: ignore[union-attr, index]
+            ori_h, ori_w = inputs.imgs_info[i].ori_shape  # type: ignore[union-attr, index]
+
+            bboxes_data = torch.as_tensor(output.bboxes, dtype=torch.float32).clone()
+
+            # Rescale predictions from model input coordinates (img_shape) to original
+            # image coordinates (ori_shape) when they differ.
+            if (img_h, img_w) != (ori_h, ori_w) and bboxes_data.numel() > 0:
+                scale_x = ori_w / img_w
+                scale_y = ori_h / img_h
+                bboxes_data[:, 0::2] *= scale_x  # x coordinates (x_min, x_max)
+                bboxes_data[:, 1::2] *= scale_y  # y coordinates (y_min, y_max)
+
             bboxes.append(
                 tv_tensors.BoundingBoxes(
-                    data=output.bboxes,
+                    data=bboxes_data,
                     format="XYXY",
-                    canvas_size=inputs.imgs_info[-1].img_shape,  # type: ignore[union-attr,index]
+                    canvas_size=(ori_h, ori_w),
                     dtype=torch.float32,
                 ),
             )
@@ -225,23 +242,26 @@ class OVInstanceSegmentationModel(OVModel):
         return super()._compute_metrics(metric, **compute_kwargs)
 
     def _create_label_info_from_ov_ir(self) -> LabelInfo:
-        """Create label information from the OpenVINO IR model.
+        """Create label information from the OpenVINO IR or ONNX model metadata.
 
-        Reads label information from the OpenVINO IR model's runtime information
-        and constructs a LabelInfo object.
+        Reads label information from the model metadata and constructs a LabelInfo object.
 
         Returns:
-            LabelInfo: Label information extracted from the OpenVINO IR model.
+            LabelInfo: Label information extracted from the model.
         """
-        try:
+        if self._is_onnx:
+            # For ONNX models, the adapter parses metadata_props into rt_info.
             serialized = self.model.inference_adapter.get_rt_info(["model_info", "label_info"]).astype(str)
-            ir_label_info = LabelInfo.from_json(serialized)
-            if ir_label_info.label_names[0] == "getitune_empty_lbl":
-                ir_label_info.label_names.pop(0)
-                ir_label_info.label_ids.pop(0)
-                ir_label_info.label_groups[0].pop(0)
-            return ir_label_info
-        except RuntimeError:
-            pass
+        else:
+            # For OV IR models, use the explicit has_rt_info check.
+            ov_model = self.model.get_model()
+            if not ov_model.has_rt_info(["model_info", "label_info"]):
+                return super()._create_label_info_from_ov_ir()
+            serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
 
-        return super()._create_label_info_from_ov_ir()
+        ir_label_info = LabelInfo.from_json(serialized)
+        if ir_label_info.label_names[0] == "getitune_empty_lbl":
+            ir_label_info.label_names.pop(0)
+            ir_label_info.label_ids.pop(0)
+            ir_label_info.label_groups[0].pop(0)
+        return ir_label_info

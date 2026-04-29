@@ -8,12 +8,14 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import defusedxml.ElementTree as Elet
 import numpy as np
+import onnx
 import torch
 from lightning.pytorch.loggers import CSVLogger
+from model_api.adapters.utils import load_parameters_from_onnx
 from rich.progress import Progress
 
 from getitune.backend.openvino.models import OVModel
@@ -39,7 +41,7 @@ class OVEngine(Engine):
     Supports both OpenVINO IR (.xml) and ONNX (.onnx) model formats for test and predict operations.
     """
 
-    _SUPPORTED_MODEL_SUFFIXES = [".xml", ".onnx"]
+    _SUPPORTED_MODEL_SUFFIXES: ClassVar[list[str]] = [".xml", ".onnx"]
 
     def __init__(
         self,
@@ -149,9 +151,6 @@ class OVEngine(Engine):
         Raises:
             ValueError: If the task type is unsupported or the ONNX metadata is missing.
         """
-        import onnx
-        from model_api.adapters.utils import load_parameters_from_onnx
-
         task_map = {
             "classification_hcl": TaskType.H_LABEL_CLS,
             "classification_mlc": TaskType.MULTI_LABEL_CLS,
@@ -434,9 +433,15 @@ class OVEngine(Engine):
             Path: Path to the optimized model.
 
         Raises:
-            RuntimeError: If an ONNX checkpoint is provided (not supported for optimization).
+            RuntimeError: If an ONNX model is used (not supported for optimization).
         """
         if checkpoint is not None and Path(str(checkpoint)).suffix == ".onnx":
+            msg = (
+                "OVEngine.optimize() does not support ONNX models. "
+                "Please convert to OpenVINO IR format first."
+            )
+            raise RuntimeError(msg)
+        if checkpoint is None and self.model is not None and Path(str(self.model.model_path)).suffix == ".onnx":
             msg = (
                 "OVEngine.optimize() does not support ONNX models. "
                 "Please convert to OpenVINO IR format first."

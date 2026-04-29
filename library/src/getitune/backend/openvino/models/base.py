@@ -8,6 +8,7 @@ import contextlib
 import inspect
 import json
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
 import nncf
@@ -32,7 +33,6 @@ from .utils import get_default_num_async_infer_requests
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from pathlib import Path
 
     from model_api.models.result import Result
     from torchmetrics import Metric, MetricCollection
@@ -166,6 +166,11 @@ class OVModel:
     def _setup_tiler(self) -> None:
         """Set up the tiler for tile-based tasks."""
         raise NotImplementedError
+
+    @property
+    def _is_onnx(self) -> bool:
+        """Check if the loaded model is an ONNX model."""
+        return Path(str(self.model_path)).suffix == ".onnx"
 
     @property
     def input_size(self) -> tuple[int, int] | None:
@@ -585,13 +590,16 @@ class OVModel:
         Raises:
             ValueError: If label information cannot be constructed.
         """
-        # Use the adapter's get_rt_info which handles both .xml (via ov_model.get_rt_info)
-        # and .onnx (via parsed metadata_props) transparently.
-        try:
+        if self._is_onnx:
+            # For ONNX models, the adapter parses metadata_props into rt_info.
             serialized = self.model.inference_adapter.get_rt_info(["model_info", "label_info"]).astype(str)
             return LabelInfo.from_json(serialized)
-        except RuntimeError:
-            pass
+
+        # For OV IR models, use the explicit has_rt_info check.
+        ov_model = self.model.get_model()
+        if ov_model.has_rt_info(["model_info", "label_info"]):
+            serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
+            return LabelInfo.from_json(serialized)
 
         mapi_model: Model = self.model
 
