@@ -216,8 +216,8 @@ RUN set -eu; \
     find "$CLEANUP_ROOT" -type d -path "*/nvidia/*/include" -exec rm -rf {} + 2>/dev/null || true && \
     # Remove static libraries (typically non-redistributable)
     find "$CLEANUP_ROOT" -name "*.a" \( -path "*cuda*" -o -path "*nvidia*" \) -delete 2>/dev/null || true && \
-    # Remove Triton NVIDIA backends (development components)
-    find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia" -exec rm -rf {} + 2>/dev/null || true && \
+    # Remove non-redistributable headers from triton nvidia backend
+    find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia/include" -exec rm -rf {} + 2>/dev/null || true && \
     # Remove specific non-redistributable CUPTI components
     find "$CLEANUP_ROOT" -type f \( \
     -name "libcheckpoint.so*" -o \
