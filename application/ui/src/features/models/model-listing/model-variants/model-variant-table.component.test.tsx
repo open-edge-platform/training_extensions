@@ -210,7 +210,7 @@ describe('ModelVariantTable', () => {
         render(<ModelVariantTable model={model} format='pytorch' />);
 
         expect(screen.getByRole('button', { name: 'Download model pt-1' })).toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: 'Model actions' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /Model variant actions/ })).not.toBeInTheDocument();
     });
 
     it('sets variant as active via menu for openvino format', async () => {

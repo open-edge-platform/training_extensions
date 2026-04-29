@@ -7,7 +7,7 @@ import { Item, Picker } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { usePredictionSetup } from '../../../../annotator/predictions-setup-provider.component';
-import { getAllModelsWithOpenVinoQuantizedModels } from '../../../../models/utils';
+import { getAllModelsWithOpenVinoVariants } from '../../../../models/utils';
 
 type PredictionModelSelectorProps = {
     isDisabled: boolean;
@@ -16,10 +16,7 @@ type PredictionModelSelectorProps = {
 export const PredictionModelSelector = ({ isDisabled }: PredictionModelSelectorProps) => {
     const { models, selectedModelId, changeSelectedModelId } = usePredictionSetup();
 
-    const allModelsWithOpenVinoQuantizedModels = useMemo(
-        () => getAllModelsWithOpenVinoQuantizedModels(models),
-        [models]
-    );
+    const allModelsWithOpenVinoQuantizedModels = useMemo(() => getAllModelsWithOpenVinoVariants(models), [models]);
 
     if (isEmpty(allModelsWithOpenVinoQuantizedModels)) {
         return null;

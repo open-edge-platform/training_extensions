@@ -4,17 +4,17 @@
 import { getMockedModel } from 'mocks/mock-model';
 import { getMockedVariant } from 'mocks/mock-model-variant';
 
-import { getAllModelsWithOpenVinoQuantizedModels } from './utils';
+import { getAllModelsWithOpenVinoVariants } from './utils';
 
 describe('getAllModelsWithOpenVinoQuantizedModels', () => {
     it('returns empty array for empty models array', () => {
-        expect(getAllModelsWithOpenVinoQuantizedModels([])).toEqual([]);
+        expect(getAllModelsWithOpenVinoVariants([])).toEqual([]);
     });
 
     it('returns only base model entry when model has no variants', () => {
         const model = getMockedModel({ id: 'model-1', name: 'My Model', variants: [] });
 
-        expect(getAllModelsWithOpenVinoQuantizedModels([model])).toEqual([{ id: 'model-1', name: 'My Model' }]);
+        expect(getAllModelsWithOpenVinoVariants([model])).toEqual([{ id: 'model-1', name: 'My Model' }]);
     });
 
     it('returns only base model entry when model has no openvino variants', () => {
@@ -27,7 +27,7 @@ describe('getAllModelsWithOpenVinoQuantizedModels', () => {
             ],
         });
 
-        expect(getAllModelsWithOpenVinoQuantizedModels([model])).toEqual([{ id: 'model-1', name: 'My Model' }]);
+        expect(getAllModelsWithOpenVinoVariants([model])).toEqual([{ id: 'model-1', name: 'My Model' }]);
     });
 
     it('returns base model + one openvino variant with precision uppercased', () => {
@@ -37,7 +37,7 @@ describe('getAllModelsWithOpenVinoQuantizedModels', () => {
             variants: [getMockedVariant({ id: 'v-ov', format: 'openvino', precision: 'fp16' })],
         });
 
-        expect(getAllModelsWithOpenVinoQuantizedModels([model])).toEqual([
+        expect(getAllModelsWithOpenVinoVariants([model])).toEqual([
             { id: 'model-1', name: 'My Model' },
             { id: 'v-ov', name: 'My Model [FP16]' },
         ]);
@@ -54,7 +54,7 @@ describe('getAllModelsWithOpenVinoQuantizedModels', () => {
             ],
         });
 
-        expect(getAllModelsWithOpenVinoQuantizedModels([model])).toEqual([
+        expect(getAllModelsWithOpenVinoVariants([model])).toEqual([
             { id: 'model-1', name: 'My Model' },
             { id: 'v-fp16', name: 'My Model [FP16]' },
             { id: 'v-fp32', name: 'My Model [FP32]' },
@@ -72,7 +72,7 @@ describe('getAllModelsWithOpenVinoQuantizedModels', () => {
             ],
         });
 
-        expect(getAllModelsWithOpenVinoQuantizedModels([model])).toEqual([
+        expect(getAllModelsWithOpenVinoVariants([model])).toEqual([
             { id: 'model-1', name: 'My Model' },
             { id: 'v-ov', name: 'My Model [FP16]' },
         ]);
@@ -98,7 +98,7 @@ describe('getAllModelsWithOpenVinoQuantizedModels', () => {
             ],
         });
 
-        expect(getAllModelsWithOpenVinoQuantizedModels([modelA, modelB, modelC])).toEqual([
+        expect(getAllModelsWithOpenVinoVariants([modelA, modelB, modelC])).toEqual([
             { id: 'model-a', name: 'Model A' },
             { id: 'v-a-ov', name: 'Model A [FP16]' },
             { id: 'model-b', name: 'Model B' },
