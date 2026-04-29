@@ -7,10 +7,9 @@ from uuid import UUID
 import cv2
 import numpy as np
 from loguru import logger
-from PIL import Image as PILImage
 from sqlalchemy.orm import Session
 
-from app.models import BatchInferenceInput, BatchInferencePrediction, BatchInferenceResult, Image, Project, VideoFrame
+from app.models import BatchInferenceInput, BatchInferenceResult, Image, Project, VideoFrame
 from app.models.media import Media, MediaListPredictionRequest, MediaType, NotAnnotatedVideoFrame, Video, VideoRange
 from app.models.system import DeviceInfo
 
@@ -128,7 +127,7 @@ class MediaPredictionService(BaseSessionManagedService):
                 binary_data = self._load_media_binary(project_id=project.id, media=vf)
                 inputs.append(BatchInferenceInput(media_id=vf.video_id, data=binary_data, frame_index=vf.frame_index))
 
-        # Batch-extract not-annotated video frames: one video open/close per video
+            # Batch-extract not-annotated video frames: one video open/close per video
         for video_id, frames in not_annotated_by_video.items():
             video = frames[0].video
             frame_indexes = [f.frame_index for f in frames]
@@ -142,81 +141,6 @@ class MediaPredictionService(BaseSessionManagedService):
                 )
 
         return inputs
-
-    def _create_or_update_dataset_item(
-        self,
-        project: Project,
-        media: Image | VideoFrame,
-        prediction: BatchInferencePrediction,
-        model_id: UUID,
-    ) -> None:
-        try:
-            dataset_item = self._dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=media.id)
-            if not dataset_item.user_reviewed:
-                logger.debug(f"Updating predictions for {str(media.id)}.")
-                self._dataset_service.set_dataset_item_annotations(
-                    project=project,
-                    dataset_item_id=dataset_item.id,
-                    annotations=prediction.prediction,
-                    user_reviewed=False,
-                    prediction_model_id=model_id,
-                )
-            else:
-                logger.debug(f"Dataset item {str(media.id)} is already annotated and reviewed by user, skipping.")
-            return
-        except ResourceNotFoundError:
-            pass
-
-        logger.debug(f"Creating dataset item for {str(media.id)}.")
-        self._dataset_service.create_dataset_item(
-            project_id=project.id,
-            task=project.task,
-            media=media,
-            annotations=prediction.prediction,
-            user_reviewed=False,
-            prediction_model_id=model_id,
-        )
-
-    def _create_dataset_items(
-        self,
-        project: Project,
-        loaded_media: LoadedMedia,
-        inputs: list[BatchInferenceInput],
-        batch_inference_result: BatchInferenceResult,
-        model_id: UUID,
-    ) -> None:
-        prediction_map: dict[tuple[UUID, int | None], BatchInferencePrediction] = {
-            (pred.media.id, pred.media.frame_index): pred for pred in batch_inference_result.predictions
-        }
-        input_map: dict[tuple[UUID, int | None], BatchInferenceInput] = {
-            (inp.media_id, inp.frame_index): inp for inp in inputs
-        }
-
-        for media in loaded_media.single_media:
-            prediction = prediction_map[(media.id, None)]
-            self._create_or_update_dataset_item(project=project, media=media, prediction=prediction, model_id=model_id)
-
-        for frame in loaded_media.video_frames:
-            prediction = prediction_map[(frame.video_id, frame.frame_index)]
-            logger.debug("Prediction is {}, frame is {}", prediction, frame)
-            if isinstance(frame, VideoFrame):
-                self._create_or_update_dataset_item(
-                    project=project, media=frame, prediction=prediction, model_id=model_id
-                )
-            else:
-                input_data = input_map[(frame.video_id, frame.frame_index)]
-                frame_image = PILImage.fromarray(input_data.data)
-                video_frame = self._media_service.save_video_frame(
-                    project=project, video=frame.video, frame_index=frame.frame_index, frame_image=frame_image
-                )
-                self._dataset_service.create_dataset_item(
-                    project_id=project.id,
-                    task=project.task,
-                    media=video_frame,
-                    annotations=prediction.prediction,
-                    user_reviewed=False,
-                    prediction_model_id=model_id,
-                )
 
     def predict_media(
         self,
@@ -253,15 +177,4 @@ class MediaPredictionService(BaseSessionManagedService):
         self._inference_server.set_inference_model(
             project_id=project.id, model_id=request.model_id, device=device, ttl=self._inference_model_ttl
         )
-        batch_inference_result = self._inference_server.infer_batch(labels=labels, inputs=inputs)
-
-        if request.save_predictions:
-            logger.debug("Saving inference results as dataset items")
-            self._create_dataset_items(
-                project=project,
-                loaded_media=loaded_media,
-                inputs=inputs,
-                batch_inference_result=batch_inference_result,
-                model_id=request.model_id,
-            )
-        return batch_inference_result
+        return self._inference_server.infer_batch(labels=labels, inputs=inputs)
