@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { VideoFileSourceConfig } from '../../../../constants/shared-types';
+import { getUniqueName } from '../utils';
 
-export const getVideoFileInitialConfig = (): VideoFileSourceConfig => ({
+export const getVideoFileInitialConfig = (existingNames: string[] = []): VideoFileSourceConfig => ({
     id: '',
-    name: 'Video file source',
+    name: getUniqueName('Video file source', existingNames),
     source_type: 'video_file',
     video_path: '',
 });
