@@ -167,10 +167,7 @@ class OVEngine(Engine):
         model_info = metadata.get("model_info", {})
         task_type = model_info.get("task_type")
         if task_type is None:
-            msg = (
-                "No 'task_type' found in ONNX model metadata. "
-                "Please ensure the model was exported by getitune."
-            )
+            msg = "No 'task_type' found in ONNX model metadata. Please ensure the model was exported by getitune."
             raise ValueError(msg)
 
         if task_type == "classification":
@@ -208,6 +205,11 @@ class OVEngine(Engine):
             return self._derive_task_from_onnx(model_path)
         msg = f"Unsupported model format: '{path.suffix}'. Supported formats: {self._SUPPORTED_MODEL_SUFFIXES}"
         raise ValueError(msg)
+
+    @property
+    def _is_onnx(self) -> bool:
+        """Check if the currently loaded model is an ONNX model."""
+        return self.model is not None and Path(str(self.model.model_path)).suffix == ".onnx"
 
     def train(self, *args, **kwargs) -> METRICS:
         """Train method is not supported for OVEngine."""
@@ -436,16 +438,10 @@ class OVEngine(Engine):
             RuntimeError: If an ONNX model is used (not supported for optimization).
         """
         if checkpoint is not None and Path(str(checkpoint)).suffix == ".onnx":
-            msg = (
-                "OVEngine.optimize() does not support ONNX models. "
-                "Please convert to OpenVINO IR format first."
-            )
+            msg = "OVEngine.optimize() does not support ONNX models. Please convert to OpenVINO IR format first."
             raise RuntimeError(msg)
-        if checkpoint is None and self.model is not None and Path(str(self.model.model_path)).suffix == ".onnx":
-            msg = (
-                "OVEngine.optimize() does not support ONNX models. "
-                "Please convert to OpenVINO IR format first."
-            )
+        if checkpoint is None and self._is_onnx:
+            msg = "OVEngine.optimize() does not support ONNX models. Please convert to OpenVINO IR format first."
             raise RuntimeError(msg)
         optimize_datamodule = datamodule if datamodule is not None else self.datamodule
         model = self._update_checkpoint(checkpoint)

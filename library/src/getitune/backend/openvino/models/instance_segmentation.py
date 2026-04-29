@@ -128,18 +128,34 @@ class OVInstanceSegmentationModel(OVModel):
         labels = []
         masks = []
         for i, output in enumerate(outputs):
-            img_h, img_w = inputs.imgs_info[i].img_shape  # type: ignore[union-attr, index]
-            ori_h, ori_w = inputs.imgs_info[i].ori_shape  # type: ignore[union-attr, index]
+            img_info = inputs.imgs_info[i]  # type: ignore[index]
+            img_h, img_w = img_info.img_shape  # type: ignore[union-attr]
+            ori_h, ori_w = img_info.ori_shape  # type: ignore[union-attr]
 
             bboxes_data = torch.as_tensor(output.bboxes, dtype=torch.float32).clone()
 
-            # Rescale predictions from model input coordinates (img_shape) to original
-            # image coordinates (ori_shape) when they differ.
+            # Map predictions from preprocessed image coords to original image coords.
+            # Handles both simple resize and letterbox (aspect-ratio + padding) cases.
             if (img_h, img_w) != (ori_h, ori_w) and bboxes_data.numel() > 0:
-                scale_x = ori_w / img_w
-                scale_y = ori_h / img_h
-                bboxes_data[:, 0::2] *= scale_x  # x coordinates (x_min, x_max)
-                bboxes_data[:, 1::2] *= scale_y  # y coordinates (y_min, y_max)
+                padding = img_info.padding  # type: ignore[union-attr]
+                scale_factor = img_info.scale_factor  # type: ignore[union-attr]
+
+                if padding != (0, 0, 0, 0) and scale_factor is not None:
+                    # Letterbox: undo padding then undo scale
+                    pad_left, pad_top = float(padding[0]), float(padding[1])
+                    scale_h, scale_w = float(scale_factor[0]), float(scale_factor[1])
+                    bboxes_data[:, 0::2] -= pad_left
+                    bboxes_data[:, 1::2] -= pad_top
+                    bboxes_data[:, 0::2] /= scale_w
+                    bboxes_data[:, 1::2] /= scale_h
+                    bboxes_data[:, 0::2].clamp_(0, ori_w)
+                    bboxes_data[:, 1::2].clamp_(0, ori_h)
+                else:
+                    # Simple resize (no padding)
+                    scale_x = ori_w / img_w
+                    scale_y = ori_h / img_h
+                    bboxes_data[:, 0::2] *= scale_x
+                    bboxes_data[:, 1::2] *= scale_y
 
             bboxes.append(
                 tv_tensors.BoundingBoxes(

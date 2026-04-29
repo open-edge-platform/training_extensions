@@ -97,7 +97,9 @@ class TestEngine:
         engine = OVEngine(work_dir=tmp_path, data=data_root, model=f"{tmp_path}/model.xml")
         assert engine.model == fxt_ov_model
 
-    def test_constructor_with_onnx_path(self, mocker, tmp_path, fxt_ov_model, fxt_onnx_classification_model_path) -> None:
+    def test_constructor_with_onnx_path(
+        self, mocker, tmp_path, fxt_ov_model, fxt_onnx_classification_model_path
+    ) -> None:
         """Test that OVEngine can be initialized with an ONNX model path."""
         data_root = "tests/assets/multilabel_classification_coco/"
         mocker.patch("getitune.backend.openvino.engine.AutoConfigurator.get_ov_model", return_value=fxt_ov_model)
@@ -295,7 +297,7 @@ class TestONNXSupport:
         from getitune.types import TaskType
 
         engine = OVEngine.__new__(OVEngine)
-        engine._SUPPORTED_MODEL_SUFFIXES = [".xml", ".onnx"]
+        OVEngine._SUPPORTED_MODEL_SUFFIXES = [".xml", ".onnx"]
 
         # ONNX dispatch
         task = engine._derive_task_from_model(fxt_onnx_model_path)
