@@ -108,19 +108,21 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
                     {(item) => <Item>{item.label}</Item>}
                 </Picker>
 
-                {defaultTaskType !== undefined && (
-                    <Flex gap='size-100' alignItems={'center'}>
-                        <View width={16} height={16}>
-                            <InfoOutline />
-                        </View>
+                <View>
+                    {defaultTaskType !== undefined && (
+                        <Flex gap='size-100' alignItems={'center'}>
+                            <View width={16} height={16}>
+                                <InfoOutline />
+                            </View>
 
-                        <Text>
-                            The recommended choice is based on the type of the annotations detected in the dataset. If
-                            you choose a different type, the annotations will be automatically transformed during import
-                            to fit the selected type.
-                        </Text>
-                    </Flex>
-                )}
+                            <Text>
+                                The recommended choice is based on the type of the annotations detected in the dataset. If
+                                you choose a different type, the annotations will be automatically transformed during import
+                                to fit the selected type.
+                            </Text>
+                        </Flex>
+                    )}
+                </View>
             </Form>
         </View>
     );
