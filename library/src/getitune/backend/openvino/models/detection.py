@@ -12,6 +12,7 @@ from model_api.tilers import DetectionTiler
 from torchvision import tv_tensors
 
 from getitune.backend.openvino.models.base import OVModel
+from getitune.backend.openvino.models.utils import rescale_bboxes_to_original
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.metrics import MetricCallable, MetricInput
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
@@ -186,31 +187,14 @@ class OVDetectionModel(OVModel):
 
             bboxes_data = torch.as_tensor(output.bboxes, dtype=torch.float32).clone()
 
-            # ModelAPI maps predictions to the preprocessed image coordinate space.
-            # When targets stay in the original coordinate space (resize_targets=false),
-            # we must map predictions back to ori_shape.
-            # If preprocessing used aspect-ratio resize + padding (letterbox), we undo
-            # padding first, then divide by scale_factor. Otherwise, use simple scaling.
-            if (img_h, img_w) != (ori_h, ori_w) and bboxes_data.numel() > 0:
-                padding = img_info.padding  # type: ignore[union-attr]
-                scale_factor = img_info.scale_factor  # type: ignore[union-attr]
-
-                if padding != (0, 0, 0, 0) and scale_factor is not None:
-                    # Letterbox: undo padding then undo scale
-                    pad_left, pad_top = float(padding[0]), float(padding[1])
-                    scale_h, scale_w = float(scale_factor[0]), float(scale_factor[1])
-                    bboxes_data[:, 0::2] -= pad_left
-                    bboxes_data[:, 1::2] -= pad_top
-                    bboxes_data[:, 0::2] /= scale_w
-                    bboxes_data[:, 1::2] /= scale_h
-                    bboxes_data[:, 0::2].clamp_(0, ori_w)
-                    bboxes_data[:, 1::2].clamp_(0, ori_h)
-                else:
-                    # Simple resize (no padding)
-                    scale_x = ori_w / img_w
-                    scale_y = ori_h / img_h
-                    bboxes_data[:, 0::2] *= scale_x
-                    bboxes_data[:, 1::2] *= scale_y
+            # Rescale predictions from model input coords to original image coords.
+            bboxes_data = rescale_bboxes_to_original(
+                bboxes_data,
+                img_shape=(img_h, img_w),
+                ori_shape=(ori_h, ori_w),
+                padding=img_info.padding,  # type: ignore[union-attr]
+                scale_factor=img_info.scale_factor,  # type: ignore[union-attr]
+            )
 
             bboxes.append(
                 tv_tensors.BoundingBoxes(
