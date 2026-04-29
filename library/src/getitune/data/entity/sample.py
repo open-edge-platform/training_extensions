@@ -1,7 +1,7 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Sample classes for OTX data entities."""
+"""Sample classes for getitune data entities."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Sequence, cast
 import polars as pl
 import torch
 from datumaro.experimental import register_sample
-from datumaro.experimental.dataset import Sample
+from datumaro.experimental.dataset import Sample as _DatumSample
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from datumaro.experimental.fields import (
     Subset,
@@ -46,8 +46,8 @@ if TYPE_CHECKING:
 
 
 @register_pytree_node
-class OTXSample(Sample):
-    """Base class for OTX data samples."""
+class BaseSample(_DatumSample):
+    """Base class for getitune data samples."""
 
     image: torch.Tensor | tv_tensors.Image
     subset: Subset = subset_field()
@@ -67,8 +67,8 @@ class OTXSample(Sample):
 
 @register_pytree_node
 @register_sample
-class ClassificationSample(OTXSample):
-    """ClassificationSample is a base class for OTX classification items."""
+class ClassificationSample(BaseSample):
+    """ClassificationSample is a base class for getitune classification items."""
 
     subset: Subset = subset_field()
 
@@ -88,8 +88,8 @@ class ClassificationSample(OTXSample):
 
 @register_pytree_node
 @register_sample
-class ClassificationMultiLabelSample(OTXSample):
-    """ClassificationMultiLabelSample is a base class for OTX multi label classification items."""
+class ClassificationMultiLabelSample(BaseSample):
+    """ClassificationMultiLabelSample is a base class for getitune multi label classification items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     label: torch.Tensor = label_field(pl.UInt8(), multi_label=True)
@@ -107,8 +107,8 @@ class ClassificationMultiLabelSample(OTXSample):
 
 @register_pytree_node
 @register_sample
-class ClassificationHierarchicalSample(OTXSample):
-    """ClassificationHierarchicalSample is a base class for OTX hierarchical classification items."""
+class ClassificationHierarchicalSample(BaseSample):
+    """ClassificationHierarchicalSample is a base class for getitune hierarchical classification items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
@@ -126,11 +126,11 @@ class ClassificationHierarchicalSample(OTXSample):
 
 @register_pytree_node
 @register_sample
-class DetectionSample(OTXSample):
-    """DetectionSample is a base class for OTX detection items."""
+class DetectionSample(BaseSample):
+    """DetectionSample is a base class for getitune detection items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), format="RGB", channels_first=True)
-    label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
+    label: torch.Tensor | None = label_field(pl.UInt8(), is_list=True)
     # Use Union type to allow torch.Tensor from Polars (since tv_tensors.BoundingBoxes
     # conversion is not supported in Datumaro), then convert in __post_init__
     bboxes: tv_tensors.BoundingBoxes | torch.Tensor = bbox_field(dtype=pl.Float32())
@@ -138,11 +138,16 @@ class DetectionSample(OTXSample):
 
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
+
+        # Handle None fields for images with no annotations
+        if self.label is None:
+            self.label = torch.zeros(0, dtype=torch.uint8)
+
         # Ensure bboxes are tv_tensors.BoundingBoxes
         if not isinstance(self.bboxes, tv_tensors.BoundingBoxes):
-            # If it's a plain tensor, wrap it
+            bboxes = self.bboxes if self.bboxes is not None else torch.zeros((0, 4), dtype=torch.float32)
             self.bboxes = tv_tensors.BoundingBoxes(
-                self.bboxes,
+                bboxes,
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=shape,
                 dtype=torch.float32,
@@ -157,8 +162,8 @@ class DetectionSample(OTXSample):
 
 @register_pytree_node
 @register_sample
-class SegmentationSample(OTXSample):
-    """OTXSample for segmentation tasks."""
+class SegmentationSample(BaseSample):
+    """BaseSample for segmentation tasks."""
 
     subset: Subset = subset_field()
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=False)
@@ -176,26 +181,32 @@ class SegmentationSample(OTXSample):
 
 @register_pytree_node
 @register_sample
-class InstanceSegmentationSample(OTXSample):
-    """OTXSample for instance segmentation tasks."""
+class InstanceSegmentationSample(BaseSample):
+    """BaseSample for instance segmentation tasks."""
 
     subset: Subset = subset_field()
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     # Use Union type to allow torch.Tensor from Polars (since tv_tensors.BoundingBoxes
     # conversion is not supported in Datumaro), then convert in __post_init__
     bboxes: tv_tensors.BoundingBoxes | torch.Tensor = bbox_field(dtype=pl.Float32())
-    masks: tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8())
-    label: torch.Tensor = label_field(dtype=pl.UInt8(), is_list=True)
+    masks: tv_tensors.Mask | None = instance_mask_field(dtype=pl.UInt8())
+    label: torch.Tensor | None = label_field(dtype=pl.UInt8(), is_list=True)
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
 
+        # Handle None fields for images with no annotations
+        if self.label is None:
+            self.label = torch.zeros(0, dtype=torch.uint8)
+        if self.masks is None:
+            self.masks = tv_tensors.Mask(torch.zeros((0, *shape), dtype=torch.uint8))
+
         # Ensure bboxes are tv_tensors.BoundingBoxes
         if not isinstance(self.bboxes, tv_tensors.BoundingBoxes):
-            # If it's a plain tensor, wrap it
+            bboxes = self.bboxes if self.bboxes is not None else torch.zeros((0, 4), dtype=torch.float32)
             self.bboxes = tv_tensors.BoundingBoxes(
-                self.bboxes,
+                bboxes,
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=shape,
                 dtype=torch.float32,
@@ -210,8 +221,8 @@ class InstanceSegmentationSample(OTXSample):
 
 @register_pytree_node
 @register_sample
-class KeypointSample(OTXSample):
-    """KeypointSample is a base class for OTX keypoint detection items."""
+class KeypointSample(BaseSample):
+    """KeypointSample is a base class for getitune keypoint detection items."""
 
     subset: Subset = subset_field()
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
@@ -230,8 +241,8 @@ class KeypointSample(OTXSample):
 
 
 @dataclass
-class OTXSampleBatch:
-    """OTX sample batch implementation.
+class SampleBatch:
+    """getitune sample batch implementation.
 
     Attributes:
         images: The batch of images as a BCHW tensor.
@@ -274,7 +285,7 @@ class OTXSampleBatch:
         if self.imgs_info is not None:
             validate_imgs_info(self.imgs_info)
 
-    def pin_memory(self) -> OTXSampleBatch:
+    def pin_memory(self) -> SampleBatch:
         """Pin memory for member tensor variables."""
         # https://github.com/pytorch/pytorch/issues/116403
 
@@ -302,7 +313,7 @@ class OTXSampleBatch:
 
         return self.wrap(**kwargs)
 
-    def wrap(self, **kwargs) -> OTXSampleBatch:
+    def wrap(self, **kwargs) -> SampleBatch:
         """Wrap this dataclass with the given keyword arguments.
 
         Args:
@@ -318,10 +329,10 @@ class OTXSampleBatch:
 
 
 @dataclass
-class OTXPredictionBatch(OTXSampleBatch):
-    """OTX prediction batch implementation.
+class PredictionBatch(SampleBatch):
+    """getitune prediction batch implementation.
 
-    Extends OTXSampleBatch with prediction-specific fields.
+    Extends SampleBatch with prediction-specific fields.
 
     Attributes:
         scores: List of score tensors, optional.
@@ -343,8 +354,8 @@ class OTXPredictionBatch(OTXSampleBatch):
 
 
 @dataclass
-class OTXPrediction:
-    """OTX prediction data entity for a single sample.
+class Prediction:
+    """getitune prediction data entity for a single sample.
 
     This is used for storing individual prediction results, e.g., after tile merging.
 

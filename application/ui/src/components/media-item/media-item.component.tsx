@@ -27,7 +27,7 @@ export const MediaItem = ({
     bottomRightElement,
 }: MediaItemProps) => {
     return (
-        <View width={'100%'} UNSAFE_className={className}>
+        <View height={'100%'} width={'100%'} UNSAFE_className={className}>
             {contentElement()}
 
             {isFunction(topLeftElement) && (

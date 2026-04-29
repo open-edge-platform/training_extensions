@@ -91,6 +91,7 @@ export type SourceConfigPayload = Exclude<SourceConfig, DisconnectedSourceConfig
 export type AnnotationDTO = components['schemas']['DatasetItemAnnotation-Input'];
 export type PredictionDTO = components['schemas']['DatasetItemAnnotation-Output'];
 export type DatasetItemAnnotationStatus = components['schemas']['DatasetItemAnnotationStatus'];
+export type FilterByStatusKey = 'all' | DatasetItemAnnotationStatus;
 
 export type AnnotatedVideoFrame = components['schemas']['AnnotatedVideoFrame'];
 export type VideoFramePrediction = {
@@ -142,3 +143,4 @@ export type TrainingConfigurationRequestPayload = {
 export type Pagination = components['schemas']['Pagination'];
 export type MediaWithPagination = components['schemas']['MediaWithPagination'];
 export type DatasetFormat = components['schemas']['DatasetFormat'];
+export type DeviceInfo = components['schemas']['DeviceInfoView'];

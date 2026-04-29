@@ -5,12 +5,12 @@ import React from 'react';
 
 import ReactDOM from 'react-dom/client';
 
+import { setupStorageCleanup } from './platform/storage-cleanup';
 import { Providers } from './providers';
-import { setupTauriStorageCleanup } from './tauri/utils/storage-cleanup-registry/storage-cleanup-registry';
 
 import './index.css';
 
-setupTauriStorageCleanup();
+setupStorageCleanup();
 
 const rootEl = document.getElementById('root');
 if (rootEl) {

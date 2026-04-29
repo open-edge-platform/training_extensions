@@ -1,67 +1,41 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{
-    env,
-    process::{Child, Command},
-    sync::{Arc, Mutex},
-};
-use tauri::RunEvent;
+mod backend;
 
-/// “geti-backend.exe” on Windows, “geti-backend” elsewhere.
-fn backend_filename() -> &'static str {
-    if cfg!(windows) {
-        "geti-backend.exe"
-    } else {
-        "geti-backend"
-    }
-}
+use std::sync::{Arc, Mutex};
 
-/// Spawns the side-car in the same folder as this executable.
-fn spawn_backend() -> std::io::Result<Child> {
-    // Locate the Tauri executable, then its parent folder
-    let exe_path = env::current_exe().expect("failed to get current exe path");
-    let exe_dir = exe_path
-        .parent()
-        .expect("failed to get parent directory of exe");
+use tauri::{Manager, RunEvent, WindowEvent};
 
-    // Build the full path to geti-backend.exe
-    // Tauri build will have renamed the suffixed file to plain name next to the exe.
-    let backend_path = exe_dir.join(backend_filename());
-
-    log::info!("▶ Looking for backend side-car at {:?}", backend_path);
-    let mut command = Command::new(&backend_path);
-    command.env("CORS_ORIGINS", "http://tauri.localhost");
-    #[cfg(all(windows, not(debug_assertions)))]
-    {
-        use std::os::windows::process::CommandExt;
-        command.creation_flags(0x08000000); // CREATE_NO_WINDOW
-    }
-    let child = command.spawn()?;
-
-    log::info!("▶ Spawned backend: {:?}", backend_path);
-    Ok(child)
-}
+use crate::backend::spawn_backend;
 
 fn main() {
-    // Shared handle so we can kill it on exit
+    // Shared handle so we can kill the backend on exit.
     let child_handle = Arc::new(Mutex::new(None));
 
-    // Build the app
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_log::Builder::default().build())
         .setup({
             let child_handle = child_handle.clone();
-            move |_app_handle| {
-                let child = spawn_backend().expect("Failed to spawn python backend");
+            move |app| {
+                let child = spawn_backend(app.handle()).expect("Failed to spawn python backend");
                 *child_handle.lock().unwrap() = Some(child);
                 Ok(())
+            }
+        })
+        // Geti is a single-window utility app, so closing the main window
+        // should quit the whole process (default macOS behaviour is to keep
+        // the app alive in the dock, which leaks the backend side-car).
+        .on_window_event(|window, event| {
+            if let WindowEvent::CloseRequested { .. } = event {
+                window.app_handle().exit(0);
             }
         })
         .invoke_handler(tauri::generate_handler![])
         .build(tauri::generate_context!())
         .expect("error building Tauri");
 
-    // Run and on Exit make sure to kill the backend
     let exit_handle = child_handle.clone();
     app.run(move |_app_handle, event| {
         if let RunEvent::Exit = event {

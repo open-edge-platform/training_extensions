@@ -1,13 +1,13 @@
 Improve Small Object Detection with Image Tiling
 *************************************************
 
-The OpenVINO Training Extensions introduces the concept of image tiling to enhance the accuracy of detection algorithms and instance segmentation algorithms, particularly for small and densely packed objects in high-resolution images.
+Geti Library introduces the concept of image tiling to enhance the accuracy of detection algorithms and instance segmentation algorithms, particularly for small and densely packed objects in high-resolution images.
 
 Image tiling involves dividing the original full-resolution image into multiple smaller tiles or patches. This division allows objects within the tiles to appear larger in relation to the tile size, effectively addressing the challenge of objects becoming nearly invisible in deeper layers of feature maps due to downsampling operations. Image tiling proves especially beneficial for datasets where objects can be as small as 20 by 20 pixels in a 4K image.
 
-However, it's important to consider the trade-off associated with image tiling. Dividing a single image sample into several tiles increases the number of samples for training, evaluation, and testing. This trade-off impacts the execution speed, as processing more images requires additional computational resources. To strike a balance between patch size and computational efficiency, the OpenVINO Training  incorporates tile dataset samples and adaptive tiling parameter optimization. These features enable the proper tuning of tile size and other tiling-related parameters to ensure efficient execution without compromising accuracy.
+However, it's important to consider the trade-off associated with image tiling. Dividing a single image sample into several tiles increases the number of samples for training, evaluation, and testing. This trade-off impacts the execution speed, as processing more images requires additional computational resources. To strike a balance between patch size and computational efficiency, Geti Library incorporates tile dataset samples and adaptive tiling parameter optimization. These features enable the proper tuning of tile size and other tiling-related parameters to ensure efficient execution without compromising accuracy.
 
-By leveraging image tiling, the OpenVINO Training Extensions empowers detection and instance segmentation algorithms to effectively detect and localize small and crowded objects in large-resolution images, ultimately leading to improved overall performance and accuracy.
+By leveraging image tiling, Geti Library empowers detection and instance segmentation algorithms to effectively detect and localize small and crowded objects in large-resolution images, ultimately leading to improved overall performance and accuracy.
 
 Tiling Strategies
 =================
@@ -24,7 +24,7 @@ During evaluation in training, only the tiles with annotations are used for eval
 
 During testing, each tile is processed and predicted separately. The tiles are then stitched back together to form the full image, and the tile predictions are merged to form the full image prediction.
 
-The tiling strategy is implemented in the OpenVINO Training Extensions through the following steps:
+The tiling strategy is implemented in Geti Library through the following steps:
 
 .. note::
 
@@ -33,7 +33,7 @@ The tiling strategy is implemented in the OpenVINO Training Extensions through t
 
 .. note::
 
-    While running `ote test` on models trained with tiling enabled, the evaluation will be performed on all tiles, this process includes merging all the tile-level prediction.
+    While running ``getitune test`` on models trained with tiling enabled, the evaluation will be performed on all tiles, this process includes merging all the tile-level prediction.
     The below context will be provided during evaluation:
 
     .. code-block:: shell
@@ -42,12 +42,12 @@ The tiling strategy is implemented in the OpenVINO Training Extensions through t
         ==== merge: 7.326097726821899 sec ====
 
 
-Enable Tiling via OTX Training
+Enable Tiling via Geti Library Training
 ==================================
 
 Currently, tiling is supported for both detection and instance segmentation models. Please refer to :doc:`../algorithms/object_detection/object_detection` and :doc:`../algorithms/segmentation/instance_segmentation` for more details.
 
-To enable tiling in OTX training, set ``data.tile_config.enable_tiler`` parameter to 1. Here's an example of enabling tiling:
+To enable tiling in Geti Library training, set ``data.tile_config.enable_tiler`` parameter to 1. Here's an example of enabling tiling:
 
 .. tab-set::
 
@@ -55,23 +55,23 @@ To enable tiling in OTX training, set ``data.tile_config.enable_tiler`` paramete
 
         .. code-block:: python
 
-            from otx.config.data import TileConfig
-            from otx.data.module import OTXDataModule
+            from getitune.config.data import TileConfig
+            from getitune.data.module import DataModule
 
-            datamodule = OTXDataModule(..., tile_config=TileConfig(enable_tiler=True))
+            datamodule = DataModule(..., tile_config=TileConfig(enable_tiler=True))
 
     .. tab-item:: CLI
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.tile_config.enable_tiler True
+            (getitune) ...$ getitune train ... --data.tile_config.enable_tiler True
 
 
 Tile Size and Tile Overlap Optimization
 -----------------------------------------
-By default, the OpenVINO Training Extensions automatically optimize tile size and tile overlap to ensure efficient execution without compromising accuracy.
+By default, Geti Library automatically optimizes tile size and tile overlap to ensure efficient execution without compromising accuracy.
 
-To strike a balance between patch size and computational efficiency, the OpenVINO Training Extensions incorporate adaptive tiling parameter optimization. These features enable the proper tuning of tile size and other tiling-related parameters to ensure efficient execution without compromising accuracy.
+To strike a balance between patch size and computational efficiency, Geti Library incorporates adaptive tiling parameter optimization. These features enable the proper tuning of tile size and other tiling-related parameters to ensure efficient execution without compromising accuracy.
 
 Adaptive tiling parameter optimization works by finding the average object size in the training dataset and using that to determine the tile size. Currently, the average object size to tile size ratio is set to 3%. For example, if the average object size is 100x100 pixels, the tile size will be around 577x577 pixels.
 
@@ -85,17 +85,17 @@ Here's an example of setting the object size ratio to 5%:
 
         .. code-block:: python
 
-            from otx.config.data import TileConfig
-            from otx.data.module import OTXDataModule
+            from getitune.config.data import TileConfig
+            from getitune.data.module import DataModule
 
             tile_config = TileConfig(enable_tiler=True, enable_adaptive_tiling=True, object_tile_ratio=0.05)
-            datamodule = OTXDataModule(..., tile_config=tile_config)
+            datamodule = DataModule(..., tile_config=tile_config)
 
     .. tab-item:: CLI
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.tile_config.enable_tiler True \             # enable tiling
+            (getitune) ...$ getitune train ... --data.tile_config.enable_tiler True \             # enable tiling
                                      --data.tile_config.enable_adaptive_tiling True \   # enable automatic tiling parameter optimization
                                      --data.tile_config.object_tile_ratio 0.05          # set the object size ratio to 5%
 
@@ -108,7 +108,7 @@ You can also manually configure the tile overlap using ``tiling_parameters.tile_
 
 Tiling Sampling Strategy
 ------------------------
-To accelerate the training process, the OpenVINO Training Extensions introduces a tile sampling strategy. This strategy involves randomly sampling a percentage of tile images from the dataset to be used for training.
+To accelerate the training process, Geti Library introduces a tile sampling strategy. This strategy involves randomly sampling a percentage of tile images from the dataset to be used for training.
 
 Since training and validation on all tiles from a high-resolution image dataset can be time-consuming, sampling the tile dataset can significantly reduce the training and validation time.
 
@@ -122,17 +122,17 @@ This can be configured with ``data.tile_config.enable_adaptive_tiling`` paramete
 
         .. code-block:: python
 
-            from otx.config.data import TileConfig
-            from otx.data.module import OTXDataModule
+            from getitune.config.data import TileConfig
+            from getitune.data.module import DataModule
 
             tile_config = TileConfig(enable_tiler=True, enable_adaptive_tiling=True, sampling_ratio=0.5)
-            datamodule = OTXDataModule(..., tile_config=tile_config)
+            datamodule = DataModule(..., tile_config=tile_config)
 
     .. tab-item:: CLI
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.tile_config.enable_tiler True
+            (getitune) ...$ getitune train ... --data.tile_config.enable_tiler True
                                      --data.tile_config.enable_adaptive_tiling True
                                      --data.tile_config.sampling_ratio 0.5
 
@@ -148,17 +148,17 @@ Users can disable adaptive tiling and customize the tiling process by setting th
 
         .. code-block:: python
 
-            from otx.config.data import TileConfig
-            from otx.data.module import OTXDataModule
+            from getitune.config.data import TileConfig
+            from getitune.data.module import DataModule
 
             tile_config = TileConfig(enable_tiler=True, enable_adaptive_tiling=False, tile_size=(512,512), tile_overlap=0.2)
-            datamodule = OTXDataModule(..., tile_config=tile_config)
+            datamodule = DataModule(..., tile_config=tile_config)
 
     .. tab-item:: CLI
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.tile_config.enable_tiler True
+            (getitune) ...$ getitune train ... --data.tile_config.enable_tiler True
                                      --data.tile_config.enable_adaptive_tiling False
                                      --data.tile_config.tile_size '[512,512]'
                                      --data.tile_config.tile_overlap 0.2
@@ -192,7 +192,7 @@ After training a model with tiling enabled, you can export the model to OpenVINO
 
         .. code-block:: shell
 
-            (otx) ...$ otx export ... --checkpoint <checkpoint-tiling-model>
+            (getitune) ...$ getitune export ... --checkpoint <checkpoint-tiling-model>
 
 After exporting the model, you can run inference on the exported model using the following command:
 
@@ -208,7 +208,7 @@ After exporting the model, you can run inference on the exported model using the
 
         .. code-block:: shell
 
-            (otx) ...$ otx test ... --checkpoint <checkpoint-tiling-IR-model>
+            (getitune) ...$ getitune test ... --checkpoint <checkpoint-tiling-IR-model>
 
 .. warning::
     When tiling is enabled, there is a trade-off between speed and accuracy as it increases the number of images to be processed.

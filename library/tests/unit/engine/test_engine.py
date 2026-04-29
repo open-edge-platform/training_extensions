@@ -6,11 +6,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from getitune.backend.native.engine import OTXEngine
-from getitune.backend.native.models.base import OTXModel
+from getitune.backend.lightning.engine import LightningEngine
+from getitune.backend.lightning.models.base import LightningModel
 from getitune.backend.openvino.engine import OVEngine
 from getitune.backend.openvino.models.base import OVModel
-from getitune.data.module import OTXDataModule
+from getitune.data.module import DataModule
 from getitune.engine import Engine, create_engine
 
 
@@ -49,18 +49,18 @@ class TestCreateEngine:
             create_engine(mock_model, mock_data)
 
     def test_create_native_engine(self, mocker):
-        mock_model = MagicMock(spec=OTXModel)
-        mock_data = MagicMock(spec=OTXDataModule)
-        mock_engine_init = mocker.patch("getitune.backend.native.engine.OTXEngine.__init__", return_value=None)
+        mock_model = MagicMock(spec=LightningModel)
+        mock_data = MagicMock(spec=DataModule)
+        mock_engine_init = mocker.patch("getitune.backend.lightning.engine.LightningEngine.__init__", return_value=None)
 
-        # test OTXEngine creation with OTXModel
+        # test LightningEngine creation with LightningModel
         engine_instance = create_engine(mock_model, mock_data)
-        assert isinstance(engine_instance, OTXEngine)
+        assert isinstance(engine_instance, LightningEngine)
         mock_engine_init.assert_called_once_with(model=mock_model, data=mock_data)
 
         # test with additional kwargs
         engine_instance = create_engine(mock_model, mock_data, work_dir="path/to/workdir", device="CPU")
-        assert isinstance(engine_instance, OTXEngine)
+        assert isinstance(engine_instance, LightningEngine)
         mock_engine_init.assert_called_with(
             model=mock_model,
             data=mock_data,
@@ -72,7 +72,7 @@ class TestCreateEngine:
         """Test create_engine for OpenVINO Engine."""
         # tests OpenVINO Engine creation with OVModel
         mock_model = MagicMock(spec=OVModel)
-        mock_data = MagicMock(spec=OTXDataModule)
+        mock_data = MagicMock(spec=DataModule)
         mock_engine_init = mocker.patch("getitune.backend.openvino.engine.OVEngine.__init__", return_value=None)
         engine_instance = create_engine(mock_model, mock_data)
         assert isinstance(engine_instance, OVEngine)

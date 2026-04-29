@@ -3,5 +3,14 @@
     "identifier": "default",
     "description": "enables the default permissions",
     "windows": ["main"],
-    "permissions": ["core:default", "core:window:allow-on-close-requested"]
+    "permissions": [
+        "core:default",
+        {
+            "identifier": "opener:allow-open-url",
+            "allow": [
+                { "url": "https://www.intel.com/*" },
+                { "url": "https://github.com/*" }
+            ]
+        }
+    ]
 }

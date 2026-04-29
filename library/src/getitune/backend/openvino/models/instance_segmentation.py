@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for instance segmentation model entity used in OTX."""
+"""Class definition for instance segmentation model entity used in getitune."""
 
 from __future__ import annotations
 
@@ -12,12 +12,12 @@ from model_api.tilers import InstanceSegmentationTiler
 from torchvision import tv_tensors
 
 from getitune.backend.openvino.models.base import OVModel
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.data.utils.structures.mask.mask_util import encode_rle
 from getitune.metrics import MetricInput
 from getitune.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 from getitune.types.label import LabelInfo
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
@@ -32,7 +32,7 @@ class OVInstanceSegmentationModel(OVModel):
     """Instance segmentation model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository
-    and create the OTX detection model compatible for OTX testing pipeline.
+    and create the getitune detection model compatible for getitune testing pipeline.
     """
 
     def __init__(
@@ -67,7 +67,7 @@ class OVInstanceSegmentationModel(OVModel):
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
-        self._task = OTXTaskType.INSTANCE_SEGMENTATION
+        self._task = TaskType.INSTANCE_SEGMENTATION
 
     def _setup_tiler(self) -> None:
         """Set up the tiler for tiled inference.
@@ -98,7 +98,7 @@ class OVInstanceSegmentationModel(OVModel):
         else:
             msg = (
                 "Cannot get best_confidence_threshold from OpenVINO IR's rt_info. "
-                "Please check whether this model is trained by OTX or not. "
+                "Please check whether this model is trained by getitune or not. "
                 "Without this information, it can produce a wrong F1 metric score. "
                 "At this time, it will be set as the default value = None."
             )
@@ -108,16 +108,16 @@ class OVInstanceSegmentationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[InstanceSegmentationResult],
-        inputs: OTXSampleBatch,
-    ) -> OTXPredictionBatch:
-        """Customize the model outputs for OTX compatibility.
+        inputs: SampleBatch,
+    ) -> PredictionBatch:
+        """Customize the model outputs for getitune compatibility.
 
         Args:
             outputs (list[InstanceSegmentationResult]): Model outputs.
-            inputs (OTXSampleBatch): Input data batch.
+            inputs (SampleBatch): Input data batch.
 
         Returns:
-            OTXPredictionBatch: Customized predictions batch.
+            PredictionBatch: Customized predictions batch.
         """
         bboxes = []
         scores = []
@@ -146,7 +146,7 @@ class OVInstanceSegmentationModel(OVModel):
                 predicted_s_maps.append(image_map)
 
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return OTXPredictionBatch(
+            return PredictionBatch(
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
@@ -157,7 +157,7 @@ class OVInstanceSegmentationModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return OTXPredictionBatch(
+        return PredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
@@ -168,8 +168,8 @@ class OVInstanceSegmentationModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredictionBatch,  # type: ignore[override]
-        inputs: OTXSampleBatch,  # type: ignore[override]
+        preds: PredictionBatch,  # type: ignore[override]
+        inputs: SampleBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
@@ -177,8 +177,8 @@ class OVInstanceSegmentationModel(OVModel):
         and caches the ground truth for the current batch.
 
         Args:
-            preds (OTXPredictionBatch): Current batch predictions.
-            inputs (OTXSampleBatch): Current batch ground-truth inputs.
+            preds (PredictionBatch): Current batch predictions.
+            inputs (SampleBatch): Current batch ground-truth inputs.
 
         Returns:
             MetricInput: Dictionary containing predictions and ground truth.
@@ -238,7 +238,7 @@ class OVInstanceSegmentationModel(OVModel):
         if ov_model.has_rt_info(["model_info", "label_info"]):
             serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
             ir_label_info = LabelInfo.from_json(serialized)
-            if ir_label_info.label_names[0] == "otx_empty_lbl":
+            if ir_label_info.label_names[0] == "getitune_empty_lbl":
                 ir_label_info.label_names.pop(0)
                 ir_label_info.label_ids.pop(0)
                 ir_label_info.label_groups[0].pop(0)

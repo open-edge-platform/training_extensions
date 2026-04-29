@@ -12,8 +12,7 @@ import torch
 from torch.utils.data import Sampler
 
 if TYPE_CHECKING:
-    from getitune.data.dataset.base import OTXDataset
-    from getitune.data.dataset.base import OTXDataset as OTXDatasetNew
+    from getitune.data.dataset.base import VisionDataset
 
 
 class BalancedSampler(Sampler):
@@ -25,7 +24,7 @@ class BalancedSampler(Sampler):
     that all samples in the tail class are selected more than once with probability 0.999
 
     Args:
-        dataset (OTXDataset): A built-up dataset
+        dataset (VisionDataset): A built-up dataset
         efficient_mode (bool): Flag about using efficient mode
         num_replicas (int, optional): Number of processes participating in
             distributed training. By default, :attr:`world_size` is retrieved from the
@@ -42,7 +41,7 @@ class BalancedSampler(Sampler):
 
     def __init__(
         self,
-        dataset: OTXDataset | OTXDatasetNew,
+        dataset: VisionDataset | VisionDataset,
         efficient_mode: bool = False,
         num_replicas: int = 1,
         rank: int = 0,

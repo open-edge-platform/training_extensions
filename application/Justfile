@@ -4,7 +4,7 @@ import "recipes.justfile"
 # -------------------------------------------------------------------------------------------------
 # Build variables
 # -------------------------------------------------------------------------------------------------
-docker-build-context := shell("git -C " + justfile_directory() + " rev-parse --show-toplevel")
+docker-build-context := justfile_directory() / ".."
 docker-build-args := "--build-arg http_proxy --build-arg https_proxy --build-arg no_proxy --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY"
 application-name := "geti"
 
@@ -46,6 +46,7 @@ build-image accelerator="cpu" tag="latest": install-uv
         {{ docker-build-args }} \
         {{ docker-build-context }} \
         -f "{{ justfile_directory() }}/docker/Dockerfile" \
+        --ulimit nofile=1048576:1048576 \
         --target "${IMAGE}" \
         ${TAG_ARGS} \
         ${CACHE_FROM_ARGS} \
@@ -68,9 +69,11 @@ build-image accelerator="cpu" tag="latest": install-uv
 [arg("coturn_host", long="coturn-host", help="Coturn server listening host (default: server's public IP)")]
 [arg("coturn_port", long="coturn-port", help="Coturn server listening port (default: 443)")]
 [arg("stun_server", long="stun", help="STUN server URL to use for WebRTC")]
-run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-name="" detach="false" remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="":
+[arg("gpu-slots", long="gpu-slots", help="Number of GPU slots available for model tuning (default: 1)")]
+run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-name="" detach="false" remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="" gpu-slots="1":
     #!/usr/bin/env bash
     set -euo pipefail
+    shopt -s nullglob
 
     IMAGE_NAME="{{ application-name }}-{{ accelerator }}:{{ tag }}"
     if [[ -n "{{ container-name }}" ]]; then
@@ -211,6 +214,7 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-na
         --publish {{ port }}:{{ port }} \
         --env HOST={{ host }} \
         --env PORT={{ port }} \
+        --env GPU_SLOTS={{ gpu-slots }} \
         --env WEBRTC_ADVERTISE_IP="${HOST_IP}" \
         $COTURN_ENV \
         $STUN_ENV \
@@ -234,3 +238,47 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-na
 # Remove persisted data and logs volumes
 clean-volumes:
     docker volume rm {{ data-volume }} {{ logs-volume }} || true
+
+# Build the macOS .app distributable.
+#
+# Runs `tauri build` and then patches the bundle layout: the PyInstaller
+# sidecar and its `_internal/` directory are moved from `Contents/MacOS/` and
+# `Contents/Resources/` respectively into `Contents/MacOS/backend/`. Without
+# this, PyInstaller's bootloader detects the `.app` bundle path and switches
+# to "macOS bundle" mode, looking for shared libraries under
+# `Contents/Frameworks/` (which Tauri doesn't populate) instead of the
+# standalone `_internal/` layout it actually shipped — the sidecar then dies
+# on launch with `Failed to load Python shared library 'libpython*.dylib'`.
+# Putting the sidecar one directory deeper avoids the bundle detection.
+#
+# The Rust shell handles either layout — see `locate_backend()` in
+# `ui/src-tauri/src/backend.rs`.
+[macos]
+tauri-build:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd ui && npx tauri build
+    APP="src-tauri/target/release/bundle/macos/Geti.app"
+    if [[ ! -d "$APP" ]]; then
+        echo "Expected bundle not found at $APP" >&2
+        exit 1
+    fi
+    BACKEND_DIR="$APP/Contents/MacOS/backend"
+    mkdir -p "$BACKEND_DIR"
+    if [[ -f "$APP/Contents/MacOS/geti-backend" ]]; then
+        echo "▶ Moving sidecar into $BACKEND_DIR"
+        mv "$APP/Contents/MacOS/geti-backend" "$BACKEND_DIR/geti-backend"
+    fi
+    if [[ -d "$APP/Contents/Resources/_internal" ]]; then
+        echo "▶ Moving _internal into $BACKEND_DIR"
+        mv "$APP/Contents/Resources/_internal" "$BACKEND_DIR/_internal"
+    fi
+    echo "✅ Bundle ready at $APP"
+
+# `tauri build` on non-macOS platforms (Windows .msi/.exe, Linux AppImage/.deb).
+# The flat install layout doesn't trigger PyInstaller's bundle detection, so
+# no post-build patching is needed.
+[linux]
+[windows]
+tauri-build:
+    cd ui && npx tauri build

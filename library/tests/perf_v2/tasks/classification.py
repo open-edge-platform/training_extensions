@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX classification performance benchmark tests."""
+"""getitune classification performance benchmark tests."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from tests.perf_v2.utils import (
     ModelInfo,
 )
 
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 CLASSIFICATION_BENCHMARK_CRITERIA = [
     Criterion(name="training:epoch", summary="max", compare="<", margin=0.1),
@@ -38,12 +38,12 @@ CLASSIFICATION_BENCHMARK_CRITERIA = [
 # ============= Multi-class classification =============
 
 MULTI_CLASS_MODEL_TEST_CASES = [
-    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="efficientnet_b0", category="speed"),
-    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="efficientnet_v2", category="balance"),
-    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="mobilenet_v3_large", category="accuracy"),
-    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="deit_tiny", category="other"),
-    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="dino_v2", category="other"),
-    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="efficientnet_b3", category="other"),
+    ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="efficientnet_b0", category="speed"),
+    ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="efficientnet_v2", category="balance"),
+    ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="mobilenet_v3_large", category="accuracy"),
+    ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="vit_tiny", category="other"),
+    ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="dino_v2", category="other"),
+    ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="efficientnet_b3", category="other"),
 ]
 
 MULTI_CLASS_DATASET_TEST_CASES = [
@@ -81,10 +81,10 @@ MULTI_CLASS_DATASET_TEST_CASES = [
 
 # ============= Multi-label classification =============
 MULTI_LABEL_MODEL_TEST_CASES = [
-    ModelInfo(task=OTXTaskType.MULTI_LABEL_CLS.value, name="efficientnet_b0", category="speed"),
-    ModelInfo(task=OTXTaskType.MULTI_LABEL_CLS.value, name="efficientnet_v2", category="balance"),
-    ModelInfo(task=OTXTaskType.MULTI_LABEL_CLS.value, name="mobilenet_v3_large", category="accuracy"),
-    ModelInfo(task=OTXTaskType.MULTI_LABEL_CLS.value, name="deit_tiny", category="other"),
+    ModelInfo(task=TaskType.MULTI_LABEL_CLS.value, name="efficientnet_b0", category="speed"),
+    ModelInfo(task=TaskType.MULTI_LABEL_CLS.value, name="efficientnet_v2", category="balance"),
+    ModelInfo(task=TaskType.MULTI_LABEL_CLS.value, name="mobilenet_v3_large", category="accuracy"),
+    ModelInfo(task=TaskType.MULTI_LABEL_CLS.value, name="vit_tiny", category="other"),
 ]
 
 MULTI_LABEL_DATASET_TEST_CASES = [
@@ -115,10 +115,10 @@ MULTI_LABEL_DATASET_TEST_CASES = [
 
 
 H_LABEL_CLS_MODEL_TEST_CASES = [
-    ModelInfo(task=OTXTaskType.H_LABEL_CLS.value, name="efficientnet_b0", category="speed"),
-    ModelInfo(task=OTXTaskType.H_LABEL_CLS.value, name="efficientnet_v2", category="balance"),
-    ModelInfo(task=OTXTaskType.H_LABEL_CLS.value, name="mobilenet_v3_large", category="accuracy"),
-    ModelInfo(task=OTXTaskType.H_LABEL_CLS.value, name="deit_tiny", category="other"),
+    ModelInfo(task=TaskType.H_LABEL_CLS.value, name="efficientnet_b0", category="speed"),
+    ModelInfo(task=TaskType.H_LABEL_CLS.value, name="efficientnet_v2", category="balance"),
+    ModelInfo(task=TaskType.H_LABEL_CLS.value, name="mobilenet_v3_large", category="accuracy"),
+    ModelInfo(task=TaskType.H_LABEL_CLS.value, name="vit_tiny", category="other"),
 ]
 
 H_LABEL_CLS_DATASET_TEST_CASES = [

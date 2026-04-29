@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for base model entity used in OTX."""
+"""Class definition for base model entity used in getitune."""
 
 from __future__ import annotations
 
@@ -23,10 +23,10 @@ from torch import Tensor
 from getitune.data.entity.base import (
     ImageInfo,
 )
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.metrics import NullMetricCallable
 from getitune.types.label import LabelInfo
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 from .utils import get_default_num_async_infer_requests
 
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from model_api.models.result import Result
     from torchmetrics import Metric, MetricCollection
 
-    from getitune.data.module import OTXDataModule
+    from getitune.data.module import DataModule
     from getitune.metrics import MetricCallable, MetricInput
     from getitune.types import PathLike
 
@@ -48,7 +48,7 @@ class _FP32OpenvinoAdapter(OpenvinoAdapter):
     """OpenvinoAdapter that forces float32 input tensors.
 
     Sets ``dtype=float`` so ModelAPI builds an f32 input tensor matching
-    the 0-1 normalisation scale used by new OTX exports.  Raises
+    the 0-1 normalisation scale used by new getitune exports.  Raises
     ``ValueError`` if the IR still stores mean/scale in the 0-255 range.
     """
 
@@ -66,7 +66,7 @@ class _FP32OpenvinoAdapter(OpenvinoAdapter):
                 "uint8 (0-255) scale, but _FP32OpenvinoAdapter expects float32 "
                 "[0, 1] inputs with values in 0-1 scale "
                 "(e.g. mean=0.485 0.456 0.406, std=0.229 0.224 0.225). "
-                "Re-export the model with the current OTX version."
+                "Re-export the model with the current getitune version."
             )
             raise ValueError(msg)
         kwargs["dtype"] = float
@@ -154,7 +154,7 @@ class OVModel:
         self.model = self._create_model()
         self.metric_callable = metric
         self._label_info = self._create_label_info_from_ov_ir()
-        self._task: OTXTaskType | None = None
+        self._task: TaskType | None = None
         tile_enabled = False
         with contextlib.suppress(RuntimeError):
             if isinstance(self.model, Model):
@@ -192,7 +192,7 @@ class OVModel:
 
         Reads ``resize_type`` from the underlying ModelAPI model parameters,
         which is embedded into the IR metadata at export time by
-        ``OTXModelExporter._extend_model_metadata``.  Returns ``False`` when
+        ``ModelExporter._extend_model_metadata``.  Returns ``False`` when
         the attribute is not accessible (e.g. for custom / wrapped models).
         """
         _aspect_ratio_resize_types = ("fit_to_window", "fit_to_window_letterbox")
@@ -241,11 +241,11 @@ class OVModel:
 
         return Model.create_model(model_adapter, model_type=self.model_type, configuration=self.model_api_configuration)
 
-    def _customize_inputs(self, entity: OTXSampleBatch) -> dict[str, Any]:
+    def _customize_inputs(self, entity: SampleBatch) -> dict[str, Any]:
         """Customize the input data for the model.
 
         Args:
-            entity (OTXSampleBatch): Input data batch.
+            entity (SampleBatch): Input data batch.
 
         Returns:
             dict[str, Any]: Customized input data.
@@ -256,31 +256,31 @@ class OVModel:
     def _customize_outputs(
         self,
         outputs: list[Result],
-        inputs: OTXSampleBatch,
-    ) -> OTXPredictionBatch:
-        """Customize the model outputs to OTX format.
+        inputs: SampleBatch,
+    ) -> PredictionBatch:
+        """Customize the model outputs to getitune format.
 
         Args:
             outputs (list[Result]): The model outputs.
-            inputs (OTXSampleBatch): The input batch entity.
+            inputs (SampleBatch): The input batch entity.
 
         Returns:
-            OTXPredictionBatch: The customized prediction batch entity.
+            PredictionBatch: The customized prediction batch entity.
         """
-        return OTXPredictionBatch(
+        return PredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
         )
 
-    def forward(self, inputs: OTXSampleBatch, async_inference: bool = True) -> OTXPredictionBatch:
+    def forward(self, inputs: SampleBatch, async_inference: bool = True) -> PredictionBatch:
         """Perform forward pass of the model.
 
         Args:
-            inputs (OTXSampleBatch): Input data batch.
+            inputs (SampleBatch): Input data batch.
             async_inference (bool): Whether to use asynchronous inference.
 
         Returns:
-            OTXPredictionBatch: Model predictions.
+            PredictionBatch: Model predictions.
         """
         async_inference = async_inference and self.async_inference
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
@@ -291,7 +291,7 @@ class OVModel:
     def optimize(
         self,
         output_dir: Path,
-        data_module: OTXDataModule,
+        data_module: DataModule,
         ptq_config: dict[str, Any] | None = None,
         optimized_model_name: str = "optimized_model",
     ) -> Path:
@@ -299,7 +299,7 @@ class OVModel:
 
         Args:
             output_dir (Path): Directory to save the optimized model.
-            data_module (OTXDataModule): Data module for training data.
+            data_module (DataModule): Data module for training data.
             ptq_config (dict[str, Any] | None): PTQ configuration.
             optimized_model_name (str): Name of the optimized model.
 
@@ -359,7 +359,7 @@ class OVModel:
         return output_model_path
 
     def _create_validation_fn(
-        self, data_module: OTXDataModule
+        self, data_module: DataModule
     ) -> Callable[[openvino.CompiledModel, Any], tuple[float, None]]:
         """Create a validation function for accuracy-aware quantization.
 
@@ -368,7 +368,7 @@ class OVModel:
         ``nncf.quantize_with_accuracy_control``.
 
         Args:
-            data_module (OTXDataModule): Data module providing the validation dataloader.
+            data_module (DataModule): Data module providing the validation dataloader.
 
         Returns:
             Callable: A function ``(compiled_model, validation_dataset) -> (float, None)``
@@ -377,8 +377,8 @@ class OVModel:
 
         def _infer_compiled_model(
             compiled_model: openvino.CompiledModel,
-            inputs: OTXSampleBatch,
-        ) -> OTXPredictionBatch:
+            inputs: SampleBatch,
+        ) -> PredictionBatch:
             """Run inference using the NNCF-provided compiled model.
 
             This replaces ``self.forward`` so that accuracy is measured on the
@@ -389,7 +389,7 @@ class OVModel:
                 inputs: Input data batch.
 
             Returns:
-                OTXPredictionBatch with predictions from the compiled model.
+                PredictionBatch with predictions from the compiled model.
             """
             numpy_inputs = self._customize_inputs(inputs)["inputs"]
             infer_request = compiled_model.create_infer_request()
@@ -444,11 +444,11 @@ class OVModel:
 
         return validation_fn
 
-    def transform_fn(self, data_batch: OTXSampleBatch) -> np.array:
+    def transform_fn(self, data_batch: SampleBatch) -> np.array:
         """Transform data for PTQ.
 
         Args:
-            data_batch (OTXSampleBatch): Input data batch.
+            data_batch (SampleBatch): Input data batch.
 
         Returns:
             np.array: Transformed data.
@@ -498,14 +498,14 @@ class OVModel:
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredictionBatch,
-        inputs: OTXSampleBatch,
+        preds: PredictionBatch,
+        inputs: SampleBatch,
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
         Args:
-            preds (OTXPredictionBatch): Predicted batch entity.
-            inputs (OTXSampleBatch): Input batch entity.
+            preds (PredictionBatch): Predicted batch entity.
+            inputs (SampleBatch): Input batch entity.
 
         Returns:
             MetricInput: Dictionary containing predictions and targets.
@@ -568,11 +568,11 @@ class OVModel:
         return self._label_info
 
     @property
-    def task(self) -> OTXTaskType | None:
+    def task(self) -> TaskType | None:
         """Get the task type of the model.
 
         Returns:
-            OTXTaskType | None: Task type.
+            TaskType | None: Task type.
         """
         return self._task
 
@@ -603,22 +603,22 @@ class OVModel:
             logger.warning(msg)
             return LabelInfo(label_names=label_names, label_groups=[label_names], label_ids=[])
 
-        msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by OTX."
+        msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by getitune."
         raise ValueError(msg)
 
-    def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:
+    def get_dummy_input(self, batch_size: int = 1) -> SampleBatch:
         """Generate a dummy input for the model.
 
         Args:
             batch_size (int): Batch size for the dummy input.
 
         Returns:
-            OTXSampleBatch: Dummy input data.
+            SampleBatch: Dummy input data.
         """
         images = torch.stack([torch.rand(3, 224, 224) for _ in range(batch_size)])
         img_shape = (224, 224)
         infos = [ImageInfo(img_idx=i, img_shape=img_shape, ori_shape=img_shape) for i in range(batch_size)]
-        return OTXSampleBatch(images=images, imgs_info=infos)
+        return SampleBatch(images=images, imgs_info=infos)
 
     def __call__(self, *args, **kwds):
         """Call the model for inference.

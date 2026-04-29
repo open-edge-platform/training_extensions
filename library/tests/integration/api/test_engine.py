@@ -1,14 +1,14 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Integration test for the core OTX engine workflow.
+"""Integration test for the core getitune engine workflow.
 
 This single test module replaces the old ``test_engine_api.py`` and
 ``test_geti_interaction.py``.  It is parametrised to cover one
 (small / fast) model architecture per task and exercises the typical
-end-to-end OTX workflow:
+end-to-end getitune workflow:
 
-1. Instantiate ``OTXEngine`` from a recipe config + data root.
+1. Instantiate ``LightningEngine`` from a recipe config + data root.
 2. Train for 1 epoch.
 3. Evaluate the model (``engine.test``).
 4. Get predictions (``engine.predict``).
@@ -29,14 +29,14 @@ import numpy as np
 import pytest
 from model_api.models import Model
 
-from getitune.backend.native.engine import OTXEngine
-from getitune.backend.native.models.base import OTXModel
+from getitune.backend.lightning.engine import LightningEngine
+from getitune.backend.lightning.models.base import LightningModel
 from getitune.backend.openvino.engine import OVEngine
-from getitune.data.module import OTXDataModule
+from getitune.data.module import DataModule
 from getitune.engine import create_engine
-from getitune.types.export import OTXExportFormatType
-from getitune.types.precision import OTXPrecisionType
-from getitune.types.task import OTXTaskType
+from getitune.types.export import ExportFormat
+from getitune.types.precision import Precision
+from getitune.types.task import TaskType
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -47,7 +47,7 @@ ASSETS_ROOT = Path(__file__).resolve().parents[2] / "assets"
 class _TaskSpec(NamedTuple):
     """Light-weight descriptor for a (task, recipe, dataset) triple."""
 
-    task: OTXTaskType
+    task: TaskType
     recipe_name: str  # e.g. "mobilenet_v3_large"
     dataset_dir: str  # relative to ASSETS_ROOT
 
@@ -55,42 +55,42 @@ class _TaskSpec(NamedTuple):
 # One *small* model per task - chosen for fast training.
 _TASK_SPECS: list[_TaskSpec] = [
     _TaskSpec(
-        task=OTXTaskType.MULTI_CLASS_CLS,
+        task=TaskType.MULTI_CLASS_CLS,
         recipe_name="mobilenet_v3_large",
         dataset_dir="classification_cifar10",
     ),
     _TaskSpec(
-        task=OTXTaskType.MULTI_LABEL_CLS,
+        task=TaskType.MULTI_LABEL_CLS,
         recipe_name="mobilenet_v3_large",
         dataset_dir="multilabel_classification_coco",
     ),
     _TaskSpec(
-        task=OTXTaskType.H_LABEL_CLS,
+        task=TaskType.H_LABEL_CLS,
         recipe_name="mobilenet_v3_large",
         dataset_dir="hierarchical_classification_cifar100",
     ),
     _TaskSpec(
-        task=OTXTaskType.DETECTION,
+        task=TaskType.DETECTION,
         recipe_name="ssd_mobilenetv2",
         dataset_dir="detection_coco",
     ),
     _TaskSpec(
-        task=OTXTaskType.INSTANCE_SEGMENTATION,
+        task=TaskType.INSTANCE_SEGMENTATION,
         recipe_name="rtmdet_inst_tiny",
         dataset_dir="instance_segmentation_coco",
     ),
     _TaskSpec(
-        task=OTXTaskType.SEMANTIC_SEGMENTATION,
+        task=TaskType.SEMANTIC_SEGMENTATION,
         recipe_name="litehrnet_s",
         dataset_dir="segmentation_pets",
     ),
     _TaskSpec(
-        task=OTXTaskType.KEYPOINT_DETECTION,
+        task=TaskType.KEYPOINT_DETECTION,
         recipe_name="rtmpose_tiny",
         dataset_dir="keypoint_detection_coco",
     ),
     _TaskSpec(
-        task=OTXTaskType.MULTI_CLASS_CLS,
+        task=TaskType.MULTI_CLASS_CLS,
         recipe_name="efficientnet_b0",
         dataset_dir="classification_dataset_16bit",
     ),
@@ -103,14 +103,14 @@ def _resolve_recipe(spec: _TaskSpec) -> str:
 
     # Map task enum to the recipe subdirectory
     task_to_subdir = {
-        OTXTaskType.MULTI_CLASS_CLS: "classification/multi_class_cls",
-        OTXTaskType.MULTI_LABEL_CLS: "classification/multi_label_cls",
-        OTXTaskType.H_LABEL_CLS: "classification/h_label_cls",
-        OTXTaskType.DETECTION: "detection",
-        OTXTaskType.ROTATED_DETECTION: "rotated_detection",
-        OTXTaskType.INSTANCE_SEGMENTATION: "instance_segmentation",
-        OTXTaskType.SEMANTIC_SEGMENTATION: "semantic_segmentation",
-        OTXTaskType.KEYPOINT_DETECTION: "keypoint_detection",
+        TaskType.MULTI_CLASS_CLS: "classification/multi_class_cls",
+        TaskType.MULTI_LABEL_CLS: "classification/multi_label_cls",
+        TaskType.H_LABEL_CLS: "classification/h_label_cls",
+        TaskType.DETECTION: "detection",
+        TaskType.ROTATED_DETECTION: "rotated_detection",
+        TaskType.INSTANCE_SEGMENTATION: "instance_segmentation",
+        TaskType.SEMANTIC_SEGMENTATION: "semantic_segmentation",
+        TaskType.KEYPOINT_DETECTION: "keypoint_detection",
     }
     subdir = task_to_subdir[spec.task]
     recipe_path = RECIPE_PATH / subdir / f"{spec.recipe_name}.yaml"
@@ -132,7 +132,7 @@ def _id_fn(spec: _TaskSpec) -> str:
 # in ``conftest.py``).  When ``--task all`` (the default) every spec is kept;
 # otherwise only specs whose task appears in the requested list are executed.
 _FILTERED_TASK_SPECS: list[_TaskSpec] = [
-    spec for spec in _TASK_SPECS if spec.task in getattr(pytest, "TASK_LIST", list(OTXTaskType))
+    spec for spec in _TASK_SPECS if spec.task in getattr(pytest, "TASK_LIST", list(TaskType))
 ]
 
 
@@ -160,14 +160,14 @@ def test_engine_workflow(
     work_dir = tmp_path / spec.task.value
 
     # ---- 1. Instantiate engine ------------------------------------------
-    engine = OTXEngine.from_config(
+    engine = LightningEngine.from_config(
         config_path=recipe,
         data_root=str(data_root),
         work_dir=str(work_dir),
         device=fxt_accelerator,
     )
-    assert isinstance(engine.model, OTXModel)
-    assert isinstance(engine.datamodule, OTXDataModule)
+    assert isinstance(engine.model, LightningModel)
+    assert isinstance(engine.datamodule, DataModule)
 
     # ---- 2. Train for a minimal number of epochs -----------------------
     train_metrics = engine.train(max_epochs=1, precision="32")
@@ -185,8 +185,8 @@ def test_engine_workflow(
 
     # ---- 5. Export to ONNX & predict -----------------------------------
     onnx_path = engine.export(
-        export_format=OTXExportFormatType.ONNX,
-        export_precision=OTXPrecisionType.FP32,
+        export_format=ExportFormat.ONNX,
+        export_precision=Precision.FP32,
     )
     assert onnx_path.exists()
     assert onnx_path.suffix == ".onnx"
@@ -203,8 +203,8 @@ def test_engine_workflow(
 
     # ---- 6. Export to OpenVINO IR & predict with OVEngine ---------------
     ov_xml_path = engine.export(
-        export_format=OTXExportFormatType.OPENVINO,
-        export_precision=OTXPrecisionType.FP32,
+        export_format=ExportFormat.OPENVINO,
+        export_precision=Precision.FP32,
     )
     assert ov_xml_path.exists()
     assert ov_xml_path.suffix == ".xml"

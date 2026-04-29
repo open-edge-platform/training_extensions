@@ -7,8 +7,8 @@ import numpy as np
 import pytest
 from openvino import Core
 
-from getitune.backend.native.engine import OTXEngine
-from getitune.data.entity.sample import OTXPredictionBatch
+from getitune.backend.lightning.engine import LightningEngine
+from getitune.data.entity.sample import PredictionBatch
 from getitune.engine import create_engine
 
 RECIPE_LIST_ALL = pytest.RECIPE_LIST
@@ -37,7 +37,7 @@ def test_forward_explain(
     Test forward == forward_explain.
 
     Args:
-        recipe (str): The recipe to use for predicting. (eg. 'classification/otx_mobilenet_v3_large.yaml')
+        recipe (str): The recipe to use for predicting. (eg. 'classification/mobilenet_v3_large.yaml')
         fxt_target_dataset_per_task (dict): A dictionary mapping tasks to target datasets.
         fxt_accelerator (str): The accelerator used for predict.
 
@@ -52,18 +52,18 @@ def test_forward_explain(
     if any(sub in model_name for sub in UNSUPPORTED_MODEL_SUBSTRS):
         pytest.skip(f"{model_name} is not supported.")
 
-    engine = OTXEngine.from_config(
+    engine = LightningEngine.from_config(
         config_path=recipe,
         data_root=fxt_target_dataset_per_task[task],
         device=fxt_accelerator,
     )
 
     predict_result = engine.predict()
-    assert isinstance(predict_result[0], OTXPredictionBatch)
+    assert isinstance(predict_result[0], PredictionBatch)
     assert predict_result[0].saliency_map is None or len(predict_result[0].saliency_map) == 0
 
     predict_result_explain = engine.predict(explain=True)
-    assert isinstance(predict_result_explain[0], OTXPredictionBatch)
+    assert isinstance(predict_result_explain[0], PredictionBatch)
     assert predict_result_explain[0].saliency_map is not None
     assert len(predict_result_explain[0].saliency_map) > 0
 
@@ -87,7 +87,7 @@ def test_predict_with_explain(
     Test XAI.
 
     Args:
-        recipe (str): The recipe to use for predicting. (eg. 'classification/otx_mobilenet_v3_large.yaml')
+        recipe (str): The recipe to use for predicting. (eg. 'classification/mobilenet_v3_large.yaml')
         tmp_path (Path): The temporary path for storing the outputs.
         fxt_target_dataset_per_task (dict): A dictionary mapping tasks to target datasets.
         fxt_accelerator (str): The accelerator used for predict.
@@ -102,8 +102,8 @@ def test_predict_with_explain(
     if any(sub in model_name for sub in UNSUPPORTED_MODEL_SUBSTRS):
         pytest.skip(f"{model_name} is not supported.")
 
-    tmp_path = tmp_path / f"otx_xai_{model_name}"
-    engine = OTXEngine.from_config(
+    tmp_path = tmp_path / f"xai_{model_name}"
+    engine = LightningEngine.from_config(
         config_path=recipe,
         data_root=fxt_target_dataset_per_task[task],
         device=fxt_accelerator,
@@ -112,7 +112,7 @@ def test_predict_with_explain(
 
     # Predict with explain torch & process maps
     predict_result_explain_torch = engine.predict(explain=True)
-    assert isinstance(predict_result_explain_torch[0], OTXPredictionBatch)
+    assert isinstance(predict_result_explain_torch[0], PredictionBatch)
     assert predict_result_explain_torch[0].saliency_map is not None
     assert len(predict_result_explain_torch[0].saliency_map) > 0
     assert predict_result_explain_torch[0].saliency_map is not None
@@ -143,7 +143,7 @@ def test_predict_with_explain(
     # Predict OV model with xai & process maps
     ov_engine = create_engine(model=exported_model_path, data=engine.datamodule, work_dir=engine.work_dir)
     predict_result_explain_ov = ov_engine.predict(checkpoint=exported_model_path, explain=True)
-    assert isinstance(predict_result_explain_ov[0], OTXPredictionBatch)
+    assert isinstance(predict_result_explain_ov[0], PredictionBatch)
     assert predict_result_explain_ov[0].saliency_map is not None
     assert len(predict_result_explain_ov[0].saliency_map) > 0
     assert predict_result_explain_ov[0].saliency_map is not None
@@ -164,7 +164,7 @@ def test_predict_with_explain(
 
     assert len(maps_torch) == len(maps_ov)
 
-    if "efficientnet_b3" in recipe or "efficientnet_b0" in recipe or "deit_tiny" in recipe:
+    if "efficientnet_b3" in recipe or "efficientnet_b0" in recipe or "vit_tiny" in recipe:
         # There is the issue with different predict results for Pytorch and OpenVINO tasks.
         # Probably because of the different preprocessed images passed as an input. Skip the rest of the checks for now.
         # Tickets: 142087, 141639

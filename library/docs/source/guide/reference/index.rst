@@ -8,4 +8,4 @@ API reference
     :nosignatures:
     :toctree: _autosummary
 
-    otx
+    getitune

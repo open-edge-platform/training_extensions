@@ -64,14 +64,24 @@ export const useMediaUpload = () => {
         };
     };
 
-    const invalidateMediaQuery = () =>
-        queryClient.invalidateQueries({
-            queryKey: getQueryKey([
-                'get',
-                '/api/projects/{project_id}/dataset/media',
-                { params: { path: { project_id: projectId } } },
-            ]),
-        });
+    const invalidateMediaQuery = () => {
+        return Promise.all([
+            queryClient.invalidateQueries({
+                queryKey: getQueryKey([
+                    'get',
+                    '/api/projects/{project_id}/dataset/media',
+                    { params: { path: { project_id: projectId } } },
+                ]),
+            }),
+            queryClient.invalidateQueries({
+                queryKey: getQueryKey([
+                    'get',
+                    '/api/projects/{project_id}/dataset/statistics',
+                    { params: { path: { project_id: projectId } } },
+                ]),
+            }),
+        ]);
+    };
 
     // Processes files with batched concurrency, returning all successfully uploaded media items
     const processUploadBatch = async (files: File[]): Promise<MediaDTO[]> => {

@@ -1,6 +1,11 @@
 Releases
 ########
 
+.. note::
+
+    Releases prior to v3.0 were published under the name **OTX** (OpenVINO Training Extensions).
+    The package has been renamed to **getitune** (Geti Library).
+
 .. toctree::
   :maxdepth: 1
 
@@ -245,7 +250,7 @@ New features
 - Add torchvision.MaskRCNN
 - Add Semi-SL for Multi-class Classification (EfficientNet-B0)
 - Decoupling mmaction for action classification (MoviNet, X3D)
-- Add Semi-SL Algorithms for mv3-large, effnet-v2, deit-tiny, dino-v2
+- Add Semi-SL Algorithms for mv3-large, effnet-v2, vit-tiny, dino-v2
 - RTMDet-tiny enablement for detection task (export/optimize)
 - Enable ruff & ruff-format into otx/algo/classification/backbones
 - Add TV MaskRCNN Tile Recipe

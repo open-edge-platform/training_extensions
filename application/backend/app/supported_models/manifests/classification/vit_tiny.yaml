@@ -1,0 +1,20 @@
+id: image-classification-vit-tiny
+name: ViT-Tiny
+
+pretrained_weights:
+  url: https://storage.geti.intel.com/weights/deit-tiny_pt-4xb256_in1k_20220218-13b382a0.pth
+  mirror_url: https://download.openmmlab.com/mmclassification/v0/deit/deit-tiny_pt-4xb256_in1k_20220218-13b382a0.pth
+  sha_sum: 13b382a0e7b4a79b8bcf7c908b9cae5eb922b8bb1d40810998d01a87b075e6b6
+
+description: "ViT-Tiny (Vision Transformer) is a lightweight transformer-based model for image classification. It uses a standard ViT architecture with Google Brain pretrained weights (ImageNet-21k pre-training, ImageNet-1k fine-tuning). ViT-Tiny is the smallest variant, optimized for speed and efficiency while maintaining competitive performance on image classification tasks."
+stats:
+  gigaflops: 1.26
+  trainable_parameters: 5.2
+  benchmark_metrics:
+    imagenet_top1_accuracy: 72.2
+    imagenet_top5_accuracy: 91.1
+
+hyperparameters:
+  training:
+    learning_rate: 0.0001
+    weight_decay: 0.05

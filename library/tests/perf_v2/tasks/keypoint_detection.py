@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""OTX keypoint detection perfomance benchmark tests."""
+"""getitune keypoint detection perfomance benchmark tests."""
 
 from __future__ import annotations
 
@@ -12,9 +12,9 @@ from tests.perf_v2.utils import (
     ModelInfo,
 )
 
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
-TASK_TYPE = OTXTaskType.KEYPOINT_DETECTION
+TASK_TYPE = TaskType.KEYPOINT_DETECTION
 
 
 MODEL_TEST_CASES = [

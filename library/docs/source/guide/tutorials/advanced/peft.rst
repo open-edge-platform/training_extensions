@@ -4,13 +4,13 @@ PEFT: Parameter-Efficient Fine-Tuning (LoRA & DoRA) for Classification
 .. note::
 
     PEFT (LoRA, DoRA) is only supported for VisionTransformer models.
-    See the method in otx.backend.native.models.classification.utils.peft
+    See the method in getitune.backend.lightning.models.classification.utils.peft
 
 
 Overview
 --------
 
-OpenVINO™ Training Extensions supports Parameter-Efficient Fine-Tuning (PEFT) for Transformer classifiers via Low Rank Adaptation (LoRA) and Weight-Decomposed Low-Rank Adaptation (DoRA).
+Geti Library supports Parameter-Efficient Fine-Tuning (PEFT) for Transformer classifiers via Low Rank Adaptation (LoRA) and Weight-Decomposed Low-Rank Adaptation (DoRA).
 These methods adapt pre-trained models with a small number of additional parameters instead of fully fine-tuning all weights.
 
 Benefits
@@ -26,7 +26,7 @@ Supported
 - **Backbones**: Vision Transformer family (e.g., DINOv2)
 - **Tasks**: Multiclass, Multi-label, Hierarchical Label Classification
 
-How to Use PEFT in OpenVINO™ Training Extensions
+How to Use PEFT in Geti Library
 --------------------------------------------------
 
 .. tab-set::
@@ -35,16 +35,16 @@ How to Use PEFT in OpenVINO™ Training Extensions
 
       .. code-block:: python
 
-         from training_extensions.src.otx.backend.native.models.classification.multiclass_models.vit import VisionTransformerMulticlassCls
+         from getitune.backend.lightning.models.classification.multiclass_models.vit import VisionTransformerMulticlassCls
 
          # Choose one: "lora" or "dora"
-         model = VisionTransformerForMulticlassCls(..., peft="lora")
+         model = VisionTransformerMulticlassCls(..., peft="lora")
 
    .. tab-item:: CLI
 
       .. code-block:: bash
 
-         (otx) $ otx train ... --model.peft dora
+         (getitune) $ getitune train ... --model.peft dora
 
    .. tab-item:: YAML
 
@@ -52,7 +52,7 @@ How to Use PEFT in OpenVINO™ Training Extensions
 
          task: MULTI_CLASS_CLS
          model:
-            class_path: otx.backend.native.models.classification.multiclass_models.vit.VisionTransformerMulticlassCls
+            class_path: getitune.backend.lightning.models.classification.multiclass_models.vit.VisionTransformerMulticlassCls
             init_args:
                label_info: 1000
                model_name: "dinov2-small"
@@ -79,7 +79,7 @@ How to Use Linear Fine-Tuning
 
       .. code-block:: python
 
-         from training_extensions.src.otx.backend.native.models.classification.multiclass_models.vit import VisionTransformerMulticlassCls
+         from getitune.backend.lightning.models.classification.multiclass_models.vit import VisionTransformerMulticlassCls
 
          # Linear FT = freeze_backbone=True, no PEFT
          model = VisionTransformerMulticlassCls(
@@ -91,7 +91,7 @@ How to Use Linear Fine-Tuning
 
       .. code-block:: bash
 
-         (otx) $ otx train ... --model.freeze_backbone true
+         (getitune) $ getitune train ... --model.freeze_backbone true
 
    .. tab-item:: YAML
 
@@ -99,7 +99,7 @@ How to Use Linear Fine-Tuning
 
          task: MULTI_CLASS_CLS
          model:
-            class_path: otx.backend.native.models.classification.multiclass_models.vit.VisionTransformerMulticlassCls
+            class_path: getitune.backend.lightning.models.classification.multiclass_models.vit.VisionTransformerMulticlassCls
             init_args:
                label_info: 1000
                model_name: "dinov2-small"

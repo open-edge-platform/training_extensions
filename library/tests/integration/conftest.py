@@ -9,10 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from getitune.backend.native.cli.utils import get_otx_root_path
-from getitune.types.task import OTXTaskType
+from getitune.backend.lightning.cli.utils import get_getitune_root_path
+from getitune.types.task import TaskType
 
-RECIPE_PATH = get_otx_root_path() / "recipe"
+RECIPE_PATH = get_getitune_root_path() / "recipe"
 
 # Recipes selected for category-only integration runs (speed / balance / accuracy).
 # This mirrors the TEMPLATE_ID_MAPPING kept in the application backend
@@ -20,7 +20,7 @@ RECIPE_PATH = get_otx_root_path() / "recipe"
 CATEGORY_RECIPES_PER_TASK: dict[str, list[Path]] = {
     "multi_class_cls": [
         RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",  # speed
-        RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",  # balance
+        RECIPE_PATH / "classification" / "multi_class_cls" / "vit_tiny.yaml",  # balance
         RECIPE_PATH / "classification" / "multi_class_cls" / "dino_v2.yaml",  # accuracy
     ],
     "detection": [
@@ -64,21 +64,21 @@ def find_recipe_folder(base_path: Path, folder_name: str) -> Path:
     raise FileNotFoundError(msg)
 
 
-def get_task_list(task: str) -> list[OTXTaskType]:
+def get_task_list(task: str) -> list[TaskType]:
     if task == "all":
-        tasks = list(OTXTaskType)
+        tasks = list(TaskType)
     elif task == "multi_class_cls":
-        tasks = [OTXTaskType.MULTI_CLASS_CLS]
+        tasks = [TaskType.MULTI_CLASS_CLS]
     elif task == "multi_label_cls":
-        tasks = [OTXTaskType.MULTI_LABEL_CLS]
+        tasks = [TaskType.MULTI_LABEL_CLS]
     elif task == "h_label_cls":
-        tasks = [OTXTaskType.H_LABEL_CLS]
+        tasks = [TaskType.H_LABEL_CLS]
     elif task == "classification":
-        tasks = [OTXTaskType.MULTI_CLASS_CLS, OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
+        tasks = [TaskType.MULTI_CLASS_CLS, TaskType.MULTI_LABEL_CLS, TaskType.H_LABEL_CLS]
     elif task == "keypoint_detection":
-        tasks = [OTXTaskType.KEYPOINT_DETECTION]
+        tasks = [TaskType.KEYPOINT_DETECTION]
     else:
-        tasks = [OTXTaskType(task.upper())]
+        tasks = [TaskType(task.upper())]
     return tasks
 
 
@@ -126,10 +126,10 @@ def pytest_configure(config):
     task = config.getoption("--task")
     run_category_only = config.getoption("--run-category-only")
 
-    # This assumes have OTX installed in environment.
-    otx_module = importlib.import_module("getitune")
+    # This assumes have getitune installed in environment.
+    getitune_module = importlib.import_module("getitune")
     # Modify RECIPE_PATH based on the task
-    recipe_path = Path(inspect.getfile(otx_module)).parent / "recipe"
+    recipe_path = Path(inspect.getfile(getitune_module)).parent / "recipe"
     task_list = get_task_list(task.lower())
     recipe_dir = [find_recipe_folder(recipe_path, task_type.value.lower()) for task_type in task_list]
 
