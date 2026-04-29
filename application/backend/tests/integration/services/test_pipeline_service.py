@@ -488,9 +488,13 @@ class TestPipelineServiceIntegration:
         else:
             assert not db_updated.is_running
 
-    @pytest.mark.parametrize("config", ["sink", "source", "model_revision"])
+    @pytest.mark.parametrize("config", ["source", "model_revision"])
     def test_enable_misconfigured_pipeline(self, config, fxt_project_with_pipeline, fxt_pipeline_service, db_session):
-        """Test enabling a misconfigured pipeline raises error."""
+        """Test enabling a misconfigured pipeline raises error.
+
+        Note: a sink is intentionally NOT required to enable a pipeline. When no sink is configured,
+        predictions are still routed to the WebRTC visualization stream.
+        """
         _, db_pipeline = fxt_project_with_pipeline(is_running=False)
         setattr(db_pipeline, config, None)  # Misconfigure the pipeline
         db_session.flush()
@@ -499,6 +503,19 @@ class TestPipelineServiceIntegration:
             fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": PipelineStatus.RUNNING})
 
         assert not db_session.get(PipelineDB, db_pipeline.project_id).is_running
+
+    def test_enable_pipeline_without_sink(self, fxt_project_with_pipeline, fxt_pipeline_service, db_session):
+        """A pipeline can be enabled even when no sink is configured."""
+        _, db_pipeline = fxt_project_with_pipeline(is_running=False)
+        db_pipeline.sink = None
+        db_pipeline.sink_id = None
+        db_session.flush()
+
+        updated = fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": PipelineStatus.RUNNING})
+
+        assert updated.status == PipelineStatus.RUNNING
+        assert updated.sink_id is None
+        assert db_session.get(PipelineDB, db_pipeline.project_id).is_running
 
     def test_reconfigure_non_existent_pipeline(self, fxt_pipeline_service):
         """Test updating a non-existent pipeline raises error."""

@@ -81,6 +81,14 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
         description="Change the device used for model inference (e.g., 'cpu', 'xpu', 'xpu-1')",
         value={"device": "xpu"},
     ),
+    "disconnect_sink": Example(
+        summary="Disconnect sink",
+        description=(
+            "Clear the configured sink. Predictions will only be routed to the WebRTC visualization "
+            "stream and not forwarded to any external sink."
+        ),
+        value={"sink_id": None},
+    ),
 }
 
 
