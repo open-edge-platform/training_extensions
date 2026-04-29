@@ -248,7 +248,7 @@ describe('ModelVariantTable', () => {
         const model = getMockedModel({
             variants: [
                 getMockedVariant({
-                    format: 'pytorch',
+                    format,
                     precision: 'fp32',
                     quantization_info: null,
                 }),
