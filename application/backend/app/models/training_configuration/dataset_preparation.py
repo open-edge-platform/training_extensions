@@ -16,9 +16,9 @@ class IntensityMappingMode(StrEnum):
     whereas the values correspond to the user-friendly names shown in the UI.
     """
 
-    SCALE_TO_UNIT = "Unit interval scaling"  # (x / max_value)
+    SCALE_TO_UNIT = "Unit interval scaling"  # (x / max_val)
     WINDOW = "Windowing"  # clamp((x - low) / (high - low), 0, 1)
-    RANGE_SCALE = "Range scaling with clipping"  # (clamp(x * factor, min_value, max_value) - min_value) / (max_value - min_value)
+    RANGE_SCALE = "Range scaling with clipping"  # (clamp(x * factor, min_val, max_val) - min_val) / (max_val - min_val)
 
 
 class IntensityMapping(BaseModel):
@@ -37,8 +37,8 @@ class IntensityMapping(BaseModel):
             "[0, max_intensity_value] to [0, 1]. "
             "'Windowing' isolates a specific intensity range, mapping a specific window (specified with center and "
             "width) to [0, 1] and clipping values outside the window. "
-            "'Range scaling with clipping' multiplies pixel values by a scale factor, clips the result to a specified range "
-            "(clip_min_value, clip_max_value) and finally normalizes to [0, 1]."
+            "'Range scaling with clipping' multiplies pixel values by a scale factor, clips the result to a "
+            "specified range (clip_min_value, clip_max_value) and finally normalizes to [0, 1]."
         ),
     )
     max_intensity_value: float = Field(

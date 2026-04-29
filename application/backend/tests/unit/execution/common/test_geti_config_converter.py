@@ -662,7 +662,7 @@ class TestIntensityMappingUpdate:
 
     def test_convert_applies_intensity_mapping_scale_to_unit(self) -> None:
         """scale_to_unit mode should set max_value on all subsets."""
-        otx_cfg = _make_otx_config()
+        otx_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(
             task_level_parameters={
                 "dataset_preparation": {"intensity_mapping": {"mode": "scale_to_unit", "max_intensity_value": 65535.0}}
@@ -680,7 +680,7 @@ class TestIntensityMappingUpdate:
 
     def test_convert_applies_intensity_mapping_window(self) -> None:
         """window mode should set window_center and window_width."""
-        otx_cfg = _make_otx_config()
+        otx_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(
             task_level_parameters={
                 "dataset_preparation": {
@@ -701,7 +701,7 @@ class TestIntensityMappingUpdate:
 
     def test_convert_applies_intensity_mapping_range_scale(self) -> None:
         """range_scale mode should set scale_factor, min_value, and max_value."""
-        otx_cfg = _make_otx_config()
+        otx_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(
             task_level_parameters={
                 "dataset_preparation": {

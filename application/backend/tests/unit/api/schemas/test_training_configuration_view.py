@@ -428,9 +428,9 @@ def fxt_training_configuration_view_json() -> dict:
                                     "'Unit interval scaling' divides by max_intensity_value, thus mapping the range "
                                     "[0, max_intensity_value] to [0, 1]. 'Windowing' isolates a specific intensity "
                                     "range, mapping a specific window (specified with center and width) to [0, 1] and "
-                                    "clipping values outside the window. 'Range scaling with clipping' multiplies pixel values by "
-                                    "a scale factor, clips the result to a specified range (clip_min_value, "
-                                    "clip_max_value) and finally normalizes to [0, 1]."
+                                    "clipping values outside the window. 'Range scaling with clipping' multiplies "
+                                    "pixel values by a scale factor, clips the result to a specified range "
+                                    "(clip_min_value, clip_max_value) and finally normalizes to [0, 1]."
                                 ),
                                 "value": "Windowing",
                                 "default_value": "Unit interval scaling",
@@ -460,8 +460,8 @@ def fxt_training_configuration_view_json() -> dict:
                                 "key": "clip_min_value",
                                 "name": "Clip minimum value",
                                 "description": (
-                                    "Minimum output value after rescaling the image in 'Range scaling with clipping' mode; "
-                                    "pixel values below this threshold are clipped."
+                                    "Minimum output value after rescaling the image in 'Range scaling with clipping' "
+                                    "mode; pixel values below this threshold are clipped."
                                 ),
                                 "value": 0.0,
                                 "default_value": 0.0,
@@ -476,8 +476,8 @@ def fxt_training_configuration_view_json() -> dict:
                                 "key": "clip_max_value",
                                 "name": "Clip maximum value",
                                 "description": (
-                                    "Maximum output value after rescaling the image in 'Range scaling with clipping' mode; "
-                                    "pixel values above this threshold are clipped."
+                                    "Maximum output value after rescaling the image in 'Range scaling with clipping' "
+                                    "mode; pixel values above this threshold are clipped."
                                 ),
                                 "value": 255.0,
                                 "default_value": 255.0,
