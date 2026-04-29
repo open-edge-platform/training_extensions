@@ -130,6 +130,24 @@ describe('ImportTaskSelection', () => {
         expect(await screen.findByRole('button', { name: /Task type/i })).toHaveTextContent(/Select task/i);
     });
 
+    it('does not show recommended message when there is no recommended task type', async () => {
+        renderApp({ format: 'coco', annotationType: 'bounding_box' });
+
+        await screen.findByRole('button', { name: /Task type/i });
+
+        expect(
+            screen.queryByText(/The recommended choice is based on the type of the annotations/i)
+        ).not.toBeInTheDocument();
+    });
+
+    it('shows recommended message when there is a recommended task type', async () => {
+        renderApp({ format: 'geti', taskType: 'detection', annotationType: 'bounding_box' });
+
+        expect(
+            await screen.findByText(/The recommended choice is based on the type of the annotations/i)
+        ).toBeVisible();
+    });
+
     it('shows an error when the project name already exists', async () => {
         renderApp({ format: 'geti', taskType: 'detection', annotationType: 'bounding_box' });
 
