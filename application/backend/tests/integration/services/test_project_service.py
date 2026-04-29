@@ -17,6 +17,7 @@ from app.services.event.event_bus import EventBus
 from app.services.label_service import DuplicateLabelsError
 from app.services.media_service import ImageMetadata, MediaService
 from app.services.project_service import ProjectService
+from app.services.video import VideoService
 
 
 @pytest.fixture
@@ -51,7 +52,7 @@ def fxt_media_service(
     db_session: Session,
 ) -> MediaService:
     """Fixture to create a MediaService instance."""
-    return MediaService(data_dir=fxt_projects_dir.parent, db_session=db_session)
+    return MediaService(data_dir=fxt_projects_dir.parent, video_service=VideoService(), db_session=db_session)
 
 
 @pytest.fixture

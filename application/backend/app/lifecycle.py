@@ -45,6 +45,7 @@ from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.inference import InferenceServer
 from app.services.subset_assignment import SubsetAssigner, SubsetService
+from app.services.video import CacheConfig, VideoService
 from app.settings import get_settings
 from app.webrtc import SDPHandler, WebRTCManager, WebRTCSettings
 
@@ -74,7 +75,7 @@ def setup_job_controller(
     label_service = LabelService()
     dataset_service = DatasetService(
         label_service=label_service,
-        media_service=MediaService(data_dir=data_dir),
+        media_service=MediaService(data_dir=data_dir, video_service=VideoService()),
     )
     project_service = ProjectService(
         data_dir=data_dir,
@@ -137,7 +138,7 @@ def setup_job_controller(
             staged_datasets_dir=staged_datasets_dir,
             dataset_service=dataset_service,
             label_service=label_service,
-            media_service=MediaService(data_dir=data_dir),
+            media_service=MediaService(data_dir=data_dir, video_service=VideoService()),
             db_session_factory=get_db_session,
         ),
     )
@@ -149,7 +150,7 @@ def setup_job_controller(
             project_service=project_service,
             dataset_service=dataset_service,
             label_service=label_service,
-            media_service=MediaService(data_dir=data_dir),
+            media_service=MediaService(data_dir=data_dir, video_service=VideoService()),
             db_session_factory=get_db_session,
         ),
     )
@@ -198,6 +199,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     inference_server = InferenceServer(data_dir=settings.data_dir)
     app.state.inference_server = inference_server
 
+    cache_config = CacheConfig(
+        ttl=settings.video_cache_ttl,
+        cleanup_interval=settings.video_cache_cleanup_interval,
+    )
+    video_service = VideoService(cache_config=cache_config)
+    app.state.video_service = video_service
+
     # Initialize Scheduler
     app_scheduler = Scheduler(
         event_bus=event_bus, data_collector=data_collector, inference_server=inference_server, mp_ctx=mp_ctx
@@ -228,6 +236,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     await job_controller.stop()
     # Shutdown
     logger.info("Shutting down {} application...", settings.app_name)
+    video_service.close()
     await webrtc_manager.cleanup()
     app_scheduler.shutdown()
     logger.info("Application shutdown completed")
