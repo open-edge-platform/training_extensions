@@ -73,14 +73,38 @@ def _decode_group(
     first_target = group[0]
     last_target = group[-1]
 
-    seek_pts = max(_pts_from_index(first_target, time_base, avg_rate) - 1, 0)
-    container.seek(seek_pts, stream=stream)
+    if first_target == 0:
+        # Seek to the very beginning - decode count equals frame index.
+        container.seek(0, stream=stream)
+        decode_offset = 0
+    else:
+        seek_pts = max(_pts_from_index(first_target, time_base, avg_rate) - 1, 0)
+        container.seek(seek_pts, stream=stream)
+        # We don't know exactly which frame the seek landed on, so we
+        # calibrate using the *minimum* PTS seen in the first few decoded
+        # frames (to handle B-frame reordering).
+        decode_offset = None  # will be set on the first frame
+
+    # We rely on a simple decode counter to assign frame indexes.
+    # PTS-based indexing is only used once - to figure out which frame
+    # the seek landed on (for non-zero seeks).  After that, every call
+    # to container.decode() yields the next presentation-order frame, so
+    # a plain counter is the most reliable approach, especially for
+    # containers (AVI) with non-monotonic or offset PTS values.
+    frame_counter = 0
 
     for frame in container.decode(stream):
-        if frame.pts is None:
-            logger.warning("Skipping frame with no PTS")
-            continue
-        frame_idx = _frame_index_from_pts(frame.pts, time_base, avg_rate)
+        if decode_offset is None:
+            # First frame after a non-zero seek: calibrate offset from PTS.
+            if frame.pts is not None:
+                decode_offset = _frame_index_from_pts(frame.pts, time_base, avg_rate)
+            else:
+                # No PTS at all - best guess is the seek target itself.
+                decode_offset = first_target
+
+        frame_idx = decode_offset + frame_counter
+        frame_counter += 1
+
         if frame_idx < first_target:
             continue
         if frame_idx in target_set:
@@ -88,7 +112,8 @@ def _decode_group(
             target_set.discard(frame_idx)
             if not target_set:
                 return
-        if frame_idx > last_target:
+        if frame_idx > last_target + 16:
+            # Allow some overshoot for B-frame reordering before giving up
             break
 
 
@@ -104,6 +129,10 @@ def get_video_metadata(video_path: Path) -> VideoMetadata:
             stream = container.streams.video[0]
             fps = float(stream.average_rate) if stream.average_rate else 0.0
             frame_count = stream.frames if stream.frames else 0
+            if frame_count == 0 and fps > 0 and stream.duration and stream.time_base:
+                frame_count = round(float(stream.duration * stream.time_base) * fps)
+            if frame_count == 0 and fps > 0 and container.duration:
+                frame_count = round((container.duration / av.time_base) * fps)
             width = stream.codec_context.width
             height = stream.codec_context.height
     except Exception as e:
