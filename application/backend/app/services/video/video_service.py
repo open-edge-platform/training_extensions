@@ -300,16 +300,17 @@ class VideoService:
         if not frame_indexes:
             return {}
 
+        path_key = str(video_path)
+        entry = self._get_or_create_entry(path_key=path_key)
+        entry.last_access = monotonic()
+
+        frames: dict[int, np.ndarray] = {}
         sorted_indexes = sorted(set(frame_indexes))
         groups = _group_consecutive(sorted_indexes)
 
-        frames: dict[int, np.ndarray] = {}
-        container, stream, time_base, avg_rate = VideoService._open_stream(str(video_path))
-        try:
+        with entry.lock:
             for group in groups:
-                _decode_group(container, stream, group, frames, time_base, avg_rate)
-        finally:
-            container.close()
+                _decode_group(entry.container, entry.stream, group, frames, entry.time_base, entry.avg_rate)
 
         missing = set(sorted_indexes) - frames.keys()
         if missing:
@@ -323,7 +324,8 @@ class VideoService:
         ``cache_config`` was *None* at construction time).
         """
         self._stop_event.set()
-        self._cleanup_thread.join(timeout=5)
+        if self._cache_config is not None:
+            self._cleanup_thread.join(timeout=5)
         with self._dict_lock:
             entries = list(self._entries.values())
             self._entries.clear()
@@ -332,7 +334,7 @@ class VideoService:
                 entry.container.close()
         logger.debug("VideoService closed, all handles released")
 
-    def _get_or_create_entry(self, path_key: str, max_cached_frames_per_video: int) -> _CacheEntry:
+    def _get_or_create_entry(self, path_key: str) -> _CacheEntry:
         """Get an existing cache entry or create a new one with an open PyAV container.
 
         Args:
@@ -366,6 +368,7 @@ class VideoService:
     def _open_stream(
         video_path: str,
     ) -> tuple[av.container.InputContainer, av.video.stream.VideoStream, Fraction, Fraction]:
+        container = None
         try:
             container = av.open(video_path)
             stream = container.streams.video[0]
@@ -373,6 +376,8 @@ class VideoService:
                 raise RuntimeError(f"Video stream is missing time_base or average_rate: {video_path}")
             stream.thread_type = ThreadType.AUTO
         except Exception as exc:
+            if container is not None:
+                container.close()
             raise RuntimeError(f"Cannot open video: {video_path}") from exc
         return container, stream, Fraction(stream.time_base), Fraction(stream.average_rate)
 
