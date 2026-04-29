@@ -322,10 +322,10 @@ class TestStagedDatasetServiceIntegration:
             labels=["bird", "cat", "dog"],
         )
 
-    def test_find_by_id_annotation_type_if_mixed_in_sample(
+    def test_find_by_id_annotation_type_if_some_samples_unannotated(
         self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
     ):
-        """Tests that annotation_type will be set if at least one sample has it."""
+        """Tests that annotation_type will be set when some samples are unannotated."""
         dataset_id, dataset_path = _stage_multiclass_dataset(tmp_path)
 
         result = fxt_staged_dataset_service.find_by_id(dataset_id)
