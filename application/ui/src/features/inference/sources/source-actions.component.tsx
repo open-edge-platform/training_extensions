@@ -45,7 +45,7 @@ export const SourceActions = () => {
     }
 
     return (
-        <SourceOptions onSaved={handleShowList} hasHeader={filteredSources.length > 0}>
+        <SourceOptions onSaved={handleShowList} hasHeader={filteredSources.length > 0} existingNames={filteredSources.map((source) => source.name)}>
             <Flex gap={'size-100'} marginBottom={'size-100'} alignItems={'center'} justifyContent={'space-between'}>
                 <ActionButton isQuiet onPress={handleShowList}>
                     <Back />
