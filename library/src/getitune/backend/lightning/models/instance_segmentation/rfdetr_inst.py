@@ -158,14 +158,15 @@ class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inc
         """Forward pass used for export.
 
         The OpenVINO ``MaskRCNN`` model_api wrapper (used by all instance
-        segmentation models) expects the ``boxes`` output to have shape
-        ``(N, 5)`` where the 5th column is the confidence score. The default
-        RF-DETR export returns ``(boxes, labels, scores, masks)`` with a
-        4-column ``boxes`` tensor, which causes an ``IndexError`` in
+        segmentation models) expects the exported ``boxes`` output to have a
+        last dimension of 5, i.e. batched shape ``(B, N, 5)``, where the 5th
+        value is the confidence score. The default RF-DETR export returns
+        ``(boxes, labels, scores, masks)`` with batched ``boxes`` shaped
+        ``(B, N, 4)``, which causes an ``IndexError`` in
         ``model_api.models.instance_segmentation.postprocess`` when it reads
-        ``outputs["boxes"][:, 4]``. We therefore concatenate ``scores`` onto
-        ``boxes`` here and drop the standalone ``scores`` output, mirroring
-        the convention used by the MaskRCNN exporters.
+        the score column from ``outputs["boxes"]``. We therefore concatenate
+        ``scores`` onto ``boxes`` here and drop the standalone ``scores``
+        output, mirroring the convention used by the MaskRCNN exporters.
         """
         outputs = self.model.export(inputs)  # pyrefly: ignore[not-callable]
         boxes, labels, scores, masks = outputs

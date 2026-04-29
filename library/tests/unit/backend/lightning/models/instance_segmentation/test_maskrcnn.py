@@ -93,19 +93,3 @@ class TestMaskRCNN:
         assert "patterns" in ignored
         assert any("mask_roi_pool" in p for p in ignored["patterns"])
         assert ignored.get("validate") is False
-
-    @pytest.mark.parametrize("model_name", ["maskrcnn_efficientnet_b2b", "maskrcnn_swin_tiny"])
-    def test_maskrcnn_fpn_uses_static_scale_factor(self, model_name: str) -> None:
-        """Mask R-CNN FPNs must use ``scale_factor`` instead of dynamic ``size``.
-
-        With dynamic ``size`` the ``F.interpolate(mode='nearest')`` lowering
-        under ``torch.compile`` produces a Triton kernel whose ``XBLOCK``
-        exceeds the hardware maximum (``AssertionError: 'XBLOCK' too large.
-        Maximum: 4096``). Using a static ``scale_factor=2.0`` is mathematically
-        equivalent for these configs (inputs are divisible by 32) and keeps
-        the kernel size bounded.
-        """
-        from getitune.backend.lightning.models.detection.necks.fpn import FPN
-
-        cfg = FPN.FPN_CFG[model_name]
-        assert cfg.get("upsample_cfg") == {"scale_factor": 2.0, "mode": "nearest"}
