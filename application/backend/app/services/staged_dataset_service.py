@@ -18,6 +18,7 @@ _ANNOTATION_ATTRS: list[tuple[str, AnnotationType]] = [
     ("bboxes", AnnotationType.BOUNDING_BOX),
     ("polygons", AnnotationType.POLYGON),
     ("labels", AnnotationType.LABEL),
+    ("label", AnnotationType.LABEL),
 ]
 
 
@@ -36,9 +37,11 @@ def _count_annotations(sample: Sample) -> tuple[AnnotationType, int]:
         if value is not None:
             ann_type_with_value.append((ann_type, value))
     if len(ann_type_with_value) > 1:
-        return AnnotationType.UNKNOWN, len(ann_type_with_value[0][1])
+        value = ann_type_with_value[0][1]
+        return AnnotationType.UNKNOWN, 1 if isinstance(value, int) else len(value)
     if len(ann_type_with_value) == 1:
-        return ann_type_with_value[0][0], len(ann_type_with_value[0][1])
+        value = ann_type_with_value[0][1]
+        return ann_type_with_value[0][0], 1 if isinstance(value, int) else len(value)
 
     return AnnotationType.UNKNOWN, 0
 
@@ -64,7 +67,8 @@ def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
     counts = _Counts()
     for item in dataset:
         ann_type, count = _count_annotations(item)
-        counts.annotation_type = ann_type
+        if ann_type != AnnotationType.UNKNOWN:
+            counts.annotation_type = ann_type
         target_media_attrs = ("media", "image", "image_path")
         values = (getattr(item, media_attr, None) for media_attr in target_media_attrs)
         media = next((v for v in values if v is not None), None)
