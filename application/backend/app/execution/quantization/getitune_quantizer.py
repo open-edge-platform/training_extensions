@@ -274,16 +274,18 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
 
     def execute(self, params: QuantizationJobParams) -> None:
         """Execute the full quantization pipeline."""
-        model = self.validate_model(params=params)
-
-        with self._db_session_factory() as db:
-            self._project_service.set_db_session(db)
-            project = self._project_service.get_project_by_id(params.project_id)
-        task = project.task
-
-        datamodule = self.prepare_calibration_dataset(params=params, model=model)
-        ov_engine = self.initialize_engine(params=params, model=model, datamodule=datamodule)
+        # Parent of the timestamped getitune quantization workspace; cleaned up unconditionally below.
+        getitune_workspace_dir = self._data_dir / f"getitune-quantize-workspace-{params.model_id}"
         try:
+            model = self.validate_model(params=params)
+
+            with self._db_session_factory() as db:
+                self._project_service.set_db_session(db)
+                project = self._project_service.get_project_by_id(params.project_id)
+            task = project.task
+
+            datamodule = self.prepare_calibration_dataset(params=params, model=model)
+            ov_engine = self.initialize_engine(params=params, model=model, datamodule=datamodule)
             quantized_model_path = self.run_quantization(
                 ov_engine=ov_engine,
                 subset_size=params.max_calibration_subset_size,
@@ -322,12 +324,21 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
                 model_variant_id=variant.id,
                 getitune_work_dir=Path(ov_engine.work_dir),
             )
-        except Exception:
-            getitune_work_dir = Path(ov_engine.work_dir)
-            if getitune_work_dir.exists():
-                shutil.rmtree(getitune_work_dir)
-                logger.info("Cleaned up getitune work directory after failure at {}", getitune_work_dir)
-            raise
+        finally:
+            # Always remove the getitune quantization workspace folder so it never lingers on disk,
+            # regardless of whether the job succeeded or failed.
+            if getitune_workspace_dir.exists():
+                try:
+                    shutil.rmtree(getitune_workspace_dir)
+                    logger.info(
+                        "Cleaned up getitune quantization workspace directory at {}", getitune_workspace_dir
+                    )
+                except Exception as cleanup_exc:
+                    logger.error(
+                        "Failed to clean up getitune quantization workspace directory at {}: {}",
+                        getitune_workspace_dir,
+                        cleanup_exc,
+                    )
 
     def _base_model_path(self, project_id: UUID, model_id: UUID) -> Path:
         return self._data_dir / "projects" / str(project_id) / "models" / str(model_id)
