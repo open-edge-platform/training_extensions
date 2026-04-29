@@ -18,7 +18,7 @@ class IntensityMappingMode(StrEnum):
 
     SCALE_TO_UNIT = "Unit interval scaling"  # (x / max_value)
     WINDOW = "Windowing"  # clamp((x - low) / (high - low), 0, 1)
-    RANGE_SCALE = "Clipped scaling"  # (clamp(x * factor, min_value, max_value) - min_value) / (max_value - min_value)
+    RANGE_SCALE = "Range scaling with clipping"  # (clamp(x * factor, min_value, max_value) - min_value) / (max_value - min_value)
 
 
 class IntensityMapping(BaseModel):
@@ -37,7 +37,7 @@ class IntensityMapping(BaseModel):
             "[0, max_intensity_value] to [0, 1]. "
             "'Windowing' isolates a specific intensity range, mapping a specific window (specified with center and "
             "width) to [0, 1] and clipping values outside the window. "
-            "'Clipped scaling' multiplies pixel values by a scale factor, clips the result to a specified range "
+            "'Range scaling with clipping' multiplies pixel values by a scale factor, clips the result to a specified range "
             "(clip_min_value, clip_max_value) and finally normalizes to [0, 1]."
         ),
     )
@@ -55,20 +55,20 @@ class IntensityMapping(BaseModel):
         default=0.0,
         title="Clip minimum value",
         description=(
-            "Minimum output value after rescaling the image in 'Clipped scaling' mode; "
+            "Minimum output value after rescaling the image in 'Range scaling with clipping' mode; "
             "pixel values below this threshold are clipped."
         ),
-        json_schema_extra={"depends_on": {"mode": "Clipped scaling"}},
+        json_schema_extra={"depends_on": {"mode": "Range scaling with clipping"}},
     )
     clip_max_value: float = Field(
         default=255.0,
         ge=0.0,
         title="Clip maximum value",
         description=(
-            "Maximum output value after rescaling the image in 'Clipped scaling' mode; "
+            "Maximum output value after rescaling the image in 'Range scaling with clipping' mode; "
             "pixel values above this threshold are clipped."
         ),
-        json_schema_extra={"depends_on": {"mode": "Clipped scaling"}},
+        json_schema_extra={"depends_on": {"mode": "Range scaling with clipping"}},
     )
     window_center: float = Field(
         default=127.5,
@@ -97,7 +97,7 @@ class IntensityMapping(BaseModel):
             "Multiplicative factor applied to pixel values, before clipping the result to "
             "[clip_min_value, clip_max_value]."
         ),
-        json_schema_extra={"depends_on": {"mode": "Clipped scaling"}},
+        json_schema_extra={"depends_on": {"mode": "Range scaling with clipping"}},
     )
 
     @field_validator("mode", mode="before")

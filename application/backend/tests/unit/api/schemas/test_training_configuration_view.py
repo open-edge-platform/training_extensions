@@ -428,14 +428,14 @@ def fxt_training_configuration_view_json() -> dict:
                                     "'Unit interval scaling' divides by max_intensity_value, thus mapping the range "
                                     "[0, max_intensity_value] to [0, 1]. 'Windowing' isolates a specific intensity "
                                     "range, mapping a specific window (specified with center and width) to [0, 1] and "
-                                    "clipping values outside the window. 'Clipped scaling' multiplies pixel values by "
+                                    "clipping values outside the window. 'Range scaling with clipping' multiplies pixel values by "
                                     "a scale factor, clips the result to a specified range (clip_min_value, "
                                     "clip_max_value) and finally normalizes to [0, 1]."
                                 ),
                                 "value": "Windowing",
                                 "default_value": "Unit interval scaling",
                                 "value_type": "str",
-                                "allowed_values": ["Unit interval scaling", "Windowing", "Clipped scaling"],
+                                "allowed_values": ["Unit interval scaling", "Windowing", "Range scaling with clipping"],
                                 "depends_on": None,
                             },
                             {
@@ -460,7 +460,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "key": "clip_min_value",
                                 "name": "Clip minimum value",
                                 "description": (
-                                    "Minimum output value after rescaling the image in 'Clipped scaling' mode; "
+                                    "Minimum output value after rescaling the image in 'Range scaling with clipping' mode; "
                                     "pixel values below this threshold are clipped."
                                 ),
                                 "value": 0.0,
@@ -469,14 +469,14 @@ def fxt_training_configuration_view_json() -> dict:
                                 "min_value": None,
                                 "max_value": None,
                                 "allowed_values": None,
-                                "depends_on": {"mode": "Clipped scaling"},
+                                "depends_on": {"mode": "Range scaling with clipping"},
                             },
                             {
                                 "type": "parameter",
                                 "key": "clip_max_value",
                                 "name": "Clip maximum value",
                                 "description": (
-                                    "Maximum output value after rescaling the image in 'Clipped scaling' mode; "
+                                    "Maximum output value after rescaling the image in 'Range scaling with clipping' mode; "
                                     "pixel values above this threshold are clipped."
                                 ),
                                 "value": 255.0,
@@ -485,7 +485,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "min_value": 0.0,
                                 "max_value": None,
                                 "allowed_values": None,
-                                "depends_on": {"mode": "Clipped scaling"},
+                                "depends_on": {"mode": "Range scaling with clipping"},
                             },
                             {
                                 "type": "parameter",
@@ -534,7 +534,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "min_value": 0.0,
                                 "max_value": None,
                                 "allowed_values": None,
-                                "depends_on": {"mode": "Clipped scaling"},
+                                "depends_on": {"mode": "Range scaling with clipping"},
                             },
                         ],
                     },

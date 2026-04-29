@@ -667,14 +667,14 @@ class TrainingConfigurationView(BaseModel):
                                             "[0, max_value] to [0, 1]. 'Windowing' isolates a specific intensity "
                                             "range, mapping a specific window (specified with center and "
                                             "width) to [0, 1] and clipping values outside the window. "
-                                            "'Clipped scaling' multiplies pixel values by a scale factor, clips the "
+                                            "'Range scaling with clipping' multiplies pixel values by a scale factor, clips the "
                                             "result to a specified range (clip_min_value, clip_max_value) and finally "
                                             "normalizes to [0, 1]."
                                         ),
                                         "value": "Unit interval scaling",
                                         "default_value": "Unit interval scaling",
                                         "value_type": "str",
-                                        "allowed_values": ["Unit interval scaling", "Windowing", "Clipped scaling"],
+                                        "allowed_values": ["Unit interval scaling", "Windowing", "Range scaling with clipping"],
                                     },
                                     {
                                         "type": "parameter",
@@ -705,7 +705,7 @@ class TrainingConfigurationView(BaseModel):
                                         "min_value": None,
                                         "max_value": None,
                                         "allowed_values": None,
-                                        "depends_on": {"mode": "Clipped scaling"},
+                                        "depends_on": {"mode": "Range scaling with clipping"},
                                     },
                                     {
                                         "type": "parameter",
@@ -754,7 +754,7 @@ class TrainingConfigurationView(BaseModel):
                                         "min_value": 0.0,
                                         "max_value": None,
                                         "allowed_values": None,
-                                        "depends_on": {"mode": "Clipped scaling"},
+                                        "depends_on": {"mode": "Range scaling with clipping"},
                                     },
                                 ],
                             },
