@@ -116,9 +116,9 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
                             </View>
 
                             <Text>
-                                The recommended choice is based on the type of the annotations detected in the dataset. If
-                                you choose a different type, the annotations will be automatically transformed during import
-                                to fit the selected type.
+                                The recommended choice is based on the type of the annotations detected in the dataset.
+                                If you choose a different type, the annotations will be automatically transformed during
+                                import to fit the selected type.
                             </Text>
                         </Flex>
                     )}
