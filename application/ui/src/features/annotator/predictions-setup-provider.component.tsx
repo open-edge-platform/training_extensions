@@ -3,11 +3,12 @@
 
 import { createContext, ReactNode, useContext, useState } from 'react';
 
+import { Model } from '../../constants/shared-types';
 import { useGetActiveModel } from '../models/hooks/api/use-get-active-model.hook';
 import { useGetSuccessfulModels } from '../models/hooks/api/use-get-models.hook';
 
 type PredictionsSetupContextProps = {
-    models: { name: string; id: string }[];
+    models: Model[];
     selectedModelId: string | undefined;
     changeSelectedModelId: (modelId: string | undefined) => void;
 };
