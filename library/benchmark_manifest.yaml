@@ -42,7 +42,7 @@ experiments:
         recipe: classification/multi_class_cls/mobilenet_v3_large.yaml
 
     datasets:
-      - allround
+      - wgisd
 
     criteria:
       accuracy_metric: accuracy
@@ -129,7 +129,7 @@ experiments:
         recipe: detection/deimv2_s.yaml
 
     datasets:
-      - allround
+      - wgisd
 
     criteria:
       accuracy_metric: mAP
@@ -171,7 +171,7 @@ experiments:
         recipe: semantic_segmentation/litehrnet_x.yaml
 
     datasets:
-      - allround
+      - wgisd
 
     criteria:
       accuracy_metric: Dice
@@ -218,7 +218,7 @@ experiments:
         recipe: instance_segmentation/rfdetr_seg_xlarge.yaml
 
     datasets:
-      - allround
+      - wgisd
 
     criteria:
       accuracy_metric: map_50
@@ -241,7 +241,7 @@ experiments:
         recipe: rotated_detection/maskrcnn_efficientnetb2b.yaml
 
     datasets:
-      - allround
+      - wgisd
 
     criteria:
       accuracy_metric: map_50

@@ -16,6 +16,6 @@
 version: 1
 
 datasets:
-  - name: allround
-    script: "scripts/benchmark_datasets/prepare_allround.py"
+  - name: wgisd
+    script: "scripts/benchmark_datasets/prepare_wgisd.py"
     size_tier: small
