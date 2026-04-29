@@ -48,6 +48,36 @@ const modelWithDeletedFiles = getMockedModel({
     files_deleted: true,
 });
 
+const modelWithOpenVinoVariant = getMockedModel({
+    id: 'model-with-ov',
+    name: 'Model A',
+    variants: [
+        {
+            id: 'variant-ov-fp16',
+            format: 'openvino',
+            precision: 'fp16',
+            weights_size: 0,
+            evaluations: [],
+            files_deleted: false,
+        },
+    ],
+});
+
+const modelWithOnnxVariant = getMockedModel({
+    id: 'model-with-onnx',
+    name: 'Model Onnx',
+    variants: [
+        {
+            id: 'variant-onnx',
+            format: 'onnx',
+            precision: 'fp32',
+            weights_size: 0,
+            evaluations: [],
+            files_deleted: false,
+        },
+    ],
+});
+
 describe('ActiveModel', () => {
     const renderApp = ({ models, pipeline }: { models: Model[]; pipeline: Pipeline }) => {
         const patchSpy = vi.fn();
@@ -123,6 +153,50 @@ describe('ActiveModel', () => {
 
         await waitFor(() => {
             expect(screen.queryByRole('button', { name: /active model/i })).not.toBeInTheDocument();
+        });
+    });
+
+    it('shows openvino variant entries in the picker', async () => {
+        renderApp({
+            models: [modelWithOpenVinoVariant],
+            pipeline: getMockedPipeline(),
+        });
+
+        expect(await screen.findByLabelText('active model')).toBeVisible();
+
+        fireEvent.click(screen.getByRole('button', { name: /active model/i }));
+
+        expect(await screen.findByRole('option', { name: 'Model A' })).toBeVisible();
+        expect(screen.getByRole('option', { name: 'Model A [FP16]' })).toBeVisible();
+    });
+
+    it('does not show non-openvino variants', async () => {
+        renderApp({
+            models: [modelWithOnnxVariant],
+            pipeline: getMockedPipeline(),
+        });
+
+        expect(await screen.findByLabelText('active model')).toBeVisible();
+
+        fireEvent.click(screen.getByRole('button', { name: /active model/i }));
+
+        expect(await screen.findByRole('option', { name: 'Model Onnx' })).toBeVisible();
+        expect(screen.queryByRole('option', { name: 'Model Onnx [FP32]' })).not.toBeInTheDocument();
+    });
+
+    it('patches pipeline with variant id when openvino variant is selected', async () => {
+        const patchSpy = renderApp({
+            models: [modelWithOpenVinoVariant],
+            pipeline: getMockedPipeline(),
+        });
+
+        await screen.findByLabelText('active model');
+
+        fireEvent.click(screen.getByRole('button', { name: /active model/i }));
+        fireEvent.click(await screen.findByRole('option', { name: 'Model A [FP16]' }));
+
+        await waitFor(() => {
+            expect(patchSpy).toHaveBeenCalledWith({ model_id: 'variant-ov-fp16' });
         });
     });
 });
