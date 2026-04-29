@@ -9,8 +9,8 @@ export const getUniqueName = (baseName: string, existingNames: string[]): string
     }
 
     let counter = 1;
-    while (existingNameSet.has(`${baseName} - ${counter}`)) {
+    while (existingNameSet.has(`${baseName} (${counter})`)) {
         counter++;
     }
-    return `${baseName} - ${counter}`;
+    return `${baseName} (${counter})`;
 };
