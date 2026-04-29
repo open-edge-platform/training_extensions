@@ -46,11 +46,19 @@ class TestOVDetectionModelCoordinateRescaling:
         batch_size: int,
         img_shape: tuple[int, int],
         ori_shape: tuple[int, int],
+        padding: tuple[int, int, int, int] = (0, 0, 0, 0),
+        scale_factor: tuple[float, float] | None = (1.0, 1.0),
     ) -> SampleBatch:
         """Create a SampleBatch with specified img_shape and ori_shape."""
         images = [torch.rand(3, *img_shape) for _ in range(batch_size)]
         imgs_info = [
-            ImageInfo(img_idx=i, img_shape=img_shape, ori_shape=ori_shape)
+            ImageInfo(
+                img_idx=i,
+                img_shape=img_shape,
+                ori_shape=ori_shape,
+                padding=padding,
+                scale_factor=scale_factor,
+            )
             for i in range(batch_size)
         ]
         return SampleBatch(images=images, imgs_info=imgs_info)
@@ -131,10 +139,7 @@ class TestOVDetectionModelCoordinateRescaling:
         ori_shapes = [(800, 600), (1200, 1600)]
 
         images = [torch.rand(3, *img_shape) for _ in range(2)]
-        imgs_info = [
-            ImageInfo(img_idx=i, img_shape=img_shape, ori_shape=ori_shapes[i])
-            for i in range(2)
-        ]
+        imgs_info = [ImageInfo(img_idx=i, img_shape=img_shape, ori_shape=ori_shapes[i]) for i in range(2)]
         inputs = SampleBatch(images=images, imgs_info=imgs_info)
 
         outputs = [
@@ -223,3 +228,52 @@ class TestOVDetectionModelCoordinateRescaling:
         pred_boxes = metric_inputs["preds"][0]["boxes"]
         target_boxes = metric_inputs["target"][0]["boxes"]
         torch.testing.assert_close(pred_boxes, target_boxes, atol=1e-4, rtol=1e-4)
+
+    def test_letterbox_rescaling(self, detection_model):
+        """When preprocessing uses letterbox (padding + aspect-ratio resize), bboxes should be unpadded and unscaled."""
+        # Original image: 480x640 (H, W)
+        # Letterbox to 640x640: scale=1.0 on height (480*1.0=480 padded to 640), scale=1.0 on width (640)
+        # Actually: fit_to_window scales uniformly by min(640/480, 640/640) = 1.0
+        # so image stays 480x640, padded to 640x640 with padding (0, 80, 0, 80) top/bottom
+        # More realistic: original 1080x1920, target 640x640
+        # scale = min(640/1080, 640/1920) = 0.333
+        # scaled = 360x640, padding_left=0, padding_top=140
+        ori_shape = (1080, 1920)
+        img_shape = (640, 640)
+        scale = min(img_shape[0] / ori_shape[0], img_shape[1] / ori_shape[1])  # 0.333
+        scaled_h = int(ori_shape[0] * scale)  # 360
+        pad_top = (img_shape[0] - scaled_h) // 2  # 140
+        padding = (0, pad_top, 0, img_shape[0] - scaled_h - pad_top)  # (left, top, right, bottom)
+        scale_factor = (scale, scale)  # (h_scale, w_scale)
+
+        # Bbox in img_shape coords (after letterbox): x=100, y=200 (includes padding)
+        bboxes_in_img = np.array([[100.0, 200.0, 500.0, 400.0]], dtype=np.float32)
+        scores = np.array([0.9], dtype=np.float32)
+        labels = np.array([0], dtype=np.int32)
+
+        outputs = [_FakeDetectionResult(bboxes_in_img, scores, labels)]
+        inputs = self._make_sample_batch(
+            batch_size=1,
+            img_shape=img_shape,
+            ori_shape=ori_shape,
+            padding=padding,
+            scale_factor=scale_factor,
+        )
+
+        result = detection_model._customize_outputs(outputs, inputs)
+        result_bboxes = result.bboxes[0]
+
+        # Expected: undo padding then divide by scale
+        expected_x1 = (100.0 - padding[0]) / scale
+        expected_y1 = (200.0 - padding[1]) / scale
+        expected_x2 = (500.0 - padding[0]) / scale
+        expected_y2 = (400.0 - padding[1]) / scale
+        # Clamp to ori_shape
+        expected_x1 = max(0.0, min(expected_x1, float(ori_shape[1])))
+        expected_y1 = max(0.0, min(expected_y1, float(ori_shape[0])))
+        expected_x2 = max(0.0, min(expected_x2, float(ori_shape[1])))
+        expected_y2 = max(0.0, min(expected_y2, float(ori_shape[0])))
+
+        expected = torch.tensor([[expected_x1, expected_y1, expected_x2, expected_y2]], dtype=torch.float32)
+        torch.testing.assert_close(result_bboxes.data, expected, atol=1e-4, rtol=1e-4)
+        assert result_bboxes.canvas_size == ori_shape

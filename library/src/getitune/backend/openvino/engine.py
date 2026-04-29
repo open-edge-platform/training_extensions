@@ -167,10 +167,7 @@ class OVEngine(Engine):
         model_info = metadata.get("model_info", {})
         task_type = model_info.get("task_type")
         if task_type is None:
-            msg = (
-                "No 'task_type' found in ONNX model metadata. "
-                "Please ensure the model was exported by getitune."
-            )
+            msg = "No 'task_type' found in ONNX model metadata. Please ensure the model was exported by getitune."
             raise ValueError(msg)
 
         if task_type == "classification":
@@ -436,16 +433,10 @@ class OVEngine(Engine):
             RuntimeError: If an ONNX model is used (not supported for optimization).
         """
         if checkpoint is not None and Path(str(checkpoint)).suffix == ".onnx":
-            msg = (
-                "OVEngine.optimize() does not support ONNX models. "
-                "Please convert to OpenVINO IR format first."
-            )
+            msg = "OVEngine.optimize() does not support ONNX models. Please convert to OpenVINO IR format first."
             raise RuntimeError(msg)
         if checkpoint is None and self.model is not None and Path(str(self.model.model_path)).suffix == ".onnx":
-            msg = (
-                "OVEngine.optimize() does not support ONNX models. "
-                "Please convert to OpenVINO IR format first."
-            )
+            msg = "OVEngine.optimize() does not support ONNX models. Please convert to OpenVINO IR format first."
             raise RuntimeError(msg)
         optimize_datamodule = datamodule if datamodule is not None else self.datamodule
         model = self._update_checkpoint(checkpoint)
