@@ -43,14 +43,11 @@ class TestMediaPredictionServiceUnit:
         return MagicMock(spec=InferenceServer)
 
     @pytest.fixture
-    def fxt_media_prediction_service(
-        self, fxt_label_service, fxt_media_service, fxt_dataset_service, fxt_inference_server
-    ):
+    def fxt_media_prediction_service(self, fxt_label_service, fxt_media_service, fxt_inference_server):
         db_session = MagicMock(spec=Session)
         return MediaPredictionService(
             label_service=fxt_label_service,
             media_service=fxt_media_service,
-            dataset_service=fxt_dataset_service,
             inference_server=fxt_inference_server,
             inference_model_ttl=10,
             db_session=db_session,

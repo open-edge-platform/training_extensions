@@ -14,7 +14,6 @@ from app.models.media import Media, MediaListPredictionRequest, MediaType, NotAn
 from app.models.system import DeviceInfo
 
 from .base import BaseSessionManagedService, ResourceError, ResourceNotFoundError, ResourceType
-from .dataset_service import DatasetService
 from .inference import InferenceServer
 from .label_service import LabelService
 from .media_service import MediaService
@@ -41,7 +40,6 @@ class MediaPredictionService(BaseSessionManagedService):
         self,
         label_service: LabelService,
         media_service: MediaService,
-        dataset_service: DatasetService,
         inference_server: InferenceServer,
         inference_model_ttl: int,
         db_session: Session | None = None,
@@ -49,7 +47,6 @@ class MediaPredictionService(BaseSessionManagedService):
         super().__init__(db_session)
         self._label_service = label_service
         self._media_service = media_service
-        self._dataset_service = dataset_service
         self._inference_server = inference_server
         self._inference_model_ttl = inference_model_ttl
 
@@ -127,7 +124,7 @@ class MediaPredictionService(BaseSessionManagedService):
                 binary_data = self._load_media_binary(project_id=project.id, media=vf)
                 inputs.append(BatchInferenceInput(media_id=vf.video_id, data=binary_data, frame_index=vf.frame_index))
 
-            # Batch-extract not-annotated video frames: one video open/close per video
+        # Batch-extract not-annotated video frames: one video open/close per video
         for video_id, frames in not_annotated_by_video.items():
             video = frames[0].video
             frame_indexes = [f.frame_index for f in frames]
@@ -152,8 +149,6 @@ class MediaPredictionService(BaseSessionManagedService):
         Perform batch inference for a number of media. Media can be an image, annotated frame or video frame range.
         Method loads media metadata and binaries with extracting frames from video if needed and passes
         binaries to the inference service.
-        As soon as inference is done, results are converted and stored as dataset items if save_predictions is set to
-        True.
 
         Args:
             project: Project object containing project information.
