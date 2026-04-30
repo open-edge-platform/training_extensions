@@ -128,5 +128,102 @@ describe('SourceMenu', () => {
                 'An unexpected error occurred. Please try again.'
             );
         });
+
+        it('shows d when is disconnected', async () => {
+            renderApp({ name, isConnected: false });
+
+            await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
+            expect(screen.getByRole('menuitem', { name: /Connect/i })).toBeVisible();
+        });
+    });
+
+    describe('disconnect', () => {
+        const name = 'test-name';
+
+        it('successfully disconnects source when pipeline is not running', async () => {
+            const pipelinePatchSpy = vi.fn();
+            const disablePipeline = vi.fn();
+
+            server.use(
+                http.patch('/api/projects/{project_id}/pipeline', async ({ request }) => {
+                    const body = await request.json();
+
+                    pipelinePatchSpy(body);
+
+                    return HttpResponse.json({
+                        project_id: '',
+                        status: 'idle',
+                        device: 'images_folder',
+                    });
+                }),
+                http.post('/api/projects/{project_id}/pipeline:disable', async () => {
+                    disablePipeline();
+
+                    return HttpResponse.json(null, { status: 204 });
+                })
+            );
+
+            renderApp({ name, isConnected: true, isPipelineRunning: false });
+
+            await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
+            await userEvent.click(screen.getByRole('menuitem', { name: /Disconnect/i }));
+
+            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
+                `Successfully disconnected from "${name}"`
+            );
+
+            expect(disablePipeline).not.toHaveBeenCalled();
+            expect(pipelinePatchSpy).toHaveBeenCalledWith({ source_id: null });
+        });
+
+        it('successfully disconnects source when pipeline is running', async () => {
+            const pipelinePatchSpy = vi.fn();
+            const disablePipeline = vi.fn();
+
+            server.use(
+                http.patch('/api/projects/{project_id}/pipeline', async ({ request }) => {
+                    const body = await request.json();
+
+                    pipelinePatchSpy(body);
+
+                    return HttpResponse.json({
+                        project_id: '',
+                        status: 'idle',
+                        device: 'images_folder',
+                    });
+                }),
+                http.post('/api/projects/{project_id}/pipeline:disable', async () => {
+                    disablePipeline();
+
+                    return HttpResponse.json(null, { status: 204 });
+                })
+            );
+
+            renderApp({ name, isConnected: true, isPipelineRunning: true });
+
+            await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
+            await userEvent.click(screen.getByRole('menuitem', { name: /Disconnect/i }));
+
+            expect(screen.getByRole('heading', { name: `Disconnect ${name}` })).toBeVisible();
+
+            await userEvent.click(screen.getByRole('button', { name: 'Disconnect' }));
+
+            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
+                `Successfully disabled pipeline and disconnected from "${name}"`
+            );
+
+            expect(disablePipeline).toHaveBeenCalled();
+            expect(pipelinePatchSpy).toHaveBeenCalledWith({ source_id: null });
+            expect(disablePipeline.mock.invocationCallOrder[0]).toBeLessThan(
+                pipelinePatchSpy.mock.invocationCallOrder[0]
+            );
+        });
+
+        it('shows disconnect when is connected', async () => {
+            renderApp({ name, isConnected: true });
+
+            await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
+            expect(screen.getByRole('menuitem', { name: /Disconnect/i })).toBeVisible();
+        });
     });
 });

@@ -102,10 +102,9 @@ export const SourceMenu = ({ id, name, isConnected, onEdit, isPipelineRunning }:
             case SOURCE_MENU_OPTIONS.DISCONNECT:
                 if (isPipelineRunning) {
                     setIsDisconnectConfirmationDialogVisible(true);
-                    break;
+                } else {
+                    handleDisconnect();
                 }
-
-                handleDisconnect();
                 break;
             case SOURCE_MENU_OPTIONS.REMOVE:
                 handleRemove();
