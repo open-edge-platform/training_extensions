@@ -16,8 +16,17 @@ describe('SourceMenu', () => {
         name = 'name test',
         isConnected = false,
         onEdit = vi.fn(),
+        isPipelineRunning = false,
     }: Partial<SourceMenuProps>) => {
-        render(<SourceMenu id={id} name={name} isConnected={isConnected} onEdit={onEdit} />);
+        render(
+            <SourceMenu
+                id={id}
+                name={name}
+                isConnected={isConnected}
+                onEdit={onEdit}
+                isPipelineRunning={isPipelineRunning}
+            />
+        );
     };
 
     it('edit', async () => {
