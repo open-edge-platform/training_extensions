@@ -1,13 +1,10 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo } from 'react';
-
 import { Item, Picker } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { usePredictionSetup } from '../../../../annotator/predictions-setup-provider.component';
-import { getAllModelsWithOpenVinoVariants } from '../../../../models/utils';
 
 type PredictionModelSelectorProps = {
     isDisabled: boolean;
@@ -16,9 +13,7 @@ type PredictionModelSelectorProps = {
 export const PredictionModelSelector = ({ isDisabled }: PredictionModelSelectorProps) => {
     const { models, selectedModelId, changeSelectedModelId } = usePredictionSetup();
 
-    const allModelsWithOpenVinoQuantizedModels = useMemo(() => getAllModelsWithOpenVinoVariants(models), [models]);
-
-    if (isEmpty(allModelsWithOpenVinoQuantizedModels)) {
+    if (isEmpty(models)) {
         return null;
     }
 
@@ -26,7 +21,7 @@ export const PredictionModelSelector = ({ isDisabled }: PredictionModelSelectorP
         <Picker
             isQuiet
             aria-label={'Select prediction model'}
-            items={allModelsWithOpenVinoQuantizedModels}
+            items={models}
             selectedKey={selectedModelId}
             isDisabled={isDisabled}
             onSelectionChange={(key) => key !== null && changeSelectedModelId(String(key))}

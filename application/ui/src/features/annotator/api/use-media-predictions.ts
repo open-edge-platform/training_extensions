@@ -7,6 +7,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { fetchClient } from '../../../api/client';
 import { PredictionDTO, PredictionVideoRangePayload } from '../../../constants/shared-types';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
+import { getModelIdentifierPayload, SelectableModel } from '../../models/utils';
 
 const MEDIA_PREDICTIONS_QUERY_KEY_PREFIX = (projectId: string, mediaId: string) => {
     return [projectId, 'media-predictions', mediaId];
@@ -14,25 +15,30 @@ const MEDIA_PREDICTIONS_QUERY_KEY_PREFIX = (projectId: string, mediaId: string) 
 
 export const mediaPredictionsQueryOptions = ({
     projectId,
-    modelId,
+    selectedModel,
     mediaId,
     range = null,
 }: {
     projectId: string;
-    modelId: string | undefined;
+    selectedModel: SelectableModel | undefined;
     mediaId: string;
     range?: PredictionVideoRangePayload | null;
 }) =>
     queryOptions({
-        queryKey: [...MEDIA_PREDICTIONS_QUERY_KEY_PREFIX(projectId, mediaId), modelId, range],
+        queryKey: [
+            ...MEDIA_PREDICTIONS_QUERY_KEY_PREFIX(projectId, mediaId),
+            selectedModel?.id,
+            selectedModel?.type === 'base' ? undefined : selectedModel?.modelId,
+            range,
+        ],
         queryFn: async () => {
-            if (modelId === undefined) return [];
+            if (selectedModel === undefined) return [];
 
             const response = await fetchClient.POST('/api/projects/{project_id}/dataset/media/media:predict', {
                 params: { path: { project_id: projectId } },
                 body: {
+                    ...getModelIdentifierPayload(selectedModel),
                     device: 'AUTO',
-                    model_id: modelId,
                     save_predictions: false,
                     media: [{ media_id: mediaId, range }],
                 },
@@ -59,21 +65,21 @@ export const mediaPredictionsQueryOptions = ({
                 return predictionItem;
             });
         },
-        enabled: modelId !== undefined,
+        enabled: selectedModel !== undefined,
     });
 
 export const useMediaPredictions = ({
     mediaId,
-    modelId,
+    selectedModel,
     range,
 }: {
     mediaId: string;
-    modelId: string | undefined;
+    selectedModel: SelectableModel | undefined;
     range?: PredictionVideoRangePayload | null;
 }) => {
     const projectId = useProjectIdentifier();
 
-    return useQuery(mediaPredictionsQueryOptions({ projectId, modelId, mediaId, range }));
+    return useQuery(mediaPredictionsQueryOptions({ projectId, selectedModel, mediaId, range }));
 };
 
 export const useIsFetchingAnyPredictions = (mediaId: string) => {

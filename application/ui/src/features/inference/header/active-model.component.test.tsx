@@ -196,7 +196,7 @@ describe('ActiveModel', () => {
         fireEvent.click(await screen.findByRole('option', { name: 'Model A [FP16]' }));
 
         await waitFor(() => {
-            expect(patchSpy).toHaveBeenCalledWith({ model_id: 'variant-ov-fp16' });
+            expect(patchSpy).toHaveBeenCalledWith({ model_id: 'model-with-ov', model_variant_id: 'variant-ov-fp16' });
         });
     });
 });

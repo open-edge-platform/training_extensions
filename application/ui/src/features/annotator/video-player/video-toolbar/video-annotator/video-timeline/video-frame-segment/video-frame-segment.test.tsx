@@ -46,6 +46,7 @@ vi.mock('../../../../video-player-provider.component', () => ({
 vi.mock('../../../../../../../features/annotator/predictions-setup-provider.component', () => ({
     usePredictionSetup: () => ({
         selectedModelId: MODEL_ID,
+        selectedModel: { id: MODEL_ID, name: 'Model 1', type: 'base' as const },
         changeSelectedModelId: vi.fn(),
         models: [{ id: MODEL_ID, name: 'Model 1' }],
     }),

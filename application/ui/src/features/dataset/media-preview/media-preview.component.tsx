@@ -102,12 +102,12 @@ const MediaPreviewContent = ({
     isMediaItemReviewedById,
 }: MediaPreviewContentProps) => {
     const { mediaItem } = useSelectedMediaItem();
-    const { selectedModelId } = usePredictionSetup();
+    const { selectedModel } = usePredictionSetup();
 
     const { data: annotationsData } = useAnnotationsQuery(mediaItem);
     const { data: predictionsData } = useMediaPredictions({
         mediaId: mediaItem.id,
-        modelId: selectedModelId,
+        selectedModel,
         range: isVideoFrame(mediaItem)
             ? { start_frame: mediaItem.frame_number, end_frame: mediaItem.frame_number, stride: mediaItem.frame_stride }
             : null,

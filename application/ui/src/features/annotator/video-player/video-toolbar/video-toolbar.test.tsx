@@ -48,6 +48,7 @@ vi.mock('../../predictions-setup-provider.component', async (importOriginal) => 
     ...(await importOriginal()),
     usePredictionSetup: () => ({
         selectedModelId: 'model-1',
+        selectedModel: { id: 'model-1', name: 'Test Model', type: 'base' as const },
         changeSelectedModelId: vi.fn(),
         models: [getMockedModel({ id: 'model-1', name: 'Test Model' })],
     }),
