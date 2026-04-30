@@ -61,7 +61,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pytest>=5.3.5",
+    "pytest>=9.0.3",
     "pytest-cov>=4.0.0",
     "pytest-stress",
     "pytest-html",
@@ -73,7 +73,7 @@ dev = [
     "dill",
     "tifffile",
     "py-cpuinfo",
-    "mlflow",
+    "mlflow>=3.11.1",
 ]
 
 lint = [
