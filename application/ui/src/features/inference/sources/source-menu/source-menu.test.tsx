@@ -129,7 +129,7 @@ describe('SourceMenu', () => {
             );
         });
 
-        it('shows d when is disconnected', async () => {
+        it('shows connected when is disconnected', async () => {
             renderApp({ name, isConnected: false });
 
             await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
