@@ -85,6 +85,7 @@ def run_config(tmp_path: Path) -> RunConfig:
         deterministic=True,
         enable_tracking=False,
         enable_report=False,
+        isolate_in_subprocess=False,
     )
 
 
@@ -409,6 +410,7 @@ class TestRunnerEvalUpto:
             eval_upto="train",
             enable_tracking=False,
             enable_report=False,
+            isolate_in_subprocess=False,
         )
         runner = BenchmarkRunner(config)
         successes, failures = runner.run(manifest, catalog)

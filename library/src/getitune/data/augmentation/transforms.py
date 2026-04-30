@@ -125,16 +125,9 @@ class Resize(tvt_v2.Transform):
         sample.image = sample.image.clamp(0, 1)
         # Apply padding if needed
         if pad_left > 0 or pad_top > 0 or pad_right > 0 or pad_bottom > 0:
-            # Normalise pad value to match the image's value range.
-            is_float_image = sample.image.is_floating_point()
-            if isinstance(self.pad_value, tuple):
-                fill_value: float | int | list[float] = [
-                    (v / 255.0 if is_float_image and v > 1.0 + 1e-5 else v) for v in self.pad_value
-                ]
-            else:
-                fill_value = (
-                    self.pad_value / 255.0 if is_float_image and self.pad_value > 1.0 + 1e-5 else self.pad_value
-                )
+            fill_value: float | int | list[float] = (
+                list(self.pad_value) if isinstance(self.pad_value, tuple) else self.pad_value
+            )
             sample.image = F.pad(
                 sample.image,
                 padding=[pad_left, pad_top, pad_right, pad_bottom],

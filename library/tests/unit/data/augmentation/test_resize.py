@@ -242,37 +242,6 @@ class TestResize:
             top_row_mean = result.image[:, 0, :].float().mean()
             assert abs(top_row_mean - pad_value) < 1.0
 
-    def test_resize_pad_value_normalised_for_float_image(self, wide_image_entity: InstanceSegmentationSample) -> None:
-        """``pad_value`` expressed in 0-255 range must be rescaled for float images.
-
-        Recipes (e.g. RTMDet/YOLOX letterbox) configure ``pad_value: 114`` while
-        the runtime image tensor is float32 in ``[0, 1]``. Without rescaling, the
-        padded region would be filled with 114.0, completely dominating any
-        downstream ImageNet-style normalisation.
-        """
-        pad_value = 114
-        resize = Resize(
-            size=(128, 128),
-            keep_aspect_ratio=True,
-            resize_targets=False,
-            pad_value=pad_value,
-        )
-        entity = deepcopy(wide_image_entity)
-        # Mimic the production CPU pipeline which scales uint8 → float32 in [0, 1]
-        # before any geometric augmentation runs.
-        entity.image = tv_tensors.Image(entity.image.float().div(255.0))
-
-        result = resize(entity)
-
-        # Wide image (100x200) → resized to 128x64 → padded bottom-right.
-        # The bottom row should be entirely padding.
-        pad_bottom = result.img_info.pad_offset[3]
-        assert pad_bottom > 0
-        bottom_row_mean = result.image[:, -1, :].float().mean().item()
-        assert abs(bottom_row_mean - pad_value / 255.0) < 1e-3
-        # Padding must stay within the image's [0, 1] range.
-        assert result.image.max().item() <= 1.0 + 1e-5
-
     def test_resize_masks_binary_preserved(self, square_image_entity: InstanceSegmentationSample) -> None:
         """Test that mask binary values are preserved after resize."""
         resize = Resize(size=(64, 64), resize_targets=True, keep_aspect_ratio=True)

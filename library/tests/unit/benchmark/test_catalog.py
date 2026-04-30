@@ -144,10 +144,13 @@ def _make_prep_script(script_path: Path, file_content: str = "world") -> None:
 
 class TestProvisionDataset:
     def test_skips_when_directory_exists(self, tmp_path: Path) -> None:
-        """If the dataset directory already exists, the script should not run."""
+        """If the dataset is marked ready, the script should not run."""
         data_root = tmp_path / "data"
         ds_dir = data_root / "cached_ds"
         ds_dir.mkdir(parents=True)
+        # The readiness sentinel is what marks a dataset as already prepared;
+        # an empty directory alone is treated as a stale prep run.
+        (ds_dir / ".ready").touch()
 
         entry = DatasetEntry(
             name="cached_ds",
