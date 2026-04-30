@@ -27,6 +27,7 @@ MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 @dataclass(frozen=True)
 class _LoadedModel:
     id: UUID
+    variant_id: UUID
     model: Model
     device: DeviceInfo
     load_timestamp: datetime
@@ -59,30 +60,49 @@ class InferenceServer:
         self._loading_model: bool = False
         self._lock = threading.Lock()
 
-    def set_inference_model(self, project_id: UUID, model_id: UUID, device: DeviceInfo, ttl: int) -> bool:
+    def set_inference_model(
+        self,
+        project_id: UUID,
+        model_id: UUID,
+        device: DeviceInfo,
+        ttl: int,
+        model_variant_id: UUID | None = None,
+    ) -> bool:
         """
         Load the specified model for inference.
-        If the same model is already loaded on the same device, it does nothing.
+        If the same model variant is already loaded on the same device, it does nothing.
 
         Args:
             project_id: Project identifier.
             model_id: Model identifier.
             device: Device to use for inference.
             ttl: Model time-to-live (TTL).
+            model_variant_id: Optional model variant identifier. If provided, the specified variant
+                will be loaded. If None, the default OpenVINO FP16 variant is selected.
 
         Returns:
             True, if the model has been loaded, False if model has not been changed.
         """
-        # Optimization: if the given model is already loaded on the given device, return immediately without acquiring
-        # the lock
+        # Optimization: if the given model variant is already loaded on the given device, return immediately without
+        # acquiring the lock
         loaded_model = self._loaded_model  # use a variable to avoid multiple unprotected reads of self._loaded_model
-        if loaded_model and loaded_model.id == model_id and loaded_model.device == device:
-            return False  # same model and device, no need to reload
+        if (
+            loaded_model
+            and loaded_model.id == model_id
+            and loaded_model.device == device
+            and (model_variant_id is None or loaded_model.variant_id == model_variant_id)
+        ):
+            return False  # same model variant and device, no need to reload
 
         self._lock.acquire()
         try:
-            if self._loaded_model and self._loaded_model.id == model_id and self._loaded_model.device == device:
-                return False  # same model and device, no need to reload
+            if (
+                self._loaded_model
+                and self._loaded_model.id == model_id
+                and self._loaded_model.device == device
+                and (model_variant_id is None or self._loaded_model.variant_id == model_variant_id)
+            ):
+                return False  # same model variant and device, no need to reload
             self._loading_model = True
 
             with get_db_session() as db:
@@ -90,25 +110,38 @@ class InferenceServer:
 
                 model_service = ModelService(data_dir=self._data_dir, db_session=db)
 
-                format = ModelFormat.OPENVINO
-                precision = ModelPrecision.FP16
-                logger.info("Loading model {} with format {} on device {}", model_id, format, device)
-                model_variants = model_service.get_model_variants(project_id=project_id, model_id=model_id)
-                model_variant = next(
-                    (mv for mv in model_variants if mv.format == format and mv.precision == precision), None
+                logger.info(
+                    "Loading model {} (variant {}) on device {}",
+                    model_id,
+                    model_variant_id if model_variant_id else "default",
+                    device,
                 )
-                if not model_variant:
-                    raise ResourceNotFoundError(
-                        resource_type=ResourceType.MODEL,
-                        resource_id=f"{model_id} with format {format.value} and precision {precision}",
+                model_variants = model_service.get_model_variants(project_id=project_id, model_id=model_id)
+                if model_variant_id is not None:
+                    model_variant = next((mv for mv in model_variants if mv.id == model_variant_id), None)
+                    if not model_variant:
+                        raise ResourceNotFoundError(
+                            resource_type=ResourceType.MODEL,
+                            resource_id=f"{model_id} variant {model_variant_id}",
+                        )
+                else:
+                    format = ModelFormat.OPENVINO
+                    precision = ModelPrecision.FP16
+                    model_variant = next(
+                        (mv for mv in model_variants if mv.format == format and mv.precision == precision), None
                     )
+                    if not model_variant:
+                        raise ResourceNotFoundError(
+                            resource_type=ResourceType.MODEL,
+                            resource_id=f"{model_id} with format {format.value} and precision {precision}",
+                        )
                 files_exist, paths = model_service.get_model_binary_files(
                     project_id=project_id, model_id=model_id, model_variant_id=model_variant.id
                 )
                 if not files_exist:
                     raise ResourceNotFoundError(
                         resource_type=ResourceType.MODEL,
-                        resource_id=f"{model_id} with format {format.value}",
+                        resource_id=f"{model_id} variant {model_variant.id}",
                     )
                 model_xml_path, _ = paths
 
@@ -122,6 +155,7 @@ class InferenceServer:
                 model = Model.create_model(adapter)
                 self._loaded_model = _LoadedModel(
                     id=model_id,
+                    variant_id=model_variant.id,
                     model=model,
                     device=device,
                     load_timestamp=datetime.now(),

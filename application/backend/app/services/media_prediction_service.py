@@ -251,7 +251,11 @@ class MediaPredictionService(BaseSessionManagedService):
         labels = self._label_service.list_all(project_id=project.id)
 
         self._inference_server.set_inference_model(
-            project_id=project.id, model_id=request.model_id, device=device, ttl=self._inference_model_ttl
+            project_id=project.id,
+            model_id=request.model_id,
+            device=device,
+            ttl=self._inference_model_ttl,
+            model_variant_id=request.model_variant_id,
         )
         batch_inference_result = self._inference_server.infer_batch(labels=labels, inputs=inputs)
 

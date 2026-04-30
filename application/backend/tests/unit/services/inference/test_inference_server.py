@@ -78,7 +78,7 @@ class TestInferenceServer:
 
         inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = _LoadedModel(
-            id=model_id, model=model, device=device, load_timestamp=datetime.now()
+            id=model_id, variant_id=uuid4(), model=model, device=device, load_timestamp=datetime.now()
         )
 
         model_loaded = inference_server.set_inference_model(
@@ -106,7 +106,7 @@ class TestInferenceServer:
 
         inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = _LoadedModel(
-            id=model_id, model=model, device=device, load_timestamp=datetime.now()
+            id=model_id, variant_id=uuid4(), model=model, device=device, load_timestamp=datetime.now()
         )
 
         status = inference_server.get_status()
@@ -126,7 +126,7 @@ class TestInferenceServer:
 
         inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = _LoadedModel(
-            id=uuid4(), model=model, device=device, load_timestamp=datetime.now()
+            id=uuid4(), variant_id=uuid4(), model=model, device=device, load_timestamp=datetime.now()
         )
 
         inference_server.stop()
@@ -159,7 +159,7 @@ class TestInferenceServer:
 
         inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = _LoadedModel(
-            id=uuid4(), model=model, device=device, load_timestamp=datetime.now()
+            id=uuid4(), variant_id=uuid4(), model=model, device=device, load_timestamp=datetime.now()
         )
 
         with patch("app.services.inference.inference_server.convert_prediction") as mock_convert_prediction:

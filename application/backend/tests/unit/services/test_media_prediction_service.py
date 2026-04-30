@@ -381,7 +381,7 @@ class TestMediaPredictionServiceUnit:
         mock_convert_to_inference_input.assert_called_once_with(project=project, loaded_media=loaded_media)
         fxt_label_service.list_all.assert_called_once_with(project_id=project.id)
         fxt_inference_server.set_inference_model.assert_called_once_with(
-            project_id=project.id, model_id=model_id, device=device, ttl=10
+            project_id=project.id, model_id=model_id, device=device, ttl=10, model_variant_id=None
         )
         fxt_inference_server.infer_batch.assert_called_once_with(labels=labels, inputs=inputs)
         if save_predictions:
