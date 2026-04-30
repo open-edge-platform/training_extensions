@@ -666,16 +666,21 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         finally:
             # Always remove the getitune workspace folder so it never lingers on disk,
             # regardless of whether the job succeeded, failed, or was cancelled.
-            if getitune_workspace_dir.exists():
-                try:
-                    shutil.rmtree(getitune_workspace_dir)
-                    logger.info("Cleaned up getitune workspace directory at {}", getitune_workspace_dir)
-                except Exception as cleanup_exc:
-                    logger.error(
-                        "Failed to clean up getitune workspace directory at {}: {}",
-                        getitune_workspace_dir,
-                        cleanup_exc,
-                    )
+            try:
+                shutil.rmtree(getitune_workspace_dir)
+                logger.info("Cleaned up getitune workspace directory at {}", getitune_workspace_dir)
+            except FileNotFoundError:
+                # Directory was never created or already removed (e.g., concurrent cleanup); treat as a no-op.
+                logger.debug(
+                    "getitune workspace directory at {} does not exist; nothing to clean up",
+                    getitune_workspace_dir,
+                )
+            except Exception as cleanup_exc:
+                logger.error(
+                    "Failed to clean up getitune workspace directory at {}: {}",
+                    getitune_workspace_dir,
+                    cleanup_exc,
+                )
 
     def _build_filter_conditions(
         self,

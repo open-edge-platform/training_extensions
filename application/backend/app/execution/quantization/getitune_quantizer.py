@@ -327,18 +327,21 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         finally:
             # Always remove the getitune quantization workspace folder so it never lingers on disk,
             # regardless of whether the job succeeded or failed.
-            if getitune_workspace_dir.exists():
-                try:
-                    shutil.rmtree(getitune_workspace_dir)
-                    logger.info(
-                        "Cleaned up getitune quantization workspace directory at {}", getitune_workspace_dir
-                    )
-                except Exception as cleanup_exc:
-                    logger.error(
-                        "Failed to clean up getitune quantization workspace directory at {}: {}",
-                        getitune_workspace_dir,
-                        cleanup_exc,
-                    )
+            try:
+                shutil.rmtree(getitune_workspace_dir)
+                logger.info("Cleaned up getitune quantization workspace directory at {}", getitune_workspace_dir)
+            except FileNotFoundError:
+                # Directory was never created or already removed (e.g., concurrent cleanup); treat as a no-op.
+                logger.debug(
+                    "getitune quantization workspace directory at {} does not exist; nothing to clean up",
+                    getitune_workspace_dir,
+                )
+            except Exception as cleanup_exc:
+                logger.error(
+                    "Failed to clean up getitune quantization workspace directory at {}: {}",
+                    getitune_workspace_dir,
+                    cleanup_exc,
+                )
 
     def _base_model_path(self, project_id: UUID, model_id: UUID) -> Path:
         return self._data_dir / "projects" / str(project_id) / "models" / str(model_id)

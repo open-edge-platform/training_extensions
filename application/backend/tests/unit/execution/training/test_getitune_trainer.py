@@ -982,7 +982,6 @@ class TestGetiTuneTrainerExecuteCancellation:
     def test_execute_failure_cleans_up_getitune_workspace(
         self,
         fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
-        fxt_model_service: Mock,
         tmp_path: Path,
     ):
         """When training fails, the getitune-workspace-{model_id} parent directory must be removed."""
@@ -1000,6 +999,7 @@ class TestGetiTuneTrainerExecuteCancellation:
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
             job_id=uuid4(),
+            dataset_revision_id=dataset_revision_id,
         )
 
         mock_training_config = Mock(spec=TrainingConfiguration)
@@ -1052,6 +1052,7 @@ class TestGetiTuneTrainerExecuteCancellation:
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
             job_id=uuid4(),
+            dataset_revision_id=dataset_revision_id,
         )
 
         mock_training_config = Mock(spec=TrainingConfiguration)
@@ -1078,13 +1079,9 @@ class TestGetiTuneTrainerExecuteCancellation:
             patch.object(getitune_trainer, "assign_subsets"),
             patch.object(getitune_trainer, "prepare_training_dataset", return_value=mock_dataset_info),
             patch.object(getitune_trainer, "prepare_model"),
-            patch.object(
-                getitune_trainer, "train_model", return_value=(mock_trained_model_path, mock_getitune_engine)
-            ),
+            patch.object(getitune_trainer, "train_model", return_value=(mock_trained_model_path, mock_getitune_engine)),
             patch.object(getitune_trainer, "export_model", return_value=Mock(spec=ExportedModels)),
-            patch.object(
-                getitune_trainer, "create_model_variants", return_value={fmt: uuid4() for fmt in ModelFormat}
-            ),
+            patch.object(getitune_trainer, "create_model_variants", return_value={fmt: uuid4() for fmt in ModelFormat}),
             patch.object(getitune_trainer, "evaluate_model"),
             patch.object(getitune_trainer, "store_model_artifacts"),
         ):
