@@ -3,8 +3,8 @@
 
 import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
 import { getMockedModel } from 'mocks/mock-model';
-import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedVariant } from 'mocks/mock-model-variant';
+import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
