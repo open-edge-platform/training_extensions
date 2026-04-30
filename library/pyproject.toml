@@ -73,7 +73,7 @@ dev = [
     "dill",
     "tifffile",
     "py-cpuinfo",
-    "mlflow",
+    "mlflow>=3.11.1",
 ]
 
 lint = [
