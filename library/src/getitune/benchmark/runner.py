@@ -9,7 +9,7 @@ import gc
 import logging
 import multiprocessing as mp
 import os
-import pickle
+import pickle  # nosec B403 - used only for IPC between parent and child benchmark processes we spawn
 import traceback as _traceback
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, ClassVar
@@ -82,7 +82,7 @@ def _subprocess_worker(
     )
 
     try:
-        config, experiment, seed, data_path, allowed_phases, deterministic = pickle.loads(payload)  # noqa: S301
+        config, experiment, seed, data_path, allowed_phases, deterministic = pickle.loads(payload)  # noqa: S301  # nosec B301 - payload is built by the parent process in this same module
         # Build a throw-away runner just to reuse ``_execute``. ``_tracker``
         # stays ``None`` in the child so MLflow writes happen only in the
         # parent after the child returns.
@@ -690,7 +690,7 @@ class BenchmarkRunner:
         exitcode = proc.exitcode
         try:
             with result_file.open("rb") as fh:
-                outcome = pickle.load(fh)  # noqa: S301
+                outcome = pickle.load(fh)  # noqa: S301  # nosec B301 - file is written by our own child process to a parent-controlled path
         except (FileNotFoundError, EOFError, pickle.UnpicklingError) as exc:
             # Child died before writing a result — almost always OOM-killed
             # (exitcode = -9 / SIGKILL) or segfault. Surface it as a real

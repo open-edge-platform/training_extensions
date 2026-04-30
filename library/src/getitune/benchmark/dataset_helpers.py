@@ -126,7 +126,7 @@ def download(url: str, dest_dir: Path, filename: str | None = None) -> Path:
     dest = dest_dir / filename
 
     print(f"Downloading {url} → {dest}")
-    urllib.request.urlretrieve(url, dest)  # noqa: S310
+    urllib.request.urlretrieve(url, dest)  # noqa: S310  # nosec B310 - URLs come from trusted in-repo benchmark catalog
     return dest
 
 

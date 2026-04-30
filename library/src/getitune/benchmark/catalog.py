@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import logging
-import subprocess
+import subprocess  # nosec B404 - used to invoke trusted in-repo dataset prep scripts
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path

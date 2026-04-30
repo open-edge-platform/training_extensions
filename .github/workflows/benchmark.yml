@@ -63,12 +63,16 @@ concurrency:
   group: benchmark-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions: {}
+
 # ---------------------------------------------------------------------------
 # Job 1: Determine run parameters based on trigger type
 # ---------------------------------------------------------------------------
 jobs:
   configure:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       priority: ${{ steps.cfg.outputs.priority }}
       size_tier: ${{ steps.cfg.outputs.size_tier }}
@@ -81,20 +85,29 @@ jobs:
     steps:
       - id: cfg
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+          INPUT_PRIORITY: ${{ inputs.priority }}
+          INPUT_SIZE_TIER: ${{ inputs.size_tier }}
+          INPUT_NUM_SEEDS: ${{ inputs.num_seeds }}
+          INPUT_EVAL_UPTO: ${{ inputs.eval_upto }}
+          INPUT_SCENARIO: ${{ inputs.scenario }}
+          INPUT_ACCELERATOR: ${{ inputs.accelerator }}
         run: |
           # ── workflow_dispatch: use inputs directly ──────────────────────
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "priority=${{ inputs.priority }}" >> "$GITHUB_OUTPUT"
-            echo "size_tier=${{ inputs.size_tier }}" >> "$GITHUB_OUTPUT"
-            echo "num_seeds=${{ inputs.num_seeds }}" >> "$GITHUB_OUTPUT"
-            echo "eval_upto=${{ inputs.eval_upto }}" >> "$GITHUB_OUTPUT"
-            echo "scenario=${{ inputs.scenario }}" >> "$GITHUB_OUTPUT"
-            echo "accelerator=${{ inputs.accelerator }}" >> "$GITHUB_OUTPUT"
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "priority=$INPUT_PRIORITY" >> "$GITHUB_OUTPUT"
+            echo "size_tier=$INPUT_SIZE_TIER" >> "$GITHUB_OUTPUT"
+            echo "num_seeds=$INPUT_NUM_SEEDS" >> "$GITHUB_OUTPUT"
+            echo "eval_upto=$INPUT_EVAL_UPTO" >> "$GITHUB_OUTPUT"
+            echo "scenario=$INPUT_SCENARIO" >> "$GITHUB_OUTPUT"
+            echo "accelerator=$INPUT_ACCELERATOR" >> "$GITHUB_OUTPUT"
             echo "trigger=manual" >> "$GITHUB_OUTPUT"
             echo "should_run=true" >> "$GITHUB_OUTPUT"
 
           # ── Weekly full: Sunday schedule ────────────────────────────────
-          elif [[ "${{ github.event.schedule }}" == "0 2 * * 0" ]]; then
+          elif [[ "$EVENT_SCHEDULE" == "0 19 * * 0" ]]; then
             echo "priority=core,extended" >> "$GITHUB_OUTPUT"
             echo "size_tier=tiny,small,medium" >> "$GITHUB_OUTPUT"
             echo "num_seeds=3" >> "$GITHUB_OUTPUT"
@@ -104,8 +117,8 @@ jobs:
             echo "trigger=weekly" >> "$GITHUB_OUTPUT"
             echo "should_run=true" >> "$GITHUB_OUTPUT"
 
-          # ── Nightly quick: Mon–Sat schedule ────────────────────────────
-          elif [[ "${{ github.event.schedule }}" == "0 2 * * 1-6" ]]; then
+          # ── Nightly quick: Mon–Fri schedule ────────────────────────────
+          elif [[ "$EVENT_SCHEDULE" == "0 19 * * 1-5" ]]; then
             echo "priority=core" >> "$GITHUB_OUTPUT"
             echo "size_tier=tiny,small" >> "$GITHUB_OUTPUT"
             echo "num_seeds=1" >> "$GITHUB_OUTPUT"
@@ -127,6 +140,8 @@ jobs:
     needs: configure
     if: needs.configure.outputs.should_run == 'true'
     runs-on: [self-hosted, "${{ needs.configure.outputs.accelerator }}"]
+    permissions:
+      contents: read
     timeout-minutes: 2880 # 48h safety net for large weekly runs
     defaults:
       run:
@@ -136,21 +151,24 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
 
       - name: Install OTX + benchmark dependencies
+        env:
+          ACCEL: ${{ needs.configure.outputs.accelerator }}
         run: |
-          ACCEL="${{ needs.configure.outputs.accelerator }}"
           # Map accelerator label to the pyproject.toml extra name
           if [[ "$ACCEL" == "gpu" ]]; then EXTRA="cuda"; else EXTRA="$ACCEL"; fi
           uv sync --frozen --extra "$EXTRA"
 
       # ── Dataset provisioning with cache ──────────────────────────────
       - name: Restore dataset cache
-        uses: actions/cache@v4
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
           path: library/data/
           key: benchmark-datasets-${{ hashFiles('library/benchmark_catalog.yaml') }}
@@ -164,13 +182,16 @@ jobs:
 
       # ── Run benchmarks ───────────────────────────────────────────────
       - name: Run benchmarks
+        env:
+          TRIGGER: ${{ needs.configure.outputs.trigger }}
+          BRANCH: ${{ github.ref_name }}
+          PRIORITY: ${{ needs.configure.outputs.priority }}
+          SIZE_TIER: ${{ needs.configure.outputs.size_tier }}
+          EVAL_UPTO: ${{ needs.configure.outputs.eval_upto }}
+          ACCELERATOR: ${{ needs.configure.outputs.accelerator }}
+          NUM_SEEDS: ${{ needs.configure.outputs.num_seeds }}
+          SCENARIO: ${{ needs.configure.outputs.scenario }}
         run: |
-          # Determine the trigger label for MLflow experiment naming
-          TRIGGER="${{ needs.configure.outputs.trigger }}"
-
-          # Determine the branch name
-          BRANCH="${{ github.ref_name }}"
-
           uv run python -m otx.benchmark run \
             --manifest benchmark_manifest.yaml \
             --catalog benchmark_catalog.yaml \
@@ -179,12 +200,12 @@ jobs:
             --mlflow-uri "${MLFLOW_TRACKING_URI:-./mlruns}" \
             --branch "$BRANCH" \
             --trigger "$TRIGGER" \
-            --priority ${{ needs.configure.outputs.priority }} \
-            --size-tier ${{ needs.configure.outputs.size_tier }} \
-            --eval-upto "${{ needs.configure.outputs.eval_upto }}" \
-            --accelerator "${{ needs.configure.outputs.accelerator }}" \
-            --num-seeds "${{ needs.configure.outputs.num_seeds }}" \
-            --scenario ${{ needs.configure.outputs.scenario }}
+            --priority "$PRIORITY" \
+            --size-tier "$SIZE_TIER" \
+            --eval-upto "$EVAL_UPTO" \
+            --accelerator "$ACCELERATOR" \
+            --num-seeds "$NUM_SEEDS" \
+            --scenario "$SCENARIO"
 
       # ── Disk cleanup: remove heavy artifacts, keep only metrics ─────
       - name: Cleanup checkpoints and exported models
@@ -207,20 +228,24 @@ jobs:
       # ── Generate standalone report (fallback if run step failed) ────
       - name: Generate report
         if: always()
+        env:
+          BRANCH: ${{ github.ref_name }}
+          TRIGGER: ${{ needs.configure.outputs.trigger }}
+          ACCELERATOR: ${{ needs.configure.outputs.accelerator }}
         run: |
           uv run python -m otx.benchmark report \
             --manifest benchmark_manifest.yaml \
             --mlflow-uri "${MLFLOW_TRACKING_URI:-./mlruns}" \
-            --branch "${{ github.ref_name }}" \
-            --trigger "${{ needs.configure.outputs.trigger }}" \
-            --accelerator "${{ needs.configure.outputs.accelerator }}" \
+            --branch "$BRANCH" \
+            --trigger "$TRIGGER" \
+            --accelerator "$ACCELERATOR" \
             --output-root results/ \
             --output results/report.md
 
       # ── Upload artifacts ─────────────────────────────────────────────
       - name: Upload results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: benchmark-results-${{ github.sha }}
           path: |
