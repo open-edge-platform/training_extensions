@@ -5,9 +5,9 @@ import { Key } from 'react';
 
 import { ActionButton, Item, Menu, MenuTrigger, toast } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../../api/client';
-import { useProjectIdentifier } from '../../../../../hooks/use-project-identifier.hook';
 
 const SINK_MENU_OPTIONS = {
     CONNECT: 'connect',
@@ -86,7 +86,20 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
     };
 
     const handleDisconnect = () => {
-        //
+        updatePipeline.mutate(
+            {
+                params: { path: { project_id } },
+                body: { sink_id: null },
+            },
+            {
+                onSuccess: () => {
+                    toast({
+                        type: 'success',
+                        message: `Successfully disconnected from "${name}"`,
+                    });
+                },
+            }
+        );
     };
 
     return (
