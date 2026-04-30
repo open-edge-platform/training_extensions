@@ -51,7 +51,7 @@ export const ActiveModel = () => {
                 labelPosition={'side'}
                 items={allModelsWithOpenVinoQuantizedModels}
                 onSelectionChange={handleChange}
-                selectedKey={activeModel?.id ?? null}
+                selectedKey={activeModel.model_variant_id ?? null}
                 minWidth={'size-3400'}
             >
                 {(item) => <Item>{item.name}</Item>}

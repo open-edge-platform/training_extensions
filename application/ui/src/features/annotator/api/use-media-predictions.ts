@@ -27,8 +27,8 @@ export const mediaPredictionsQueryOptions = ({
     queryOptions({
         queryKey: [
             ...MEDIA_PREDICTIONS_QUERY_KEY_PREFIX(projectId, mediaId),
+            selectedModel?.modelId,
             selectedModel?.id,
-            selectedModel?.type === 'base' ? undefined : selectedModel?.modelId,
             range,
         ],
         queryFn: async () => {
