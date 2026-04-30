@@ -1,36 +1,21 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import os
 import threading
-from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
 import numpy as np
 from loguru import logger
-from model_api.adapters import create_core
-from model_api.models import Model
 
 from app.db import get_db_session
 from app.models import BatchInferenceInput, BatchInferenceMedia, BatchInferencePrediction, BatchInferenceResult, Label
 from app.models.inference import InferenceModel, InferenceState, InferenceStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.system import DeviceInfo
-from app.services import ResourceNotFoundError, ResourceType
+from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.data_collect.prediction_converter import convert_prediction
-from app.utils.ir_format import FP32OpenvinoAdapter
 
-MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
-
-
-@dataclass(frozen=True)
-class _LoadedModel:
-    id: UUID
-    variant_id: UUID
-    model: Model
-    device: DeviceInfo
-    load_timestamp: datetime
+from .model_loader import LoadedModelHandle, ModelLoader
 
 
 class InferenceBusyError(Exception):
@@ -56,7 +41,7 @@ class InferenceServer:
 
     def __init__(self, data_dir: Path) -> None:
         self._data_dir = data_dir
-        self._loaded_model: _LoadedModel | None = None
+        self._loaded_model: LoadedModelHandle | None = None
         self._loading_model: bool = False
         self._lock = threading.Lock()
 
@@ -83,22 +68,11 @@ class InferenceServer:
         Returns:
             True, if the model has been loaded, False if model has not been changed.
         """
-        # Optimization: if the given model variant is already loaded on the given device, return immediately without
-        # acquiring the lock
-        loaded_model = self._loaded_model  # use a variable to avoid multiple unprotected reads of self._loaded_model
-        if (
-            loaded_model
-            and loaded_model.id == model_id
-            and loaded_model.device == device
-            and (model_variant_id is None or loaded_model.variant_id == model_variant_id)
-        ):
-            return False  # same model variant and device, no need to reload
-
         self._lock.acquire()
         try:
             if (
                 self._loaded_model
-                and self._loaded_model.id == model_id
+                and self._loaded_model.model_id == model_id
                 and self._loaded_model.device == device
                 and (model_variant_id is None or self._loaded_model.variant_id == model_variant_id)
             ):
@@ -145,20 +119,11 @@ class InferenceServer:
                     )
                 model_xml_path, _ = paths
 
-                ie = create_core()
-                adapter = FP32OpenvinoAdapter(
-                    ie,
-                    str(model_xml_path),
-                    device=device.as_openvino,
-                    max_num_requests=int(MODELAPI_NSTREAMS),
-                )
-                model = Model.create_model(adapter)
-                self._loaded_model = _LoadedModel(
-                    id=model_id,
-                    variant_id=model_variant.id,
-                    model=model,
-                    device=device,
-                    load_timestamp=datetime.now(),
+                if self._loaded_model is not None:
+                    ModelLoader.unload(self._loaded_model)
+                    self._loaded_model = None
+                self._loaded_model = ModelLoader.load(
+                    model_id=model_id, variant_id=model_variant.id, model_xml_path=model_xml_path, device=device
                 )
                 return True
         finally:
@@ -180,9 +145,9 @@ class InferenceServer:
         return InferenceState(
             status=InferenceStatus.ACTIVE,
             model=InferenceModel(
-                model_id=loaded_model.id,
+                model_id=loaded_model.model_id,
                 device=loaded_model.device,
-                load_timestamp=loaded_model.load_timestamp,
+                load_timestamp=loaded_model.loaded_at,
             ),
         )
 
@@ -231,4 +196,6 @@ class InferenceServer:
         """
         # TODO: model unload & active inference cancellation
         with self._lock:
-            self._loaded_model = None
+            if self._loaded_model is not None:
+                ModelLoader.unload(self._loaded_model)
+                self._loaded_model = None
