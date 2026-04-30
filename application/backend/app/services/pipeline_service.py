@@ -112,6 +112,16 @@ class PipelineService(BaseSessionManagedService):
         if new_model_id is not None and "model_variant_id" not in partial_config:
             base["model_variant_id"] = None
 
+        # Allows only the model_variant_id to be passed, then the model id will be inferred from the variant.
+        new_variant_id = partial_config.get("model_variant_id")
+        if new_variant_id is not None and new_model_id is None:
+            model_variant_repo = ModelVariantRepository(db=self.db_session)
+            variant_db = model_variant_repo.get_by_id(str(new_variant_id))
+            if variant_db is None:
+                raise ResourceNotFoundError(resource_type=ResourceType.MODEL_VARIANT, resource_id=str(new_variant_id))
+            # Override the model id so that the merged config refers to the variant's parent revision.
+            partial_config = {**partial_config, "model_id": variant_db.model_revision_id}
+
         to_update = type(pipeline).model_validate({**base, **partial_config})
         pipeline_repo = PipelineRepository(self.db_session)
         to_update_db = PipelineDB(
@@ -181,7 +191,9 @@ class PipelineService(BaseSessionManagedService):
             # Explicit variant specified: validate it
             variant_db = model_variant_repo.get_by_id(pipeline_db.model_variant_id)
             if variant_db is None or variant_db.files_deleted:
-                raise ResourceNotFoundError(resource_type=ResourceType.MODEL, resource_id=pipeline_db.model_variant_id)
+                raise ResourceNotFoundError(
+                    resource_type=ResourceType.MODEL_VARIANT, resource_id=pipeline_db.model_variant_id
+                )
             if variant_db.model_revision_id != model_revision_id:
                 raise IncompatibleModelVariantError(
                     f"Model variant '{pipeline_db.model_variant_id}' does not belong to "
