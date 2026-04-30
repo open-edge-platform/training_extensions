@@ -1,9 +1,20 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 import pytest
 
 from app.api.schemas.evaluation import EvaluationMetricName, EvaluationView
+from app.models import DatasetItemSubset
+
+
+def _make_evaluation_view(metrics: dict) -> EvaluationView:
+    """Helper to build an EvaluationView via the public model_validate interface."""
+    return EvaluationView.model_validate(
+        {
+            "dataset_revision_id": "00000000-0000-0000-0000-000000000001",
+            "subset": DatasetItemSubset.TESTING,
+            "metrics": metrics,
+        }
+    )
 
 
 class TestEvaluationViewPrimaryMetric:
@@ -19,10 +30,8 @@ class TestEvaluationViewPrimaryMetric:
             "mar_10": 0.90,
             "mar_100": 0.92,
         }
-
-        result = EvaluationView._EvaluationView__serialize_metrics(metrics)
-
-        primary_metrics = [m for m in result if m.primary]
+        result = _make_evaluation_view(metrics)
+        primary_metrics = [m for m in result.metrics if m.primary]
         assert len(primary_metrics) == 1
         assert primary_metrics[0].name == EvaluationMetricName.MAP_50
 
@@ -32,10 +41,8 @@ class TestEvaluationViewPrimaryMetric:
             "map": 0.85,
             "mar_1": 0.88,
         }
-
-        result = EvaluationView._EvaluationView__serialize_metrics(metrics)
-
-        primary_metrics = [m for m in result if m.primary]
+        result = _make_evaluation_view(metrics)
+        primary_metrics = [m for m in result.metrics if m.primary]
         assert len(primary_metrics) == 1
         assert primary_metrics[0].name == EvaluationMetricName.MAP
 
@@ -47,10 +54,8 @@ class TestEvaluationViewPrimaryMetric:
             "recall": 0.94,
             "f_measure": 0.95,
         }
-
-        result = EvaluationView._EvaluationView__serialize_metrics(metrics)
-
-        primary_metrics = [m for m in result if m.primary]
+        result = _make_evaluation_view(metrics)
+        primary_metrics = [m for m in result.metrics if m.primary]
         assert len(primary_metrics) == 1
         assert primary_metrics[0].name == EvaluationMetricName.ACCURACY
 
@@ -60,10 +65,8 @@ class TestEvaluationViewPrimaryMetric:
             "map": 0.85,
             "map_50": 0.90,
         }
-
-        result = EvaluationView._EvaluationView__serialize_metrics(metrics)
-
-        map_metric = next((m for m in result if m.name == EvaluationMetricName.MAP), None)
+        result = _make_evaluation_view(metrics)
+        map_metric = next((m for m in result.metrics if m.name == EvaluationMetricName.MAP), None)
         assert map_metric is not None
         assert not map_metric.primary
 
@@ -72,6 +75,5 @@ class TestEvaluationViewPrimaryMetric:
         metrics = {
             "unknown_metric": 0.5,
         }
-
         with pytest.raises(ValueError, match="Unable to determine the primary evaluation metric"):
-            EvaluationView._EvaluationView__serialize_metrics(metrics)
+            _make_evaluation_view(metrics)
