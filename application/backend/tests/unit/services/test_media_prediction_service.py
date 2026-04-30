@@ -7,15 +7,7 @@ import numpy as np
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models import (
-    BatchInferencePrediction,
-    BatchInferenceResult,
-    DatasetItem,
-    DatasetItemAnnotation,
-    Project,
-    Task,
-    Video,
-)
+from app.models import BatchInferenceResult, Project, Task, Video
 from app.models.media import (
     Image,
     MediaListPredictionRequest,
@@ -26,14 +18,7 @@ from app.models.media import (
     VideoRange,
 )
 from app.models.system import DeviceInfo, DeviceType
-from app.services import (
-    DatasetService,
-    LabelService,
-    MediaPredictionService,
-    MediaService,
-    ResourceNotFoundError,
-    ResourceType,
-)
+from app.services import DatasetService, LabelService, MediaPredictionService, MediaService, ResourceNotFoundError
 from app.services.inference import InferenceServer
 from app.services.media_prediction_service import LoadedMedia
 
