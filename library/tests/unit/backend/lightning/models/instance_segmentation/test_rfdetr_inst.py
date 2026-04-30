@@ -165,17 +165,11 @@ class TestRFDETRInst:
         assert masks.shape[:2] == boxes.shape[:2]
 
     def test_exporter_output_names(self) -> None:
-        """Exporter must publish ``boxes``/``labels``/``masks`` (no standalone ``scores``).
-
-        The OpenVINO ``MaskRCNN`` model_api wrapper used at test/optimize time
-        reads ``outputs["boxes"][:, 4]`` for the score; emitting a separate
-        ``scores`` output and a 4-column ``boxes`` tensor would raise
-        ``IndexError: index 4 is out of bounds for axis 1 with size 4``.
-        """
+        """Exporter must publish ``boxes``/``labels``/``masks`` (no standalone ``scores``)."""
         model = RFDETRInst(model_name="rfdetr_seg_n", label_info=3)
         exporter = model._exporter
-        assert exporter.output_names == ["boxes", "labels", "masks"]
         assert isinstance(exporter, LightningModelExporter)
+        assert exporter.output_names == ["boxes", "labels", "masks"]
         onnx_cfg = exporter.onnx_export_configuration
         assert onnx_cfg["output_names"] == ["boxes", "labels", "masks"]
 

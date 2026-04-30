@@ -297,7 +297,7 @@ class MaskRCNNTV(LightningInstanceSegModel):
                 "autograd_inlining": False,
                 "dynamo": False,
             },
-            output_names=["bboxes", "labels", "masks", "feature_vector", "saliency_map"] if self.explain_mode else None,
+            output_names=["boxes", "labels", "masks", "feature_vector", "saliency_map"] if self.explain_mode else None,
         )
 
     def forward_for_tracing(self, inputs: Tensor) -> tuple[Tensor, ...]:
@@ -311,21 +311,10 @@ class MaskRCNNTV(LightningInstanceSegModel):
 
     @property
     def _optimization_config(self) -> dict[str, Any]:
-        """PTQ config for torchvision MaskRCNN.
-
-        The mask branch (``roi_heads.mask_roi_pool``) only receives input when
-        the box branch produces detections. During NNCF calibration on small
-        datasets it is possible for some scatter/slice nodes inside
-        ``mask_roi_pool`` to never see activations, which causes
-        ``nncf.InternalError: Statistics were not collected for the node
-        __module.model.roi_heads.mask_roi_pool/aten::scatter/Slice_3``.
-        Excluding the entire ``mask_roi_pool`` subgraph from quantization
-        keeps PTQ stable while leaving the heavier conv-dominated parts of
-        the model quantized.
-        """
+        """PTQ config for torchvision MaskRCNN."""
         return {
             "ignored_scope": {
-                "patterns": [".*mask_roi_pool.*"],
+                "patterns": [r".*mask_roi_pool.*aten::scatter.*"],
                 "validate": False,
             },
         }

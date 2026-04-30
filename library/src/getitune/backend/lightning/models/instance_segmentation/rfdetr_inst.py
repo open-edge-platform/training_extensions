@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Literal
 
-import torch
 from rfdetr import (
     RFDETRSeg2XLarge,
     RFDETRSegLarge,
@@ -28,6 +27,7 @@ from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 
 if TYPE_CHECKING:
+    import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
@@ -155,23 +155,8 @@ class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inc
         )
 
     def forward_for_tracing(self, inputs: torch.Tensor) -> tuple[torch.Tensor, ...]:
-        """Forward pass used for export.
-
-        The OpenVINO ``MaskRCNN`` model_api wrapper (used by all instance
-        segmentation models) expects the exported ``boxes`` output to have a
-        last dimension of 5, i.e. batched shape ``(B, N, 5)``, where the 5th
-        value is the confidence score. The default RF-DETR export returns
-        ``(boxes, labels, scores, masks)`` with batched ``boxes`` shaped
-        ``(B, N, 4)``, which causes an ``IndexError`` in
-        ``model_api.models.instance_segmentation.postprocess`` when it reads
-        the score column from ``outputs["boxes"]``. We therefore concatenate
-        ``scores`` onto ``boxes`` here and drop the standalone ``scores``
-        output, mirroring the convention used by the MaskRCNN exporters.
-        """
-        outputs = self.model.export(inputs)  # pyrefly: ignore[not-callable]
-        boxes, labels, scores, masks = outputs
-        boxes_with_scores = torch.cat([boxes, scores.unsqueeze(-1)], dim=-1)
-        return boxes_with_scores, labels, masks
+        """Forward pass used for export."""
+        return self.model.export(inputs, merge_scores=True)  # pyrefly: ignore[not-callable]
 
     @property
     def _default_preprocessing_params(self) -> dict[str, DataInputParams]:  # type: ignore[override]

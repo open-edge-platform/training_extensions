@@ -74,13 +74,14 @@ class TestMaskRCNN:
         # assert len(output) == 5  # noqa: ERA001
 
     def test_maskrcnn_tv_optimization_config_excludes_mask_roi_pool(self) -> None:
-        """``MaskRCNNTV`` PTQ config must exclude ``mask_roi_pool``.
+        """``MaskRCNNTV`` PTQ config must exclude the ``mask_roi_pool`` scatter subgraph.
 
         NNCF calibration on small datasets can leave scatter/slice nodes inside
         ``roi_heads.mask_roi_pool`` without statistics, raising
         ``InternalError: Statistics were not collected for the node
         __module.model.roi_heads.mask_roi_pool/aten::scatter/Slice_3``.
-        Excluding the subgraph from PTQ keeps quantization stable.
+        We narrow the ignored scope to the failing scatter subgraph only, so
+        the conv-dominated parts of the mask branch remain quantized.
         """
         model = MaskRCNNTV(
             label_info=3,
@@ -91,5 +92,6 @@ class TestMaskRCNN:
         assert "ignored_scope" in cfg
         ignored = cfg["ignored_scope"]
         assert "patterns" in ignored
-        assert any("mask_roi_pool" in p for p in ignored["patterns"])
+        patterns = ignored["patterns"]
+        assert any("mask_roi_pool" in p and "scatter" in p for p in patterns), patterns
         assert ignored.get("validate") is False
