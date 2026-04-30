@@ -82,6 +82,29 @@ class TestProjectEndpoints:
         assert response.status_code == status.HTTP_200_OK
         fxt_project_service.get_project_by_id.assert_called_once_with(fxt_project.id)
 
+    def test_get_project_created_at_has_timezone(self, fxt_project, fxt_project_service, fxt_client):
+        fxt_project_service.get_project_by_id.return_value = fxt_project
+
+        response = fxt_client.get(f"/api/projects/{str(fxt_project.id)}")
+
+        assert response.status_code == status.HTTP_200_OK
+        created_at_str = response.json()["created_at"]
+        parsed = datetime.fromisoformat(created_at_str)
+        assert parsed.tzinfo is not None, "created_at must include timezone info"
+
+    def test_get_project_naive_created_at_becomes_utc(self, fxt_project, fxt_project_service, fxt_client):
+        """Ensure a project with a naive created_at (as returned by SQLite) gets UTC timezone in the response."""
+        naive_project = fxt_project.model_copy(update={"created_at": datetime(2025, 6, 1, 12, 0, 0)})
+        fxt_project_service.get_project_by_id.return_value = naive_project
+
+        response = fxt_client.get(f"/api/projects/{str(fxt_project.id)}")
+
+        assert response.status_code == status.HTTP_200_OK
+        created_at_str = response.json()["created_at"]
+        parsed = datetime.fromisoformat(created_at_str)
+        assert parsed.tzinfo is not None, "created_at must include timezone info even when DB returns naive datetime"
+        assert parsed == datetime(2025, 6, 1, 12, 0, 0, tzinfo=UTC)
+
     @pytest.mark.parametrize("exclude_attrs", [{}, {"id"}])
     def test_create_project_success(self, exclude_attrs, fxt_project, fxt_project_service, fxt_client):
         fxt_project_service.create_project.return_value = fxt_project

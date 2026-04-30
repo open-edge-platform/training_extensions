@@ -1,10 +1,10 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Generic, TypeVar
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_serializer, model_validator
 
 from app.core.models import HasID, RequiresID
 from app.models import TaskType
@@ -89,6 +89,17 @@ class ProjectCreate(HasID, ProjectBase[TaskCreate]):
 class ProjectView(RequiresID, ProjectBase[TaskView]):
     active_pipeline: bool = Field(..., description="Whether the project has an active pipeline.")
     created_at: datetime = Field(..., description="Timestamp when the project was created.")
+
+    @field_serializer("created_at")
+    def serialize_created_at(self, v: datetime) -> str:
+        """Ensure created_at is always serialized with UTC timezone info.
+
+        The DB (SQLite) stores naive datetimes, so timezone info must be attached
+        here before the value is written to the JSON response.
+        """
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=UTC)
+        return v.isoformat()
 
     model_config = {
         "json_schema_extra": {
