@@ -115,8 +115,10 @@ class IntensityMapping(BaseModel):
 
     @field_serializer("mode")
     @staticmethod
-    def serialize_mode(value: IntensityMappingMode) -> str:
+    def serialize_mode(value: IntensityMappingMode | str) -> str:
         """Serialize mode as the lowercase enum key name expected by the training library."""
+        if not isinstance(value, IntensityMappingMode):
+            value = IntensityMappingMode(value)
         return value.name.lower()
 
 

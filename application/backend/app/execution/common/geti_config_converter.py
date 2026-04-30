@@ -814,6 +814,8 @@ class GetiConfigConverter:
             intensity_config["scale_factor"] = intensity_mapping.get("scale_factor", 1.0)
             intensity_config["min_value"] = intensity_mapping.get("clip_min_value", 0.0)
             intensity_config["max_value"] = intensity_mapping.get("clip_max_value", 255.0)
+        else:
+            raise ValueError(f"Unsupported intensity mapping mode: {mode}")
 
         # Apply to all subsets
         for subset_key in ("train_subset", "val_subset", "test_subset"):
