@@ -100,7 +100,7 @@ describe('useDatasetFiltersSearchParams', () => {
     });
 
     describe('annotationStatus filter', () => {
-        it.each(['unannotated', 'reviewed', 'to_review'] as const)(
+        it.each(['missing_annotations', 'with_annotations'] as const)(
             'returns annotationStatus "%s" from search param',
             (status) => {
                 const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
