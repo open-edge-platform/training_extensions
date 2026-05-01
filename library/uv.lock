@@ -1394,7 +1394,7 @@ dev = [
     { name = "dill" },
     { name = "mlflow", specifier = ">=3.11.1" },
     { name = "py-cpuinfo" },
-    { name = "pytest", specifier = ">=5.3.5" },
+    { name = "pytest", specifier = "~=9.0.3" },
     { name = "pytest-cov", specifier = ">=4.0.0" },
     { name = "pytest-csv" },
     { name = "pytest-forked" },
