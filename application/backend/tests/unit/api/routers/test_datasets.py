@@ -247,6 +247,7 @@ class TestDatasetItemEndpoints:
             "instances_per_label": [
                 {"label_id": "11111111-1111-1111-1111-111111111111", "instances": 5},
                 {"label_id": "22222222-2222-2222-2222-222222222222", "instances": 2},
+                {"label_id": None, "instances": 3},
             ],
         }
         # Patch the service to return a DatasetStatistics model with the correct fields
@@ -269,6 +270,7 @@ class TestDatasetItemEndpoints:
                 "instances_per_label": [
                     {"label_id": "11111111-1111-1111-1111-111111111111", "instances": 5},
                     {"label_id": "22222222-2222-2222-2222-222222222222", "instances": 2},
+                    {"label_id": None, "instances": 3},
                 ],
             },
         }

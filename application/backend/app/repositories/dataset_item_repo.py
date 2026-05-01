@@ -292,10 +292,6 @@ class DatasetItemRepository:
         )
 
         # instances_per_label
-        annotated_dataset_items_stmt = select(DatasetItemDB.annotation_data).where(
-            DatasetItemDB.project_id == self.project_id, DatasetItemDB.annotation_data.isnot(None)
-        )
-
         labels_counts = Counter(
             label["id"]
             for item in self.db.execute(annotated_dataset_items_stmt)
@@ -303,9 +299,12 @@ class DatasetItemRepository:
             for annotation in item.annotation_data
             for label in annotation["labels"]
         )
+        no_object_count = sum(1 for item in self.db.execute(annotated_dataset_items_stmt) if not item.annotation_data)
+
         annotated_counts["instances_per_label"] = [
             {"label_id": label_id, "instances": count} for label_id, count in labels_counts.items()
         ]
+        annotated_counts["instances_per_label"].append({"label_id": None, "instances": no_object_count})
 
         statistics.update(annotated_counts)
 

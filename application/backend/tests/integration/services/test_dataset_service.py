@@ -541,6 +541,23 @@ def fxt_project_with_rich_dataset_items(fxt_project_with_pipeline, db_session) -
     db_media_items.append(annotated_image)
     db_dataset_items.append(item_annotated_image)
 
+    # Image (annotated with no objects - empty annotations)
+    no_object_image = MediaDB(
+        id=str(uuid4()),
+        type="image",
+        name="no_object_img",
+        format="jpg",
+        **default_media_values,
+    )
+    item_no_object_image = DatasetItemDB(
+        id=str(no_object_image.id),
+        **default_item_values,
+        annotation_data=[],
+        user_reviewed=True,
+    )
+    db_media_items.append(no_object_image)
+    db_dataset_items.append(item_no_object_image)
+
     # Video (annotated frames)
     annotated_video = MediaDB(
         id=str(uuid4()),
@@ -1510,21 +1527,25 @@ class TestDatasetServiceIntegration:
         statistics = fxt_dataset_service.get_dataset_statistics(project_id=project.id)
 
         # Media counts
-        assert statistics.media_counts.images == 2
+        assert statistics.media_counts.images == 3
         assert statistics.media_counts.videos == 2
         assert statistics.media_counts.video_frames == 35
 
         # Annotation counts
-        assert statistics.annotations_counts.annotated_images == 1
+        assert statistics.annotations_counts.annotated_images == 2
         assert statistics.annotations_counts.annotated_videos == 1
         assert statistics.annotations_counts.annotated_video_frames == 2
 
         # Instances counts
         assert statistics.annotations_counts.instances == 5
-        assert len(statistics.annotations_counts.instances_per_label) == 2
-        label_counts = {str(lbl.label_id): lbl.instances for lbl in statistics.annotations_counts.instances_per_label}
+        assert len(statistics.annotations_counts.instances_per_label) == 3
+        label_counts = {
+            str(lbl.label_id) if lbl.label_id is not None else None: lbl.instances
+            for lbl in statistics.annotations_counts.instances_per_label
+        }
         assert label_counts[str(project.task.labels[0].id)] == 3
         assert label_counts[str(project.task.labels[1].id)] == 2
+        assert label_counts[None] == 1
 
     def test_get_dataset_statistics_no_annotations(
         self,
@@ -1571,7 +1592,9 @@ class TestDatasetServiceIntegration:
         assert statistics.media_counts.video_frames == 0
         assert statistics.annotations_counts.annotated_images == 0
         assert statistics.annotations_counts.instances == 0
-        assert statistics.annotations_counts.instances_per_label == []
+        assert len(statistics.annotations_counts.instances_per_label) == 1
+        assert statistics.annotations_counts.instances_per_label[0].label_id is None
+        assert statistics.annotations_counts.instances_per_label[0].instances == 0
 
     def test_get_dataset_statistics_mixed_annotated_and_unannotated(
         self,
@@ -1646,6 +1669,10 @@ class TestDatasetServiceIntegration:
         assert statistics.media_counts.images == 2
         assert statistics.annotations_counts.annotated_images == 1
         assert statistics.annotations_counts.instances == 1
-        assert len(statistics.annotations_counts.instances_per_label) == 1
-        assert str(statistics.annotations_counts.instances_per_label[0].label_id) == label_id
-        assert statistics.annotations_counts.instances_per_label[0].instances == 1
+        assert len(statistics.annotations_counts.instances_per_label) == 2
+        label_counts = {
+            str(lbl.label_id) if lbl.label_id is not None else None: lbl.instances
+            for lbl in statistics.annotations_counts.instances_per_label
+        }
+        assert label_counts[label_id] == 1
+        assert label_counts[None] == 0
