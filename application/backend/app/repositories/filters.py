@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from sqlalchemy import Select, exists, select
+from sqlalchemy import Select, exists, func, select
 from sqlalchemy.orm import aliased
 
 from app.db.schema import DatasetItemDB, MediaDB
@@ -48,13 +48,32 @@ def _apply_annotation_status_filter_with_video_support(stmt: Select, annotation_
             .correlate(MediaDB)
         )
         stmt = stmt.where(
-            (DatasetItemDB.annotation_data.isnot(None))  # image or frame with annotation
+            (MediaDB.type != MediaType.VIDEO)
+            & (DatasetItemDB.annotation_data.isnot(None))  # image or frame with annotation
             | (
                 (MediaDB.type == MediaType.VIDEO) & annotated_frame_exists  # video with at least one annotated frame
             )
         )
     elif annotation_status == DatasetItemAnnotationStatus.MISSING_ANNOTATIONS:
-        stmt = stmt.where(DatasetItemDB.annotation_data.is_(None))
+        frame_alias = aliased(MediaDB)
+        annotated_frame_count = (
+            select(func.count(DatasetItemDB.id))
+            .join(frame_alias, frame_alias.id == DatasetItemDB.id)
+            .where(
+                frame_alias.video_id == MediaDB.id,
+                DatasetItemDB.annotation_data.isnot(None),
+            )
+            .correlate(MediaDB)
+            .scalar_subquery()
+        )
+        stmt = stmt.where(
+            (MediaDB.type != MediaType.VIDEO)
+            & (DatasetItemDB.annotation_data.is_(None))  # image or frame missing annotation
+            | (
+                (MediaDB.type == MediaType.VIDEO)
+                & (annotated_frame_count < MediaDB.frame_count)  # not all frames annotated
+            )
+        )
     return stmt
 
 

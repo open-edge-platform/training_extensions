@@ -826,6 +826,74 @@ class TestMediaServiceIntegration:
         assert videos[0].annotated_frame_count == 1
 
     @pytest.mark.parametrize(
+        "annotation_status, expected_video_count",
+        [
+            (None, 1),
+            (DatasetItemAnnotationStatus.WITH_ANNOTATIONS, 1),
+            (DatasetItemAnnotationStatus.MISSING_ANNOTATIONS, 0),
+        ],
+    )
+    def test_list_media_with_annotated_video(
+        self,
+        annotation_status: DatasetItemAnnotationStatus | None,
+        expected_video_count: int,
+        fxt_media_service: MediaService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
+        fxt_media_factory: Callable[[str, list[dict]], list[MediaDB]],
+        db_session: Session,
+    ) -> None:
+        """Test listing media with fully annotated video."""
+        project, _ = fxt_project_with_pipeline
+
+        video_config = {
+            "id": str(uuid4()),
+            "type": "video",
+            "name": "test4",
+            "format": "avi",
+            "size": 1024,
+            "width": 1024,
+            "height": 768,
+            "fps": 25.0,
+            "frame_count": 1,
+        }
+        video_frame_config = {
+            "video_id": video_config["id"],
+            "type": "video_frame",
+            "name": "test",
+            "format": "jpg",
+            "size": 1024,
+            "width": 1024,
+            "height": 768,
+            "frame_index": 0,
+        }
+
+        db_media_list = fxt_media_factory(
+            str(project.id),
+            [
+                video_config,
+                video_frame_config,
+            ],
+        )
+
+        db_video_frame = db_media_list[1]
+        db_dataset_item = DatasetItemDB(
+            id=db_video_frame.id,
+            project_id=str(project.id),
+            subset="unassigned",
+            annotation_data=[{"labels": [{"id": str(uuid4())}], "shape": {"type": "full_image"}}],
+        )
+        db_session.add(db_dataset_item)
+        db_session.flush()
+
+        media_list = fxt_media_service.list_media(
+            project_id=project.id,
+            filters=MediaFilters(annotation_status=annotation_status),
+            exclude_types=[MediaType.VIDEO_FRAME],
+        )
+
+        assert len(media_list) == expected_video_count
+
+    @pytest.mark.parametrize(
         "exclude_types, count", [([MediaType.IMAGE], 2), ([MediaType.VIDEO], 4), ([MediaType.VIDEO_FRAME], 4)]
     )
     def test_list_media_excluding(
