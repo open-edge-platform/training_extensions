@@ -2,27 +2,21 @@
 #
 # Automated benchmarking of OTX models on curated datasets.
 # Results are logged to a centralized MLflow tracking server and
-# summarized as Markdown reports (posted as PR comments or CI artifacts).
+# summarized as Markdown reports
 #
 # Triggers:
-#   - Weekly full benchmark (Sunday 19:00 UTC) — core + extended models, all dataset tiers
-#   - Nightly quick benchmark (Mon–Sat 19:00 UTC) — core models, tiny + small datasets
+#   - Weekly full benchmark (Friday 19:00 UTC) — core + extended models, all dataset tiers
 #   - Manual workflow_dispatch — full control over all parameters
 #
-# Required secrets:
-#   MLFLOW_TRACKING_URI — URL of the centralized MLflow server (e.g. http://mlflow.internal:5000)
-#
 # Self-hosted runner labels:
-#   gpu — NVIDIA GPU runner (primary)
+#   gpu — NVIDIA GPU runner
 #   xpu — Intel XPU runner
-#   cpu — CPU-only runner
 
 name: Model Benchmark
 
 on:
   schedule:
-    - cron: "0 19 * * 0" # Weekly full: Sunday 19:00 UTC
-    - cron: "0 19 * * 1-5" # Nightly quick: Mon–Fri 19:00 UTC
+    - cron: "0 19 * * 5" # Weekly full: Friday 19:00 UTC
   workflow_dispatch:
     inputs:
       task:
@@ -49,7 +43,7 @@ on:
         description: "Accelerator target"
         default: "gpu"
         type: choice
-        options: [gpu, xpu, cpu]
+        options: [gpu, xpu]
       eval_upto:
         description: "Last evaluation phase (train → export → optimize)"
         default: "optimize"
@@ -57,7 +51,7 @@ on:
         options: [train, export, optimize]
       num_seeds:
         description: "Number of seeds per experiment"
-        default: "3"
+        default: "2"
 
 concurrency:
   group: benchmark-${{ github.event_name }}-${{ github.ref }}
@@ -79,7 +73,7 @@ jobs:
       num_seeds: ${{ steps.cfg.outputs.num_seeds }}
       eval_upto: ${{ steps.cfg.outputs.eval_upto }}
       scenario: ${{ steps.cfg.outputs.scenario }}
-      accelerator: ${{ steps.cfg.outputs.accelerator }}
+      accelerators: ${{ steps.cfg.outputs.accelerators }}
       trigger: ${{ steps.cfg.outputs.trigger }}
       should_run: ${{ steps.cfg.outputs.should_run }}
     steps:
@@ -102,30 +96,19 @@ jobs:
             echo "num_seeds=$INPUT_NUM_SEEDS" >> "$GITHUB_OUTPUT"
             echo "eval_upto=$INPUT_EVAL_UPTO" >> "$GITHUB_OUTPUT"
             echo "scenario=$INPUT_SCENARIO" >> "$GITHUB_OUTPUT"
-            echo "accelerator=$INPUT_ACCELERATOR" >> "$GITHUB_OUTPUT"
+            echo "accelerators=[\"$INPUT_ACCELERATOR\"]" >> "$GITHUB_OUTPUT"
             echo "trigger=manual" >> "$GITHUB_OUTPUT"
             echo "should_run=true" >> "$GITHUB_OUTPUT"
 
-          # ── Weekly full: Sunday schedule ────────────────────────────────
-          elif [[ "$EVENT_SCHEDULE" == "0 19 * * 0" ]]; then
+          # ── Weekly full: Friday schedule ────────────────────────────────
+          elif [[ "$EVENT_SCHEDULE" == "0 19 * * 5" ]]; then
             echo "priority=core,extended" >> "$GITHUB_OUTPUT"
             echo "size_tier=tiny,small,medium" >> "$GITHUB_OUTPUT"
             echo "num_seeds=3" >> "$GITHUB_OUTPUT"
             echo "eval_upto=optimize" >> "$GITHUB_OUTPUT"
             echo "scenario=default" >> "$GITHUB_OUTPUT"
-            echo "accelerator=gpu" >> "$GITHUB_OUTPUT"
+            echo "accelerators=[\"gpu\",\"xpu\"]" >> "$GITHUB_OUTPUT"
             echo "trigger=weekly" >> "$GITHUB_OUTPUT"
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-
-          # ── Nightly quick: Mon–Fri schedule ────────────────────────────
-          elif [[ "$EVENT_SCHEDULE" == "0 19 * * 1-5" ]]; then
-            echo "priority=core" >> "$GITHUB_OUTPUT"
-            echo "size_tier=tiny,small" >> "$GITHUB_OUTPUT"
-            echo "num_seeds=1" >> "$GITHUB_OUTPUT"
-            echo "eval_upto=export" >> "$GITHUB_OUTPUT"
-            echo "scenario=default" >> "$GITHUB_OUTPUT"
-            echo "accelerator=gpu" >> "$GITHUB_OUTPUT"
-            echo "trigger=nightly" >> "$GITHUB_OUTPUT"
             echo "should_run=true" >> "$GITHUB_OUTPUT"
 
 
@@ -139,15 +122,17 @@ jobs:
   benchmark:
     needs: configure
     if: needs.configure.outputs.should_run == 'true'
-    runs-on: [self-hosted, "${{ needs.configure.outputs.accelerator }}"]
+    strategy:
+      fail-fast: false
+      matrix:
+        accelerator: ${{ fromJSON(needs.configure.outputs.accelerators) }}
+    runs-on: [self-hosted, "${{ matrix.accelerator }}"]
     permissions:
       contents: read
-    timeout-minutes: 2880 # 48h safety net for large weekly runs
+    timeout-minutes: 4320 # 72h safety net for large weekly runs
     defaults:
       run:
         working-directory: library
-    env:
-      MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
 
     steps:
       - name: Checkout
@@ -160,7 +145,7 @@ jobs:
 
       - name: Install OTX + benchmark dependencies
         env:
-          ACCEL: ${{ needs.configure.outputs.accelerator }}
+          ACCEL: ${{ matrix.accelerator }}
         run: |
           # Map accelerator label to the pyproject.toml extra name
           if [[ "$ACCEL" == "gpu" ]]; then EXTRA="cuda"; else EXTRA="$ACCEL"; fi
@@ -188,7 +173,7 @@ jobs:
           PRIORITY: ${{ needs.configure.outputs.priority }}
           SIZE_TIER: ${{ needs.configure.outputs.size_tier }}
           EVAL_UPTO: ${{ needs.configure.outputs.eval_upto }}
-          ACCELERATOR: ${{ needs.configure.outputs.accelerator }}
+          ACCELERATOR: ${{ matrix.accelerator }}
           NUM_SEEDS: ${{ needs.configure.outputs.num_seeds }}
           SCENARIO: ${{ needs.configure.outputs.scenario }}
         run: |
@@ -197,7 +182,7 @@ jobs:
             --catalog benchmark_catalog.yaml \
             --data-root data/ \
             --output-root results/ \
-            --mlflow-uri "${MLFLOW_TRACKING_URI:-./mlruns}" \
+            --mlflow-uri "http://localhost:5000" \
             --branch "$BRANCH" \
             --trigger "$TRIGGER" \
             --priority "$PRIORITY" \
@@ -231,11 +216,11 @@ jobs:
         env:
           BRANCH: ${{ github.ref_name }}
           TRIGGER: ${{ needs.configure.outputs.trigger }}
-          ACCELERATOR: ${{ needs.configure.outputs.accelerator }}
+          ACCELERATOR: ${{ matrix.accelerator }}
         run: |
           uv run python -m otx.benchmark report \
             --manifest benchmark_manifest.yaml \
-            --mlflow-uri "${MLFLOW_TRACKING_URI:-./mlruns}" \
+            --mlflow-uri "http://localhost:5000" \
             --branch "$BRANCH" \
             --trigger "$TRIGGER" \
             --accelerator "$ACCELERATOR" \
@@ -247,7 +232,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: benchmark-results-${{ github.sha }}
+          name: benchmark-results-${{ matrix.accelerator }}-${{ github.sha }}
           path: |
             library/results/report.md
             library/results/aggregated.csv
@@ -259,7 +244,7 @@ jobs:
         if: always() && needs.configure.outputs.trigger == 'weekly'
         run: |
           uv run python -m otx.benchmark clean \
-            --mlflow-uri "${MLFLOW_TRACKING_URI:-./mlruns}" \
+            --mlflow-uri "http://localhost:5000" \
             --max-age-days 90 \
             --protect-branch develop main
 

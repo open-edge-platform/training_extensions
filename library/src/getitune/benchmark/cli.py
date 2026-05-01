@@ -46,11 +46,11 @@ def _add_common_args(parser: argparse.ArgumentParser) -> None:
         help="Root directory for dataset storage.",
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Enable DEBUG logging.",
+        "--log-level",
+        type=str,
+        default=None,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Log level (overrides the GETITUNE_LOG_LEVEL environment variable; default: INFO).",
     )
 
 
@@ -117,8 +117,8 @@ def _build_parser() -> argparse.ArgumentParser:
     run.add_argument("--num-seeds", type=int, default=None, help="Override number of seeds.")
     run.add_argument("--max-epochs", type=int, default=None, help="Override max training epochs.")
     run.add_argument("--eval-upto", type=str, choices=["train", "export", "optimize"], default=None)
-    run.add_argument("--deterministic", action="store_true", default=True)
-    run.add_argument("--no-deterministic", dest="deterministic", action="store_false")
+    run.add_argument("--deterministic", action="store_const", const=True, default=None)
+    run.add_argument("--no-deterministic", dest="deterministic", action="store_const", const=False)
     run.add_argument("--dry-run", action="store_true", default=False, help="Print what would run without executing.")
     run.add_argument(
         "--no-tracking", dest="enable_tracking", action="store_false", default=True, help="Disable MLflow tracking."
@@ -182,11 +182,11 @@ def _build_parser() -> argparse.ArgumentParser:
     # -- clean -------------------------------------------------------------
     cln = sub.add_parser("clean", help="Purge old MLflow runs to free storage (retention policy).")
     cln.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Enable DEBUG logging.",
+        "--log-level",
+        type=str,
+        default=None,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Log level (overrides the GETITUNE_LOG_LEVEL environment variable; default: INFO).",
     )
     cln.add_argument(
         "--mlflow-uri",
@@ -261,13 +261,16 @@ def _cmd_run(args: argparse.Namespace) -> int:
     ad_hoc_overrides = _parse_key_value_pairs(args.override)
     ad_hoc_train_kwargs = _parse_key_value_pairs(args.train_kwarg)
 
+    # CLI flag wins when set; otherwise honour manifest default.
+    deterministic = args.deterministic if args.deterministic is not None else manifest.defaults.deterministic
+
     config = RunConfig(
         manifest_path=args.manifest,
         catalog_path=args.catalog,
         data_root=args.data_root,
         output_root=args.output_root,
         accelerator=args.accelerator,
-        deterministic=args.deterministic,
+        deterministic=deterministic,
         max_epochs=args.max_epochs,
         num_seeds=args.num_seeds,
         eval_upto=args.eval_upto,
@@ -343,9 +346,43 @@ def _cmd_report(args: argparse.Namespace) -> int:
     # Convert MLflow runs into ExperimentResult objects for reuse by report.py
     from getitune.benchmark.experiment import ExperimentResult, PhaseResult
 
+    # Map metric-key prefixes back to the pseudo-phase that emitted them so
+    # the regenerated report retains the per-phase grouping (otherwise every
+    # metric collapses into a single "all" phase and downstream code that
+    # iterates ``result.phases`` loses its structure).
+    phase_prefixes: dict[str, str] = {
+        "training:": "train",
+        "torch:": "test/torch",
+        "export:": "export",
+        "optimize:": "optimize",
+    }
+
     results: list[ExperimentResult] = []
     for run in runs:
         tags = run.data.tags
+        metrics = dict(run.data.metrics)
+        # MLflow stores total wall time under ``duration_seconds`` (see
+        # ``BenchmarkTracker.log_run``). Pop it out so it doesn't leak into a
+        # phase metrics dict.
+        total_wall = float(metrics.pop("duration_seconds", 0.0))
+
+        bucketed: dict[str, dict[str, float]] = {phase: {} for phase in phase_prefixes.values()}
+        leftover: dict[str, float] = {}
+        for k, v in metrics.items():
+            phase = next((p for prefix, p in phase_prefixes.items() if k.startswith(prefix)), None)
+            if phase is None:
+                leftover[k] = v
+            else:
+                bucketed[phase][k] = v
+
+        phases = [PhaseResult(phase=phase, metrics=mtr, wall_time=0.0) for phase, mtr in bucketed.items() if mtr]
+        if leftover:
+            phases.append(PhaseResult(phase="other", metrics=leftover, wall_time=0.0))
+        # Attribute the full run wall time to the train phase (best effort —
+        # MLflow no longer carries per-phase timings after rewriting).
+        if total_wall and phases:
+            phases[0].wall_time = total_wall
+
         results.append(
             ExperimentResult(
                 task=tags.get("task", "unknown"),
@@ -354,7 +391,7 @@ def _cmd_report(args: argparse.Namespace) -> int:
                 scenario=tags.get("scenario", "default"),
                 seed=int(tags.get("seed", "0")),
                 success=True,
-                phases=[PhaseResult(phase="all", metrics=dict(run.data.metrics))],
+                phases=phases,
             )
         )
 
@@ -415,12 +452,20 @@ def _cmd_clean(args: argparse.Namespace) -> int:
 
 def main() -> None:
     """CLI entry point for ``python -m getitune.benchmark``."""
+    import os
+
     parser = _build_parser()
     args = parser.parse_args()
 
-    level = logging.DEBUG if args.verbose else logging.INFO
+    # Resolve log level: explicit --log-level wins, then GETITUNE_LOG_LEVEL,
+    # defaulting to INFO. The env var is propagated so spawned subprocess
+    # workers honour the same level.
+    explicit = getattr(args, "log_level", None)
+    level_name: str = explicit if explicit else os.environ.get("GETITUNE_LOG_LEVEL", "INFO")
+    os.environ["GETITUNE_LOG_LEVEL"] = level_name
+
     logging.basicConfig(
-        level=level,
+        level=getattr(logging, level_name.upper(), logging.INFO),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%H:%M:%S",
     )

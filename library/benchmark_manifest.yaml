@@ -10,7 +10,7 @@ version: 1
 defaults:
   num_seeds: 3
   eval_upto: optimize
-  deterministic: false # Setting to true is extremely slow for certain models, ~50x longer for MaskRCNN
+  deterministic: false # Setting to true is extremely slow for certain models
   rotation:
     extended_groups: 4
 
@@ -132,7 +132,7 @@ experiments:
       - wgisd
 
     criteria:
-      accuracy_metric: mAP
+      accuracy_metric: map_50
       thresholds:
         "training:val/{metric}": { compare: ">=", margin: 0.10 }
         "torch:test/{metric}": { compare: ">=", margin: 0.10 }

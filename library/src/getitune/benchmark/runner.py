@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import gc
+import hashlib
 import logging
 import multiprocessing as mp
 import os
@@ -25,6 +26,7 @@ from getitune.benchmark.manifest import (
     BenchmarkManifest,
     Experiment,
     ManifestFilters,
+    count_experiments,
     iter_experiments,
 )
 
@@ -114,6 +116,12 @@ def _subprocess_worker(
 # ---------------------------------------------------------------------------
 # Resource cleanup
 # ---------------------------------------------------------------------------
+
+
+def _rotation_bucket(name: str, groups: int) -> int:
+    """Stable hash of *name* into ``[0, groups)``."""
+    digest = hashlib.blake2b(name.encode("utf-8"), digest_size=4).digest()
+    return int.from_bytes(digest, "big") % groups
 
 
 def _cleanup_resources(*, reset_cuda_peak: bool = False) -> None:
@@ -240,6 +248,13 @@ class BenchmarkRunner:
 
         Returns ``(successes, failures)``.
         """
+        # Sync the task → primary-metric lookup with the live manifest.
+        from getitune.benchmark.tracking import register_primary_metrics
+
+        register_primary_metrics(
+            {task: f"training:val/{section.criteria.accuracy_metric}" for task, section in manifest.experiments.items()}
+        )
+
         # Set up MLflow tracking if enabled
         if self.config.enable_tracking:
             self._setup_tracking()
@@ -273,7 +288,7 @@ class BenchmarkRunner:
             experiments = [
                 exp
                 for exp in experiments
-                if exp.model.priority != "extended" or (hash(exp.model.name) % rotation_groups) == group
+                if exp.model.priority != "extended" or _rotation_bucket(exp.model.name, rotation_groups) == group
             ]
             logger.info(
                 "Rotation group %d/%d: %d experiment(s) after filtering.",
@@ -287,15 +302,22 @@ class BenchmarkRunner:
             return [], []
 
         if self.config.filters.dry_run:
-            logger.info("Dry run: would execute %d experiments.", len(experiments))
+            total_unfiltered = count_experiments(manifest)
+            logger.info(
+                "Dry run: would execute %d experiments (out of %d declared in manifest).",
+                len(experiments),
+                total_unfiltered,
+            )
             for exp in experiments:
                 seeds = self.config.num_seeds or exp.num_seeds
                 logger.info(
-                    "  %s / %s / %s / %s  (%d seeds)",
+                    "  %s / %s / %s / %s  [priority=%s, eval_upto=%s]  (%d seeds)",
                     exp.task,
                     exp.model.name,
                     exp.dataset_name,
                     exp.scenario.name,
+                    exp.model.priority,
+                    exp.eval_upto,
                     seeds,
                 )
             return [], []

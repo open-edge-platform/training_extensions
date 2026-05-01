@@ -92,8 +92,8 @@ class TestCheckRegressions:
         }
 
     def test_pass_when_within_margin(self) -> None:
-        current = {"training:val/mAP": 0.85, "training:e2e_time": 105.0}
-        baseline = {"training:val/mAP": 0.90, "training:e2e_time": 100.0}
+        current = {"training:val/mAP": 0.85, "time/training/e2e": 105.0}
+        baseline = {"training:val/mAP": 0.90, "time/training/e2e": 100.0}
         results = check_regressions(current, baseline, self._thresholds())
 
         status_map = {r.metric: r.status for r in results}
@@ -111,13 +111,24 @@ class TestCheckRegressions:
 
     def test_regression_lower_is_better(self) -> None:
         """Time increased above baseline * (1 + margin)."""
-        current = {"training:e2e_time": 120.0}  # 120 > 100 * 1.10 = 110
-        baseline = {"training:e2e_time": 100.0}
+        current = {"time/training/e2e": 120.0}  # 120 > 100 * 1.10 = 110
+        baseline = {"time/training/e2e": 100.0}
         results = check_regressions(current, baseline, self._thresholds())
 
         time_result = [r for r in results if r.metric == "training:e2e_time"]
         assert len(time_result) == 1
         assert time_result[0].status == "regression"
+
+    def test_timing_threshold_resolves_against_rewritten_baseline(self) -> None:
+        """Timing thresholds must successfully match MLflow-rewritten baseline keys."""
+        current = {"time/training/e2e": 95.0}
+        baseline = {"time/training/e2e": 100.0}
+        thresholds = {"training:e2e_time": Threshold(compare="<=", margin=0.10)}
+        results = check_regressions(current, baseline, thresholds)
+
+        assert len(results) == 1
+        assert results[0].status == "pass"
+        assert results[0].baseline_value == 100.0
 
     def test_improvement_detected(self) -> None:
         """Accuracy improved significantly above baseline * (1 + margin)."""

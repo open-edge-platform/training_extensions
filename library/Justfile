@@ -60,3 +60,4 @@ test-unit-models *ARGS: _ensure_uv
 # Run integration tests with pytest
 test-integration *ARGS: _ensure_uv
     uv run pytest ./tests/integration -v {{ ARGS }}
+

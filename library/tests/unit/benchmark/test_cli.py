@@ -82,8 +82,14 @@ class TestBuildParser:
         assert args.manifest == Path("benchmark_manifest.yaml")
         assert args.output_root == Path("results")
         assert args.accelerator == "gpu"
-        assert args.deterministic is True
+        assert args.deterministic is None
         assert args.dry_run is False
+
+    def test_run_subcommand_deterministic_flag(self) -> None:
+        parser = _build_parser()
+        assert parser.parse_args(["run"]).deterministic is None
+        assert parser.parse_args(["run", "--deterministic"]).deterministic is True
+        assert parser.parse_args(["run", "--no-deterministic"]).deterministic is False
 
     def test_run_subcommand_filters(self) -> None:
         parser = _build_parser()
@@ -130,10 +136,15 @@ class TestBuildParser:
         args = parser.parse_args(["run", "--no-deterministic"])
         assert args.deterministic is False
 
-    def test_verbose_flag(self) -> None:
+    def test_log_level_flag(self) -> None:
         parser = _build_parser()
-        args = parser.parse_args(["provision", "-v"])
-        assert args.verbose is True
+        args = parser.parse_args(["provision", "--log-level", "DEBUG"])
+        assert args.log_level == "DEBUG"
+
+    def test_log_level_default_is_none(self) -> None:
+        parser = _build_parser()
+        args = parser.parse_args(["provision"])
+        assert args.log_level is None
 
     def test_no_subcommand_errors(self) -> None:
         parser = _build_parser()

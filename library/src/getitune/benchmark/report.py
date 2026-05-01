@@ -12,6 +12,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
+from getitune.benchmark.tracking import rewrite_metric_key
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -177,7 +179,10 @@ def check_regressions(
         margin = threshold.margin
         direction = _direction_for_metric(compare)
 
-        current_value = current_metrics.get(metric_key)
+        # Normalize threshold key into the same shape used by current/baseline dicts.
+        lookup_key = rewrite_metric_key(metric_key)
+
+        current_value = current_metrics.get(lookup_key)
         if current_value is None:
             # Metric not present in current run — skip silently
             continue
@@ -195,7 +200,7 @@ def check_regressions(
             )
             continue
 
-        baseline_value = baseline_metrics.get(metric_key)
+        baseline_value = baseline_metrics.get(lookup_key)
         if baseline_value is None:
             results.append(
                 RegressionResult(
@@ -253,6 +258,9 @@ def aggregate_metrics_across_seeds(
 ) -> dict[str, dict[str, float]]:
     """Average metrics across seeds for each ``(task/model/dataset/scenario)`` key.
 
+    Per-seed metric keys are normalized via :func:`rewrite_metric_key` so they
+    share the same shape as MLflow-stored baseline metrics.
+
     Returns:
         ``{key: averaged_metrics}``
     """
@@ -262,7 +270,8 @@ def aggregate_metrics_across_seeds(
         if not result.success:
             continue
         key = f"{result.task}/{result.model}/{result.dataset}/{result.scenario}"
-        grouped[key].append(result.all_metrics())
+        normalized = {rewrite_metric_key(k): v for k, v in result.all_metrics().items()}
+        grouped[key].append(normalized)
 
     averaged: dict[str, dict[str, float]] = {}
     for key, metric_dicts in grouped.items():
@@ -549,33 +558,41 @@ def _detect_metric_columns(
 
     columns: list[tuple[str, str, Any]] = []
 
+    # Substrings that identify metrics where lower values are better. The
+    # arrow shown next to the column header reflects this so that
+    # e.g. ``loss`` and ``iter_time`` columns aren't tagged with ↑.
+    lower_is_better_markers = ("loss", "iter_time", "/time", "latency", "e2e_time")
+
+    def _arrow_for(key: str) -> str:
+        return "↓" if any(m in key for m in lower_is_better_markers) else "↑"
+
     # Accuracy-like metrics (val/*)
     for key in sorted(all_keys):
         if "val/" in key and "training:" in key:
             label_short = key.split("val/", 1)[1] if "val/" in key else key
-            columns.append((f"Val {label_short} ↑", key, _fmt_metric))
+            columns.append((f"Val {label_short} {_arrow_for(key)}", key, _fmt_metric))
 
     # Test metrics (torch)
     for key in sorted(all_keys):
         if key.startswith("torch:") and "test/" in key and "latency" not in key and "e2e_time" not in key:
             label_short = key.split("test/", 1)[1] if "test/" in key else key
-            columns.append((f"Test {label_short} ↑", key, _fmt_metric))
+            columns.append((f"Test {label_short} {_arrow_for(key)}", key, _fmt_metric))
 
     # Export test metrics
     for key in sorted(all_keys):
         if key.startswith("export:") and "test/" in key and "latency" not in key and "e2e_time" not in key:
             label_short = key.split("test/", 1)[1] if "test/" in key else key
-            columns.append((f"Export {label_short} ↑", key, _fmt_metric))
+            columns.append((f"Export {label_short} {_arrow_for(key)}", key, _fmt_metric))
 
-    # Timing metrics
-    if "training:e2e_time" in all_keys:
-        columns.append(("Train Time ↓", "training:e2e_time", _fmt_time))
+    # Timing metrics — keys are stored in their rewritten form.
+    if rewrite_metric_key("training:e2e_time") in all_keys:
+        columns.append(("Train Time ↓", rewrite_metric_key("training:e2e_time"), _fmt_time))
 
     if "training:gpu_mem" in all_keys:
         columns.append(("GPU Mem ↓", "training:gpu_mem", _fmt_memory))
 
-    if "torch:test/latency" in all_keys:
-        columns.append(("Test Latency ↓", "torch:test/latency", _fmt_time))
+    if rewrite_metric_key("torch:test/latency") in all_keys:
+        columns.append(("Test Latency ↓", rewrite_metric_key("torch:test/latency"), _fmt_time))
 
     return columns
 

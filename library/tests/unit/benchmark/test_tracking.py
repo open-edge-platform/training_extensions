@@ -473,10 +473,17 @@ class TestSanitizeErrorMessage:
         assert _sanitize_error_message('Error:   "bad"   quoted') == "Error: 'bad' quoted"
 
     def test_truncates_long_messages(self) -> None:
-        msg = "RuntimeError: " + ("x" * 500)
+        msg = "RuntimeError: " + ("x" * 500) + " final-detail"
         out = _sanitize_error_message(msg)
         assert len(out) <= 250
-        assert out.endswith("…")
+        # Truncation keeps both the head (exception class) and the tail
+        # (informative detail), joined by a middle ellipsis.
+        assert " … " in out
+        assert out.startswith("RuntimeError:")
+        assert out.endswith("final-detail")
+
+    def test_short_messages_are_unchanged(self) -> None:
+        assert _sanitize_error_message("RuntimeError: OOM") == "RuntimeError: OOM"
 
 
 class TestClassifyError:

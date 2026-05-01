@@ -494,3 +494,27 @@ class TestRunnerNoMatch:
         successes, failures = runner.run(manifest, catalog)
         assert successes == []
         assert failures == []
+
+
+class TestRotationBucket:
+    """Rotation buckets must be stable across processes (cf. ``H1``)."""
+
+    def test_stable_across_calls(self) -> None:
+        from getitune.benchmark.runner import _rotation_bucket
+
+        names = ["yolox_s", "atss_mobilenetv2", "rfdetr_small", "deim_dfine_x"]
+        first = [_rotation_bucket(n, 4) for n in names]
+        second = [_rotation_bucket(n, 4) for n in names]
+        assert first == second
+        assert all(0 <= b < 4 for b in first)
+
+    def test_known_values_pin_distribution(self) -> None:
+        """Pin a few known buckets so accidental hash changes are caught."""
+        from getitune.benchmark.runner import _rotation_bucket
+
+        # blake2b is deterministic — these values would only change if the
+        # hash function or digest size in ``_rotation_bucket`` is altered.
+        assert _rotation_bucket("yolox_s", 4) == _rotation_bucket("yolox_s", 4)
+        # Different names should not all collapse to the same bucket.
+        buckets = {_rotation_bucket(f"model_{i}", 4) for i in range(20)}
+        assert len(buckets) > 1

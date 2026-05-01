@@ -151,10 +151,10 @@ def _get_cpu_info() -> str:
 # Primary-metric lookup per task
 # ---------------------------------------------------------------------------
 
-# Maps the task string produced by the manifest/experiment to the metric key
-# (as written by the executor) that represents the "headline" quality of the
-# run. Mirroring this under the unified ``primary_metric`` key makes the run
-# table sortable across heterogeneous tasks.
+# Built-in fallback mapping from task → headline metric key. The benchmark
+# runner overrides this at startup with the live values from the manifest's
+# ``criteria.accuracy_metric`` (see ``register_primary_metrics``); the static
+# table is only consulted for tasks not declared in the manifest.
 _PRIMARY_METRIC: dict[str, str] = {
     "classification/multi_class_cls": "training:val/accuracy",
     "classification/multi_label_cls": "training:val/accuracy",
@@ -170,6 +170,17 @@ _PRIMARY_METRIC: dict[str, str] = {
     "visual_prompting": "training:val/Dice",
     "zero_shot_visual_prompting": "training:val/Dice",
 }
+
+
+def register_primary_metrics(mapping: dict[str, str]) -> None:
+    """Override the task → primary-metric lookup with *mapping*.
+
+    Called by the runner once the manifest is loaded so
+    ``manifest.experiments[task].criteria.accuracy_metric`` becomes the
+    single source of truth (avoids drift between the YAML and this module).
+    Entries not present in *mapping* fall back to the built-in defaults.
+    """
+    _PRIMARY_METRIC.update(mapping)
 
 
 def _primary_metric_key(task: str) -> str | None:
@@ -188,8 +199,14 @@ def _primary_metric_key(task: str) -> str | None:
 # ---------------------------------------------------------------------------
 
 
-def _rewrite_metric_key(key: str) -> str:
+def rewrite_metric_key(key: str) -> str:
     """Normalize metric keys into tidy, UI-groupable namespaces.
+
+    Must be applied consistently on both the MLflow-logging side and the
+    regression-checking side (see ``report.aggregate_metrics_across_seeds``);
+    if the two sides disagree, baseline lookups silently miss.
+
+    Rewrites:
 
     - ``<phase>:e2e_time``                  -> ``time/<phase>/e2e``
     - ``<phase>:test/e2e_time``             -> ``time/<phase>/test_e2e``
@@ -264,28 +281,24 @@ _ERROR_PHASE_PATTERNS: tuple[tuple[str, str], ...] = (
 def _sanitize_error_message(error: str) -> str:
     """Return a single-line, CSV-safe summary of an error string.
 
-    The raw ``error`` field on a failed :class:`ExperimentResult` is
-    typically ``"<ExceptionType>: <message>"`` which can itself span
-    multiple lines (e.g. nested tracebacks for subprocess failures).
-    Storing such a value verbatim as an MLflow tag has two problems:
-
-    1. MLflow happily round-trips embedded newlines/quotes; downstream
-       CSV exporters then produce mangled, unparseable rows.
-    2. Hard truncation at a fixed length frequently chops the message
-       mid-token, hiding the actually informative first line.
-
-    This helper keeps only the first non-empty line, collapses runs of
-    whitespace, strips problematic quote characters, and finally caps
-    the result at :data:`_ERROR_TAG_MAX_LEN` characters with an ellipsis
-    when truncation occurred.
+    Keeps only the first non-empty line, collapses whitespace, and strips
+    ``"`` so MLflow tag exports stay parseable. When the message exceeds
+    :data:`_ERROR_TAG_MAX_LEN`, both the head (with the exception class
+    prefix) and the tail (which usually carries the actually informative
+    detail) are preserved, joined by ``" … "``.
     """
     if not error:
         return ""
     first_line = next((ln.strip() for ln in error.splitlines() if ln.strip()), "")
     cleaned = re.sub(r"\s+", " ", first_line).replace('"', "'").strip()
-    if len(cleaned) > _ERROR_TAG_MAX_LEN:
-        cleaned = cleaned[: _ERROR_TAG_MAX_LEN - 1].rstrip() + "…"
-    return cleaned
+    if len(cleaned) <= _ERROR_TAG_MAX_LEN:
+        return cleaned
+    # Keep both ends: head + " … " + tail.
+    sep = " … "
+    budget = _ERROR_TAG_MAX_LEN - len(sep)
+    head_len = budget // 2
+    tail_len = budget - head_len
+    return cleaned[:head_len].rstrip() + sep + cleaned[-tail_len:].lstrip()
 
 
 def _classify_error(error: str | None, traceback: str | None) -> tuple[str, str]:
@@ -595,7 +608,7 @@ class BenchmarkTracker:
                     # metric arrays — see ``_is_per_class_sentinel``.
                     if _is_per_class_sentinel(k, float(v)):
                         continue
-                    numeric_metrics[_rewrite_metric_key(k)] = _round_metric(v)
+                    numeric_metrics[rewrite_metric_key(k)] = _round_metric(v)
 
                 if numeric_metrics:
                     mlflow.log_metrics(numeric_metrics)
