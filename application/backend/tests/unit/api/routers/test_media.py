@@ -1623,9 +1623,8 @@ class TestMediaEndpoints:
             frame_index_to=9,
         )
 
-    @pytest.mark.parametrize("save_predictions", [True, False])
     def test_media_predict(
-        self, fxt_get_project, fxt_media_prediction_service, fxt_inference_media_limit, fxt_client, save_predictions
+        self, fxt_get_project, fxt_media_prediction_service, fxt_inference_media_limit, fxt_client
     ) -> None:
         label_id = uuid4()
         model_id = uuid4()
@@ -1633,7 +1632,6 @@ class TestMediaEndpoints:
         request = MediaListPredictionRequest(
             model_id=model_id,
             media=[MediaPredictionRequest(media_id=media_id, range=None)],
-            save_predictions=save_predictions,
             device="AUTO",
         )
 
@@ -1700,7 +1698,6 @@ class TestMediaEndpoints:
         request = MediaListPredictionRequest(
             model_id=uuid4(),
             media=[MediaPredictionRequest(media_id=media_id, range=None)],
-            save_predictions=True,
             device="AUTO",
         )
 
@@ -1732,7 +1729,6 @@ class TestMediaEndpoints:
             media=[
                 MediaPredictionRequest(media_id=media_id, range=VideoRange(start_frame=0, end_frame=100, stride=10))
             ],
-            save_predictions=True,
             device="AUTO",
         )
 
@@ -1758,7 +1754,6 @@ class TestMediaEndpoints:
         request = MediaListPredictionRequest(
             model_id=uuid4(),
             media=[MediaPredictionRequest(media_id=uuid4(), range=None)],
-            save_predictions=False,
             device="AUTO",
         )
 

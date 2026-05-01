@@ -36,15 +36,12 @@ class CacheConfig(BaseModel):
 
 @dataclass
 class _CacheEntry:
-    """Internal cache entry holding a video container handle and decoded frames with per-video LRU eviction.
+    """Internal cache entry holding a video container handle.
 
     Attributes:
         container: Open PyAV input container for the video file.
         stream: Video stream selected from the container.
-        max_frames: Maximum number of decoded frames to cache for this video.
-        frames: Mapping of frame index to the decoded RGB numpy array.
-        lru_order: Ordered dict tracking access recency for LRU eviction.
-        lock: Per-entry lock protecting ``frames`` and ``lru_order``.
+        lock: Per-entry lock protecting container seek/decode operations.
         last_access: Monotonic timestamp of the most recent access (used for TTL).
     """
 
@@ -66,10 +63,10 @@ class VideoMetadata(BaseModel):
         fps: Average frames per second.
     """
 
-    width: int = Field(..., description="Video width in pixels", ge=0)
-    height: int = Field(..., description="Video height in pixels", ge=0)
-    frame_count: int = Field(..., description="Total number of frames in the video", ge=0)
-    fps: float = Field(..., description="Average frames per second", ge=0)
+    width: int = Field(..., description="Video width in pixels", gt=0)
+    height: int = Field(..., description="Video height in pixels", gt=0)
+    frame_count: int = Field(..., description="Total number of frames in the video", gt=0)
+    fps: float = Field(..., description="Average frames per second", gt=0)
 
 
 def _frame_index_from_pts(frame_pts: int, time_base: Fraction, avg_rate: Fraction) -> int:
@@ -234,7 +231,9 @@ class VideoService:
         try:
             with av.open(str(video_path)) as container:
                 stream = container.streams.video[0]
-                fps = float(stream.average_rate) if stream.average_rate else 0.0
+                if not stream.average_rate or float(stream.average_rate) == 0:
+                    raise RuntimeError(f"Cannot determine FPS for video: {video_path}")
+                fps = float(stream.average_rate)
                 frame_count = stream.frames if stream.frames else 0
                 if frame_count == 0 and fps > 0 and stream.duration and stream.time_base:
                     frame_count = round(float(stream.duration * stream.time_base) * fps)
@@ -281,7 +280,7 @@ class VideoService:
         video_path: Path,
         frame_indexes: list[int],
     ) -> dict[int, np.ndarray]:
-        """Extract multiple video frames, using cached frames when available.
+        """Extract multiple video frames.
 
         Missing frames are decoded in grouped batches with a single seek per
         group of consecutive indexes for efficiency.
