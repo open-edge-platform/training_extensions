@@ -40,6 +40,9 @@ class _CacheEntry:
     Attributes:
         container: Open PyAV input container for the video file.
         stream: Video stream selected from the container.
+        time_base: Stream time-base as a :class:`~fractions.Fraction`, used to convert PTS values to seconds.
+        avg_rate: Average frame-rate as a :class:`~fractions.Fraction`, used
+            to map between PTS values and frame indexes.
         lock: Per-entry lock protecting container seek/decode operations.
         last_access: Monotonic timestamp of the most recent access (used for TTL).
     """
