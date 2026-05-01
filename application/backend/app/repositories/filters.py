@@ -1,21 +1,60 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from sqlalchemy import Select
+from sqlalchemy import Select, exists, select
+from sqlalchemy.orm import aliased
 
-from app.db.schema import DatasetItemDB
-from app.models import DatasetItemAnnotationStatus
+from app.db.schema import DatasetItemDB, MediaDB
+from app.models import DatasetItemAnnotationStatus, MediaType
 
 
 def _apply_annotation_status_filter(stmt: Select, annotation_status: str | None = None) -> Select:
     """Apply annotation status filter to a select statement."""
     match annotation_status:
-        case DatasetItemAnnotationStatus.UNANNOTATED:
+        case DatasetItemAnnotationStatus.MISSING_ANNOTATIONS:
             stmt = stmt.where(DatasetItemDB.annotation_data.is_(None))
-        case DatasetItemAnnotationStatus.REVIEWED:
-            stmt = stmt.where(DatasetItemDB.user_reviewed.is_(True))
-        case DatasetItemAnnotationStatus.TO_REVIEW:
-            stmt = stmt.where(DatasetItemDB.user_reviewed.is_(False))
+        case DatasetItemAnnotationStatus.WITH_ANNOTATIONS:
+            stmt = stmt.where(DatasetItemDB.annotation_data.isnot(None))
+    return stmt
+
+
+def _apply_annotation_status_filter_with_video_support(stmt: Select, annotation_status: str | None = None) -> Select:
+    """Apply annotation status filter to a media query, accounting for the video/frame hierarchy.
+
+    Unlike the base filter, this handles the case where videos do not have their own
+    ``DatasetItemDB`` rows. A video is considered annotated if at least one of its
+    frames has a ``DatasetItemDB`` with non-null ``annotation_data``.
+
+    Args:
+        stmt: The base SQLAlchemy select statement, expected to have ``MediaDB`` as its
+              primary entity with an outer join to ``DatasetItemDB``.
+        annotation_status: One of ``DatasetItemAnnotationStatus`` values, or ``None``
+                           to skip filtering.
+
+    Returns:
+        The select statement with the annotation status condition applied.
+    """
+    if annotation_status == DatasetItemAnnotationStatus.WITH_ANNOTATIONS:
+        # Images/frames: have a dataset_item with annotation_data
+        # Videos: have no dataset_item themselves, but at least one annotated frame
+        frame_alias = aliased(MediaDB)
+        annotated_frame_exists = exists(
+            select(DatasetItemDB.id)
+            .join(frame_alias, frame_alias.id == DatasetItemDB.id)
+            .where(
+                frame_alias.video_id == MediaDB.id,
+                DatasetItemDB.annotation_data.isnot(None),
+            )
+            .correlate(MediaDB)
+        )
+        stmt = stmt.where(
+            (DatasetItemDB.annotation_data.isnot(None))  # image or frame with annotation
+            | (
+                (MediaDB.type == MediaType.VIDEO) & annotated_frame_exists  # video with at least one annotated frame
+            )
+        )
+    elif annotation_status == DatasetItemAnnotationStatus.MISSING_ANNOTATIONS:
+        stmt = stmt.where(DatasetItemDB.annotation_data.is_(None))
     return stmt
 
 

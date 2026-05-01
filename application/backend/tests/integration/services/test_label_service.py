@@ -17,19 +17,6 @@ from app.models.task import Task, TaskType
 from app.services import ResourceNotFoundError, ResourceType, ResourceWithIdAlreadyExistsError
 from app.services.dataset_service import DatasetService
 from app.services.label_service import DuplicateLabelsError, LabelService
-from app.services.media_service import MediaService
-
-
-@pytest.fixture
-def fxt_label_service(db_session: Session) -> LabelService:
-    return LabelService(db_session)
-
-
-@pytest.fixture
-def fxt_dataset_service(db_session: Session) -> DatasetService:
-    label_service = LabelService(db_session)
-    media_service = MagicMock(spec=MediaService)
-    return DatasetService(label_service=label_service, media_service=media_service, db_session=db_session)
 
 
 @pytest.fixture

@@ -1,18 +1,52 @@
+;
+
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { act } from '@testing-library/react';
 import { stringify } from 'zipson/lib';
 
+
+
 import { renderHook } from '../test-utils/render';
-import {
-    ANNOTATION_STATUS_PARAM,
-    encodeToBinary,
-    END_DATE_PARAM,
-    LABELS_PARAM,
-    START_DATE_PARAM,
-    useDatasetFiltersSearchParams,
-} from './use-dataset-filters-search-params.hook';
+import { ANNOTATION_STATUS_PARAM, encodeToBinary, END_DATE_PARAM, LABELS_PARAM, START_DATE_PARAM, useDatasetFiltersSearchParams } from './use-dataset-filters-search-params.hook';
+
+
+
+
+
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 describe('useDatasetFiltersSearchParams', () => {
     describe('labels filter', () => {
@@ -128,19 +162,19 @@ describe('useDatasetFiltersSearchParams', () => {
             });
 
             act(() => {
-                result.current.setAnnotationStatus('reviewed');
+                result.current.setAnnotationStatus('with_annotations');
             });
 
-            expect(result.current.annotationStatus).toBe('reviewed');
+            expect(result.current.annotationStatus).toBe('with_annotations');
         });
 
         it('clears annotation status when set to null', () => {
             const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-                route: `/projects/123?${ANNOTATION_STATUS_PARAM}=reviewed`,
+                route: `/projects/123?${ANNOTATION_STATUS_PARAM}=with_annotations`,
                 path: '/projects/:projectId',
             });
 
-            expect(result.current.annotationStatus).toBe('reviewed');
+            expect(result.current.annotationStatus).toBe('with_annotations');
 
             act(() => {
                 result.current.setAnnotationStatus(null);

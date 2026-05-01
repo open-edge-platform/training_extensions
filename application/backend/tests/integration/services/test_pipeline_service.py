@@ -13,7 +13,7 @@ from app.models import DataCollectionConfig, PipelineStatus
 from app.models.data_collection_policy import FixedRateDataCollectionPolicy
 from app.models.model_revision import ModelFormat, ModelPrecision, TrainingStatus
 from app.models.system import DeviceInfo, DeviceType
-from app.services import PipelineService, ResourceNotFoundError, ResourceType, SystemService
+from app.services import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventType
 from app.services.pipeline_service import (
     DeviceInt8NotSupportedError,
@@ -26,18 +26,6 @@ from tests.integration.project_factory import ProjectTestDataFactory
 class PipelineField(StrEnum):
     SOURCE_ID = "source_id"
     SINK_ID = "sink_id"
-
-
-@pytest.fixture
-def fxt_system_service() -> SystemService:
-    """Fixture to create a SystemService instance."""
-    return SystemService()
-
-
-@pytest.fixture
-def fxt_pipeline_service(fxt_event_bus, db_session, fxt_system_service) -> PipelineService:
-    """Fixture to create a PipelineService instance with mocked dependencies."""
-    return PipelineService(system_service=fxt_system_service, event_bus=fxt_event_bus, db_session=db_session)
 
 
 @pytest.fixture

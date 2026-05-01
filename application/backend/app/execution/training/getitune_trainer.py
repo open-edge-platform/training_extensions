@@ -278,7 +278,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
                     dm_dataset = self._dataset_service.get_dm_dataset(
                         project_id=project_id,
                         task=task,
-                        annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                        annotation_status=DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
                         sample_mode=SampleMode.TRAINING,
                     )
                     dataset_revision_id = self._dataset_revision_service.save_revision(

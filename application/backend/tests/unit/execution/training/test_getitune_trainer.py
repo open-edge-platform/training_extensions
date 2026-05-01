@@ -567,7 +567,7 @@ class TestGetiTuneTrainerCreateTrainingDataset:
                 fxt_dataset_service.get_dm_dataset.assert_called_once_with(
                     project_id=project_id,
                     task=task,
-                    annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                    annotation_status=DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
                     sample_mode=SampleMode.TRAINING,
                 )
                 fxt_dataset_revision_service.save_revision.assert_called_once_with(

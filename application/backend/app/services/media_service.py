@@ -199,7 +199,7 @@ class MediaService(BaseSessionManagedService):
         project: Project,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
-        annotation_status: str | None = None,
+        annotation_status: DatasetItemAnnotationStatus | None = None,
         label_ids: list[UUID] | None = None,
         subset: str | None = None,
         exclude_types: list[MediaType] | None = None,
