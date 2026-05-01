@@ -4,8 +4,7 @@
 """Video decoding service with LRU frame caching and TTL-based handle management.
 
 This module provides :class:`VideoService`, a thread-safe service for extracting
-video frames backed by PyAV. It keeps file handles open and caches decoded frames
-in memory to speed up repeated access. Idle handles are automatically evicted by
+video frames backed by PyAV. It keeps file handles open, idle ones are automatically evicted by
 a background cleanup thread after a configurable TTL.
 """
 
@@ -170,7 +169,7 @@ def _decode_group(
 
 
 class VideoService:
-    """Video decoding service with LRU frame caching and TTL-based handle management.
+    """Video decoding service with TTL-based handle management.
 
     Features:
         - Keeps PyAV container handles open and reuses them across calls.
@@ -189,8 +188,8 @@ class VideoService:
         """Initialise the video service.
 
         Args:
-            cache_config: Optional cache configuration. When provided, decoded
-                frames and container handles are cached with TTL-based eviction.
+            cache_config: Optional cache configuration. When provided, container handles are cached
+            with TTL-based eviction.
                 When *None*, no caching or background cleanup is performed.
         """
         self._cache_config = cache_config
