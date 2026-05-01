@@ -130,7 +130,7 @@ def fxt_training_configuration() -> TrainingConfiguration:
                 learning_rate=0.001,
                 weight_decay=0.01,
                 scheduler=SchedulerParameters(
-                    type=SchedulerType.COSINE_ANNEALING,
+                    type=SchedulerType.REDUCE_LR_ON_PLATEAU,
                     warmup=LrLinearWarmupParameters(enable=True, epochs=3),
                     factor=0.5,
                     patience=7,
@@ -1325,10 +1325,10 @@ def fxt_training_configuration_view_json() -> dict:
                                     "metric stops improving. With CosineAnnealing, the learning rate will follow a "
                                     "cosine decay schedule, gradually decreasing over the course of training."
                                 ),
-                                "value": "cosine_annealing",
+                                "value": "reduce_lr_on_plateau",
                                 "default_value": "reduce_lr_on_plateau",
                                 "value_type": "str",
-                                "allowed_values": ["reduce_lr_on_plateau", "cosine_annealing"],
+                                "allowed_values": ["reduce_lr_on_plateau"],
                                 "depends_on": None,
                             },
                             {
