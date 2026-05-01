@@ -20,12 +20,6 @@ def fxt_projects_dir(tmp_path: Path) -> Generator[Path]:
 
 
 @pytest.fixture
-def fxt_event_bus() -> EventBus:
-    """Fixture to create a EventBus instance."""
-    return EventBus()
-
-
-@pytest.fixture
 def fxt_system_service() -> SystemService:
     """Fixture to create a SystemService instance."""
     return SystemService()
