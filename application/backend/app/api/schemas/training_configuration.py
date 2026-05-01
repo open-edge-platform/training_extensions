@@ -52,6 +52,10 @@ class StringParameterView(_BaseConfigurableParameterView):
         default=None,
         title="List of allowed values for the parameter. None if it doesn't have a predefined set of valid values.",
     )
+    allowed_values_display_names: dict[str, str] | None = Field(
+        default=None,
+        title="Mapping from allowed values to user-friendly display names.",
+    )
 
 
 class IntParameterView(_BaseConfigurableParameterView):
@@ -238,7 +242,7 @@ class TrainingConfigurationView(BaseModel):
         return None
 
     @classmethod
-    def _field_to_configurable_parameter(
+    def _field_to_configurable_parameter(  # noqa: C901
         cls,
         key: str,
         value: ParamValueType | None,
@@ -314,7 +318,14 @@ class TrainingConfigurationView(BaseModel):
         if value_type == "float_range":
             min_value, max_value = cls._extract_range_bounds(field_info)
             return FloatRangeParameterView(**common_kwargs, min_value=min_value, max_value=max_value)  # type: ignore
-        return StringParameterView(**common_kwargs, allowed_values=allowed_values)  # type: ignore
+        display_names = None
+        if enum_class is not None and any(hasattr(enum, "display_name") for enum in enum_class):
+            display_names = {enum.value: enum.display_name for enum in enum_class if hasattr(enum, "display_name")}
+        return StringParameterView(
+            **common_kwargs,  # type: ignore
+            allowed_values=allowed_values,
+            allowed_values_display_names=display_names,
+        )
 
     @classmethod
     def _resolve_allowed_values(cls, model: BaseModel, field_info: FieldInfo) -> list | None:
