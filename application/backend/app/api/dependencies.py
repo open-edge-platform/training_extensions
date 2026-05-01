@@ -218,7 +218,6 @@ def get_dataset_service(
 def get_media_prediction_service(
     label_service: Annotated[LabelService, Depends(get_label_service)],
     media_service: Annotated[MediaService, Depends(get_media_service)],
-    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     inference_server: Annotated[InferenceServer, Depends(get_inference_server)],
     inference_model_ttl: Annotated[int, Depends(get_inference_model_ttl)],
     db: Annotated[Session, Depends(get_db)],
@@ -227,7 +226,6 @@ def get_media_prediction_service(
     return MediaPredictionService(
         label_service=label_service,
         media_service=media_service,
-        dataset_service=dataset_service,
         inference_server=inference_server,
         inference_model_ttl=inference_model_ttl,
         db_session=db,

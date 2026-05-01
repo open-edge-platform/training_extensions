@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { IPCameraSourceConfig } from '../../../../constants/shared-types';
+import { getUniqueName } from '../utils';
 
-export const getIpCameraInitialConfig = (): IPCameraSourceConfig => ({
+export const getIpCameraInitialConfig = (existingNames: string[] = []): IPCameraSourceConfig => ({
     id: '',
-    name: 'IP camera source',
+    name: getUniqueName('IP camera source', existingNames),
     source_type: 'ip_camera',
     stream_url: '',
     auth_required: false,

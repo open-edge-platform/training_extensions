@@ -122,7 +122,9 @@ class EvaluationView(BaseModel):
             A list of MetricView instances with user-friendly metric names and their values.
         """
         raw_keys = {k.lower(): k for k in metrics}
-        if "map" in raw_keys:
+        if "map_50" in raw_keys:
+            primary_metric_name = EvaluationMetricName.MAP_50
+        elif "map" in raw_keys:
             primary_metric_name = EvaluationMetricName.MAP
         elif "accuracy" in raw_keys:
             primary_metric_name = EvaluationMetricName.ACCURACY

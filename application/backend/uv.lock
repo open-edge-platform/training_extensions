@@ -1043,7 +1043,7 @@ provides-extras = ["cpu", "cuda", "xpu", "docs", "ci-publish"]
 dev = [
     { name = "coverage" },
     { name = "dill" },
-    { name = "mlflow" },
+    { name = "mlflow", specifier = ">=3.11.1" },
     { name = "py-cpuinfo" },
     { name = "pytest", specifier = ">=5.3.5" },
     { name = "pytest-cov", specifier = ">=4.0.0" },
