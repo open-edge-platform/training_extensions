@@ -15,3 +15,30 @@
         color: var(--energy-blue);
     }
 }
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.4);
+    }
+}
+
+.availabilityCue {
+    position: absolute;
+    top: calc(-1 * var(--spectrum-global-dimension-size-100));
+    right: calc(-1 * var(--spectrum-global-dimension-size-100));
+    animation: pulse 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .availabilityCue {
+        animation: none;
+    }
+}

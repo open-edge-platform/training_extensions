@@ -41,7 +41,7 @@ MULTI_CLASS_MODEL_TEST_CASES = [
     ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="efficientnet_b0", category="speed"),
     ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="efficientnet_v2", category="balance"),
     ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="mobilenet_v3_large", category="accuracy"),
-    ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="deit_tiny", category="other"),
+    ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="vit_tiny", category="other"),
     ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="dino_v2", category="other"),
     ModelInfo(task=TaskType.MULTI_CLASS_CLS.value, name="efficientnet_b3", category="other"),
 ]
@@ -84,7 +84,7 @@ MULTI_LABEL_MODEL_TEST_CASES = [
     ModelInfo(task=TaskType.MULTI_LABEL_CLS.value, name="efficientnet_b0", category="speed"),
     ModelInfo(task=TaskType.MULTI_LABEL_CLS.value, name="efficientnet_v2", category="balance"),
     ModelInfo(task=TaskType.MULTI_LABEL_CLS.value, name="mobilenet_v3_large", category="accuracy"),
-    ModelInfo(task=TaskType.MULTI_LABEL_CLS.value, name="deit_tiny", category="other"),
+    ModelInfo(task=TaskType.MULTI_LABEL_CLS.value, name="vit_tiny", category="other"),
 ]
 
 MULTI_LABEL_DATASET_TEST_CASES = [
@@ -118,7 +118,7 @@ H_LABEL_CLS_MODEL_TEST_CASES = [
     ModelInfo(task=TaskType.H_LABEL_CLS.value, name="efficientnet_b0", category="speed"),
     ModelInfo(task=TaskType.H_LABEL_CLS.value, name="efficientnet_v2", category="balance"),
     ModelInfo(task=TaskType.H_LABEL_CLS.value, name="mobilenet_v3_large", category="accuracy"),
-    ModelInfo(task=TaskType.H_LABEL_CLS.value, name="deit_tiny", category="other"),
+    ModelInfo(task=TaskType.H_LABEL_CLS.value, name="vit_tiny", category="other"),
 ]
 
 H_LABEL_CLS_DATASET_TEST_CASES = [

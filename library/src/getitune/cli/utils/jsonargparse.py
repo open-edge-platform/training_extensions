@@ -450,7 +450,9 @@ def get_configuration(config_path: str | PathLike, subcommand: str = "train", **
     config = namespace_to_dict(args)
     logger.info(f"{config_path} is loaded.")
 
-    # Remove unnecessary cli arguments for API usage
+    # Remove unnecessary cli arguments for API usage. Only log dropped keys
+    # when they are actually present in the config to avoid spamming the log
+    # on every call.
     cli_args = [
         "verbose",
         "data_root",
@@ -460,7 +462,9 @@ def get_configuration(config_path: str | PathLike, subcommand: str = "train", **
         "disable_infer_num_classes",
         "workspace",
     ]
-    logger.warning(f"The corresponding keys in config are not used.: {cli_args}")
+    dropped = [arg for arg in cli_args if arg in config]
+    if dropped:
+        logger.debug("Dropping CLI-only keys from config: %s", dropped)
     for arg in cli_args:
         config.pop(arg, None)
     return config

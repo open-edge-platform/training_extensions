@@ -148,7 +148,7 @@ class ForwardExplainMixInForViT:
 
     @property
     def _optimization_config(self) -> dict[str, Any]:
-        """PTQ config for DeitTinyForMultilabelCls."""
+        """PTQ config for ViT classification models."""
         return {"model_type": "transformer"}
 
     @property
@@ -202,7 +202,7 @@ class ForwardExplainMixInForViT:
 
 
 class VisionTransformerMulticlassCls(ForwardExplainMixInForViT, LightningMulticlassClsModel):
-    """DeitTiny Model for multi-class classification task."""
+    """ViT Model for multi-class classification task."""
 
     model: ImageClassifier
 

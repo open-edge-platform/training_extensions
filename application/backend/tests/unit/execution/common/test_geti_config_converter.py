@@ -101,13 +101,16 @@ def _make_geti_config(
     model_manifest_id: str = "object-detection-atss-mobilenet-v2",
     sub_task_type: str | None = None,
     hyper_parameters: dict | None = None,
+    task_level_parameters: dict | None = None,
 ) -> dict:
     """Build a Geti training configuration dict (the input to convert())."""
-    return {
+    cfg: dict[str, Any] = {
         "model_manifest_id": model_manifest_id,
         "sub_task_type": sub_task_type,
         "hyper_parameters": hyper_parameters or {},
+        "task_level_parameters": task_level_parameters or {},
     }
+    return cfg
 
 
 class TestGetiConfigConverterConvert:
@@ -661,6 +664,15 @@ class TestFullConfigRoundTrip:
                     "gradient_accumulation": {"enable": True, "batches": 2},
                 },
             },
+            task_level_parameters={
+                "dataset_preparation": {
+                    "intensity_mapping": {
+                        "mode": "window",
+                        "window_center": 2048.0,
+                        "window_width": 4096.0,
+                    }
+                }
+            },
         )
 
         with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
@@ -700,3 +712,79 @@ class TestFullConfigRoundTrip:
         affine = [a for a in gpu_augs if "RandomAffine" in a["class_path"]]
         assert len(affine) == 1
         assert affine[0]["init_args"]["degrees"] == 15.0
+
+        # Intensity mapping
+        for subset in ("train_subset", "val_subset", "test_subset"):
+            intensity = result["data"][subset]["intensity"]
+            assert intensity["mode"] == "window"
+            assert intensity["window_center"] == 2048.0
+            assert intensity["window_width"] == 4096.0
+
+
+class TestIntensityMappingUpdate:
+    """Tests for intensity mapping parameter handling in GetiConfigConverter."""
+
+    def test_convert_applies_intensity_mapping_scale_to_unit(self) -> None:
+        """scale_to_unit mode should set max_value on all subsets."""
+        otx_cfg = _make_getitune_config()
+        geti_cfg = _make_geti_config(
+            task_level_parameters={
+                "dataset_preparation": {"intensity_mapping": {"mode": "scale_to_unit", "max_intensity_value": 65535.0}}
+            }
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        for subset in ("train_subset", "val_subset", "test_subset"):
+            intensity = result["data"][subset]["intensity"]
+            assert intensity["mode"] == "scale_to_unit"
+            assert intensity["max_value"] == 65535.0
+
+    def test_convert_applies_intensity_mapping_window(self) -> None:
+        """window mode should set window_center and window_width."""
+        otx_cfg = _make_getitune_config()
+        geti_cfg = _make_geti_config(
+            task_level_parameters={
+                "dataset_preparation": {
+                    "intensity_mapping": {"mode": "window", "window_center": 500.0, "window_width": 1000.0}
+                }
+            }
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        intensity = result["data"]["train_subset"]["intensity"]
+        assert intensity["mode"] == "window"
+        assert intensity["window_center"] == 500.0
+        assert intensity["window_width"] == 1000.0
+        assert "max_value" not in intensity
+
+    def test_convert_applies_intensity_mapping_range_scale(self) -> None:
+        """range_scale mode should set scale_factor, min_value, and max_value."""
+        otx_cfg = _make_getitune_config()
+        geti_cfg = _make_geti_config(
+            task_level_parameters={
+                "dataset_preparation": {
+                    "intensity_mapping": {
+                        "mode": "range_scale",
+                        "scale_factor": 0.4,
+                        "clip_min_value": 10.0,
+                        "clip_max_value": 300.0,
+                    }
+                }
+            }
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        intensity = result["data"]["train_subset"]["intensity"]
+        assert intensity["mode"] == "range_scale"
+        assert intensity["scale_factor"] == 0.4
+        assert intensity["min_value"] == 10.0
+        assert intensity["max_value"] == 300.0

@@ -69,7 +69,7 @@ jobs:
         run: just lint
 
   unit-tests:
-    runs-on: [self-hosted, linux, x64, dev, dmount]
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     permissions:
       contents: read
       # The id-token permission is required by Codecov to use OIDC

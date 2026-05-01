@@ -1,20 +1,19 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from collections import defaultdict
 from dataclasses import dataclass
 from uuid import UUID
 
 import cv2
 import numpy as np
 from loguru import logger
-from PIL import Image as PILImage
 from sqlalchemy.orm import Session
 
-from app.models import BatchInferenceInput, BatchInferencePrediction, BatchInferenceResult, Image, Project, VideoFrame
+from app.models import BatchInferenceInput, BatchInferenceResult, Image, Project, VideoFrame
 from app.models.media import Media, MediaListPredictionRequest, MediaType, NotAnnotatedVideoFrame, Video, VideoRange
 from app.models.system import DeviceInfo
 
 from .base import BaseSessionManagedService, ResourceError, ResourceNotFoundError, ResourceType
-from .dataset_service import DatasetService
 from .inference import InferenceServer
 from .label_service import LabelService
 from .media_service import MediaService
@@ -41,7 +40,6 @@ class MediaPredictionService(BaseSessionManagedService):
         self,
         label_service: LabelService,
         media_service: MediaService,
-        dataset_service: DatasetService,
         inference_server: InferenceServer,
         inference_model_ttl: int,
         db_session: Session | None = None,
@@ -49,7 +47,6 @@ class MediaPredictionService(BaseSessionManagedService):
         super().__init__(db_session)
         self._label_service = label_service
         self._media_service = media_service
-        self._dataset_service = dataset_service
         self._inference_server = inference_server
         self._inference_model_ttl = inference_model_ttl
 
@@ -104,100 +101,43 @@ class MediaPredictionService(BaseSessionManagedService):
                 )
         return LoadedMedia(single_media=single_media, video_frames=video_frames)
 
-    def _convert_to_inference_input(
-        self, project: Project, loaded_media: LoadedMedia
-    ) -> tuple[list[BatchInferenceInput], dict[NotAnnotatedVideoFrame, PILImage.Image]]:
+    def _convert_to_inference_input(self, project: Project, loaded_media: LoadedMedia) -> list[BatchInferenceInput]:
         inputs: list[BatchInferenceInput] = []
-        frame_images: dict[NotAnnotatedVideoFrame, PILImage.Image] = {}
+
+        # Process single media (images and already-saved video frames)
         for single_media in loaded_media.single_media:
             data = self._load_media_binary(project_id=project.id, media=single_media)
             inputs.append(BatchInferenceInput(media_id=single_media.id, data=data))
+
+        # Process video frames: group by video to extract all frames per video in a single pass
+        annotated_by_video: dict[UUID, list[VideoFrame]] = defaultdict(list)
+        not_annotated_by_video: dict[UUID, list[NotAnnotatedVideoFrame]] = defaultdict(list)
         for video_frame in loaded_media.video_frames:
             if isinstance(video_frame, VideoFrame):
-                binary_data = self._load_media_binary(project_id=project.id, media=video_frame)
+                annotated_by_video[video_frame.video_id].append(video_frame)
             else:
-                frame_image = self._media_service.get_frame_binary(
-                    project=project, video=video_frame.video, frame_index=video_frame.frame_index
-                )
-                frame_images[video_frame] = frame_image
-                binary_data = np.asarray(frame_image)
-            inputs.append(
-                BatchInferenceInput(
-                    media_id=video_frame.video_id, data=binary_data, frame_index=video_frame.frame_index
-                )
+                not_annotated_by_video[video_frame.video.id].append(video_frame)
+
+        # Load annotated video frames (already saved as images on disk)
+        for _video_id, frames in annotated_by_video.items():
+            for vf in frames:
+                binary_data = self._load_media_binary(project_id=project.id, media=vf)
+                inputs.append(BatchInferenceInput(media_id=vf.video_id, data=binary_data, frame_index=vf.frame_index))
+
+        # Batch-extract not-annotated video frames: one video open/close per video
+        for video_id, frames in not_annotated_by_video.items():
+            video = frames[0].video
+            frame_indexes = [f.frame_index for f in frames]
+            extracted = self._media_service.get_frame_binaries(
+                project=project, video=video, frame_indexes=frame_indexes
             )
-        return inputs, frame_images
-
-    def _create_or_update_dataset_item(
-        self,
-        project: Project,
-        media: Image | VideoFrame,
-        prediction: BatchInferencePrediction,
-        model_id: UUID,
-    ) -> None:
-        try:
-            dataset_item = self._dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=media.id)
-            if not dataset_item.user_reviewed:
-                logger.debug(f"Updating predictions for {str(media.id)}.")
-                self._dataset_service.set_dataset_item_annotations(
-                    project=project,
-                    dataset_item_id=dataset_item.id,
-                    annotations=prediction.prediction,
-                    user_reviewed=False,
-                    prediction_model_id=model_id,
+            for na_frame in frames:
+                binary_data = extracted[na_frame.frame_index]
+                inputs.append(
+                    BatchInferenceInput(media_id=na_frame.video.id, data=binary_data, frame_index=na_frame.frame_index)
                 )
-            else:
-                logger.debug(f"Dataset item {str(media.id)} is already annotated and reviewed by user, skipping.")
-            return
-        except ResourceNotFoundError:
-            pass
 
-        logger.debug(f"Creating dataset item for {str(media.id)}.")
-        self._dataset_service.create_dataset_item(
-            project_id=project.id,
-            task=project.task,
-            media=media,
-            annotations=prediction.prediction,
-            user_reviewed=False,
-            prediction_model_id=model_id,
-        )
-
-    def _create_dataset_items(
-        self,
-        project: Project,
-        loaded_media: LoadedMedia,
-        frame_images: dict[NotAnnotatedVideoFrame, PILImage.Image],
-        batch_inference_result: BatchInferenceResult,
-        model_id: UUID,
-    ) -> None:
-        for media in loaded_media.single_media:
-            prediction = next(pred for pred in batch_inference_result.predictions if pred.media.id == media.id)
-            self._create_or_update_dataset_item(project=project, media=media, prediction=prediction, model_id=model_id)
-
-        for frame in loaded_media.video_frames:
-            prediction = next(
-                pred
-                for pred in batch_inference_result.predictions
-                if pred.media.id == frame.video_id and pred.media.frame_index == frame.frame_index
-            )
-            logger.debug("Prediction is {}, frame is {}", prediction, frame)
-            if isinstance(frame, VideoFrame):
-                self._create_or_update_dataset_item(
-                    project=project, media=frame, prediction=prediction, model_id=model_id
-                )
-            else:
-                frame_image = frame_images[frame]
-                video_frame = self._media_service.save_video_frame(
-                    project=project, video=frame.video, frame_index=frame.frame_index, frame_image=frame_image
-                )
-                self._dataset_service.create_dataset_item(
-                    project_id=project.id,
-                    task=project.task,
-                    media=video_frame,
-                    annotations=prediction.prediction,
-                    user_reviewed=False,
-                    prediction_model_id=model_id,
-                )
+        return inputs
 
     def predict_media(
         self,
@@ -209,8 +149,6 @@ class MediaPredictionService(BaseSessionManagedService):
         Perform batch inference for a number of media. Media can be an image, annotated frame or video frame range.
         Method loads media metadata and binaries with extracting frames from video if needed and passes
         binaries to the inference service.
-        As soon as inference is done, results are converted and stored as dataset items if save_predictions is set to
-        True.
 
         Args:
             project: Project object containing project information.
@@ -227,22 +165,11 @@ class MediaPredictionService(BaseSessionManagedService):
             "Loaded {} media and {} video frames", len(loaded_media.single_media), len(loaded_media.video_frames)
         )
 
-        inputs, frame_images = self._convert_to_inference_input(project=project, loaded_media=loaded_media)
+        inputs = self._convert_to_inference_input(project=project, loaded_media=loaded_media)
 
         labels = self._label_service.list_all(project_id=project.id)
 
         self._inference_server.set_inference_model(
             project_id=project.id, model_id=request.model_id, device=device, ttl=self._inference_model_ttl
         )
-        batch_inference_result = self._inference_server.infer_batch(labels=labels, inputs=inputs)
-
-        if request.save_predictions:
-            logger.debug("Saving inference results as dataset items")
-            self._create_dataset_items(
-                project=project,
-                loaded_media=loaded_media,
-                frame_images=frame_images,
-                batch_inference_result=batch_inference_result,
-                model_id=request.model_id,
-            )
-        return batch_inference_result
+        return self._inference_server.infer_batch(labels=labels, inputs=inputs)

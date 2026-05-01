@@ -128,7 +128,7 @@ describe('CreateProjectForm', () => {
     describe('detection and segmentation tasks', () => {
         it.each([
             { taskLabel: 'Object Detection', labelName: 'Car' },
-            { taskLabel: 'Image Segmentation', labelName: 'Tree' },
+            { taskLabel: 'Instance Segmentation', labelName: 'Tree' },
         ])('disables create button with zero labels for $taskLabel', ({ taskLabel }) => {
             renderCreateProjectForm();
 
@@ -139,7 +139,7 @@ describe('CreateProjectForm', () => {
 
         it.each([
             { taskLabel: 'Object Detection', labelName: 'Car' },
-            { taskLabel: 'Image Segmentation', labelName: 'Tree' },
+            { taskLabel: 'Instance Segmentation', labelName: 'Tree' },
         ])('enables create button with one label for $taskLabel', async ({ taskLabel, labelName }) => {
             renderCreateProjectForm();
 
@@ -231,7 +231,7 @@ describe('CreateProjectForm', () => {
 
         it.each([
             { taskLabel: 'Object Detection', taskType: 'detection', labelName: 'Car' },
-            { taskLabel: 'Image Segmentation', taskType: 'instance_segmentation', labelName: 'Tree' },
+            { taskLabel: 'Instance Segmentation', taskType: 'instance_segmentation', labelName: 'Tree' },
         ])('submits $taskLabel project with correct task_type', async ({ taskLabel, taskType, labelName }) => {
             let capturedBody: Record<string, unknown> = {};
 

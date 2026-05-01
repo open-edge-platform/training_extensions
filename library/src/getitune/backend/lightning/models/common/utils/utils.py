@@ -381,6 +381,7 @@ def gen_encoder_output_proposals(
         grid_y, grid_x = torch.meshgrid(
             torch.linspace(0, height - 1, height, device=memory.device),
             torch.linspace(0, width - 1, width, device=memory.device),
+            indexing="ij",
         )
         grid = torch.cat([grid_x.unsqueeze(-1), grid_y.unsqueeze(-1)], -1)
 

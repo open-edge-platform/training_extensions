@@ -11,8 +11,7 @@ build-backend = "setuptools.build_meta"
 name = "getitune"
 version = "0.1.0"
 description = "getitune: Train, Evaluate, Optimize, Deploy Computer Vision Models"
-# TODO restore after creating a proper README file for the library
-# readme = "README.md"
+readme = "README.md"
 requires-python = ">=3.11,<3.15"
 license = "Apache-2.0"
 authors = [
@@ -36,13 +35,12 @@ dependencies = [
     "rich_argparse==1.7.0", # CLI help-formatter
     "einops==0.8.1",
     "typeguard>=4.3,<4.5",
-    "setuptools==78.1.1",
     "lightning==2.6.0",
     "torchmetrics==1.8.2",
     "pytorchcv==0.0.74",
     "timm==1.0.3",
     "openvino~=2026.1.0",
-    "openvino-model-api @ git+https://github.com/open-edge-platform/model_api.git",
+    "openvino-model-api==0.4.1",
     "onnx==1.21.0",
     "onnxconverter-common==1.16.0",
     "onnxscript==0.6.2",
@@ -63,7 +61,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pytest>=5.3.5",
+    "pytest~=9.0.3",
     "pytest-cov>=4.0.0",
     "pytest-stress",
     "pytest-html",
@@ -75,7 +73,7 @@ dev = [
     "dill",
     "tifffile",
     "py-cpuinfo",
-    "mlflow",
+    "mlflow>=3.11.1",
 ]
 
 lint = [
@@ -87,7 +85,6 @@ lint = [
     "types-Deprecated",
     "types-docutils",
     "types_futures",
-    "types-setuptools",
     "types-python-dateutil",
     "tokenize-rt==3.2.0",
     "pyrefly~=0.51.0",

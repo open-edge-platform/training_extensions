@@ -43,7 +43,7 @@ export class DatasetPage {
     }
 
     getImagesCountText(count: number) {
-        return this.page.getByText(`${count} images`);
+        return this.page.getByText(`${count} medias`);
     }
 
     getUploadInput() {

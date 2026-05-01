@@ -4,12 +4,12 @@ Hierarchical Classification Metric Collection
 .. note::
 
    The hierarchical classification metrics are designed for structured label spaces (e.g., taxonomies in biology or medicine).
-   See the method in ``otx.metrics.hier_metric_collection.hier_metric_collection_callable``.
+   See the method in ``getitune.metrics.hier_metric_collection.hier_metric_collection_callable``.
 
 Overview
 --------
 
-OpenVINO™ Training Extensions provides a unified **hierarchical metric collection** for classification tasks
+Geti Library provides a unified **hierarchical metric collection** for classification tasks
 that involve taxonomic or multi-level labels. This extends flat classification metrics (accuracy, mAP) with
 hierarchy-aware evaluation.
 
@@ -37,8 +37,8 @@ How to Use Hierarchical Metric Collection
 
       .. code-block:: python
 
-         from otx.metrics.hier_metric_collection import hier_metric_collection_callable
-         from otx.core.types.label import HLabelInfo
+         from getitune.metrics.hier_metric_collection import hier_metric_collection_callable
+         from getitune.types.label import HLabelInfo
 
          # Suppose label_info is loaded from a Datumaro dataset
          metric = hier_metric_collection_callable(label_info)
@@ -51,7 +51,7 @@ How to Use Hierarchical Metric Collection
 
       .. code-block:: bash
 
-         (otx) $ otx train ... --metric otx.metrics.hier_metric_collection.hier_metric_collection_callable
+         (getitune) $ getitune train ... --metric getitune.metrics.hier_metric_collection.hier_metric_collection_callable
 
    .. tab-item:: YAML
 
@@ -64,7 +64,7 @@ How to Use Hierarchical Metric Collection
                label_info: <your_label_info>
 
          metric:
-            class_path: otx.metrics.hier_metric_collection.hier_metric_collection_callable
+            class_path: getitune.metrics.hier_metric_collection.hier_metric_collection_callable
 
 How to Use the Metric Collection with the Engine
 -------------------------------------------
@@ -75,9 +75,9 @@ How to Use the Metric Collection with the Engine
 
       .. code-block:: python
 
-         from otx.engine import create_engine
-         from otx.metrics.hier_metric_collection import hier_metric_collection_callable
-         from otx.core.types.label import HLabelInfo
+         from getitune.engine import create_engine
+         from getitune.metrics.hier_metric_collection import hier_metric_collection_callable
+         from getitune.types.label import HLabelInfo
 
          # 1) Build or load your label_info (e.g., from a Datumaro dataset)
          #    label_info: HLabelInfo = ...

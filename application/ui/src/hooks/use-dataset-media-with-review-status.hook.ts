@@ -1,17 +1,23 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { DatasetItemAnnotationStatus } from '../constants/shared-types';
+import { isEmpty } from 'lodash-es';
+
+import { useDatasetFiltersSearchParams } from './use-dataset-filters-search-params.hook';
 import { useGetDatasetItemsById } from './use-get-dataset-items-by-id.hook';
 import { useGetDatasetMediaItems } from './use-get-dataset-media-items.hook';
 
-interface UseDatasetMediaWithReviewStatusOptions {
-    annotationStatus?: DatasetItemAnnotationStatus;
-}
+export const useDatasetMediaWithReviewStatus = () => {
+    const { selectedLabelIds, annotationStatus, startDate, endDate } = useDatasetFiltersSearchParams();
 
-export const useDatasetMediaWithReviewStatus = ({ annotationStatus }: UseDatasetMediaWithReviewStatusOptions) => {
-    const mediaItemsResponse = useGetDatasetMediaItems({ annotationStatus });
-    const datasetItemsResponse = useGetDatasetItemsById({ annotationStatus });
+    const mediaItemsResponse = useGetDatasetMediaItems({
+        annotationStatus: annotationStatus ?? undefined,
+        labelIds: isEmpty(selectedLabelIds) ? undefined : selectedLabelIds,
+        startDate: startDate ?? undefined,
+        endDate: endDate ?? undefined,
+    });
+
+    const datasetItemsResponse = useGetDatasetItemsById({ annotationStatus: annotationStatus ?? undefined });
 
     const fetchNextPage = () => {
         if (mediaItemsResponse.hasNextPage && !mediaItemsResponse.isFetchingNextPage) {
@@ -23,7 +29,7 @@ export const useDatasetMediaWithReviewStatus = ({ annotationStatus }: UseDataset
         }
     };
 
-    const isUserReviewed = (mediaItemId: string) => {
+    const isMediaItemReviewedById = (mediaItemId: string) => {
         return datasetItemsResponse.reviewStatus.get(mediaItemId) ?? false;
     };
 
@@ -31,7 +37,8 @@ export const useDatasetMediaWithReviewStatus = ({ annotationStatus }: UseDataset
         items: mediaItemsResponse.items,
         isPending: mediaItemsResponse.isPending || datasetItemsResponse.isPending,
         isFetchingNextPage: mediaItemsResponse.isFetchingNextPage || datasetItemsResponse.isFetchingNextPage,
+        totalCount: mediaItemsResponse.totalCount,
         fetchNextPage,
-        isUserReviewed,
+        isMediaItemReviewedById,
     };
 };

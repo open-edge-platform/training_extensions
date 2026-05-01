@@ -4,7 +4,7 @@ Multi-GPU Support
 Overview
 --------
 
-OpenVINO™ Training Extensions now supports operations in a multi-GPU environment, offering faster computation speeds and enhanced performance. With this new feature, users can efficiently process large datasets and complex models, significantly reducing the time required for machine learning and deep learning tasks.
+Geti Library now supports operations in a multi-GPU environment, offering faster computation speeds and enhanced performance. With this new feature, users can efficiently process large datasets and complex models, significantly reducing the time required for machine learning and deep learning tasks.
 
 Benefits of Multi-GPU Support
 -----------------------------
@@ -16,11 +16,11 @@ Benefits of Multi-GPU Support
 How to Set Up Multi-GPU
 -----------------------
 
-Setting up multi-GPU in OpenVINO™ Training Extensions is straightforward. Follow these steps to complete the setup:
+Setting up multi-GPU in Geti Library is straightforward. Follow these steps to complete the setup:
 
-1. **Environment Check**: Ensure that multiple GPUs are installed in your system and that all GPUs are compatible with OpenVINO™ Training Extensions.
+1. **Environment Check**: Ensure that multiple GPUs are installed in your system and that all GPUs are compatible with Geti Library.
 2. **Driver Installation**: Install the latest GPU drivers to ensure all GPUs are properly recognized and available for use.
-3. **Configuration**: Activate the multi-GPU option in the OpenVINO™ Training Extensions configuration file or through the user interface.
+3. **Configuration**: Activate the multi-GPU option in the Geti Library configuration file or through the user interface.
 
 Using Multi-GPU
 ---------------
@@ -33,7 +33,7 @@ Once the multi-GPU feature is enabled, you can use multi-GPU for model training 
 
         .. code-block:: shell
 
-            (otx) ...$ otx train \
+            (getitune) ...$ getitune train \
                         ... \
                         --engine.num_devices 2
 
@@ -41,9 +41,9 @@ Once the multi-GPU feature is enabled, you can use multi-GPU for model training 
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
+            from getitune.backend.lightning.engine import LightningEngine
 
-            engine = OTXEngine.from_config(
+            engine = LightningEngine(
                         ...
                         num_devices=2,
                     )

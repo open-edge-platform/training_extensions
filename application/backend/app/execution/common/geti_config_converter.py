@@ -30,8 +30,8 @@ class ModelStatus(str, Enum):
 
 TEMPLATE_ID_MAPPING = {
     # MULTI_CLASS_CLS
-    "image-classification-deit-tiny": {
-        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",
+    "image-classification-vit-tiny": {
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "vit_tiny.yaml",
         "status": ModelStatus.BALANCE,
         "default": False,
     },
@@ -730,6 +730,13 @@ class GetiConfigConverter:
         default_config = AutoConfigurator(model=model_config_path).config
         if hyper_parameters:
             GetiConfigConverter._update_params(default_config, hyper_parameters)
+
+        # Update parameters that are task-level in Geti
+        task_level_params = config.get("task_level_parameters", {})
+        intensity_mapping = task_level_params.get("dataset_preparation", {}).get("intensity_mapping")
+        if intensity_mapping:
+            GetiConfigConverter._update_intensity_mapping(default_config, intensity_mapping)
+
         GetiConfigConverter._remove_unused_key(default_config)
         return default_config
 
@@ -816,6 +823,38 @@ class GetiConfigConverter:
         if idx > -1:
             callbacks.pop(idx)
             logger.info("DEIM framework disabled: removed AugmentationSchedulerCallback")
+
+    @staticmethod
+    def _update_intensity_mapping(config: dict, intensity_mapping: dict) -> None:
+        """Apply intensity mapping parameters to the data subset configs.
+
+        Maps the Geti application intensity_mapping parameters to the library's
+        IntensityConfig format and sets them on train/val/test subsets.
+
+        Args:
+            config: The full getitune config dictionary.
+            intensity_mapping: Dict with keys: mode, max_intensity_value, clip_min_value,
+                clip_max_value, window_center, window_width, scale_factor.
+        """
+        mode = intensity_mapping.get("mode", "scale_to_unit")
+        intensity_config: dict[str, Any] = {"mode": mode}
+
+        if mode == "scale_to_unit":
+            intensity_config["max_value"] = intensity_mapping.get("max_intensity_value", 255.0)
+        elif mode == "window":
+            intensity_config["window_center"] = intensity_mapping.get("window_center", 127.5)
+            intensity_config["window_width"] = intensity_mapping.get("window_width", 255.0)
+        elif mode == "range_scale":
+            intensity_config["scale_factor"] = intensity_mapping.get("scale_factor", 1.0)
+            intensity_config["min_value"] = intensity_mapping.get("clip_min_value", 0.0)
+            intensity_config["max_value"] = intensity_mapping.get("clip_max_value", 255.0)
+        else:
+            raise ValueError(f"Unsupported intensity mapping mode: {mode}")
+
+        # Apply to all subsets
+        for subset_key in ("train_subset", "val_subset", "test_subset"):
+            if subset_key in config.get("data", {}):
+                config["data"][subset_key]["intensity"] = intensity_config
 
     @staticmethod
     def _remove_unused_key(config: dict) -> None:
