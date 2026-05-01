@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 from collections.abc import Callable
 from enum import StrEnum
 from unittest.mock import MagicMock
@@ -246,50 +245,18 @@ class TestPipelineServiceIntegration:
     def test_switch_variant_only_derives_model_id(
         self,
         fxt_project_with_pipeline,
-        fxt_db_models,
-        fxt_db_model_variants,
         fxt_pipeline_service,
-        fxt_event_bus,
-        db_session,
     ):
         """
-        Providing only `model_variant_id` (no `model_id`) should switch the pipeline to that variant
-        and automatically derive the parent model revision from the variant. This supports use cases
-        like switching between OpenVINO FP16 and INT8 variants without needing to know the model id.
+        Providing only `model_variant_id` (no `model_id`) should raise an error
         """
         _, db_pipeline = fxt_project_with_pipeline(is_running=True)
 
-        # Pipeline currently uses model 0's FP16 variant; switch to model 1's FP16 variant by id only.
-        target_model = fxt_db_models[1]
-        target_variant = fxt_db_model_variants[1]
-
-        updated = fxt_pipeline_service.update_pipeline(
-            db_pipeline.project_id,
-            {"model_variant_id": target_variant.id},
-        )
-
-        fxt_event_bus.emit_event.assert_called_once_with(EventType.MODEL_CHANGED)
-        db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
-        assert str(updated.model_id) == target_model.id
-        assert db_updated.model_revision_id == target_model.id
-        assert db_updated.model_variant_id == target_variant.id
-
-    def test_switch_variant_only_with_unknown_id_raises_not_found(
-        self,
-        fxt_project_with_pipeline,
-        fxt_pipeline_service,
-    ):
-        """Providing only an unknown `model_variant_id` should raise ResourceNotFoundError for ModelVariant."""
-        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
-
-        unknown_variant_id = str(uuid4())
-        with pytest.raises(ResourceNotFoundError) as exc_info:
-            fxt_pipeline_service.update_pipeline(
+        with pytest.raises(ValueError, match="It is not possible to provide only a model variant ID"):
+            _ = fxt_pipeline_service.update_pipeline(
                 db_pipeline.project_id,
-                {"model_variant_id": unknown_variant_id},
+                {"model_variant_id": str(uuid4())},
             )
-        assert exc_info.value.resource_type == ResourceType.MODEL_VARIANT
-        assert exc_info.value.resource_id == unknown_variant_id
 
     def test_switch_model_defaults_to_fp16_openvino_variant(
         self,

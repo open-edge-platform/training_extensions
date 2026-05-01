@@ -28,8 +28,6 @@ Partial pipeline configuration update. May contain any subset of fields includin
 'source_id', 'sink_id', 'model_id', or 'model_variant_id'. Fields not included in the request will remain unchanged.
 
 When 'model_id' is provided without 'model_variant_id', the default FP16 OpenVINO variant is selected automatically.
-When only 'model_variant_id' is provided (without 'model_id'), the parent model revision is derived from the variant,
-allowing callers to switch between variants (e.g., OpenVINO FP16/INT8) without explicitly tracking the model id.
 Only OpenVINO model variants can be used for inference. If an INT8 variant is selected, the server validates that the 
 inference device supports INT8.
 """
@@ -46,16 +44,6 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
         description="Change the active model and select a specific model variant (must be OpenVINO format)",
         value={
             "model_id": "c1feaabc-da2b-442e-9b3e-55c11c2c2ff3",
-            "model_variant_id": "a2d3e4f5-1234-5678-9abc-def012345678",
-        },
-    ),
-    "switch_variant_only": Example(
-        summary="Switch to a specific model variant",
-        description=(
-            "Change the active model variant (e.g., OpenVINO FP16 or INT8) without specifying model_id. "
-            "The parent model revision is derived from the variant."
-        ),
-        value={
             "model_variant_id": "a2d3e4f5-1234-5678-9abc-def012345678",
         },
     ),
