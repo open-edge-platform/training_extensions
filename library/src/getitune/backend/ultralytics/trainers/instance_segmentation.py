@@ -19,7 +19,7 @@ from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
 from getitune.backend.ultralytics.validators.instance_segmentation import SegmentationValidator
 
 if TYPE_CHECKING:
-    from getitune.data.module import OTXDataModule as DataModule
+    from getitune.data.module import DataModule
 
 _MP_CONTEXT = multiprocessing.get_context("spawn")
 

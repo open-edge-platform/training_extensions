@@ -17,11 +17,11 @@ from torchvision import tv_tensors
 from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.backend.ultralytics.models import UltralyticsDetectionModel, UltralyticsInstSegModel
 from getitune.data.entity.base import ImageInfo
-from getitune.data.entity.sample import OTXSampleBatch as SampleBatch
-from getitune.data.module import OTXDataModule as DataModule
-from getitune.types.export import OTXExportFormatType as ExportFormat
+from getitune.data.entity.sample import SampleBatch
+from getitune.data.module import DataModule
+from getitune.types.export import ExportFormat
 from getitune.types.label import LabelInfo
-from getitune.types.precision import OTXPrecisionType as Precision
+from getitune.types.precision import Precision
 
 
 def _label_info() -> LabelInfo:

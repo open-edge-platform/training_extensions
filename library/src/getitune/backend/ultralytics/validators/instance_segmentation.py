@@ -20,7 +20,7 @@ from getitune.backend.ultralytics.data.adapter import UltralyticsDatasetAdapter
 from getitune.backend.ultralytics.data.collate import ultralytics_collate_fn
 
 if TYPE_CHECKING:
-    from getitune.data.module import OTXDataModule as DataModule
+    from getitune.data.module import DataModule
 
 
 class SegmentationValidator(_UltralyticsSegmentationValidator):

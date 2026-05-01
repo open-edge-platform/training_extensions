@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Any
 import yaml
 
 from getitune.types.device import DeviceType
-from getitune.types.task import OTXTaskType as TaskType
+from getitune.types.task import TaskType
 
 from .config import (
     UltralyticsConfig,
@@ -36,7 +36,7 @@ from .engine import UltralyticsEngine
 from .models.base import UltralyticsModel
 
 if TYPE_CHECKING:
-    from getitune.data.module import OTXDataModule as DataModule
+    from getitune.data.module import DataModule
     from getitune.types import PathLike
     from getitune.types.label import LabelInfo
 

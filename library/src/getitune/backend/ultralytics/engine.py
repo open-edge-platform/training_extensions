@@ -15,13 +15,12 @@ import torch
 from torchvision import tv_tensors
 
 from getitune.data.entity.base import ImageInfo
-from getitune.data.entity.sample import OTXPrediction as Prediction
-from getitune.data.entity.sample import OTXSampleBatch as SampleBatch
-from getitune.data.module import OTXDataModule as DataModule
+from getitune.data.entity.sample import Prediction, SampleBatch
+from getitune.data.module import DataModule
 from getitune.engine.engine import Engine
 from getitune.types.device import DeviceType
-from getitune.types.export import OTXExportFormatType as ExportFormat
-from getitune.types.precision import OTXPrecisionType as Precision
+from getitune.types.export import ExportFormat
+from getitune.types.precision import Precision
 from getitune.utils.device import is_xpu_available
 
 from .models.base import UltralyticsModel
