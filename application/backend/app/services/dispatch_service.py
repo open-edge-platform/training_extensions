@@ -1,6 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from loguru import logger
+
 from collections.abc import Callable, Sequence
 
 from app.models import Sink, SinkType
@@ -23,9 +25,11 @@ class DispatchService:
         factory = cls._dispatcher_registry.get(output_config.sink_type)
         if factory is None:
             raise ValueError(f"Unrecognized sink type: {output_config.sink_type}")
-
-        return factory(output_config)
-
+        try:
+            return factory(output_config)
+        except Exception as e:
+            logger.warning(f"Failed to initialize dispatcher for {output_config.sink_type}: {e}")
+            return None
     @classmethod
     def get_destinations(cls, output_configs: Sequence[Sink]) -> list[Dispatcher]:
         """
