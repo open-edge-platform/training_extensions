@@ -12,7 +12,7 @@ import { usePatchPipeline } from '../../../../../hooks/api/pipeline.hook';
 import { useDeleteModel } from '../../../hooks/api/use-delete-model.hook';
 import { useRenameModel } from '../../../hooks/api/use-rename-model.hook';
 import { TrainingLogsDialog } from '../../../training-logs/training-logs-dialog.component';
-import { isFailedModel, isTrainingModel } from '../../utils/utils';
+import { hasDeletedWeights, isFailedModel, isTrainingModel } from '../../utils/utils';
 import { RenameModelDialog } from '../model-row/rename-model-dialog.component';
 
 const MODEL_ACTIONS = {
@@ -43,8 +43,11 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
 
     const disableRenameAndActive = isFailedModel(model) || isTrainingModel(model);
     const disabledKeys = [];
+
     if (disableRenameAndActive) disabledKeys.push(MODEL_ACTIONS.ACTIVATE, MODEL_ACTIONS.RENAME);
     if (isTrainingModel(model)) disabledKeys.push(MODEL_ACTIONS.VIEW_LOGS);
+    if (hasDeletedWeights(model))
+        disabledKeys.push(MODEL_ACTIONS.DELETE_WEIGHTS, MODEL_ACTIONS.VIEW_LOGS, MODEL_ACTIONS.ACTIVATE);
 
     const handleAction = (key: Key) => {
         if (key === MODEL_ACTIONS.ACTIVATE) {

@@ -6,7 +6,7 @@ import { useGetDatasetItems } from '../../../../hooks/use-get-dataset-items.hook
 
 export const MainDatasetStatistics = () => {
     const { totalCount: totalMediaItems } = useGetDatasetItems();
-    const { totalCount: totalAnnotatedItems } = useGetDatasetItems({ annotationStatus: 'reviewed' });
+    const { totalCount: totalAnnotatedItems } = useGetDatasetItems({ annotationStatus: 'with_annotations' });
 
     return (
         <DatasetStatistics label='items' totalMediaItems={totalMediaItems} totalAnnotatedItems={totalAnnotatedItems} />

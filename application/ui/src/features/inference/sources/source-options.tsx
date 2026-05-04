@@ -20,9 +20,10 @@ interface SourceOptionsProps {
     onSaved: () => void;
     hasHeader: boolean;
     children: ReactNode;
+    existingNames?: string[];
 }
 
-export const SourceOptions = ({ onSaved, hasHeader, children }: SourceOptionsProps) => {
+export const SourceOptions = ({ onSaved, hasHeader, children, existingNames = [] }: SourceOptionsProps) => {
     return (
         <>
             {hasHeader && children}
@@ -37,7 +38,7 @@ export const SourceOptions = ({ onSaved, hasHeader, children }: SourceOptionsPro
                         content: (
                             <AddSource
                                 onSaved={onSaved}
-                                config={getUsbCameraInitialConfig()}
+                                config={getUsbCameraInitialConfig(existingNames)}
                                 componentFields={(state: USBCameraSourceConfig) => <UsbCamera defaultState={state} />}
                                 bodyFormatter={usbCameraBodyFormatter}
                             />
@@ -50,7 +51,7 @@ export const SourceOptions = ({ onSaved, hasHeader, children }: SourceOptionsPro
                         content: (
                             <AddSource
                                 onSaved={onSaved}
-                                config={getIpCameraInitialConfig()}
+                                config={getIpCameraInitialConfig(existingNames)}
                                 componentFields={(state: IPCameraSourceConfig) => <IpCamera defaultState={state} />}
                                 bodyFormatter={ipCameraBodyFormatter}
                             />
@@ -81,7 +82,7 @@ export const SourceOptions = ({ onSaved, hasHeader, children }: SourceOptionsPro
                         content: (
                             <AddSource
                                 onSaved={onSaved}
-                                config={getVideoFileInitialConfig()}
+                                config={getVideoFileInitialConfig(existingNames)}
                                 componentFields={(state: VideoFileSourceConfig) => <VideoFile defaultState={state} />}
                                 bodyFormatter={videoFileBodyFormatter}
                             />

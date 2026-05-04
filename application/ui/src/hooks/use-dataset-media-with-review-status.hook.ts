@@ -8,11 +8,13 @@ import { useGetDatasetItemsById } from './use-get-dataset-items-by-id.hook';
 import { useGetDatasetMediaItems } from './use-get-dataset-media-items.hook';
 
 export const useDatasetMediaWithReviewStatus = () => {
-    const { selectedLabelIds, annotationStatus } = useDatasetFiltersSearchParams();
+    const { selectedLabelIds, annotationStatus, startDate, endDate } = useDatasetFiltersSearchParams();
 
     const mediaItemsResponse = useGetDatasetMediaItems({
         annotationStatus: annotationStatus ?? undefined,
         labelIds: isEmpty(selectedLabelIds) ? undefined : selectedLabelIds,
+        startDate: startDate ?? undefined,
+        endDate: endDate ?? undefined,
     });
 
     const datasetItemsResponse = useGetDatasetItemsById({ annotationStatus: annotationStatus ?? undefined });

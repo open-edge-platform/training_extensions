@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.models.system import DeviceInfo
+
 
 class ModelActivationState(BaseModel):
     project_id: UUID | None = Field(..., description="Project ID of the model that is currently used for inference")
@@ -13,7 +15,7 @@ class ModelActivationState(BaseModel):
         ..., description="ID of the model variant that is currently used for inference"
     )
     available_models: list[UUID] = Field(..., description="List of all available model IDs that can be activated")
-    device: str = Field(default="cpu", description="Device to use for inference (e.g., 'cpu', 'gpu')")
+    device: DeviceInfo = Field(..., description="Device information for inference")
 
     @field_validator("active_model_id")
     @classmethod
@@ -23,12 +25,3 @@ class ModelActivationState(BaseModel):
                 f"active_model_id '{v}' must be one of the available_models: {info.data['available_models']}"
             )
         return v
-
-    def to_json_dict(self) -> dict:
-        """Serialize the state to a JSON-compatible dictionary."""
-        return self.model_dump()
-
-    @classmethod
-    def from_json_dict(cls, data: dict) -> "ModelActivationState":
-        """Deserialize the state from a JSON-compatible dictionary."""
-        return cls.model_validate(data)

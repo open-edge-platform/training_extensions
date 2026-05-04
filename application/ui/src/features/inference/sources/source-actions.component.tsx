@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ActionButton, Flex, Loading, Text } from '@geti/ui';
 import { Back } from '@geti/ui/icons';
@@ -18,6 +18,7 @@ export const SourceActions = () => {
     const [currentSource, setCurrentSource] = useState<SourceConfig | null>(null);
     const { data: sources = [], isLoading } = $api.useSuspenseQuery('get', '/api/sources');
     const filteredSources = sources.filter((source) => source.source_type !== 'disconnected');
+    const existingNames = useMemo(() => filteredSources.map((source) => source.name), [filteredSources]);
 
     const handleShowList = () => {
         setView('list');
@@ -45,7 +46,7 @@ export const SourceActions = () => {
     }
 
     return (
-        <SourceOptions onSaved={handleShowList} hasHeader={filteredSources.length > 0}>
+        <SourceOptions onSaved={handleShowList} hasHeader={filteredSources.length > 0} existingNames={existingNames}>
             <Flex gap={'size-100'} marginBottom={'size-100'} alignItems={'center'} justifyContent={'space-between'}>
                 <ActionButton isQuiet onPress={handleShowList}>
                     <Back />

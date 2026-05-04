@@ -25,6 +25,8 @@ from app.models.training_configuration.augmentation import (
 from app.models.training_configuration.configuration import TaskLevelParameters, TrainingConfiguration
 from app.models.training_configuration.dataset_preparation import (
     Filtering,
+    IntensityMapping,
+    IntensityMappingMode,
     MaxAnnotationObjects,
     MinAnnotationObjects,
     MinAnnotationPixels,
@@ -51,6 +53,15 @@ def fxt_training_configuration() -> TrainingConfiguration:
                     min_annotation_pixels=MinAnnotationPixels(enable=True, value=20),
                     min_annotation_objects=MinAnnotationObjects(enable=False, value=1),
                     max_annotation_objects=MaxAnnotationObjects(enable=False, value=50),
+                ),
+                intensity_mapping=IntensityMapping(
+                    mode=IntensityMappingMode.WINDOW,
+                    max_intensity_value=255.0,
+                    clip_min_value=0.0,
+                    clip_max_value=255.0,
+                    window_center=200.0,
+                    window_width=400.0,
+                    scale_factor=1.0,
                 ),
             ),
         ),
@@ -119,7 +130,7 @@ def fxt_training_configuration() -> TrainingConfiguration:
                 learning_rate=0.001,
                 weight_decay=0.01,
                 scheduler=SchedulerParameters(
-                    type=SchedulerType.COSINE_ANNEALING,
+                    type=SchedulerType.REDUCE_LR_ON_PLATEAU,
                     warmup=LrLinearWarmupParameters(enable=True, epochs=3),
                     factor=0.5,
                     patience=7,
@@ -394,6 +405,136 @@ def fxt_training_configuration_view_json() -> dict:
                                         "depends_on": None,
                                     },
                                 ],
+                            },
+                        ],
+                    },
+                    {
+                        "type": "parameter_group",
+                        "key": "intensity_mapping",
+                        "name": "Intensity mapping",
+                        "description": (
+                            "Intensity mapping parameters control how raw pixel values are normalised to [0, 1] range "
+                            "before training. This is especially important for images with non-standard bit depths "
+                            "(e.g. 16-bit), where the default [0, 255] assumption does not hold."
+                        ),
+                        "depends_on": None,
+                        "parameters": [
+                            {
+                                "type": "parameter",
+                                "key": "mode",
+                                "name": "Intensity mapping mode",
+                                "description": (
+                                    "Strategy used to transform pixel intensities. "
+                                    "'Unit interval scaling' divides by max_intensity_value, thus mapping the range "
+                                    "[0, max_intensity_value] to [0, 1]. 'Windowing' isolates a specific intensity "
+                                    "range, mapping a specific window (specified with center and width) to [0, 1] and "
+                                    "clipping values outside the window. 'Range scaling with clipping' multiplies "
+                                    "pixel values by a scale factor, clips the result to a specified range "
+                                    "(clip_min_value, clip_max_value) and finally normalizes to [0, 1]."
+                                ),
+                                "value": "Windowing",
+                                "default_value": "Unit interval scaling",
+                                "value_type": "str",
+                                "allowed_values": ["Unit interval scaling", "Windowing", "Range scaling with clipping"],
+                                "depends_on": None,
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "max_intensity_value",
+                                "name": "Maximum pixel intensity",
+                                "description": (
+                                    "Maximum possible pixel value in the raw image, used as the divisor for "
+                                    "'Unit interval scaling'. "
+                                    "For 8-bit images use 255, for 16-bit images use 65535."
+                                ),
+                                "value": 255.0,
+                                "default_value": 255.0,
+                                "value_type": "float",
+                                "min_value": 0.0,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": {"mode": "Unit interval scaling"},
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "clip_min_value",
+                                "name": "Clip minimum value",
+                                "description": (
+                                    "Minimum output value after rescaling the image in 'Range scaling with clipping' "
+                                    "mode; pixel values below this threshold are clipped."
+                                ),
+                                "value": 0.0,
+                                "default_value": 0.0,
+                                "value_type": "float",
+                                "min_value": None,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": {"mode": "Range scaling with clipping"},
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "clip_max_value",
+                                "name": "Clip maximum value",
+                                "description": (
+                                    "Maximum output value after rescaling the image in 'Range scaling with clipping' "
+                                    "mode; pixel values above this threshold are clipped."
+                                ),
+                                "value": 255.0,
+                                "default_value": 255.0,
+                                "value_type": "float",
+                                "min_value": 0.0,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": {"mode": "Range scaling with clipping"},
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "window_center",
+                                "name": "Window center",
+                                "description": (
+                                    "Center of the intensity window for 'windowing' mode. Together with width, "
+                                    "it defines the intensity range that is mapped to [0, 1]."
+                                ),
+                                "value": 200.0,
+                                "default_value": 127.5,
+                                "value_type": "float",
+                                "min_value": None,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": {"mode": "Windowing"},
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "window_width",
+                                "name": "Window width",
+                                "description": (
+                                    "Width of the intensity window for 'windowing' mode. "
+                                    "The effective range is [center - width/2, center + width/2], "
+                                    "mapped linearly to [0, 1]."
+                                ),
+                                "value": 400.0,
+                                "default_value": 255.0,
+                                "value_type": "float",
+                                "min_value": 0.0,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": {"mode": "Windowing"},
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "scale_factor",
+                                "name": "Scale factor",
+                                "description": (
+                                    "Multiplicative factor applied to pixel values, "
+                                    "before clipping the result to [clip_min_value, clip_max_value]."
+                                ),
+                                "value": 1.0,
+                                "default_value": 1.0,
+                                "value_type": "float",
+                                "min_value": 0.0,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": {"mode": "Range scaling with clipping"},
                             },
                         ],
                     },
@@ -1184,10 +1325,10 @@ def fxt_training_configuration_view_json() -> dict:
                                     "metric stops improving. With CosineAnnealing, the learning rate will follow a "
                                     "cosine decay schedule, gradually decreasing over the course of training."
                                 ),
-                                "value": "cosine_annealing",
+                                "value": "reduce_lr_on_plateau",
                                 "default_value": "reduce_lr_on_plateau",
                                 "value_type": "str",
-                                "allowed_values": ["reduce_lr_on_plateau", "cosine_annealing"],
+                                "allowed_values": ["reduce_lr_on_plateau"],
                                 "depends_on": None,
                             },
                             {

@@ -12,12 +12,16 @@ import { ImportJobsList } from '../../features/dataset/import-export/import-jobs
 
 export const Dataset = () => {
     const [viewMode, setViewMode] = useViewMode('dataset-gallery-view-mode');
-    const { selectedLabelIds: selectedFilterLabels, annotationStatus: filterStatus } = useDatasetFiltersSearchParams();
+    const datasetFilters = useDatasetFiltersSearchParams();
 
     const { items, isPending, isFetchingNextPage, fetchNextPage, isMediaItemReviewedById } =
         useDatasetMediaWithReviewStatus();
 
-    const hasActiveFilter = filterStatus !== null || selectedFilterLabels.length > 0;
+    const hasActiveFilter =
+        datasetFilters.annotationStatus !== null ||
+        datasetFilters.selectedLabelIds.length > 0 ||
+        datasetFilters.startDate !== null ||
+        datasetFilters.endDate !== null;
 
     return (
         <Grid
