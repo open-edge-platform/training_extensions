@@ -17,3 +17,5 @@ export const isTrainingModel = (model: Pick<Model, 'training_info'>): boolean =>
 
 export const isSuccessfulModel = (model: Pick<Model, 'training_info'>): boolean =>
     model.training_info?.status === TRAINING_STATUS.Successful;
+
+export const hasDeletedWeights = (model: Pick<Model, 'files_deleted'>): boolean => model.files_deleted;
