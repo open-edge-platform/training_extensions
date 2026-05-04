@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import logging
 import os
-import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Sequence
 
@@ -23,6 +22,7 @@ from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
 from getitune.utils.device import is_xpu_available
 
+from .exporter import UltralyticsModelExporter
 from .models.base import UltralyticsModel
 
 if TYPE_CHECKING:
@@ -34,12 +34,6 @@ if TYPE_CHECKING:
     from getitune.types.types import ANNOTATIONS, DATA, METRICS, MODEL
 
 logger = logging.getLogger(__name__)
-
-
-_ULTRALYTICS_FORMAT_MAP: dict[ExportFormat, str] = {
-    ExportFormat.OPENVINO: "openvino",
-    ExportFormat.ONNX: "onnx",
-}
 
 
 class _UltralyticsResultLike(Protocol):
@@ -225,27 +219,22 @@ class UltralyticsEngine(Engine):
     ) -> Path:
         """Export the model to OpenVINO IR or ONNX.
 
-        If *checkpoint* is ``None``, the engine tries (in order):
-
-        1. the explicit checkpoint recorded from the most recent ``train()`` call,
-        2. ``work_dir/train/weights/best.pt``,
-        3. the currently loaded YOLO model weights.
+        Delegates to :class:`UltralyticsModelExporter` which follows the same
+        architecture as Lightning's :class:`LightningModelExporter` — metadata
+        embedding, preprocessing parameters, and FP16 compression are all
+        handled by the inherited :class:`ModelExporter` base class.
 
         Args:
             checkpoint: Path to a ``.pt`` checkpoint to export.  When given,
                 a fresh YOLO model is loaded from this file.
             export_format: Target format.
             export_precision: Precision (FP32 or FP16).
-            **kwargs: Extra arguments for Ultralytics export.
+            **kwargs: Extra arguments forwarded to ``UltralyticsModelExporter``.
 
         Returns:
             Path to the exported model file (``.xml`` for OpenVINO,
             ``.onnx`` for ONNX).
         """
-        ultra_format = _ULTRALYTICS_FORMAT_MAP.get(export_format)
-        if ultra_format is None:
-            msg = f"Unsupported export format: {export_format}"
-            raise ValueError(msg)
         if self._model.task == "segment":
             msg = (
                 "Ultralytics instance-segmentation export is not supported yet. "
@@ -254,7 +243,7 @@ class UltralyticsEngine(Engine):
             raise NotImplementedError(msg)
 
         yolo = self._resolve_export_model(checkpoint)
-        half = export_precision == Precision.FP16
+        exporter = self._build_exporter()
 
         logger.info(
             f"Exporting model: format={export_format.value}, "
@@ -262,29 +251,13 @@ class UltralyticsEngine(Engine):
             f"checkpoint={checkpoint or self._last_train_checkpoint or 'current weights'}"
         )
 
-        export_result = yolo.export(
-            format=ultra_format,
-            imgsz=self._model.imgsz,
-            half=half,
-            end2end=False,
-            **kwargs,
+        return exporter.export(
+            model=yolo,
+            output_dir=self._work_dir,
+            base_model_name=self._EXPORTED_MODEL_BASE_NAME,
+            export_format=export_format,
+            precision=export_precision,
         )
-        export_path = Path(export_result)
-
-        if export_format == ExportFormat.OPENVINO:
-            xml_path = self._normalize_openvino_export(export_path)
-            if half:
-                self._cast_openvino_outputs_to_fp32(xml_path)
-            self._embed_export_metadata_openvino(xml_path)
-            return xml_path
-        if export_format == ExportFormat.ONNX:
-            onnx_path = self._normalize_onnx_export(export_path)
-            if half:
-                self._cast_onnx_outputs_to_fp32(onnx_path)
-            self._embed_export_metadata_onnx(onnx_path)
-            return onnx_path
-
-        return export_path
 
     @staticmethod
     def is_supported(model: MODEL, data: DATA) -> bool:
@@ -609,73 +582,30 @@ class UltralyticsEngine(Engine):
         )
         return img_tensor, img_info
 
-    def _normalize_openvino_export(self, export_path: Path) -> Path:
-        """Copy OpenVINO export into work_dir and return the .xml path."""
-        target_dir = self._work_dir / self._EXPORTED_MODEL_BASE_NAME
+    def _build_exporter(self) -> UltralyticsModelExporter:
+        """Build an :class:`UltralyticsModelExporter` from the current model.
 
-        if export_path.is_dir():
-            if export_path != target_dir:
-                if target_dir.exists():
-                    shutil.rmtree(target_dir)
-                shutil.copytree(str(export_path), str(target_dir))
-                logger.info(f"Exported model copied to {target_dir}")
+        Threshold overrides from ``export_args`` are applied on top of the
+        model's default ``_export_parameters``.
+        """
+        export_params = self._model._export_parameters  # noqa: SLF001
 
-            xml_files = list(target_dir.glob("*.xml"))
-            if not xml_files:
-                msg = f"No .xml file found in exported directory: {target_dir}"
-                raise FileNotFoundError(msg)
-            return xml_files[0]
+        # Apply threshold overrides from export_args, if provided
+        overrides: dict[str, Any] = {}
+        if "confidence_threshold" in self._export_args:
+            overrides["confidence_threshold"] = float(self._export_args["confidence_threshold"])
+        if "iou_threshold" in self._export_args:
+            overrides["iou_threshold"] = float(self._export_args["iou_threshold"])
+        if overrides:
+            export_params = export_params.wrap(**overrides)
 
-        return export_path
-
-    def _normalize_onnx_export(self, export_path: Path) -> Path:
-        """Copy ONNX export into work_dir and return the .onnx path."""
-        target_file = self._work_dir / f"{self._EXPORTED_MODEL_BASE_NAME}.onnx"
-
-        if export_path != target_file:
-            target_file.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(str(export_path), str(target_file))
-            logger.info(f"Exported model copied to {target_file}")
-
-        return target_file
-
-    def _embed_export_metadata_openvino(self, xml_path: Path) -> None:
-        """Embed ModelAPI-compatible metadata into an exported OpenVINO IR."""
-        from .export import build_export_metadata, embed_openvino_metadata
-
-        metadata = build_export_metadata(
-            model=self._model,
-            task_type=self._model.export_task_type,
-            confidence_threshold=float(self._export_args.get("confidence_threshold", 0.25)),
-            iou_threshold=float(self._export_args.get("iou_threshold", 0.7)),
+        return UltralyticsModelExporter(
+            task_level_export_parameters=export_params,
+            data_input_params=self._model.data_input_params,
+            resize_mode="fit_to_window_letterbox",
+            pad_value=114,
+            swap_rgb=True,
         )
-        embed_openvino_metadata(xml_path, metadata)
-
-    def _embed_export_metadata_onnx(self, onnx_path: Path) -> None:
-        """Embed ModelAPI-compatible metadata into an exported ONNX model."""
-        from .export import build_export_metadata, embed_onnx_metadata
-
-        metadata = build_export_metadata(
-            model=self._model,
-            task_type=self._model.export_task_type,
-            confidence_threshold=float(self._export_args.get("confidence_threshold", 0.25)),
-            iou_threshold=float(self._export_args.get("iou_threshold", 0.7)),
-        )
-        embed_onnx_metadata(onnx_path, metadata)
-
-    @staticmethod
-    def _cast_openvino_outputs_to_fp32(xml_path: Path) -> None:
-        """Cast OpenVINO model outputs to f32 for ModelAPI YOLO compatibility."""
-        from .export import cast_openvino_outputs_to_fp32
-
-        cast_openvino_outputs_to_fp32(xml_path)
-
-    @staticmethod
-    def _cast_onnx_outputs_to_fp32(onnx_path: Path) -> None:
-        """Cast ONNX model outputs to f32 for ModelAPI YOLO compatibility."""
-        from .export import cast_onnx_outputs_to_fp32
-
-        cast_onnx_outputs_to_fp32(onnx_path)
 
     @staticmethod
     def _resolve_device(device: str | DeviceType) -> torch.device:

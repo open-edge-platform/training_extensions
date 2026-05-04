@@ -818,7 +818,7 @@ class TestGetiTuneTrainerTrainModel:
             assert train_call_kwargs["precision"] == "32"
         else:
             assert "precision" not in train_call_kwargs
-        if geti_device.type == DeviceType.CPU or not geti_device.index:
+        if geti_device.type == DeviceType.CPU or geti_device.index is None:
             assert "devices" not in train_call_kwargs
         else:
             assert train_call_kwargs["devices"] == [geti_device.index]
@@ -1271,11 +1271,13 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         variants_dir = model_dir / "variants"
         assert variants_dir.exists()
 
-        # Check PyTorch variant
+        # Check PyTorch variant — extension matches the original checkpoint
         pytorch_dir = variants_dir / str(pytorch_variant_id)
+        expected_ext = Path(checkpoint_name).suffix
+        pytorch_filename = f"model{expected_ext}"
         assert pytorch_dir.exists()
-        assert (pytorch_dir / "model.ckpt").exists()
-        assert (pytorch_dir / "model.ckpt").read_text() == "checkpoint content"
+        assert (pytorch_dir / pytorch_filename).exists()
+        assert (pytorch_dir / pytorch_filename).read_text() == "checkpoint content"
 
         # Check OpenVINO variant
         openvino_dir = variants_dir / str(openvino_variant_id)

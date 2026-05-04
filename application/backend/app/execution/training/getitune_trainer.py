@@ -455,7 +455,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             "max_epochs": training_config["max_epochs"],
             "callbacks": callbacks_list,
         }
-        if device.type is not DeviceType.CPU and device.index:
+        if device.type is not DeviceType.CPU and device.index is not None:
             train_kwargs["devices"] = [device.index]
         if "precision" in training_config:
             train_kwargs["precision"] = training_config["precision"]
@@ -491,7 +491,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         )
 
         train_kwargs = dict(training_config.get("training", {}))
-        if device.type is not DeviceType.CPU and device.index:
+        if device.type is not DeviceType.CPU and device.index is not None:
             train_kwargs["device"] = device.index
         if has_parent_revision:
             logger.info("Using parent Ultralytics weights as initialization, not resume state: {}", weights_path)
@@ -572,10 +572,12 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         variants_dir = model_dir / "variants"
         variants_dir.mkdir(parents=True, exist_ok=True)
 
-        # Copy PyTorch checkpoint
+        # Copy PyTorch checkpoint — preserve the source extension so
+        # Ultralytics weights keep the .pt suffix required by ``YOLO.load()``.
         pytorch_variant_dir = variants_dir / str(created_variants[ModelFormat.PYTORCH])
         pytorch_variant_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(trained_model_path, pytorch_variant_dir / "model.ckpt")
+        pytorch_dest_name = f"model{trained_model_path.suffix}"
+        shutil.copyfile(trained_model_path, pytorch_variant_dir / pytorch_dest_name)
         logger.info("Stored PyTorch variant at {}", pytorch_variant_dir)
 
         # Copy OpenVINO IR files
@@ -829,9 +831,17 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
     @classmethod
     def __build_model_weights_path(cls, data_dir: Path, project_id: UUID, model_id: UUID, model_variant: UUID) -> Path:
-        """Get the path to the PyTorch checkpoint from a model's variants directory."""
+        """Get the path to the PyTorch checkpoint from a model's variants directory.
+
+        Ultralytics checkpoints are stored as ``model.pt``; Lightning checkpoints
+        as ``model.ckpt``.  We probe for ``.pt`` first and fall back to ``.ckpt``
+        for backward compatibility.
+        """
         model_dir = cls.__base_model_path(data_dir, project_id, model_id)
         variant_dir = model_dir / "variants" / str(model_variant)
+        pt_path = variant_dir / "model.pt"
+        if pt_path.exists():
+            return pt_path
         return variant_dir / "model.ckpt"
 
     @staticmethod

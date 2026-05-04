@@ -203,170 +203,61 @@ class TestExport:
     """Tests for the export() method."""
 
     def test_unsupported_format_raises(self, mocker, tmp_path) -> None:
+        """Unsupported formats should be rejected by the exporter dispatch."""
         engine, _ = _make_engine(tmp_path, mocker)
 
-        # Create a fake ExportFormat value that isn't in the map
         bad_format = MagicMock(spec=ExportFormat)
         bad_format.value = "TORCHSCRIPT"
 
-        with pytest.raises(ValueError, match="Unsupported export format"):
-            engine.export(export_format=bad_format)
+        mock_exporter = MagicMock()
+        mock_exporter.export.side_effect = ValueError("Unsupported export format")
 
-    def test_export_openvino_fp32(self, mocker, tmp_path) -> None:
-        """OpenVINO FP32 export should call yolo.export with half=False and end2end=False."""
+        with (
+            patch.object(engine, "_resolve_export_model", return_value=MagicMock()),
+            patch.object(engine, "_build_exporter", return_value=mock_exporter),
+        ):
+            with pytest.raises(ValueError, match="Unsupported export format"):
+                engine.export(export_format=bad_format)
+
+    def test_export_delegates_to_exporter(self, mocker, tmp_path) -> None:
+        """export() should delegate to exporter.export() with correct args."""
         engine, _ = _make_engine(tmp_path, mocker)
 
-        # Set up the fake export output: a directory with a .xml file
-        export_dir = tmp_path / "fake_export"
-        export_dir.mkdir()
-        (export_dir / "model.xml").touch()
-        (export_dir / "model.bin").touch()
-
         mock_yolo = MagicMock()
-        mock_yolo.export.return_value = str(export_dir)
+        mock_exporter = MagicMock()
+        mock_exporter.export.return_value = tmp_path / "exported_model.xml"
 
         with (
             patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
-            patch.object(engine, "_embed_export_metadata_openvino"),
+            patch.object(engine, "_build_exporter", return_value=mock_exporter),
         ):
             result = engine.export(
                 export_format=ExportFormat.OPENVINO,
                 export_precision=Precision.FP32,
             )
 
-        mock_yolo.export.assert_called_once_with(
-            format="openvino",
-            imgsz=engine._model.imgsz,
-            half=False,
-            end2end=False,
+        mock_exporter.export.assert_called_once_with(
+            model=mock_yolo,
+            output_dir=engine._work_dir,
+            base_model_name="exported_model",
+            export_format=ExportFormat.OPENVINO,
+            precision=Precision.FP32,
         )
-        assert result.suffix == ".xml"
-        assert result.exists()
-
-    def test_export_openvino_fp16_sets_half(self, mocker, tmp_path) -> None:
-        """OpenVINO FP16 export should call yolo.export with half=True."""
-        engine, _ = _make_engine(tmp_path, mocker)
-
-        export_dir = tmp_path / "fake_export"
-        export_dir.mkdir()
-        (export_dir / "model.xml").touch()
-
-        mock_yolo = MagicMock()
-        mock_yolo.export.return_value = str(export_dir)
-
-        with (
-            patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
-            patch.object(engine, "_cast_openvino_outputs_to_fp32") as mock_cast_outputs,
-            patch.object(engine, "_embed_export_metadata_openvino"),
-        ):
-            result = engine.export(
-                export_format=ExportFormat.OPENVINO,
-                export_precision=Precision.FP16,
-            )
-
-        mock_yolo.export.assert_called_once_with(
-            format="openvino",
-            imgsz=engine._model.imgsz,
-            half=True,
-            end2end=False,
-        )
-        mock_cast_outputs.assert_called_once_with(result)
-        assert result.suffix == ".xml"
-
-    def test_export_openvino_fp32_does_not_cast_outputs(self, mocker, tmp_path) -> None:
-        """OpenVINO FP32 export should not add an output cast."""
-        engine, _ = _make_engine(tmp_path, mocker)
-
-        export_dir = tmp_path / "fake_export"
-        export_dir.mkdir()
-        (export_dir / "model.xml").touch()
-
-        mock_yolo = MagicMock()
-        mock_yolo.export.return_value = str(export_dir)
-
-        with (
-            patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
-            patch.object(engine, "_cast_openvino_outputs_to_fp32") as mock_cast_outputs,
-            patch.object(engine, "_embed_export_metadata_openvino"),
-        ):
-            engine.export(
-                export_format=ExportFormat.OPENVINO,
-                export_precision=Precision.FP32,
-            )
-
-        mock_cast_outputs.assert_not_called()
-
-    def test_export_onnx_fp32(self, mocker, tmp_path) -> None:
-        """ONNX FP32 export should call yolo.export with half=False."""
-        engine, _ = _make_engine(tmp_path, mocker)
-
-        onnx_file = tmp_path / "model.onnx"
-        onnx_file.touch()
-
-        mock_yolo = MagicMock()
-        mock_yolo.export.return_value = str(onnx_file)
-
-        with (
-            patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
-            patch.object(engine, "_embed_export_metadata_onnx"),
-        ):
-            result = engine.export(
-                export_format=ExportFormat.ONNX,
-                export_precision=Precision.FP32,
-            )
-
-        mock_yolo.export.assert_called_once_with(
-            format="onnx",
-            imgsz=engine._model.imgsz,
-            half=False,
-            end2end=False,
-        )
-        assert result.suffix == ".onnx"
-
-    def test_export_onnx_fp16_sets_half(self, mocker, tmp_path) -> None:
-        engine, _ = _make_engine(tmp_path, mocker)
-
-        onnx_file = tmp_path / "model.onnx"
-        onnx_file.touch()
-
-        mock_yolo = MagicMock()
-        mock_yolo.export.return_value = str(onnx_file)
-
-        with (
-            patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
-            patch.object(engine, "_cast_onnx_outputs_to_fp32") as mock_cast_outputs,
-            patch.object(engine, "_embed_export_metadata_onnx"),
-        ):
-            result = engine.export(
-                export_format=ExportFormat.ONNX,
-                export_precision=Precision.FP16,
-            )
-
-        mock_yolo.export.assert_called_once_with(
-            format="onnx",
-            imgsz=engine._model.imgsz,
-            half=True,
-            end2end=False,
-        )
-        mock_cast_outputs.assert_called_once_with(result)
-        assert result.suffix == ".onnx"
+        assert result == tmp_path / "exported_model.xml"
 
     def test_export_with_explicit_checkpoint(self, mocker, tmp_path) -> None:
         """Checkpoint arg should be forwarded to _resolve_export_model."""
         engine, _ = _make_engine(tmp_path, mocker)
-
-        onnx_file = tmp_path / "model.onnx"
-        onnx_file.touch()
-
         ckpt_file = tmp_path / "custom.pt"
         ckpt_file.touch()
 
         mock_yolo = MagicMock()
-        mock_yolo.export.return_value = str(onnx_file)
+        mock_exporter = MagicMock()
+        mock_exporter.export.return_value = tmp_path / "exported_model.onnx"
 
         with (
             patch.object(engine, "_resolve_export_model", return_value=mock_yolo) as mock_resolve,
-            patch.object(engine, "_embed_export_metadata_onnx"),
+            patch.object(engine, "_build_exporter", return_value=mock_exporter),
         ):
             engine.export(
                 checkpoint=ckpt_file,
@@ -376,33 +267,8 @@ class TestExport:
 
         mock_resolve.assert_called_once_with(ckpt_file)
 
-    def test_export_passes_extra_kwargs(self, mocker, tmp_path) -> None:
-        """Extra kwargs should be forwarded to yolo.export()."""
-        engine, _ = _make_engine(tmp_path, mocker)
-
-        onnx_file = tmp_path / "model.onnx"
-        onnx_file.touch()
-
-        mock_yolo = MagicMock()
-        mock_yolo.export.return_value = str(onnx_file)
-
-        with (
-            patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
-            patch.object(engine, "_embed_export_metadata_onnx"),
-        ):
-            engine.export(
-                export_format=ExportFormat.ONNX,
-                export_precision=Precision.FP32,
-                simplify=True,
-                dynamic=True,
-            )
-
-        _, call_kwargs = mock_yolo.export.call_args
-        assert call_kwargs["simplify"] is True
-        assert call_kwargs["dynamic"] is True
-
-    def test_export_passes_configured_thresholds_to_metadata(self, mocker, tmp_path) -> None:
-        """Export metadata should use thresholds configured on the engine."""
+    def test_export_passes_configured_thresholds_to_exporter(self, mocker, tmp_path) -> None:
+        """Export metadata should use thresholds configured via export_args."""
         model = UltralyticsDetectionModel(label_info=_label_info())
         datamodule = mocker.MagicMock(spec=DataModule)
         engine = UltralyticsEngine(
@@ -413,16 +279,10 @@ class TestExport:
             export_args={"confidence_threshold": 0.4, "iou_threshold": 0.6},
         )
 
-        with (
-            patch("getitune.backend.ultralytics.export.build_export_metadata") as mock_build,
-            patch("getitune.backend.ultralytics.export.embed_openvino_metadata"),
-        ):
-            mock_build.return_value = {}
-            engine._embed_export_metadata_openvino(tmp_path / "model.xml")
-
-        _, kwargs = mock_build.call_args
-        assert kwargs["confidence_threshold"] == 0.4
-        assert kwargs["iou_threshold"] == 0.6
+        exporter = engine._build_exporter()
+        metadata = exporter.metadata
+        assert metadata[("model_info", "confidence_threshold")] == "0.4"
+        assert metadata[("model_info", "iou_threshold")] == "0.6"
 
     def test_instance_segmentation_export_is_blocked(self, mocker, tmp_path) -> None:
         """Segmentation export should fail until a compatible wrapper is validated."""
@@ -507,82 +367,44 @@ class TestExport:
         assert engine._last_train_checkpoint == recorded_ckpt.resolve()
 
 
-class TestNormalizeOpenvinoExport:
-    """Tests for OpenVINO export normalization."""
+class TestBuildExporter:
+    """Tests for the _build_exporter helper."""
 
-    def test_copies_directory_to_target(self, mocker, tmp_path) -> None:
-        """Export dir should be copied to work_dir/exported_model/."""
+    def test_returns_ultralytics_exporter(self, mocker, tmp_path) -> None:
         engine, _ = _make_engine(tmp_path, mocker)
+        exporter = engine._build_exporter()
 
-        src_dir = tmp_path / "src_export"
-        src_dir.mkdir()
-        (src_dir / "model.xml").touch()
-        (src_dir / "model.bin").touch()
+        from getitune.backend.ultralytics.exporter import UltralyticsModelExporter
 
-        result = engine._normalize_openvino_export(src_dir)
+        assert isinstance(exporter, UltralyticsModelExporter)
 
-        target_dir = tmp_path / "exported_model"
-        assert target_dir.exists()
-        assert result.parent == target_dir
-        assert result.suffix == ".xml"
-        assert (target_dir / "model.bin").exists()
-
-    def test_no_xml_raises(self, mocker, tmp_path) -> None:
-        """Empty export dir with no .xml should raise FileNotFoundError."""
+    def test_uses_model_data_input_params(self, mocker, tmp_path) -> None:
         engine, _ = _make_engine(tmp_path, mocker)
+        exporter = engine._build_exporter()
 
-        src_dir = tmp_path / "empty_export"
-        src_dir.mkdir()
+        assert exporter.data_input_params.mean == (0.0, 0.0, 0.0)
+        assert exporter.data_input_params.std == (1.0, 1.0, 1.0)
 
-        with pytest.raises(FileNotFoundError, match="No .xml file found"):
-            engine._normalize_openvino_export(src_dir)
-
-    def test_already_at_target_no_copy(self, mocker, tmp_path) -> None:
-        """If export is already at target_dir, no copy should happen."""
+    def test_default_yolo_preprocessing_values(self, mocker, tmp_path) -> None:
         engine, _ = _make_engine(tmp_path, mocker)
+        exporter = engine._build_exporter()
 
-        target_dir = tmp_path / "exported_model"
-        target_dir.mkdir()
-        (target_dir / "model.xml").touch()
+        assert exporter.resize_mode == "fit_to_window_letterbox"
+        assert exporter.pad_value == 114
+        assert exporter.swap_rgb is True
 
-        result = engine._normalize_openvino_export(target_dir)
-        assert result == target_dir / "model.xml"
+    def test_threshold_overrides_from_export_args(self, mocker, tmp_path) -> None:
+        model = UltralyticsDetectionModel(label_info=_label_info())
+        datamodule = mocker.MagicMock(spec=DataModule)
+        engine = UltralyticsEngine(
+            model=model,
+            data=datamodule,
+            work_dir=tmp_path,
+            device="cpu",
+            export_args={"confidence_threshold": 0.4, "iou_threshold": 0.6},
+        )
+        exporter = engine._build_exporter()
+        metadata = exporter.metadata
 
-    def test_file_path_returned_as_is(self, mocker, tmp_path) -> None:
-        """If export_path is a file (not dir), return it directly."""
-        engine, _ = _make_engine(tmp_path, mocker)
-
-        xml_file = tmp_path / "model.xml"
-        xml_file.touch()
-
-        result = engine._normalize_openvino_export(xml_file)
-        assert result == xml_file
-
-
-class TestNormalizeOnnxExport:
-    """Tests for ONNX export normalization."""
-
-    def test_copies_file_to_target(self, mocker, tmp_path) -> None:
-        """Export file should be copied to work_dir/exported_model.onnx."""
-        engine, _ = _make_engine(tmp_path, mocker)
-
-        src_file = tmp_path / "src" / "model.onnx"
-        src_file.parent.mkdir()
-        src_file.write_bytes(b"fake_onnx_data")
-
-        result = engine._normalize_onnx_export(src_file)
-
-        expected = tmp_path / "exported_model.onnx"
-        assert result == expected
-        assert expected.exists()
-        assert expected.read_bytes() == b"fake_onnx_data"
-
-    def test_already_at_target_no_copy(self, mocker, tmp_path) -> None:
-        """If file is already at target path, no error."""
-        engine, _ = _make_engine(tmp_path, mocker)
-
-        target_file = tmp_path / "exported_model.onnx"
-        target_file.write_bytes(b"data")
-
-        result = engine._normalize_onnx_export(target_file)
-        assert result == target_file
+        assert metadata[("model_info", "confidence_threshold")] == "0.4"
+        assert metadata[("model_info", "iou_threshold")] == "0.6"

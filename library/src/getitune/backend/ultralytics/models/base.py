@@ -11,6 +11,8 @@ from typing import Any, ClassVar
 
 from ultralytics import YOLO
 
+from getitune.backend.lightning.models.base import DataInputParams
+from getitune.types.export import TaskLevelExportParameters
 from getitune.types.label import LabelInfo
 
 logger = logging.getLogger(__name__)
@@ -115,6 +117,37 @@ class UltralyticsModel:
         Subclasses may override for task-specific values.
         """
         return "detection"
+
+    @property
+    def data_input_params(self) -> DataInputParams:
+        """Data input parameters for model preprocessing.
+
+        YOLO models expect [0, 1] float input (the /255 happens externally),
+        so ``mean=(0, 0, 0)`` and ``std=(1, 1, 1)`` — identity normalisation.
+        """
+        return DataInputParams(
+            input_size=(self.imgsz, self.imgsz),
+            mean=(0.0, 0.0, 0.0),
+            std=(1.0, 1.0, 1.0),
+        )
+
+    @property
+    def _export_parameters(self) -> TaskLevelExportParameters:
+        """Task-level export parameters for metadata embedding.
+
+        Returns a :class:`TaskLevelExportParameters` with detection defaults.
+        Subclasses may override for task-specific values.
+        """
+        label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
+        return TaskLevelExportParameters(
+            model_type=self.export_model_type,
+            model_name=self.model_name or "",
+            task_type=self.export_task_type,
+            label_info=label_info,
+            optimization_config={},
+            confidence_threshold=0.25,
+            iou_threshold=0.7,
+        )
 
     def __repr__(self) -> str:
         return (

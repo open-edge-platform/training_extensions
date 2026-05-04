@@ -10,8 +10,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from getitune.backend.lightning.models.base import DataInputParams
 from getitune.backend.ultralytics.models import UltralyticsDetectionModel
 from getitune.backend.ultralytics.models.base import UltralyticsModel
+from getitune.types.export import TaskLevelExportParameters
+from getitune.types.label import LabelInfo
+
+
+def _label_info() -> LabelInfo:
+    return LabelInfo(label_names=["cat", "dog"], label_ids=["0", "1"], label_groups=[["cat", "dog"]])
 
 
 def test_model_rejects_checkpoint_name_for_scratch_training() -> None:
@@ -47,3 +54,93 @@ def test_load_checkpoint_raises_on_missing_file() -> None:
     model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
     with pytest.raises(FileNotFoundError, match="Checkpoint file not found"):
         model.load_checkpoint("/nonexistent/weights.pt")
+
+
+# ------------------------------------------------------------------
+# data_input_params property
+# ------------------------------------------------------------------
+
+
+class TestDataInputParams:
+    """Tests for the data_input_params property on UltralyticsModel."""
+
+    def test_returns_data_input_params(self) -> None:
+        model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False, imgsz=640)
+        params = model.data_input_params
+        assert isinstance(params, DataInputParams)
+
+    def test_input_size_matches_imgsz(self) -> None:
+        model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False, imgsz=320)
+        params = model.data_input_params
+        assert params.input_size == (320, 320)
+
+    def test_mean_is_zero(self) -> None:
+        """YOLO expects identity normalization — mean should be (0, 0, 0)."""
+        model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
+        assert model.data_input_params.mean == (0.0, 0.0, 0.0)
+
+    def test_std_is_one(self) -> None:
+        """YOLO expects identity normalization — std should be (1, 1, 1)."""
+        model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
+        assert model.data_input_params.std == (1.0, 1.0, 1.0)
+
+    def test_no_intensity_config(self) -> None:
+        model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
+        assert model.data_input_params.intensity_config is None
+
+
+# ------------------------------------------------------------------
+# _export_parameters property
+# ------------------------------------------------------------------
+
+
+class TestExportParameters:
+    """Tests for the _export_parameters property on UltralyticsModel."""
+
+    def test_returns_task_level_export_parameters(self) -> None:
+        model = UltralyticsDetectionModel(label_info=_label_info())
+        params = model._export_parameters
+        assert isinstance(params, TaskLevelExportParameters)
+
+    def test_model_type_from_export_model_type(self) -> None:
+        model = UltralyticsDetectionModel(label_info=_label_info())
+        assert model._export_parameters.model_type == "YOLO11"
+
+    def test_task_type_from_export_task_type(self) -> None:
+        model = UltralyticsDetectionModel(label_info=_label_info())
+        assert model._export_parameters.task_type == "detection"
+
+    def test_model_name_from_model(self) -> None:
+        model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False, label_info=_label_info())
+        assert model._export_parameters.model_name == "yolo26n.yaml"
+
+    def test_label_info_from_model(self) -> None:
+        li = _label_info()
+        model = UltralyticsDetectionModel(label_info=li)
+        assert model._export_parameters.label_info == li
+
+    def test_none_label_info_uses_empty(self) -> None:
+        """When label_info is None, should use an empty LabelInfo."""
+        model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
+        params = model._export_parameters
+        assert params.label_info.label_names == []
+        assert params.label_info.label_ids == []
+
+    def test_default_thresholds(self) -> None:
+        model = UltralyticsDetectionModel(label_info=_label_info())
+        params = model._export_parameters
+        assert params.confidence_threshold == 0.25
+        assert params.iou_threshold == 0.7
+
+    def test_optimization_config_empty(self) -> None:
+        model = UltralyticsDetectionModel(label_info=_label_info())
+        assert model._export_parameters.optimization_config == {}
+
+    def test_to_metadata_produces_valid_dict(self) -> None:
+        """to_metadata should produce a valid metadata dict with all required keys."""
+        model = UltralyticsDetectionModel(label_info=_label_info())
+        metadata = model._export_parameters.to_metadata()
+        assert ("model_info", "model_type") in metadata
+        assert ("model_info", "task_type") in metadata
+        assert ("model_info", "labels") in metadata
+        assert all(isinstance(v, str) for v in metadata.values())
