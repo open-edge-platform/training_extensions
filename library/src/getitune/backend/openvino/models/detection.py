@@ -132,7 +132,7 @@ class OVDetectionModel(OVModel):
             self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
         else:
             msg = (
-                "Cannot get best_confidence_threshold from OpenVINO IR's rt_info. "
+                "Cannot get best_confidence_threshold from model metadata. "
                 "Please check whether this model is trained by getitune or not. "
                 "Without this information, it can produce a wrong F1 metric score. "
                 "At this time, it will be set as the default value = None."
