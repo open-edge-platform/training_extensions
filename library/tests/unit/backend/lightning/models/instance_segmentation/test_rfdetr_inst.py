@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import torch
 
+from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import DataInputParams
 from getitune.backend.lightning.models.common.rfdetr_mixin import RFDETRMixin
 from getitune.backend.lightning.models.instance_segmentation.rfdetr_inst import RFDETRInst
@@ -154,8 +155,24 @@ class TestRFDETRInst:
 
         # Test export forward pass
         output = model.forward_for_tracing(torch.randn(1, 3, 312, 312))
-        # Should return boxes, labels, scores, masks
-        assert len(output) == 4
+        # Should return (boxes, labels, masks) where ``boxes`` has scores
+        # concatenated as the 5th column to match the OpenVINO ``MaskRCNN``
+        # model_api wrapper's expectation of ``boxes[:, 4]`` being the score.
+        assert len(output) == 3
+        boxes, labels, masks = output
+        assert boxes.ndim == 3
+        assert boxes.shape[-1] == 5  # x1, y1, x2, y2, score
+        assert labels.shape[:2] == boxes.shape[:2]
+        assert masks.shape[:2] == boxes.shape[:2]
+
+    def test_exporter_output_names(self) -> None:
+        """Exporter must publish ``boxes``/``labels``/``masks`` (no standalone ``scores``)."""
+        model = RFDETRInst(model_name="rfdetr_seg_n", label_info=3)
+        exporter = model._exporter
+        assert isinstance(exporter, LightningModelExporter)
+        assert exporter.output_names == ["boxes", "labels", "masks"]
+        onnx_cfg = exporter.onnx_export_configuration
+        assert onnx_cfg["output_names"] == ["boxes", "labels", "masks"]
 
     def test_predict_after_export_restore(self, fxt_instance_seg_batch) -> None:
         """Inference must work after export() + _restore_forward_methods().

@@ -149,15 +149,22 @@ class RFDETRDetector(BaseModule):
         self,
         batch_inputs: Tensor,
         num_select: int = 300,
-    ) -> tuple[Tensor, Tensor, Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
+        merge_scores: bool = False,
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor] | tuple[Tensor, Tensor, Tensor] | tuple[Tensor, Tensor]:
         """Export function for model tracing with mask support.
 
         Args:
             batch_inputs: Input images tensor.
             num_select: Number of top predictions to select.
-
+            merge_scores: If True, concatenate ``scores`` as the last column of
+                ``boxes``
         Returns:
-            Tuple of (boxes, labels, scores, masks) tensors.
+            When ``merge_scores`` is ``False`` (default):
+                - With masks:    ``(boxes, labels, scores, masks)``
+                - Without masks: ``(boxes, labels, scores)``
+            When ``merge_scores`` is ``True``:
+                - With masks:    ``(boxes_with_scores, labels, masks)``
+                - Without masks: ``(boxes_with_scores, labels)``
         """
         outputs = self.lwdetr(batch_inputs)
         # outputs may be dict or tuple in export mode
@@ -193,6 +200,12 @@ class RFDETRDetector(BaseModule):
             )
             # Apply sigmoid to get mask probabilities
             masks = torch.sigmoid(masks)
+            if merge_scores:
+                boxes_with_scores = torch.cat([boxes, scores.unsqueeze(-1)], dim=-1)
+                return boxes_with_scores, labels, masks
             return boxes, labels, scores, masks
 
+        if merge_scores:
+            boxes_with_scores = torch.cat([boxes, scores.unsqueeze(-1)], dim=-1)
+            return boxes_with_scores, labels
         return boxes, labels, scores
