@@ -3,24 +3,21 @@
 
 import { isEmpty } from 'lodash-es';
 
-import type { DatasetItemAnnotationStatus } from '../constants/shared-types';
+import { useDatasetFiltersSearchParams } from './use-dataset-filters-search-params.hook';
 import { useGetDatasetItemsById } from './use-get-dataset-items-by-id.hook';
 import { useGetDatasetMediaItems } from './use-get-dataset-media-items.hook';
-import { useLabelsSearchParams } from './use-labels-search-params.hook';
 
-interface UseDatasetMediaWithReviewStatusOptions {
-    annotationStatus?: DatasetItemAnnotationStatus;
-}
-
-export const useDatasetMediaWithReviewStatus = ({ annotationStatus }: UseDatasetMediaWithReviewStatusOptions) => {
-    const { selectedLabelIds } = useLabelsSearchParams();
+export const useDatasetMediaWithReviewStatus = () => {
+    const { selectedLabelIds, annotationStatus, startDate, endDate } = useDatasetFiltersSearchParams();
 
     const mediaItemsResponse = useGetDatasetMediaItems({
-        annotationStatus,
+        annotationStatus: annotationStatus ?? undefined,
         labelIds: isEmpty(selectedLabelIds) ? undefined : selectedLabelIds,
+        startDate: startDate ?? undefined,
+        endDate: endDate ?? undefined,
     });
 
-    const datasetItemsResponse = useGetDatasetItemsById({ annotationStatus });
+    const datasetItemsResponse = useGetDatasetItemsById({ annotationStatus: annotationStatus ?? undefined });
 
     const fetchNextPage = () => {
         if (mediaItemsResponse.hasNextPage && !mediaItemsResponse.isFetchingNextPage) {
@@ -40,6 +37,7 @@ export const useDatasetMediaWithReviewStatus = ({ annotationStatus }: UseDataset
         items: mediaItemsResponse.items,
         isPending: mediaItemsResponse.isPending || datasetItemsResponse.isPending,
         isFetchingNextPage: mediaItemsResponse.isFetchingNextPage || datasetItemsResponse.isFetchingNextPage,
+        totalCount: mediaItemsResponse.totalCount,
         fetchNextPage,
         isMediaItemReviewedById,
     };

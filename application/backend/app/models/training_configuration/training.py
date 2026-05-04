@@ -51,6 +51,7 @@ class SchedulerParameters(BaseModel):
             "metric stops improving. With CosineAnnealing, the learning rate will follow a cosine decay schedule, "
             "gradually decreasing over the course of training."
         ),
+        json_schema_extra={"read_only": True},
     )
     warmup: LrLinearWarmupParameters = Field(
         default_factory=LrLinearWarmupParameters,

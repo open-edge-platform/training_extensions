@@ -59,13 +59,14 @@ class ExportDataset(Execution[ExportDatasetJobParams]):
         with self._db_session_factory() as session:
             if export_params.dataset_id is None:
                 self._dataset_service.set_db_session(session)
-                annotation_status = None if export_params.include_unannotated else DatasetItemAnnotationStatus.REVIEWED
+                annotation_status = (
+                    None if export_params.include_unannotated else DatasetItemAnnotationStatus.WITH_ANNOTATIONS
+                )
                 dataset = self._dataset_service.get_dm_dataset(
                     project_id=export_params.project_id,
                     task=export_params.task,
                     annotation_status=annotation_status,
                     sample_mode=SampleMode.IMPORT_EXPORT,
-                    keep_predictions=False,
                 )
             else:
                 self._dataset_revision_service.set_db_session(session)

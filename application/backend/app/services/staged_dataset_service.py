@@ -8,20 +8,24 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
-from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, Sample, import_dataset
+from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, import_dataset
 
+from app.datumaro_converter.domain.samples.import_export import BaseImportExportSample
 from app.models import AnnotationType, DatasetFormat, StagedDataset
 from app.models.dataset import DatasetMetadata
 
-# labels should be checked after bboxes and polygons, as they can be present in all samples
-_ANNOTATION_ATTRS: list[tuple[str, AnnotationType]] = [
+_ANNOTATION_SHAPE_ATTRS: list[tuple[str, AnnotationType]] = [
     ("bboxes", AnnotationType.BOUNDING_BOX),
     ("polygons", AnnotationType.POLYGON),
+]
+# labels should be checked after bboxes and polygons, as they can be present in all samples.
+_ANNOTATION_LABEL_ATTRS: list[tuple[str, AnnotationType]] = [
     ("labels", AnnotationType.LABEL),
+    ("label", AnnotationType.LABEL),
 ]
 
 
-def _count_annotations(sample: Sample) -> tuple[AnnotationType, int]:
+def _count_annotations(sample: BaseImportExportSample) -> tuple[AnnotationType, int]:
     if (
         hasattr(sample, "annotation_type")
         and callable(getattr(sample, "annotation_type", None))
@@ -31,14 +35,19 @@ def _count_annotations(sample: Sample) -> tuple[AnnotationType, int]:
 
     # collect non-empty values from the sample for all annotation attributes and their corresponding types
     ann_type_with_value: list[tuple[AnnotationType, Any]] = []
-    for attr, ann_type in _ANNOTATION_ATTRS:
-        value = getattr(sample, attr, None)
-        if value is not None:
+    for attr, ann_type in _ANNOTATION_SHAPE_ATTRS:
+        if (value := getattr(sample, attr, None)) is not None:
             ann_type_with_value.append((ann_type, value))
+    if not ann_type_with_value:
+        for attr, ann_type in _ANNOTATION_LABEL_ATTRS:
+            if (value := getattr(sample, attr, None)) is not None:
+                ann_type_with_value.append((ann_type, value))
     if len(ann_type_with_value) > 1:
-        return AnnotationType.UNKNOWN, len(ann_type_with_value[0][1])
+        value = ann_type_with_value[0][1]
+        return AnnotationType.UNKNOWN, 1 if isinstance(value, int) else len(value)
     if len(ann_type_with_value) == 1:
-        return ann_type_with_value[0][0], len(ann_type_with_value[0][1])
+        value = ann_type_with_value[0][1]
+        return ann_type_with_value[0][0], 1 if isinstance(value, int) else len(value)
 
     return AnnotationType.UNKNOWN, 0
 
@@ -64,7 +73,8 @@ def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
     counts = _Counts()
     for item in dataset:
         ann_type, count = _count_annotations(item)
-        counts.annotation_type = ann_type
+        if ann_type != AnnotationType.UNKNOWN:
+            counts.annotation_type = ann_type
         target_media_attrs = ("media", "image", "image_path")
         values = (getattr(item, media_attr, None) for media_attr in target_media_attrs)
         media = next((v for v in values if v is not None), None)

@@ -155,7 +155,14 @@ class DEIMV2(DEIMDFine):
             input_size=self.data_input_params.input_size[0],
         )
         model.init_weights()
-        load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
+        # Remap decoder self-attention keys: checkpoint uses nn.MultiheadAttention naming,
+        # our decoder uses fused qkv_proj/out_proj. Scoped to decoder layers only.
+        key_mapping: dict[str, str] = {}
+        for i in range(decoder.num_layers):
+            prefix = f"decoder.decoder.layers.{i}."
+            key_mapping[f"{prefix}self_attn.in_proj_"] = f"{prefix}qkv_proj."
+            key_mapping[f"{prefix}self_attn.out_proj."] = f"{prefix}out_proj."
+        load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu", key_mapping=key_mapping)
         return model
 
     @property

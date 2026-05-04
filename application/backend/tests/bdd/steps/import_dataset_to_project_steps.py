@@ -171,14 +171,14 @@ def step_project_contains_unannotated_images(context: Context, count: int) -> No
     # Verify items existing without annotations
     response = requests.get(
         f"{context.base_url}/api/projects/{project.id}/dataset/items?"
-        f"annotation_status={DatasetItemAnnotationStatus.UNANNOTATED}"
+        f"annotation_status={DatasetItemAnnotationStatus.MISSING_ANNOTATIONS}"
     )
     actual_item_count = response.json()["pagination"]["total"]
     assert actual_item_count == count, f"Expected {count} unannotated items, got {actual_item_count}"
     # Verify media existing without annotations
     response = requests.get(
         f"{context.base_url}/api/projects/{project.id}/dataset/media?"
-        f"annotation_status={DatasetItemAnnotationStatus.UNANNOTATED}"
+        f"annotation_status={DatasetItemAnnotationStatus.MISSING_ANNOTATIONS}"
     )
     actual_media_count = response.json()["pagination"]["total"]
     assert actual_media_count == count, f"Expected {count} unannotated media, got {actual_media_count}"

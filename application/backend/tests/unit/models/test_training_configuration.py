@@ -12,6 +12,8 @@ from app.models.training_configuration.configuration import (
 from app.models.training_configuration.dataset_preparation import (
     AlgoLevelDatasetPreparationParameters,
     AugmentationParameters,
+    IntensityMapping,
+    IntensityMappingMode,
     TaskLevelDatasetPreparationParameters,
 )
 from app.models.training_configuration.training import AlgoLevelTrainingParameters, EarlyStopping
@@ -130,3 +132,30 @@ class TestTrainingConfiguration:
         config = make_config()
         with pytest.raises(ValueError, match="at least one dot separator"):
             config.apply_updates({"max_epochs": 10})
+
+    def test_apply_updates_intensity_mapping_mode(self) -> None:
+        config = make_config()
+        config.apply_updates({"dataset_preparation.intensity_mapping.mode": "Windowing"})
+        assert config.task_level_parameters.dataset_preparation.intensity_mapping.mode == IntensityMappingMode.WINDOW
+
+    def test_apply_updates_intensity_mapping_window_params(self) -> None:
+        config = make_config()
+        config.apply_updates(
+            {
+                "dataset_preparation.intensity_mapping.window_center": 500.0,
+                "dataset_preparation.intensity_mapping.window_width": 1000.0,
+            }
+        )
+        im = config.task_level_parameters.dataset_preparation.intensity_mapping
+        assert im.window_center == pytest.approx(500.0)
+        assert im.window_width == pytest.approx(1000.0)
+
+    def test_intensity_mapping_defaults(self) -> None:
+        im = IntensityMapping()
+        assert im.mode == IntensityMappingMode.SCALE_TO_UNIT
+        assert im.max_intensity_value == 255.0
+        assert im.clip_min_value == 0.0
+        assert im.clip_max_value == 255.0
+        assert im.window_center == 127.5
+        assert im.window_width == 255.0
+        assert im.scale_factor == 1.0

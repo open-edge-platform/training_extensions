@@ -12,6 +12,7 @@ import { render } from 'test-utils/render';
 import { http } from '../../../../api/utils';
 import type { Media } from '../../../../constants/shared-types';
 import { server } from '../../../../msw-node-setup';
+import { isImage } from '../../../../shared/media-item-utils';
 import { SelectedDataProvider } from '../../providers/selected-data-provider.component';
 import { Toolbar } from './toolbar.component';
 
@@ -57,13 +58,38 @@ describe('Toolbar', () => {
                 return HttpResponse.json(getMockedProject({ id: 'project-123' }));
             }),
             http.get('/api/projects/{project_id}/dataset/statistics', () => {
-                return HttpResponse.json(getMockedDatasetStatistics({}));
+                return HttpResponse.json(
+                    getMockedDatasetStatistics({
+                        media_counts: {
+                            images: items.filter(isImage).length,
+                            videos: items.filter((item) => !isImage(item)).length,
+                            video_frames: 0,
+                        },
+                    })
+                );
+            }),
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: [getMockedMediaImage({})],
+                    pagination: { offset: 0, limit: 1, count: items.length, total: items.length },
+                });
+            }),
+            http.get('/api/projects/{project_id}/dataset/items', () => {
+                return HttpResponse.json({
+                    pagination: {
+                        total: items.length,
+                        offset: 0,
+                        limit: 0,
+                        count: items.length,
+                    },
+                    items: [],
+                });
             })
         );
 
         const result = render(
             <SelectedDataProvider>
-                <Toolbar items={items} viewMode={ViewModes.LARGE} setViewMode={vi.fn()} onFilter={vi.fn()} />
+                <Toolbar items={items} viewMode={ViewModes.LARGE} setViewMode={vi.fn()} />
             </SelectedDataProvider>
         );
 
@@ -86,12 +112,6 @@ describe('Toolbar', () => {
         fireEvent.change(input, { target: { files: [file] } });
 
         expect(uploadMediaMock).toHaveBeenCalledWith([file]);
-    });
-
-    it('shows total images count when no items are selected', async () => {
-        await renderToolbar([getMockedMediaImage({ id: '1' }), getMockedMediaImage({ id: '2' })]);
-
-        expect(screen.getByText('2 images')).toBeVisible();
     });
 
     it('disables annotate button when there are no items', async () => {

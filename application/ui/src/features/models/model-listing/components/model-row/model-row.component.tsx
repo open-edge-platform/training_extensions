@@ -13,7 +13,7 @@ import { GRID_COLUMNS } from '../../constants';
 import { AccuracyIndicator } from '../../model-variants/accuracy-indicator.component';
 import { type GroupByMode } from '../../types';
 import { formatTrainingDateTime } from '../../utils/date-formatting';
-import { isFailedModel } from '../../utils/utils';
+import { hasDeletedWeights, isFailedModel } from '../../utils/utils';
 import { ActiveModelTag } from '../active-model-tag.component';
 import { ParentRevisionModel } from '../parent-revision-model.component';
 import { ArchitectureColumn } from './architecture-column.component';
@@ -34,6 +34,19 @@ type ModelRowProps = {
 
 const FailedModel = () => {
     return <Badge variant={'negative'}>Failed</Badge>;
+};
+
+const DeletedWeightsModel = () => {
+    return (
+        <Badge
+            variant={'yellow'}
+            UNSAFE_style={{
+                '--spectrum-yellow-background-color-default': `var(--brand-daisy)`,
+            }}
+        >
+            Deleted weights
+        </Badge>
+    );
 };
 
 export const ModelRow = ({
@@ -58,16 +71,12 @@ export const ModelRow = ({
     return (
         <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'} columnGap={'size-200'}>
             <Flex direction={'column'} gap={'size-50'}>
-                <Flex alignItems={'center'} gap={'size-100'}>
+                <Flex alignItems={'center'} gap={'size-100'} wrap>
                     <Text UNSAFE_className={classes.modelName} data-testid={'model-name'}>
                         {model.name ?? 'Unnamed Model'}
-                        {isFailedModel(model) && (
-                            <>
-                                {' '}
-                                <FailedModel />
-                            </>
-                        )}
                     </Text>
+                    {isFailedModel(model) && <FailedModel />}
+                    {hasDeletedWeights(model) && <DeletedWeightsModel />}
                     {model.id === activeModelId && <ActiveModelTag />}
                 </Flex>
                 <Text UNSAFE_className={classes.secondaryText}>

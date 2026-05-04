@@ -66,7 +66,7 @@ test.describe('Annotator Classification', () => {
             });
         });
 
-        test('remove the annotations when label is removed', async ({ page }) => {
+        test('keeps annotation but disables submit button when label is removed', async ({ page }) => {
             await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
             await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
 
@@ -78,9 +78,13 @@ test.describe('Annotator Classification', () => {
                 await expect(annotation).toHaveAttribute('stroke', redLabel.color);
             });
 
-            await test.step('remove the annotation label', async () => {
+            await test.step('remove the label and check submit button', async () => {
                 await page.getByLabel(`Remove ${redLabel.name}`).click();
-                expect(await page.getByLabel('annotation full image').count()).toBe(0);
+
+                await expect(getAnnotationShape(page)).toBeVisible();
+                await expect(page.getByLabel('label No label background')).toBeVisible();
+
+                await expect(page.getByRole('button', { name: 'Submit' })).toBeDisabled();
             });
         });
 
@@ -134,7 +138,7 @@ test.describe('Annotator Classification', () => {
             });
         });
 
-        test('remove the annotations when all labels are removed', async ({ page }) => {
+        test('keeps annotation but disables submit button when all labels are removed', async ({ page }) => {
             await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
             await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
 
@@ -144,12 +148,15 @@ test.describe('Annotator Classification', () => {
                 await page.getByRole('button', { name: `Label ${yellowLabel.name}` }).click();
             });
 
-            await test.step('removing all labels', async () => {
+            await test.step('remove all labels and check submit button', async () => {
                 await page.getByLabel(`Remove ${redLabel.name}`).click();
                 await page.getByLabel(`Remove ${greenLabel.name}`).click();
                 await page.getByLabel(`Remove ${yellowLabel.name}`).click();
 
-                expect(await page.getByLabel('annotation full image').count()).toBe(0);
+                await expect(getAnnotationShape(page)).toBeVisible();
+                await expect(page.getByLabel('label No label background')).toBeVisible();
+
+                await expect(page.getByRole('button', { name: 'Submit' })).toBeDisabled();
             });
         });
 

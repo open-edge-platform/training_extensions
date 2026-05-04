@@ -1,5 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import numpy as np
 import torch
 from getitune import TaskType as GetiTuneTaskType
 from getitune.data import DetectionDataset, InstanceSegDataset, MulticlassClsDataset, MultilabelClsDataset
@@ -71,6 +72,14 @@ def convert_metrics(metrics: dict) -> dict[str, float]:
                 result[name] = v.item()
             else:
                 logger.debug("Skipping non-scalar metric '{}' with {} elements", name, v.numel())
+        elif isinstance(v, list | tuple | dict) or (isinstance(v, np.ndarray) and v.size != 1):
+            # Skip non-scalar aggregate metrics (e.g., per-class confusion matrices)
+            logger.debug("Skipping non-scalar metric '{}' of type {}", name, type(v).__name__)
+        elif isinstance(v, np.ndarray):
+            result[name] = float(v.item())
         else:
-            result[name] = float(v)
+            try:
+                result[name] = float(v)
+            except (TypeError, ValueError):
+                logger.debug("Skipping metric '{}' with non-numeric value of type {}", name, type(v).__name__)
     return result

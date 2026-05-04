@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB
 from app.models import MediaType
 
-from .filters import _apply_annotation_status_filter, _apply_subset_filter
+from .filters import _apply_annotation_status_filter_with_video_support, _apply_subset_filter
 
 
 class MediaRepository:
@@ -62,7 +62,7 @@ class MediaRepository:
         if exclude_types:
             stmt = stmt.where(MediaDB.type.not_in(exclude_types))
         stmt = self._apply_date_filters(stmt, start_date, end_date)
-        stmt = _apply_annotation_status_filter(stmt, annotation_status)
+        stmt = _apply_annotation_status_filter_with_video_support(stmt, annotation_status)
         stmt = _apply_subset_filter(stmt, subset)
         if label_ids:
             stmt = stmt.join(DatasetItemLabelDB, isouter=True).where(DatasetItemLabelDB.label_id.in_(label_ids))
@@ -83,7 +83,7 @@ class MediaRepository:
         if exclude_types:
             stmt = stmt.where(MediaDB.type.not_in(exclude_types))
         stmt = self._apply_date_filters(stmt, start_date, end_date)
-        stmt = _apply_annotation_status_filter(stmt, annotation_status)
+        stmt = _apply_annotation_status_filter_with_video_support(stmt, annotation_status)
         stmt = _apply_subset_filter(stmt, subset)
         if label_ids:
             stmt = (

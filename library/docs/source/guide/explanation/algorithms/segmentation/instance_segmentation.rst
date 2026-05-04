@@ -15,7 +15,7 @@ Instance segmentation is commonly used in applications such as self-driving cars
 
 |
 
-We integrate two types of instance segmentation architecture within OpenVINO™ Training Extensions:: `Mask R-CNN <https://arxiv.org/abs/1703.06870>`_ and `RTMDet <https://arxiv.org/abs/2212.07784>`_.
+We integrate two types of instance segmentation architecture within Geti Library:: `Mask R-CNN <https://arxiv.org/abs/1703.06870>`_ and `RTMDet <https://arxiv.org/abs/2212.07784>`_.
 
 Mask R-CNN, a widely adopted method, builds upon the Faster R-CNN architecture, known for its two-stage object detection mechanism. In the initial stage, it proposes regions of interest, while in the subsequent stage, it predicts the class and bounding box offsets for each proposal. Distinguishing itself, Mask R-CNN incorporates an additional branch dedicated to predicting object masks concurrently with the existing branches for bounding box regression and object classification.
 
@@ -40,7 +40,7 @@ For the supervised training we use the following algorithms components:
 Dataset Format
 **************
 
-For the dataset handling inside OpenVINO™ Training Extensions, we use `Dataset Management Framework (Datumaro) <https://github.com/open-edge-platform/datumaro>`_. For instance segmentation we support `COCO <https://cocodataset.org/#format-data>`_ dataset format.
+For the dataset handling inside Geti Library, we use `Dataset Management Framework (Datumaro) <https://github.com/open-edge-platform/datumaro>`_. For instance segmentation we support `COCO <https://cocodataset.org/#format-data>`_ dataset format.
 
 .. note::
 
@@ -55,20 +55,20 @@ We support the following ready-to-use model recipes:
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
 | Model Recipe                                                                                                                                                                                                  | Name                       | Complexity (GFLOPs) | Model size (MB) |
 +===============================================================================================================================================================================================================+============================+=====================+=================+
-| `Instance Segmentation MaskRCNN EfficientNetB2B <https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml>`_                    | MaskRCNN-EfficientNetB2B   | 68.48               | 13.27           |
+| `Instance Segmentation MaskRCNN EfficientNetB2B <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml>`_                    | MaskRCNN-EfficientNetB2B   | 68.48               | 13.27           |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
-| `Instance Segmentation MaskRCNN ResNet50 <https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/recipe/instance_segmentation/maskrcnn_r50_tv.yaml>`_                                    | MaskRCNN-ResNet50          | 533.80              | 177.90          |
+| `Instance Segmentation MaskRCNN ResNet50 <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/instance_segmentation/maskrcnn_r50_tv.yaml>`_                                    | MaskRCNN-ResNet50          | 533.80              | 177.90          |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
-| `Instance Segmentation MaskRCNN SwinT <https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml>`_                                        | MaskRCNN-SwinT             | 566                 | 191.46          |
+| `Instance Segmentation MaskRCNN SwinT <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/instance_segmentation/maskrcnn_swint.yaml>`_                                        | MaskRCNN-SwinT             | 566                 | 191.46          |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
-| `Instance Segmentation RTMDet-Inst Tiny <https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml>`_                                    | RTMDet-Ins-tiny            | 52.86               | 22.8            |
+| `Instance Segmentation RTMDet-Inst Tiny <https://github.com/open-edge-platform/training_extensions/blob/develop/library/src/getitune/recipe/instance_segmentation/rtmdet_inst_tiny.yaml>`_                                    | RTMDet-Ins-tiny            | 52.86               | 22.8            |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
 
 Above table can be found using the following command
 
 .. code-block:: shell
 
-    (otx) ...$ otx find --task INSTANCE_SEGMENTATION
+    (getitune) ...$ getitune find --task INSTANCE_SEGMENTATION
 
 MaskRCNN-SwinT leverages `Swin Transformer <https://arxiv.org/abs/2103.14030>`_ architecture as its backbone network for feature extraction. This choice, while yielding superior accuracy, comes with a longer training time and higher computational requirements.
 

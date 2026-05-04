@@ -19,7 +19,7 @@ from app.db.schema import MediaDB
 from app.models import DatasetItem, DatasetItemAnnotationStatus, Media, MediaType, Project, Video, VideoFrame
 from app.models.media import ImageFormat, MediaAdapter, VideoFormat
 from app.repositories import MediaRepository
-from app.services.video import extract_video_frame, get_video_metadata
+from app.services.video import extract_video_frame, extract_video_frames, get_video_metadata
 from app.utils.images import convert_to_jpeg_compatible, crop_to_thumbnail
 
 from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
@@ -199,7 +199,7 @@ class MediaService(BaseSessionManagedService):
         project: Project,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
-        annotation_status: str | None = None,
+        annotation_status: DatasetItemAnnotationStatus | None = None,
         label_ids: list[UUID] | None = None,
         subset: str | None = None,
         exclude_types: list[MediaType] | None = None,
@@ -314,6 +314,21 @@ class MediaService(BaseSessionManagedService):
     def get_frame_binary(self, project: Project, video: Video, frame_index: int) -> Image.Image:
         video_path = self.get_media_binary_path(project_id=project.id, media=video)
         return self._get_frame_binary_from_video_file(video_path=video_path, frame_index=frame_index)
+
+    def get_frame_binaries(self, project: Project, video: Video, frame_indexes: list[int]) -> dict[int, np.ndarray]:
+        """
+        Extract multiple frames from a video in a single pass.
+
+        Args:
+            project: Project containing the video.
+            video: Video to extract frames from.
+            frame_indexes: List of frame indexes to extract.
+
+        Returns:
+            Dictionary mapping frame index to numpy array (RGB format).
+        """
+        video_path = self.get_media_binary_path(project_id=project.id, media=video)
+        return extract_video_frames(video_path=video_path, frame_indexes=frame_indexes)
 
     def get_frame_thumbnail(self, project: Project, video: Video, frame_index: int) -> Image.Image:
         video_frame = self.get_frame_binary(project=project, video=video, frame_index=frame_index)

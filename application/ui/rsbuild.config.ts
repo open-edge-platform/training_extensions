@@ -15,11 +15,37 @@ const { publicVars } = loadEnv({ prefixes: ['PUBLIC_'] });
 // a `.tauri.*` twin resolve as usual. This keeps Tauri-specific code out of
 // the web graph entirely, and removes the need for runtime `isTauri` checks.
 const isTauriBuild = process.env.BUILD_TARGET === 'tauri';
+
+// `TAURI_ENV_DEBUG` is set by the Tauri CLI: `tauri dev` / `start:desktop`
+// propagate it as `true`, and `tauri build` sets it to `false`. We disable
+// minification and emit inline JS source maps for debug desktop builds so
+// stack traces are readable inside the embedded WebView.
+const isTauriDebugBuild = isTauriBuild && process.env.TAURI_ENV_DEBUG === 'true';
+
 const platformExtensions = isTauriBuild ? ['.tauri.tsx', '.tauri.ts', '.tauri.jsx', '.tauri.js', '.tauri.scss'] : [];
 // `.scss` is appended unconditionally so extensionless SCSS imports (used
 // to opt in to the platform-override mechanism, e.g. `import './foo'`)
 // still resolve to `foo.scss` on the web build.
 const styleExtensions = ['.scss'];
+
+// API base URL injected into the bundle. Web builds resolve to '' (relative
+// paths, served same-origin behind a reverse proxy). Tauri builds load the
+// frontend from a custom protocol (`tauri://localhost`) that has no API, so
+// fetches must point at the absolute backend URL — the sidecar always binds
+// to localhost:7860. The web dev server reads the same value from .env.development.
+const getPublicApiUrl = () => {
+    if (publicVars['import.meta.env.PUBLIC_API_BASE_URL'] !== undefined) {
+        return JSON.parse(publicVars['import.meta.env.PUBLIC_API_BASE_URL']);
+    }
+
+    if (isTauriBuild) {
+        return 'http://localhost:7860';
+    }
+
+    return '';
+};
+const publicApiUrl = getPublicApiUrl();
+const publicApiUrlJson = JSON.stringify(publicApiUrl);
 
 export default defineConfig({
     plugins: [
@@ -43,14 +69,19 @@ export default defineConfig({
     ],
     output: {
         assetPrefix: process.env.ASSET_PREFIX,
+        minify: isTauriDebugBuild ? false : undefined,
+        sourceMap: isTauriDebugBuild
+            ? {
+                  js: 'inline-source-map',
+                  css: false,
+              }
+            : undefined,
     },
     source: {
         define: {
             ...publicVars,
-            'import.meta.env.PUBLIC_API_BASE_URL':
-                publicVars['import.meta.env.PUBLIC_API_BASE_URL'] ?? '"http://localhost:7860"',
-            'process.env.PUBLIC_API_BASE_URL':
-                publicVars['process.env.PUBLIC_API_BASE_URL'] ?? '"http://localhost:7860"',
+            'import.meta.env.PUBLIC_API_BASE_URL': publicApiUrlJson,
+            'process.env.PUBLIC_API_BASE_URL': publicApiUrlJson,
             // Needed to prevent an issue with spectrum's picker
             // eslint-disable-next-line max-len
             // https://github.com/adobe/react-spectrum/blob/6173beb4dad153aef74fc81575fd97f8afcf6cb3/packages/%40react-spectrum/overlays/src/OpenTransition.tsx#L40
@@ -97,9 +128,9 @@ export default defineConfig({
                 "default-src 'self'; " +
                 "script-src 'self' 'unsafe-eval' blob:; " +
                 "worker-src 'self' blob:; " +
-                "connect-src 'self' http://localhost:7860 data:; " +
-                "img-src 'self' http://localhost:7860 data: blob:; " +
-                "media-src 'self' http://localhost:7860 blob: data:; " +
+                `connect-src 'self' ${publicApiUrl} data:; ` +
+                `img-src 'self' ${publicApiUrl} data: blob:; ` +
+                `media-src 'self' ${publicApiUrl} blob: data:; ` +
                 "style-src 'self' 'unsafe-inline';",
         },
     },

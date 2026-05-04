@@ -14,7 +14,7 @@ class ModelArchitectureCategory(StrEnum):
 
 RECOMMENDED_MODEL_ARCHITECTURES = {
     TaskType.CLASSIFICATION: {
-        ModelArchitectureCategory.BALANCE: "image-classification-deit-tiny",
+        ModelArchitectureCategory.BALANCE: "image-classification-vit-tiny",
         ModelArchitectureCategory.ACCURACY: "image-classification-dinov2",
         ModelArchitectureCategory.SPEED: "image-classification-mobilenet-v3-large",
     },

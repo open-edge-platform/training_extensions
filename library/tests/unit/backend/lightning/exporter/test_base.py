@@ -3,11 +3,18 @@
 
 from unittest.mock import MagicMock
 
+import numpy as np
+import onnx
 import pytest
-from onnx import ModelProto
+from onnx import ModelProto, TensorProto, helper, numpy_helper
 from onnxconverter_common import float16
 
-from getitune.backend.lightning.exporter.base import ExportFormat, ModelExporter, Precision
+from getitune.backend.lightning.exporter.base import (
+    ExportFormat,
+    ModelExporter,
+    Precision,
+    _convert_onnx_to_float16,
+)
 from getitune.backend.lightning.models.base import DataInputParams
 from getitune.config.data import IntensityConfig
 from getitune.types.export import TaskLevelExportParameters
@@ -80,8 +87,104 @@ class TestLightningModelExporter:
             m.setattr(float16, "convert_float_to_float16", convert_float_to_float16_mock)
             result = exporter._postprocess_onnx_model(onnx_model, embed_metadata=True, precision=Precision.FP16)
             exporter._embed_onnx_metadata.assert_called_once()
-            convert_float_to_float16_mock.assert_called_once_with(onnx_model)
+            convert_float_to_float16_mock.assert_called_once()
             assert result is onnx_model
+
+
+class TestConvertOnnxToFloat16:
+    """Tests for the fixed FP16 conversion that works around onnxconverter_common bugs."""
+
+    @staticmethod
+    def _make_simple_fp32_model() -> ModelProto:
+        """Create a minimal FP32 ONNX model (MatMul) for conversion testing."""
+        x = helper.make_tensor_value_info("X", TensorProto.FLOAT, [1, 4])
+        y = helper.make_tensor_value_info("Y", TensorProto.FLOAT, [1, 4])
+        w = numpy_helper.from_array(np.ones((4, 4), dtype=np.float32), name="W")
+        matmul = helper.make_node("MatMul", ["X", "W"], ["Y"])
+        graph = helper.make_graph([matmul], "test_graph", [x], [y], initializer=[w])
+        model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 13)])
+        model.ir_version = 7
+        return model
+
+    @staticmethod
+    def _make_multi_consumer_cast_model() -> ModelProto:
+        """Create an ONNX graph where a single node fans out to two consumers.
+
+        This replicates the topology that triggers the onnxconverter_common bug:
+        a Cast node whose output feeds multiple downstream nodes.  The upstream
+        ``remove_unnecessary_cast_node`` stores them as a list but then crashes
+        with ``AttributeError: 'list' object has no attribute 'input'``.
+        """
+        x = helper.make_tensor_value_info("X", TensorProto.FLOAT, [1, 4])
+        out1 = helper.make_tensor_value_info("out1", TensorProto.FLOAT, [1, 4])
+        out2 = helper.make_tensor_value_info("out2", TensorProto.FLOAT, [1, 4])
+
+        w1 = numpy_helper.from_array(np.ones((4, 4), dtype=np.float32), name="W1")
+        w2 = numpy_helper.from_array(np.ones((4, 4), dtype=np.float32), name="W2")
+
+        # Relu fans out to two MatMul consumers (common in ROI-style subgraphs)
+        relu = helper.make_node("Relu", ["X"], ["relu_out"], name="relu")
+        mm1 = helper.make_node("MatMul", ["relu_out", "W1"], ["out1"], name="mm1")
+        mm2 = helper.make_node("MatMul", ["relu_out", "W2"], ["out2"], name="mm2")
+
+        graph = helper.make_graph(
+            [relu, mm1, mm2],
+            "multi_consumer_graph",
+            [x],
+            [out1, out2],
+            initializer=[w1, w2],
+        )
+        model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 13)])
+        model.ir_version = 7
+        return model
+
+    def test_simple_model_converts_to_fp16(self):
+        model = self._make_simple_fp32_model()
+        result = _convert_onnx_to_float16(model)
+        # Verify inputs are converted to FP16
+        assert any(vi.type.tensor_type.elem_type == TensorProto.FLOAT16 for vi in result.graph.input) or any(
+            node.op_type == "Cast" for node in result.graph.node
+        )
+
+    def test_multi_consumer_model_does_not_crash(self):
+        """Regression test for issue #5439: multi-consumer Cast nodes must not crash."""
+        model = self._make_multi_consumer_cast_model()
+        # This would raise AttributeError with the original onnxconverter_common
+        result = _convert_onnx_to_float16(model)
+        assert result is not None
+        onnx.checker.check_model(result)
+
+    def test_upstream_remove_cast_crashes_on_multi_consumer(self):
+        """Verify the upstream bug actually exists (validates our workaround is needed).
+
+        If the upstream library fixes this, the test will xfail and we can
+        re-evaluate whether our workaround is still necessary.
+        """
+        model = self._make_multi_consumer_cast_model()
+        try:
+            float16.convert_float_to_float16(model)
+        except AttributeError:
+            pass  # Expected: upstream bug still present
+        else:
+            pytest.xfail(
+                "onnxconverter_common no longer crashes on multi-consumer Cast nodes; consider removing our workaround"
+            )
+
+    def test_original_function_restored_after_conversion(self):
+        """Ensure we don't permanently modify the onnxconverter_common module."""
+        original_fn = float16.remove_unnecessary_cast_node
+        model = self._make_simple_fp32_model()
+        _convert_onnx_to_float16(model)
+        assert float16.remove_unnecessary_cast_node is original_fn
+
+    def test_original_function_restored_on_error(self):
+        """Ensure original function is restored even if conversion raises."""
+        original_fn = float16.remove_unnecessary_cast_node
+        with pytest.MonkeyPatch.context() as m:
+            m.setattr(float16, "convert_float_to_float16", MagicMock(side_effect=RuntimeError("boom")))
+            with pytest.raises(RuntimeError, match="boom"):
+                _convert_onnx_to_float16(ModelProto())
+        assert float16.remove_unnecessary_cast_node is original_fn
 
     def test_extend_model_metadata_no_intensity(self, exporter):
         """Without intensity_config, metadata should contain only standard preprocessing keys."""

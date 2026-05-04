@@ -764,11 +764,30 @@ class LightningEngine(Engine):
         set_valid_args = TrainerArgumentsCache.get_trainer_constructor_args().union(
             set(inspect.signature(LightningEngine.__init__).parameters.keys()),
         )
+        # Keys that are legitimate train/test/export method kwargs. They come
+        # from OTXCLI.prepare_subcommand_kwargs("train") being merged into the
+        # engine kwargs, and should be silently dropped here -- warning about
+        # them is noise, because they are consumed at method-call time by the
+        # caller, not by the engine ctor.
+        known_method_kwargs = {
+            "resume",
+            "adaptive_bs",
+            "max_epochs",
+            "run_hpo",
+            "hpo_config",
+            "checkpoint",
+            "export_demo_package",
+            "export_format",
+            "explain",
+            "dump_options",
+            "precision",
+        }
         removed_args = []
         for engine_key in list(engine_kwargs.keys()):
             if engine_key not in set_valid_args:
                 engine_kwargs.pop(engine_key)
-                removed_args.append(engine_key)
+                if engine_key not in known_method_kwargs:
+                    removed_args.append(engine_key)
         if removed_args:
             msg = (
                 f"Warning: {removed_args} -> not available in Engine constructor. "
@@ -788,7 +807,13 @@ class LightningEngine(Engine):
         if not isinstance(model, LightningModel):
             raise TypeError(model)
 
-        model.label_info = datamodule.label_info
+        if model.label_info != datamodule.label_info:
+            # Only reassign when it actually differs, to avoid emitting the
+            # (misleading) "Assign new label_info to the model" warning on
+            # every from_config() call.  The CLI path in
+            # OTXCLI.instantiate_model already sets label_info at model
+            # construction time, so this branch is normally a no-op.
+            model.label_info = datamodule.label_info
 
         return cls(
             work_dir=instantiated_config.get("work_dir", work_dir),
@@ -1141,15 +1166,21 @@ class LightningEngine(Engine):
             return
 
         # Find AugmentationSchedulerCallback and its DataAugSwitch
+        # Skip silently when the scheduler isn't configured -- most recipes
+        # don't use it, and warning on every run is dead noise.
+        trainer_callbacks = getattr(self._trainer, "callbacks", []) or []
+        scheduler_callbacks = [c for c in trainer_callbacks if isinstance(c, AugmentationSchedulerCallback)]
+        if not scheduler_callbacks:
+            return
+
         data_aug_switch = None
-        for callback in self._trainer.callbacks:
-            if isinstance(callback, AugmentationSchedulerCallback) and callback.data_aug_switch is not None:
+        for callback in scheduler_callbacks:
+            if callback.data_aug_switch is not None:
                 data_aug_switch = callback.data_aug_switch
                 break
 
         if data_aug_switch is None:
-            msg = "DataAugSwitch not found in AugmentationSchedulerCallback"
-            logging.warning(msg)
+            logging.debug("DataAugSwitch not found in AugmentationSchedulerCallback")
             return
 
         def set_data_aug_switch_if_supported(dataset: VisionDataset) -> bool:

@@ -1,5 +1,10 @@
 # See help here: https://github.com/marketplace/actions/labeler
 
+Geti Library:
+  - changed-files:
+      - any-glob-to-any-file:
+        - "library/**/*"
+
 Geti Backend:
   - changed-files:
       - any-glob-to-any-file:
@@ -14,9 +19,7 @@ Geti UI:
 TEST:
   - changed-files:
       - any-glob-to-any-file:
-          - "library/tests/**/*"
-          - "application/backend/tests/**/*"
-          - "application/ui/tests/**/*"
+          - "**/tests/**/*"
 
 DOC:
   - changed-files:
