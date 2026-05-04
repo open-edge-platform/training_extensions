@@ -117,8 +117,6 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
 
         converter = GetiConfigConverter()
         getitune_training_config = converter.convert(geti_training_config)
-        if getitune_training_config.get("backend") == "ultralytics":
-            raise NotImplementedError("Quantization of Ultralytics-backed models is not supported yet.")
 
         def build_subset_config(subset_name: str) -> SubsetConfig:
             subset_cfg_data = getitune_training_config["data"][f"{subset_name}_subset"]
