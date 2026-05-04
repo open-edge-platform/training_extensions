@@ -336,9 +336,9 @@ class LightningDetectionModel(LightningModel):
         ):
             # Only NMS-based models (e.g. SingleStageDetector) need this metadata.
             # DETR-based models don't use NMS and handle postprocessing differently.
+            # ModelAPI defaults: agnostic_nms=False (per-class NMS) and
+            # nms_max_predictions=200, which are acceptable for our detection models.
             nms_params["nms_execute"] = True
-            nms_params["agnostic_nms"] = False
-            nms_params["nms_max_predictions"] = 0
         return super()._export_parameters.wrap(
             model_type="ssd",
             task_type="detection",
