@@ -127,9 +127,8 @@ class TestDatasetItemEndpoints:
     @pytest.mark.parametrize(
         "annotation_status",
         [
-            DatasetItemAnnotationStatus.UNANNOTATED,
-            DatasetItemAnnotationStatus.REVIEWED,
-            DatasetItemAnnotationStatus.TO_REVIEW,
+            DatasetItemAnnotationStatus.MISSING_ANNOTATIONS,
+            DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
         ],
     )
     def test_list_dataset_items_with_annotation_status(
