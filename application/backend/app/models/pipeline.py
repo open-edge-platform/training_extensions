@@ -49,7 +49,9 @@ class Pipeline(BaseEntity):
         device: The device used for model inference (e.g., 'cpu', 'xpu', 'cuda', 'xpu-1', etc.).
 
     Raises:
-        ValueError: If attempting to set status to RUNNING when source, sink, or model is not configured.
+        ValueError: If attempting to set status to RUNNING when source or model is not configured.
+            A sink is not required: when no sink is configured, inference output is only routed to the
+            WebRTC visualization stream and not forwarded to any external sink.
     """
 
     project_id: UUID
@@ -81,8 +83,8 @@ class Pipeline(BaseEntity):
 
     @model_validator(mode="after")
     def validate_running_status(self) -> "Pipeline":
-        if self.status == PipelineStatus.RUNNING and any(
-            x is None for x in (self.source_id, self.sink_id, self.model_id)
-        ):
-            raise ValueError("Pipeline cannot be in 'running' state when source, sink, or model is not configured.")
+        # A sink is intentionally NOT required to enable a pipeline. When no sink is configured, predictions are still
+        # routed to the WebRTC visualization stream, skipping external sinks (folder, MQTT, ROS, webhook, ...)
+        if self.status == PipelineStatus.RUNNING and any(x is None for x in (self.source_id, self.model_id)):
+            raise ValueError("Pipeline cannot be in 'running' state when source or model is not configured.")
         return self

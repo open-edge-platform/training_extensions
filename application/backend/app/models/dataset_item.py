@@ -21,9 +21,18 @@ class DatasetItemSubset(StrEnum):
 
 
 class DatasetItemAnnotationStatus(StrEnum):
-    UNANNOTATED = "unannotated"
-    REVIEWED = "reviewed"
-    TO_REVIEW = "to_review"
+    """
+    Annotation status filter for dataset items.
+
+    Used to filter media based on their annotation state:
+
+    - ``WITH_ANNOTATIONS``: Matches images that have annotations, or videos that have at least one annotated frame.
+    - ``MISSING_ANNOTATIONS``: Matches images that have no annotations, or videos that have at least one unannotated
+        frame.
+    """
+
+    WITH_ANNOTATIONS = "with_annotations"
+    MISSING_ANNOTATIONS = "missing_annotations"
 
 
 class DatasetItemAnnotation(BaseModel):

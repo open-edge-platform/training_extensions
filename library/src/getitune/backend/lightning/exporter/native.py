@@ -136,7 +136,7 @@ class LightningModelExporter(ModelExporter):
             output_dir (Path): The directory where the ONNX model will be saved.
             base_model_name (str, optional): The base name for the exported model. Defaults to "exported_model".
             precision (Precision, optional): The precision type for the exported model.
-            Defaults to Precision.FP32.
+                Defaults to Precision.FP32.
             embed_metadata (bool, optional): Whether to embed metadata in the ONNX model. Defaults to True.
 
         Returns:
@@ -144,7 +144,7 @@ class LightningModelExporter(ModelExporter):
         """
         dummy_tensor = torch.rand(self.data_input_params.as_ncwh()).to(next(model.parameters()).device)
         save_path = str(output_dir / (base_model_name + ".onnx"))
-        torch.onnx.export(model, dummy_tensor, save_path, **self.onnx_export_configuration)
+        torch.onnx.export(model, (dummy_tensor,), save_path, **self.onnx_export_configuration)
 
         onnx_model = onnx.load(save_path)
         onnx_model = self._postprocess_onnx_model(onnx_model, embed_metadata, precision)

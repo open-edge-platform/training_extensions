@@ -68,11 +68,6 @@ class DispatchingWorker(BaseThreadWorker):
 
     def run_loop(self) -> None:
         while not self.should_stop():
-            if self._sink.sink_type == SinkType.DISCONNECTED:
-                logger.debug("No sink available... retrying in 1 second")
-                self.stop_aware_sleep(1)
-                continue
-
             # Read from the queue
             try:
                 stream_data: StreamData = self._pred_queue.get(timeout=1)
@@ -91,13 +86,16 @@ class DispatchingWorker(BaseThreadWorker):
 
             image_with_visualization = inference_data.visualized_prediction
             prediction = inference_data.prediction
-            # Postprocess and dispatch results
-            for destination in self._destinations:
-                destination.dispatch(
-                    original_image=stream_data.frame_data,
-                    image_with_visualization=image_with_visualization,
-                    predictions=prediction,
-                )
+
+            # Postprocess and dispatch results to external sinks (folder, MQTT, ROS, webhook, ...).
+            # Skipped when no sink is configured; WebRTC and data collection still run below.
+            if self._sink.sink_type != SinkType.DISCONNECTED:
+                for destination in self._destinations:
+                    destination.dispatch(
+                        original_image=stream_data.frame_data,
+                        image_with_visualization=image_with_visualization,
+                        predictions=prediction,
+                    )
 
             # Dispatch to WebRTC stream
             self._rtc_stream_broadcaster.broadcast(image_with_visualization)
