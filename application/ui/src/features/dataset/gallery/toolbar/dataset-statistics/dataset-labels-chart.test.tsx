@@ -8,6 +8,7 @@ import { getMockedLabel } from 'mocks/mock-labels';
 import { render } from 'test-utils/render';
 import { vi } from 'vitest';
 
+import { useProjectLabelsWithEmptyLabel } from '../../../../../shared/annotator/labels';
 import { DatasetLabelsChart } from './dataset-labels-chart.component';
 
 vi.mock('recharts', async () => {
@@ -32,11 +33,19 @@ const mockLabels = [
     getMockedLabel({ id: 'label-10', name: 'Fish-10' }),
 ];
 
-vi.mock('../../../../../shared/annotator/labels', () => ({
-    useProjectLabelsWithEmptyLabel: vi.fn(() => mockLabels),
-}));
+vi.mock('../../../../../shared/annotator/labels', async () => {
+    const actual = await vi.importActual('../../../../../shared/annotator/labels');
+    return {
+        ...actual,
+        useProjectLabelsWithEmptyLabel: vi.fn(),
+    };
+});
 
 describe('DatasetLabelsChart', () => {
+    beforeEach(() => {
+        vi.mocked(useProjectLabelsWithEmptyLabel).mockReturnValue(mockLabels);
+    });
+
     it('renders all label names with multiple items', () => {
         const instancesPerLabel = mockLabels.map(({ id }) => ({ label_id: id, instances: 10 }));
         render(<DatasetLabelsChart totalItems={instancesPerLabel.length * 2} instancesPerLabel={instancesPerLabel} />);
@@ -44,5 +53,17 @@ describe('DatasetLabelsChart', () => {
         mockLabels.forEach(({ name }) => {
             expect(screen.getByText(name)).toBeVisible();
         });
+    });
+
+    it('maps null label_id to the empty label', async () => {
+        const emptyLabel = getMockedLabel({ id: 'empty-label', name: 'No object' });
+        const labelsWithEmpty = [...mockLabels, emptyLabel];
+
+        vi.mocked(useProjectLabelsWithEmptyLabel).mockReturnValue(labelsWithEmpty);
+
+        const instancesPerLabel = [{ label_id: null, instances: 3 }];
+        render(<DatasetLabelsChart totalItems={10} instancesPerLabel={instancesPerLabel} />);
+
+        expect(screen.getByText('No object')).toBeVisible();
     });
 });

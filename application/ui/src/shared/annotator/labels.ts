@@ -12,6 +12,8 @@ export const EMPTY_LABEL_ID = 'empty-label';
 const NO_LABEL: Label = { id: EMPTY_LABEL_ID, name: 'No label', color: '#FFF' };
 const NO_OBJECT_LABEL: Label = { id: EMPTY_LABEL_ID, name: 'No object', color: '#FFF' };
 
+export const isEmptyLabel = (id: string): boolean => id === EMPTY_LABEL_ID;
+
 const getEmptyLabel = (taskType: TaskType, exclusiveLabels: boolean): Label | null => {
     if (isClassificationTask(taskType)) {
         const isMultiLabel = exclusiveLabels === false;
