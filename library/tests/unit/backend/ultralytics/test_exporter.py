@@ -22,7 +22,7 @@ def _label_info() -> LabelInfo:
 
 
 def _data_input_params(imgsz: int = 640) -> DataInputParams:
-    return DataInputParams(input_size=(imgsz, imgsz), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0))
+    return DataInputParams(input_size=(imgsz, imgsz), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))
 
 
 def _export_parameters() -> TaskLevelExportParameters:
@@ -118,7 +118,7 @@ class TestExporterMetadata:
         extended = exporter._extend_model_metadata(exporter.metadata)
 
         assert extended[("model_info", "mean_values")] == "0.0 0.0 0.0"
-        assert extended[("model_info", "scale_values")] == "1.0 1.0 1.0"
+        assert extended[("model_info", "scale_values")] == "255.0 255.0 255.0"
         assert extended[("model_info", "resize_type")] == "fit_to_window_letterbox"
         assert extended[("model_info", "pad_value")] == "114"
         assert extended[("model_info", "reverse_input_channels")] == "True"

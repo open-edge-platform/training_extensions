@@ -57,10 +57,24 @@ class UltralyticsDatasetAdapter(torch.utils.data.Dataset):
         ratio_pad = build_ratio_pad(ori_shape, resized_shape, padding)
 
         # --- Bounding boxes (XYXY absolute -> XYWH normalised) ---
-        # Ultralytics expects centre-xywh normalised by image dimensions.
+        # Ultralytics expects centre-xywh normalised by the model input
+        # (tensor) dimensions.  getitune's DataModule may deliver bboxes in
+        # the *original* image coordinate space when ``resize_targets=False``
+        # (typical for val/test subsets).  Detect this via ``canvas_size``
+        # on ``tv_tensors.BoundingBoxes`` and rescale to the tensor space.
         bboxes_raw = getattr(sample, "bboxes", None)
         if bboxes_raw is not None and len(bboxes_raw) > 0:
-            bboxes_xywh = xyxy_abs_to_xywh_norm(bboxes_raw, img_w=tensor_w, img_h=tensor_h)
+            bboxes_for_norm = bboxes_raw
+            # When canvas_size differs from the tensor dims the bboxes are
+            # still in the original (or some other non-tensor) coord space.
+            canvas = getattr(bboxes_raw, "canvas_size", None)
+            if canvas is not None and tuple(canvas) != (tensor_h, tensor_w):
+                canvas_h, canvas_w = canvas
+                bboxes_np = bboxes_raw.detach().cpu().numpy().astype(np.float32).copy()
+                bboxes_np[:, 0::2] *= tensor_w / canvas_w  # x coords
+                bboxes_np[:, 1::2] *= tensor_h / canvas_h  # y coords
+                bboxes_for_norm = bboxes_np
+            bboxes_xywh = xyxy_abs_to_xywh_norm(bboxes_for_norm, img_w=tensor_w, img_h=tensor_h)
         else:
             bboxes_xywh = np.zeros((0, 4), dtype=np.float32)
 

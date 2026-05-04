@@ -120,15 +120,27 @@ class UltralyticsModel:
 
     @property
     def data_input_params(self) -> DataInputParams:
-        """Data input parameters for model preprocessing.
+        """Data input parameters for model preprocessing metadata.
 
-        YOLO models expect [0, 1] float input (the /255 happens externally),
-        so ``mean=(0, 0, 0)`` and ``std=(1, 1, 1)`` — identity normalisation.
+        These values are embedded into the exported IR/ONNX so that ModelAPI
+        can reconstruct the correct preprocessing at inference time.
+
+        ModelAPI's ``InputTransform`` computes ``(image - mean) / scale``.
+        YOLO models expect ``[0, 1]`` float input, produced by dividing raw
+        uint8 pixels by 255.  Therefore:
+
+        - ``mean = (0, 0, 0)`` — no mean subtraction
+        - ``std = (255, 255, 255)`` — divide by 255
+
+        Note: during *training*, the getitune DataModule already delivers
+        ``float32 [0, 1]`` data (intensity mapping handles ``/255``), so the
+        custom trainer skips any further normalisation.  The values here are
+        strictly for the *export metadata* consumed by ModelAPI at inference.
         """
         return DataInputParams(
             input_size=(self.imgsz, self.imgsz),
             mean=(0.0, 0.0, 0.0),
-            std=(1.0, 1.0, 1.0),
+            std=(255.0, 255.0, 255.0),
         )
 
     @property

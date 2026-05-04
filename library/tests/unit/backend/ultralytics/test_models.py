@@ -79,10 +79,10 @@ class TestDataInputParams:
         model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
         assert model.data_input_params.mean == (0.0, 0.0, 0.0)
 
-    def test_std_is_one(self) -> None:
-        """YOLO expects identity normalization — std should be (1, 1, 1)."""
+    def test_std_is_255(self) -> None:
+        """YOLO export metadata needs scale_values=255 so ModelAPI divides by 255."""
         model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
-        assert model.data_input_params.std == (1.0, 1.0, 1.0)
+        assert model.data_input_params.std == (255.0, 255.0, 255.0)
 
     def test_no_intensity_config(self) -> None:
         model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)

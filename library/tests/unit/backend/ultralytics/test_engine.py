@@ -383,7 +383,7 @@ class TestBuildExporter:
         exporter = engine._build_exporter()
 
         assert exporter.data_input_params.mean == (0.0, 0.0, 0.0)
-        assert exporter.data_input_params.std == (1.0, 1.0, 1.0)
+        assert exporter.data_input_params.std == (255.0, 255.0, 255.0)
 
     def test_default_yolo_preprocessing_values(self, mocker, tmp_path) -> None:
         engine, _ = _make_engine(tmp_path, mocker)
