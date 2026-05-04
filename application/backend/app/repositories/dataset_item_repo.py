@@ -279,32 +279,29 @@ class DatasetItemRepository:
         annotated_video_count = self.db.execute(annotated_video_stmt).scalar()
         annotated_counts["annotated_videos"] = annotated_video_count or 0
 
-        # Total instances:
+        # Total instances and instances_per_label
         annotated_dataset_items_stmt = select(DatasetItemDB.annotation_data).where(
             DatasetItemDB.project_id == self.project_id,
             DatasetItemDB.annotation_data.isnot(None),
             DatasetItemDB.user_reviewed,
         )
-        annotated_counts["instances"] = sum(
-            len(item.annotation_data)
-            for item in self.db.execute(annotated_dataset_items_stmt)
-            if item.annotation_data is not None
-        )
+        total_instances = 0
+        labels_counts: Counter[str] = Counter()
+        no_object_count = 0
+        for item in self.db.execute(annotated_dataset_items_stmt):
+            if not item.annotation_data:
+                no_object_count += 1
+            else:
+                total_instances += len(item.annotation_data)
+                for annotation in item.annotation_data:
+                    for label in annotation["labels"]:
+                        labels_counts[label["id"]] += 1
 
-        # instances_per_label
-        labels_counts = Counter(
-            label["id"]
-            for item in self.db.execute(annotated_dataset_items_stmt)
-            if item.annotation_data is not None
-            for annotation in item.annotation_data
-            for label in annotation["labels"]
-        )
-        no_object_count = sum(1 for item in self.db.execute(annotated_dataset_items_stmt) if not item.annotation_data)
-
+        annotated_counts["instances"] = total_instances
         annotated_counts["instances_per_label"] = [
             {"label_id": label_id, "instances": count} for label_id, count in labels_counts.items()
         ]
-        annotated_counts["instances_per_label"].append({"label_id": None, "instances": no_object_count})
+        annotated_counts["instances_per_label"].append({"label_id": None, "instances": no_object_count})  # type: ignore[dict-item]
 
         statistics.update(annotated_counts)
 
