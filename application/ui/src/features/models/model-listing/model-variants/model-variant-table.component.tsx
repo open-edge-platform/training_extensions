@@ -100,10 +100,10 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
         : undefined;
 
     const handleDownloadModel = (modelVariantId: string) => {
-        toast({ type: 'info', message: 'Model download started...please wait.' });
-
         const url = `${API_BASE_URL}/api/projects/${projectId}/models/${model.id}/variants/${modelVariantId}/binary`;
         downloadFile(url);
+
+        toast({ type: 'info', message: 'Model download started' });
     };
 
     return (
