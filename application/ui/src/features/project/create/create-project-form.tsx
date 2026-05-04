@@ -143,7 +143,16 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
             <Flex direction={'column'} alignItems={'center'} UNSAFE_className={classes.buttonGroup} gap={'size-300'}>
                 <Divider size={'S'} width={'100%'} />
                 <ButtonGroup>
-                    <Button variant={'secondary'} onPress={() => navigate(-1)}>
+                    <Button
+                        variant={'secondary'}
+                        onPress={() => {
+                            const isExternalReferrer =
+                                document.referrer === '' ||
+                                new URL(document.referrer).origin !== window.location.origin;
+
+                            isExternalReferrer ? navigate(paths.project.index({})) : navigate(-1);
+                        }}
+                    >
                         Go back
                     </Button>
                     <Button type={'submit'} variant='accent' isDisabled={isCreateProjectDisabled}>
