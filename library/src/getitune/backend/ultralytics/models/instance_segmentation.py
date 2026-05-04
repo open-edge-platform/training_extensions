@@ -21,6 +21,11 @@ class UltralyticsInstSegModel(UltralyticsModel):
     trainer_cls: ClassVar[type] = SegmentationTrainer
     validator_cls: ClassVar[type] = SegmentationValidator
 
+    @property
+    def export_task_type(self) -> str:
+        """ModelAPI ``task_type`` for instance segmentation."""
+        return "instance_segmentation"
+
     metric_keys: ClassVar[dict[str, str]] = {
         "metrics/mAP50(B)": "val/map_50",
         "metrics/mAP50-95(B)": "val/map",

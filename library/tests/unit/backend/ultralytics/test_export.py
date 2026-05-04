@@ -9,7 +9,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from getitune.backend.ultralytics.export import (
-    _TASK_TO_MODEL_TYPE,
     _YOLO_MEAN,
     _YOLO_PAD_VALUE,
     _YOLO_RESIZE_TYPE,
@@ -38,7 +37,7 @@ def _make_mock_model(
         model.label_info = LabelInfo(label_names=label_names, label_ids=ids, label_groups=[label_names])
     else:
         model.label_info = None
-    model.export_model_type = _TASK_TO_MODEL_TYPE.get(task, "YOLO11")
+    model.export_model_type = "YOLO11"
     model.export_task_type = "detection"
     return model
 
@@ -55,7 +54,7 @@ class TestBuildExportMetadata:
             ("model_info", "model_type"),
             ("model_info", "model_name"),
             ("model_info", "task_type"),
-            ("model_info", "otx_version"),
+            ("model_info", "getitune_version"),
             ("model_info", "label_info"),
             ("model_info", "labels"),
             ("model_info", "label_ids"),
@@ -147,13 +146,13 @@ class TestBuildExportMetadata:
         for key, value in metadata.items():
             assert isinstance(value, str), f"Value for {key} is {type(value)}, expected str"
 
-    def test_otx_version_present(self) -> None:
-        """otx_version should be a non-empty string."""
+    def test_getitune_version_present(self) -> None:
+        """getitune_version should be a non-empty string."""
         import getitune
 
         model = _make_mock_model(label_names=["a"])
         metadata = build_export_metadata(model)
-        assert metadata[("model_info", "otx_version")] == getitune.__version__
+        assert metadata[("model_info", "getitune_version")] == getitune.__version__
 
 
 class TestEmbedOpenvinoMetadata:

@@ -24,13 +24,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# ModelAPI model_type values for Ultralytics tasks.
-# These map to existing upstream ModelAPI wrapper classes.
-_TASK_TO_MODEL_TYPE: dict[str, str] = {
-    "detect": "YOLO11",
-    "segment": "YOLO11",  # TODO(kprokofi): validate segmentation wrapper compatibility
-}
-
 # Default preprocessing parameters for YOLO models.
 # YOLO expects: BGR→RGB, divide by 255, letterbox resize with pad=114.
 # ModelAPI convention: scale_values are DIVISORS (image / scale).
@@ -63,7 +56,7 @@ def build_export_metadata(
         ready for ``ov_model.set_rt_info(value, list(key))``.
     """
     label_info = model.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
-    model_type = _TASK_TO_MODEL_TYPE.get(model.task, "YOLO11")
+    model_type = model.export_model_type
 
     # Build labels strings
     all_labels = " ".join(name.replace(" ", "_") for name in label_info.label_names)
@@ -78,7 +71,7 @@ def build_export_metadata(
         ("model_info", "model_type"): model_type,
         ("model_info", "model_name"): model.model_name or "",
         ("model_info", "task_type"): task_type,
-        ("model_info", "otx_version"): getitune.__version__,
+        ("model_info", "getitune_version"): getitune.__version__,
         # Label info
         ("model_info", "label_info"): label_info.to_json(),
         ("model_info", "labels"): all_labels.strip(),

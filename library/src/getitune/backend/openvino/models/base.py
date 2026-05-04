@@ -45,11 +45,18 @@ logger = logging.getLogger()
 
 
 class _FP32OpenvinoAdapter(OpenvinoAdapter):
-    """OpenvinoAdapter that forces float32 input tensors.
+    """OpenvinoAdapter that adapts preprocessing for both float-scale and uint8-scale models.
 
-    Sets ``dtype=float`` so ModelAPI builds an f32 input tensor matching
-    the 0-1 normalisation scale used by new getitune exports.  Raises
-    ``ValueError`` if the IR still stores mean/scale in the 0-255 range.
+    For models with float [0, 1] normalisation (standard getitune Lightning
+    exports), sets ``dtype=float`` so ModelAPI builds an f32 input tensor.
+
+    For models with uint8-range preprocessing (e.g. YOLO divide-by-255 where
+    ``scale_values=[255]``), skips the f32 dtype override and lets ModelAPI
+    embed preprocessing normally — the baked-in normalisation handles the
+    conversion.
+
+    In both cases the pad-constant type patch is applied to avoid element-type
+    mismatches between data and pad values.
     """
 
     # Values above this threshold indicate uint8 (0-255) scale rather than 0-1 scale.
@@ -58,18 +65,11 @@ class _FP32OpenvinoAdapter(OpenvinoAdapter):
     def embed_preprocessing(self, *args, **kwargs) -> None:
         mean = kwargs.get("mean")
         scale = kwargs.get("scale")
-        bad_mean = mean and any(v > self._UINT8_SCALE_THRESHOLD for v in mean)
-        bad_scale = scale and any(v > self._UINT8_SCALE_THRESHOLD for v in scale)
-        if bad_mean or bad_scale:
-            msg = (
-                f"IR mean_values {mean} / scale_values {scale} appear to be in "
-                "uint8 (0-255) scale, but _FP32OpenvinoAdapter expects float32 "
-                "[0, 1] inputs with values in 0-1 scale "
-                "(e.g. mean=0.485 0.456 0.406, std=0.229 0.224 0.225). "
-                "Re-export the model with the current getitune version."
-            )
-            raise ValueError(msg)
-        kwargs["dtype"] = float
+        has_uint8_mean = mean is not None and any(v > self._UINT8_SCALE_THRESHOLD for v in mean)
+        has_uint8_scale = scale is not None and any(v > self._UINT8_SCALE_THRESHOLD for v in scale)
+        if not (has_uint8_mean or has_uint8_scale):
+            # Float-scale model (standard getitune exports) — force f32 input dtype.
+            kwargs["dtype"] = float
         _patch_pad_constant_type(super().embed_preprocessing, *args, **kwargs)
 
 
@@ -208,6 +208,34 @@ class OVModel:
             model_adapter (OpenvinoAdapter): Target adapter to read the configuration.
         """
 
+    def _resolve_model_type(self, model_adapter: _FP32OpenvinoAdapter) -> str:
+        """Resolve the ModelAPI wrapper name from IR metadata, falling back to the class default.
+
+        New exports embed ``model_type`` into ``rt_info["model_info"]`` at export
+        time (e.g. ``"SSD"`` for Lightning detection, ``"YOLO11"`` for Ultralytics).
+        When the metadata is present it is authoritative; otherwise
+        ``self.model_type`` (set by the subclass constructor default) is returned
+        as a backward-compatible fallback for older IRs that lack the field.
+
+        Args:
+            model_adapter (_FP32OpenvinoAdapter): The adapter wrapping the loaded IR.
+
+        Returns:
+            str: The resolved ModelAPI model type name.
+        """
+        if model_adapter.model.has_rt_info(["model_info", "model_type"]):
+            rt_model_type = model_adapter.model.get_rt_info(["model_info", "model_type"]).value
+            if rt_model_type:
+                resolved = str(rt_model_type)
+                if resolved != self.model_type:
+                    logger.info(
+                        "Overriding default model_type '%s' with '%s' from IR metadata.",
+                        self.model_type,
+                        resolved,
+                    )
+                return resolved
+        return self.model_type
+
     def _create_model(self) -> Model:
         """Create an OpenVINO model using the Model API.
 
@@ -239,7 +267,8 @@ class OVModel:
 
         self._get_hparams_from_adapter(model_adapter)
 
-        return Model.create_model(model_adapter, model_type=self.model_type, configuration=self.model_api_configuration)
+        model_type = self._resolve_model_type(model_adapter)
+        return Model.create_model(model_adapter, model_type=model_type, configuration=self.model_api_configuration)
 
     def _customize_inputs(self, entity: SampleBatch) -> dict[str, Any]:
         """Customize the input data for the model.
