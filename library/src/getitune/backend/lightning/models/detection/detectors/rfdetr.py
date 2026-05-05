@@ -14,8 +14,13 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
+
+# isort: off
+import getitune._compat_transformers  # noqa: F401 -- patch transformers before rfdetr import
 from rfdetr.datasets.coco import compute_multi_scale_scales
 from rfdetr.util.misc import nested_tensor_from_tensor_list
+
+# isort: on
 from torch import Tensor, nn
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxes
