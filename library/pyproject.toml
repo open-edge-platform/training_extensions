@@ -154,6 +154,9 @@ exclude-dependencies = [
 override-dependencies = [
     # Bypass the unnecessarily strict version requirement of 'opencv-python-headless' set by 'roboflow'
     "opencv-python-headless~=4.11",
+    # Bypass the upper bound (<5.0.0) on 'transformers' set by 'rfdetr' to address a security
+    # vulnerability (CVE) flagged by Dependabot in versions prior to 5.0.
+    "transformers>=5.0",
 ]
 
 [tool.uv.sources]
