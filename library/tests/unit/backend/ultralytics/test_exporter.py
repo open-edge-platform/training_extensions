@@ -47,11 +47,6 @@ def _make_exporter(**kwargs) -> UltralyticsModelExporter:
     return UltralyticsModelExporter(**defaults)
 
 
-# ------------------------------------------------------------------
-# Constructor / defaults
-# ------------------------------------------------------------------
-
-
 class TestUltralyticsModelExporterInit:
     """Tests for exporter construction and default values."""
 
@@ -72,11 +67,6 @@ class TestUltralyticsModelExporterInit:
 
         exporter = _make_exporter()
         assert isinstance(exporter, ModelExporter)
-
-
-# ------------------------------------------------------------------
-# Metadata (inherited from ModelExporter)
-# ------------------------------------------------------------------
 
 
 class TestExporterMetadata:
@@ -136,11 +126,6 @@ class TestExporterMetadata:
         metadata = exporter.metadata
         assert metadata[("model_info", "confidence_threshold")] == "0.5"
         assert metadata[("model_info", "iou_threshold")] == "0.6"
-
-
-# ------------------------------------------------------------------
-# to_openvino
-# ------------------------------------------------------------------
 
 
 class TestToOpenvino:
@@ -288,11 +273,6 @@ class TestToOpenvino:
         assert not raw_dir.exists()
 
 
-# ------------------------------------------------------------------
-# to_onnx
-# ------------------------------------------------------------------
-
-
 class TestToOnnx:
     """Tests for the to_onnx export path."""
 
@@ -373,11 +353,6 @@ class TestToOnnx:
         assert not raw_onnx.exists()
 
 
-# ------------------------------------------------------------------
-# export() dispatch
-# ------------------------------------------------------------------
-
-
 class TestExportDispatch:
     """Tests for the inherited export() dispatch method."""
 
@@ -410,11 +385,6 @@ class TestExportDispatch:
 
         with pytest.raises(ValueError, match="Unsupported export format"):
             exporter.export(mock_yolo, tmp_path, "model", bad_format, Precision.FP32)
-
-
-# ------------------------------------------------------------------
-# Helper methods
-# ------------------------------------------------------------------
 
 
 class TestFindXmlInExport:

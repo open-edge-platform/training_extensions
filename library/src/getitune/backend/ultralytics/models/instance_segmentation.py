@@ -7,24 +7,55 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+from getitune.backend.lightning.models.base import DataInputParams
 from getitune.backend.ultralytics.trainers.instance_segmentation import SegmentationTrainer
 from getitune.backend.ultralytics.validators.instance_segmentation import SegmentationValidator
+from getitune.types.export import TaskLevelExportParameters
+from getitune.types.label import LabelInfo
 
 from .base import UltralyticsModel
 
 
 class UltralyticsInstSegModel(UltralyticsModel):
-    """YOLO instance-segmentation model (default: ``yolo11s-seg.pt``)."""
+    """YOLO instance-segmentation model.
+
+    Supported variants: ``yolo26n-seg``, ``yolo26s-seg``, ``yolo26m-seg``.
+    """
 
     task: ClassVar[str] = "segment"
-    default_model_name: ClassVar[str] = "yolo11s-seg.pt"
+    default_model_name: ClassVar[str] = "yolo26n-seg"
     trainer_cls: ClassVar[type] = SegmentationTrainer
     validator_cls: ClassVar[type] = SegmentationValidator
 
+    _pretrained_weights: ClassVar[dict[str, str]] = {
+        "yolo26n-seg": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo26n-seg.pt",
+        "yolo26s-seg": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo26s-seg.pt",
+        "yolo26m-seg": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo26m-seg.pt",
+    }
+
     @property
-    def export_task_type(self) -> str:
-        """ModelAPI ``task_type`` for instance segmentation."""
-        return "instance_segmentation"
+    def _default_preprocessing_params(self) -> dict[str, DataInputParams]:
+        """Per-variant preprocessing defaults."""
+        default = DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))
+        return {
+            "yolo26n-seg": default,
+            "yolo26s-seg": default,
+            "yolo26m-seg": default,
+        }
+
+    @property
+    def _export_parameters(self) -> TaskLevelExportParameters:
+        """Instance segmentation export parameters."""
+        label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
+        return TaskLevelExportParameters(
+            model_type="YOLO11",
+            model_name=self.model_name or "",
+            task_type="instance_segmentation",
+            label_info=label_info,
+            optimization_config={},
+            confidence_threshold=0.25,
+            iou_threshold=0.7,
+        )
 
     metric_keys: ClassVar[dict[str, str]] = {
         "metrics/mAP50(B)": "val/map_50",

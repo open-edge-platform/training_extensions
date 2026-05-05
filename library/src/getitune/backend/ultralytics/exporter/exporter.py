@@ -81,10 +81,6 @@ class UltralyticsModelExporter(ModelExporter):
             input_names=input_names,
         )
 
-    # ------------------------------------------------------------------
-    # Public API (overrides from ModelExporter)
-    # ------------------------------------------------------------------
-
     def to_openvino(
         self,
         model: YOLO,  # type: ignore[override]
@@ -195,10 +191,6 @@ class UltralyticsModelExporter(ModelExporter):
             raw_path.unlink(missing_ok=True)
 
         return save_path
-
-    # ------------------------------------------------------------------
-    # Private helpers
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _find_xml_in_export(export_path: Path) -> Path:

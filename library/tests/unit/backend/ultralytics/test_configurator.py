@@ -24,10 +24,6 @@ from getitune.backend.ultralytics.configurator import (
 from getitune.backend.ultralytics.models.base import UltralyticsModel
 from getitune.types.label import LabelInfo
 
-# ------------------------------------------------------------------
-# Helpers
-# ------------------------------------------------------------------
-
 _RECIPE_DIR = Path(__file__).resolve().parents[4] / "src" / "getitune" / "recipe"
 
 _DETECTION_CLASS_PATH = "getitune.backend.ultralytics.models.detection.UltralyticsDetectionModel"

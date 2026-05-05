@@ -215,9 +215,9 @@ class TestExport:
         with (
             patch.object(engine, "_resolve_export_model", return_value=MagicMock()),
             patch.object(engine, "_build_exporter", return_value=mock_exporter),
+            pytest.raises(ValueError, match="Unsupported export format"),
         ):
-            with pytest.raises(ValueError, match="Unsupported export format"):
-                engine.export(export_format=bad_format)
+            engine.export(export_format=bad_format)
 
     def test_export_delegates_to_exporter(self, mocker, tmp_path) -> None:
         """export() should delegate to exporter.export() with correct args."""

@@ -49,10 +49,6 @@ class XPUAwareTrainerMixin:
     device: torch.device
     scaler: Any
 
-    # ------------------------------------------------------------------
-    # Training entry point — XPU autocast wrapper
-    # ------------------------------------------------------------------
-
     def train(self) -> None:  # type: ignore[override]
         """Wrap the training loop in XPU autocast when running on an Intel GPU.
 
@@ -67,10 +63,6 @@ class XPUAwareTrainerMixin:
                 return super().train()  # type: ignore[misc]
         return super().train()  # type: ignore[misc]
 
-    # ------------------------------------------------------------------
-    # Device setup — GradScaler fix
-    # ------------------------------------------------------------------
-
     def _setup_train(self) -> None:  # type: ignore[override]
         """Run base setup, then replace the CUDA GradScaler on XPU.
 
@@ -82,10 +74,6 @@ class XPUAwareTrainerMixin:
         if self.device.type == "xpu":
             self.scaler = torch.amp.GradScaler(self.device.type, enabled=False)
             logger.debug("Replaced GradScaler with disabled XPU scaler")
-
-    # ------------------------------------------------------------------
-    # Memory utilities
-    # ------------------------------------------------------------------
 
     def _get_memory(self, fraction: bool = False) -> float:  # type: ignore[override]
         """Return reserved GPU memory (GiB) or fraction, with an XPU branch."""
@@ -108,10 +96,6 @@ class XPUAwareTrainerMixin:
             torch.xpu.empty_cache()
             return
         super()._clear_memory(threshold)  # type: ignore[misc]
-
-    # ------------------------------------------------------------------
-    # Preprocessing helper
-    # ------------------------------------------------------------------
 
     def _move_batch_to_device(self, batch: dict[str, Any]) -> dict[str, Any]:
         """Move tensors to device with ``non_blocking`` on CUDA and XPU.

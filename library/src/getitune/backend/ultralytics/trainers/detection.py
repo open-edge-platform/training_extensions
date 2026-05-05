@@ -36,10 +36,6 @@ class DetectionTrainer(XPUAwareTrainerMixin, _UltralyticsDetectionTrainer):
 
     _datamodule: DataModule | None = None
 
-    # ------------------------------------------------------------------
-    # Data overrides
-    # ------------------------------------------------------------------
-
     def get_dataset(self) -> dict[str, Any]:
         """Build data config dict from DataModule or fall back to YAML."""
         if self._datamodule is None:
@@ -134,10 +130,6 @@ class DetectionTrainer(XPUAwareTrainerMixin, _UltralyticsDetectionTrainer):
         )
         validator._datamodule = self._datamodule  # noqa: SLF001
         return validator
-
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
 
     def _disable_ultralytics_augmentations(self) -> None:
         """Zero out Ultralytics augmentation hyperparams."""

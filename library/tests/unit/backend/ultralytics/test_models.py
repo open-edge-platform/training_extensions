@@ -32,9 +32,9 @@ def test_model_allows_yaml_config_for_scratch_training() -> None:
     assert model.pretrained is False
 
 
-def test_default_model_name_is_yaml() -> None:
-    """Default model name should be a .yaml config, not a .pt checkpoint."""
-    assert UltralyticsDetectionModel.default_model_name.endswith(".yaml")
+def test_default_model_name_is_variant_key() -> None:
+    """Default model name should be a variant key matching _pretrained_weights."""
+    assert UltralyticsDetectionModel.default_model_name in UltralyticsDetectionModel._pretrained_weights
 
 
 def test_load_checkpoint_calls_yolo_load(tmp_path: Path) -> None:
@@ -54,11 +54,6 @@ def test_load_checkpoint_raises_on_missing_file() -> None:
     model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
     with pytest.raises(FileNotFoundError, match="Checkpoint file not found"):
         model.load_checkpoint("/nonexistent/weights.pt")
-
-
-# ------------------------------------------------------------------
-# data_input_params property
-# ------------------------------------------------------------------
 
 
 class TestDataInputParams:
@@ -88,10 +83,11 @@ class TestDataInputParams:
         model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
         assert model.data_input_params.intensity_config is None
 
-
-# ------------------------------------------------------------------
-# _export_parameters property
-# ------------------------------------------------------------------
+    def test_default_imgsz_from_preprocessing_params(self) -> None:
+        """When imgsz is not specified, it should come from _default_preprocessing_params."""
+        model = UltralyticsDetectionModel(model_name="yolo26n", pretrained=False)
+        assert model.imgsz == 640
+        assert model.data_input_params.input_size == (640, 640)
 
 
 class TestExportParameters:
@@ -102,11 +98,12 @@ class TestExportParameters:
         params = model._export_parameters
         assert isinstance(params, TaskLevelExportParameters)
 
-    def test_model_type_from_export_model_type(self) -> None:
+    def test_model_type_is_yolo11(self) -> None:
+        """Detection model type should be 'YOLO11' for ModelAPI YOLO adapter."""
         model = UltralyticsDetectionModel(label_info=_label_info())
         assert model._export_parameters.model_type == "YOLO11"
 
-    def test_task_type_from_export_task_type(self) -> None:
+    def test_task_type_is_detection(self) -> None:
         model = UltralyticsDetectionModel(label_info=_label_info())
         assert model._export_parameters.task_type == "detection"
 
@@ -144,3 +141,31 @@ class TestExportParameters:
         assert ("model_info", "task_type") in metadata
         assert ("model_info", "labels") in metadata
         assert all(isinstance(v, str) for v in metadata.values())
+
+
+class TestPretrainedWeights:
+    """Tests for the _pretrained_weights pattern."""
+
+    def test_pretrained_weights_defined(self) -> None:
+        assert len(UltralyticsDetectionModel._pretrained_weights) > 0
+
+    def test_default_model_in_pretrained_weights(self) -> None:
+        assert UltralyticsDetectionModel.default_model_name in UltralyticsDetectionModel._pretrained_weights
+
+    def test_build_yolo_loads_pretrained_when_enabled(self) -> None:
+        model = UltralyticsDetectionModel(model_name="yolo26n", pretrained=True)
+        mock_yolo = MagicMock()
+        with patch("getitune.backend.ultralytics.models.base.YOLO", return_value=mock_yolo):
+            yolo = model._build_yolo()
+
+        mock_yolo.load.assert_called_once_with(UltralyticsDetectionModel._pretrained_weights["yolo26n"])
+        assert yolo is mock_yolo
+
+    def test_build_yolo_skips_pretrained_when_disabled(self) -> None:
+        model = UltralyticsDetectionModel(model_name="yolo26n", pretrained=False)
+        mock_yolo = MagicMock()
+        with patch("getitune.backend.ultralytics.models.base.YOLO", return_value=mock_yolo):
+            yolo = model._build_yolo()
+
+        mock_yolo.load.assert_not_called()
+        assert yolo is mock_yolo

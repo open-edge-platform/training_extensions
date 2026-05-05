@@ -13,9 +13,7 @@ import torch
 from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.types.device import DeviceType
 
-# ------------------------------------------------------------------
 # _resolve_device() tests
-# ------------------------------------------------------------------
 
 
 class TestResolveDevice:
@@ -111,11 +109,6 @@ class TestResolveDevice:
     def test_gpu_string_maps_to_cuda(self) -> None:
         result = UltralyticsEngine._resolve_device("gpu")
         assert result == torch.device("cuda:0")
-
-
-# ------------------------------------------------------------------
-# XPUAwareTrainerMixin tests
-# ------------------------------------------------------------------
 
 
 class TestXPUAwareTrainerMixin:

@@ -96,10 +96,6 @@ class UltralyticsEngine(Engine):
             msg = f"data must be DataModule or PathLike, got {type(data)}"
             raise TypeError(msg)
 
-    # ------------------------------------------------------------------
-    # Engine interface
-    # ------------------------------------------------------------------
-
     def train(self, **kwargs) -> METRICS:
         """Train the model via a custom Ultralytics trainer.
 
@@ -298,10 +294,6 @@ class UltralyticsEngine(Engine):
         msg = "No data source configured."
         raise RuntimeError(msg)
 
-    # ------------------------------------------------------------------
-    # DataModule-aware test / predict
-    # ------------------------------------------------------------------
-
     def _test_with_datamodule(self, overrides: dict, checkpoint: PathLike | None = None) -> dict[str, float]:
         """Run validation via a bound validator class with DataModule data."""
         validator_cls = self._make_bound_validator()
@@ -355,10 +347,6 @@ class UltralyticsEngine(Engine):
             predictions.extend(self._convert_predictions(raw_results, images=batch.images, imgs_info=batch.imgs_info))
 
         return predictions
-
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
 
     def _resolve_export_model(self, checkpoint: PathLike | None = None) -> YOLO:
         """Return a YOLO model instance to export.
