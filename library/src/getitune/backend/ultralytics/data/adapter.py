@@ -124,7 +124,16 @@ class UltralyticsDatasetAdapter(torch.utils.data.Dataset):
                         .float()
                     )
                 result["masks"] = mask_tensor.float()
+
+                # Generate per-pixel semantic class labels at the same spatial
+                # resolution as masks (required by YOLO26-seg's auxiliary sem
+                # loss which indexes sem_masks using instance mask shapes).
+                cls_tensor = torch.as_tensor(cls, dtype=torch.float32).squeeze(-1)  # (N,)
+                # Per-pixel class = max(class_id * mask_presence); background stays 0.
+                sem_masks = (mask_tensor * cls_tensor[:, None, None]).max(0).values  # (H, W)
+                result["sem_masks"] = sem_masks
             else:
                 result["masks"] = torch.zeros((0, tensor_h, tensor_w), dtype=torch.float32)
+                result["sem_masks"] = torch.zeros((tensor_h, tensor_w), dtype=torch.float32)
 
         return result

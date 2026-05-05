@@ -535,6 +535,57 @@ class TestYOLO11SegWrapper:
         assert result.labels[0] == 1  # 0-indexed + 1 for MaskRCNN convention
         assert result.masks[0].sum() > 0  # mask should have nonzero pixels
 
+    def test_postprocess_non_square_image(self) -> None:
+        """Mask decode should handle non-square (letterboxed) images correctly."""
+        import numpy as np
+
+        from getitune.backend.ultralytics.exporter.yolo_seg_wrapper import YOLO11Seg
+
+        wrapper = object.__new__(YOLO11Seg)
+        wrapper._det_output_name = "det"
+        wrapper._proto_output_name = "proto"
+        wrapper._mask_dim = 32
+        wrapper._proto_h = 160
+        wrapper._proto_w = 160
+        wrapper._num_classes = 5
+        wrapper.params = MagicMock()
+        wrapper.params.confidence_threshold = 0.1
+        wrapper.params.resize_type = "fit_to_window_letterbox"
+        wrapper.params.iou_threshold = 0.7
+        wrapper.params.nms_execute = True
+        wrapper.params.nms_max_predictions = 30000
+        wrapper.orig_width = 640
+        wrapper.orig_height = 640
+        wrapper.labels = ["class_0", "class_1", "class_2", "class_3", "class_4"]
+        wrapper.get_label_name = lambda i: f"class_{i}"
+
+        # Landscape image: 1920x1080 → letterboxed to 640x640 with pad_top=140
+        det = np.zeros((1, 41, 8400), dtype=np.float32)
+        # Box at center of model input: xywh = (320, 320, 100, 100)
+        det[0, 0, 0] = 320.0
+        det[0, 1, 0] = 320.0
+        det[0, 2, 0] = 100.0
+        det[0, 3, 0] = 100.0
+        det[0, 4, 0] = 0.9
+        det[0, 9:41, 0] = 1.0
+
+        proto = np.ones((1, 32, 160, 160), dtype=np.float32) * 0.1
+
+        outputs = {"det": det, "proto": proto}
+        meta = {"original_shape": (1080, 1920)}
+
+        result = wrapper.postprocess(outputs, meta)
+
+        assert result.bboxes.shape[0] == 1
+        assert result.masks.shape == (1, 1080, 1920)
+        assert result.masks[0].sum() > 0
+        # Mask center should be near the center of the original image
+        ys, xs = np.where(result.masks[0] > 0)
+        center_x = (xs.min() + xs.max()) / 2
+        center_y = (ys.min() + ys.max()) / 2
+        assert abs(center_x - 960) < 30  # within 30px of image center
+        assert abs(center_y - 540) < 30
+
     def test_model_type_in_is_export_parameters(self) -> None:
         """IS model should report model_type='YOLO11-seg'."""
         from getitune.backend.ultralytics.models.instance_segmentation import UltralyticsInstSegModel

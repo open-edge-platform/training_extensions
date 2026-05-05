@@ -52,4 +52,8 @@ def ultralytics_collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
             all_masks.append(masks)
         new_batch["masks"] = torch.cat(all_masks, dim=0) if all_masks else torch.zeros((0, 1, 1), dtype=torch.float32)
 
+    # Semantic masks (YOLO26-seg auxiliary loss).
+    if "sem_masks" in batch[0]:
+        new_batch["sem_masks"] = torch.stack([b["sem_masks"] for b in batch], dim=0)
+
     return new_batch
