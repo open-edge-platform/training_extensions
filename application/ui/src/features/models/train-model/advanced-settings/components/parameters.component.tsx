@@ -106,21 +106,15 @@ type ParameterNameProps = {
     marginStart?: DimensionValue;
 };
 
-const ParameterContextualHelp = ({ text }: { text: string }) => {
-    return (
-        <ContextualHelp variant='info'>
-            <Content>
-                <Text>{text}</Text>
-            </Content>
-        </ContextualHelp>
-    );
-};
-
 export const ParameterName = ({ name, description, marginStart, gridColumn }: ParameterNameProps) => {
     return (
         <Text marginStart={marginStart} gridColumn={gridColumn}>
             {name}
-            <ParameterContextualHelp text={description} />
+            <ContextualHelp variant='info'>
+                <Content>
+                    <Text>{description}</Text>
+                </Content>
+            </ContextualHelp>
         </Text>
     );
 };
@@ -183,6 +177,7 @@ const StringEnumParameterField = ({
     };
 
     const items = parameter.allowed_values.map((value) => ({ value }));
+    const displayNames = parameter.allowed_values_display_names ?? {};
 
     return (
         <Picker
@@ -194,7 +189,7 @@ const StringEnumParameterField = ({
         >
             {(item) => (
                 <Item key={item.value} textValue={item.value}>
-                    <Text>{item.value}</Text>
+                    <Text>{displayNames[item.value] ?? item.value}</Text>
                 </Item>
             )}
         </Picker>
