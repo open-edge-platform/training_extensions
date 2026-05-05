@@ -14,8 +14,8 @@ import { ModelListing } from './model-listing.component';
 import { ModelListingProvider, useModelListing } from './provider/model-listing-provider';
 
 const ModelListingContent = () => {
-    const { groupedModels, searchBy, datasetRevisions, groupBy } = useModelListing();
     const runningJob = useGetCurrentRunningJob();
+    const { groupedModels, searchBy, datasetRevisions, groupBy } = useModelListing();
 
     const hasNoResults = groupedModels.length === 0 && searchBy.length > 0;
     const hasNoModels = groupedModels.length === 0 && searchBy.length === 0;

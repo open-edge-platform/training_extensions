@@ -1,19 +1,14 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { renderHook } from 'test-utils/render';
 
 import { getMockedJob } from '../../../../mocks/mock-job';
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
-import {
-    getLastEventSource,
-    MockEventSourceConstructor,
-    resetMockEventSource,
-    simulateSSEMessage,
-} from '../../../test-utils/mock-event-source';
+import { MockEventSourceConstructor, resetMockEventSource } from '../../../test-utils/mock-event-source';
 import { useGetCurrentRunningJob } from './jobs.hook';
 
 const PROJECT_ID = '123';
@@ -34,55 +29,6 @@ const createMockJobForProject = (overrides: Partial<ReturnType<typeof getMockedJ
         },
         ...overrides,
     });
-
-describe('useStreamJobStatus', () => {
-    beforeEach(() => {
-        resetMockEventSource();
-    });
-
-    it('updates the React Query cache when an SSE message arrives', async () => {
-        const initialJob = createMockJobForProject({ progress: 10 });
-        server.use(http.get('/api/jobs', () => HttpResponse.json([initialJob])));
-
-        const { result: jobsResult } = renderHook(() => useGetCurrentRunningJob());
-
-        await waitFor(() => {
-            expect(jobsResult.current).toBeDefined();
-        });
-
-        const es = getLastEventSource();
-        const updatedJob = createMockJobForProject({ progress: 50, message: 'Epoch 5/10' });
-
-        act(() => {
-            simulateSSEMessage(es, updatedJob);
-        });
-
-        await waitFor(() => {
-            expect(jobsResult.current?.progress).toBe(50);
-            expect(jobsResult.current?.message).toBe('Epoch 5/10');
-        });
-    });
-
-    it('closes the connection when a terminal status is received', async () => {
-        const initialJob = createMockJobForProject();
-        server.use(http.get('/api/jobs', () => HttpResponse.json([initialJob])));
-
-        renderHook(() => useGetCurrentRunningJob());
-
-        await waitFor(() => {
-            expect(MockEventSourceConstructor).toHaveBeenCalled();
-        });
-
-        const es = getLastEventSource();
-        const completedJob = createMockJobForProject({ status: 'DONE', progress: 100 });
-
-        act(() => {
-            simulateSSEMessage(es, completedJob);
-        });
-
-        expect(es.close).toHaveBeenCalled();
-    });
-});
 
 describe('useGetCurrentRunningJob', () => {
     beforeEach(() => {
@@ -106,7 +52,8 @@ describe('useGetCurrentRunningJob', () => {
         const { result } = renderHook(() => useGetCurrentRunningJob());
 
         await waitFor(() => {
-            expect(result.current?.job_id).toBe(job.job_id);
+            expect(result.current).toHaveLength(1);
+            expect(result.current?.[0].job_id).toBe(job.job_id);
         });
     });
 
@@ -127,18 +74,6 @@ describe('useGetCurrentRunningJob', () => {
 
         await waitFor(() => {
             expect(result.current).toBeUndefined();
-        });
-    });
-
-    it('subscribes to SSE when an active running job is found', async () => {
-        const job = createMockJobForProject();
-        server.use(http.get('/api/jobs', () => HttpResponse.json([job])));
-
-        renderHook(() => useGetCurrentRunningJob());
-
-        await waitFor(() => {
-            expect(MockEventSourceConstructor).toHaveBeenCalled();
-            expect(getLastEventSource().url).toContain(`/api/jobs/${job.job_id}/status`);
         });
     });
 

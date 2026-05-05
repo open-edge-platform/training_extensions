@@ -14,7 +14,7 @@ import { isQuantizeJob, isTrainJob } from '../util';
 
 const TERMINAL_STATUSES: string[] = ['DONE', 'FAILED', 'CANCELLED'];
 
-const useStreamJobStatus = (jobId: string | undefined) => {
+export const useStreamJobStatus = (jobId: string | undefined) => {
     const queryClient = useQueryClient();
     const projectId = useProjectIdentifier();
     const modelIdRef = useRef<string | null>(null);
@@ -83,7 +83,7 @@ export const useGetCurrentRunningJob = () => {
     const projectId = useProjectIdentifier();
     const activeJobs = useListJobs();
 
-    const activeRunningJob = activeJobs.data?.find((job) => {
+    const activeRunningJobs = activeJobs.data?.filter((job) => {
         const isActive = job.status === 'RUNNING' || job.status === 'PENDING';
 
         if (isActive && (isTrainJob(job) || isQuantizeJob(job))) {
@@ -93,9 +93,7 @@ export const useGetCurrentRunningJob = () => {
         return false;
     });
 
-    useStreamJobStatus(activeRunningJob?.job_id);
-
-    return activeRunningJob;
+    return activeRunningJobs;
 };
 
 export const useCancelJob = () => {
