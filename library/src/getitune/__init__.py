@@ -8,6 +8,7 @@ __version__ = "0.1.0"
 import os
 from pathlib import Path
 
+import getitune._compat_transformers  # noqa: F401
 from getitune.types import *  # noqa: F403
 
 # Set the value of HF_HUB_CACHE to set the cache folder that stores the pretrained weights for timm and huggingface.

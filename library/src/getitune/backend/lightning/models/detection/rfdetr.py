@@ -12,11 +12,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Literal
 
-# isort: off
-import getitune._compat_transformers  # noqa: F401 -- patch transformers before rfdetr import
 from rfdetr import RFDETRBase, RFDETRLarge, RFDETRMedium, RFDETRNano, RFDETRSmall
-
-# isort: on
 from torch.export import Dim
 
 from getitune.backend.lightning.exporter.base import ModelExporter

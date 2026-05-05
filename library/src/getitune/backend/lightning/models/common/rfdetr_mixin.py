@@ -12,14 +12,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
-
-# isort: off
-import getitune._compat_transformers  # noqa: F401 -- patch transformers before rfdetr import
 from rfdetr.main import populate_args
 from rfdetr.models.lwdetr import build_criterion_and_postprocessors
 from rfdetr.util.get_param_dicts import get_param_dict
-
-# isort: on
 from torchvision import tv_tensors
 from torchvision.ops import box_convert
 

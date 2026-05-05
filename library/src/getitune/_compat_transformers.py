@@ -10,17 +10,15 @@ before rfdetr is loaded.
 Patched symbols:
 - ``transformers.pytorch_utils.find_pruneable_heads_and_indices``
 - ``transformers.utils.backbone_utils.get_aligned_output_features_output_indices``
+- ``transformers.backbone_utils.BackboneMixin._init_backbone``
 """
 
 from __future__ import annotations
 
 import torch
 from transformers import pytorch_utils
+from transformers.backbone_utils import BackboneMixin
 from transformers.utils import backbone_utils
-
-# ---------------------------------------------------------------------------
-# find_pruneable_heads_and_indices (removed in transformers 5.0)
-# ---------------------------------------------------------------------------
 
 
 def find_pruneable_heads_and_indices(
@@ -29,17 +27,7 @@ def find_pruneable_heads_and_indices(
     head_size: int,
     already_pruned_heads: set[int],
 ) -> tuple[set[int], torch.Tensor]:
-    """Find the heads and their indices taking ``already_pruned_heads`` into account.
-
-    Args:
-        heads: List of the indices of heads to prune.
-        n_heads: The number of heads in the model.
-        head_size: The size of each head.
-        already_pruned_heads: A set of already pruned heads.
-
-    Returns:
-        A tuple with the remaining heads to prune and the corresponding weight indices to keep.
-    """
+    """Find the heads and their indices taking ``already_pruned_heads`` into account."""
     mask = torch.ones(n_heads, head_size)
     heads_set = set(heads) - already_pruned_heads
     for head in heads_set:
@@ -50,26 +38,12 @@ def find_pruneable_heads_and_indices(
     return heads_set, index
 
 
-# ---------------------------------------------------------------------------
-# get_aligned_output_features_output_indices (removed in transformers 5.0)
-# ---------------------------------------------------------------------------
-
-
 def get_aligned_output_features_output_indices(
     out_features: list[str] | None,
     out_indices: list[int] | tuple[int, ...] | None,
     stage_names: list[str],
 ) -> tuple[list[str], list[int]]:
-    """Align ``out_features`` and ``out_indices`` based on ``stage_names``.
-
-    Args:
-        out_features: List of feature names to output.
-        out_indices: List of stage indices to output.
-        stage_names: Ordered list of all stage names in the model.
-
-    Returns:
-        A consistent (out_features, out_indices) tuple.
-    """
+    """Align ``out_features`` and ``out_indices`` based on ``stage_names``."""
     if out_features is not None and out_indices is not None:
         if len(out_features) != len(out_indices):
             msg = "out_features and out_indices should have the same length if both are set"
@@ -84,13 +58,15 @@ def get_aligned_output_features_output_indices(
     if out_indices is not None:
         out_features_resolved = [stage_names[idx] for idx in out_indices]
         return out_features_resolved, list(out_indices)
-    # Default: last stage only
     return [stage_names[-1]], [len(stage_names) - 1]
 
 
-# ---------------------------------------------------------------------------
-# Apply patches
-# ---------------------------------------------------------------------------
+def _init_backbone(self, config) -> None:  # noqa: ANN001
+    """Re-implementation of BackboneMixin._init_backbone removed in transformers 5.0."""
+    self.stage_names = config.stage_names
+    self._out_features = config._out_features  # noqa: SLF001
+    self._out_indices = config._out_indices  # noqa: SLF001
+
 
 if not hasattr(pytorch_utils, "find_pruneable_heads_and_indices"):
     # pyrefly: ignore[missing-attribute]
@@ -99,3 +75,6 @@ if not hasattr(pytorch_utils, "find_pruneable_heads_and_indices"):
 if not hasattr(backbone_utils, "get_aligned_output_features_output_indices"):
     # pyrefly: ignore[missing-attribute]
     backbone_utils.get_aligned_output_features_output_indices = get_aligned_output_features_output_indices
+
+if not hasattr(BackboneMixin, "_init_backbone"):
+    BackboneMixin._init_backbone = _init_backbone  # type: ignore[attr-defined]  # noqa: SLF001
