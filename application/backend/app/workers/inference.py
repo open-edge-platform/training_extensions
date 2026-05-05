@@ -9,6 +9,7 @@ from multiprocessing.synchronize import Event as EventClass
 from multiprocessing.synchronize import Lock
 from typing import Any
 
+import cv2
 from loguru import logger
 from loguru._logger import Logger as LoguruLogger
 from model_api.models import Model
@@ -193,8 +194,9 @@ class InferenceWorker(BaseProcessWorker):
 
                     inference_start_time = self._metrics_service.record_inference_start()  # type: ignore
                     self._prediction_buffer.register_expected_timestamp(inference_start_time)
+                    rgb_frame = cv2.cvtColor(item.frame_data, cv2.COLOR_BGR2RGB)
                     model.infer_async(
-                        item.frame_data,
+                        rgb_frame,
                         user_data={
                             "stream_data": item,
                             "model_id": self._loaded_model.model_id,
