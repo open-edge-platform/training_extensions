@@ -11,6 +11,7 @@ import torch
 from model_api.tilers import InstanceSegmentationTiler
 from torchvision import tv_tensors
 
+import getitune.backend.ultralytics.exporter.yolo_seg_wrapper  # noqa: F401 — registers YOLO11Seg with ModelAPI
 from getitune.backend.openvino.models.base import OVModel
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.data.utils.structures.mask.mask_util import encode_rle

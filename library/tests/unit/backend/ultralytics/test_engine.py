@@ -284,14 +284,20 @@ class TestExport:
         assert metadata[("model_info", "confidence_threshold")] == "0.4"
         assert metadata[("model_info", "iou_threshold")] == "0.6"
 
-    def test_instance_segmentation_export_is_blocked(self, mocker, tmp_path) -> None:
-        """Segmentation export should fail until a compatible wrapper is validated."""
+    def test_instance_segmentation_export_succeeds(self, mocker, tmp_path) -> None:
+        """Segmentation export should succeed and produce an IR file."""
         model = UltralyticsInstSegModel(label_info=_label_info())
         datamodule = mocker.MagicMock(spec=DataModule)
         engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
 
-        with pytest.raises(NotImplementedError, match="instance-segmentation export"):
-            engine.export(export_format=ExportFormat.OPENVINO, export_precision=Precision.FP32)
+        mock_exporter = mocker.MagicMock()
+        mock_exporter.export.return_value = tmp_path / "exported_model.xml"
+        mocker.patch.object(engine, "_build_exporter", return_value=mock_exporter)
+
+        result = engine.export(export_format=ExportFormat.OPENVINO, export_precision=Precision.FP32)
+
+        assert result == tmp_path / "exported_model.xml"
+        mock_exporter.export.assert_called_once()
 
     def test_train_records_actual_trainer_checkpoint(self, mocker, tmp_path) -> None:
         """train() should persist the checkpoint chosen by the underlying trainer."""

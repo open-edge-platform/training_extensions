@@ -231,13 +231,6 @@ class UltralyticsEngine(Engine):
             Path to the exported model file (``.xml`` for OpenVINO,
             ``.onnx`` for ONNX).
         """
-        if self._model.task == "segment":
-            msg = (
-                "Ultralytics instance-segmentation export is not supported yet. "
-                "YOLO segmentation outputs require a validated ModelAPI wrapper."
-            )
-            raise NotImplementedError(msg)
-
         yolo = self._resolve_export_model(checkpoint)
         exporter = self._build_exporter()
 

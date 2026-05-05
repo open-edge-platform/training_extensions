@@ -109,6 +109,20 @@ class UltralyticsDatasetAdapter(torch.utils.data.Dataset):
                     mask_tensor = torch.as_tensor(mask_tensor)
                 if mask_tensor.ndim == 2:
                     mask_tensor = mask_tensor.unsqueeze(0)
+                # Resize masks to tensor dimensions if they differ (val/test
+                # subsets may deliver masks at original image resolution while
+                # the image tensor is already resized + padded).
+                if mask_tensor.shape[1:] != (tensor_h, tensor_w):
+                    mask_tensor = (
+                        torch.nn.functional.interpolate(
+                            mask_tensor.unsqueeze(0).float(),
+                            size=(tensor_h, tensor_w),
+                            mode="bilinear",
+                            align_corners=False,
+                        )[0]
+                        .gt_(0.5)
+                        .float()
+                    )
                 result["masks"] = mask_tensor.float()
             else:
                 result["masks"] = torch.zeros((0, tensor_h, tensor_w), dtype=torch.float32)

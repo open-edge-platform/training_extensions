@@ -48,7 +48,7 @@ class UltralyticsInstSegModel(UltralyticsModel):
         """Instance segmentation export parameters."""
         label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
         return TaskLevelExportParameters(
-            model_type="YOLO11",
+            model_type="YOLO11-seg",
             model_name=self.model_name or "",
             task_type="instance_segmentation",
             label_info=label_info,
