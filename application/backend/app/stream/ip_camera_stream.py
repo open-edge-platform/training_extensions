@@ -1,6 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import os
+import threading
 import time
 
 import cv2
@@ -9,16 +11,40 @@ from loguru import logger
 
 from app.models import IPCameraSourceConfig, SourceType
 from app.stream.base_opencv_stream import BaseOpenCVStream
+from app.stream.stream_data import StreamData
+
+# Force TCP transport and low-latency demux/decode to avoid UDP packet loss
+# and reordering delays that break H.264 decoding ("co located POCs unavailable").
+_RTSP_FFMPEG_OPTIONS = (
+    "rtsp_transport;tcp|fflags;nobuffer|flags;low_delay|max_delay;500000|reorder_queue_size;0|stimeout;5000000"
+)
+
+
+def _apply_ffmpeg_capture_options() -> None:
+    """Set OpenCV's FFmpeg capture options before constructing VideoCapture."""
+    existing = os.environ.get("OPENCV_FFMPEG_CAPTURE_OPTIONS", "")
+    if existing == _RTSP_FFMPEG_OPTIONS:
+        return
+    if existing and "rtsp_transport" in existing:
+        # Respect operator overrides.
+        return
+    os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = _RTSP_FFMPEG_OPTIONS
 
 
 class IPCameraStream(BaseOpenCVStream):
-    """Video stream implementation using IP camera via OpenCV."""
+    """IP camera stream that drains the RTSP socket on a dedicated reader thread
+    and exposes only the latest decoded frame, so slow consumers (e.g. inference)
+    cannot back-pressure the network reader and cause upstream packet drops.
+    """
 
     MAX_RETRIES = 3
     BACKOFF_FACTOR = 0.1
 
+    _FIRST_FRAME_TIMEOUT_S = 5.0
+    _NEW_FRAME_TIMEOUT_S = 1.0
+
     def __init__(self, config: IPCameraSourceConfig) -> None:
-        """Initialize IP camera stream."""
+        _apply_ffmpeg_capture_options()
         super().__init__(
             source=config.config_data.get_configured_stream_url(),
             source_type=SourceType.IP_CAMERA,
@@ -27,22 +53,148 @@ class IPCameraStream(BaseOpenCVStream):
         logger.info("IP camera stream initialized")
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
+        self._frame_lock = threading.Lock()
+        self._frame_available = threading.Condition(self._frame_lock)
+        self._latest_frame: np.ndarray | None = None
+        self._latest_timestamp: float = 0.0
+        self._latest_seq: int = 0
+        self._last_consumed_seq: int = 0
+        self._reader_error: BaseException | None = None
+
+        self._stop_reader = threading.Event()
+        self._reader_thread = threading.Thread(
+            target=self._reader_loop,
+            name=f"IPCameraReader[{self.source_type.value}]",
+            daemon=True,
+        )
+        self._reader_thread.start()
+
+    def _reader_loop(self) -> None:
+        """Continuously drain the RTSP socket and publish the latest frame."""
+        consecutive_failures = 0
+        while not self._stop_reader.is_set():
+            try:
+                if self.cap is None or not self.cap.isOpened():
+                    self._reconnect()
+                    consecutive_failures = 0
+                    continue
+
+                if not self.cap.grab():
+                    consecutive_failures += 1
+                    if consecutive_failures >= self.MAX_RETRIES:
+                        self._reconnect()
+                        consecutive_failures = 0
+                    else:
+                        time.sleep(self.BACKOFF_FACTOR * consecutive_failures)
+                    continue
+
+                ret, frame = self.cap.retrieve()
+                if not ret or frame is None:
+                    # Decoder skipped a corrupt packet / waiting for keyframe.
+                    continue
+
+                consecutive_failures = 0
+                self._publish_frame(frame)
+            except Exception as exc:
+                logger.exception("IP camera reader thread error")
+                if self._stop_reader.is_set():
+                    break
+                with self._frame_available:
+                    self._reader_error = exc
+                    self._frame_available.notify_all()
+                time.sleep(self.BACKOFF_FACTOR)
+
+    def _publish_frame(self, frame: np.ndarray) -> None:
+        with self._frame_available:
+            self._latest_frame = frame
+            self._latest_timestamp = time.time()
+            self._latest_seq += 1
+            self._reader_error = None
+            self._frame_available.notify_all()
+
+    def _reconnect(self) -> None:
+        """Re-open the capture with exponential backoff."""
+        for attempt in range(self.MAX_RETRIES):
+            if self._stop_reader.is_set():
+                return
+            logger.warning("IP camera reconnect attempt {}/{}", attempt + 1, self.MAX_RETRIES)
+            try:
+                if self.cap is not None:
+                    self.cap.release()
+            except Exception:
+                logger.debug("Error releasing capture during reconnect", exc_info=True)
+            try:
+                self._initialize_capture()
+                self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+                if self.cap.isOpened():
+                    logger.info("Successfully reconnected to IP camera stream.")
+                    return
+            except Exception:
+                logger.debug("Reconnect attempt failed", exc_info=True)
+            self._stop_reader.wait(self.BACKOFF_FACTOR * (attempt + 1))
+
+        with self._frame_available:
+            self._reader_error = RuntimeError("Failed to capture frame from IP camera after multiple retries")
+            self._frame_available.notify_all()
+        self._stop_reader.wait(1.0)
+
+    def get_data(self) -> StreamData:
+        """Return the latest decoded frame, blocking briefly if necessary."""
+        with self._frame_available:
+            if self._latest_seq == 0:
+                self._frame_available.wait(timeout=self._FIRST_FRAME_TIMEOUT_S)
+            elif self._latest_seq == self._last_consumed_seq:
+                self._frame_available.wait(timeout=self._NEW_FRAME_TIMEOUT_S)
+
+            if self._reader_error is not None and self._latest_seq == 0:
+                err = self._reader_error
+                self._reader_error = None
+                raise err
+
+            if self._latest_frame is None or self._latest_seq == self._last_consumed_seq:
+                raise RuntimeError("No new frame available from IP camera")
+
+            frame = self._latest_frame
+            timestamp = self._latest_timestamp
+            self._last_consumed_seq = self._latest_seq
+
+        return StreamData(
+            frame_data=frame,
+            timestamp=timestamp,
+            source_metadata=self._get_source_metadata(),
+        )
+
     def _handle_read_failure(self) -> np.ndarray:
-        """Handle IP camera read failure"""
+        """Legacy synchronous reconnect path, kept for BaseOpenCVStream compatibility."""
         if self.cap is None:
             raise RuntimeError("Video capture not initialized")
 
         for attempt in range(self.MAX_RETRIES):
             logger.warning(f"Attempt {attempt + 1}: Failed to capture frame from IP camera, retrying...")
-            self.release()
+            self.release_capture_only()
             self._initialize_capture()
             ret, frame = self.cap.read()
             if ret:
                 logger.info("Successfully reconnected to IP camera stream.")
                 return frame
-            time.sleep(self.BACKOFF_FACTOR * (attempt + 1))  # Exponential backoff
+            time.sleep(self.BACKOFF_FACTOR * (attempt + 1))
 
         raise RuntimeError("Failed to capture frame from IP camera after multiple retries")
+
+    def release_capture_only(self) -> None:
+        if self.cap is not None:
+            try:
+                self.cap.release()
+            except Exception:
+                logger.debug("Error releasing VideoCapture", exc_info=True)
+
+    def release(self) -> None:
+        self._stop_reader.set()
+        with self._frame_available:
+            self._frame_available.notify_all()
+        if self._reader_thread.is_alive() and threading.current_thread() is not self._reader_thread:
+            self._reader_thread.join(timeout=2.0)
+        super().release()
 
     def is_real_time(self) -> bool:
         return True
