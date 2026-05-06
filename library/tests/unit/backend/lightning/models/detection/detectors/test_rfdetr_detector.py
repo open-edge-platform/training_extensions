@@ -95,6 +95,7 @@ class DummyPostprocessor(nn.Module):
 
     def __init__(self) -> None:
         super().__init__()
+        self.num_select = 100
 
     def forward(self, outputs, target_sizes):
         """Return dummy detection results."""
