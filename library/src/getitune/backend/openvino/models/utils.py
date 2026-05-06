@@ -51,21 +51,28 @@ def rescale_bboxes_to_original(
     if (img_h, img_w) == (ori_h, ori_w) or bboxes_data.numel() == 0:
         return bboxes_data
 
-    if padding != (0, 0, 0, 0) and scale_factor is not None:
-        # Letterbox: undo padding then undo scale
-        pad_left, pad_top = float(padding[0]), float(padding[1])
-        scale_h, scale_w = float(scale_factor[0]), float(scale_factor[1])
-        bboxes_data[:, 0::2] -= pad_left
-        bboxes_data[:, 1::2] -= pad_top
-        bboxes_data[:, 0::2] /= scale_w
-        bboxes_data[:, 1::2] /= scale_h
-        bboxes_data[:, 0::2].clamp_(0, ori_w)
-        bboxes_data[:, 1::2].clamp_(0, ori_h)
-    else:
-        # Simple resize (no padding)
-        scale_x = ori_w / img_w
-        scale_y = ori_h / img_h
-        bboxes_data[:, 0::2] *= scale_x
-        bboxes_data[:, 1::2] *= scale_y
+    if padding != (0, 0, 0, 0):
+        if scale_factor is None:
+            warnings.warn(
+                "Non-zero padding with scale_factor=None is unexpected; falling back to simple ratio rescaling.",
+                stacklevel=2,
+            )
+        else:
+            # Letterbox: undo padding then undo scale
+            pad_left, pad_top = float(padding[0]), float(padding[1])
+            scale_h, scale_w = float(scale_factor[0]), float(scale_factor[1])
+            bboxes_data[:, 0::2] -= pad_left
+            bboxes_data[:, 1::2] -= pad_top
+            bboxes_data[:, 0::2] /= scale_w
+            bboxes_data[:, 1::2] /= scale_h
+            bboxes_data[:, 0::2].clamp_(0, ori_w)
+            bboxes_data[:, 1::2].clamp_(0, ori_h)
+            return bboxes_data
+
+    # Simple resize (no padding or fallback from unexpected padding+None state)
+    scale_x = ori_w / img_w
+    scale_y = ori_h / img_h
+    bboxes_data[:, 0::2] *= scale_x
+    bboxes_data[:, 1::2] *= scale_y
 
     return bboxes_data
