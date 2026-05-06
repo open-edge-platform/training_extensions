@@ -11,6 +11,7 @@ import pytest
 import torch
 from datumaro.experimental import Dataset
 
+from getitune import LabelInfo
 from getitune.data.dataset.base import VisionDataset, _default_collate_fn
 from getitune.data.entity.sample import BaseSample, SampleBatch
 
@@ -314,3 +315,56 @@ class TestVisionDataset:
 
         collate = dataset.collate_fn
         assert collate is _default_collate_fn
+
+    def test_repr_default(self):
+        """Test repr on a default dataset reports class name and zero classes."""
+        dataset = VisionDataset(dm_subset=self.mock_dm_subset)
+
+        assert "VisionDataset" in repr(dataset)
+        assert "num_samples=100" in repr(dataset)
+        assert "num_classes=0" in repr(dataset)
+
+    def test_repr_with_label_info(self):
+        """Test repr reflects num_classes after label_info is populated."""
+        dataset = VisionDataset(dm_subset=self.mock_dm_subset)
+        dataset.label_info = LabelInfo(
+            label_names=["cat", "dog"],
+            label_groups=[["cat", "dog"]],
+            label_ids=["0", "1"],
+        )
+
+        assert "num_classes=2" in repr(dataset)
+
+    def test_repr_uses_subclass_name(self):
+        """Test repr uses the subclass name, not the base class name."""
+
+        class FakeDataset(VisionDataset):
+            pass
+
+        dataset = FakeDataset(dm_subset=self.mock_dm_subset)
+
+        assert "FakeDataset" in repr(dataset)
+
+    def test_describe_basic(self):
+        """Test describe returns expected keys and values on a default dataset."""
+        dataset = VisionDataset(dm_subset=self.mock_dm_subset)
+
+        result = dataset.describe()
+
+        assert isinstance(result, dict)
+        assert result["class_name"] == "VisionDataset"
+        assert result["num_samples"] == 100
+        assert result["num_classes"] == 0
+        assert result["label_names"] == []
+        assert result["has_transforms"] is False
+
+    def test_describe_with_transforms(self):
+        """Test describe reports has_transforms=True when transforms are provided."""
+        dataset = VisionDataset(
+            dm_subset=self.mock_dm_subset,
+            transforms=self.mock_transforms,
+        )
+
+        result = dataset.describe()
+
+        assert result["has_transforms"] is True

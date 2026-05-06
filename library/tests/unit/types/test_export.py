@@ -76,3 +76,39 @@ def test_to_metadata_label_consistency(fxt_label_info):
 
     with pytest.raises(RuntimeError, match="incorrect"):
         params.to_metadata()
+
+
+def test_nms_metadata(fxt_label_info):
+    params = TaskLevelExportParameters(
+        model_type="ssd",
+        model_name="test_model",
+        task_type="detection",
+        label_info=fxt_label_info,
+        optimization_config={},
+    )
+
+    params = params.wrap(
+        nms_execute=True,
+        agnostic_nms=False,
+        nms_max_predictions=0,
+    )
+
+    metadata = params.to_metadata()
+    assert metadata[("model_info", "nms_execute")] == "True"
+    assert metadata[("model_info", "agnostic_nms")] == "False"
+    assert metadata[("model_info", "nms_max_predictions")] == "0"
+
+
+def test_nms_metadata_not_set(fxt_label_info):
+    params = TaskLevelExportParameters(
+        model_type="ssd",
+        model_name="test_model",
+        task_type="detection",
+        label_info=fxt_label_info,
+        optimization_config={},
+    )
+
+    metadata = params.to_metadata()
+    assert ("model_info", "nms_execute") not in metadata
+    assert ("model_info", "agnostic_nms") not in metadata
+    assert ("model_info", "nms_max_predictions") not in metadata

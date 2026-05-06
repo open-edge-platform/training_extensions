@@ -228,3 +228,39 @@ class TestRFDETRDetector:
         # In valid xyxy format: x1 <= x2 and y1 <= y2 for all boxes
         assert (boxes[:, :, 0] <= boxes[:, :, 2]).all()
         assert (boxes[:, :, 1] <= boxes[:, :, 3]).all()
+        # Default boxes are 4-column xyxy.
+        assert boxes.shape[-1] == 4
+
+    def test_export_merge_scores_with_masks(
+        self,
+        rfdetr_detector: RFDETRDetector,
+        images: torch.Tensor,
+    ) -> None:
+        """``merge_scores=True`` must concat scores into ``boxes`` and drop scores tensor.
+
+        This is the contract required by the OpenVINO ``MaskRCNN`` model_api
+        wrapper used by the instance-segmentation export path, which reads
+        ``outputs["boxes"][:, 4]`` for the confidence score.
+        """
+        rfdetr_detector.eval()
+        if hasattr(rfdetr_detector.lwdetr, "export"):
+            rfdetr_detector.lwdetr.export()  # pyrefly: ignore[not-callable]
+
+        result = rfdetr_detector.export(images, merge_scores=True)
+
+        assert isinstance(result, tuple)
+        assert len(result) == 3
+        boxes_with_scores, labels, masks = result
+        # Boxes must now carry the score in the 5th column.
+        assert boxes_with_scores.ndim == 3
+        assert boxes_with_scores.shape[0] == 2
+        assert boxes_with_scores.shape[-1] == 5
+        # Scores (last column) must be in [0, 1] (sigmoid of pred_logits).
+        last_col = boxes_with_scores[..., 4]
+        assert torch.all(last_col >= 0.0)
+        assert torch.all(last_col <= 1.0)
+        # xyxy validity on the first 4 columns.
+        assert (boxes_with_scores[..., 0] <= boxes_with_scores[..., 2]).all()
+        assert (boxes_with_scores[..., 1] <= boxes_with_scores[..., 3]).all()
+        assert labels.shape[:2] == boxes_with_scores.shape[:2]
+        assert masks.shape[:2] == boxes_with_scores.shape[:2]

@@ -231,8 +231,7 @@ class TestInferenceServer:
             mock_convert_prediction.return_value = [annotation]
             inference_server.infer_batch(labels=[label], inputs=[input])
 
-        # Images are always scaled to float32 [0, 1]
         (passed_batch,) = model.infer_batch.call_args.args
         assert len(passed_batch) == 1
-        np.testing.assert_array_almost_equal(passed_batch[0], raw_uint8.astype(np.float32) / 255.0)
-        assert passed_batch[0].dtype == np.float32
+        np.testing.assert_array_equal(passed_batch[0], raw_uint8)
+        assert passed_batch[0].dtype == np.uint8

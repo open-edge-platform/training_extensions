@@ -253,7 +253,7 @@ class TestConvertOnnxToFloat16:
         assert metadata[("model_info", "intensity_mode")] == "window"
         assert metadata[("model_info", "intensity_window_center")] == "40.0"
         assert metadata[("model_info", "intensity_window_width")] == "400.0"
-        assert metadata[("model_info", "intensity_repeat_channels")] == "3"
+        assert metadata[("model_info", "intensity_repeat_channels")] == "True"
 
     def test_extend_model_metadata_with_range_scale_intensity(self):
         """With range_scale IntensityConfig (thermal), all range params should be embedded."""
@@ -281,7 +281,7 @@ class TestConvertOnnxToFloat16:
         assert metadata[("model_info", "intensity_scale_factor")] == "0.4"
         assert metadata[("model_info", "intensity_min_value")] == "295.15"
         assert metadata[("model_info", "intensity_max_value")] == "360.15"
-        assert metadata[("model_info", "intensity_repeat_channels")] == "3"
+        assert metadata[("model_info", "intensity_repeat_channels")] == "True"
 
     def test_extend_model_metadata_with_percentile_intensity(self):
         """With percentile IntensityConfig, percentile params should be embedded."""

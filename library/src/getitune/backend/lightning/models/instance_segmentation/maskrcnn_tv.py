@@ -297,7 +297,7 @@ class MaskRCNNTV(LightningInstanceSegModel):
                 "autograd_inlining": False,
                 "dynamo": False,
             },
-            output_names=["bboxes", "labels", "masks", "feature_vector", "saliency_map"] if self.explain_mode else None,
+            output_names=["boxes", "labels", "masks", "feature_vector", "saliency_map"] if self.explain_mode else None,
         )
 
     def forward_for_tracing(self, inputs: Tensor) -> tuple[Tensor, ...]:
@@ -308,6 +308,16 @@ class MaskRCNNTV(LightningInstanceSegModel):
         }
         meta_info_list = [meta_info] * len(inputs)
         return self.model.export(inputs, meta_info_list, explain_mode=self.explain_mode)
+
+    @property
+    def _optimization_config(self) -> dict[str, Any]:
+        """PTQ config for torchvision MaskRCNN."""
+        return {
+            "ignored_scope": {
+                "patterns": [r".*mask_roi_pool.*aten::scatter.*"],
+                "validate": False,
+            },
+        }
 
 
 class RotatedMaskRCNNModelV2(RotatedPredictMixin, MaskRCNNTV):
