@@ -103,7 +103,10 @@ class TestIPCameraStream:
             data = stream.get_data()
             assert data.frame_data is not None
 
-            # Mock cv2.VideoCapture.read to simulate failure then success
+            # Stop the reader thread so we can test the legacy reconnect path directly.
+            stream._stop_reader.set()
+            stream._reader_thread.join(timeout=2)
+
             mock_cap = MagicMock(spec=cv2.VideoCapture)
             call_count = 0
 
@@ -126,15 +129,18 @@ class TestIPCameraStream:
             stream._initialize_capture = mock_initialize_capture  # type: ignore[method-assign]
             stream.cap = mock_cap
 
-            # This should trigger reconnection logic and succeed
-            data = stream.get_data()
-            assert data.frame_data is not None
-            assert call_count == 3  # Verify reconnection attempts were made
+            frame = stream._handle_read_failure()
+            assert frame is not None
+            assert call_count == 3
             assert mock_initialize_capture.call_count == 2
 
     def test_max_retries_exceeded(self, config: IPCameraSourceConfig):
         """Test that IPCameraStream raises exception when max retries are exceeded."""
         with IPCameraStream(config) as stream:
+            # Stop the reader thread so we can test the legacy reconnect path directly.
+            stream._stop_reader.set()
+            stream._reader_thread.join(timeout=2)
+
             mock_cap = MagicMock(spec=cv2.VideoCapture)
             mock_cap.read.return_value = (False, None)
             mock_cap.isOpened.return_value = True
@@ -146,8 +152,7 @@ class TestIPCameraStream:
             stream._initialize_capture = mock_initialize_capture  # type: ignore[method-assign]
             stream.cap = mock_cap
 
-            # Should exhaust retries and raise RuntimeError
             with pytest.raises(RuntimeError, match="Failed to capture frame from IP camera after multiple retries"):
-                stream.get_data()
+                stream._handle_read_failure()
 
-                assert mock_initialize_capture.call_count == 3
+            assert mock_initialize_capture.call_count == 3
