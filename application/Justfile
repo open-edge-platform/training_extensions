@@ -58,7 +58,7 @@ build-image accelerator="cpu" tag="latest": install-uv
 [arg("tag", long="tag", short="t")]
 [arg("host", long="host", short="h", help="Host address to bind the server to")]
 [arg("port", long="port", short="p", help="Host port to publish (forwarded to the container's internal port)")]
-[arg("container-port", long="container-port", help="Container-internal port the server listens on (defaults to the value of --port)")]
+[arg("container-port", long="container-port", help="Container-internal port the server listens on")]
 [arg("container-name", long="name", short="n", help="Custom name for the container (defaults to geti-<accelerator>)")]
 [arg("detach", long="detach", short="d", value="true", help="Run the container in detached mode")]
 [arg("remove", long="remove", value="true", help="Automatically remove the container after it exits")]
@@ -71,7 +71,7 @@ build-image accelerator="cpu" tag="latest": install-uv
 [arg("coturn_port", long="coturn-port", help="Coturn server listening port (default: 443)")]
 [arg("stun_server", long="stun", help="STUN server URL to use for WebRTC")]
 [arg("gpu-slots", long="gpu-slots", help="Number of GPU slots available for model tuning (default: 1)")]
-run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-port="" container-name="" detach="false" remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="" gpu-slots="1":
+run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-port="7860" container-name="" detach="false" remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="" gpu-slots="1":
     #!/usr/bin/env bash
     set -euo pipefail
     shopt -s nullglob
@@ -83,12 +83,6 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-po
         CONTAINER_NAME="{{ application-name }}-{{ accelerator }}"
     fi
 
-    # Resolve container-internal port (defaults to host port for backwards compatibility)
-    if [[ -n "{{ container-port }}" ]]; then
-        CONTAINER_PORT="{{ container-port }}"
-    else
-        CONTAINER_PORT="{{ port }}"
-    fi
 
     if ! docker image inspect "${IMAGE_NAME}" > /dev/null 2>&1; then
         echo "Error: Docker image '${IMAGE_NAME}' not found." >&2
@@ -219,9 +213,9 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-po
         {{ docker-run-args }} \
         $GPU_FLAG \
         --publish {{ webrtc-ports }}:{{ webrtc-ports }}/udp \
-        --publish {{ port }}:${CONTAINER_PORT} \
+        --publish {{ port }}:{{ container-port }} \
         --env HOST={{ host }} \
-        --env PORT=${CONTAINER_PORT} \
+        --env PORT={{ container-port }} \
         --env GPU_SLOTS={{ gpu-slots }} \
         --env WEBRTC_ADVERTISE_IP="${HOST_IP}" \
         $COTURN_ENV \
@@ -229,10 +223,10 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-po
         --sysctl net.ipv4.ip_local_port_range="{{ replace(webrtc-ports, '-', ' ') }}" \
         --volume {{ data-volume }}:/application/data/ \
         --volume {{ logs-volume }}:/application/logs/ \
-        "${volume_args[@]}" \
+        ${volume_args[@]+"${volume_args[@]}"} \
         $WSL_LIB_FLAG \
-        "${passthrough_devices_args[@]}" \
-        "${extra_render_args[@]}" \
+        ${passthrough_devices_args[@]+"${passthrough_devices_args[@]}"} \
+        ${extra_render_args[@]+"${extra_render_args[@]}"} \
         $SHM_SIZE_FLAG \
         --name "${CONTAINER_NAME}" \
         $DETACH_FLAG \
