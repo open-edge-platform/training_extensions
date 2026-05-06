@@ -8,10 +8,10 @@ pretrained_weights:
 
 description: "YOLO26-N is the nano Ultralytics YOLO26 detection model. It is optimized for fast fine-tuning and low-latency inference while using the Geti Tune data pipeline for preprocessing and dataset handling."
 stats:
-  gigaflops: 0.0
-  trainable_parameters: 0.0
+  gigaflops: 5.4
+  trainable_parameters: 2.4
   benchmark_metrics:
-    coco_map_50_95: 0.0
+    coco_map_50_95: 40.9
 
 capabilities:
   tiling: false

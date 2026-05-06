@@ -15,7 +15,7 @@ from ultralytics.models.yolo.detect import DetectionValidator as _UltralyticsDet
 
 from getitune.backend.ultralytics.data.adapter import UltralyticsDatasetAdapter
 from getitune.backend.ultralytics.data.collate import ultralytics_collate_fn
-from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
+from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 from getitune.backend.ultralytics.validators.detection import DetectionValidator
 
 if TYPE_CHECKING:

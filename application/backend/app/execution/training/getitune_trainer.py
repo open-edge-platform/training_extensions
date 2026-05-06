@@ -488,13 +488,10 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             model=model,
             data=datamodule,
             work_dir=self._data_dir / f"getitune-workspace-{model_id}",
-            device=getitune_device_type,
+            device=f"cuda:{device.index or 0}" if device.type is DeviceType.CUDA else getitune_device_type,
         )
 
         train_kwargs = dict(training_config.get("training", {}))
-        # NOTE: Don't pass device index here — the engine already resolves the
-        # device from the DeviceType enum passed to create_engine(). Passing a
-        # bare integer would be misinterpreted as a CUDA index even on XPU.
         if has_parent_revision:
             logger.info("Using parent Ultralytics weights as initialization, not resume state: {}", weights_path)
 

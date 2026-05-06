@@ -49,9 +49,6 @@ class SegmentationValidator(_UltralyticsSegmentationValidator):
         batch["masks"] = batch["masks"].float()
         return batch
 
-    # ------------------------------------------------------------------
-    # Standalone DataModule evaluation
-    # ------------------------------------------------------------------
 
     def _run_standalone_eval(self, model: object) -> dict:
         """Run validation using DataModule without YAML data config.

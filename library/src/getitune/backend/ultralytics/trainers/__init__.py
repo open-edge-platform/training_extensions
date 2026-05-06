@@ -5,10 +5,8 @@
 
 from .detection import DetectionTrainer
 from .instance_segmentation import SegmentationTrainer
-from .xpu_mixin import XPUAwareTrainerMixin
 
 __all__ = [
     "DetectionTrainer",
     "SegmentationTrainer",
-    "XPUAwareTrainerMixin",
 ]

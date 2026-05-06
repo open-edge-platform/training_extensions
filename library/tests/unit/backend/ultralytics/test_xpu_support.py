@@ -116,7 +116,7 @@ class TestXPUAwareTrainerMixin:
 
     def test_setup_train_replaces_grad_scaler_on_xpu(self) -> None:
         """After _setup_train, GradScaler must be disabled on XPU."""
-        from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
+        from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 
         class FakeBaseTrainer:
             def __init__(self):
@@ -136,7 +136,7 @@ class TestXPUAwareTrainerMixin:
 
     def test_setup_train_keeps_grad_scaler_on_cuda(self) -> None:
         """On CUDA, the mixin must not touch the GradScaler."""
-        from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
+        from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 
         class FakeBaseTrainer:
             def __init__(self):
@@ -157,7 +157,7 @@ class TestXPUAwareTrainerMixin:
 
     def test_get_memory_xpu_returns_float(self) -> None:
         """_get_memory() should return a float on XPU."""
-        from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
+        from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 
         class FakeBaseTrainer:
             def __init__(self):
@@ -177,7 +177,7 @@ class TestXPUAwareTrainerMixin:
             assert pytest.approx(result, abs=0.01) == 1.0  # 1 GiB
 
     def test_get_memory_fraction_xpu(self) -> None:
-        from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
+        from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 
         class FakeBaseTrainer:
             def __init__(self):
@@ -201,7 +201,7 @@ class TestXPUAwareTrainerMixin:
             assert pytest.approx(result, abs=0.01) == 0.25
 
     def test_clear_memory_xpu_calls_empty_cache(self) -> None:
-        from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
+        from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 
         class FakeBaseTrainer:
             def __init__(self):
@@ -220,7 +220,7 @@ class TestXPUAwareTrainerMixin:
             mock_clear.assert_called_once()
 
     def test_clear_memory_cuda_delegates_to_super(self) -> None:
-        from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
+        from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 
         class FakeBaseTrainer:
             def __init__(self):
@@ -239,7 +239,7 @@ class TestXPUAwareTrainerMixin:
 
     def test_move_batch_to_device_uses_non_blocking_on_xpu(self) -> None:
         """The helper should use non_blocking=True on XPU."""
-        from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
+        from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 
         class FakeBaseTrainer:
             def __init__(self):
@@ -255,7 +255,7 @@ class TestXPUAwareTrainerMixin:
         batch = {"img": tensor, "non_tensor": "value"}
 
         with patch(
-            "getitune.backend.ultralytics.trainers.xpu_mixin.isinstance",
+            "getitune.backend.ultralytics.plugins.xpu_mixin.isinstance",
             side_effect=lambda o, t: True if t is torch.Tensor and o is tensor else isinstance(o, t),
         ):
             result = trainer._move_batch_to_device(batch)
@@ -265,7 +265,7 @@ class TestXPUAwareTrainerMixin:
 
     def test_train_wraps_xpu_autocast(self) -> None:
         """On XPU, train() should wrap the call in xpu autocast."""
-        from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
+        from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 
         autocast_entered = False
 
@@ -289,7 +289,7 @@ class TestXPUAwareTrainerMixin:
 
     def test_train_no_autocast_on_cuda(self) -> None:
         """On CUDA, train() should NOT add extra autocast wrapping."""
-        from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
+        from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 
         class FakeBaseTrainer:
             def __init__(self):

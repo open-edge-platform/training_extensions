@@ -15,7 +15,7 @@ from ultralytics.models.yolo.segment import SegmentationValidator as _Ultralytic
 
 from getitune.backend.ultralytics.data.adapter import UltralyticsDatasetAdapter
 from getitune.backend.ultralytics.data.collate import ultralytics_collate_fn
-from getitune.backend.ultralytics.trainers.xpu_mixin import XPUAwareTrainerMixin
+from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 from getitune.backend.ultralytics.validators.instance_segmentation import SegmentationValidator
 
 if TYPE_CHECKING:
@@ -34,10 +34,6 @@ class SegmentationTrainer(XPUAwareTrainerMixin, _UltralyticsSegmentationTrainer)
     """
 
     _datamodule: DataModule | None = None
-
-    # ------------------------------------------------------------------
-    # Data overrides
-    # ------------------------------------------------------------------
 
     def get_dataset(self) -> dict[str, Any]:
         """Build data config dict from DataModule or fall back to YAML."""
@@ -133,10 +129,6 @@ class SegmentationTrainer(XPUAwareTrainerMixin, _UltralyticsSegmentationTrainer)
         )
         validator._datamodule = self._datamodule  # noqa: SLF001
         return validator
-
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
 
     def _disable_ultralytics_augmentations(self) -> None:
         """Zero out Ultralytics augmentation hyperparams."""

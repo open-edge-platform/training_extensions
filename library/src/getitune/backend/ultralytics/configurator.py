@@ -71,9 +71,6 @@ class UltralyticsConfigurator:
         self._validate_backend()
         self._validate_task()
 
-    # ------------------------------------------------------------------
-    # Construction helpers
-    # ------------------------------------------------------------------
 
     @classmethod
     def from_recipe(cls, recipe_path: PathLike) -> UltralyticsConfigurator:
@@ -121,9 +118,6 @@ class UltralyticsConfigurator:
         data_config = dict(data_raw) if isinstance(data_raw, dict) else {}
         return cls(config, data_config=data_config)
 
-    # ------------------------------------------------------------------
-    # Properties
-    # ------------------------------------------------------------------
 
     @property
     def config(self) -> UltralyticsConfig:
@@ -135,9 +129,6 @@ class UltralyticsConfigurator:
         """The resolved DataModule-compatible data configuration."""
         return self._data_config
 
-    # ------------------------------------------------------------------
-    # High-level API (used by the application converter)
-    # ------------------------------------------------------------------
 
     @staticmethod
     def is_ultralytics_recipe(recipe_path: Path) -> bool:
@@ -207,9 +198,6 @@ class UltralyticsConfigurator:
             "data": data,
         }
 
-    # ------------------------------------------------------------------
-    # Native overrides (library usage)
-    # ------------------------------------------------------------------
 
     def apply_overrides(self, overrides: Mapping[str, Any] | None = None) -> None:
         """Merge supported overrides into the current config.
@@ -224,9 +212,6 @@ class UltralyticsConfigurator:
         for key, value in flat.items():
             self._apply_single_override(key, value)
 
-    # ------------------------------------------------------------------
-    # Model / engine instantiation
-    # ------------------------------------------------------------------
 
     def create_model(
         self,
@@ -300,9 +285,6 @@ class UltralyticsConfigurator:
             **engine_kwargs,
         )
 
-    # ------------------------------------------------------------------
-    # Internal: hyper-parameter translation
-    # ------------------------------------------------------------------
 
     def _apply_training_params(self, training: dict) -> None:
         """Map standard Geti training params to Ultralytics config fields."""
@@ -350,9 +332,6 @@ class UltralyticsConfigurator:
         elif early_stopping.get("enable") is True and early_stopping.get("patience") is not None:
             cfg.training.patience = int(early_stopping["patience"])
 
-    # ------------------------------------------------------------------
-    # Internal: validation
-    # ------------------------------------------------------------------
 
     def _validate_backend(self) -> None:
         if self._config.backend != "ultralytics":
@@ -364,9 +343,6 @@ class UltralyticsConfigurator:
             msg = f"Unsupported task '{self._config.task}'. Supported: {sorted(_SUPPORTED_TASKS)}"
             raise ValueError(msg)
 
-    # ------------------------------------------------------------------
-    # Internal: model / class resolution
-    # ------------------------------------------------------------------
 
     def _resolve_model_wrapper_cls(self) -> type[UltralyticsModel]:
         """Return the model wrapper class from recipe ``class_path`` or task."""
@@ -384,9 +360,6 @@ class UltralyticsConfigurator:
             raise TypeError(msg)
         return cls
 
-    # ------------------------------------------------------------------
-    # Internal: override application
-    # ------------------------------------------------------------------
 
     def _apply_single_override(self, key: str, value: object) -> None:
         """Apply a single dot-separated override to the config."""
@@ -416,9 +389,6 @@ class UltralyticsConfigurator:
 
         setattr(section, field_name, value)
 
-    # ------------------------------------------------------------------
-    # Internal: recipe parsing
-    # ------------------------------------------------------------------
 
     @classmethod
     def _parse_raw_config(cls, raw: dict[str, Any]) -> UltralyticsConfig:
@@ -486,9 +456,6 @@ class UltralyticsConfigurator:
         return loaded if isinstance(loaded, dict) else {}
 
 
-# ------------------------------------------------------------------
-# Module-level helpers
-# ------------------------------------------------------------------
 
 
 def _import_class(class_path: str) -> type:

@@ -85,7 +85,7 @@ def test_move_batch_to_device_uses_non_blocking_for_xpu() -> None:
     batch = {"img": tensor, "meta": "value"}
 
     with patch(
-        "getitune.backend.ultralytics.trainers.xpu_mixin.isinstance",
+        "getitune.backend.ultralytics.plugins.xpu_mixin.isinstance",
         side_effect=lambda obj, typ: obj is tensor if typ is torch.Tensor else isinstance(obj, typ),
     ):
         result = trainer._move_batch_to_device(batch)

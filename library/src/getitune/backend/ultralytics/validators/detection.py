@@ -48,9 +48,6 @@ class DetectionValidator(_UltralyticsDetectionValidator):
             batch["img"] = batch["img"].half()
         return batch
 
-    # ------------------------------------------------------------------
-    # Standalone DataModule evaluation
-    # ------------------------------------------------------------------
 
     def _run_standalone_eval(self, model: object) -> dict:
         """Run validation using DataModule without YAML data config.

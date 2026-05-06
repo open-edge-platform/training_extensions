@@ -197,6 +197,21 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACCURACY,
         "default": False,
     },
+    "instance-segmentation-yolo26-n": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_n_seg.yaml",
+        "status": ModelStatus.SPEED,
+        "default": False,
+    },
+    "instance-segmentation-yolo26-s": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_s_seg.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": False,
+    },
+    "instance-segmentation-yolo26-m": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_m_seg.yaml",
+        "status": ModelStatus.ACCURACY,
+        "default": False,
+    },
 }
 
 
@@ -713,6 +728,11 @@ class GetiConfigConverter:
             # so all augmentations are supported identically across backends.
             if hyper_parameters:
                 GetiConfigConverter._update_data_transforms(config_dict, hyper_parameters)
+            # Apply task-level parameters (e.g. intensity mapping) to the Ultralytics config.
+            task_level_params = config.get("task_level_parameters", {})
+            intensity_mapping = task_level_params.get("dataset_preparation", {}).get("intensity_mapping")
+            if intensity_mapping:
+                GetiConfigConverter._update_intensity_mapping(config_dict, intensity_mapping)
             return config_dict
 
         # Lightning-specific: resolve tile recipe variant and sub-task type.

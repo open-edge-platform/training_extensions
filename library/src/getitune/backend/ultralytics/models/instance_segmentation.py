@@ -45,7 +45,12 @@ class UltralyticsInstSegModel(UltralyticsModel):
 
     @property
     def _export_parameters(self) -> TaskLevelExportParameters:
-        """Instance segmentation export parameters."""
+        """Instance segmentation export parameters.
+
+        Since Ultralytics models are exported without built-in NMS
+        (``end2end=False``), we set ``nms_execute=True`` so that ModelAPI
+        performs NMS during post-processing.
+        """
         label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
         return TaskLevelExportParameters(
             model_type="YOLO11-seg",
@@ -55,6 +60,8 @@ class UltralyticsInstSegModel(UltralyticsModel):
             optimization_config={},
             confidence_threshold=0.25,
             iou_threshold=0.7,
+            nms_execute=True,
+            agnostic_nms=True,
         )
 
     metric_keys: ClassVar[dict[str, str]] = {
