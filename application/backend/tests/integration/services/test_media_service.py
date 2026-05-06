@@ -19,59 +19,8 @@ from sqlalchemy.orm import Session
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB, PipelineDB
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project, Video
 from app.models.media import ImageFormat, MediaType, VideoFormat
-from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.event.event_bus import EventBus
 from app.services.media_service import ImageMetadata, InvalidImageError, MediaFilters, MediaService
-from app.services.video import VideoService
-
-
-@pytest.fixture
-def fxt_event_bus() -> EventBus:
-    """Fixture to create a EventBus instance."""
-    return EventBus()
-
-
-@pytest.fixture
-def fxt_system_service() -> SystemService:
-    """Fixture to create a SystemService instance."""
-    return SystemService()
-
-
-@pytest.fixture
-def fxt_pipeline_service(
-    fxt_event_bus: EventBus, db_session: Session, fxt_system_service: SystemService
-) -> PipelineService:
-    """Fixture to create a PipelineService instance."""
-    return PipelineService(event_bus=fxt_event_bus, db_session=db_session, system_service=fxt_system_service)
-
-
-@pytest.fixture
-def fxt_label_service(db_session: Session) -> LabelService:
-    """Fixture to create a LabelService instance."""
-    return LabelService(db_session=db_session)
-
-
-@pytest.fixture
-def fxt_project_service(
-    fxt_projects_dir: Path, db_session: Session, fxt_pipeline_service: PipelineService, fxt_label_service: LabelService
-) -> ProjectService:
-    """Fixture to create a ProjectService instance."""
-    return ProjectService(
-        fxt_projects_dir.parent,
-        db_session=db_session,
-        pipeline_service=fxt_pipeline_service,
-        label_service=fxt_label_service,
-    )
-
-
-@pytest.fixture
-def fxt_media_service(
-    fxt_projects_dir: Path,
-    db_session: Session,
-) -> MediaService:
-    """Fixture to create a MediaService instance."""
-    return MediaService(data_dir=fxt_projects_dir.parent, video_service=VideoService(), db_session=db_session)
 
 
 @pytest.fixture
@@ -105,13 +54,32 @@ def fxt_project_with_pipeline(
     db_session.add(db_pipeline)
     db_session.flush()
 
-    return fxt_project_service.get_project_by_id(UUID(db_project.id)), fxt_pipeline_service.get_pipeline_by_id(
-        UUID(db_project.id)
+    return (
+        fxt_project_service.get_project_by_id(UUID(db_project.id)),
+        fxt_pipeline_service.get_pipeline_by_id(UUID(db_project.id)),
     )
 
 
 @pytest.fixture
-def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Project, list[MediaDB]]:
+def fxt_media_factory(db_session) -> Callable[[str, list[dict]], list[MediaDB]]:
+    """Returns a callable that creates and persists MediaDB objects for a project."""
+
+    def _create_media(project_id: str, configs: list[dict]) -> list[MediaDB]:
+        items = []
+        for config in configs:
+            m = MediaDB(**config)
+            m.project_id = project_id
+            m.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
+            items.append(m)
+        db_session.add_all(items)
+        db_session.flush()
+        return items
+
+    return _create_media
+
+
+@pytest.fixture
+def fxt_project_with_media(fxt_project_with_pipeline, fxt_media_factory, db_session) -> tuple[Project, list[MediaDB]]:
     project, _ = fxt_project_with_pipeline
 
     configs = [
@@ -120,6 +88,7 @@ def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Proje
         {"type": "image", "name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
     ]
     video_config = {
+        "id": str(uuid4()),
         "type": "video",
         "name": "test4",
         "format": "avi",
@@ -130,6 +99,7 @@ def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Proje
         "frame_count": 100,
     }
     video_frame_config = {
+        "video_id": video_config["id"],
         "type": "video_frame",
         "name": "test4_10",
         "format": "jpg",
@@ -139,29 +109,14 @@ def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Proje
         "frame_index": 20,
     }
 
-    db_media_list = []
-    for config in configs:
-        db_media = MediaDB(**config)
-        db_media.project_id = str(project.id)
-        db_media.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
-        db_media_list.append(db_media)
-
-    db_video = MediaDB(**video_config)
-    db_video.project_id = str(project.id)
-    db_video.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
-    db_media_list.append(db_video)
-
-    db_session.add_all(db_media_list)
-    db_session.flush()
-
-    db_video_frame = MediaDB(**video_frame_config)
-    db_video_frame.project_id = str(project.id)
-    db_video_frame.video_id = str(db_video.id)
-    db_video_frame.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
-    db_media_list.append(db_video_frame)
-
-    db_session.add(db_video_frame)
-    db_session.flush()
+    db_media_list = fxt_media_factory(
+        str(project.id),
+        [
+            *configs,
+            video_config,
+            video_frame_config,
+        ],
+    )
 
     return project, db_media_list
 
@@ -248,28 +203,8 @@ def fxt_project_with_annotation_status_items(
         ),
     ]
 
-    # To review items (annotation_data is not null and user_reviewed is False)
-    to_review_items = [
-        DatasetItemDB(
-            subset="unassigned",
-            annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
-            user_reviewed=False,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
-        ),
-        DatasetItemDB(
-            subset="unassigned",
-            annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
-            user_reviewed=False,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
-        ),
-    ]
-
     db_dataset_items = []
-    for list, name in zip(
-        [unannotated_items, reviewed_items, to_review_items], ["unannotated", "reviewed", "to_review"]
-    ):
+    for list, name in zip([unannotated_items, reviewed_items], ["unannotated", "reviewed"]):
         for idx, dataset_item in enumerate(list):
             db_media = MediaDB(
                 type="image",
@@ -291,7 +226,7 @@ def fxt_project_with_annotation_status_items(
     db_session.flush()
 
     # Link labels to annotated dataset items
-    for item in [*reviewed_items, *to_review_items]:
+    for item in [*reviewed_items]:
         db_session.add(DatasetItemLabelDB(dataset_item_id=item.id, label_id=str(project.task.labels[0].id)))
     db_session.flush()
 
@@ -857,13 +792,18 @@ class TestMediaServiceIntegration:
             else len(media_list) == len(db_media_list)
         )
 
+    @pytest.mark.parametrize(
+        "annotation_status",
+        [None, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, DatasetItemAnnotationStatus.MISSING_ANNOTATIONS],
+    )
     def test_list_media_with_annotated_frame(
         self,
+        annotation_status: DatasetItemAnnotationStatus | None,
         fxt_media_service: MediaService,
         fxt_project_with_media: tuple[Project, list[MediaDB]],
         db_session: Session,
     ) -> None:
-        """Test listing media with video that have annotated frame."""
+        """Test listing media should include the video that have annotated frame with each filter option."""
         project, db_media_list = fxt_project_with_media
 
         db_video_frame = next(db_media for db_media in db_media_list if db_media.type == MediaType.VIDEO_FRAME)
@@ -876,11 +816,82 @@ class TestMediaServiceIntegration:
         db_session.add(db_dataset_item)
         db_session.flush()
 
-        media_list = fxt_media_service.list_media(project_id=project.id)
+        media_list = fxt_media_service.list_media(
+            project_id=project.id,
+            filters=MediaFilters(annotation_status=annotation_status),
+        )
 
         videos = [m for m in media_list if isinstance(m, Video)]
         assert len(videos) == 1
         assert videos[0].annotated_frame_count == 1
+
+    @pytest.mark.parametrize(
+        "annotation_status, expected_video_count",
+        [
+            (None, 1),
+            (DatasetItemAnnotationStatus.WITH_ANNOTATIONS, 1),
+            (DatasetItemAnnotationStatus.MISSING_ANNOTATIONS, 0),
+        ],
+    )
+    def test_list_media_with_annotated_video(
+        self,
+        annotation_status: DatasetItemAnnotationStatus | None,
+        expected_video_count: int,
+        fxt_media_service: MediaService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
+        fxt_media_factory: Callable[[str, list[dict]], list[MediaDB]],
+        db_session: Session,
+    ) -> None:
+        """Test listing media with fully annotated video."""
+        project, _ = fxt_project_with_pipeline
+
+        video_config = {
+            "id": str(uuid4()),
+            "type": "video",
+            "name": "test4",
+            "format": "avi",
+            "size": 1024,
+            "width": 1024,
+            "height": 768,
+            "fps": 25.0,
+            "frame_count": 1,
+        }
+        video_frame_config = {
+            "video_id": video_config["id"],
+            "type": "video_frame",
+            "name": "test",
+            "format": "jpg",
+            "size": 1024,
+            "width": 1024,
+            "height": 768,
+            "frame_index": 0,
+        }
+
+        db_media_list = fxt_media_factory(
+            str(project.id),
+            [
+                video_config,
+                video_frame_config,
+            ],
+        )
+
+        db_video_frame = db_media_list[1]
+        db_dataset_item = DatasetItemDB(
+            id=db_video_frame.id,
+            project_id=str(project.id),
+            subset="unassigned",
+            annotation_data=[{"labels": [{"id": str(uuid4())}], "shape": {"type": "full_image"}}],
+        )
+        db_session.add(db_dataset_item)
+        db_session.flush()
+
+        media_list = fxt_media_service.list_media(
+            project_id=project.id,
+            filters=MediaFilters(annotation_status=annotation_status),
+            exclude_types=[MediaType.VIDEO_FRAME],
+        )
+
+        assert len(media_list) == expected_video_count
 
     @pytest.mark.parametrize(
         "exclude_types, count", [([MediaType.IMAGE], 2), ([MediaType.VIDEO], 4), ([MediaType.VIDEO_FRAME], 4)]
@@ -1074,17 +1085,16 @@ class TestMediaServiceIntegration:
     @pytest.mark.parametrize(
         "annotation_status, expected_count",
         [
-            (None, 7),  # All items
-            ("unannotated", 2),  # 2 unannotated items
-            ("reviewed", 3),  # 3 items with user_reviewed=True
-            ("to_review", 4),  # 2 unannotated items + 2 items with user_reviewed=False
+            (None, 5),  # All items
+            (DatasetItemAnnotationStatus.MISSING_ANNOTATIONS, 2),  # 2 items without annotations
+            (DatasetItemAnnotationStatus.WITH_ANNOTATIONS, 3),  # 3 items with annotations
         ],
     )
     def test_count_media_with_annotation_status(
         self,
         fxt_media_service: MediaService,
         fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
-        annotation_status: str | None,
+        annotation_status: DatasetItemAnnotationStatus | None,
         expected_count: int,
     ) -> None:
         """Test counting media with annotation_status filter."""
@@ -1097,10 +1107,9 @@ class TestMediaServiceIntegration:
     @pytest.mark.parametrize(
         "annotation_status, expected_names",
         [
-            (None, ["unannotated1", "unannotated2", "reviewed1", "reviewed2", "reviewed3", "to_review1", "to_review2"]),
-            (DatasetItemAnnotationStatus.UNANNOTATED, ["unannotated1", "unannotated2"]),
-            (DatasetItemAnnotationStatus.REVIEWED, ["reviewed1", "reviewed2", "reviewed3"]),
-            (DatasetItemAnnotationStatus.TO_REVIEW, ["unannotated1", "unannotated2", "to_review1", "to_review2"]),
+            (None, ["unannotated1", "unannotated2", "reviewed1", "reviewed2", "reviewed3"]),
+            (DatasetItemAnnotationStatus.MISSING_ANNOTATIONS, ["unannotated1", "unannotated2"]),
+            (DatasetItemAnnotationStatus.WITH_ANNOTATIONS, ["reviewed1", "reviewed2", "reviewed3"]),
         ],
     )
     def test_list_media_with_annotation_status(
@@ -1127,12 +1136,12 @@ class TestMediaServiceIntegration:
     @pytest.mark.parametrize(
         "annotation_status, limit, offset, expected_count",
         [
-            (DatasetItemAnnotationStatus.UNANNOTATED, 1, 0, 1),  # First page of unannotated
-            (DatasetItemAnnotationStatus.UNANNOTATED, 1, 1, 1),  # Second page of unannotated
-            (DatasetItemAnnotationStatus.UNANNOTATED, 1, 2, 0),  # Beyond available unannotated items
-            (DatasetItemAnnotationStatus.REVIEWED, 2, 0, 2),  # First page of reviewed
-            (DatasetItemAnnotationStatus.REVIEWED, 2, 2, 1),  # Second page of reviewed (only 1 left)
-            (DatasetItemAnnotationStatus.TO_REVIEW, 10, 0, 4),  # All items with user_reviewed=False
+            (DatasetItemAnnotationStatus.MISSING_ANNOTATIONS, 1, 0, 1),  # First page of unannotated
+            (DatasetItemAnnotationStatus.MISSING_ANNOTATIONS, 1, 1, 1),  # Second page of unannotated
+            (DatasetItemAnnotationStatus.MISSING_ANNOTATIONS, 1, 2, 0),  # Beyond available unannotated items
+            (DatasetItemAnnotationStatus.WITH_ANNOTATIONS, 2, 0, 2),  # First page of reviewed
+            (DatasetItemAnnotationStatus.WITH_ANNOTATIONS, 2, 2, 1),  # Second page of reviewed (only 1 left)
+            (None, 10, 0, 5),  # All items
         ],
     )
     def test_list_media_with_annotation_status_pagination(
@@ -1172,7 +1181,7 @@ class TestMediaServiceIntegration:
             filters=MediaFilters(
                 start_date=datetime.fromisoformat("2025-01-01T00:00:00Z"),
                 end_date=datetime.fromisoformat("2025-02-02T00:00:00Z"),
-                annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                annotation_status=DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
             ),
         )
         assert len(media_list) == 3
@@ -1183,7 +1192,7 @@ class TestMediaServiceIntegration:
             filters=MediaFilters(
                 start_date=datetime.fromisoformat("2025-03-01T00:00:00Z"),
                 end_date=datetime.fromisoformat("2025-03-31T00:00:00Z"),
-                annotation_status=DatasetItemAnnotationStatus.UNANNOTATED,
+                annotation_status=DatasetItemAnnotationStatus.MISSING_ANNOTATIONS,
             ),
         )
         assert len(media_list) == 0
@@ -1199,7 +1208,7 @@ class TestMediaServiceIntegration:
         unannotated_items = fxt_media_service.list_media(
             project_id=project.id,
             filters=MediaFilters(
-                annotation_status=DatasetItemAnnotationStatus.UNANNOTATED,
+                annotation_status=DatasetItemAnnotationStatus.MISSING_ANNOTATIONS,
             ),
         )
         assert len(unannotated_items) == 2
@@ -1207,18 +1216,10 @@ class TestMediaServiceIntegration:
         reviewed_media = fxt_media_service.list_media(
             project_id=project.id,
             filters=MediaFilters(
-                annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                annotation_status=DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
             ),
         )
         assert len(reviewed_media) == 3
-
-        to_review_media = fxt_media_service.list_media(
-            project_id=project.id,
-            filters=MediaFilters(
-                annotation_status=DatasetItemAnnotationStatus.TO_REVIEW,
-            ),
-        )
-        assert len(to_review_media) == 4
 
     def test_list_media_filter_by_single_label(
         self,

@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Literal
 
+from getitune.backend.lightning.exporter.base import ModelExporter
+from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from getitune.backend.lightning.models.detection.backbones.hgnetv2 import HGNetv2
 from getitune.backend.lightning.models.detection.detectors import DETR
@@ -165,3 +167,22 @@ class DEIMDFine(RTDETR):
         load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
 
         return model
+
+    @property
+    def _exporter(self) -> ModelExporter:
+        """Creates ModelExporter object that can export the model."""
+        return LightningModelExporter(
+            task_level_export_parameters=self._export_parameters,
+            data_input_params=self.data_input_params,
+            resize_mode="standard",
+            swap_rgb=False,
+            via_onnx=False,
+            onnx_export_configuration={
+                "input_names": ["images"],
+                "output_names": ["bboxes", "labels", "scores"],
+                "dynamic_axes": {"images": {0: "batch"}},
+                "dynamo": False,
+                "opset_version": 18,
+            },
+            output_names=["bboxes", "labels", "scores"],
+        )

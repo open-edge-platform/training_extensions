@@ -15,64 +15,9 @@ from sqlalchemy.orm import Session
 from app.datumaro_converter import SampleMode
 from app.db.schema import DatasetItemDB, DatasetRevisionDB, MediaDB, PipelineDB
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project
-from app.services import (
-    DatasetRevisionService,
-    DatasetService,
-    LabelService,
-    MediaService,
-    PipelineService,
-    ProjectService,
-    SystemService,
-)
+from app.services import DatasetRevisionService, DatasetService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_revision_service import DATASET_REVISION_ITEM_THUMBNAIL_SIZE
-from app.services.event.event_bus import EventBus
-from app.services.video import VideoService
-
-
-@pytest.fixture
-def fxt_event_bus() -> EventBus:
-    """Fixture to create a EventBus instance."""
-    return EventBus()
-
-
-@pytest.fixture
-def fxt_system_service() -> SystemService:
-    """Fixture to create a SystemService instance."""
-    return SystemService()
-
-
-@pytest.fixture
-def fxt_pipeline_service(
-    fxt_event_bus: EventBus, db_session: Session, fxt_system_service: SystemService
-) -> PipelineService:
-    """Fixture to create a PipelineService instance."""
-    return PipelineService(event_bus=fxt_event_bus, db_session=db_session, system_service=fxt_system_service)
-
-
-@pytest.fixture
-def fxt_label_service(db_session: Session) -> LabelService:
-    """Fixture to create a LabelService instance."""
-    return LabelService(db_session=db_session)
-
-
-@pytest.fixture
-def fxt_media_service(fxt_projects_dir: Path, db_session: Session) -> MediaService:
-    """Fixture to create a MediaService instance."""
-    return MediaService(data_dir=fxt_projects_dir.parent, video_service=VideoService(), db_session=db_session)
-
-
-@pytest.fixture
-def fxt_project_service(
-    fxt_projects_dir: Path, db_session: Session, fxt_pipeline_service: PipelineService, fxt_label_service: LabelService
-) -> ProjectService:
-    """Fixture to create a ProjectService instance."""
-    return ProjectService(
-        fxt_projects_dir.parent,
-        db_session=db_session,
-        pipeline_service=fxt_pipeline_service,
-        label_service=fxt_label_service,
-    )
 
 
 @pytest.fixture
@@ -82,16 +27,6 @@ def fxt_dataset_revision_service(
 ) -> DatasetRevisionService:
     """Fixture to create a DatasetRevisionService instance."""
     return DatasetRevisionService(data_dir=fxt_projects_dir.parent, db_session=db_session)
-
-
-@pytest.fixture
-def fxt_dataset_service(
-    fxt_label_service: LabelService,
-    fxt_media_service: MediaService,
-    db_session: Session,
-) -> DatasetService:
-    """Fixture to create a DatasetService instance."""
-    return DatasetService(label_service=fxt_label_service, media_service=fxt_media_service, db_session=db_session)
 
 
 @pytest.fixture
@@ -424,7 +359,7 @@ class TestDatasetRevisionServiceIntegration:
         dataset = fxt_dataset_service.get_dm_dataset(
             project_id=project.id,
             task=project.task,
-            annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+            annotation_status=DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
             sample_mode=SampleMode.TRAINING,
         )
 
@@ -450,7 +385,7 @@ class TestDatasetRevisionServiceIntegration:
         dataset = fxt_dataset_service.get_dm_dataset(
             project_id=project.id,
             task=project.task,
-            annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+            annotation_status=DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
             sample_mode=SampleMode.IMPORT_EXPORT,
         )
 
@@ -473,7 +408,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test saving a dataset revision."""
         project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(
-            project.id, project.task, DatasetItemAnnotationStatus.REVIEWED, SampleMode.TRAINING
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
         )
 
         revision_id = fxt_dataset_revision_service.save_revision(
@@ -501,7 +436,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test saving a dataset revision."""
         project, _ = fxt_project_with_subset_items
         dataset = fxt_dataset_service.get_dm_dataset(
-            project.id, project.task, DatasetItemAnnotationStatus.REVIEWED, SampleMode.TRAINING
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
         )
 
         with pytest.raises(ValueError):
@@ -519,7 +454,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test getting a dataset revision."""
         project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(
-            project.id, project.task, DatasetItemAnnotationStatus.REVIEWED, SampleMode.TRAINING
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
         )
 
         # Save a revision
@@ -545,7 +480,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test getting a dataset revision."""
         project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(
-            project.id, project.task, DatasetItemAnnotationStatus.REVIEWED, SampleMode.TRAINING
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
         )
 
         # Save a revision
@@ -569,7 +504,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test getting a dataset revision."""
         project, media_and_dataset_items = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(
-            project.id, project.task, DatasetItemAnnotationStatus.REVIEWED, SampleMode.TRAINING
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
         )
 
         # Save a revision
@@ -617,7 +552,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test getting a dataset revision with wrong project ID raises error."""
         project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(
-            project.id, project.task, DatasetItemAnnotationStatus.REVIEWED, SampleMode.TRAINING
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
         )
 
         # Save a revision for the project
@@ -643,7 +578,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test updating name of a dataset revision"""
         project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(
-            project.id, project.task, DatasetItemAnnotationStatus.REVIEWED, SampleMode.TRAINING
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
         )
 
         # Save a revision
@@ -682,7 +617,7 @@ class TestDatasetRevisionServiceIntegration:
         dataset = fxt_dataset_service.get_dm_dataset(
             project.id,
             project.task,
-            annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+            annotation_status=DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
             sample_mode=SampleMode.TRAINING,
         )
 
@@ -715,7 +650,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test deleting dataset revision files."""
         project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(
-            project.id, project.task, DatasetItemAnnotationStatus.REVIEWED, SampleMode.TRAINING
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
         )
 
         # Save a revision
@@ -748,7 +683,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test deleting dataset revision files."""
         project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(
-            project.id, project.task, DatasetItemAnnotationStatus.REVIEWED, SampleMode.TRAINING
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
         )
 
         # Save a revision
@@ -799,7 +734,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test deleting dataset revision files that are already deleted is idempotent."""
         project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(
-            project.id, project.task, DatasetItemAnnotationStatus.REVIEWED, SampleMode.TRAINING
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
         )
 
         # Save a revision
@@ -862,7 +797,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test loading a dataset revision as a Datumaro dataset."""
         project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(
-            project.id, project.task, DatasetItemAnnotationStatus.REVIEWED, SampleMode.TRAINING
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
         )
 
         # Save a revision
@@ -888,7 +823,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test loading a revision with deleted files raises error."""
         project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(
-            project.id, project.task, DatasetItemAnnotationStatus.REVIEWED, SampleMode.TRAINING
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
         )
 
         # Save a revision

@@ -81,19 +81,19 @@ const updateSubsetSplitValues = (
 
 const useSubsetDatasetSizes = () => {
     const { totalCount: trainingSubsetSize } = useGetDatasetItems({
-        annotationStatus: 'reviewed',
+        annotationStatus: 'with_annotations',
         subset: 'training',
     });
     const { totalCount: testingSubsetSize } = useGetDatasetItems({
-        annotationStatus: 'reviewed',
+        annotationStatus: 'with_annotations',
         subset: 'testing',
     });
     const { totalCount: validationSubsetSize } = useGetDatasetItems({
-        annotationStatus: 'reviewed',
+        annotationStatus: 'with_annotations',
         subset: 'validation',
     });
     const { totalCount: unassignedSubsetSize } = useGetDatasetItems({
-        annotationStatus: 'reviewed',
+        annotationStatus: 'with_annotations',
         subset: 'unassigned',
     });
 

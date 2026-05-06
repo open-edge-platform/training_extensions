@@ -359,9 +359,8 @@ class TestMediaEndpoints:
     @pytest.mark.parametrize(
         "annotation_status",
         [
-            DatasetItemAnnotationStatus.UNANNOTATED,
-            DatasetItemAnnotationStatus.REVIEWED,
-            DatasetItemAnnotationStatus.TO_REVIEW,
+            DatasetItemAnnotationStatus.MISSING_ANNOTATIONS,
+            DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
         ],
     )
     def test_list_media_with_annotation_status(

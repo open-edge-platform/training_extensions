@@ -55,7 +55,7 @@ KEY_MAPPING = {
     # Step based training metric
     "train/data_time": MetricDisplayInfo(display_name="Training data time", frequency="step"),
     "train/iter_time": MetricDisplayInfo(display_name="Training iteration time", frequency="step"),
-    "train/loss": MetricDisplayInfo(display_name="Training loss", frequency="step"),
+    # "train/loss": MetricDisplayInfo(display_name="Training loss", frequency="step"),  # see issue #6350
     "train/loss_bbox": MetricDisplayInfo(display_name="Training loss bbox", frequency="step"),
     "train/loss_centerness": MetricDisplayInfo(display_name="Training loss centerness", frequency="step"),
     "train/loss_cls": MetricDisplayInfo(display_name="Training loss cls", frequency="step"),

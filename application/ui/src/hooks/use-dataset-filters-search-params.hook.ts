@@ -14,7 +14,7 @@ export const ANNOTATION_STATUS_PARAM = 'annotationStatusFilter';
 export const START_DATE_PARAM = 'startDateFilter';
 export const END_DATE_PARAM = 'endDateFilter';
 
-const VALID_ANNOTATION_STATUSES = new Set<DatasetItemAnnotationStatus>(['unannotated', 'reviewed', 'to_review']);
+const VALID_ANNOTATION_STATUSES = new Set<DatasetItemAnnotationStatus>(['with_annotations', 'missing_annotations']);
 
 const parseAnnotationStatus = (value: string | null): DatasetItemAnnotationStatus | null => {
     if (value !== null && VALID_ANNOTATION_STATUSES.has(value as DatasetItemAnnotationStatus)) {
