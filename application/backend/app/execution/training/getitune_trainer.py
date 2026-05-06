@@ -771,7 +771,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
                 logger.info(
                     "Using pre-downloaded pretrained weights for {} from: {}", class_name, weights_path
                 )
-        except Exception as exc:  # noqa: BLE001
+        except (ImportError, AttributeError, ValueError) as exc:
             logger.warning(
                 "Could not inject pretrained_weights_path for {}: {}. "
                 "The model will attempt to download weights from an external server.",

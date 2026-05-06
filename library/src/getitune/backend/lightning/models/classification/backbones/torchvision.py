@@ -101,12 +101,11 @@ class TorchvisionBackbone(nn.Module):
             msg = f"Backbone model name is not supported: {backbone}. Available models: {TVModels}"
             raise ValueError(msg)
         tv_model_cfg = {"name": backbone}
-        local_weights_path = Path(pretrained_weights_path) if pretrained_weights_path is not None else None
-        if local_weights_path is not None and local_weights_path.exists():
+        if pretrained_weights_path is not None and Path(pretrained_weights_path).exists():
             # Load weights from local file to avoid downloading from external servers
-            logger.info("Loading pretrained weights for %s from local path: %s", backbone, local_weights_path)
+            logger.info("Loading pretrained weights for %s from local path: %s", backbone, pretrained_weights_path)
             net = get_model(**tv_model_cfg)
-            state_dict = torch.load(local_weights_path, map_location="cpu", weights_only=True)
+            state_dict = torch.load(pretrained_weights_path, map_location="cpu", weights_only=True)
             net.load_state_dict(state_dict)
         elif pretrained:
             tv_model_cfg["weights"] = get_model_weights(backbone)
