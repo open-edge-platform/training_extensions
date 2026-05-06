@@ -86,6 +86,18 @@ class Settings(BaseSettings):
         description="Time to live for a model loaded for inference, before unloading",
     )
 
+    # Video
+    video_cache_ttl: float = Field(
+        default=30.0,
+        alias="VIDEO_CACHE_TTL",
+        description="Time-to-live in seconds for cached video handles before eviction",
+    )
+    video_cache_cleanup_interval: float = Field(
+        default=5.0,
+        alias="VIDEO_CACHE_CLEANUP_INTERVAL",
+        description="Interval in seconds between cache cleanup sweeps",
+    )
+
     @property
     def ice_servers(self) -> list[dict]:
         """Compute ICE servers from coturn and STUN configuration."""
