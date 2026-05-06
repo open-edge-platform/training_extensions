@@ -83,7 +83,7 @@ class MediaService(BaseSessionManagedService):
             # FIXME: direct instance as a tmp workaround to avoid sending non-pickable objects between process
             #  boundaries in the current job execution implementation.
             #  Should be refactored with a proper DI in lifecycle.py.
-            return VideoService()
+            self._video_service = VideoService()
         return self._video_service
 
     @staticmethod
