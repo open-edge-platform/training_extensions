@@ -200,7 +200,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     video_service = VideoService(cache_config=cache_config)
     app.state.video_service = video_service
 
-    data_collector = DataCollector(data_dir=settings.data_dir, event_bus=event_bus, video_service=video_service)
+    data_collector = DataCollector(data_dir=settings.data_dir, event_bus=event_bus)
     app.state.data_collector = data_collector
 
     inference_server = InferenceServer(data_dir=settings.data_dir)

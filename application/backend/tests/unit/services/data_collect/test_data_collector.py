@@ -18,7 +18,6 @@ from app.services.data_collect.data_collector import (
     FixedRatePolicyChecker,
 )
 from app.services.media_service import ImageMetadata
-from app.services.video import VideoService
 
 
 class TestFixedRatePolicyCheckerUnit:
@@ -94,15 +93,10 @@ class TestConfidenceThresholdDataCollectionPolicyUnit:
 
 
 @pytest.fixture
-def fxt_video_service() -> MagicMock:
-    return MagicMock(spec=VideoService)
-
-
-@pytest.fixture
-def fxt_data_collector(fxt_event_bus, fxt_video_service) -> DataCollector:
+def fxt_data_collector(fxt_event_bus) -> DataCollector:
     """Fixture to create a DataCollector instance with mocked dependencies."""
     with patch("app.services.data_collect.data_collector.DataCollector._load_pipeline"):
-        return DataCollector(Path("data"), fxt_event_bus, fxt_video_service)
+        return DataCollector(Path("data"), fxt_event_bus)
 
 
 class TestDataCollectorUnit:
