@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import logging as log
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence, cast
 
 import torch
 from model_api.tilers import DetectionTiler
@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from model_api.models.utils import DetectionResult
     from torchmetrics import Metric, MetricCollection
 
+    from getitune.data.entity.base import ImageInfo
     from getitune.types import PathLike
 
 
@@ -180,10 +181,11 @@ class OVDetectionModel(OVModel):
         if label_shift:
             log.warning(f"label_shift: {label_shift}")
 
+        imgs_info = cast("Sequence[ImageInfo]", inputs.imgs_info)
         for i, output in enumerate(outputs):
-            img_info = inputs.imgs_info[i]  # type: ignore[index]
-            img_h, img_w = img_info.img_shape  # type: ignore[union-attr]
-            ori_h, ori_w = img_info.ori_shape  # type: ignore[union-attr]
+            img_info = imgs_info[i]
+            img_h, img_w = img_info.img_shape
+            ori_h, ori_w = img_info.ori_shape
 
             bboxes_data = torch.as_tensor(output.bboxes, dtype=torch.float32).clone()
 
@@ -192,8 +194,8 @@ class OVDetectionModel(OVModel):
                 bboxes_data,
                 img_shape=(img_h, img_w),
                 ori_shape=(ori_h, ori_w),
-                padding=img_info.padding,  # type: ignore[union-attr]
-                scale_factor=img_info.scale_factor,  # type: ignore[union-attr]
+                padding=img_info.padding,
+                scale_factor=img_info.scale_factor,
             )
 
             bboxes.append(

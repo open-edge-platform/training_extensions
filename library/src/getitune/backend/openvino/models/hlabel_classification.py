@@ -162,7 +162,7 @@ class OVHlabelClassificationModel(OVModel):
             "target": torch.stack(inputs.labels),
         }
 
-    def _create_label_info_from_ov_ir(self) -> HLabelInfo:
+    def _create_label_info_from_model(self) -> HLabelInfo:
         """Create hierarchical label information from OpenVINO IR or ONNX model metadata.
 
         Extracts label information from the model metadata if available.

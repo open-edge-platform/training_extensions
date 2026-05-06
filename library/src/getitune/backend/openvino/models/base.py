@@ -153,7 +153,7 @@ class OVModel:
         self.hparams: dict[str, Any] = {}
         self.model = self._create_model()
         self.metric_callable = metric
-        self._label_info = self._create_label_info_from_ov_ir()
+        self._label_info = self._create_label_info_from_model()
         self._task: TaskType | None = None
         tile_enabled = False
         with contextlib.suppress(RuntimeError):
@@ -581,8 +581,8 @@ class OVModel:
         """
         return self._task
 
-    def _create_label_info_from_ov_ir(self) -> LabelInfo:
-        """Create label information from the OpenVINO IR or ONNX model metadata.
+    def _create_label_info_from_model(self) -> LabelInfo:
+        """Create label information from model metadata.
 
         Returns:
             LabelInfo: Label information.

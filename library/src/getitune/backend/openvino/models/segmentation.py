@@ -144,7 +144,7 @@ class OVSegmentationModel(OVModel):
             for pred_mask, target_mask in zip(preds.masks, inputs.masks)
         ]
 
-    def _create_label_info_from_ov_ir(self) -> SegLabelInfo:
+    def _create_label_info_from_model(self) -> SegLabelInfo:
         """Create label information from OpenVINO IR or ONNX model metadata.
 
         Extracts label information from the model metadata if available.

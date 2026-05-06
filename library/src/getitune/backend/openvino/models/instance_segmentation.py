@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import logging as log
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence, cast
 
 import torch
 from model_api.tilers import InstanceSegmentationTiler
@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from model_api.models.utils import InstanceSegmentationResult
     from torchmetrics import Metric, MetricCollection
 
+    from getitune.data.entity.base import ImageInfo
     from getitune.metrics import MetricCallable
     from getitune.types import PathLike
 
@@ -128,10 +129,11 @@ class OVInstanceSegmentationModel(OVModel):
         scores = []
         labels = []
         masks = []
+        imgs_info = cast("Sequence[ImageInfo]", inputs.imgs_info)
         for i, output in enumerate(outputs):
-            img_info = inputs.imgs_info[i]  # type: ignore[index]
-            img_h, img_w = img_info.img_shape  # type: ignore[union-attr]
-            ori_h, ori_w = img_info.ori_shape  # type: ignore[union-attr]
+            img_info = imgs_info[i]
+            img_h, img_w = img_info.img_shape
+            ori_h, ori_w = img_info.ori_shape
 
             bboxes_data = torch.as_tensor(output.bboxes, dtype=torch.float32).clone()
 
@@ -140,8 +142,8 @@ class OVInstanceSegmentationModel(OVModel):
                 bboxes_data,
                 img_shape=(img_h, img_w),
                 ori_shape=(ori_h, ori_w),
-                padding=img_info.padding,  # type: ignore[union-attr]
-                scale_factor=img_info.scale_factor,  # type: ignore[union-attr]
+                padding=img_info.padding,
+                scale_factor=img_info.scale_factor,
             )
 
             bboxes.append(
@@ -244,7 +246,7 @@ class OVInstanceSegmentationModel(OVModel):
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}
         return super()._compute_metrics(metric, **compute_kwargs)
 
-    def _create_label_info_from_ov_ir(self) -> LabelInfo:
+    def _create_label_info_from_model(self) -> LabelInfo:
         """Create label information from the OpenVINO IR or ONNX model metadata.
 
         Reads label information from the model metadata and constructs a LabelInfo object.
@@ -259,7 +261,7 @@ class OVInstanceSegmentationModel(OVModel):
             # For OV IR models, use the explicit has_rt_info check.
             ov_model = self.model.get_model()
             if not ov_model.has_rt_info(["model_info", "label_info"]):
-                return super()._create_label_info_from_ov_ir()
+                return super()._create_label_info_from_model()
             serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
 
         ir_label_info = LabelInfo.from_json(serialized)
