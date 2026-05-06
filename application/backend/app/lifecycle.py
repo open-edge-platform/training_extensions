@@ -51,7 +51,7 @@ from app.webrtc import SDPHandler, WebRTCManager, WebRTCSettings
 
 
 def setup_job_controller(
-    data_dir: Path, staged_datasets_dir: Path | None, max_parallel_jobs: int, video_service: VideoService
+    data_dir: Path, staged_datasets_dir: Path | None, max_parallel_jobs: int
 ) -> tuple[JobQueue, JobController]:
     """
     Initializes and configures the job queue and job controller for managing parallel job execution.
@@ -64,7 +64,6 @@ def setup_job_controller(
         data_dir: Path to the directory containing data required for job execution.
         staged_datasets_dir: Path to the directory for storing staged datasets.
         max_parallel_jobs (int): Maximum number of jobs that can run concurrently.
-        video_service: Video service instance
 
     Returns:
         tuple[JobQueue, JobController]: The job queue and the configured job controller.
@@ -76,7 +75,7 @@ def setup_job_controller(
     label_service = LabelService()
     dataset_service = DatasetService(
         label_service=label_service,
-        media_service=MediaService(data_dir=data_dir, video_service=video_service),
+        media_service=MediaService(data_dir=data_dir),
     )
     project_service = ProjectService(
         data_dir=data_dir,
@@ -139,7 +138,7 @@ def setup_job_controller(
             staged_datasets_dir=staged_datasets_dir,
             dataset_service=dataset_service,
             label_service=label_service,
-            media_service=MediaService(data_dir=data_dir, video_service=video_service),
+            media_service=MediaService(data_dir=data_dir),
             db_session_factory=get_db_session,
         ),
     )
@@ -151,7 +150,7 @@ def setup_job_controller(
             project_service=project_service,
             dataset_service=dataset_service,
             label_service=label_service,
-            media_service=MediaService(data_dir=data_dir, video_service=video_service),
+            media_service=MediaService(data_dir=data_dir),
             db_session_factory=get_db_session,
         ),
     )
@@ -227,7 +226,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         data_dir=settings.data_dir,
         staged_datasets_dir=settings.staged_datasets_dir,
         max_parallel_jobs=settings.gpu_slots,
-        video_service=video_service,
     )
     app.state.job_queue = job_queue
 
