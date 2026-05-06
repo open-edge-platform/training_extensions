@@ -144,13 +144,14 @@ class TestPipelineServiceIntegration:
     ):
         """Test that updating a pipeline to running raises error if another project's pipeline is already running."""
         # Create an active pipeline in one project
-        _, active_pipeline = fxt_project_with_pipeline(is_running=True, project_index=0)
+        active_project_db, active_pipeline = fxt_project_with_pipeline(is_running=True, project_index=0)
         # Create a second project/pipeline (not running)
         _, other_pipeline = fxt_project_with_pipeline(is_running=False, project_index=1)
         # Try to activate the second pipeline while the first is still running
         with pytest.raises(OtherProjectActiveError) as excinfo:
             fxt_pipeline_service.update_pipeline(other_pipeline.project_id, {"status": PipelineStatus.RUNNING})
         assert str(active_pipeline.project_id) in str(excinfo.value)
+        assert active_project_db.name in str(excinfo.value)
 
     @pytest.mark.parametrize("pipeline_attr", [PipelineField.SINK_ID, PipelineField.SOURCE_ID])
     def test_reconfigure_running_pipeline(

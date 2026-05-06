@@ -181,7 +181,10 @@ class TestPipelineEndpoints:
 
     def test_cannot_enable_pipeline(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
         fxt_pipeline_service.update_pipeline.side_effect = OtherProjectActiveError(
-            requested_project_name="this_project_name", active_project_name="active_project_name"
+            requested_project_name="this_project_name",
+            requested_project_id="requested-project-id",
+            active_project_name="active_project_name",
+            active_project_id="active-project-id",
         )
 
         response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:enable")

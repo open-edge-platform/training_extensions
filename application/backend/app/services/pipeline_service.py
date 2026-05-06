@@ -28,11 +28,17 @@ class OtherProjectActiveError(Exception):
     Exception raised when trying to run a pipeline in one project, while a pipeline of another project is still running.
     """
 
-    def __init__(self, requested_project_name: str, active_project_name: str):
+    def __init__(
+        self,
+        requested_project_name: str,
+        requested_project_id: str,
+        active_project_name: str,
+        active_project_id: str,
+    ):
         super().__init__(
-            f"Attempted to enable a pipeline in project '{requested_project_name}', while a pipeline is still "
-            f"enabled in another project '{active_project_name}' Please first disable pipeline in project "
-            f"'{active_project_name}'"
+            f"Attempted to enable a pipeline in project '{requested_project_name}' (ID: {requested_project_id}), "
+            f"while a pipeline is still enabled in another project '{active_project_name}' (ID: {active_project_id}). "
+            f"Please first disable pipeline in project '{active_project_name}' (ID: {active_project_id})."
         )
 
 
@@ -132,15 +138,13 @@ class PipelineService(BaseSessionManagedService):
             active_pipeline_db = pipeline_repo.get_active_pipeline()
             if active_pipeline_db is not None and to_update_db.project_id != active_pipeline_db.project_id:
                 project_repo = ProjectRepository(db=self.db_session)
-                to_uptdate_project = project_repo.get_by_id(to_update_db.project_id)
+                to_update_project = project_repo.get_by_id(to_update_db.project_id)
                 active_project = project_repo.get_by_id(active_pipeline_db.project_id)
                 raise OtherProjectActiveError(
-                    requested_project_name=to_uptdate_project.name
-                    if to_uptdate_project is not None
-                    else to_update_db.project_id,
-                    active_project_name=active_project.name
-                    if active_project is not None
-                    else active_pipeline_db.project_id,
+                    requested_project_name=to_update_project.name if to_update_project is not None else "",
+                    requested_project_id=to_update_db.project_id,
+                    active_project_name=active_project.name if active_project is not None else "",
+                    active_project_id=active_pipeline_db.project_id,
                 )
         if to_update_db.model_revision_id is not None:
             self._validate_model_and_resolve_variant(to_update_db)
