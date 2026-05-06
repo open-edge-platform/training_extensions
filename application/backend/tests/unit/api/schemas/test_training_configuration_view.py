@@ -436,7 +436,6 @@ def fxt_training_configuration_view_json() -> dict:
                                 "default_value": "Unit interval scaling",
                                 "value_type": "str",
                                 "allowed_values": ["Unit interval scaling", "Windowing", "Range scaling with clipping"],
-                                "allowed_values_display_names": None,
                                 "depends_on": None,
                             },
                             {
@@ -1330,10 +1329,6 @@ def fxt_training_configuration_view_json() -> dict:
                                 "default_value": "reduce_lr_on_plateau",
                                 "value_type": "str",
                                 "allowed_values": ["reduce_lr_on_plateau"],
-                                "allowed_values_display_names": {
-                                    "cosine_annealing": "Cosine annealing",
-                                    "reduce_lr_on_plateau": "Reduce LR on plateau",
-                                },
                                 "depends_on": None,
                             },
                             {
@@ -1549,7 +1544,6 @@ def fxt_training_configuration_view_json() -> dict:
                         "default_value": "default",
                         "value_type": "str",
                         "allowed_values": ["default"],
-                        "allowed_values_display_names": None,
                         "depends_on": None,
                     },
                 ],

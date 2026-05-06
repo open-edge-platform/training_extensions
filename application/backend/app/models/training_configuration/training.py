@@ -26,14 +26,6 @@ class SchedulerType(StrEnum):
     REDUCE_LR_ON_PLATEAU = "reduce_lr_on_plateau"
     COSINE_ANNEALING = "cosine_annealing"
 
-    @property
-    def display_name(self) -> str:
-        _display_names = {
-            SchedulerType.REDUCE_LR_ON_PLATEAU: "Reduce LR on plateau",
-            SchedulerType.COSINE_ANNEALING: "Cosine annealing",
-        }
-        return _display_names[self]
-
 
 class LrLinearWarmupParameters(BaseModel):
     enable: bool = Field(
