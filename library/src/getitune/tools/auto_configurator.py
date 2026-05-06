@@ -324,10 +324,13 @@ class AutoConfigurator:
                 from the OV model metadata.  When provided this overrides
                 ``datamodule.input_size`` so that ``$(input_size)`` placeholders
                 in the OV recipe augmentations resolve to the correct value.
-            keep_aspect_ratio (bool, optional): When ``True``, patches every
-                ``getitune.data.augmentation.transforms.Resize`` step in the OV
-                augmentation lists so that aspect ratio is preserved (matching
-                the ``resize_type`` embedded in the IR metadata at export time).
+            keep_aspect_ratio (bool, optional): When ``True`` and the model uses
+                letterbox preprocessing (fit_to_window_letterbox), the DataModule
+                skips image resize entirely and lets ModelAPI handle
+                preprocessing internally. This avoids padding/pad-value
+                mismatches between the DataModule Resize and the model's native
+                letterbox.  When ``False``, the OV recipe augmentations are
+                applied as usual (simple stretch resize).
                 Defaults to ``False``.
 
         Returns:
@@ -341,12 +344,21 @@ class AutoConfigurator:
         ov_config = self._load_default_config(config_path=ov_config_path)["data"]
         subset_config = getattr(datamodule, f"{subset}_subset")
         ov_subset = ov_config.get(f"{subset}_subset", ov_config["test_subset"])
-        subset_config.batch_size = ov_subset["batch_size"]
-        subset_config.augmentations_cpu = ov_subset["augmentations_cpu"]
-        subset_config.augmentations_gpu = ov_subset.get("augmentations_gpu", [])
+
         if keep_aspect_ratio:
-            self._patch_resize_keep_aspect_ratio(subset_config.augmentations_cpu)
-            self._patch_resize_keep_aspect_ratio(subset_config.augmentations_gpu)
+            # For letterbox models (YOLO, etc.), do NOT pre-resize images in the
+            # DataModule. Instead, feed original-resolution images and let ModelAPI
+            # handle the full preprocessing (centered letterbox with correct pad
+            # value). This avoids the accuracy loss caused by a padding-strategy
+            # mismatch between the DataModule Resize (bottom-right, pad=0) and the
+            # model's native letterbox (centered, pad=114).
+            subset_config.batch_size = 1
+            subset_config.augmentations_cpu = []
+            subset_config.augmentations_gpu = []
+        else:
+            subset_config.batch_size = ov_subset["batch_size"]
+            subset_config.augmentations_cpu = ov_subset["augmentations_cpu"]
+            subset_config.augmentations_gpu = ov_subset.get("augmentations_gpu", [])
         datamodule.tile_config.enable_tiler = False
 
         # Resolve input size: prefer model IR metadata, fall back to

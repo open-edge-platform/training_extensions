@@ -258,9 +258,25 @@ class OVModel:
             (img * 255).clip(0, 255).astype(np.uint8) if img.dtype == np.float32 and img.max() <= 1.0 + 1e-6 else img
             for img in numpy_inputs
         ]
+        # The DataModule provides images in RGB channel order (torchvision convention).
+        # When the model's PPP has reverse_input_channels=True, it expects BGR input
+        # and internally converts BGR→RGB for the model. Feed BGR to match.
+        if self._needs_bgr_input:
+            numpy_inputs = [img[:, :, ::-1].copy() for img in numpy_inputs]
         outputs = self.model.infer_batch(numpy_inputs) if async_inference else [self.model(im) for im in numpy_inputs]
 
         return self._customize_outputs(outputs, inputs)
+
+    @property
+    def _needs_bgr_input(self) -> bool:
+        """Return True when ModelAPI's PPP expects BGR input.
+
+        ModelAPI's ``reverse_input_channels`` flag indicates the PPP will convert
+        BGR→RGB.  Since the DataModule provides RGB images, we must swap to BGR
+        before feeding to ModelAPI when this flag is set.
+        """
+        base = self.model.model if isinstance(self.model, Tiler) else self.model
+        return bool(getattr(getattr(base, "params", None), "reverse_input_channels", False))
 
     def optimize(
         self,

@@ -173,11 +173,30 @@ class OVDetectionModel(OVModel):
             log.warning(f"label_shift: {label_shift}")
 
         for i, output in enumerate(outputs):
+            img_info = inputs.imgs_info[i]  # type: ignore[index]
+            bboxes_data = torch.as_tensor(output.bboxes, dtype=torch.float32)
+
+            # When the test augmentation pipeline uses resize_targets=False (the
+            # default for OV detection recipes), GT bboxes remain in original image
+            # coords while the image tensor is resized to the model input size.
+            # ModelAPI returns predictions in resized-image coords (img_shape) since
+            # it receives the already-resized image.  Scale predictions back to
+            # original coords so they match GT during metric computation.
+            # For the keep_aspect_ratio=True path (YOLO/letterbox), no DataModule
+            # resize is applied so img_shape == ori_shape and this block is skipped.
+            ori_h, ori_w = img_info.ori_shape
+            img_h, img_w = img_info.img_shape
+            if (ori_h, ori_w) != (img_h, img_w) and img_info.scale_factor is not None:
+                scale_h, scale_w = img_info.scale_factor
+                pad_left, pad_top = img_info.padding[0], img_info.padding[1]
+                bboxes_data[:, 0::2] = (bboxes_data[:, 0::2] - pad_left) / scale_w
+                bboxes_data[:, 1::2] = (bboxes_data[:, 1::2] - pad_top) / scale_h
+
             bboxes.append(
                 tv_tensors.BoundingBoxes(
-                    data=output.bboxes,
+                    data=bboxes_data,
                     format="XYXY",
-                    canvas_size=inputs.imgs_info[i].img_shape,  # type: ignore[union-attr, index]
+                    canvas_size=(ori_h, ori_w),
                     dtype=torch.float32,
                 ),
             )
