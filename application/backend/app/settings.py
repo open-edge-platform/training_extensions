@@ -86,6 +86,18 @@ class Settings(BaseSettings):
         description="Time to live for a model loaded for inference, before unloading",
     )
 
+    # Video
+    video_cache_ttl: float = Field(
+        default=30.0,
+        alias="VIDEO_CACHE_TTL",
+        description="Time-to-live in seconds for cached video handles before eviction",
+    )
+    video_cache_cleanup_interval: float = Field(
+        default=5.0,
+        alias="VIDEO_CACHE_CLEANUP_INTERVAL",
+        description="Interval in seconds between cache cleanup sweeps",
+    )
+
     @property
     def ice_servers(self) -> list[dict]:
         """Compute ICE servers from coturn and STUN configuration."""
@@ -111,8 +123,18 @@ class Settings(BaseSettings):
 
     @property
     def cors_allowed_origins(self) -> list[str]:
-        """Parsed list of allowed CORS origins."""
-        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        """Parsed list of allowed CORS origins.
+
+        Always includes localhost / 127.0.0.1 entries for the configured server port,
+        so that browser requests from a forwarded / non-default port are accepted.
+        """
+        origins = [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        for host in ("localhost", "127.0.0.1"):
+            for scheme in ("http", "https"):
+                entry = f"{scheme}://{host}:{self.port}"
+                if entry not in origins:
+                    origins.append(entry)
+        return origins
 
     @model_validator(mode="after")
     def set_default_dirs(self) -> "Settings":

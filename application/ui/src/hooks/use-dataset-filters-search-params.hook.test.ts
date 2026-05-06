@@ -100,7 +100,7 @@ describe('useDatasetFiltersSearchParams', () => {
     });
 
     describe('annotationStatus filter', () => {
-        it.each(['unannotated', 'reviewed', 'to_review'] as const)(
+        it.each(['missing_annotations', 'with_annotations'] as const)(
             'returns annotationStatus "%s" from search param',
             (status) => {
                 const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
@@ -128,19 +128,19 @@ describe('useDatasetFiltersSearchParams', () => {
             });
 
             act(() => {
-                result.current.setAnnotationStatus('reviewed');
+                result.current.setAnnotationStatus('with_annotations');
             });
 
-            expect(result.current.annotationStatus).toBe('reviewed');
+            expect(result.current.annotationStatus).toBe('with_annotations');
         });
 
         it('clears annotation status when set to null', () => {
             const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-                route: `/projects/123?${ANNOTATION_STATUS_PARAM}=reviewed`,
+                route: `/projects/123?${ANNOTATION_STATUS_PARAM}=with_annotations`,
                 path: '/projects/:projectId',
             });
 
-            expect(result.current.annotationStatus).toBe('reviewed');
+            expect(result.current.annotationStatus).toBe('with_annotations');
 
             act(() => {
                 result.current.setAnnotationStatus(null);

@@ -18,7 +18,7 @@ const getAnnotationPercentage = (annotated: number, total: number): number => {
     return Math.min(100, Math.max(0, percentage));
 };
 
-const getMaxInstancesPerLabel = (instancesPerLabel: { label_id: string; instances: number }[]): number => {
+const getMaxInstancesPerLabel = (instancesPerLabel: { label_id: string | null; instances: number }[]): number => {
     if (isEmpty(instancesPerLabel)) {
         return 0;
     }

@@ -387,15 +387,16 @@ class BaseDenseHead(BaseModule):
         x: tuple[Tensor],
         batch_img_metas: list[dict],
         rescale: bool = False,
+        with_nms: bool = True,
     ) -> tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
         """Perform forward propagation of the detection head and predict detection results.
 
         Args:
             x (tuple[Tensor]): Multi-level features from the upstream network, each is a 4D-tensor.
-            batch_data_samples (list[dict]): The Data Samples. It usually includes information such as
-                `gt_instance`, `gt_panoptic_seg` and `gt_sem_seg`.
+            batch_img_metas (list[dict]): Image meta info, e.g. img_shape, scale_factor.
             rescale (bool, optional): Whether to rescale the results.
                 Defaults to False.
+            with_nms (bool, optional): Whether to apply NMS. Defaults to True.
 
         Returns:
             tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
@@ -403,7 +404,22 @@ class BaseDenseHead(BaseModule):
         """
         outs = self(x)
 
-        return self.export_by_feat(*outs, batch_img_metas=batch_img_metas, rescale=rescale)  # type: ignore[misc]
+        return self.export_by_feat(*outs, batch_img_metas=batch_img_metas, rescale=rescale, with_nms=with_nms)  # type: ignore[misc]
+
+    @staticmethod
+    def _format_no_nms_output(bboxes: Tensor, scores: Tensor) -> tuple[Tensor, Tensor]:
+        """Format raw detections for export without NMS.
+
+        Args:
+            bboxes (Tensor): Decoded bboxes, shape (batch, num_priors, 4).
+            scores (Tensor): Class scores, shape (batch, num_priors, num_classes).
+
+        Returns:
+            tuple[Tensor, Tensor]: dets (batch, num_priors, 5) and labels (batch, num_priors).
+        """
+        max_scores, labels = scores.max(dim=-1)
+        dets = torch.cat([bboxes, max_scores.unsqueeze(-1)], dim=-1)
+        return dets, labels
 
     def export_by_feat(
         self,
@@ -540,6 +556,9 @@ class BaseDenseHead(BaseModule):
 
         if with_score_factors:
             batch_scores = batch_scores * batch_score_factors
+
+        if not with_nms:
+            return self._format_no_nms_output(batch_bboxes, batch_scores)
 
         return multiclass_nms(
             batch_bboxes,

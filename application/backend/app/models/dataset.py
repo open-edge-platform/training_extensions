@@ -52,15 +52,16 @@ class MediaCounts(BaseEntity):
 
 
 class InstancesPerLabel(BaseEntity):
-    label_id: UUID
+    label_id: UUID | None
     instances: int = 0
 
     @model_validator(mode="before")
     @classmethod
     def populate_instances_per_label(cls, data: object) -> object:
         if isinstance(data, dict):
+            label_id = data.get("label_id")
             return {
-                "label_id": UUID(str(data.get("label_id"))),
+                "label_id": UUID(str(label_id)) if label_id is not None else None,
                 "instances": data.get("instances", 0),
             }
         return data

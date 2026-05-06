@@ -8,7 +8,7 @@ import contextlib
 import inspect
 import json
 import logging
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import nncf
 import numpy as np
@@ -42,69 +42,6 @@ if TYPE_CHECKING:
     from getitune.types import PathLike
 
 logger = logging.getLogger()
-
-
-class _FP32OpenvinoAdapter(OpenvinoAdapter):
-    """OpenvinoAdapter that adapts preprocessing for both float-scale and uint8-scale models.
-
-    For models with float [0, 1] normalisation (standard getitune Lightning
-    exports), sets ``dtype=float`` so ModelAPI builds an f32 input tensor.
-
-    For models with uint8-range preprocessing (e.g. YOLO divide-by-255 where
-    ``scale_values=[255]``), skips the f32 dtype override and lets ModelAPI
-    embed preprocessing normally — the baked-in normalisation handles the
-    conversion.
-
-    In both cases the pad-constant type patch is applied to avoid element-type
-    mismatches between data and pad values.
-    """
-
-    # Values above this threshold indicate uint8 (0-255) scale rather than 0-1 scale.
-    _UINT8_SCALE_THRESHOLD = 1.0
-
-    def embed_preprocessing(self, *args, **kwargs) -> None:
-        mean = kwargs.get("mean")
-        scale = kwargs.get("scale")
-        has_uint8_mean = mean is not None and any(v > self._UINT8_SCALE_THRESHOLD for v in mean)
-        has_uint8_scale = scale is not None and any(v > self._UINT8_SCALE_THRESHOLD for v in scale)
-        if not (has_uint8_mean or has_uint8_scale):
-            # Float-scale model (standard getitune exports) — force f32 input dtype.
-            kwargs["dtype"] = float
-        _patch_pad_constant_type(super().embed_preprocessing, *args, **kwargs)
-
-
-def _patch_pad_constant_type(embed_fn: Callable, *args: object, **kwargs: object) -> None:
-    """Call ``embed_fn`` while monkey-patching ``opset.pad`` to fix pad-value dtype.
-
-    ModelAPI hardcodes pad constants as ``uint8``.  With f32 input this causes
-    a type-mismatch error, so we temporarily wrap ``opset.pad`` to insert a
-    ``Convert`` when the element types differ.
-    """
-    import model_api.adapters.utils as _mapi_utils
-
-    _opset = _mapi_utils.opset
-    _orig_pad = _opset.pad
-
-    def _pad_with_type_cast(
-        arg: openvino.Node,
-        pads_begin: openvino.Node,
-        pads_end: openvino.Node,
-        pad_mode: str,
-        arg_pad_value: openvino.Node | None = None,
-        name: str | None = None,
-    ) -> openvino.Node:
-        if arg_pad_value is not None:
-            data_et = arg.get_element_type()
-            pad_et = arg_pad_value.get_element_type()
-            if data_et != pad_et:
-                arg_pad_value = _opset.convert(arg_pad_value, data_et)
-        return _orig_pad(arg, pads_begin, pads_end, pad_mode, arg_pad_value, name)
-
-    _opset.pad = _pad_with_type_cast  # pyrefly: ignore[bad-assignment]
-    try:
-        embed_fn(*args, **kwargs)
-    finally:
-        _opset.pad = _orig_pad
 
 
 class OVModel:
@@ -208,7 +145,7 @@ class OVModel:
             model_adapter (OpenvinoAdapter): Target adapter to read the configuration.
         """
 
-    def _resolve_model_type(self, model_adapter: _FP32OpenvinoAdapter) -> str:
+    def _resolve_model_type(self, model_adapter: OpenvinoAdapter) -> str:
         """Resolve the ModelAPI wrapper name from IR metadata, falling back to the class default.
 
         New exports embed ``model_type`` into ``rt_info["model_info"]`` at export
@@ -218,7 +155,7 @@ class OVModel:
         as a backward-compatible fallback for older IRs that lack the field.
 
         Args:
-            model_adapter (_FP32OpenvinoAdapter): The adapter wrapping the loaded IR.
+            model_adapter (OpenvinoAdapter): The adapter wrapping the loaded IR.
 
         Returns:
             str: The resolved ModelAPI model type name.
@@ -256,7 +193,7 @@ class OVModel:
         if self.use_throughput_mode:
             plugin_config["PERFORMANCE_HINT"] = "THROUGHPUT"
 
-        model_adapter = _FP32OpenvinoAdapter(
+        model_adapter = OpenvinoAdapter(
             ie,
             self.model_path,
             device=ov_device,

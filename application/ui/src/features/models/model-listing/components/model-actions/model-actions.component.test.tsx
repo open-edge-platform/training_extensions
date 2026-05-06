@@ -154,4 +154,35 @@ describe('ModelActions', () => {
         expect(renameItem).toHaveAttribute('aria-disabled', 'true');
         expect(deleteItem).not.toHaveAttribute('aria-disabled', 'true');
     });
+
+    describe('when model has deleted weights', () => {
+        const modelWithDeletedWeights = getMockedModel({
+            ...mockModel,
+            files_deleted: true,
+        });
+
+        it('disables "Delete weights", "View training logs", and "Set as active"', async () => {
+            render(<ModelActions model={modelWithDeletedWeights} />);
+
+            const menuButton = screen.getByRole('button', { name: 'Model actions' });
+            await userEvent.click(menuButton);
+
+            expect(screen.getByRole('menuitem', { name: 'Delete weights' })).toHaveAttribute('aria-disabled', 'true');
+            expect(screen.getByRole('menuitem', { name: 'View training logs' })).toHaveAttribute(
+                'aria-disabled',
+                'true'
+            );
+            expect(screen.getByRole('menuitem', { name: 'Set as active' })).toHaveAttribute('aria-disabled', 'true');
+        });
+
+        it('keeps "Rename" and "Delete model" enabled', async () => {
+            render(<ModelActions model={modelWithDeletedWeights} />);
+
+            const menuButton = screen.getByRole('button', { name: 'Model actions' });
+            await userEvent.click(menuButton);
+
+            expect(screen.getByRole('menuitem', { name: 'Rename' })).not.toHaveAttribute('aria-disabled', 'true');
+            expect(screen.getByRole('menuitem', { name: 'Delete model' })).not.toHaveAttribute('aria-disabled', 'true');
+        });
+    });
 });

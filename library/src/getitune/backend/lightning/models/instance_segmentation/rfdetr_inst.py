@@ -27,6 +27,7 @@ from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 
 if TYPE_CHECKING:
+    import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
@@ -145,13 +146,17 @@ class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inc
             via_onnx=False,
             onnx_export_configuration={
                 "input_names": ["images"],
-                "output_names": ["bboxes", "labels", "scores", "masks"],
+                "output_names": ["boxes", "labels", "masks"],
                 "dynamic_shapes": {"inputs": {0: Dim("batch")}},
                 "autograd_inlining": False,
                 "opset_version": 18,
             },
-            output_names=["bboxes", "labels", "scores", "masks"],
+            output_names=["boxes", "labels", "masks"],
         )
+
+    def forward_for_tracing(self, inputs: torch.Tensor) -> tuple[torch.Tensor, ...]:
+        """Forward pass used for export."""
+        return self.model.export(inputs, merge_scores=True)  # pyrefly: ignore[not-callable]
 
     @property
     def _default_preprocessing_params(self) -> dict[str, DataInputParams]:  # type: ignore[override]

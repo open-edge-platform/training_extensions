@@ -7,10 +7,9 @@ import { useDatasetFiltersSearchParams } from 'hooks/use-dataset-filters-search-
 import { FilterByStatusKey } from '../../../../../constants/shared-types';
 
 const FILTER_BY_STATUS_OPTIONS: { name: string; key: FilterByStatusKey }[] = [
-    { name: 'Status: All', key: 'all' },
-    { name: 'Status: Unannotated', key: 'unannotated' },
-    { name: 'Status: Reviewed', key: 'reviewed' },
-    { name: 'Status: To Review', key: 'to_review' },
+    { name: 'All media', key: 'all' },
+    { name: 'Media with annotations', key: 'with_annotations' },
+    { name: 'Media with missing annotations', key: 'missing_annotations' },
 ];
 
 export const FilterByStatus = () => {

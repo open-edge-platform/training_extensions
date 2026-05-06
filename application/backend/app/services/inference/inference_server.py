@@ -4,7 +4,6 @@ import threading
 from pathlib import Path
 from uuid import UUID
 
-import numpy as np
 from loguru import logger
 
 from app.db import get_db_session
@@ -146,7 +145,7 @@ class InferenceServer:
                 raise RuntimeError("No model loaded for inference")
             logger.debug("Running inference on batch of {} inputs", len(inputs))
 
-            input_data = [inp.data.astype(np.float32) / 255.0 for inp in inputs]
+            input_data = [inp.data for inp in inputs]
             inference_result = self._loaded_model.model.infer_batch(input_data)
         finally:
             self._lock.release()

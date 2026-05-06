@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import torch
 
+from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import DataInputParams
+from getitune.backend.lightning.models.common.rfdetr_mixin import RFDETRMixin
 from getitune.backend.lightning.models.instance_segmentation.rfdetr_inst import RFDETRInst
 from getitune.data.entity import PredictionBatch
 
@@ -153,8 +155,58 @@ class TestRFDETRInst:
 
         # Test export forward pass
         output = model.forward_for_tracing(torch.randn(1, 3, 312, 312))
-        # Should return boxes, labels, scores, masks
-        assert len(output) == 4
+        # Should return (boxes, labels, masks) where ``boxes`` has scores
+        # concatenated as the 5th column to match the OpenVINO ``MaskRCNN``
+        # model_api wrapper's expectation of ``boxes[:, 4]`` being the score.
+        assert len(output) == 3
+        boxes, labels, masks = output
+        assert boxes.ndim == 3
+        assert boxes.shape[-1] == 5  # x1, y1, x2, y2, score
+        assert labels.shape[:2] == boxes.shape[:2]
+        assert masks.shape[:2] == boxes.shape[:2]
+
+    def test_exporter_output_names(self) -> None:
+        """Exporter must publish ``boxes``/``labels``/``masks`` (no standalone ``scores``)."""
+        model = RFDETRInst(model_name="rfdetr_seg_n", label_info=3)
+        exporter = model._exporter
+        assert isinstance(exporter, LightningModelExporter)
+        assert exporter.output_names == ["boxes", "labels", "masks"]
+        onnx_cfg = exporter.onnx_export_configuration
+        assert onnx_cfg["output_names"] == ["boxes", "labels", "masks"]
+
+    def test_predict_after_export_restore(self, fxt_instance_seg_batch) -> None:
+        """Inference must work after export() + _restore_forward_methods().
+
+        Regression test for a bug where ``TransformerDecoder._export`` was not
+        reset by ``_restore_forward_methods`` because the decoder has no
+        ``_forward_origin``.  The lingering flag made the decoder return a 3-D
+        tensor instead of 4-D, crashing the segmentation head's einsum.
+        """
+        model = RFDETRInst(
+            model_name="rfdetr_seg_n",
+            label_info=3,
+            data_input_params=DataInputParams((312, 312), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
+        model = model.cpu()
+        model.eval()
+
+        fxt_instance_seg_batch.images = [
+            torch.randn(3, 312, 312),
+            torch.randn(3, 312, 312),
+        ]
+
+        # Simulate what RFDETRMixin.export() does: export then restore.
+        lwdetr = model.model.lwdetr  # pyrefly: ignore[missing-attribute]
+        lwdetr.export()  # pyrefly: ignore[missing-attribute]
+        RFDETRMixin._restore_forward_methods(lwdetr)  # pyrefly: ignore[bad-argument-type]
+
+        # Verify the decoder flag was cleared.
+        assert not lwdetr.transformer.decoder._export  # pyrefly: ignore[missing-attribute]
+
+        # Inference must succeed after the round-trip.
+        output = model(fxt_instance_seg_batch)
+        assert isinstance(output, PredictionBatch)
+        assert output.masks is not None
 
     def test_customize_inputs(self, fxt_instance_seg_batch) -> None:
         """Test input customization for RF-DETR format."""

@@ -133,6 +133,39 @@ class TestLightningDetectionModel:
         assert isinstance(parameters, TaskLevelExportParameters)
         assert parameters.task_type == "detection"
 
+    def test_export_parameters_without_nms(self, model):
+        model.export_nms = False
+        parameters = model._export_parameters
+        assert isinstance(parameters, TaskLevelExportParameters)
+        assert parameters.nms_execute is True
+        # agnostic_nms and nms_max_predictions are not set; ModelAPI defaults suffice
+        assert parameters.agnostic_nms is None
+        assert parameters.nms_max_predictions is None
+        metadata = parameters.to_metadata()
+        assert metadata[("model_info", "nms_execute")] == "True"
+        assert ("model_info", "agnostic_nms") not in metadata
+        assert ("model_info", "nms_max_predictions") not in metadata
+
+    def test_export_parameters_with_nms(self, model):
+        model.export_nms = True
+        parameters = model._export_parameters
+        assert parameters.nms_execute is None
+        assert parameters.agnostic_nms is None
+        assert parameters.nms_max_predictions is None
+
+    def test_forward_for_tracing_without_nms(self, model):
+        model.eval()
+        model.export_nms = False
+        output = model.forward_for_tracing(torch.randn(1, 3, 64, 64))
+        assert len(output) == 2
+        dets, labels = output
+        # Without NMS: dets=(1, num_priors, 5), labels=(1, num_priors)
+        assert dets.ndim == 3
+        assert dets.shape[0] == 1
+        assert dets.shape[2] == 5
+        assert labels.ndim == 2
+        assert labels.shape == dets.shape[:2]
+
     def test_dummy_input(self, model: ATSS):
         batch_size = 2
         batch = model.get_dummy_input(batch_size)

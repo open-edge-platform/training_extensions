@@ -13,6 +13,7 @@ from app.models.media import ImageFormat
 from app.services.data_collect.prediction_converter import get_confidence_scores
 from app.services.event.event_bus import EventBus, EventType
 from app.services.media_service import ImageMetadata
+from app.services.video import VideoService
 from app.stream.stream_data import InferenceData
 
 
@@ -84,10 +85,11 @@ class ConfidenceThresholdPolicyChecker(PolicyChecker):
 
 
 class DataCollector:
-    def __init__(self, data_dir: Path, event_bus: EventBus) -> None:
+    def __init__(self, data_dir: Path, event_bus: EventBus, video_service: VideoService) -> None:
         self.should_collect_next_frame = False
         self.data_dir = data_dir
         self.event_bus = event_bus
+        self.video_service = video_service
         self.active_pipeline_data: tuple[Pipeline, Project] | None = None
         self.policy_checkers: list[PolicyChecker] = []
 
@@ -184,7 +186,7 @@ class DataCollector:
         frame_data = cv2.cvtColor(frame_data, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
         with get_db_session() as session:
             label_service = LabelService(db_session=session)
-            media_service = MediaService(data_dir=self.data_dir, db_session=session)
+            media_service = MediaService(data_dir=self.data_dir, video_service=self.video_service, db_session=session)
             dataset_service = DatasetService(
                 label_service=label_service, media_service=media_service, db_session=session
             )

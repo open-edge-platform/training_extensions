@@ -1,5 +1,3 @@
-# app/services/inference/model_loader.py
-
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -15,7 +13,6 @@ from model_api.adapters import OpenvinoAdapter, create_core
 from model_api.models import Model
 
 from app.models.system import DeviceInfo
-from app.utils.ir_format import FP32OpenvinoAdapter
 
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
@@ -55,7 +52,7 @@ class ModelLoader:
         """
         logger.debug("Loading model '{}' on device '{}'", model_xml_path, device)
         ie = create_core()
-        adapter = FP32OpenvinoAdapter(
+        adapter = OpenvinoAdapter(
             ie,
             str(model_xml_path),
             device=device.as_openvino,

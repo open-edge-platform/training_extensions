@@ -11,21 +11,21 @@ const pluralizeItems = (count: number) => (pluralRules.select(count) === 'one' ?
 const conjugateToBe = (count: number) => (pluralRules.select(count) === 'one' ? 'is' : 'are');
 
 export const useTrainModelDisabledReason = () => {
-    const { totalCount, isPending: isTotalPending } = useGetDatasetItems({ annotationStatus: 'reviewed' });
+    const { totalCount, isPending: isTotalPending } = useGetDatasetItems({ annotationStatus: 'with_annotations' });
     const { totalCount: trainingSubsetSize, isPending: isTrainingPending } = useGetDatasetItems({
-        annotationStatus: 'reviewed',
+        annotationStatus: 'with_annotations',
         subset: 'training',
     });
     const { totalCount: testingSubsetSize, isPending: isTestingPending } = useGetDatasetItems({
-        annotationStatus: 'reviewed',
+        annotationStatus: 'with_annotations',
         subset: 'testing',
     });
     const { totalCount: validationSubsetSize, isPending: isValidationPending } = useGetDatasetItems({
-        annotationStatus: 'reviewed',
+        annotationStatus: 'with_annotations',
         subset: 'validation',
     });
     const { totalCount: reviewedUnassignedSubsetSize, isPending: isReviewedUnassignedPending } = useGetDatasetItems({
-        annotationStatus: 'reviewed',
+        annotationStatus: 'with_annotations',
         subset: 'unassigned',
     });
     const { totalCount: unassignedSubsetSize, isPending: isUnassignedPending } = useGetDatasetItems({

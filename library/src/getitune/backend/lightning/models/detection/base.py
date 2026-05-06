@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging as log
 import types
 from contextlib import contextmanager
@@ -95,6 +96,7 @@ class LightningDetectionModel(LightningModel):
         )
 
         self.explain_mode = explain_mode
+        self.export_nms = False  # Whether to include NMS in the exported model graph
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 
@@ -313,17 +315,37 @@ class LightningDetectionModel(LightningModel):
             "scale_factor": (1.0, 1.0),
         }
         meta_info_list = [meta_info] * len(inputs)
-        return self.model.export(inputs, meta_info_list, explain_mode=self.explain_mode)
+        # Build export kwargs dynamically based on the model's export() signature.
+        # Not all detectors accept all parameters (e.g. DETR-based models don't
+        # use NMS and don't accept with_nms; RFDETRDetector doesn't accept explain_mode).
+        export_sig = inspect.signature(self.model.export).parameters
+        export_kwargs: dict[str, Any] = {}
+        if "explain_mode" in export_sig:
+            export_kwargs["explain_mode"] = self.explain_mode
+        if "with_nms" in export_sig:
+            export_kwargs["with_nms"] = self.export_nms
+        return self.model.export(inputs, meta_info_list, **export_kwargs)
 
     @property
     def _export_parameters(self) -> TaskLevelExportParameters:
         """Defines parameters required to export a particular model implementation."""
+        nms_params: dict[str, Any] = {}
+        if (
+            not self.export_nms
+            and "with_nms" in inspect.signature(self.model.export).parameters  # pyrefly: ignore[bad-argument-type]
+        ):
+            # Only NMS-based models (e.g. SingleStageDetector) need this metadata.
+            # DETR-based models don't use NMS and handle postprocessing differently.
+            # ModelAPI defaults: agnostic_nms=False (per-class NMS) and
+            # nms_max_predictions=200, which are acceptable for our detection models.
+            nms_params["nms_execute"] = True
         return super()._export_parameters.wrap(
             model_type="ssd",
             task_type="detection",
             confidence_threshold=self.hparams.get("best_confidence_threshold", None),
             iou_threshold=0.5,
             tile_config=self.tile_config if self.tile_config.enable_tiler else None,
+            **nms_params,
         )
 
     def _convert_pred_entity_to_compute_metric(
