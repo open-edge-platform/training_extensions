@@ -25,10 +25,11 @@ type SourcesListProps = {
 type SourceListItemProps = {
     source: SourceConfig;
     isConnected: boolean;
+    isPipelineRunning: boolean;
     onEditSource: (config: SourceConfig) => void;
 };
 
-const SourceListItem = ({ source, isConnected, onEditSource }: SourceListItemProps) => {
+const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }: SourceListItemProps) => {
     return (
         <Flex
             key={source.id}
@@ -56,6 +57,7 @@ const SourceListItem = ({ source, isConnected, onEditSource }: SourceListItemPro
                     name={source.name}
                     isConnected={isConnected}
                     onEdit={() => onEditSource(source)}
+                    isPipelineRunning={isPipelineRunning}
                 />
             </Flex>
         </Flex>
@@ -64,7 +66,8 @@ const SourceListItem = ({ source, isConnected, onEditSource }: SourceListItemPro
 
 export const SourcesList = ({ sources, onAddSource, onEditSource }: SourcesListProps) => {
     const pipeline = usePipeline();
-    const currentSourceId = pipeline.data?.source?.id;
+    const currentSourceId = pipeline.data.source?.id;
+    const isPipelineRunning = pipeline.data.status === 'running';
 
     return (
         <Flex
@@ -82,6 +85,7 @@ export const SourcesList = ({ sources, onAddSource, onEditSource }: SourcesListP
                     source={source}
                     isConnected={isEqual(currentSourceId, source.id)}
                     onEditSource={onEditSource}
+                    isPipelineRunning={isPipelineRunning}
                 />
             ))}
         </Flex>
