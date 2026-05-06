@@ -40,11 +40,16 @@ class IPCameraStream(BaseOpenCVStream):
     MAX_RETRIES = 3
     BACKOFF_FACTOR = 0.1
 
-    _FIRST_FRAME_TIMEOUT_S = 5.0
+    _FIRST_FRAME_TIMEOUT_S = 10.0
     _NEW_FRAME_TIMEOUT_S = 1.0
 
     def __init__(self, config: IPCameraSourceConfig) -> None:
-        _apply_ffmpeg_capture_options()
+        stream_url = config.config_data.get_configured_stream_url()
+        if str(stream_url).lower().startswith("rtsp"):
+            _apply_ffmpeg_capture_options()
+        else:
+            # Clear RTSP-specific options that would interfere with HTTP/other streams
+            os.environ.pop("OPENCV_FFMPEG_CAPTURE_OPTIONS", None)
         super().__init__(
             source=config.config_data.get_configured_stream_url(),
             source_type=SourceType.IP_CAMERA,
@@ -74,12 +79,18 @@ class IPCameraStream(BaseOpenCVStream):
         consecutive_failures = 0
         while not self._stop_reader.is_set():
             try:
-                if self.cap is None or not self.cap.isOpened():
+                cap = self.cap
+                if cap is None or not cap.isOpened():
+                    if self._stop_reader.is_set():
+                        break
                     self._reconnect()
                     consecutive_failures = 0
                     continue
 
-                if not self.cap.grab():
+                if self._stop_reader.is_set():
+                    break
+
+                if not cap.grab():
                     consecutive_failures += 1
                     if consecutive_failures >= self.MAX_RETRIES:
                         self._reconnect()
@@ -88,7 +99,7 @@ class IPCameraStream(BaseOpenCVStream):
                         time.sleep(self.BACKOFF_FACTOR * consecutive_failures)
                     continue
 
-                ret, frame = self.cap.retrieve()
+                ret, frame = cap.retrieve()
                 if not ret or frame is None:
                     # Decoder skipped a corrupt packet / waiting for keyframe.
                     continue
@@ -96,9 +107,9 @@ class IPCameraStream(BaseOpenCVStream):
                 consecutive_failures = 0
                 self._publish_frame(frame)
             except Exception as exc:
-                logger.exception("IP camera reader thread error")
                 if self._stop_reader.is_set():
                     break
+                logger.exception("IP camera reader thread error")
                 with self._frame_available:
                     self._reader_error = exc
                     self._frame_available.notify_all()
@@ -171,12 +182,13 @@ class IPCameraStream(BaseOpenCVStream):
 
         for attempt in range(self.MAX_RETRIES):
             logger.warning(f"Attempt {attempt + 1}: Failed to capture frame from IP camera, retrying...")
-            self.release_capture_only()
-            self._initialize_capture()
             ret, frame = self.cap.read()
             if ret:
                 logger.info("Successfully reconnected to IP camera stream.")
                 return frame
+            # Reconnect before next attempt
+            self.release_capture_only()
+            self._initialize_capture()
             time.sleep(self.BACKOFF_FACTOR * (attempt + 1))
 
         raise RuntimeError("Failed to capture frame from IP camera after multiple retries")
@@ -193,8 +205,15 @@ class IPCameraStream(BaseOpenCVStream):
         with self._frame_available:
             self._frame_available.notify_all()
         if self._reader_thread.is_alive() and threading.current_thread() is not self._reader_thread:
-            self._reader_thread.join(timeout=2.0)
-        super().release()
+            self._reader_thread.join(timeout=5.0)
+        # Only release the capture AFTER the reader thread has stopped to avoid
+        # segfaults from concurrent cv2.VideoCapture access (not thread-safe).
+        if self.cap is not None:
+            try:
+                self.cap.release()
+            except Exception:
+                logger.debug("Error releasing VideoCapture during cleanup", exc_info=True)
+            self.cap = None  # type: ignore[assignment]
 
     def is_real_time(self) -> bool:
         return True
