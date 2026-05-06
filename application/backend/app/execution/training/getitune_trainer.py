@@ -1,5 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import importlib
+import inspect
 import shutil
 from collections.abc import Callable
 from contextlib import AbstractContextManager
@@ -359,14 +361,6 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         has_parent_revision: bool,
     ) -> tuple[Path, LightningEngine]:
         """Execute model training."""
-        # TODO use weights path to initialize model from pre-downloaded weights
-        #  after resolving https://github.com/open-edge-platform/training_extensions/issues/5100
-        logger.warning(
-            "Argument 'weights_path' (value='{}') is not used in model training yet; "
-            "the weights location will be determined internally by getitune",
-            weights_path,
-        )
-
         # Build the DataModule
         logger.info("Preparing the DataModule for training (model_id={})", model_id)
         getitune_datamodule = DataModule.from_vision_datasets(
@@ -388,6 +382,10 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             std=getitune_datamodule.input_std if getitune_datamodule.input_std is not None else (1.0, 1.0, 1.0),
             intensity_config=getitune_datamodule.input_intensity_config,
         ).as_dict()
+        if not has_parent_revision:
+            # Inject pre-downloaded backbone weights when training from scratch,
+            # but only if the model class supports the pretrained_weights_path parameter
+            self._inject_pretrained_weights_path(model_cfg, weights_path)
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(LightningModel, "model", required=False, fail_untyped=False)
         getitune_model: LightningModel = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
@@ -751,6 +749,35 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             dtype_or_schema=dm_dataset.dtype,
             schema=dm_dataset.schema,
         )
+
+    @staticmethod
+    def _inject_pretrained_weights_path(model_cfg: dict, weights_path: Path) -> None:
+        """Inject pretrained_weights_path into model init_args if the model class supports it.
+
+        This avoids downloading backbone weights from external servers when a local
+        pre-downloaded file is available.
+
+        Args:
+            model_cfg: The model configuration dict with 'class_path' and 'init_args' keys.
+            weights_path: Path to the locally downloaded pretrained weights file.
+        """
+        class_path = model_cfg.get("class_path", "")
+        try:
+            module_name, class_name = class_path.rsplit(".", 1)
+            module = importlib.import_module(module_name)
+            cls = getattr(module, class_name)
+            if "pretrained_weights_path" in inspect.signature(cls.__init__).parameters:
+                model_cfg["init_args"]["pretrained_weights_path"] = str(weights_path)
+                logger.info(
+                    "Using pre-downloaded pretrained weights for {} from: {}", class_name, weights_path
+                )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "Could not inject pretrained_weights_path for {}: {}. "
+                "The model will attempt to download weights from an external server.",
+                class_path,
+                exc,
+            )
 
     @staticmethod
     def __base_model_path(data_dir: Path, project_id: UUID, model_id: UUID) -> Path:

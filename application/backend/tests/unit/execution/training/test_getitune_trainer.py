@@ -835,6 +835,126 @@ class TestGetiTuneTrainerTrainModel:
         assert trained_model_path == expected_checkpoint_path
         assert returned_engine == mock_getitune_engine
 
+    def test_train_model_without_parent_revision_injects_pretrained_weights_path(
+        self,
+        fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
+        tmp_path: Path,
+    ):
+        """When has_parent_revision=False, pretrained_weights_path should be injected for supported model classes."""
+        # Arrange
+        getitune_trainer = fxt_getitune_trainer()
+        model_id = uuid4()
+
+        mock_dataset_info = Mock()
+        mock_dataset_info.getitune_training_dataset = Mock()
+        mock_dataset_info.getitune_validation_dataset = Mock()
+        mock_dataset_info.getitune_testing_dataset = Mock()
+        mock_dataset_info.getitune_training_subset_config = Mock()
+        mock_dataset_info.getitune_validation_subset_config = Mock()
+        mock_dataset_info.getitune_testing_subset_config = Mock()
+
+        weights_path = tmp_path / "weights.pth"
+        weights_path.touch()
+
+        training_config: dict[str, Any] = {
+            "model": {
+                "class_path": "getitune.backend.lightning.models.classification.multiclass_models.torchvision_model.TVModelMulticlassCls",
+                "init_args": {
+                    "model_name": "efficientnet_b3",
+                },
+            },
+            "max_epochs": 10,
+            "callbacks": [],
+        }
+
+        mock_datamodule = Mock()
+        mock_datamodule.label_info.label_names = ["cat", "dog"]
+        mock_datamodule.input_size = (300, 300)
+        mock_datamodule.input_mean = None
+        mock_datamodule.input_std = None
+        mock_datamodule.input_intensity_config = None
+
+        mock_getitune_model = Mock()
+        mock_getitune_engine = Mock()
+        mock_getitune_engine.work_dir = str(tmp_path / f"getitune-workspace-{model_id}")
+        Path(mock_getitune_engine.work_dir).mkdir(parents=True)
+        expected_checkpoint_path = Path(mock_getitune_engine.work_dir) / "best_checkpoint.ckpt"
+        expected_checkpoint_path.touch()
+
+        with patch("app.execution.training.getitune_trainer.DataModule.from_vision_datasets") as mock_dm_factory:
+            mock_dm_factory.return_value = mock_datamodule
+            with patch("app.execution.training.getitune_trainer.ArgumentParser") as mock_parser_class:
+                mock_parser = Mock()
+                mock_parser_class.return_value = mock_parser
+                mock_model_namespace = Mock()
+                mock_model_namespace.get.return_value = mock_getitune_model
+                mock_parser.instantiate_classes.return_value = mock_model_namespace
+                with patch("app.execution.training.getitune_trainer.LightningEngine") as mock_engine_class:
+                    mock_engine_class.return_value = mock_getitune_engine
+
+                    # Act
+                    getitune_trainer.train_model(
+                        training_config=training_config,
+                        dataset_info=mock_dataset_info,
+                        weights_path=weights_path,
+                        model_id=model_id,
+                        device=DeviceInfo(type=DeviceType.CPU, name="Intel Core", index=None, memory=None),
+                        has_parent_revision=False,
+                    )
+
+        # Assert: pretrained_weights_path should be injected into the model init_args
+        assert training_config["model"]["init_args"]["pretrained_weights_path"] == str(weights_path)
+        # Assert: checkpoint should be None when has_parent_revision=False
+        engine_call_kwargs = mock_engine_class.call_args.kwargs
+        assert engine_call_kwargs["checkpoint"] is None
+
+
+class TestGetiTuneTrainerInjectPretrainedWeightsPath:
+    """Tests for the GetiTuneTrainer._inject_pretrained_weights_path static method."""
+
+    def test_injects_path_for_supported_model(self, tmp_path: Path):
+        """When model class supports pretrained_weights_path, it should be injected."""
+        weights_path = tmp_path / "weights.pth"
+        weights_path.touch()
+
+        model_cfg = {
+            "class_path": "getitune.backend.lightning.models.classification.multiclass_models.torchvision_model.TVModelMulticlassCls",
+            "init_args": {"model_name": "efficientnet_b3"},
+        }
+
+        GetiTuneTrainer._inject_pretrained_weights_path(model_cfg, weights_path)
+
+        assert model_cfg["init_args"]["pretrained_weights_path"] == str(weights_path)
+
+    def test_does_not_inject_for_unsupported_model(self, tmp_path: Path):
+        """When model class does not support pretrained_weights_path, init_args should remain unchanged."""
+        weights_path = tmp_path / "weights.pth"
+        weights_path.touch()
+
+        model_cfg = {
+            "class_path": "getitune.backend.lightning.models.detection.yolox.YOLOXModel",
+            "init_args": {"model_name": "yolox_tiny"},
+        }
+
+        GetiTuneTrainer._inject_pretrained_weights_path(model_cfg, weights_path)
+
+        assert "pretrained_weights_path" not in model_cfg["init_args"]
+
+    def test_handles_invalid_class_path_gracefully(self, tmp_path: Path):
+        """When class_path is invalid, the method should log a warning and not raise."""
+        weights_path = tmp_path / "weights.pth"
+        weights_path.touch()
+
+        model_cfg = {
+            "class_path": "non.existent.module.SomeModel",
+            "init_args": {},
+        }
+
+        # Should not raise an exception
+        GetiTuneTrainer._inject_pretrained_weights_path(model_cfg, weights_path)
+
+        assert "pretrained_weights_path" not in model_cfg["init_args"]
+
 
 class TestGetiTuneTrainerExecuteCancellation:
     """Tests for the GetiTuneTrainer.execute method handling CancelledExc."""

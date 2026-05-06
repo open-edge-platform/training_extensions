@@ -37,6 +37,9 @@ class TVModelMultilabelCls(LightningMultilabelClsModel):
         label_info (LabelInfoTypes): Information about the labels.
         backbone (TVModelType): Backbone model for feature extraction.
         pretrained (bool, optional): Whether to use pretrained weights. Defaults to True.
+        pretrained_weights_path (str | None, optional): Path to a local pretrained weights file.
+            If provided and the file exists, weights are loaded from this path instead of downloading
+            from external servers. Defaults to None.
         optimizer (OptimizerCallable, optional): Optimizer for model training. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Learning rate scheduler.
             Defaults to DefaultSchedulerCallable.
@@ -51,11 +54,13 @@ class TVModelMultilabelCls(LightningMultilabelClsModel):
         data_input_params: DataInputParams | dict | None = None,
         model_name: str = "efficientnet_v2_s",
         freeze_backbone: bool = False,
+        pretrained_weights_path: str | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
+        self.pretrained_weights_path = pretrained_weights_path
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -69,7 +74,7 @@ class TVModelMultilabelCls(LightningMultilabelClsModel):
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:
         num_classes = num_classes if num_classes is not None else self.num_classes
-        backbone = TorchvisionBackbone(backbone=self.model_name)
+        backbone = TorchvisionBackbone(backbone=self.model_name, pretrained_weights_path=self.pretrained_weights_path)
         return ImageClassifier(
             backbone=backbone,
             neck=GlobalAveragePooling(dim=2),
