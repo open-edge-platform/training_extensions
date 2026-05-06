@@ -11,6 +11,8 @@ import { DataAugmentation } from './data-augmentation/data-augmentation.componen
 import { getDataAugmentationParameters } from './data-augmentation/utils';
 import { Filters } from './filters/filters.component';
 import { getFiltersParameters } from './filters/utils';
+import { IntensityMapping } from './intensity-mapping/intensity-mapping.component';
+import { getIntensityMappingParameters } from './intensity-mapping/utils';
 import { Tiling } from './tiling/tiling.component';
 import { getTilingParameters } from './tiling/utils';
 import { TrainingSubsets } from './training-subsets/training-subsets.component';
@@ -35,6 +37,7 @@ export const DataManagement = ({
     const filtersParameters = getFiltersParameters(trainingConfiguration);
     const tilingParameters = getTilingParameters(trainingConfiguration);
     const dataAugmentationParameters = getDataAugmentationParameters(trainingConfiguration);
+    const intensityMappingParameters = getIntensityMappingParameters(trainingConfiguration);
 
     return (
         <View>
@@ -66,6 +69,15 @@ export const DataManagement = ({
                 <LazyLoadSection rootRef={containerRef}>
                     <Filters
                         filtersParameters={filtersParameters}
+                        onTrainingConfigurationChange={onTrainingConfigurationChange}
+                    />
+                </LazyLoadSection>
+            )}
+
+            {intensityMappingParameters !== undefined && (
+                <LazyLoadSection rootRef={containerRef}>
+                    <IntensityMapping
+                        intensityMappingParameters={intensityMappingParameters}
                         onTrainingConfigurationChange={onTrainingConfigurationChange}
                     />
                 </LazyLoadSection>
