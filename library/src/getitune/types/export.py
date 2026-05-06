@@ -73,6 +73,13 @@ class TaskLevelExportParameters:
     # (Optional) Detection and instance segmentation task
     iou_threshold: float | None = None
 
+    # (Optional) NMS parameters for ModelAPI postprocessing
+    # When nms_execute is True, ModelAPI performs NMS on model outputs.
+    # This is used when the model is exported without built-in NMS.
+    nms_execute: bool | None = None
+    agnostic_nms: bool | None = None
+    nms_max_predictions: int | None = None
+
     # (Optional) Semantic segmentation task
     return_soft_prediction: bool | None = None
     soft_threshold: float | None = None
@@ -148,6 +155,15 @@ class TaskLevelExportParameters:
 
         if self.iou_threshold is not None:
             metadata[("model_info", "iou_threshold")] = str(self.iou_threshold)
+
+        if self.nms_execute is not None:
+            metadata[("model_info", "nms_execute")] = str(self.nms_execute)
+
+        if self.agnostic_nms is not None:
+            metadata[("model_info", "agnostic_nms")] = str(self.agnostic_nms)
+
+        if self.nms_max_predictions is not None:
+            metadata[("model_info", "nms_max_predictions")] = str(self.nms_max_predictions)
 
         if self.return_soft_prediction is not None:
             metadata[("model_info", "return_soft_prediction")] = str(self.return_soft_prediction)

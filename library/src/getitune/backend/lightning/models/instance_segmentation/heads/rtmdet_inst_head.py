@@ -1368,6 +1368,7 @@ class RTMDetInstSepBNHead(RTMDetInstHead):
         batch_img_metas: list[dict] | None = None,
         cfg: dict | None = None,
         rescale: bool = False,
+        with_nms: bool = True,
     ) -> tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
         """Export the detection head."""
         if len(cls_scores) != len(bbox_preds):
