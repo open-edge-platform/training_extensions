@@ -124,12 +124,12 @@ class OVInstanceSegmentationModel(OVModel):
         scores = []
         labels = []
         masks = []
-        for output in outputs:
+        for i, output in enumerate(outputs):
             bboxes.append(
                 tv_tensors.BoundingBoxes(
                     data=output.bboxes,
                     format="XYXY",
-                    canvas_size=inputs.imgs_info[-1].img_shape,  # type: ignore[union-attr,index]
+                    canvas_size=inputs.imgs_info[i].img_shape,  # type: ignore[union-attr,index]
                     dtype=torch.float32,
                 ),
             )

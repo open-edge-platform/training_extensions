@@ -492,8 +492,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         )
 
         train_kwargs = dict(training_config.get("training", {}))
-        if device.type is not DeviceType.CPU and device.index is not None:
-            train_kwargs["device"] = device.index
+        # NOTE: Don't pass device index here — the engine already resolves the
+        # device from the DeviceType enum passed to create_engine(). Passing a
+        # bare integer would be misinterpreted as a CUDA index even on XPU.
         if has_parent_revision:
             logger.info("Using parent Ultralytics weights as initialization, not resume state: {}", weights_path)
 

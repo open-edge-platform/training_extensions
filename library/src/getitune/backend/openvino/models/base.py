@@ -250,6 +250,14 @@ class OVModel:
         """
         async_inference = async_inference and self.async_inference
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
+        # ModelAPI's PrePostProcessor declares the input tensor as uint8 and casts
+        # incoming data to u8 BEFORE applying scale/mean normalization. If we feed
+        # float32 [0, 1] values, they get truncated to 0 after the cast. Convert to
+        # uint8 [0, 255] so the PPP pipeline produces correct results.
+        numpy_inputs = [
+            (img * 255).clip(0, 255).astype(np.uint8) if img.dtype == np.float32 and img.max() <= 1.0 + 1e-6 else img
+            for img in numpy_inputs
+        ]
         outputs = self.model.infer_batch(numpy_inputs) if async_inference else [self.model(im) for im in numpy_inputs]
 
         return self._customize_outputs(outputs, inputs)

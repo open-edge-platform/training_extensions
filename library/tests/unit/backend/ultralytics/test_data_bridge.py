@@ -49,7 +49,7 @@ def test_dataset_adapter_keeps_float_images_and_converts_boxes() -> None:
     assert result["cls"].shape == (1, 1)
     assert result["ori_shape"] == (16, 20)
     assert result["resized_shape"] == (12, 18)
-    assert result["ratio_pad"] == ((12 / 16, 18 / 20), (2, 1))
+    assert result["ratio_pad"] == ((12 / 16, 18 / 20), (1, 2))
 
 
 def test_dataset_adapter_rescales_bboxes_when_canvas_differs_from_tensor() -> None:
