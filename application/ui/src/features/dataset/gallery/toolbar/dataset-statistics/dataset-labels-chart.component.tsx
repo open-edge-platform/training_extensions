@@ -46,7 +46,7 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
     const emptyLabelInstance = instancesPerLabel.find(({ label_id }) => label_id === null);
 
     const chartData = projectLabels.map((projectLabel) => {
-        const matchingInstances = isEmptyLabel(projectLabel.id)
+        const matchingInstances = isEmptyLabel(projectLabel)
             ? emptyLabelInstance
             : instancesPerLabel.find(({ label_id }) => label_id === projectLabel.id);
 
