@@ -54,7 +54,7 @@ on:
         default: "2"
 
 concurrency:
-  group: benchmark-${{ github.event_name }}-${{ github.ref }}
+  group: benchmark-${{ github.ref }}
   cancel-in-progress: true
 
 permissions: {}
@@ -139,6 +139,13 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          clean: true
+
+      - name: Ensure MLflow server is running
+        working-directory: library/docker
+        run: |
+          docker compose up -d --wait
+          echo "✅ MLflow server is healthy at localhost:5000"
 
       - name: Install uv
         uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
@@ -245,7 +252,7 @@ jobs:
         run: |
           uv run python -m otx.benchmark clean \
             --mlflow-uri "http://localhost:5000" \
-            --max-age-days 90 \
+            --max-age-days 365 \
             --protect-branch develop main
 
       # ── Post report to job summary (visible on all triggers) ────────

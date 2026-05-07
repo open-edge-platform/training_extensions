@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: mlflow
-      POSTGRES_PASSWORD: "${MLFLOW_DB_PASSWORD:?Set MLFLOW_DB_PASSWORD in .env or environment}"
+      POSTGRES_PASSWORD: "${MLFLOW_DB_PASSWORD:-mlflow}"
       POSTGRES_DB: mlflow
     volumes:
       - mlflow-db-data:/var/lib/postgresql/data
@@ -48,7 +48,7 @@ services:
     ports:
       - "${MLFLOW_PORT:-5000}:5000"
     environment:
-      MLFLOW_BACKEND_STORE_URI: "postgresql://mlflow:${MLFLOW_DB_PASSWORD}@db:5432/mlflow"
+      MLFLOW_BACKEND_STORE_URI: "postgresql://mlflow:${MLFLOW_DB_PASSWORD:-mlflow}@db:5432/mlflow"
       MLFLOW_DEFAULT_ARTIFACT_ROOT: /mlflow/artifacts
     volumes:
       - mlflow-artifacts:/mlflow/artifacts
@@ -56,7 +56,7 @@ services:
       mlflow server
         --host 0.0.0.0
         --port 5000
-        --backend-store-uri "postgresql://mlflow:${MLFLOW_DB_PASSWORD}@db:5432/mlflow"
+        --backend-store-uri "postgresql://mlflow:${MLFLOW_DB_PASSWORD:-mlflow}@db:5432/mlflow"
         --default-artifact-root /mlflow/artifacts
         --workers 2
         --allowed-hosts "*"
