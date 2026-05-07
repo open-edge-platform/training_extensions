@@ -1,5 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import bisect
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -157,6 +158,18 @@ class MediaPredictionService(BaseSessionManagedService):
 
         return inputs
 
+    @staticmethod
+    def _find_nearest_keyframe_index(frame_index: int, keyframe_indexes: list[int]) -> int:
+        """Find the nearest keyframe index for a given frame index using bisect."""
+        pos = bisect.bisect_left(keyframe_indexes, frame_index)
+        if pos == 0:
+            return keyframe_indexes[0]
+        if pos == len(keyframe_indexes):
+            return keyframe_indexes[-1]
+        before = keyframe_indexes[pos - 1]
+        after = keyframe_indexes[pos]
+        return before if (frame_index - before) <= (after - frame_index) else after
+
     def _convert_result(
         self, loaded_media: LoadedMedia, inference_result: dict[tuple[UUID, int | None], list[DatasetItemAnnotation]]
     ) -> BatchInferenceResult:
@@ -167,19 +180,22 @@ class MediaPredictionService(BaseSessionManagedService):
                     media=BatchInferenceMedia(id=single_media.id), prediction=inference_result[(single_media.id, None)]
                 )
             )
-        previous_prediction: list[DatasetItemAnnotation] | None = None
         for video in loaded_media.video_frames:
             frames = loaded_media.video_frames[video]
+            # Collect keyframe predictions (frames that were inferred)
+            keyframe_predictions: dict[int, list[DatasetItemAnnotation]] = {
+                frame.frame_index: inference_result[(video.id, frame.frame_index)] for frame in frames if not frame.skip
+            }
+
+            # Sorted keyframe indexes for nearest-keyframe lookup
+            keyframe_indexes = sorted(keyframe_predictions.keys())
+
             for frame in frames:
                 if not frame.skip:
-                    prediction = inference_result[(video.id, frame.frame_index)]
-                    previous_prediction = prediction
+                    prediction = keyframe_predictions[frame.frame_index]
                 else:
-                    # For skipped frames, we copy-paste previous inference prediction
-                    if previous_prediction is None:
-                        # Shouldn't be the case because we always pass the first frame to the inference
-                        raise RuntimeError("No prediction found")
-                    prediction = previous_prediction
+                    nearest = self._find_nearest_keyframe_index(frame.frame_index, keyframe_indexes)
+                    prediction = keyframe_predictions[nearest]
                 predictions.append(
                     BatchInferencePrediction(
                         media=BatchInferenceMedia(id=video.id, frame_index=frame.frame_index), prediction=prediction

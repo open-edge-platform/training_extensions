@@ -332,3 +332,23 @@ class TestMediaPredictionServiceUnit:
         fxt_inference_server.infer_batch.assert_called_once_with(labels=labels, inputs=inputs)
         mock_convert_result.assert_called_once_with(loaded_media=loaded_media, inference_result=infer_batch_result)
         assert result == batch_inference_result
+
+    @pytest.mark.parametrize(
+        "frame_index, keyframe_indexes, expected",
+        [
+            (0, [0, 5, 10, 15, 20], 0),
+            (2, [0, 5, 10, 15, 20], 0),
+            (3, [0, 5, 10, 15, 20], 5),
+            (5, [0, 5, 10, 15, 20], 5),
+            (7, [0, 5, 10, 15, 20], 5),
+            (8, [0, 5, 10, 15, 20], 10),
+            (14, [0, 5, 10, 15, 20], 15),
+            (20, [0, 5, 10, 15, 20], 20),
+            (0, [0], 0),
+            (5, [0, 10], 0),  # equidistant, picks the earlier one (<=)
+            (100, [0, 10, 20], 20),
+        ],
+    )
+    def test_find_nearest_keyframe_index(self, frame_index, keyframe_indexes, expected):
+        result = MediaPredictionService._find_nearest_keyframe_index(frame_index, keyframe_indexes)
+        assert result == expected

@@ -225,7 +225,7 @@ def get_media_prediction_service(
     media_service: Annotated[MediaService, Depends(get_media_service)],
     inference_server: Annotated[InferenceServer, Depends(get_inference_server)],
     inference_model_ttl: Annotated[int, Depends(get_inference_model_ttl)],
-    inference_frame_skip: Annotated[int, Depends(get_inference_frame_skip)],
+    inference_frame_skip: Annotated[int | None, Depends(get_inference_frame_skip)],
     db: Annotated[Session, Depends(get_db)],
 ) -> MediaPredictionService:
     """Provides a MediaPredictionService instance."""

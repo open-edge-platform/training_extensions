@@ -89,6 +89,7 @@ class Settings(BaseSettings):
         default=None,
         alias="INFERENCE_FRAME_SKIP",
         description="Number of frames to skip between inferences for video processing",
+        gt=0,
     )
 
     # Video
