@@ -136,7 +136,7 @@ class InferenceServer:
             inputs: List of inputs
 
         Returns:
-            Prediction results for inputs
+            Dictionary mapping (media_id, frame_index) tuples to lists of DatasetItemAnnotation predictions.
         """
         if self._loaded_model is None:
             raise RuntimeError("No model loaded for inference")

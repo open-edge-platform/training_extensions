@@ -51,21 +51,21 @@ class TestMediaPredictionServiceUnit:
 
     @pytest.fixture
     def fxt_media_prediction_service(self, fxt_label_service, fxt_media_service, fxt_inference_server):
-        def _create_media_prediction_service(inference_frame_skip: int | None = None):
+        def _create_media_prediction_service(inference_keyframe_stride: int | None = None):
             db_session = MagicMock(spec=Session)
             return MediaPredictionService(
                 label_service=fxt_label_service,
                 media_service=fxt_media_service,
                 inference_server=fxt_inference_server,
                 inference_model_ttl=10,
-                inference_frame_skip=inference_frame_skip,
+                inference_keyframe_stride=inference_keyframe_stride,
                 db_session=db_session,
             )
 
         return _create_media_prediction_service
 
     @pytest.mark.parametrize(
-        "index, frame_indexes, inference_frame_skip, expected_result",
+        "index, frame_indexes, inference_keyframe_stride, expected_result",
         [
             (0, [0, 1, 2, 3, 4, 5], 2, True),
             (1, [0, 1, 2, 3, 4, 5], 2, False),
@@ -75,9 +75,9 @@ class TestMediaPredictionServiceUnit:
             (5, [0, 1, 2, 3, 4, 5], 2, True),
         ],
     )
-    def test_is_frame_index_to_infer(self, index, frame_indexes, inference_frame_skip, expected_result):
+    def test_is_frame_index_to_infer(self, index, frame_indexes, inference_keyframe_stride, expected_result):
         result = MediaPredictionService._is_frame_index_to_infer(
-            index=index, frame_indexes=frame_indexes, inference_frame_skip=inference_frame_skip
+            index=index, frame_indexes=frame_indexes, inference_keyframe_stride=inference_keyframe_stride
         )
         assert result == expected_result
 

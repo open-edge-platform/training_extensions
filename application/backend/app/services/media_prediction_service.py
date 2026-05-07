@@ -59,14 +59,14 @@ class MediaPredictionService(BaseSessionManagedService):
         inference_server: InferenceServer,
         inference_model_ttl: int,
         db_session: Session | None = None,
-        inference_frame_skip: int | None = None,
+        inference_keyframe_stride: int | None = None,
     ) -> None:
         super().__init__(db_session)
         self._label_service = label_service
         self._media_service = media_service
         self._inference_server = inference_server
         self._inference_model_ttl = inference_model_ttl
-        self._inference_frame_skip = inference_frame_skip
+        self._inference_keyframe_stride = inference_keyframe_stride
 
     def _load_media_binary(self, project_id: UUID, media: Media) -> np.ndarray:
         binary_path = self._media_service.get_media_binary_path(project_id=project_id, media=media)
@@ -76,8 +76,8 @@ class MediaPredictionService(BaseSessionManagedService):
         return cv2.cvtColor(binary_data, cv2.COLOR_BGR2RGB)
 
     @staticmethod
-    def _is_frame_index_to_infer(index: int, frame_indexes: list[int], inference_frame_skip: int) -> bool:
-        return index == 0 or index == len(frame_indexes) - 1 or index % inference_frame_skip == 0
+    def _is_frame_index_to_infer(index: int, frame_indexes: list[int], inference_keyframe_stride: int) -> bool:
+        return index == 0 or index == len(frame_indexes) - 1 or index % inference_keyframe_stride == 0
 
     def _load_frame_range(self, project: Project, video: Video, video_range: VideoRange) -> list[Frame]:
         video_frames: list[Frame] = []
@@ -90,9 +90,9 @@ class MediaPredictionService(BaseSessionManagedService):
             annotated_frame = next((frame for frame in annotated_frames if frame.frame_index == frame_index), None)
             skip = (
                 not MediaPredictionService._is_frame_index_to_infer(
-                    index=idx, frame_indexes=frame_indexes, inference_frame_skip=self._inference_frame_skip
+                    index=idx, frame_indexes=frame_indexes, inference_keyframe_stride=self._inference_keyframe_stride
                 )
-                if self._inference_frame_skip is not None
+                if self._inference_keyframe_stride is not None
                 else False
             )
             video_frames.append(Frame(frame_index=frame_index, annotated_frame=annotated_frame, skip=skip))

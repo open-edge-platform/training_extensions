@@ -85,10 +85,11 @@ class Settings(BaseSettings):
         alias="INFERENCE_MODEL_TTL",
         description="Time to live for a model loaded for inference, before unloading",
     )
-    inference_frame_skip: int | None = Field(
-        default=None,
-        alias="INFERENCE_FRAME_SKIP",
-        description="Number of frames to skip between inferences for video processing",
+    inference_keyframe_stride: int | None = Field(
+        default=5,
+        alias="INFERENCE_KEYFRAME_STRIDE",
+        description="Stride for video frame inference; only frames where frame_index % stride == 0 are processed. "
+        "First and last frames are always processed.",
         gt=0,
     )
 
