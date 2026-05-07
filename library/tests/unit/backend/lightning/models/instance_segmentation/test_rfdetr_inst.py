@@ -155,11 +155,14 @@ class TestRFDETRInst:
 
         # Test export forward pass
         output = model.forward_for_tracing(torch.randn(1, 3, 312, 312))
-        # Should return (boxes, labels, masks) where ``boxes`` has scores
+        # Should return dict with boxes, labels, masks where ``boxes`` has scores
         # concatenated as the 5th column to match the OpenVINO ``MaskRCNN``
         # model_api wrapper's expectation of ``boxes[:, 4]`` being the score.
+        assert isinstance(output, dict)
         assert len(output) == 3
-        boxes, labels, masks = output
+        boxes = output["boxes"]
+        labels = output["labels"]
+        masks = output["masks"]
         assert boxes.ndim == 3
         assert boxes.shape[-1] == 5  # x1, y1, x2, y2, score
         assert labels.shape[:2] == boxes.shape[:2]
