@@ -4,46 +4,39 @@
 # regression criteria for each task.  The runner iterates over the
 # cross-product (model × dataset × scenario × seed) after applying
 # any runtime filters.
-
 version: 1
-
 defaults:
   num_seeds: 3
   eval_upto: optimize
   deterministic: false # Setting to true is extremely slow for certain models
   rotation:
-    extended_groups: 4
-
+    extended_groups: 2
 experiments:
   classification/multi_class_cls:
     models:
       - name: efficientnet_b0
         priority: core
         recipe: classification/multi_class_cls/efficientnet_b0.yaml
-
       - name: dino_v2
         priority: core
         recipe: classification/multi_class_cls/dino_v2.yaml
-
       - name: deit_tiny
         priority: extended
         recipe: classification/multi_class_cls/deit_tiny.yaml
-
       - name: efficientnet_b3
         priority: extended
         recipe: classification/multi_class_cls/efficientnet_b3.yaml
-
       - name: efficientnet_v2
         priority: extended
         recipe: classification/multi_class_cls/efficientnet_v2.yaml
-
       - name: mobilenet_v3_large
         priority: extended
         recipe: classification/multi_class_cls/mobilenet_v3_large.yaml
-
+      - name: vit_tiny
+        priority: extended
+        recipe: classification/multi_class_cls/vit_tiny.yaml
     datasets:
-      - wgisd
-
+      - flowers102
     criteria:
       accuracy_metric: accuracy
       thresholds:
@@ -53,84 +46,126 @@ experiments:
         "training:e2e_time": { compare: "<=", margin: 0.10 }
         "training:gpu_mem": { compare: "<=", margin: 0.10 }
         "torch:test/latency": { compare: "<=", margin: 0.15 }
-
+  classification/multi_label_cls:
+    models:
+      - name: efficientnet_b0
+        priority: core
+        recipe: classification/multi_label_cls/efficientnet_b0.yaml
+      - name: dino_v2
+        priority: core
+        recipe: classification/multi_label_cls/dino_v2.yaml
+      - name: efficientnet_b3
+        priority: extended
+        recipe: classification/multi_label_cls/efficientnet_b3.yaml
+      - name: efficientnet_v2
+        priority: extended
+        recipe: classification/multi_label_cls/efficientnet_v2.yaml
+      - name: mobilenet_v3_large
+        priority: extended
+        recipe: classification/multi_label_cls/mobilenet_v3_large.yaml
+      - name: vit_tiny
+        priority: extended
+        recipe: classification/multi_label_cls/vit_tiny.yaml
+    datasets:
+      - voc2007
+    criteria:
+      accuracy_metric: accuracy
+      thresholds:
+        "training:val/{metric}": { compare: ">=", margin: 0.10 }
+        "torch:test/{metric}": { compare: ">=", margin: 0.10 }
+        "export:test/{metric}": { compare: ">=", margin: 0.10 }
+        "training:e2e_time": { compare: "<=", margin: 0.10 }
+        "training:gpu_mem": { compare: "<=", margin: 0.10 }
+        "torch:test/latency": { compare: "<=", margin: 0.15 }
+  classification/h_label_cls:
+    models:
+      - name: efficientnet_b0
+        priority: core
+        recipe: classification/h_label_cls/efficientnet_b0.yaml
+      - name: dino_v2
+        priority: core
+        recipe: classification/h_label_cls/dino_v2.yaml
+      - name: efficientnet_b3
+        priority: extended
+        recipe: classification/h_label_cls/efficientnet_b3.yaml
+      - name: efficientnet_v2
+        priority: extended
+        recipe: classification/h_label_cls/efficientnet_v2.yaml
+      - name: mobilenet_v3_large
+        priority: extended
+        recipe: classification/h_label_cls/mobilenet_v3_large.yaml
+      - name: vit_tiny
+        priority: extended
+        recipe: classification/h_label_cls/vit_tiny.yaml
+    datasets:
+      - oxford_pets_hlabel
+    criteria:
+      accuracy_metric: accuracy
+      thresholds:
+        "training:val/{metric}": { compare: ">=", margin: 0.10 }
+        "torch:test/{metric}": { compare: ">=", margin: 0.10 }
+        "export:test/{metric}": { compare: ">=", margin: 0.10 }
+        "training:e2e_time": { compare: "<=", margin: 0.10 }
+        "training:gpu_mem": { compare: "<=", margin: 0.10 }
+        "torch:test/latency": { compare: "<=", margin: 0.15 }
   detection:
     models:
       - name: atss_mobilenetv2
         priority: core
         recipe: detection/atss_mobilenetv2.yaml
-
       - name: yolox_s
         priority: core
         recipe: detection/yolox_s.yaml
-
       - name: dfine_x
         priority: core
         recipe: detection/dfine_x.yaml
-
       - name: ssd_mobilenetv2
         priority: extended
         recipe: detection/ssd_mobilenetv2.yaml
-
       - name: yolox_tiny
         priority: extended
         recipe: detection/yolox_tiny.yaml
-
       - name: yolox_tiny_tile
         priority: extended
         recipe: detection/yolox_tiny_tile.yaml
-
       - name: yolox_l
         priority: extended
         recipe: detection/yolox_l.yaml
-
       - name: yolox_x
         priority: extended
         recipe: detection/yolox_x.yaml
-
       - name: rtdetr_50
         priority: extended
         recipe: detection/rtdetr_50.yaml
-
       - name: rfdetr_small
         priority: extended
         recipe: detection/rfdetr_small.yaml
-
       - name: rfdetr_medium
         priority: extended
         recipe: detection/rfdetr_medium.yaml
-
       - name: rfdetr_large
         priority: extended
         recipe: detection/rfdetr_large.yaml
-
       - name: deim_dfine_x
         priority: extended
         recipe: detection/deim_dfine_x.yaml
-
       - name: deim_dfine_l
         priority: extended
         recipe: detection/deim_dfine_l.yaml
-
       - name: deim_dfine_m
         priority: extended
         recipe: detection/deim_dfine_m.yaml
-
       - name: deimv2_l
         priority: extended
         recipe: detection/deimv2_l.yaml
-
       - name: deimv2_m
         priority: extended
         recipe: detection/deimv2_m.yaml
-
       - name: deimv2_s
         priority: extended
         recipe: detection/deimv2_s.yaml
-
     datasets:
-      - wgisd
-
+      - voc2007
     criteria:
       accuracy_metric: map_50
       thresholds:
@@ -145,34 +180,26 @@ experiments:
       - name: litehrnet_18
         priority: core
         recipe: semantic_segmentation/litehrnet_18.yaml
-
       - name: dino_v2
         priority: core
         recipe: semantic_segmentation/dino_v2.yaml
-
       - name: segnext_t
         priority: extended
         recipe: semantic_segmentation/segnext_t.yaml
-
       - name: segnext_s
         priority: extended
         recipe: semantic_segmentation/segnext_s.yaml
-
       - name: segnext_b
         priority: extended
         recipe: semantic_segmentation/segnext_b.yaml
-
       - name: litehrnet_s
         priority: extended
         recipe: semantic_segmentation/litehrnet_s.yaml
-
       - name: litehrnet_x
         priority: extended
         recipe: semantic_segmentation/litehrnet_x.yaml
-
     datasets:
-      - wgisd
-
+      - oxford_pets
     criteria:
       accuracy_metric: Dice
       thresholds:
@@ -182,44 +209,34 @@ experiments:
         "training:e2e_time": { compare: "<=", margin: 0.10 }
         "training:gpu_mem": { compare: "<=", margin: 0.10 }
         "torch:test/latency": { compare: "<=", margin: 0.15 }
-
   instance_segmentation:
     models:
       - name: maskrcnn_r50
         priority: core
         recipe: instance_segmentation/maskrcnn_r50.yaml
-
       - name: rtmdet_inst_tiny
         priority: core
         recipe: instance_segmentation/rtmdet_inst_tiny.yaml
-
       - name: maskrcnn_efficientnetb2b
         priority: extended
         recipe: instance_segmentation/maskrcnn_efficientnetb2b.yaml
-
       - name: maskrcnn_swint
         priority: extended
         recipe: instance_segmentation/maskrcnn_swint.yaml
-
       - name: rfdetr_seg_small
         priority: extended
         recipe: instance_segmentation/rfdetr_seg_small.yaml
-
       - name: rfdetr_seg_medium
         priority: extended
         recipe: instance_segmentation/rfdetr_seg_medium.yaml
-
       - name: rfdetr_seg_large
         priority: extended
         recipe: instance_segmentation/rfdetr_seg_large.yaml
-
       - name: rfdetr_seg_xlarge
         priority: extended
         recipe: instance_segmentation/rfdetr_seg_xlarge.yaml
-
     datasets:
       - wgisd
-
     criteria:
       accuracy_metric: map_50
       thresholds:
@@ -229,20 +246,32 @@ experiments:
         "training:e2e_time": { compare: "<=", margin: 0.10 }
         "training:gpu_mem": { compare: "<=", margin: 0.10 }
         "torch:test/latency": { compare: "<=", margin: 0.15 }
-
   rotated_detection:
     models:
       - name: maskrcnn_r50_rotated
         priority: core
         recipe: rotated_detection/maskrcnn_r50.yaml
-
       - name: maskrcnn_efficientnetb2b_rotated
         priority: extended
         recipe: rotated_detection/maskrcnn_efficientnetb2b.yaml
-
     datasets:
       - wgisd
-
+    criteria:
+      accuracy_metric: map_50
+      thresholds:
+        "training:val/{metric}": { compare: ">=", margin: 0.10 }
+        "torch:test/{metric}": { compare: ">=", margin: 0.10 }
+        "export:test/{metric}": { compare: ">=", margin: 0.10 }
+        "training:e2e_time": { compare: "<=", margin: 0.10 }
+        "training:gpu_mem": { compare: "<=", margin: 0.10 }
+        "torch:test/latency": { compare: "<=", margin: 0.15 }
+  keypoint_detection:
+    models:
+      - name: rtmpose_tiny
+        priority: core
+        recipe: keypoint_detection/rtmpose_tiny.yaml
+    datasets:
+      - coco_person_kps
     criteria:
       accuracy_metric: map_50
       thresholds:

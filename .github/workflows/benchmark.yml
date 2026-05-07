@@ -51,7 +51,7 @@ on:
         options: [train, export, optimize]
       num_seeds:
         description: "Number of seeds per experiment"
-        default: "2"
+        default: "1"
 
 concurrency:
   group: benchmark-${{ github.ref }}
@@ -76,7 +76,15 @@ jobs:
       accelerators: ${{ steps.cfg.outputs.accelerators }}
       trigger: ${{ steps.cfg.outputs.trigger }}
       should_run: ${{ steps.cfg.outputs.should_run }}
+      rotation_group: ${{ steps.cfg.outputs.rotation_group }}
     steps:
+      - name: Checkout manifest
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          sparse-checkout: library/benchmark_manifest.yaml
+          sparse-checkout-cone-mode: false
+
       - id: cfg
         shell: bash
         env:
@@ -89,6 +97,10 @@ jobs:
           INPUT_SCENARIO: ${{ inputs.scenario }}
           INPUT_ACCELERATOR: ${{ inputs.accelerator }}
         run: |
+          # Read rotation groups from manifest
+          EXTENDED_GROUPS=$(grep 'extended_groups' library/benchmark_manifest.yaml | awk '{print $2}')
+          EXTENDED_GROUPS=${EXTENDED_GROUPS:-4}
+
           # ── workflow_dispatch: use inputs directly ──────────────────────
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             echo "priority=$INPUT_PRIORITY" >> "$GITHUB_OUTPUT"
@@ -99,9 +111,12 @@ jobs:
             echo "accelerators=[\"$INPUT_ACCELERATOR\"]" >> "$GITHUB_OUTPUT"
             echo "trigger=manual" >> "$GITHUB_OUTPUT"
             echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "rotation_group=" >> "$GITHUB_OUTPUT"
 
           # ── Weekly full: Friday schedule ────────────────────────────────
           elif [[ "$EVENT_SCHEDULE" == "0 19 * * 5" ]]; then
+            # Compute rotation group: ISO week number mod extended_groups from manifest
+            ROTATION_GROUP=$(( $(date +%V) % EXTENDED_GROUPS ))
             echo "priority=core,extended" >> "$GITHUB_OUTPUT"
             echo "size_tier=tiny,small,medium" >> "$GITHUB_OUTPUT"
             echo "num_seeds=3" >> "$GITHUB_OUTPUT"
@@ -110,6 +125,7 @@ jobs:
             echo "accelerators=[\"gpu\",\"xpu\"]" >> "$GITHUB_OUTPUT"
             echo "trigger=weekly" >> "$GITHUB_OUTPUT"
             echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "rotation_group=$ROTATION_GROUP" >> "$GITHUB_OUTPUT"
 
 
           else
@@ -183,7 +199,16 @@ jobs:
           ACCELERATOR: ${{ matrix.accelerator }}
           NUM_SEEDS: ${{ needs.configure.outputs.num_seeds }}
           SCENARIO: ${{ needs.configure.outputs.scenario }}
+          ROTATION_GROUP: ${{ needs.configure.outputs.rotation_group }}
         run: |
+          # Build rotation flags
+          ROTATION_FLAGS=""
+          if [[ -n "$ROTATION_GROUP" ]]; then
+            ROTATION_FLAGS="--rotation-group $ROTATION_GROUP"
+          else
+            ROTATION_FLAGS="--no-rotation"
+          fi
+
           uv run python -m otx.benchmark run \
             --manifest benchmark_manifest.yaml \
             --catalog benchmark_catalog.yaml \
@@ -197,7 +222,8 @@ jobs:
             --eval-upto "$EVAL_UPTO" \
             --accelerator "$ACCELERATOR" \
             --num-seeds "$NUM_SEEDS" \
-            --scenario "$SCENARIO"
+            --scenario "$SCENARIO" \
+            $ROTATION_FLAGS
 
       # ── Disk cleanup: remove heavy artifacts, keep only metrics ─────
       - name: Cleanup checkpoints and exported models

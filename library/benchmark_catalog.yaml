@@ -19,3 +19,51 @@ datasets:
   - name: wgisd
     script: "scripts/benchmark_datasets/prepare_wgisd.py"
     size_tier: small
+    description: "Wine Grape Instance Segmentation Dataset — 137 images of grape clusters with COCO-style polygon annotations (5 varieties)."
+    compatible_tasks:
+      - instance_segmentation
+      - detection # polygons → bounding boxes
+      - rotated_detection # polygons → oriented bounding boxes
+      - semantic_segmentation # polygons → pixel masks
+      - classification/multi_class_cls # crop-level or image-level class from category
+
+  - name: flowers102
+    script: "scripts/benchmark_datasets/prepare_flowers102.py"
+    size_tier: large
+    description: "Oxford Flowers 102 — 8,189 images across 102 flower categories with official train/val/test splits."
+    compatible_tasks:
+      - classification/multi_class_cls
+
+  - name: oxford_pets_hlabel
+    script: "scripts/benchmark_datasets/prepare_oxford_pets_hlabel.py"
+    size_tier: large
+    description: "Oxford-IIIT Pet with hierarchical labels — 7,349 images with natural 2-level hierarchy: species (cat/dog) → 37 breeds."
+    compatible_tasks:
+      - classification/h_label_cls
+
+  - name: voc2007
+    script: "scripts/benchmark_datasets/prepare_voc2007.py"
+    size_tier: large
+    description: "Pascal VOC 2007 — 9,963 images with bounding box annotations for 20 object classes."
+    compatible_tasks:
+      - detection
+      - classification/multi_label_cls # per-image multi-label from object presence
+
+  - name: oxford_pets
+    script: "scripts/benchmark_datasets/prepare_oxford_pets.py"
+    size_tier: large
+    description: "Oxford-IIIT Pet — 7,349 images of 37 pet breeds with pixel-level trimap segmentation masks."
+    compatible_tasks:
+      - semantic_segmentation
+      - instance_segmentation # trimap foreground → single instance polygon
+      - detection # foreground mask → bounding box
+
+  - name: coco_person_kps
+    script: "scripts/benchmark_datasets/prepare_coco_person_kps.py"
+    size_tier: large
+    description: "COCO 2017 val person keypoints — ~2,700 images with 17-joint human pose annotations."
+    compatible_tasks:
+      - keypoint_detection
+      - detection # person bounding boxes
+      - instance_segmentation # person segmentation masks available in COCO
+
