@@ -225,7 +225,7 @@ class TestStagedDatasetServiceIntegration:
         assert geti_ds.filename == str(geti_path)
         assert geti_ds.metadata == DatasetMetadata(
             num_images=3,
-            num_frames=1,
+            num_frames=0,
             num_videos=1,
             annotation_type=AnnotationType.LABEL,
             num_annotations=3,
@@ -286,7 +286,7 @@ class TestStagedDatasetServiceIntegration:
         assert result.format == DatasetFormat.GETI
         assert result.metadata == DatasetMetadata(
             num_images=3,
-            num_frames=1,
+            num_frames=0,
             num_videos=1,
             annotation_type=AnnotationType.LABEL,
             num_annotations=3,
