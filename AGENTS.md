@@ -13,7 +13,8 @@
 - `library/`: OTX Python package, recipes, and tests.
 - `application/backend/`: FastAPI backend named `geti`; consumes `../../library` as an editable `uv` source.
 - `application/ui/`: React 19 + TypeScript + RSBuild frontend.
-- `DOCS/`: documentation and supporting repo docs.
+- `library/docs/`: Sphinx-based documentation source.
+- `README.md` & `CHANGELOG.md`: root-level project documentation.
 - `.github/workflows/`: CI source of truth for path-based checks and required jobs.
 
 ## Data & State
@@ -27,6 +28,7 @@
 - Use the `backend` workflow for changes under `application/backend/app`, backend tests, backend packaging, or backend API schemas.
 - Use the `ui` workflow for changes under `application/ui/src`, frontend tests, build config, or generated API client types.
 - Use the OpenAPI sync workflow whenever backend API contracts change and the UI consumes those changes.
+- Use the documentation update workflow to keep `README.md`, `CHANGELOG.md`, or `library/docs/` in sync with code changes.
 
 ## Commands: Library
 
