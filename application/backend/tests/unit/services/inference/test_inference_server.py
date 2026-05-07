@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import ANY, Mock, patch
 from uuid import uuid4
 
 import numpy as np
@@ -14,7 +14,7 @@ from app.models.model_revision import ModelFormat, ModelPrecision, ModelVariant
 from app.models.system import DeviceInfo, DeviceType
 from app.services import ModelService
 from app.services.inference import InferenceModel, InferenceServer, InferenceState, InferenceStatus
-from app.services.inference.inference_server import _LoadedModel
+from app.services.inference.model_loader import LoadedModelHandle
 
 
 class TestInferenceServer:
@@ -24,16 +24,18 @@ class TestInferenceServer:
         model_variant_id = uuid4()
         device = DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
 
-        model_variant = MagicMock(
+        model_variant = Mock(
             spec=ModelVariant, id=model_variant_id, format=ModelFormat.OPENVINO, precision=ModelPrecision.FP16
         )
 
         inference_server = InferenceServer(data_dir=Path(tmp_path))
 
-        model = MagicMock(spec=Model)
+        model = Mock(spec=Model)
+        model_handle = LoadedModelHandle(
+            model_id=model_id, variant_id=uuid4(), model=model, device=device, loaded_at=datetime.now()
+        )
 
         with (
-            patch("model_api.models.Model.create_model", return_value=model) as mock_create_model,
             patch.object(
                 target=ModelService, attribute="get_model_variants", return_value=[model_variant]
             ) as mock_get_model_variants,
@@ -42,8 +44,7 @@ class TestInferenceServer:
                 attribute="get_model_binary_files",
                 return_value=(True, (tmp_path / "model.xml", tmp_path / "model.bin")),
             ) as mock_get_model_binary_files,
-            patch("app.services.inference.inference_server.create_core") as mock_create_core,
-            patch("app.services.inference.inference_server.FP32OpenvinoAdapter") as mock_fp32_adapter,
+            patch("app.services.inference.model_loader.ModelLoader.load", return_value=model_handle) as mock_load_model,
         ):
             model_loaded = inference_server.set_inference_model(
                 project_id=project_id, model_id=model_id, device=device, ttl=60
@@ -52,7 +53,7 @@ class TestInferenceServer:
             assert model_loaded
             assert (
                 inference_server._loaded_model is not None
-                and inference_server._loaded_model.id == model_id
+                and inference_server._loaded_model.model_id == model_id
                 and inference_server._loaded_model.model == model
                 and inference_server._loaded_model.device == device
             )
@@ -61,34 +62,95 @@ class TestInferenceServer:
             mock_get_model_binary_files.assert_called_once_with(
                 project_id=project_id, model_id=model_id, model_variant_id=model_variant_id
             )
-            mock_fp32_adapter.assert_called_once_with(
-                mock_create_core.return_value,
-                str(tmp_path / "model.xml"),
-                device=device.as_openvino,
-                max_num_requests=2,
+            mock_load_model.assert_called_once_with(
+                model_id=model_id,
+                variant_id=model_variant_id,
+                model_xml_path=tmp_path / "model.xml",
+                device=device,
             )
-            mock_create_model.assert_called_once_with(mock_fp32_adapter.return_value)
 
-    def test_set_inference_model_already_loaded(self, tmp_path) -> None:
+    def test_set_inference_same_model_already_loaded(self, tmp_path) -> None:
+        """Tests that inference server doesn't try to load the model again if it is already loaded."""
         project_id = uuid4()
         model_id = uuid4()
         device = DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
 
-        model = MagicMock(spec=Model)
+        model = Mock(spec=Model)
+        model_handle = LoadedModelHandle(
+            model_id=model_id, variant_id=uuid4(), model=model, device=device, loaded_at=datetime.now()
+        )
 
         inference_server = InferenceServer(data_dir=Path(tmp_path))
-        inference_server._loaded_model = _LoadedModel(
-            id=model_id, model=model, device=device, load_timestamp=datetime.now()
+        inference_server._loaded_model = model_handle
+
+        with patch(
+            "app.services.inference.model_loader.ModelLoader.load", return_value=model_handle
+        ) as mock_load_model:
+            model_loaded = inference_server.set_inference_model(
+                project_id=project_id, model_id=model_id, device=device, ttl=60
+            )
+
+            mock_load_model.assert_not_called()
+            assert not model_loaded
+            assert inference_server._loaded_model.model_id == model_id
+            assert inference_server._loaded_model.model == model
+            assert inference_server._loaded_model.device == device
+
+    def test_set_inference_different_model_already_loaded(self, tmp_path) -> None:
+        """Tests that inference server first unloads the old model before loading the new one."""
+        project_id = uuid4()
+        model_id, new_model_id = uuid4(), uuid4()
+        new_model_variant_id = uuid4()
+        device = DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
+
+        model_variant = Mock(
+            spec=ModelVariant, id=new_model_variant_id, format=ModelFormat.OPENVINO, precision=ModelPrecision.FP16
         )
 
-        model_loaded = inference_server.set_inference_model(
-            project_id=project_id, model_id=model_id, device=device, ttl=60
+        model = Mock(spec=Model)
+        model_handle = LoadedModelHandle(
+            model_id=model_id, variant_id=uuid4(), model=model, device=device, loaded_at=datetime.now()
+        )
+        new_model_handle = LoadedModelHandle(
+            model_id=new_model_id, variant_id=new_model_variant_id, model=model, device=device, loaded_at=datetime.now()
         )
 
-        assert not model_loaded
-        assert inference_server._loaded_model.id == model_id
-        assert inference_server._loaded_model.model == model
-        assert inference_server._loaded_model.device == device
+        inference_server = InferenceServer(data_dir=Path(tmp_path))
+        inference_server._loaded_model = model_handle
+
+        with (
+            patch.object(
+                target=ModelService, attribute="get_model_variants", return_value=[model_variant]
+            ) as mock_get_model_variants,
+            patch.object(
+                target=ModelService,
+                attribute="get_model_binary_files",
+                return_value=(True, (tmp_path / "model.xml", tmp_path / "model.bin")),
+            ) as mock_get_model_binary_files,
+            patch(
+                "app.services.inference.model_loader.ModelLoader.load", return_value=new_model_handle
+            ) as mock_load_model,
+            patch("app.services.inference.model_loader.ModelLoader.unload") as mock_unload_model,
+        ):
+            model_loaded = inference_server.set_inference_model(
+                project_id=project_id, model_id=new_model_id, device=device, ttl=60
+            )
+
+            mock_get_model_variants.assert_called_once_with(project_id=project_id, model_id=new_model_id)
+            mock_get_model_binary_files.assert_called_once_with(
+                project_id=project_id, model_id=new_model_id, model_variant_id=new_model_variant_id
+            )
+            mock_unload_model.assert_called_once_with(model_handle)
+            mock_load_model.assert_called_once_with(
+                model_id=new_model_id,
+                variant_id=new_model_variant_id,
+                model_xml_path=tmp_path / "model.xml",
+                device=device,
+            )
+            assert model_loaded
+            assert inference_server._loaded_model.model_id == new_model_id
+            assert inference_server._loaded_model.model == model
+            assert inference_server._loaded_model.device == new_model_handle.device
 
     def test_get_status_idle(self, tmp_path) -> None:
         inference_server = InferenceServer(data_dir=Path(tmp_path))
@@ -102,11 +164,11 @@ class TestInferenceServer:
         model_id = uuid4()
         device = DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
 
-        model = MagicMock(spec=Model)
+        model = Mock(spec=Model)
 
         inference_server = InferenceServer(data_dir=Path(tmp_path))
-        inference_server._loaded_model = _LoadedModel(
-            id=model_id, model=model, device=device, load_timestamp=datetime.now()
+        inference_server._loaded_model = LoadedModelHandle(
+            model_id=model_id, variant_id=uuid4(), model=model, device=device, loaded_at=datetime.now()
         )
 
         status = inference_server.get_status()
@@ -122,20 +184,23 @@ class TestInferenceServer:
 
     def test_stop(self, tmp_path) -> None:
         device = DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
-        model = MagicMock(spec=Model)
-
-        inference_server = InferenceServer(data_dir=Path(tmp_path))
-        inference_server._loaded_model = _LoadedModel(
-            id=uuid4(), model=model, device=device, load_timestamp=datetime.now()
+        model = Mock(spec=Model)
+        model_handle = LoadedModelHandle(
+            model_id=uuid4(), variant_id=uuid4(), model=model, device=device, loaded_at=datetime.now()
         )
 
-        inference_server.stop()
+        inference_server = InferenceServer(data_dir=Path(tmp_path))
+        inference_server._loaded_model = model_handle
 
-        assert inference_server._loaded_model is None
+        with patch("app.services.inference.model_loader.ModelLoader.unload") as mock_unload_model:
+            inference_server.stop()
+
+            mock_unload_model.assert_called_once_with(model_handle)
+            assert inference_server._loaded_model is None
 
     def test_infer_batch_not_loaded(self, tmp_path) -> None:
-        label = MagicMock(spec=Label)
-        input = MagicMock(spec=BatchInferenceInput)
+        label = Mock(spec=Label)
+        input = Mock(spec=BatchInferenceInput)
 
         inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = None
@@ -147,27 +212,26 @@ class TestInferenceServer:
         device = DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
         media_id = uuid4()
 
-        model = MagicMock(spec=Model)
-        inference_result = MagicMock()
+        model = Mock(spec=Model)
+        inference_result = Mock()
         model.infer_batch.return_value = [inference_result]
 
-        label = MagicMock(spec=Label)
+        label = Mock(spec=Label)
         raw_uint8 = np.full((20, 20, 3), 128, dtype=np.uint8)
         input = BatchInferenceInput(media_id=media_id, frame_index=15, data=raw_uint8)
 
-        annotation = MagicMock(spec=DatasetItemAnnotation)
+        annotation = Mock(spec=DatasetItemAnnotation)
 
         inference_server = InferenceServer(data_dir=Path(tmp_path))
-        inference_server._loaded_model = _LoadedModel(
-            id=uuid4(), model=model, device=device, load_timestamp=datetime.now()
+        inference_server._loaded_model = LoadedModelHandle(
+            model_id=uuid4(), variant_id=uuid4(), model=model, device=device, loaded_at=datetime.now()
         )
 
         with patch("app.services.inference.inference_server.convert_prediction") as mock_convert_prediction:
             mock_convert_prediction.return_value = [annotation]
             inference_server.infer_batch(labels=[label], inputs=[input])
 
-        # Images are always scaled to float32 [0, 1]
         (passed_batch,) = model.infer_batch.call_args.args
         assert len(passed_batch) == 1
-        np.testing.assert_array_almost_equal(passed_batch[0], raw_uint8.astype(np.float32) / 255.0)
-        assert passed_batch[0].dtype == np.float32
+        np.testing.assert_array_equal(passed_batch[0], raw_uint8)
+        assert passed_batch[0].dtype == np.uint8

@@ -9,21 +9,21 @@ Base Tutorials
       :link-type: doc
       :text-align: center
 
-      Learn how to train a model and deploy it to use in OpenVINO™ Training Extensions.
+      Learn how to train a model and deploy it to use in Geti Library.
 
    .. grid-item-card:: XAI Tutorial
       :link: explain
       :link-type: doc
       :text-align: center
 
-      Learn how to explain a model using OpenVINO™ Training Extensions.
+      Learn how to explain a model using Geti Library.
 
    .. grid-item-card:: Export and demo tutorial
       :link: export
       :link-type: doc
       :text-align: center
 
-      Learn how to export a model using OpenVINO™ Training Extensions and use it in self-contained demo.
+      Learn how to export a model using Geti Library and use it in self-contained demo.
 
 .. toctree::
    :maxdepth: 2

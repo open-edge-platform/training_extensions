@@ -4,7 +4,7 @@ XAI Tutorial
 This guide explains the model behavior, which is trained through :doc:`previous stage <how_to_train/index>`.
 It allows displaying the saliency maps, which provide the locality where the model gave an attention to predict a specific category.
 
-To be specific, this tutorial uses as an example of the ATSS model trained through ``otx train`` and saved as ``otx-workspace/.latest/train/checkpoints/epoch_*.pth``.
+To be specific, this tutorial uses as an example of the ATSS model trained through ``getitune train`` and saved as ``getitune-workspace/.latest/train/checkpoints/epoch_*.pth``.
 
 .. note::
 
@@ -18,7 +18,7 @@ For visualization we use images from WGISD dataset from the :doc:`object detecti
 
   source .venv/bin/activate
 
-2. ``otx predict`` with the ``--explain True`` parameter returns saliency maps, 
+2. ``getitune predict`` with the ``--explain True`` parameter returns saliency maps, 
 which are heatmaps with red-colored areas indicating focus. Here's an example how to generate saliency maps from trained checkpoint:
 
 .. tab-set::
@@ -27,7 +27,7 @@ which are heatmaps with red-colored areas indicating focus. Here's an example ho
 
         .. code-block:: shell
 
-            (otx) ...$ otx predict --work_dir otx-workspace \
+            (getitune) ...$ getitune predict --work_dir getitune-workspace \
                                    --explain True \
                                    --explain_config.postprocess True # Resizes and applies colormap to the saliency map
 
@@ -35,9 +35,9 @@ which are heatmaps with red-colored areas indicating focus. Here's an example ho
 
         .. code-block:: shell
 
-            (otx) ...$ otx predict --config src/otx/recipe/detection/atss_mobilenetv2.yaml \
+            (getitune) ...$ getitune predict --config src/getitune/recipe/detection/atss_mobilenetv2.yaml \
                                    --data_root data/wgisd \
-                                   --checkpoint otx-workspace/.latest/train/best_checkpoint.ckpt \
+                                   --checkpoint getitune-workspace/.latest/train/best_checkpoint.ckpt \
                                    --explain True \
                                    --explain_config.postprocess True # Resizes and applies colormap to the saliency map
 
@@ -46,13 +46,13 @@ which are heatmaps with red-colored areas indicating focus. Here's an example ho
         .. code-block:: python
 
             engine.predict(
-                checkpoint="otx-workspace/.latest/train/best_checkpoint.ckpt",
-                datamodule=OTXDataModule(...), # The data module to use for predictions
+                checkpoint="getitune-workspace/.latest/train/best_checkpoint.ckpt",
+                datamodule=DataModule(...), # The data module to use for predictions
                 explain=True,
                 explain_config=ExplainConfig(postprocess=True), # Resizes and applies colormap to the saliency map
               )
 
-3. The generated saliency maps will appear in  ``otx-workspace/.latest/explain/saliency_maps`` folder. 
+3. The generated saliency maps will appear in  ``getitune-workspace/.latest/explain/saliency_maps`` folder. 
 It will contain a pair of generated images with saliency maps for each image used for the explanation process: 
 
 - saliency map - where red color means more attention of the model
@@ -64,7 +64,7 @@ It will contain a pair of generated images with saliency maps for each image use
 |
 
 4. To use the exported OpenVINO IR model for explanation, PyTorch weights should be converted to OpenVINO IR model with additional outputs ``saliency_map`` and ``feature_map``.
-To do that we should use ``otx export --explain True`` parameter during export.
+To do that we should use ``getitune export --explain True`` parameter during export.
 
 .. tab-set::
 
@@ -72,20 +72,23 @@ To do that we should use ``otx export --explain True`` parameter during export.
 
         .. code-block:: shell
 
-            (otx) ...$ otx export ... --explain True
-            (otx) ...$ otx predict ... --checkpoint otx-workspace/20240312_052847/exported_model.xml --explain True
+            (getitune) ...$ getitune export ... --explain True
+            (getitune) ...$ getitune predict ... --checkpoint getitune-workspace/20240312_052847/exported_model.xml --explain True
 
     .. tab-item:: API
 
         .. code-block:: python
-            # Use .pth when instantiating the engine with OTXEngine
-            engine = OTXEngine(model="checkpoint.pth", ...)
-            engine.export(..., explain=True)
-            engine.predict(..., explain=True)
 
-  
-            engine = OVEngine(model="exported_model.xml", ...)
-            engine.predict(..., explain=True)
+            from getitune.backend.lightning.engine import LightningEngine
+            from getitune.backend.openvino.engine import OVEngine
+
+            # Export with explain outputs
+            engine = LightningEngine(model="checkpoint.ckpt", data="data/wgisd")
+            engine.export(explain=True)
+
+            # Run prediction with explain on exported model
+            ov_engine = OVEngine(model="exported_model.xml", data="data/wgisd")
+            ov_engine.predict(explain=True)
 
 5. We can parametrize the explanation process by specifying 
 the following parameters in ``ExplainConfig``:
@@ -107,7 +110,7 @@ the following parameters in ``ExplainConfig``:
 
         .. code-block:: shell
 
-            (otx) ...$ otx predict ... --explain True \
+            (getitune) ...$ getitune predict ... --explain True \
                                        --explain_config.postprocess True \
                                        --explain_config.target_explain_group PREDICTIONS
 

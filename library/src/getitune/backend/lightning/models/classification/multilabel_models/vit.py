@@ -58,7 +58,7 @@ pretrained_urls = {
 
 
 class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, LightningMultilabelClsModel):
-    """DeitTiny Model for multi-class classification task."""
+    """ViT Model for multi-label classification task."""
 
     def __init__(
         self,

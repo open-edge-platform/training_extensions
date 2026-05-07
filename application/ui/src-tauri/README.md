@@ -50,11 +50,13 @@ cannot bloat the desktop bundle.
 
 ```
 src/
-  features/
-    foo/
-      use-bar.ts              ← web (default)
-      use-bar.tauri.ts        ← tauri override
+  platform/
+    download-file.ts            ← web (default)
+    download-file.tauri.ts      ← tauri override
 ```
+
+Twins can live anywhere under `src/`; `src/platform/` is just where existing
+capability modules are grouped.
 
 Rules of thumb when adding a platform-specific behaviour:
 
@@ -64,7 +66,7 @@ Rules of thumb when adding a platform-specific behaviour:
    not — this is enforced by the `no-restricted-imports` rule in
    [`../eslint.config.js`](../eslint.config.js).
 3. **Tauri-only features:** ship a no-op/null-returning module as the default
-   and the real implementation in `.tauri.tsx`. Consumers render/call
+   and the real implementation in `.tauri.{ts,tsx}`. Consumers render/call
    unconditionally; the web build tree-shakes the no-op away.
 4. **Tauri-only styles:** same trick with `.scss` / `.tauri.scss`. The
    `.tauri.scss` and `.scss` extensions are already in `resolve.extensions`,
@@ -86,7 +88,15 @@ production build via `beforeDevCommand` / `beforeBuildCommand` in
 - **Node.js** ≥ 24.2 and **npm** ≥ 11.3 (see `engines` in `../package.json`).
 - **Rust** stable toolchain ≥ 1.77.2 (install via [rustup](https://rustup.rs)).
 - **`just`** task runner (used to build the Python backend; install via
-  `brew install just`, `cargo install just`, or your package manager).
+  `brew install just`, `cargo install just`, `winget install Casey.Just`, or
+  your package manager).
+- **`bash`** on `PATH`. The backend `Justfile` uses bash heredocs in several
+  recipes. macOS and Linux already provide it. On **Windows you must install
+  [Git for Windows](https://git-scm.com/download/win)** and make sure its
+  `cmd/` and `usr/bin/` folders are on `PATH` so `just` can resolve
+  `bash.exe` and `cygpath.exe`. Without these, recipes such as
+  `just pyinstaller` fail with `cygpath.exe: command not found` or
+  `program not found` errors.
 - **`uv`** Python package manager — installed automatically by the backend
   `Justfile` if missing, or via `curl -LsSf https://astral.sh/uv/install.sh | sh`.
 - **Tauri 2 system dependencies** — see the platform-specific sections below.
@@ -115,6 +125,32 @@ just pyinstaller -a xpu     # Intel GPU
 just pyinstaller -a cuda    # NVIDIA GPU
 ```
 
+On **macOS** the recipe transparently runs `just fix-macho-signatures`
+first, which repairs malformed Mach-O dylibs shipped by some upstream wheels
+(notably `openvino`'s `libhwloc` / `libtbb*`). Without this, ad-hoc
+codesigning during PyInstaller's `COLLECT` phase fails with
+_"internal error in Code Signing subsystem"_. The repair script lives at
+[`../../backend/pyinstaller/fix_macho_signatures.py`](../../backend/pyinstaller/fix_macho_signatures.py)
+and is a no-op on non-macOS platforms. If you ever need to run it on its
+own (e.g. after a manual `uv sync`):
+
+```sh
+just fix-macho-signatures
+```
+
+On **Windows** you might need to install [Git for Windows](https://git-scm.com/download/win)
+first — the backend `Justfile` uses bash heredocs, so `just` shells out to
+`bash.exe` and `cygpath.exe`. Without them you'll see
+`cygpath.exe: command not found` or `program not found`. During install,
+accept the _"Git from the command line and also from 3rd-party software"_
+option (or add `C:\Program Files\Git\cmd` and `C:\Program Files\Git\usr\bin`
+to `PATH` manually), open a fresh PowerShell and verify:
+
+```powershell
+where.exe bash
+where.exe cygpath
+```
+
 This produces `application/backend/dist/geti-backend/`, which contains:
 
 - `geti-backend` (or `geti-backend.exe` on Windows) — the entry executable.
@@ -130,7 +166,7 @@ Tauri's `externalBin` mechanism requires the executable next to
 We use **symlinks** so the side-car always reflects the latest PyInstaller
 run without copying gigabytes around.
 
-From `application/ui/src-tauri`:
+cd into `application/ui/src-tauri`, then:
 
 ```sh
 # macOS — Apple silicon (M1/M2/M3/M4)
@@ -154,9 +190,13 @@ New-Item -ItemType SymbolicLink -Path .\_internal `
 
 Find your host triple with `rustc -vV | grep host` if unsure.
 
-The symlinks are gitignored. The Rust shell spawns the executable that
-lives next to the bundled app at runtime — see `spawn_backend()` in
-[`src/main.rs`](./src/main.rs).
+The symlinks are gitignored. Tauri stages both `geti-backend` (from
+`externalBin`) and `_internal/` (from `resources`) next to its own
+executable in `target/<profile>/` during `tauri dev`, so PyInstaller's
+frozen layout works in dev with no extra steps. The release `.app` on
+macOS needs the sidecar nested one level deeper — that's done by the
+`just tauri-build` recipe in [`../../Justfile`](../../Justfile); see
+`spawn_backend()` and `locate_backend()` in [`src/backend.rs`](./src/backend.rs).
 
 ### macOS
 
@@ -169,17 +209,25 @@ lives next to the bundled app at runtime — see `spawn_backend()` in
     brew install rustup-init && rustup-init
     ```
 3. From `application/ui`, run the desktop dev shell:
+
     ```sh
     npm run start:desktop
     ```
+
     This invokes `tauri dev`, which in turn runs `npm run start:tauri` (sets
     `BUILD_TARGET=tauri` and starts the Rspack dev server) and launches the
     native window once the dev server is ready.
+
 4. Build a distributable `.app` / `.dmg`:
     ```sh
-    npx tauri build
+    just tauri-build   # from application/
     ```
-    Artifacts land in `src-tauri/target/release/bundle/`.
+    Artifacts land in `application/ui/src-tauri/target/release/bundle/`.
+    Note: the recipe runs `npx tauri build` and then patches the bundle
+    layout (moves the sidecar + `_internal/` into `Contents/MacOS/backend/`)
+    to work around PyInstaller's `.app` bundle detection. Running
+    `npx tauri build` directly produces a `.app` whose backend dies on
+    launch with `Failed to load Python shared library 'libpython*.dylib'`.
 
 ### Linux
 
@@ -201,14 +249,16 @@ lives next to the bundled app at runtime — see `spawn_backend()` in
     ```
 2. Install Rust via [rustup](https://rustup.rs).
 3. From `application/ui`, run the desktop dev shell:
+
     ```sh
     npm run start:desktop
     ```
+
 4. Build a distributable AppImage / `.deb`:
     ```sh
-    npx tauri build
+    just tauri-build   # from application/
     ```
-    Artifacts land in `src-tauri/target/release/bundle/`.
+    Artifacts land in `application/ui/src-tauri/target/release/bundle/`.
 
 ### Windows
 
@@ -219,14 +269,16 @@ lives next to the bundled app at runtime — see `spawn_backend()` in
    (already present on Windows 11 and most up-to-date Windows 10 installs).
 3. Install Rust via [rustup](https://rustup.rs).
 4. From `application/ui` (PowerShell or `cmd`), run the desktop dev shell:
+
     ```powershell
     npm run start:desktop
     ```
+
 5. Build a distributable `.msi` / `.exe`:
     ```powershell
-    npx tauri build
+    just tauri-build   # from application\
     ```
-    Artifacts land in `src-tauri\target\release\bundle\`.
+    Artifacts land in `application\ui\src-tauri\target\release\bundle\`.
 
 > The `start:tauri` and `build:tauri` npm scripts set `BUILD_TARGET=tauri`
 > using POSIX shell syntax (`BUILD_TARGET=tauri rsbuild …`). On native
@@ -237,6 +289,45 @@ lives next to the bundled app at runtime — see `spawn_backend()` in
 > ```powershell
 > $env:BUILD_TARGET = 'tauri'; npx rsbuild build
 > ```
+
+## Where is my data?
+
+The desktop shell pins the backend's `DATA_DIR`, `LOG_DIR` and matplotlib
+cache to OS-conventional per-user directories (resolved via Tauri's
+`app.path()` APIs from the `com.intel.geti` bundle identifier). These live
+**outside** the install prefix, so reinstalls and upgrades preserve them
+— same convention as Chrome and VSCode.
+
+| Platform | Data                                              | Logs                              | Cache (matplotlib)                           |
+| -------- | ------------------------------------------------- | --------------------------------- | -------------------------------------------- |
+| macOS    | `~/Library/Application Support/com.intel.geti`    | `~/Library/Logs/com.intel.geti`   | `~/Library/Caches/com.intel.geti/matplotlib` |
+| Windows  | `%APPDATA%\com.intel.geti`                        | `%APPDATA%\com.intel.geti\logs`   | `%LOCALAPPDATA%\com.intel.geti\matplotlib`   |
+| Linux    | `~/.local/share/com.intel.geti`                   | `~/.local/state/com.intel.geti`   | `~/.cache/com.intel.geti/matplotlib`         |
+
+Set `DATA_DIR`, `LOG_DIR`, or `MPLCONFIGDIR` in the environment to override
+any of them (the Rust shell only fills in what's missing).
+
+## Cleanup / uninstall
+
+The OS uninstaller / drag-to-trash only removes the app bundle. To wipe
+**everything**:
+
+1. **Per-user data** — delete the directories listed above. On macOS:
+    ```sh
+    rm -rf ~/Library/{Application\ Support,Logs,Caches}/com.intel.geti
+    ```
+2. **PyInstaller build output** (only if you built locally):
+    ```sh
+    rm -rf application/backend/dist application/backend/build
+    ```
+3. **Rust build artifacts**:
+    ```sh
+    rm -rf application/ui/src-tauri/target
+    ```
+4. **Frontend build output**:
+    ```sh
+    rm -rf application/ui/dist
+    ```
 
 ## Verifying the platform split
 

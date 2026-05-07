@@ -15,12 +15,12 @@ import {
     YAxis,
 } from 'recharts';
 
-import { useProjectLabelsWithEmptyLabel } from '../../../../../shared/annotator/labels';
+import { isEmptyLabel, useProjectLabelsWithEmptyLabel } from '../../../../../shared/annotator/labels';
 
 type DatasetLabelsChartProps = {
     totalItems: number;
     instancesPerLabel: {
-        label_id: string;
+        label_id: string | null;
         instances: number;
     }[];
 };
@@ -43,8 +43,12 @@ const ItemLabel = (props: LabelProps) => {
 export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLabelsChartProps) => {
     const projectLabels = useProjectLabelsWithEmptyLabel();
 
+    const emptyLabelInstance = instancesPerLabel.find(({ label_id }) => label_id === null);
+
     const chartData = projectLabels.map((projectLabel) => {
-        const matchingInstances = instancesPerLabel.find(({ label_id }) => label_id === projectLabel.id);
+        const matchingInstances = isEmptyLabel(projectLabel)
+            ? emptyLabelInstance
+            : instancesPerLabel.find(({ label_id }) => label_id === projectLabel.id);
 
         return {
             label: projectLabel.name,

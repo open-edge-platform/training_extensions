@@ -3,7 +3,13 @@
 
 .grid {
     padding: var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-250)
-        var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-1000);
+        var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-700);
+}
+
+div:has(> .grid) {
+    & + & {
+        border-top: 1px solid var(--spectrum-global-color-gray-300);
+    }
 }
 
 .modelName {

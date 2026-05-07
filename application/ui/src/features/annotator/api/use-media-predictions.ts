@@ -33,7 +33,6 @@ export const mediaPredictionsQueryOptions = ({
                 body: {
                     device: 'AUTO',
                     model_id: modelId,
-                    save_predictions: false,
                     media: [{ media_id: mediaId, range }],
                 },
             });

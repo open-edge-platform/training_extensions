@@ -26,7 +26,7 @@ export const TASK_OPTIONS: TaskOption[] = [
     {
         id: 'segmentation_task',
         imageSrc: segmentationImageUrl,
-        title: 'Image Segmentation',
+        title: 'Instance Segmentation',
         description: 'Detect and outline specific regions or shapes',
         advice: 'Best for: Measurement, Odd shapes',
         verb: 'segment',

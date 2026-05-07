@@ -10,9 +10,9 @@ For default setting, the square root of (number of old data/number of new data) 
 
         .. code-block:: python
 
-            from otx.data.samplers.class_incremental_sampler import ClassIncrementalSampler
+            from getitune.data.samplers.class_incremental_sampler import ClassIncrementalSampler
 
-            dataset = OTXDataset(...)
+            dataset = VisionDataset(...)
             class_incr_sampler = ClassIncrementalSampler(
                 dataset=dataset,
                 batch_size=32,
@@ -24,8 +24,8 @@ For default setting, the square root of (number of old data/number of new data) 
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... \
-                                 --data.train_subset.sampler.class_path otx.algo.samplers.class_incremental_sampler.ClassIncrementalSampler \
+            (getitune) ...$ getitune train ... \
+                                 --data.train_subset.sampler.class_path getitune.data.samplers.class_incremental_sampler.ClassIncrementalSampler \
                                  --data.train_subset.sampler.init_args.old_classes '[car,truck]' \
                                  --data.train_subset.sampler.init_args.new_classes '[bus]'
 
@@ -43,9 +43,9 @@ It helps ensure balanced sampling by class based on the distribution of class la
 
         .. code-block:: python
 
-            from otx.data.samplers.balanced_sampler import BalancedSampler
+            from getitune.data.samplers.balanced_sampler import BalancedSampler
 
-            dataset = OTXDataset(...)
+            dataset = VisionDataset(...)
             class_incr_sampler = BalancedSampler(
                 dataset=dataset,
             )
@@ -54,5 +54,5 @@ It helps ensure balanced sampling by class based on the distribution of class la
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... \
-                                 --data.train_subset.sampler.class_path otx.algo.samplers.balanced_sampler.BalancedSampler
+            (getitune) ...$ getitune train ... \
+                                 --data.train_subset.sampler.class_path getitune.data.samplers.balanced_sampler.BalancedSampler

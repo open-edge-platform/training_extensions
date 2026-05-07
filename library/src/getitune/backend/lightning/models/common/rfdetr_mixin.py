@@ -289,11 +289,21 @@ class RFDETRMixin:
 
     @staticmethod
     def _restore_forward_methods(module: torch.nn.Module) -> None:
-        """Undo ``module.export()`` forward monkey-patching on all sub-modules."""
+        """Undo ``module.export()`` forward monkey-patching on all sub-modules.
+
+        Some rfdetr sub-modules (e.g. ``TransformerDecoder``, ``MSDeformAttn``)
+        set ``_export = True`` in their ``export()`` method but do **not** swap
+        ``forward`` (i.e. they have no ``_forward_origin``).  They instead
+        branch on ``self._export`` inside their existing ``forward``.  We must
+        reset the flag on *every* module that carries it, not only those whose
+        ``forward`` was monkey-patched.
+        """
         for m in module.modules():
-            if getattr(m, "_export", False) and hasattr(m, "_forward_origin"):
+            if not getattr(m, "_export", False):
+                continue
+            if hasattr(m, "_forward_origin"):
                 m.forward = m._forward_origin  # noqa: SLF001  # pyrefly: ignore[bad-assignment]
-                m._export = False  # noqa: SLF001  # pyrefly: ignore[bad-argument-type]
+            m._export = False  # noqa: SLF001  # pyrefly: ignore[bad-argument-type]
 
     def export(
         self,

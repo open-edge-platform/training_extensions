@@ -1,0 +1,51 @@
+name: Add new issues to project
+
+on:
+  issues:
+    types: [opened, transferred]
+
+permissions: {}
+
+jobs:
+  add-to-project:
+    name: Add issue to org project and set Squad
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    environment:
+      name: auto-add-new-issue-to-project
+      deployment: false
+    steps:
+      - name: Add issue to project
+        id: add-project
+        uses: actions/add-to-project@244f685bbc3b7adfa8466e08b698b5577571133e # v1.0.2
+        with:
+          project-url: https://github.com/orgs/open-edge-platform/projects/7
+          github-token: ${{ secrets.ADD_TO_PROJECT_TOKEN }}
+
+      - name: Set Squad field
+        env:
+          GH_TOKEN: ${{ secrets.ADD_TO_PROJECT_TOKEN }}
+          ITEM_ID: ${{ steps.add-project.outputs.itemId }}
+          PROJECT_ID: ${{ vars.PROJECT_ID }}
+          SQUAD_FIELD_ID: ${{ vars.SQUAD_FIELD_ID }}
+          SQUAD_OPTION_ID: ${{ vars.SQUAD_OPTION_ID }}
+        run: |
+          gh api graphql -f query='
+            mutation(
+              $project: ID!,
+              $item: ID!,
+              $field: ID!,
+              $option: String!
+            ) {
+              updateProjectV2ItemFieldValue(
+                input: {
+                  projectId: $project,
+                  itemId: $item,
+                  fieldId: $field,
+                  value: { singleSelectOptionId: $option }
+                }
+              ) { projectV2Item { id } }
+            }' \
+            -f project="$PROJECT_ID" \
+            -f item="$ITEM_ID" \
+            -f field="$SQUAD_FIELD_ID" \
+            -f option="$SQUAD_OPTION_ID"

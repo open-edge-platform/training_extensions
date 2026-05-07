@@ -8,7 +8,7 @@ import { isEmpty } from 'lodash-es';
 
 import { MultiSelectList } from '../../../../../components/multi-select-list/multi-select-list.component';
 import { Label } from '../../../../../constants/shared-types';
-import { FilterChips } from './filter-chips.component';
+import { FilterChips } from '../filter-chips/filter-chips.component';
 
 import classes from './media-filter-labels.module.scss';
 

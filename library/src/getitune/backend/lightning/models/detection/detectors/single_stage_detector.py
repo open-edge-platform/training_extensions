@@ -191,6 +191,7 @@ class SingleStageDetector(BaseModule):
         batch_img_metas: list[dict],
         rescale: bool = True,
         explain_mode: bool = False,
+        with_nms: bool = True,
     ) -> list[InstanceData] | dict:
         """Predict results from a batch of inputs and data samples with post-processing.
 
@@ -222,7 +223,9 @@ class SingleStageDetector(BaseModule):
             if hasattr(self.bbox_head, "mask_head") and self.bbox_head.mask_head is not None:
                 # create dummy saliency map as its implemented in ModelAPI
                 saliency_map = torch.zeros(1)
-                bboxes, labels, masks = self.bbox_head.export(backbone_feat, batch_img_metas, rescale=rescale)  # type: ignore[misc]
+                bboxes, labels, masks = self.bbox_head.export(  # pyrefly: ignore[not-callable]
+                    backbone_feat, batch_img_metas, rescale=rescale, with_nms=with_nms
+                )  # type: ignore[misc]
                 return {
                     "bboxes": bboxes,
                     "labels": labels,
@@ -232,7 +235,7 @@ class SingleStageDetector(BaseModule):
                 }
 
             saliency_map = self.explain_fn(bbox_head_feat[0])
-            bboxes, labels = self.bbox_head.export(backbone_feat, batch_img_metas, rescale=rescale)
+            bboxes, labels = self.bbox_head.export(backbone_feat, batch_img_metas, rescale=rescale, with_nms=with_nms)
             return {
                 "bboxes": bboxes,
                 "labels": labels,
@@ -240,7 +243,7 @@ class SingleStageDetector(BaseModule):
                 "saliency_map": saliency_map,
             }
         x = self.extract_feat(batch_inputs)
-        return self.bbox_head.export(x, batch_img_metas, rescale=rescale)
+        return self.bbox_head.export(x, batch_img_metas, rescale=rescale, with_nms=with_nms)
 
     def _forward(
         self,

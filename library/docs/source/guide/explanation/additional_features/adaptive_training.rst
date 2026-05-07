@@ -15,17 +15,17 @@ To handle this, we have implemented module named ``AdaptiveTrainScheduling``. Th
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
-            from otx.backend.native.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
+            from getitune.backend.lightning.engine import LightningEngine
+            from getitune.backend.lightning.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
 
-            engine = OTXEngine(data_root="<path_to_data_root>", model="path/to/config/model.yaml")
+            engine = LightningEngine(data="<path_to_data_root>", model="path/to/config/model.yaml")
             engine.train(callbacks=[AdaptiveTrainScheduling()])
 
     .. tab-item:: CLI
 
         .. code-block:: shell
 
-            (otx) ...$ otx train --config path/to/config/model.yaml --data_root  --callbacks otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+            (getitune) ...$ getitune train --config path/to/config/model.yaml --data_root  --callbacks getitune.backend.lightning.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
 
 Auto-adapt batch size
 =====================
@@ -50,16 +50,16 @@ To use this feature, add the following parameter:
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
+            from getitune.backend.lightning.engine import LightningEngine
 
-            engine = OTXEngine(data_root="<path_to_data_root>", model="path/to/config/model.yaml")
+            engine = LightningEngine(data="<path_to_data_root>", model="path/to/config/model.yaml")
             engine.train(adaptive_bs="Safe")
 
     .. tab-item:: CLI
 
         .. code-block:: bash
 
-            (otx) ...$ otx train ...  --adaptive_bs Safe
+            (getitune) ...$ getitune train ...  --adaptive_bs Safe
 
 2. Find the maximum executable batch size (`Full` mode)
 
@@ -76,16 +76,16 @@ To use this feature, add the following parameter:
 
         .. code-block:: python
 
-            from otx.backend.native.engine import OTXEngine
+            from getitune.backend.lightning.engine import LightningEngine
 
-            engine = OTXEngine(data_root="<path_to_data_root>", model="path/to/config/model.yaml")
+            engine = LightningEngine(data="<path_to_data_root>", model="path/to/config/model.yaml")
             engine.train(adaptive_bs="Full")
 
     .. tab-item:: CLI
 
         .. code-block:: bash
 
-            (otx) ...$ otx train ...  --adaptive_bs Full
+            (getitune) ...$ getitune train ...  --adaptive_bs Full
 
 
 .. Warning::
@@ -110,12 +110,12 @@ To use this feature, add the following parameter:
 
         .. code-block:: python
 
-            from otx.data.module import OTXDataModule
+            from getitune.data.module import DataModule
 
-            datamodule = OTXDataModule(..., auto_num_workers=True)
+            datamodule = DataModule(..., auto_num_workers=True)
 
     .. tab-item:: CLI
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --data.auto_num_workers True
+            (getitune) ...$ getitune train ... --data.auto_num_workers True

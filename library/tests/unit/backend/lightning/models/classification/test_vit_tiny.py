@@ -11,7 +11,7 @@ from getitune.backend.lightning.models.classification.multilabel_models.vit impo
 from getitune.data.entity.base import BatchLoss
 
 
-class TestDeitTiny:
+class TestVitTiny:
     @pytest.fixture(
         params=[
             (VisionTransformerMulticlassCls, "fxt_multiclass_cls_batch_data_entity", "fxt_multiclass_labelinfo"),
@@ -33,7 +33,7 @@ class TestDeitTiny:
         return model, fxt_input
 
     @pytest.mark.parametrize("explain_mode", [True, False])
-    def test_deit_tiny(self, fxt_model_and_input, explain_mode, mocker):
+    def test_vit_tiny(self, fxt_model_and_input, explain_mode, mocker):
         fxt_model, fxt_input = fxt_model_and_input
 
         fxt_model.train()

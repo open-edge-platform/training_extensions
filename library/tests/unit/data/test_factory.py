@@ -9,7 +9,7 @@ import polars as pl
 import pytest
 from datumaro.experimental import Dataset
 
-from getitune.config.data import SubsetConfig
+from getitune.config.data import IntensityConfig, SubsetConfig
 from getitune.data.dataset.classification import (
     HlabelClsDataset,
     HLabelInfo,
@@ -53,6 +53,7 @@ class TestDatasetFactory:
         mock_schema.attributes = {"label": mock_label, "masks": mock_label}
         dm_subset.schema = mock_schema
         cfg_subset = mocker.MagicMock(spec=SubsetConfig)
+        cfg_subset.intensity = IntensityConfig()
         mocker.patch.object(HLabelInfo, "from_dm_label_groups", return_value=fxt_mock_hlabelinfo)
         mocker.patch.object(Dataset, "convert_to_schema", return_value=dm_subset)
 

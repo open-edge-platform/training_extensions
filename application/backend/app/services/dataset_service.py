@@ -117,7 +117,7 @@ class DatasetService(BaseSessionManagedService):
         project: Project,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
-        annotation_status: str | None = None,
+        annotation_status: DatasetItemAnnotationStatus | None = None,
         label_ids: list[UUID] | None = None,
         subset: str | None = None,
     ) -> int:
@@ -165,30 +165,24 @@ class DatasetService(BaseSessionManagedService):
         self,
         project_id: UUID,
         filters: DatasetItemFilters | None = None,
-        keep_predictions: bool = True,
     ) -> list[tuple[DatasetItem, Media]]:
         """Get information about available dataset items with corresponding media info"""
         if filters is None:
             filters = DatasetItemFilters()
         repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
         label_ids_str = [str(label_id) for label_id in filters.label_ids] if filters.label_ids else None
-        items_with_media = []
-        for db_dataset_item, db_media in repo.list_items_with_media(
-            limit=filters.limit,
-            offset=filters.offset,
-            start_date=filters.start_date,
-            end_date=filters.end_date,
-            annotation_status=filters.annotation_status,
-            label_ids=label_ids_str,
-            subset=filters.subset,
-        ):
-            dataset_item = DatasetItem.model_validate(db_dataset_item)
-            media = MediaAdapter.validate_python(db_media)
-            # remove predictions if not requested
-            if not keep_predictions and dataset_item.annotation_data and not dataset_item.user_reviewed:
-                dataset_item.annotation_data = []
-            items_with_media.append((dataset_item, media))
-        return items_with_media
+        return [
+            (DatasetItem.model_validate(db_dataset_item), MediaAdapter.validate_python(db_media))
+            for db_dataset_item, db_media in repo.list_items_with_media(
+                limit=filters.limit,
+                offset=filters.offset,
+                start_date=filters.start_date,
+                end_date=filters.end_date,
+                annotation_status=filters.annotation_status,
+                label_ids=label_ids_str,
+                subset=filters.subset,
+            )
+        ]
 
     def get_dataset_item_by_id(self, project_id: UUID, dataset_item_id: UUID) -> DatasetItem:
         """Get a dataset item by its ID"""
@@ -357,13 +351,11 @@ class DatasetService(BaseSessionManagedService):
         task: Task,
         annotation_status: DatasetItemAnnotationStatus | None,
         sample_mode: SampleMode,
-        keep_predictions: bool = True,
     ) -> dm.Dataset:
         def get_dataset_items_and_media(offset: int, limit: int) -> list[tuple[DatasetItem, Media]]:
             return self.list_dataset_items_with_media(
                 project_id=project_id,
                 filters=DatasetItemFilters(limit=limit, offset=offset, annotation_status=annotation_status),
-                keep_predictions=keep_predictions,
             )
 
         def _get_media_path(media: Media) -> str:

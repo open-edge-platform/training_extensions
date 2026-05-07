@@ -16,7 +16,7 @@ describe('TaskSelection', () => {
         render(<App />);
 
         expect(screen.getByLabelText('Task option: Object Detection')).toBeInTheDocument();
-        expect(screen.getByLabelText('Task option: Image Segmentation')).toBeInTheDocument();
+        expect(screen.getByLabelText('Task option: Instance Segmentation')).toBeInTheDocument();
         expect(screen.getByLabelText('Task option: Image Classification')).toBeInTheDocument();
 
         expect(screen.getByText('Best for: Counting, Tracking')).toBeInTheDocument();
@@ -35,7 +35,7 @@ describe('TaskSelection', () => {
         const mockSetSelectedTask = vi.fn();
         render(<App setSelectedTask={mockSetSelectedTask} />);
 
-        const segOption = screen.getByLabelText('Task option: Image Segmentation');
+        const segOption = screen.getByLabelText('Task option: Instance Segmentation');
         fireEvent.click(segOption);
 
         expect(mockSetSelectedTask).toHaveBeenCalledWith('instance_segmentation');
