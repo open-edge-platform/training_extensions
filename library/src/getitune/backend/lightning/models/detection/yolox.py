@@ -99,13 +99,19 @@ class YOLOX(LightningDetectionModel):
             tile_config=tile_config,
         )
 
-        # YOLOX-S/L/X pretrained weights expect [0, 255] float inputs.
-        # The training pipeline scales to [0, 1] then _customize_inputs rescales
-        # back to [0, 255], but the exported model graph does NOT include this
-        # rescaling. Therefore we must NOT export intensity_mode=scale_to_unit
-        # metadata, otherwise ModelAPI will incorrectly scale inputs to [0, 1].
+        # Raw uint8 models expect [0, 255] inputs; intensity scaling must not be exported.
         if model_name in _RAW_UINT8_MODELS:
-            self.data_input_params.intensity_config = None
+            if (
+                self.data_input_params.intensity_config is not None
+                and self.data_input_params.intensity_config.storage_dtype in ("uint16", "int16")
+            ):
+                msg = (
+                    f"YOLOX ({model_name}) does not support high-bit-depth inputs "
+                    f"(got storage_dtype='{self.data_input_params.intensity_config.storage_dtype}'). "
+                    "Use yolox_tiny or a model with normalization for 16-bit images."
+                )
+                raise ValueError(msg)
+            self.data_input_params = dataclasses.replace(self.data_input_params, intensity_config=None)
 
     def _create_model(self, num_classes: int | None = None) -> SingleStageDetector:
         num_classes = num_classes if num_classes is not None else self.num_classes
