@@ -140,7 +140,7 @@ def _build_dataset(images_dir: Path, ann_file: Path) -> Dataset:
                 subset=subset,
                 bboxes=bboxes,
                 labels=labels,
-                polygons=np.empty((0,), dtype=object),
+                polygons=None,
                 areas=areas,
                 iscrowd=iscrowd,
                 caption_group_ids=None,

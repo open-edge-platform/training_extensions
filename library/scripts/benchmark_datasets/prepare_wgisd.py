@@ -135,11 +135,11 @@ def _append_image(
             dtype=object,
         )
     else:
-        bboxes = np.zeros((0, 4), dtype=np.float32)
-        labels = np.zeros((0,), dtype=np.int64)
-        areas = np.zeros((0,), dtype=np.float32)
-        iscrowd = np.zeros((0,), dtype=np.int32)
-        polygons = np.empty((0,), dtype=object)
+        bboxes = None
+        labels = None
+        areas = None
+        iscrowd = None
+        polygons = None
 
     dataset.append(
         CocoSample(

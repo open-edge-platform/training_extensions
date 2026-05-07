@@ -121,10 +121,10 @@ def _build_dataset(staging: Path) -> Dataset:
             poly_arr = np.empty(1, dtype=object)
             poly_arr[0] = poly
         else:
-            bbox = np.zeros((0, 4), dtype=np.float32)
-            labels = np.zeros((0,), dtype=np.int64)
-            areas = np.zeros((0,), dtype=np.float32)
-            poly_arr = np.empty((0,), dtype=object)
+            bbox = None
+            labels = None
+            areas = None
+            poly_arr = None
 
         dataset.append(
             CocoSample(
@@ -136,7 +136,7 @@ def _build_dataset(staging: Path) -> Dataset:
                 labels=labels,
                 polygons=poly_arr,
                 areas=areas,
-                iscrowd=np.zeros((len(labels),), dtype=np.int32),
+                iscrowd=None,
                 caption_group_ids=None,
                 captions=None,
                 keypoints=None,

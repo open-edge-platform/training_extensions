@@ -21,6 +21,7 @@ from datumaro.experimental import Dataset, LazyImage
 from datumaro.experimental.data_formats.coco.sample import CocoCategories, CocoSample
 from datumaro.experimental.export_import import export_dataset
 from datumaro.experimental.fields import ImageInfo, Subset
+from PIL import Image
 from scipy.io import loadmat
 
 from getitune.benchmark.dataset_helpers import download, extract_archive, parse_args
@@ -69,18 +70,20 @@ def _build_dataset(extracted_root: Path, labels_path: Path, splits_path: Path) -
 
         label = int(all_labels[img_idx - 1])
 
-        # For classification: single label per image, bbox covers full image
+        with Image.open(img_path) as im:
+            width, height = im.size
+
         dataset.append(
             CocoSample(
                 image=LazyImage(img_path),
-                image_info=ImageInfo(width=0, height=0),
+                image_info=ImageInfo(width=width, height=height),
                 image_id=img_idx,
                 subset=subset,
-                bboxes=np.zeros((1, 4), dtype=np.float32),
+                bboxes=None,
                 labels=np.array([label], dtype=np.int64),
-                polygons=np.empty((0,), dtype=object),
-                areas=np.zeros((1,), dtype=np.float32),
-                iscrowd=np.zeros((1,), dtype=np.int32),
+                polygons=None,
+                areas=None,
+                iscrowd=None,
                 caption_group_ids=None,
                 captions=None,
                 keypoints=None,

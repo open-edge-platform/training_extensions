@@ -14,7 +14,6 @@ Source: http://host.robots.ox.ac.uk/pascal/VOC/voc2007/
 from __future__ import annotations
 
 import shutil
-import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -22,6 +21,7 @@ from datumaro.experimental import Dataset, LazyImage
 from datumaro.experimental.data_formats.coco.sample import CocoCategories, CocoSample
 from datumaro.experimental.export_import import export_dataset
 from datumaro.experimental.fields import ImageInfo, Subset
+from defusedxml import ElementTree
 
 from getitune.benchmark.dataset_helpers import download, extract_archive, parse_args
 
@@ -57,7 +57,7 @@ _VOC_CLASSES = (
 
 def _parse_voc_annotation(xml_path: Path) -> dict:
     """Parse a single VOC XML annotation file."""
-    tree = ET.parse(xml_path)  # noqa: S314
+    tree = ElementTree.parse(xml_path)
     root = tree.getroot()
 
     size = root.find("size")
@@ -133,15 +133,10 @@ def _build_dataset(voc_root: Path) -> Dataset:
                 dtype=np.int64,
             )
             areas = bboxes[:, 2] * bboxes[:, 3]
-            iscrowd = np.asarray(
-                [o["difficult"] for o in ann["objects"]],
-                dtype=np.int32,
-            )
         else:
-            bboxes = np.zeros((0, 4), dtype=np.float32)
-            labels = np.zeros((0,), dtype=np.int64)
-            areas = np.zeros((0,), dtype=np.float32)
-            iscrowd = np.zeros((0,), dtype=np.int32)
+            bboxes = None
+            labels = None
+            areas = None
 
         dataset.append(
             CocoSample(
@@ -151,9 +146,9 @@ def _build_dataset(voc_root: Path) -> Dataset:
                 subset=subset,
                 bboxes=bboxes,
                 labels=labels,
-                polygons=np.empty((0,), dtype=object),
+                polygons=None,
                 areas=areas,
-                iscrowd=iscrowd,
+                iscrowd=None,
                 caption_group_ids=None,
                 captions=None,
                 keypoints=None,

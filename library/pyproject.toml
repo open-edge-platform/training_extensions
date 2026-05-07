@@ -57,6 +57,7 @@ dependencies = [
     "rfdetr @ git+https://github.com/kprokofi/rf-detr.git@bf69fe2d11ee6b7e0698e4a27af2081134f9b483",
     "certifi>=2026",
     "roboflow~=1.2",
+    "defusedxml>=0.7.1",
 ]
 
 [dependency-groups]
