@@ -35,4 +35,38 @@ describe('usePanning', () => {
         fireEvent.keyDown(document.body, { code: 'Enter' });
         expect(result.current.isPanning).toBe(false);
     });
+
+    it('does not set isPanning when target is an input element', () => {
+        const { result } = renderHook(() => usePanning());
+        const input = document.createElement('input');
+        document.body.appendChild(input);
+
+        fireEvent.keyDown(input, { code: 'Space' });
+        expect(result.current.isPanning).toBe(false);
+
+        document.body.removeChild(input);
+    });
+
+    it('does not set isPanning when target is a contentEditable element', () => {
+        const { result } = renderHook(() => usePanning());
+        const div = document.createElement('div');
+        div.contentEditable = 'true';
+        Object.defineProperty(div, 'isContentEditable', { value: true });
+        document.body.appendChild(div);
+
+        fireEvent.keyDown(div, { code: 'Space' });
+        expect(result.current.isPanning).toBe(false);
+
+        document.body.removeChild(div);
+    });
+
+    it('calls preventDefault on Space keydown', () => {
+        renderHook(() => usePanning());
+
+        const event = new KeyboardEvent('keydown', { code: 'Space', bubbles: true });
+        const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+
+        document.body.dispatchEvent(event);
+        expect(preventDefaultSpy).toHaveBeenCalled();
+    });
 });

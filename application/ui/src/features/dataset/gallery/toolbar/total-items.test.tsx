@@ -44,18 +44,18 @@ describe('TotalItems', () => {
     it('shows total media count with plural when no items are selected', async () => {
         await renderTotalItems(0, 5);
 
-        expect(await screen.findByText('5 medias')).toBeVisible();
+        expect(await screen.findByText('5 media items')).toBeVisible();
     });
 
     it('shows singular media when there is exactly 1 item', async () => {
         await renderTotalItems(0, 1);
 
-        expect(await screen.findByText('1 media')).toBeVisible();
+        expect(await screen.findByText('1 media item')).toBeVisible();
     });
 
-    it('shows 0 medias when there are no items', async () => {
+    it('shows 0 media items when there are no items', async () => {
         await renderTotalItems(0, 0);
 
-        expect(await screen.findByText('0 medias')).toBeVisible();
+        expect(await screen.findByText('0 media items')).toBeVisible();
     });
 });
