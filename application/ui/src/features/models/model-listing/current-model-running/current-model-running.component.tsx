@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Flex, Heading, View } from '@geti/ui';
-import { useCancelJob, useGetCurrentRunningJob } from 'hooks/api/jobs/jobs.hook';
+import { useCancelJob, useGetCurrentRunningJobs } from 'hooks/api/jobs/jobs.hook';
 import { isEmpty, isNil } from 'lodash-es';
 
 import { type DatasetRevision } from '../../../../constants/shared-types';
@@ -18,7 +18,7 @@ type CurrentModelRunningProps = {
 
 export const CurrentModelRunning = ({ groupBy, datasetRevisions }: CurrentModelRunningProps) => {
     const cancelJobMutation = useCancelJob();
-    const activeRunningJobs = useGetCurrentRunningJob();
+    const activeRunningJobs = useGetCurrentRunningJobs();
     const { modelArchitectures } = useGetTaskModelArchitectures();
 
     const handleCancelRunning = (jobId: string | undefined) => {

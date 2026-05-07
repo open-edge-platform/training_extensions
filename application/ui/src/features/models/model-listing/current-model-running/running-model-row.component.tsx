@@ -49,23 +49,23 @@ const CancelRunningJob = ({ job, onCancel }: CancelRunningJobProps) => {
     return (
         <>
             <Button
-                isDisabled={job.status !== 'RUNNING'}
+                isDisabled={job.status !== 'RUNNING' && job.status !== 'PENDING'}
                 variant={'negative'}
                 onPress={() => setIsDeleteDialogOpen(true)}
-                aria-label={'Cancel running job'}
+                aria-label={'Cancel job'}
             >
                 Cancel
             </Button>
             <DialogContainer onDismiss={() => setIsDeleteDialogOpen(false)}>
                 {isDeleteDialogOpen && (
                     <AlertDialog
-                        title='Stop running job'
+                        title='Cancel job'
                         variant='destructive'
                         primaryActionLabel='Cancel'
                         onPrimaryAction={onCancel}
                         cancelLabel='Close'
                     >
-                        Are you sure you want to stop this running job?
+                        Are you sure you want to cancel this job?
                     </AlertDialog>
                 )}
             </DialogContainer>

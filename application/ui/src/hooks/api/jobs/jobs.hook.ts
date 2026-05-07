@@ -79,7 +79,7 @@ const useListJobs = () => {
     return $api.useQuery('get', '/api/jobs');
 };
 
-export const useGetCurrentRunningJob = () => {
+export const useGetCurrentRunningJobs = () => {
     const projectId = useProjectIdentifier();
     const activeJobs = useListJobs();
 

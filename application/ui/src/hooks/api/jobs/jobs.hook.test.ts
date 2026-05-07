@@ -9,7 +9,7 @@ import { getMockedJob } from '../../../../mocks/mock-job';
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
 import { MockEventSourceConstructor, resetMockEventSource } from '../../../test-utils/mock-event-source';
-import { useGetCurrentRunningJob } from './jobs.hook';
+import { useGetCurrentRunningJobs } from './jobs.hook';
 
 const PROJECT_ID = '123';
 
@@ -30,18 +30,18 @@ const createMockJobForProject = (overrides: Partial<ReturnType<typeof getMockedJ
         ...overrides,
     });
 
-describe('useGetCurrentRunningJob', () => {
+describe('useGetCurrentRunningJobs', () => {
     beforeEach(() => {
         resetMockEventSource();
     });
 
-    it('returns undefined when there are no active running jobs', async () => {
+    it('returns an empty array when there are no active running jobs', async () => {
         server.use(http.get('/api/jobs', () => HttpResponse.json([])));
 
-        const { result } = renderHook(() => useGetCurrentRunningJob());
+        const { result } = renderHook(() => useGetCurrentRunningJobs());
 
         await waitFor(() => {
-            expect(result.current).toBeUndefined();
+            expect(result.current).toEqual([]);
         });
     });
 
@@ -49,7 +49,7 @@ describe('useGetCurrentRunningJob', () => {
         const job = createMockJobForProject();
         server.use(http.get('/api/jobs', () => HttpResponse.json([job])));
 
-        const { result } = renderHook(() => useGetCurrentRunningJob());
+        const { result } = renderHook(() => useGetCurrentRunningJobs());
 
         await waitFor(() => {
             expect(result.current).toHaveLength(1);
@@ -70,17 +70,17 @@ describe('useGetCurrentRunningJob', () => {
         });
         server.use(http.get('/api/jobs', () => HttpResponse.json([otherProjectJob])));
 
-        const { result } = renderHook(() => useGetCurrentRunningJob());
+        const { result } = renderHook(() => useGetCurrentRunningJobs());
 
         await waitFor(() => {
-            expect(result.current).toBeUndefined();
+            expect(result.current).toEqual([]);
         });
     });
 
     it('does not subscribe to SSE when no active running job matches the project', async () => {
         server.use(http.get('/api/jobs', () => HttpResponse.json([])));
 
-        renderHook(() => useGetCurrentRunningJob());
+        renderHook(() => useGetCurrentRunningJobs());
 
         await waitFor(() => {
             expect(MockEventSourceConstructor).not.toHaveBeenCalled();

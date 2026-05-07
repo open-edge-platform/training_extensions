@@ -9,7 +9,7 @@ import { HttpResponse } from 'msw';
 import { render, renderHook } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
-import { useGetCurrentRunningJob, useStreamJobStatus } from '../../../../hooks/api/jobs/jobs.hook';
+import { useGetCurrentRunningJobs, useStreamJobStatus } from '../../../../hooks/api/jobs/jobs.hook';
 import { server } from '../../../../msw-node-setup';
 import {
     getLastEventSource,
@@ -192,7 +192,7 @@ describe('RunningModelRow', () => {
             />
         );
 
-        const cancelButton = await screen.findByRole('button', { name: /cancel running job/i });
+        const cancelButton = await screen.findByRole('button', { name: /cancel job/i });
         expect(cancelButton).toBeVisible();
         expect(cancelButton).toBeEnabled();
     });
@@ -226,7 +226,7 @@ describe('RunningModelRow', () => {
             />
         );
 
-        const cancelButton = await screen.findByRole('button', { name: /cancel running job/i });
+        const cancelButton = await screen.findByRole('button', { name: /cancel job/i });
         expect(cancelButton).toBeDisabled();
     });
 
@@ -273,7 +273,7 @@ describe('RunningModelRow', () => {
 
             const { result: jobsResult } = renderHook(() => {
                 useStreamJobStatus(job.job_id);
-                return useGetCurrentRunningJob();
+                return useGetCurrentRunningJobs();
             });
 
             await waitFor(() => {
