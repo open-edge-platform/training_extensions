@@ -54,7 +54,7 @@
 ## Commands: UI
 
 - Work from `application/ui/`.
-- Use Node `v24.2.0` and npm `>=11.3.0`.
+- Use Node `>=24.2.0` and npm `>=11.3.0`.
 - Install dependencies with `npm ci`. This also fetches the core `@geti` UI packages via a `preinstall` hook.
 - Build with `npm run build`.
 - Run formatting checks with `npm run format:check`.
