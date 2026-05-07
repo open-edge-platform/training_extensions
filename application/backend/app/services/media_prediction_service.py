@@ -1,6 +1,5 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from collections import defaultdict
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -9,14 +8,30 @@ import numpy as np
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.models import BatchInferenceInput, BatchInferenceResult, Image, Project, VideoFrame
-from app.models.media import Media, MediaListPredictionRequest, MediaType, NotAnnotatedVideoFrame, Video, VideoRange
+from app.models import (
+    BatchInferenceInput,
+    BatchInferenceMedia,
+    BatchInferencePrediction,
+    BatchInferenceResult,
+    DatasetItemAnnotation,
+    Image,
+    Project,
+    VideoFrame,
+)
+from app.models.media import Media, MediaListPredictionRequest, MediaType, Video, VideoRange
 from app.models.system import DeviceInfo
 
 from .base import BaseSessionManagedService, ResourceError, ResourceNotFoundError, ResourceType
 from .inference import InferenceServer
 from .label_service import LabelService
 from .media_service import MediaService
+
+
+@dataclass(frozen=True)
+class Frame:
+    frame_index: int
+    skip: bool
+    annotated_frame: VideoFrame | None = None
 
 
 class VideoRangeError(ResourceError):
@@ -32,7 +47,7 @@ class BinaryNotFoundError(Exception):
 @dataclass(frozen=True)
 class LoadedMedia:
     single_media: list[Image | VideoFrame]
-    video_frames: list[VideoFrame | NotAnnotatedVideoFrame]
+    video_frames: dict[Video, list[Frame]]
 
 
 class MediaPredictionService(BaseSessionManagedService):
@@ -43,12 +58,14 @@ class MediaPredictionService(BaseSessionManagedService):
         inference_server: InferenceServer,
         inference_model_ttl: int,
         db_session: Session | None = None,
+        inference_frame_skip: int | None = None,
     ) -> None:
         super().__init__(db_session)
         self._label_service = label_service
         self._media_service = media_service
         self._inference_server = inference_server
         self._inference_model_ttl = inference_model_ttl
+        self._inference_frame_skip = inference_frame_skip
 
     def _load_media_binary(self, project_id: UUID, media: Media) -> np.ndarray:
         binary_path = self._media_service.get_media_binary_path(project_id=project_id, media=media)
@@ -57,27 +74,32 @@ class MediaPredictionService(BaseSessionManagedService):
             raise BinaryNotFoundError(f"Media {str(media.id)} binary cannot be found")
         return cv2.cvtColor(binary_data, cv2.COLOR_BGR2RGB)
 
-    def _load_frame_range(
-        self, project: Project, video: Video, video_range: VideoRange
-    ) -> list[VideoFrame | NotAnnotatedVideoFrame]:
-        video_frames: list[VideoFrame | NotAnnotatedVideoFrame] = []
+    @staticmethod
+    def _is_frame_index_to_infer(index: int, frame_indexes: list[int], inference_frame_skip: int) -> bool:
+        return index == 0 or index == len(frame_indexes) - 1 or index % inference_frame_skip == 0
+
+    def _load_frame_range(self, project: Project, video: Video, video_range: VideoRange) -> list[Frame]:
+        video_frames: list[Frame] = []
 
         frame_indexes = list(range(video_range.start_frame, video_range.end_frame + 1, video_range.stride))
         annotated_frames = self._media_service.search_video_frames_by_video_id_and_indexes(
             project=project, video_id=video.id, frame_indexes=frame_indexes
         )
-        for frame_index in frame_indexes:
+        for idx, frame_index in enumerate(frame_indexes):
             annotated_frame = next((frame for frame in annotated_frames if frame.frame_index == frame_index), None)
-            if annotated_frame is not None:
-                video_frames.append(annotated_frame)
-            else:
-                video_frame = NotAnnotatedVideoFrame(video=video, frame_index=frame_index)
-                video_frames.append(video_frame)
+            skip = (
+                not MediaPredictionService._is_frame_index_to_infer(
+                    index=idx, frame_indexes=frame_indexes, inference_frame_skip=self._inference_frame_skip
+                )
+                if self._inference_frame_skip is not None
+                else False
+            )
+            video_frames.append(Frame(frame_index=frame_index, annotated_frame=annotated_frame, skip=skip))
         return video_frames
 
     def _load_media(self, project: Project, request: MediaListPredictionRequest) -> LoadedMedia:
         single_media: list[Image | VideoFrame] = []
-        video_frames: list[VideoFrame | NotAnnotatedVideoFrame] = []
+        video_frames: dict[Video, list[Frame]] = {}
 
         media_ids: list[UUID] = [media_request.media_id for media_request in request.media]
         media_list = self._media_service.get_media_by_ids(project_id=project.id, media_ids=media_ids)
@@ -96,8 +118,8 @@ class MediaPredictionService(BaseSessionManagedService):
             else:
                 if media.type != MediaType.VIDEO:
                     raise VideoRangeError(str(media_request.media_id), "Frame range can be specified only for videos.")
-                video_frames.extend(
-                    self._load_frame_range(project=project, video=media, video_range=media_request.range)
+                video_frames[media] = self._load_frame_range(
+                    project=project, video=media, video_range=media_request.range
                 )
         return LoadedMedia(single_media=single_media, video_frames=video_frames)
 
@@ -109,35 +131,62 @@ class MediaPredictionService(BaseSessionManagedService):
             data = self._load_media_binary(project_id=project.id, media=single_media)
             inputs.append(BatchInferenceInput(media_id=single_media.id, data=data))
 
-        # Process video frames: group by video to extract all frames per video in a single pass
-        annotated_by_video: dict[UUID, list[VideoFrame]] = defaultdict(list)
-        not_annotated_by_video: dict[UUID, list[NotAnnotatedVideoFrame]] = defaultdict(list)
-        for video_frame in loaded_media.video_frames:
-            if isinstance(video_frame, VideoFrame):
-                annotated_by_video[video_frame.video_id].append(video_frame)
-            else:
-                not_annotated_by_video[video_frame.video.id].append(video_frame)
+        for video in loaded_media.video_frames:
+            frames = loaded_media.video_frames[video]
+            annotated_frames: list[Frame] = [
+                frame for frame in frames if frame.annotated_frame is not None and not frame.skip
+            ]
+            for frame in annotated_frames:
+                binary_data = self._load_media_binary(
+                    project_id=project.id,
+                    media=frame.annotated_frame,  # pyrefly: ignore[bad-argument-type]
+                )
+                inputs.append(BatchInferenceInput(media_id=video.id, data=binary_data, frame_index=frame.frame_index))
 
-        # Load annotated video frames (already saved as images on disk)
-        for _video_id, frames in annotated_by_video.items():
-            for vf in frames:
-                binary_data = self._load_media_binary(project_id=project.id, media=vf)
-                inputs.append(BatchInferenceInput(media_id=vf.video_id, data=binary_data, frame_index=vf.frame_index))
-
-        # Batch-extract not-annotated video frames: one video open/close per video
-        for video_id, frames in not_annotated_by_video.items():
-            video = frames[0].video
-            frame_indexes = [f.frame_index for f in frames]
+            not_annotated_frames: list[Frame] = [
+                frame for frame in frames if frame.annotated_frame is None and not frame.skip
+            ]
+            # Batch-extract not-annotated video frames: one video open/close per video
+            frame_indexes = [f.frame_index for f in not_annotated_frames]
             extracted = self._media_service.get_frame_binaries(
                 project=project, video=video, frame_indexes=frame_indexes
             )
-            for na_frame in frames:
-                binary_data = extracted[na_frame.frame_index]
-                inputs.append(
-                    BatchInferenceInput(media_id=na_frame.video.id, data=binary_data, frame_index=na_frame.frame_index)
-                )
+            for frame in not_annotated_frames:
+                binary_data = extracted[frame.frame_index]
+                inputs.append(BatchInferenceInput(media_id=video.id, data=binary_data, frame_index=frame.frame_index))
 
         return inputs
+
+    def _convert_result(
+        self, loaded_media: LoadedMedia, inference_result: dict[tuple[UUID, int | None], list[DatasetItemAnnotation]]
+    ) -> BatchInferenceResult:
+        predictions: list[BatchInferencePrediction] = []
+        for single_media in loaded_media.single_media:
+            predictions.append(
+                BatchInferencePrediction(
+                    media=BatchInferenceMedia(id=single_media.id), prediction=inference_result[(single_media.id, None)]
+                )
+            )
+        previous_prediction: list[DatasetItemAnnotation] | None = None
+        for video in loaded_media.video_frames:
+            frames = loaded_media.video_frames[video]
+            for frame in frames:
+                if not frame.skip:
+                    prediction = inference_result[(video.id, frame.frame_index)]
+                    previous_prediction = prediction
+                else:
+                    # For skipped frames, we copy-paste previous inference prediction
+                    if previous_prediction is None:
+                        # Shouldn't be the case because we always pass the first frame to the inference
+                        raise RuntimeError("No prediction found")
+                    prediction = previous_prediction
+                predictions.append(
+                    BatchInferencePrediction(
+                        media=BatchInferenceMedia(id=video.id, frame_index=frame.frame_index), prediction=prediction
+                    )
+                )
+
+        return BatchInferenceResult(predictions=predictions)
 
     def predict_media(
         self,
@@ -172,4 +221,5 @@ class MediaPredictionService(BaseSessionManagedService):
         self._inference_server.set_inference_model(
             project_id=project.id, model_id=request.model_id, device=device, ttl=self._inference_model_ttl
         )
-        return self._inference_server.infer_batch(labels=labels, inputs=inputs)
+        result = self._inference_server.infer_batch(labels=labels, inputs=inputs)
+        return self._convert_result(loaded_media=loaded_media, inference_result=result)

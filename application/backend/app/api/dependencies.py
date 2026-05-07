@@ -103,6 +103,11 @@ def get_inference_model_ttl(request: Request) -> int:
     return request.app.state.settings.inference_model_ttl
 
 
+def get_inference_frame_skip(request: Request) -> int | None:
+    """Provides the inference frame skip from settings."""
+    return request.app.state.settings.inference_frame_skip
+
+
 def get_event_bus(request: Request) -> EventBus:
     """Provides an EventBus instance."""
     return request.app.state.event_bus
@@ -220,6 +225,7 @@ def get_media_prediction_service(
     media_service: Annotated[MediaService, Depends(get_media_service)],
     inference_server: Annotated[InferenceServer, Depends(get_inference_server)],
     inference_model_ttl: Annotated[int, Depends(get_inference_model_ttl)],
+    inference_frame_skip: Annotated[int, Depends(get_inference_frame_skip)],
     db: Annotated[Session, Depends(get_db)],
 ) -> MediaPredictionService:
     """Provides a MediaPredictionService instance."""
@@ -228,6 +234,7 @@ def get_media_prediction_service(
         media_service=media_service,
         inference_server=inference_server,
         inference_model_ttl=inference_model_ttl,
+        inference_frame_skip=inference_frame_skip,
         db_session=db,
     )
 

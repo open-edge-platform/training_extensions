@@ -85,6 +85,11 @@ class Settings(BaseSettings):
         alias="INFERENCE_MODEL_TTL",
         description="Time to live for a model loaded for inference, before unloading",
     )
+    inference_frame_skip: int | None = Field(
+        default=None,
+        alias="INFERENCE_FRAME_SKIP",
+        description="Number of frames to skip between inferences for video processing",
+    )
 
     # Video
     video_cache_ttl: float = Field(
