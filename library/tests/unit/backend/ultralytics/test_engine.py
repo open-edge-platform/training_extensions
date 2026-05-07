@@ -76,6 +76,33 @@ def test_ultralytics_engine_supports_ultralytics_model_with_datamodule(mocker) -
     assert UltralyticsEngine.is_supported(model, data)
 
 
+def test_engine_propagates_intensity_config_from_datamodule(mocker, tmp_path) -> None:
+    """When DataModule has input_intensity_config, engine should propagate it to the model."""
+    from getitune.config.data import IntensityConfig
+
+    model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
+    datamodule = mocker.MagicMock(spec=DataModule)
+    uint16_cfg = IntensityConfig(mode="scale_to_unit", storage_dtype="uint16")
+    datamodule.input_intensity_config = uint16_cfg
+
+    engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
+
+    assert model._intensity_config is uint16_cfg
+    assert engine._model.data_input_params.intensity_config is uint16_cfg
+    assert engine._model.data_input_params.intensity_config.storage_dtype == "uint16"
+
+
+def test_engine_default_intensity_config_without_datamodule(tmp_path) -> None:
+    """Without DataModule (upstream data path), model should use default uint8 intensity config."""
+    model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
+    engine = UltralyticsEngine(model=model, data=tmp_path, work_dir=tmp_path / "work", device="cpu")
+
+    ic = engine._model.data_input_params.intensity_config
+    assert ic is not None
+    assert ic.mode == "scale_to_unit"
+    assert ic.storage_dtype == "uint8"
+
+
 def test_predict_with_datamodule_uses_predict_dataloader(mocker, tmp_path) -> None:
     model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
     datamodule = mocker.MagicMock(spec=DataModule)
@@ -325,7 +352,9 @@ class TestModelExporter:
         exporter = model._exporter
 
         assert exporter.data_input_params.mean == (0.0, 0.0, 0.0)
-        assert exporter.data_input_params.std == (255.0, 255.0, 255.0)
+        assert exporter.data_input_params.std == (1.0, 1.0, 1.0)
+        assert exporter.data_input_params.intensity_config is not None
+        assert exporter.data_input_params.intensity_config.mode == "scale_to_unit"
 
     def test_default_yolo_preprocessing_values(self, mocker, tmp_path) -> None:
         model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())

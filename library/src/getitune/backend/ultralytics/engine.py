@@ -95,6 +95,13 @@ class UltralyticsEngine(Engine):
             msg = f"data must be DataModule or PathLike, got {type(data)}"
             raise TypeError(msg)
 
+        # Propagate intensity config from DataModule so the exporter can embed
+        # the correct input_dtype and intensity_mode into the exported model.
+        if self._datamodule is not None:
+            intensity_cfg = getattr(self._datamodule, "input_intensity_config", None)
+            if intensity_cfg is not None:
+                self._model._intensity_config = intensity_cfg
+
     def train(self, **kwargs) -> METRICS:
         """Train the model via a custom Ultralytics trainer.
 

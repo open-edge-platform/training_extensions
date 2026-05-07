@@ -74,14 +74,18 @@ class TestDataInputParams:
         model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
         assert model.data_input_params.mean == (0.0, 0.0, 0.0)
 
-    def test_std_is_255(self) -> None:
-        """YOLO export metadata needs scale_values=255 so ModelAPI divides by 255."""
+    def test_std_is_identity(self) -> None:
+        """YOLO uses intensity_config for /255 scaling; std should be identity (1, 1, 1)."""
         model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
-        assert model.data_input_params.std == (255.0, 255.0, 255.0)
+        assert model.data_input_params.std == (1.0, 1.0, 1.0)
 
-    def test_no_intensity_config(self) -> None:
+    def test_default_intensity_config(self) -> None:
+        """Default intensity config should be scale_to_unit with uint8."""
         model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
-        assert model.data_input_params.intensity_config is None
+        ic = model.data_input_params.intensity_config
+        assert ic is not None
+        assert ic.mode == "scale_to_unit"
+        assert ic.storage_dtype == "uint8"
 
     def test_default_imgsz_from_preprocessing_params(self) -> None:
         """When imgsz is not specified, it should come from _default_preprocessing_params."""

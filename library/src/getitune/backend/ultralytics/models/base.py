@@ -12,6 +12,7 @@ from typing import Any, ClassVar
 from ultralytics import YOLO
 
 from getitune.backend.lightning.models.base import DataInputParams
+from getitune.config.data import IntensityConfig
 from getitune.types.export import ExportFormat, TaskLevelExportParameters
 from getitune.types.label import LabelInfo
 from getitune.types.precision import Precision
@@ -80,6 +81,7 @@ class UltralyticsModel:
                 self.imgsz = default_params.input_size[0]
 
         self._yolo: YOLO | None = None
+        self._intensity_config: IntensityConfig | None = None
 
     @property
     def yolo(self) -> YOLO:
@@ -175,7 +177,12 @@ class UltralyticsModel:
 
     @property
     def data_input_params(self) -> DataInputParams:
-        """Resolved data input parameters for this model instance."""
+        """Resolved data input parameters for this model instance.
+
+        Uses the intensity config propagated from the DataModule (if set by
+        the engine), otherwise falls back to the model's default (uint8,
+        scale_to_unit).
+        """
         default = self._default_preprocessing_params
         if isinstance(default, dict):
             params = default.get(self.model_name)
@@ -184,12 +191,16 @@ class UltralyticsModel:
         else:
             params = default
 
+        # Resolve intensity config: engine-propagated > model default.
+        intensity_config = self._intensity_config if self._intensity_config is not None else params.intensity_config
+
         # Always use self.imgsz — it may have been overridden by the user.
-        if params.input_size != (self.imgsz, self.imgsz):
+        if params.input_size != (self.imgsz, self.imgsz) or intensity_config is not params.intensity_config:
             return DataInputParams(
                 input_size=(self.imgsz, self.imgsz),
                 mean=params.mean,
                 std=params.std,
+                intensity_config=intensity_config,
             )
         return params
 
@@ -201,16 +212,22 @@ class UltralyticsModel:
         Returns either a single ``DataInputParams`` or a dict keyed by
         ``model_name`` (like Lightning models).
 
-        YOLO models expect ``[0, 1]`` float input at inference, produced by
-        dividing raw uint8 pixels by 255.  ModelAPI's ``InputTransform``
-        computes ``(image - mean) / scale``, so:
-        - ``mean = (0, 0, 0)`` — no mean subtraction
-        - ``std = (255, 255, 255)`` — divide by 255 (for standard 8-bit images)
+        YOLO models expect ``[0, 1]`` float input at inference. The conversion
+        from raw pixels to [0, 1] is handled by ``IntensityConfig`` (mode
+        ``"scale_to_unit"``), which ModelAPI embeds as a PPP step:
+
+        - For uint8: divide by 255.
+        - For uint16: divide by 65535.
+
+        The ``mean`` and ``std`` here represent any *additional* channel-wise
+        normalization applied after intensity scaling. YOLO needs none, so
+        both are identity (0 / 1).
         """
         return DataInputParams(
             input_size=(self.imgsz, self.imgsz),
             mean=(0.0, 0.0, 0.0),
-            std=(255.0, 255.0, 255.0),
+            std=(1.0, 1.0, 1.0),
+            intensity_config=IntensityConfig(mode="scale_to_unit", storage_dtype="uint8"),
         )
 
     @property
