@@ -602,11 +602,20 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         logger.info("Stored ONNX variant at {}", onnx_variant_dir)
 
         # Store the metrics
+        # Lightning writes to <work_dir>/csv/version_0/metrics.csv;
+        # Ultralytics writes to <work_dir>/train/results.csv.
         metrics_source_path = getitune_work_dir / "csv"
         metrics_dest_path = model_dir / "metrics"
         if metrics_source_path.exists():
             shutil.move(metrics_source_path, metrics_dest_path)
             logger.info("Stored training metrics at {}", metrics_dest_path)
+        else:
+            ultralytics_csv = getitune_work_dir / "train" / "results.csv"
+            if ultralytics_csv.exists():
+                dest_version_dir = metrics_dest_path / "version_0"
+                dest_version_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ultralytics_csv, dest_version_dir / "metrics.csv")
+                logger.info("Stored Ultralytics training metrics at {}", dest_version_dir)
 
         # Cleanup the getitune work directory
         shutil.rmtree(getitune_work_dir)

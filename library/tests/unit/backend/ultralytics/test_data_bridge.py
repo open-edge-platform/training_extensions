@@ -74,6 +74,7 @@ def test_dataset_adapter_rescales_bboxes_when_canvas_differs_from_tensor() -> No
             img_shape=(16, 20),
             ori_shape=(32, 40),
             padding=(0, 0, 0, 0),
+            scale_factor=(0.5, 0.5),
         ),
     )
 
@@ -90,6 +91,51 @@ def test_dataset_adapter_rescales_bboxes_when_canvas_differs_from_tensor() -> No
     #   cx=(2+10)/2/20=0.3, cy=(4+12)/2/16=0.5, w=8/20=0.4, h=8/16=0.5
     np.testing.assert_allclose(result["bboxes"], np.array([[0.3, 0.5, 0.4, 0.5]], dtype=np.float32))
     assert result["ori_shape"] == (32, 40)
+
+
+def test_dataset_adapter_rescales_bboxes_with_letterbox_padding() -> None:
+    """When keep_aspect_ratio=True, the image is resized + padded (letterboxed).
+
+    Bboxes in original coords must be scaled by scale_factor and then offset
+    by the padding before normalisation.
+    """
+    # Original image: 1000x500 (h x w), target tensor: 640x640
+    # Aspect-preserving resize: scale = min(640/1000, 640/500) = 0.64
+    # resized: 640x320, padding: left=160, right=160, top=0, bottom=0
+    image = tv_tensors.Image(torch.rand(3, 640, 640, dtype=torch.float32))
+    # Bbox at left edge of original image: x1=0, y1=0, x2=100, y2=200
+    bboxes = tv_tensors.BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
+        torch.tensor([[0.0, 0.0, 100.0, 200.0]], dtype=torch.float32),
+        format=tv_tensors.BoundingBoxFormat.XYXY,
+        canvas_size=(1000, 500),
+    )
+    sample = SimpleNamespace(
+        image=image,
+        bboxes=bboxes,
+        label=torch.tensor([0]),
+        img_info=ImageInfo(  # pyrefly: ignore[no-matching-overload]
+            img_idx=0,
+            img_shape=(640, 320),
+            ori_shape=(1000, 500),
+            padding=(160, 0, 160, 0),
+            scale_factor=(0.64, 0.64),
+        ),
+    )
+
+    dataset = MagicMock(spec=VisionDataset)
+    dataset.__len__.return_value = 1
+    dataset.__getitem__.return_value = sample
+
+    adapter = UltralyticsDatasetAdapter(dataset)
+    result = adapter[0]
+
+    # After scale + offset from original to tensor:
+    #   x1 = 0 * 0.64 + 160 = 160, y1 = 0 * 0.64 + 0 = 0
+    #   x2 = 100 * 0.64 + 160 = 224, y2 = 200 * 0.64 + 0 = 128
+    # XYWH normalised by tensor 640x640:
+    #   cx = (160+224)/2/640 = 0.3, cy = (0+128)/2/640 = 0.1
+    #   w  = (224-160)/640 = 0.1,   h  = (128-0)/640 = 0.2
+    np.testing.assert_allclose(result["bboxes"], np.array([[0.3, 0.1, 0.1, 0.2]], dtype=np.float32), atol=1e-6)
 
 
 def test_ultralytics_collate_fn_matches_expected_detection_contract() -> None:

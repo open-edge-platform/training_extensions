@@ -69,10 +69,19 @@ class UltralyticsDatasetAdapter(torch.utils.data.Dataset):
             # still in the original (or some other non-tensor) coord space.
             canvas = getattr(bboxes_raw, "canvas_size", None)
             if canvas is not None and tuple(canvas) != (tensor_h, tensor_w):
-                canvas_h, canvas_w = canvas
                 bboxes_np = bboxes_raw.detach().cpu().numpy().astype(np.float32).copy()
-                bboxes_np[:, 0::2] *= tensor_w / canvas_w  # x coords
-                bboxes_np[:, 1::2] *= tensor_h / canvas_h  # y coords
+                # Use scale_factor + padding from ImageInfo for correct
+                # letterbox transformation (simple ratio is wrong when
+                # keep_aspect_ratio padding is present).
+                if img_info is not None and img_info.scale_factor is not None:
+                    scale_h, scale_w = img_info.scale_factor
+                    pad_left, pad_top = padding[0], padding[1]
+                    bboxes_np[:, 0::2] = bboxes_np[:, 0::2] * scale_w + pad_left
+                    bboxes_np[:, 1::2] = bboxes_np[:, 1::2] * scale_h + pad_top
+                else:
+                    canvas_h, canvas_w = canvas
+                    bboxes_np[:, 0::2] *= tensor_w / canvas_w
+                    bboxes_np[:, 1::2] *= tensor_h / canvas_h
                 bboxes_for_norm = bboxes_np
             bboxes_xywh = xyxy_abs_to_xywh_norm(bboxes_for_norm, img_w=tensor_w, img_h=tensor_h)
         else:

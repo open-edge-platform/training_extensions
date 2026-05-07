@@ -82,6 +82,25 @@ KEY_MAPPING = {
     "val/mar_small": MetricDisplayInfo(display_name="Validation mAR small", frequency="epoch"),
     "validation/data_time": MetricDisplayInfo(display_name="Validation data time", frequency="epoch"),
     "validation/iter_time": MetricDisplayInfo(display_name="Validation iteration time", frequency="epoch"),
+    # Ultralytics epoch-based training losses
+    "train/box_loss": MetricDisplayInfo(display_name="Training box loss", frequency="epoch"),
+    "train/cls_loss": MetricDisplayInfo(display_name="Training cls loss", frequency="epoch"),
+    "train/dfl_loss": MetricDisplayInfo(display_name="Training dfl loss", frequency="epoch"),
+    "train/seg_loss": MetricDisplayInfo(display_name="Training seg loss", frequency="epoch"),
+    # Ultralytics epoch-based validation metrics (detection / bounding box)
+    "metrics/precision(B)": MetricDisplayInfo(display_name="Validation precision", frequency="epoch"),
+    "metrics/recall(B)": MetricDisplayInfo(display_name="Validation recall", frequency="epoch"),
+    "metrics/mAP50(B)": MetricDisplayInfo(display_name="Validation mAP@50", frequency="epoch"),
+    "metrics/mAP50-95(B)": MetricDisplayInfo(display_name="Validation mAP", frequency="epoch"),
+    # Ultralytics epoch-based validation metrics (instance segmentation / mask)
+    "metrics/precision(M)": MetricDisplayInfo(display_name="Validation mask precision", frequency="epoch"),
+    "metrics/recall(M)": MetricDisplayInfo(display_name="Validation mask recall", frequency="epoch"),
+    "metrics/mAP50(M)": MetricDisplayInfo(display_name="Validation mask mAP@50", frequency="epoch"),
+    "metrics/mAP50-95(M)": MetricDisplayInfo(display_name="Validation mask mAP", frequency="epoch"),
+    # Ultralytics learning rate metrics
+    "lr/pg0": MetricDisplayInfo(display_name="Learning rate (pg0)", frequency="epoch"),
+    "lr/pg1": MetricDisplayInfo(display_name="Learning rate (pg1)", frequency="epoch"),
+    "lr/pg2": MetricDisplayInfo(display_name="Learning rate (pg2)", frequency="epoch"),
 }
 
 
@@ -575,6 +594,10 @@ class ModelService(BaseSessionManagedService):
 
         # Read the CSV file with polars
         df = pl.read_csv(metrics_file)
+
+        # Ensure 'step' column exists (Ultralytics CSVs only have 'epoch').
+        if "step" not in df.columns:
+            df = df.with_columns(pl.lit(None).cast(pl.Int64).alias("step"))
 
         # Due to a quirk in SimpleLearningRateMonitor/LearningRateMonitor, the LR metric does not log the epoch value.
         # Fill in missing epoch values.
