@@ -19,7 +19,7 @@ export const usePanning = () => {
     });
 
     useEventListener('keyup', (event: KeyboardEvent) => {
-        if (!isTextInput(event.target) && event.code === 'Space') {
+        if (event.code === 'Space') {
             setIsPanning(false);
         }
     });

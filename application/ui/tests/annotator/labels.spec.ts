@@ -42,13 +42,13 @@ test.describe('Annotator', () => {
             await page.getByRole('button', { name: 'Edit labels' }).click();
         });
 
-        const filterLabel = page.getByLabel('Label name').first();
+        const labelNameInput = page.getByLabel('Label name').first();
 
-        await test.step('Update label name with empty space', async () => {
-            await filterLabel.clear();
-            await filterLabel.pressSequentially(nameWithSpaces);
+        await test.step('Update label name with spaces', async () => {
+            await labelNameInput.clear();
+            await labelNameInput.pressSequentially(nameWithSpaces);
         });
 
-        await expect(filterLabel).toHaveValue(nameWithSpaces);
+        await expect(labelNameInput).toHaveValue(nameWithSpaces);
     });
 });
