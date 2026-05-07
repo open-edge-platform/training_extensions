@@ -12,17 +12,15 @@ from typing import Any, ClassVar
 from ultralytics import YOLO
 
 from getitune.backend.lightning.models.base import DataInputParams
-from getitune.types.export import TaskLevelExportParameters
+from getitune.types.export import ExportFormat, TaskLevelExportParameters
 from getitune.types.label import LabelInfo
+from getitune.types.precision import Precision
 
 logger = logging.getLogger(__name__)
 
 
 class UltralyticsModel:
     """Wrapper around ``ultralytics.YOLO`` for :class:`UltralyticsEngine`.
-
-    Follows the same contract as Lightning models for pretrained weights,
-    preprocessing parameters, and export metadata.
 
     Args:
         model_name: Model variant identifier (e.g. ``"yolo26n"``).
@@ -48,20 +46,20 @@ class UltralyticsModel:
 
     def __init__(
         self,
-        model_name: str | None = None,
+        model_name: str,
         label_info: LabelInfo | None = None,
         *,
         pretrained: bool = True,
         imgsz: int | None = None,
         extra_overrides: dict[str, Any] | None = None,
     ) -> None:
-        self.model_name = model_name or self.default_model_name
+        self.model_name = model_name
         self.label_info = label_info
         self.pretrained = pretrained
         self.extra_overrides = extra_overrides or {}
 
         if not self.model_name:
-            msg = "model_name must be provided either directly or via the subclass default_model_name attribute."
+            msg = "model_name must be provided."
             raise ValueError(msg)
         if not self.pretrained and self.model_name.endswith(".pt"):
             msg = (
@@ -92,7 +90,6 @@ class UltralyticsModel:
 
     def _build_yolo(self) -> YOLO:
         """Create the ``ultralytics.YOLO`` model and optionally load pretrained weights."""
-        # Always build from .yaml config for the model architecture.
         yaml_name = self._model_yaml_name
         logger.info(f"Building Ultralytics model: {yaml_name} (task={self.task})")
         yolo = YOLO(yaml_name, task=self.task or None)
@@ -132,33 +129,53 @@ class UltralyticsModel:
         logger.info(f"Loading checkpoint weights from: {path}")
         self.yolo.load(str(path))
 
-    @property
-    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        """Per-model preprocessing parameters.
+    def export(
+        self,
+        output_dir: Path,
+        base_name: str,
+        export_format: ExportFormat,
+        precision: Precision = Precision.FP32,
+    ) -> Path:
+        """Export this model to the specified output directory.
 
-        Subclasses must override to provide model-specific defaults.
-        Returns either a single ``DataInputParams`` or a dict keyed by
-        ``model_name`` (like Lightning models).
+        Follows the same contract as Lightning's ``LightningModel.export()``.
 
-        YOLO models expect ``[0, 1]`` float input at inference, produced by
-        dividing raw uint8 pixels by 255.  ModelAPI's ``InputTransform``
-        computes ``(image - mean) / scale``, so:
-        - ``mean = (0, 0, 0)`` — no mean subtraction
-        - ``std = (255, 255, 255)`` — divide by 255
+        Args:
+            output_dir: Directory for saving the exported model.
+            base_name: Base name for the exported model file.
+            export_format: Format of the output model.
+            precision: Precision of the output model.
+
+        Returns:
+            Path to the exported model file.
         """
-        return DataInputParams(
-            input_size=(self.imgsz, self.imgsz),
-            mean=(0.0, 0.0, 0.0),
-            std=(255.0, 255.0, 255.0),
+        exporter = self._exporter
+        if export_format == ExportFormat.OPENVINO:
+            return exporter.to_openvino(self.yolo, output_dir, base_name, precision)
+        if export_format == ExportFormat.ONNX:
+            return exporter.to_onnx(self.yolo, output_dir, base_name, precision)
+        msg = f"Unsupported export format: {export_format}"
+        raise ValueError(msg)
+
+    @property
+    def _exporter(self) -> Any:
+        """Build and return the model exporter.
+
+        Subclasses may override to customize export behavior.
+        """
+        from getitune.backend.ultralytics.exporter import UltralyticsModelExporter
+
+        return UltralyticsModelExporter(
+            task_level_export_parameters=self._export_parameters,
+            data_input_params=self.data_input_params,
+            resize_mode="fit_to_window_letterbox",
+            pad_value=114,
+            swap_rgb=True,
         )
 
     @property
     def data_input_params(self) -> DataInputParams:
-        """Resolved data input parameters for this model instance.
-
-        Uses mean/std from :attr:`_default_preprocessing_params` and
-        ``self.imgsz`` for the input size (which may be user-overridden).
-        """
+        """Resolved data input parameters for this model instance."""
         default = self._default_preprocessing_params
         if isinstance(default, dict):
             params = default.get(self.model_name)
@@ -177,6 +194,26 @@ class UltralyticsModel:
         return params
 
     @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        """Per-model preprocessing parameters.
+
+        Subclasses must override to provide model-specific defaults.
+        Returns either a single ``DataInputParams`` or a dict keyed by
+        ``model_name`` (like Lightning models).
+
+        YOLO models expect ``[0, 1]`` float input at inference, produced by
+        dividing raw uint8 pixels by 255.  ModelAPI's ``InputTransform``
+        computes ``(image - mean) / scale``, so:
+        - ``mean = (0, 0, 0)`` — no mean subtraction
+        - ``std = (255, 255, 255)`` — divide by 255 (for standard 8-bit images)
+        """
+        return DataInputParams(
+            input_size=(self.imgsz, self.imgsz),
+            mean=(0.0, 0.0, 0.0),
+            std=(255.0, 255.0, 255.0),
+        )
+
+    @property
     def _export_parameters(self) -> TaskLevelExportParameters:
         """Task-level export parameters for metadata embedding.
 
@@ -189,7 +226,7 @@ class UltralyticsModel:
         label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
         return TaskLevelExportParameters(
             model_type="YOLO11",
-            model_name=self.model_name or "",
+            model_name=self.model_name,
             task_type="detection",
             label_info=label_info,
             optimization_config={},

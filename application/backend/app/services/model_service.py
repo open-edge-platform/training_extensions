@@ -97,10 +97,8 @@ KEY_MAPPING = {
     "metrics/recall(M)": MetricDisplayInfo(display_name="Validation mask recall", frequency="epoch"),
     "metrics/mAP50(M)": MetricDisplayInfo(display_name="Validation mask mAP@50", frequency="epoch"),
     "metrics/mAP50-95(M)": MetricDisplayInfo(display_name="Validation mask mAP", frequency="epoch"),
-    # Ultralytics learning rate metrics
-    "lr/pg0": MetricDisplayInfo(display_name="Learning rate (pg0)", frequency="epoch"),
-    "lr/pg1": MetricDisplayInfo(display_name="Learning rate (pg1)", frequency="epoch"),
-    "lr/pg2": MetricDisplayInfo(display_name="Learning rate (pg2)", frequency="epoch"),
+    # Ultralytics learning rate (main parameter group only)
+    "lr/pg0": MetricDisplayInfo(display_name="Learning rate", frequency="epoch"),
 }
 
 

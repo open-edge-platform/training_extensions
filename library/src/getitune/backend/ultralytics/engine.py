@@ -22,7 +22,6 @@ from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
 from getitune.utils.device import is_xpu_available
 
-from .exporter import UltralyticsModelExporter
 from .models.base import UltralyticsModel
 
 if TYPE_CHECKING:
@@ -154,7 +153,9 @@ class UltralyticsEngine(Engine):
         if self._datamodule is not None:
             return self._test_with_datamodule(merged, checkpoint=checkpoint)
 
-        yolo = self._resolve_export_model(checkpoint) if checkpoint is not None else self._model.yolo
+        if checkpoint is not None:
+            self._model.load_checkpoint(checkpoint)
+        yolo = self._model.yolo
         if self._data_root is not None and "data" not in merged:
             merged["data"] = str(self._data_root)
 
@@ -172,16 +173,28 @@ class UltralyticsEngine(Engine):
         results = yolo.val(**val_args)
         return self._translate_metrics(results)
 
-    def predict(self, **kwargs) -> ANNOTATIONS:
+    def predict(
+        self, source: str | Path | None = None, conf: float | None = None, iou: float | None = None, **kwargs
+    ) -> ANNOTATIONS:
         """Run inference and return a list of :class:`Prediction` objects.
 
         When a DataModule is attached, iterates ``predict_dataloader()``.
         Otherwise uses ``yolo.predict(source=...)``.
 
         Args:
-            **kwargs: Overrides forwarded to prediction.
+            source: Image source path or directory. Overrides attached data.
+            conf: Confidence threshold for predictions.
+            iou: IoU threshold for NMS.
+            **kwargs: Additional overrides forwarded to prediction.
         """
-        merged = self._build_overrides(**kwargs)
+        extra: dict[str, Any] = {}
+        if source is not None:
+            extra["source"] = str(source)
+        if conf is not None:
+            extra["conf"] = conf
+        if iou is not None:
+            extra["iou"] = iou
+        merged = self._build_overrides(**extra, **kwargs)
 
         if self._datamodule is not None and "source" not in merged:
             return self._predict_with_datamodule(merged)  # pyrefly: ignore[bad-return]
@@ -215,24 +228,29 @@ class UltralyticsEngine(Engine):
     ) -> Path:
         """Export the model to OpenVINO IR or ONNX.
 
-        Delegates to :class:`UltralyticsModelExporter` which follows the same
-        architecture as Lightning's :class:`LightningModelExporter` — metadata
-        embedding, preprocessing parameters, and FP16 compression are all
-        handled by the inherited :class:`ModelExporter` base class.
+        Delegates to :meth:`UltralyticsModel.export` which follows the same
+        architecture as Lightning — metadata embedding, preprocessing
+        parameters, and FP16 compression are handled by the model's exporter.
 
         Args:
             checkpoint: Path to a ``.pt`` checkpoint to export.  When given,
-                a fresh YOLO model is loaded from this file.
+                the model loads weights from this file before exporting.
             export_format: Target format.
             export_precision: Precision (FP32 or FP16).
-            **kwargs: Extra arguments forwarded to ``UltralyticsModelExporter``.
+            **kwargs: Extra arguments (reserved for future use).
 
         Returns:
             Path to the exported model file (``.xml`` for OpenVINO,
             ``.onnx`` for ONNX).
         """
-        yolo = self._resolve_export_model(checkpoint)
-        exporter = self._build_exporter()
+        if checkpoint is not None:
+            self._model.load_checkpoint(checkpoint)
+        elif self._last_train_checkpoint is not None and self._last_train_checkpoint.exists():
+            self._model.load_checkpoint(self._last_train_checkpoint)
+        else:
+            best_pt = self._work_dir / "train" / "weights" / "best.pt"
+            if best_pt.exists():
+                self._model.load_checkpoint(best_pt)
 
         logger.info(
             f"Exporting model: format={export_format.value}, "
@@ -240,10 +258,9 @@ class UltralyticsEngine(Engine):
             f"checkpoint={checkpoint or self._last_train_checkpoint or 'current weights'}"
         )
 
-        return exporter.export(
-            model=yolo,
+        return self._model.export(
             output_dir=self._work_dir,
-            base_model_name=self._EXPORTED_MODEL_BASE_NAME,
+            base_name=self._EXPORTED_MODEL_BASE_NAME,
             export_format=export_format,
             precision=export_precision,
         )
@@ -308,8 +325,9 @@ class UltralyticsEngine(Engine):
             args=args,
         )
 
-        yolo = self._resolve_export_model(checkpoint) if checkpoint is not None else self._model.yolo
-        results = validator(model=yolo.model)
+        if checkpoint is not None:
+            self._model.load_checkpoint(checkpoint)
+        results = validator(model=self._model.yolo.model)
         return self._translate_metrics(results)
 
     def _predict_with_datamodule(self, overrides: dict[str, Any]) -> list[Prediction]:
@@ -340,48 +358,6 @@ class UltralyticsEngine(Engine):
             predictions.extend(self._convert_predictions(raw_results, images=batch.images, imgs_info=batch.imgs_info))
 
         return predictions
-
-    def _resolve_export_model(self, checkpoint: PathLike | None = None) -> YOLO:
-        """Return a YOLO model instance to export.
-
-        Resolution order:
-        1. Explicit *checkpoint* path → load fresh YOLO from file.
-        2. Recorded checkpoint from the most recent ``train()`` call.
-        3. ``best.pt`` from the default training run directory.
-        4. Currently loaded model weights.
-
-        Args:
-            checkpoint: Optional path to a ``.pt`` checkpoint.
-
-        Returns:
-            A ``YOLO`` model instance ready for export.
-        """
-        from ultralytics import YOLO
-
-        if checkpoint is not None:
-            ckpt = Path(checkpoint)
-            if not ckpt.exists():
-                msg = f"Checkpoint not found: {ckpt}"
-                raise FileNotFoundError(msg)
-            logger.info(f"Loading checkpoint for export: {ckpt}")
-            return YOLO(str(ckpt))
-
-        if self._last_train_checkpoint is not None:
-            if self._last_train_checkpoint.exists():
-                logger.info(f"Using recorded checkpoint from latest training run: {self._last_train_checkpoint}")
-                return YOLO(str(self._last_train_checkpoint))
-
-            logger.warning(f"Recorded checkpoint no longer exists: {self._last_train_checkpoint}")
-            self._record_last_train_checkpoint(None)
-
-        # Try best.pt from the most recent training run.
-        best_pt = self._work_dir / "train" / "weights" / "best.pt"
-        if best_pt.exists():
-            logger.info(f"Using best checkpoint from training: {best_pt}")
-            return YOLO(str(best_pt))
-
-        # Fall back to whatever is currently loaded.
-        return self._model.yolo
 
     def _resolve_trainer_checkpoint(self, yolo: YOLO) -> Path | None:
         """Return the actual checkpoint produced by the latest training run."""
@@ -563,31 +539,6 @@ class UltralyticsEngine(Engine):
         )
         return img_tensor, img_info
 
-    def _build_exporter(self) -> UltralyticsModelExporter:
-        """Build an :class:`UltralyticsModelExporter` from the current model.
-
-        Threshold overrides from ``export_args`` are applied on top of the
-        model's default ``_export_parameters``.
-        """
-        export_params = self._model._export_parameters  # noqa: SLF001
-
-        # Apply threshold overrides from export_args, if provided
-        overrides: dict[str, Any] = {}
-        if "confidence_threshold" in self._export_args:
-            overrides["confidence_threshold"] = float(self._export_args["confidence_threshold"])
-        if "iou_threshold" in self._export_args:
-            overrides["iou_threshold"] = float(self._export_args["iou_threshold"])
-        if overrides:
-            export_params = export_params.wrap(**overrides)
-
-        return UltralyticsModelExporter(
-            task_level_export_parameters=export_params,
-            data_input_params=self._model.data_input_params,
-            resize_mode="fit_to_window_letterbox",
-            pad_value=114,
-            swap_rgb=True,
-        )
-
     @staticmethod
     def _resolve_device(device: str | DeviceType) -> torch.device:
         """Resolve a device specification to a :class:`torch.device`.
@@ -620,13 +571,13 @@ class UltralyticsEngine(Engine):
 
         if device == "auto":
             if is_xpu_available():
-                return torch.device("xpu:0")
+                return torch.device("xpu")
             if torch.cuda.is_available():
-                return torch.device("cuda:0")
+                return torch.device("cuda")
             return torch.device("cpu")
 
-        if device in ("xpu", "xpu:0"):
-            return torch.device(device if ":" in device else "xpu:0")
+        if device == "xpu":
+            return torch.device("xpu")
 
         if device in ("cuda", "gpu"):
             return torch.device("cuda:0")

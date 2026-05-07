@@ -94,17 +94,17 @@ class TestExportParameters:
     """Tests for the _export_parameters property on UltralyticsModel."""
 
     def test_returns_task_level_export_parameters(self) -> None:
-        model = UltralyticsDetectionModel(label_info=_label_info())
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         params = model._export_parameters
         assert isinstance(params, TaskLevelExportParameters)
 
     def test_model_type_is_yolo11(self) -> None:
         """Detection model type should be 'YOLO11' for ModelAPI YOLO adapter."""
-        model = UltralyticsDetectionModel(label_info=_label_info())
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         assert model._export_parameters.model_type == "YOLO11"
 
     def test_task_type_is_detection(self) -> None:
-        model = UltralyticsDetectionModel(label_info=_label_info())
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         assert model._export_parameters.task_type == "detection"
 
     def test_model_name_from_model(self) -> None:
@@ -113,7 +113,7 @@ class TestExportParameters:
 
     def test_label_info_from_model(self) -> None:
         li = _label_info()
-        model = UltralyticsDetectionModel(label_info=li)
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=li)
         assert model._export_parameters.label_info == li
 
     def test_none_label_info_uses_empty(self) -> None:
@@ -124,18 +124,18 @@ class TestExportParameters:
         assert params.label_info.label_ids == []
 
     def test_default_thresholds(self) -> None:
-        model = UltralyticsDetectionModel(label_info=_label_info())
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         params = model._export_parameters
         assert params.confidence_threshold == 0.25
         assert params.iou_threshold == 0.7
 
     def test_optimization_config_empty(self) -> None:
-        model = UltralyticsDetectionModel(label_info=_label_info())
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         assert model._export_parameters.optimization_config == {}
 
     def test_to_metadata_produces_valid_dict(self) -> None:
         """to_metadata should produce a valid metadata dict with all required keys."""
-        model = UltralyticsDetectionModel(label_info=_label_info())
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         metadata = model._export_parameters.to_metadata()
         assert ("model_info", "model_type") in metadata
         assert ("model_info", "task_type") in metadata

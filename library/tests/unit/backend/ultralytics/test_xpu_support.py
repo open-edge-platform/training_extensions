@@ -25,7 +25,7 @@ class TestResolveDevice:
             patch("getitune.backend.ultralytics.engine.torch.cuda.is_available", return_value=True),
         ):
             result = UltralyticsEngine._resolve_device("auto")
-            assert result == torch.device("xpu:0")
+            assert result == torch.device("xpu")
 
     def test_auto_falls_back_to_cuda(self) -> None:
         with (
@@ -33,7 +33,7 @@ class TestResolveDevice:
             patch("getitune.backend.ultralytics.engine.torch.cuda.is_available", return_value=True),
         ):
             result = UltralyticsEngine._resolve_device("auto")
-            assert result == torch.device("cuda:0")
+            assert result == torch.device("cuda")
 
     def test_auto_falls_back_to_cpu(self) -> None:
         with (
@@ -45,7 +45,7 @@ class TestResolveDevice:
 
     def test_explicit_xpu_string(self) -> None:
         result = UltralyticsEngine._resolve_device("xpu")
-        assert result == torch.device("xpu:0")
+        assert result == torch.device("xpu")
 
     def test_explicit_xpu_with_index(self) -> None:
         result = UltralyticsEngine._resolve_device("xpu:0")
@@ -75,7 +75,7 @@ class TestResolveDevice:
 
     def test_device_type_xpu(self) -> None:
         result = UltralyticsEngine._resolve_device(DeviceType.xpu)
-        assert result == torch.device("xpu:0")
+        assert result == torch.device("xpu")
 
     def test_device_type_gpu(self) -> None:
         result = UltralyticsEngine._resolve_device(DeviceType.gpu)
@@ -91,7 +91,7 @@ class TestResolveDevice:
             patch("getitune.backend.ultralytics.engine.torch.cuda.is_available", return_value=True),
         ):
             result = UltralyticsEngine._resolve_device(DeviceType.auto)
-            assert result == torch.device("xpu:0")
+            assert result == torch.device("xpu")
 
     def test_device_type_auto_cuda(self) -> None:
         with (
@@ -99,7 +99,7 @@ class TestResolveDevice:
             patch("getitune.backend.ultralytics.engine.torch.cuda.is_available", return_value=True),
         ):
             result = UltralyticsEngine._resolve_device(DeviceType.auto)
-            assert result == torch.device("cuda:0")
+            assert result == torch.device("cuda")
 
     def test_returns_torch_device(self) -> None:
         """All return values must be ``torch.device`` instances."""

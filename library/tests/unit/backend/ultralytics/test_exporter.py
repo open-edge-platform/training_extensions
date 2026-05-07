@@ -164,6 +164,9 @@ class TestToOpenvino:
             imgsz=640,
             half=False,
             end2end=False,
+            project=str(tmp_path / "output"),
+            name="raw_export",
+            exist_ok=True,
         )
         mock_save.assert_called_once_with(mock_ov_model, str(output_dir / "exported_model.xml"), compress_to_fp16=False)
         assert result == output_dir / "exported_model.xml"
@@ -300,6 +303,9 @@ class TestToOnnx:
             imgsz=640,
             half=False,
             end2end=False,
+            project=str(tmp_path / "output"),
+            name="raw_export",
+            exist_ok=True,
         )
         mock_pp.assert_called_once_with(mock_onnx_model, True, Precision.FP32)
         mock_save.assert_called_once_with(mock_onnx_model, str(output_dir / "exported_model.onnx"))

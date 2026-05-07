@@ -8,20 +8,6 @@ raises ``ValueError``, and ``BaseTrainer`` hardcodes CUDA in GradScaler,
 autocast, memory utilities, and OOM handling.  This mixin overrides the
 device-touching methods so that training runs on a single Intel XPU card
 via upstream PyTorch (no IPEX dependency).
-
-Design notes:
-
-* **bf16-mixed precision** — Intel GPUs use ``bfloat16`` (not ``fp16``).
-  ``GradScaler`` is disabled on XPU because bf16 does not need loss scaling.
-* **Autocast** — Ultralytics' ``autocast(self.amp)`` helper defaults to
-  ``device="cuda"``, which is a no-op for XPU tensors.  We wrap the
-  top-level ``train()`` call in ``torch.amp.autocast("xpu", ...)`` so that
-  the entire training loop runs under XPU mixed precision.
-* **Single-card only** — multi-card / DDP on XPU is explicitly deferred.
-* **OOM handling** — Ultralytics catches ``torch.cuda.OutOfMemoryError``
-  for auto batch-size retry.  XPU OOM surfaces as ``RuntimeError``.  We
-  do *not* override ``_do_train()`` (too large / fragile); XPU OOM will
-  propagate as-is.  Acceptable for v1.
 """
 
 from __future__ import annotations

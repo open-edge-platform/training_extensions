@@ -108,12 +108,16 @@ class UltralyticsModelExporter(ModelExporter):
         """
         imgsz = self.data_input_params.input_size[0]
 
-        # Step 1 — Ultralytics raw FP32 export
+        # Step 1 — Ultralytics raw FP32 export (save to output_dir to keep
+        # the .pt alongside the final OV model for the application backend)
         raw_result = model.export(
             format="openvino",
             imgsz=imgsz,
             half=False,
             end2end=False,
+            project=str(output_dir),
+            name="raw_export",
+            exist_ok=True,
         )
         raw_path = Path(raw_result)
 
@@ -125,14 +129,12 @@ class UltralyticsModelExporter(ModelExporter):
         ov_model = self._postprocess_openvino_model(ov_model)
 
         output_dir.mkdir(parents=True, exist_ok=True)
-        save_path = output_dir / (base_model_name + ".xml")
+        save_path = output_dir / f"{base_model_name}.xml"
         openvino.save_model(ov_model, str(save_path), compress_to_fp16=(precision == Precision.FP16))
 
         logger.info(
-            "Ultralytics OpenVINO export done (%d inputs, %d outputs) -> %s",
-            len(ov_model.inputs),
-            len(ov_model.outputs),
-            save_path,
+            f"Ultralytics OpenVINO export done ({len(ov_model.inputs)} inputs, "
+            f"{len(ov_model.outputs)} outputs) -> {save_path}"
         )
 
         # Step 4 — Clean up Ultralytics raw export artefacts
@@ -173,6 +175,9 @@ class UltralyticsModelExporter(ModelExporter):
             imgsz=imgsz,
             half=False,
             end2end=False,
+            project=str(output_dir),
+            name="raw_export",
+            exist_ok=True,
         )
         raw_path = Path(raw_result)
 
@@ -181,10 +186,10 @@ class UltralyticsModelExporter(ModelExporter):
         onnx_model = self._postprocess_onnx_model(onnx_model, embed_metadata, precision)
 
         output_dir.mkdir(parents=True, exist_ok=True)
-        save_path = output_dir / (base_model_name + ".onnx")
+        save_path = output_dir / f"{base_model_name}.onnx"
         onnx.save(onnx_model, str(save_path))
 
-        logger.info("Ultralytics ONNX export done -> %s", save_path)
+        logger.info(f"Ultralytics ONNX export done -> {save_path}")
 
         # Step 3 — Clean up raw export if different from target
         if raw_path.resolve() != save_path.resolve():

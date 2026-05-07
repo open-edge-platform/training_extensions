@@ -34,7 +34,7 @@ def _label_info() -> LabelInfo:
 
 def _make_engine(tmp_path: Path, mocker) -> tuple[UltralyticsEngine, MagicMock]:
     """Create an engine with a mocked YOLO model for unit testing."""
-    model = UltralyticsDetectionModel(label_info=_label_info())
+    model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
     datamodule = mocker.MagicMock(spec=DataModule)
     engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
 
@@ -44,7 +44,7 @@ def _make_engine(tmp_path: Path, mocker) -> tuple[UltralyticsEngine, MagicMock]:
 
 
 def test_train_args_are_train_only(mocker, tmp_path) -> None:
-    model = UltralyticsDetectionModel(label_info=_label_info())
+    model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
     datamodule = mocker.MagicMock(spec=DataModule)
     engine = UltralyticsEngine(
         model=model,
@@ -70,14 +70,14 @@ def test_train_args_are_train_only(mocker, tmp_path) -> None:
 
 
 def test_ultralytics_engine_supports_ultralytics_model_with_datamodule(mocker) -> None:
-    model = UltralyticsDetectionModel(label_info=_label_info())
+    model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
     data = mocker.MagicMock(spec=DataModule)
 
     assert UltralyticsEngine.is_supported(model, data)
 
 
 def test_predict_with_datamodule_uses_predict_dataloader(mocker, tmp_path) -> None:
-    model = UltralyticsDetectionModel(label_info=_label_info())
+    model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
     datamodule = mocker.MagicMock(spec=DataModule)
     datamodule.predict_dataloader.return_value = [
         SampleBatch(
@@ -110,28 +110,23 @@ def test_predict_with_datamodule_uses_predict_dataloader(mocker, tmp_path) -> No
     assert len(predictions) == 1
 
 
-class TestResolveExportModel:
-    """Tests for checkpoint resolution logic in export."""
+class TestExportCheckpointResolution:
+    """Tests for checkpoint resolution logic in export (now via model.load_checkpoint)."""
 
-    def test_explicit_checkpoint_loads_yolo(self, mocker, tmp_path) -> None:
-        """Providing a checkpoint path should load a fresh YOLO from that file."""
+    def test_explicit_checkpoint_loads_via_model(self, mocker, tmp_path) -> None:
+        """Providing a checkpoint path should call model.load_checkpoint."""
         engine, _ = _make_engine(tmp_path, mocker)
 
         ckpt_file = tmp_path / "custom.pt"
         ckpt_file.touch()
 
-        mock_yolo_cls = MagicMock()
-        with patch("ultralytics.YOLO", mock_yolo_cls):
-            result = engine._resolve_export_model(checkpoint=ckpt_file)
+        with (
+            patch.object(engine._model, "load_checkpoint") as mock_load,
+            patch.object(engine._model, "export", return_value=tmp_path / "exported_model.xml"),
+        ):
+            engine.export(checkpoint=ckpt_file)
 
-        mock_yolo_cls.assert_called_once_with(str(ckpt_file))
-        assert result is mock_yolo_cls.return_value
-
-    def test_explicit_checkpoint_not_found_raises(self, mocker, tmp_path) -> None:
-        engine, _ = _make_engine(tmp_path, mocker)
-
-        with pytest.raises(FileNotFoundError, match="Checkpoint not found"):
-            engine._resolve_export_model(checkpoint=tmp_path / "nonexistent.pt")
+        mock_load.assert_called_once_with(ckpt_file)
 
     def test_auto_discovers_best_pt(self, mocker, tmp_path) -> None:
         """When no checkpoint given, best.pt from train dir should be used."""
@@ -141,12 +136,13 @@ class TestResolveExportModel:
         best_pt.parent.mkdir(parents=True)
         best_pt.touch()
 
-        mock_yolo_cls = MagicMock()
-        with patch("ultralytics.YOLO", mock_yolo_cls):
-            result = engine._resolve_export_model(checkpoint=None)
+        with (
+            patch.object(engine._model, "load_checkpoint") as mock_load,
+            patch.object(engine._model, "export", return_value=tmp_path / "exported_model.xml"),
+        ):
+            engine.export()
 
-        mock_yolo_cls.assert_called_once_with(str(best_pt))
-        assert result is mock_yolo_cls.return_value
+        mock_load.assert_called_once_with(best_pt)
 
     def test_prefers_recorded_train_checkpoint(self, mocker, tmp_path) -> None:
         """Recorded checkpoints from train() should win over hardcoded train/best.pt."""
@@ -161,103 +157,65 @@ class TestResolveExportModel:
         fallback_best.parent.mkdir(parents=True)
         fallback_best.touch()
 
-        mock_yolo_cls = MagicMock()
-        with patch("ultralytics.YOLO", mock_yolo_cls):
-            result = engine._resolve_export_model(checkpoint=None)
+        with (
+            patch.object(engine._model, "load_checkpoint") as mock_load,
+            patch.object(engine._model, "export", return_value=tmp_path / "exported_model.xml"),
+        ):
+            engine.export()
 
-        mock_yolo_cls.assert_called_once_with(str(recorded_ckpt))
-        assert result is mock_yolo_cls.return_value
+        mock_load.assert_called_once_with(recorded_ckpt.resolve())
 
-    def test_stale_recorded_checkpoint_falls_back_to_default_best(self, mocker, tmp_path) -> None:
-        """Missing recorded checkpoint should not block fallback to work_dir/train/weights/best.pt."""
-        engine, _ = _make_engine(tmp_path, mocker)
-
-        stale_ckpt = tmp_path / "custom_run" / "weights" / "best.pt"
-        engine._record_last_train_checkpoint(stale_ckpt)
-        stale_ckpt.parent.mkdir(parents=True)
-        checkpoint_file = tmp_path / ".last_train_checkpoint"
-        assert checkpoint_file.exists()
-
-        default_best = tmp_path / "train" / "weights" / "best.pt"
-        default_best.parent.mkdir(parents=True)
-        default_best.touch()
-
-        mock_yolo_cls = MagicMock()
-        with patch("ultralytics.YOLO", mock_yolo_cls):
-            result = engine._resolve_export_model(checkpoint=None)
-
-        mock_yolo_cls.assert_called_once_with(str(default_best))
-        assert result is mock_yolo_cls.return_value
-        assert engine._last_train_checkpoint is None
-        assert not checkpoint_file.exists()
-
-    def test_fallback_to_current_model(self, mocker, tmp_path) -> None:
-        """Without checkpoint or best.pt, the current model is returned."""
+    def test_no_checkpoint_no_best_pt_does_not_load(self, mocker, tmp_path) -> None:
+        """Without checkpoint or best.pt, load_checkpoint should not be called."""
         engine, yolo = _make_engine(tmp_path, mocker)
 
-        result = engine._resolve_export_model(checkpoint=None)
-        assert result is yolo
+        with (
+            patch.object(engine._model, "load_checkpoint") as mock_load,
+            patch.object(engine._model, "export", return_value=tmp_path / "exported_model.xml"),
+        ):
+            engine.export()
+
+        mock_load.assert_not_called()
 
 
 class TestExport:
     """Tests for the export() method."""
 
-    def test_unsupported_format_raises(self, mocker, tmp_path) -> None:
-        """Unsupported formats should be rejected by the exporter dispatch."""
+    def test_export_delegates_to_model_export(self, mocker, tmp_path) -> None:
+        """export() should delegate to model.export() with correct args."""
         engine, _ = _make_engine(tmp_path, mocker)
 
-        bad_format = MagicMock(spec=ExportFormat)
-        bad_format.value = "TORCHSCRIPT"
-
-        mock_exporter = MagicMock()
-        mock_exporter.export.side_effect = ValueError("Unsupported export format")
-
         with (
-            patch.object(engine, "_resolve_export_model", return_value=MagicMock()),
-            patch.object(engine, "_build_exporter", return_value=mock_exporter),
-            pytest.raises(ValueError, match="Unsupported export format"),
+            patch.object(engine._model, "load_checkpoint"),
+            patch.object(engine._model, "export", return_value=tmp_path / "exported_model.xml") as mock_export,
         ):
-            engine.export(export_format=bad_format)
+            # Create a checkpoint so load_checkpoint gets called
+            best_pt = tmp_path / "train" / "weights" / "best.pt"
+            best_pt.parent.mkdir(parents=True)
+            best_pt.touch()
 
-    def test_export_delegates_to_exporter(self, mocker, tmp_path) -> None:
-        """export() should delegate to exporter.export() with correct args."""
-        engine, _ = _make_engine(tmp_path, mocker)
-
-        mock_yolo = MagicMock()
-        mock_exporter = MagicMock()
-        mock_exporter.export.return_value = tmp_path / "exported_model.xml"
-
-        with (
-            patch.object(engine, "_resolve_export_model", return_value=mock_yolo),
-            patch.object(engine, "_build_exporter", return_value=mock_exporter),
-        ):
             result = engine.export(
                 export_format=ExportFormat.OPENVINO,
                 export_precision=Precision.FP32,
             )
 
-        mock_exporter.export.assert_called_once_with(
-            model=mock_yolo,
+        mock_export.assert_called_once_with(
             output_dir=engine._work_dir,
-            base_model_name="exported_model",
+            base_name="exported_model",
             export_format=ExportFormat.OPENVINO,
             precision=Precision.FP32,
         )
         assert result == tmp_path / "exported_model.xml"
 
     def test_export_with_explicit_checkpoint(self, mocker, tmp_path) -> None:
-        """Checkpoint arg should be forwarded to _resolve_export_model."""
+        """Checkpoint arg should be forwarded to model.load_checkpoint."""
         engine, _ = _make_engine(tmp_path, mocker)
         ckpt_file = tmp_path / "custom.pt"
         ckpt_file.touch()
 
-        mock_yolo = MagicMock()
-        mock_exporter = MagicMock()
-        mock_exporter.export.return_value = tmp_path / "exported_model.onnx"
-
         with (
-            patch.object(engine, "_resolve_export_model", return_value=mock_yolo) as mock_resolve,
-            patch.object(engine, "_build_exporter", return_value=mock_exporter),
+            patch.object(engine._model, "load_checkpoint") as mock_load,
+            patch.object(engine._model, "export", return_value=tmp_path / "exported_model.onnx"),
         ):
             engine.export(
                 checkpoint=ckpt_file,
@@ -265,39 +223,19 @@ class TestExport:
                 export_precision=Precision.FP32,
             )
 
-        mock_resolve.assert_called_once_with(ckpt_file)
-
-    def test_export_passes_configured_thresholds_to_exporter(self, mocker, tmp_path) -> None:
-        """Export metadata should use thresholds configured via export_args."""
-        model = UltralyticsDetectionModel(label_info=_label_info())
-        datamodule = mocker.MagicMock(spec=DataModule)
-        engine = UltralyticsEngine(
-            model=model,
-            data=datamodule,
-            work_dir=tmp_path,
-            device="cpu",
-            export_args={"confidence_threshold": 0.4, "iou_threshold": 0.6},
-        )
-
-        exporter = engine._build_exporter()
-        metadata = exporter.metadata
-        assert metadata[("model_info", "confidence_threshold")] == "0.4"
-        assert metadata[("model_info", "iou_threshold")] == "0.6"
+        mock_load.assert_called_once_with(ckpt_file)
 
     def test_instance_segmentation_export_succeeds(self, mocker, tmp_path) -> None:
         """Segmentation export should succeed and produce an IR file."""
-        model = UltralyticsInstSegModel(label_info=_label_info())
+        model = UltralyticsInstSegModel(model_name="yolo26n-seg", label_info=_label_info())
         datamodule = mocker.MagicMock(spec=DataModule)
         engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
 
-        mock_exporter = mocker.MagicMock()
-        mock_exporter.export.return_value = tmp_path / "exported_model.xml"
-        mocker.patch.object(engine, "_build_exporter", return_value=mock_exporter)
-
-        result = engine.export(export_format=ExportFormat.OPENVINO, export_precision=Precision.FP32)
+        with patch.object(model, "export", return_value=tmp_path / "exported_model.xml") as mock_export:
+            result = engine.export(export_format=ExportFormat.OPENVINO, export_precision=Precision.FP32)
 
         assert result == tmp_path / "exported_model.xml"
-        mock_exporter.export.assert_called_once()
+        mock_export.assert_called_once()
 
     def test_train_records_actual_trainer_checkpoint(self, mocker, tmp_path) -> None:
         """train() should persist the checkpoint chosen by the underlying trainer."""
@@ -328,34 +266,33 @@ class TestExport:
         validator.return_value = {"metrics/mAP50(B)": 0.5}
         validator_cls.return_value = validator
 
-        loaded_yolo = MagicMock()
-        loaded_yolo.model = MagicMock()
-
         with (
             patch.object(engine, "_make_bound_validator", return_value=validator_cls),
-            patch.object(engine, "_resolve_export_model", return_value=loaded_yolo) as resolve,
+            patch.object(engine._model, "load_checkpoint") as mock_load,
         ):
             metrics = engine.test(checkpoint=ckpt_file)
 
-        resolve.assert_called_once_with(ckpt_file)
-        validator.assert_called_once_with(model=loaded_yolo.model)
+        mock_load.assert_called_once_with(ckpt_file)
         assert metrics == {"val/map_50": 0.5}
 
     def test_test_with_data_root_loads_explicit_checkpoint(self, tmp_path) -> None:
         """Filesystem validation should use a fresh YOLO model for explicit checkpoint."""
-        model = UltralyticsDetectionModel(label_info=_label_info())
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         engine = UltralyticsEngine(model=model, data=tmp_path, work_dir=tmp_path / "work", device="cpu")
         ckpt_file = tmp_path / "best.pt"
         ckpt_file.touch()
 
-        loaded_yolo = MagicMock()
-        loaded_yolo.val.return_value = {"metrics/mAP50(B)": 0.25}
+        mock_yolo = MagicMock()
+        mock_yolo.val.return_value = {"metrics/mAP50(B)": 0.25}
 
-        with patch.object(engine, "_resolve_export_model", return_value=loaded_yolo) as resolve:
+        with (
+            patch.object(model, "load_checkpoint") as mock_load,
+            patch.object(type(model), "yolo", new_callable=lambda: property(lambda self: mock_yolo)),
+        ):
             metrics = engine.test(checkpoint=ckpt_file)
 
-        resolve.assert_called_once_with(ckpt_file)
-        loaded_yolo.val.assert_called_once()
+        mock_load.assert_called_once_with(ckpt_file)
+        mock_yolo.val.assert_called_once()
         assert metrics == {"val/map_50": 0.25}
 
     def test_engine_loads_persisted_checkpoint_pointer(self, mocker, tmp_path) -> None:
@@ -366,51 +303,34 @@ class TestExport:
         recorded_ckpt.touch()
         (tmp_path / ".last_train_checkpoint").write_text(str(recorded_ckpt.resolve()), encoding="utf-8")
 
-        model = UltralyticsDetectionModel(label_info=_label_info())
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         datamodule = mocker.MagicMock(spec=DataModule)
         engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
 
         assert engine._last_train_checkpoint == recorded_ckpt.resolve()
 
 
-class TestBuildExporter:
-    """Tests for the _build_exporter helper."""
+class TestModelExporter:
+    """Tests for the model's _exporter property."""
 
     def test_returns_ultralytics_exporter(self, mocker, tmp_path) -> None:
-        engine, _ = _make_engine(tmp_path, mocker)
-        exporter = engine._build_exporter()
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
 
         from getitune.backend.ultralytics.exporter import UltralyticsModelExporter
 
-        assert isinstance(exporter, UltralyticsModelExporter)
+        assert isinstance(model._exporter, UltralyticsModelExporter)
 
     def test_uses_model_data_input_params(self, mocker, tmp_path) -> None:
-        engine, _ = _make_engine(tmp_path, mocker)
-        exporter = engine._build_exporter()
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
+        exporter = model._exporter
 
         assert exporter.data_input_params.mean == (0.0, 0.0, 0.0)
         assert exporter.data_input_params.std == (255.0, 255.0, 255.0)
 
     def test_default_yolo_preprocessing_values(self, mocker, tmp_path) -> None:
-        engine, _ = _make_engine(tmp_path, mocker)
-        exporter = engine._build_exporter()
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
+        exporter = model._exporter
 
         assert exporter.resize_mode == "fit_to_window_letterbox"
         assert exporter.pad_value == 114
         assert exporter.swap_rgb is True
-
-    def test_threshold_overrides_from_export_args(self, mocker, tmp_path) -> None:
-        model = UltralyticsDetectionModel(label_info=_label_info())
-        datamodule = mocker.MagicMock(spec=DataModule)
-        engine = UltralyticsEngine(
-            model=model,
-            data=datamodule,
-            work_dir=tmp_path,
-            device="cpu",
-            export_args={"confidence_threshold": 0.4, "iou_threshold": 0.6},
-        )
-        exporter = engine._build_exporter()
-        metadata = exporter.metadata
-
-        assert metadata[("model_info", "confidence_threshold")] == "0.4"
-        assert metadata[("model_info", "iou_threshold")] == "0.6"

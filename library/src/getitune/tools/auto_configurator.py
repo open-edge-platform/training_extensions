@@ -346,15 +346,11 @@ class AutoConfigurator:
         ov_subset = ov_config.get(f"{subset}_subset", ov_config["test_subset"])
 
         if keep_aspect_ratio:
-            # For letterbox models (YOLO, etc.), do NOT pre-resize images in the
-            # DataModule. Instead, feed original-resolution images and let ModelAPI
-            # handle the full preprocessing (centered letterbox with correct pad
-            # value). This avoids the accuracy loss caused by a padding-strategy
-            # mismatch between the DataModule Resize (bottom-right, pad=0) and the
-            # model's native letterbox (centered, pad=114).
-            subset_config.batch_size = 1
-            subset_config.augmentations_cpu = []
-            subset_config.augmentations_gpu = []
+            subset_config.batch_size = ov_subset["batch_size"]
+            subset_config.augmentations_cpu = ov_subset["augmentations_cpu"]
+            subset_config.augmentations_gpu = ov_subset.get("augmentations_gpu", [])
+            self._patch_resize_keep_aspect_ratio(subset_config.augmentations_cpu)
+            self._patch_resize_keep_aspect_ratio(subset_config.augmentations_gpu)
         else:
             subset_config.batch_size = ov_subset["batch_size"]
             subset_config.augmentations_cpu = ov_subset["augmentations_cpu"]
