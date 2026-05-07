@@ -17,5 +17,5 @@ export const TotalItems = ({ totalSelectedElements }: TotalItemsProps) => {
         return <Text>{`${totalSelectedElements} selected`}</Text>;
     }
 
-    return <Text>{`${totalCount} media${totalCount === 1 ? '' : 's'}`}</Text>;
+    return <Text>{`${totalCount} media item${totalCount === 1 ? '' : 's'}`}</Text>;
 };
