@@ -5,6 +5,7 @@ import asyncio
 from pathlib import Path
 from uuid import UUID, uuid4
 
+import cv2
 import numpy as np
 import pytest
 from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, MediaInfo, export_dataset
@@ -20,6 +21,16 @@ from app.datumaro_converter import (
 from app.models import AnnotationType, DatasetFormat
 from app.models.dataset import DatasetMetadata
 from app.services import StagedDatasetService
+
+
+def _create_dummy_video(path: Path, num_frames: int = 20, width: int = 64, height: int = 64, fps: int = 10) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fourcc = cv2.VideoWriter.fourcc(*"mp4v")
+    writer = cv2.VideoWriter(str(path), fourcc, fps, (width, height))
+    for _ in range(num_frames):
+        frame = np.random.randint(0, 255, (height, width, 3), dtype=np.uint8)
+        writer.write(frame)
+    writer.release()
 
 
 def _stage_dataset_archive(root: Path, file_name: str, content: bytes = b"data") -> tuple[UUID, Path]:
@@ -71,10 +82,12 @@ def _stage_multilabel_dataset(root: Path) -> tuple[UUID, Path]:
             user_reviewed=False,
         )
     )
+    video_path = root / "videos" / "video1.mp4"
+    _create_dummy_video(video_path, num_frames=20)
     dataset.append(
         MultilabelClassificationImportExportSample(
             id=str(uuid4()),
-            media=LazyVideoFrame(video_path=ds_dir / "videos/video1.mp4", frame_index=10),
+            media=LazyVideoFrame(video_path=video_path, frame_index=10),
             media_info=MediaInfo(width=200, height=200),
             label=np.array([]),
             subset=Subset.TRAINING,
@@ -225,7 +238,7 @@ class TestStagedDatasetServiceIntegration:
         assert geti_ds.filename == str(geti_path)
         assert geti_ds.metadata == DatasetMetadata(
             num_images=3,
-            num_frames=0,
+            num_frames=20,
             num_videos=1,
             annotation_type=AnnotationType.LABEL,
             num_annotations=3,
@@ -286,7 +299,7 @@ class TestStagedDatasetServiceIntegration:
         assert result.format == DatasetFormat.GETI
         assert result.metadata == DatasetMetadata(
             num_images=3,
-            num_frames=0,
+            num_frames=20,
             num_videos=1,
             annotation_type=AnnotationType.LABEL,
             num_annotations=3,

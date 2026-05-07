@@ -85,7 +85,7 @@ def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
                 counts.num_annotated_images += annotation_count > 0
             case LazyVideoFrame():
                 video_path = str(media.video_path)
-                if video_path not in counts.video_paths and Path(video_path).exists():
+                if video_path not in counts.video_paths:
                     counts.num_frames += media.video_info.total_frames
                 counts.video_paths.add(video_path)
                 counts.num_annotations += annotation_count
