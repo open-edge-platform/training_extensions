@@ -59,13 +59,13 @@ const CancelRunningJob = ({ job, onCancel }: CancelRunningJobProps) => {
             <DialogContainer onDismiss={() => setIsDeleteDialogOpen(false)}>
                 {isDeleteDialogOpen && (
                     <AlertDialog
-                        title='Cancel job'
+                        title='Stop job'
                         variant='destructive'
                         primaryActionLabel='Cancel'
                         onPrimaryAction={onCancel}
                         cancelLabel='Close'
                     >
-                        Are you sure you want to cancel this job?
+                        Are you sure you want to stop this job?
                     </AlertDialog>
                 )}
             </DialogContainer>

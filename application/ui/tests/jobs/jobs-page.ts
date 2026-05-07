@@ -25,11 +25,11 @@ export class JobsPage {
     }
 
     getCancelButton() {
-        return this.page.getByRole('button', { name: 'Cancel running job' });
+        return this.page.getByRole('button', { name: 'Cancel job' });
     }
 
     getConfirmCancelDialog() {
-        return this.page.getByRole('alertdialog', { name: 'Stop running job' });
+        return this.page.getByRole('alertdialog', { name: 'Stop job' });
     }
 
     async cancelRunningJob() {
