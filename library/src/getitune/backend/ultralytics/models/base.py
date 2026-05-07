@@ -196,7 +196,6 @@ class UltralyticsModel:
             confidence_threshold=0.25,
             iou_threshold=0.7,
             nms_execute=True,
-            agnostic_nms=True,
         )
 
     def __repr__(self) -> str:

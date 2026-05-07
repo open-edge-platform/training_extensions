@@ -61,7 +61,6 @@ class UltralyticsInstSegModel(UltralyticsModel):
             confidence_threshold=0.25,
             iou_threshold=0.7,
             nms_execute=True,
-            agnostic_nms=True,
         )
 
     metric_keys: ClassVar[dict[str, str]] = {

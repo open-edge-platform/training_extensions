@@ -4,7 +4,7 @@ name: YOLO26-M-Seg
 pretrained_weights:
   url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-seg.pt
   mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-seg.pt
-  sha_sum: ""
+  sha_sum: "16b636f04e8fb6a325b3370f22dc5e5535ff473e384f4d041fd28d788f6ee9f5"
 
 description: "YOLO26-M-Seg is the medium Ultralytics YOLO26 instance segmentation model. It delivers higher accuracy at the cost of increased latency while using the Geti Tune data pipeline for preprocessing and dataset handling."
 stats:
