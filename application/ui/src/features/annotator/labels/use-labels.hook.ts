@@ -182,6 +182,7 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
         editableLabels,
         hasLabels,
         selectedLabelId,
+        isUpdating: updateLabelMutation.isPending,
         addLabel,
         updateLabel,
         deleteLabel,

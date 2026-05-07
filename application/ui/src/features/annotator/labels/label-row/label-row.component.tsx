@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { KeyboardEvent, useState } from 'react';
 
 import { ActionButton, Grid, TextField, Tooltip, TooltipTrigger, View } from '@geti/ui';
 import { Delete, Pin, Unpin } from '@geti/ui/icons';
@@ -15,7 +15,7 @@ import classes from './label-row.module.scss';
 
 const COLOR_DEBOUNCE_MS = 300;
 
-type LabelRowProps = {
+export type LabelRowProps = {
     label: Label;
     isSelected: boolean;
     isPinned: boolean;
@@ -24,6 +24,10 @@ type LabelRowProps = {
     onTogglePin: (label: Label) => void;
     onUpdate: (labelId: string, updates: { name: string; color: string; hotkey: string | null | undefined }) => void;
     validateName: (name: string, excludeId?: string) => string | undefined;
+};
+
+const onEnter = (handler: () => void) => (event: KeyboardEvent) => {
+    event.key === 'Enter' && handler();
 };
 
 export const LabelRow = ({
@@ -43,7 +47,7 @@ export const LabelRow = ({
 
     const getValidName = () => (validationError || name.trim() === '' ? label.name : name.trim());
 
-    const handleNameBlur = () => {
+    const handleUpdateName = () => {
         if (validationError || name.trim() === '') return;
         if (name === label.name) return;
 
@@ -77,12 +81,13 @@ export const LabelRow = ({
 
             <View>
                 <TextField
+                    width={'100%'}
+                    value={name}
                     aria-label={'Label name'}
                     placeholder={'Label name'}
-                    value={name}
                     onChange={setName}
-                    onBlur={handleNameBlur}
-                    width={'100%'}
+                    onBlur={handleUpdateName}
+                    onKeyDown={onEnter(handleUpdateName)}
                     errorMessage={validationError}
                     validationState={validationError ? 'invalid' : undefined}
                 />
