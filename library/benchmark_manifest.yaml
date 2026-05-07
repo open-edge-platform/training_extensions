@@ -79,22 +79,22 @@ experiments:
         "torch:test/latency": { compare: "<=", margin: 0.15 }
   classification/h_label_cls:
     models:
-      - name: efficientnet_b0
+      - name: efficientnet_b0_hl
         priority: core
         recipe: classification/h_label_cls/efficientnet_b0.yaml
-      - name: dino_v2
+      - name: dino_v2_hl
         priority: core
         recipe: classification/h_label_cls/dino_v2.yaml
-      - name: efficientnet_b3
+      - name: efficientnet_b3_hl
         priority: extended
         recipe: classification/h_label_cls/efficientnet_b3.yaml
-      - name: efficientnet_v2
+      - name: efficientnet_v2_hl
         priority: extended
         recipe: classification/h_label_cls/efficientnet_v2.yaml
-      - name: mobilenet_v3_large
+      - name: mobilenet_v3_large_hl
         priority: extended
         recipe: classification/h_label_cls/mobilenet_v3_large.yaml
-      - name: vit_tiny
+      - name: vit_tiny_hl
         priority: extended
         recipe: classification/h_label_cls/vit_tiny.yaml
     datasets:
