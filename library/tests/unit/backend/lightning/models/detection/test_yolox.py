@@ -95,3 +95,19 @@ class TestYOLOX:
         assert dets.shape[0] == 1
         assert dets.shape[2] == 5
         assert labels.shape == dets.shape[:2]
+
+    @pytest.mark.parametrize(
+        ("model_name", "expect_cleared"),
+        [("yolox_s", True), ("yolox_l", True), ("yolox_x", True), ("yolox_tiny", False)],
+    )
+    def test_intensity_config_cleared_for_raw_uint8_models(self, model_name, expect_cleared):
+        from getitune.config.data import IntensityConfig
+
+        intensity_cfg = IntensityConfig(mode="scale_to_unit", max_value=255.0)
+        params = DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0), intensity_config=intensity_cfg)
+        model = YOLOX(model_name=model_name, label_info=3, data_input_params=params)
+        if expect_cleared:
+            assert model.data_input_params.intensity_config is None
+        else:
+            assert model.data_input_params.intensity_config is not None
+            assert model.data_input_params.intensity_config.mode == "scale_to_unit"
