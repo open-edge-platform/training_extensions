@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import logging as log
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence, cast
 
 import torch
 from model_api.tilers import InstanceSegmentationTiler
@@ -13,6 +13,7 @@ from torchvision import tv_tensors
 
 import getitune.backend.ultralytics.exporter.yolo_seg_wrapper  # noqa: F401 — registers YOLO11Seg with ModelAPI
 from getitune.backend.openvino.models.base import OVModel
+from getitune.backend.openvino.models.utils import rescale_bboxes_to_original
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.data.utils.structures.mask.mask_util import encode_rle
 from getitune.metrics import MetricInput
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
     from model_api.models.utils import InstanceSegmentationResult
     from torchmetrics import Metric, MetricCollection
 
+    from getitune.data.entity.base import ImageInfo
     from getitune.metrics import MetricCallable
     from getitune.types import PathLike
 
@@ -93,12 +95,16 @@ class OVInstanceSegmentationModel(OVModel):
         This method reads the confidence threshold from the model's runtime information
         and updates the hyperparameters accordingly.
         """
-        if model_adapter.model.has_rt_info(["model_info", "confidence_threshold"]):
+        if self._is_onnx:
+            # For ONNX models, the adapter parses metadata_props into rt_info.
+            best_confidence_threshold = model_adapter.get_rt_info(["model_info", "confidence_threshold"]).astype(str)
+            self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
+        elif model_adapter.model.has_rt_info(["model_info", "confidence_threshold"]):
             best_confidence_threshold = model_adapter.model.get_rt_info(["model_info", "confidence_threshold"]).value
             self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
         else:
             msg = (
-                "Cannot get best_confidence_threshold from OpenVINO IR's rt_info. "
+                "Cannot get best_confidence_threshold from model metadata. "
                 "Please check whether this model is trained by getitune or not. "
                 "Without this information, it can produce a wrong F1 metric score. "
                 "At this time, it will be set as the default value = None."
@@ -124,25 +130,22 @@ class OVInstanceSegmentationModel(OVModel):
         scores = []
         labels = []
         masks = []
+        imgs_info = cast("Sequence[ImageInfo]", inputs.imgs_info)
         for i, output in enumerate(outputs):
-            img_info = inputs.imgs_info[i]  # type: ignore[union-attr,index]
-            bboxes_data = torch.as_tensor(output.bboxes, dtype=torch.float32)
-
-            # When the test augmentation pipeline uses resize_targets=False (the
-            # default for OV recipes), GT bboxes remain in original image coords
-            # while the image tensor is resized to the model input size.
-            # ModelAPI returns predictions in resized-image coords (img_shape) since
-            # it receives the already-resized image.  Scale predictions back to
-            # original coords so they match GT during metric computation.
-            # For the keep_aspect_ratio=True path (YOLO/letterbox), no DataModule
-            # resize is applied so img_shape == ori_shape and this block is skipped.
-            ori_h, ori_w = img_info.ori_shape
+            img_info = imgs_info[i]
             img_h, img_w = img_info.img_shape
-            if (ori_h, ori_w) != (img_h, img_w) and img_info.scale_factor is not None:
-                scale_h, scale_w = img_info.scale_factor
-                pad_left, pad_top = img_info.padding[0], img_info.padding[1]
-                bboxes_data[:, 0::2] = (bboxes_data[:, 0::2] - pad_left) / scale_w
-                bboxes_data[:, 1::2] = (bboxes_data[:, 1::2] - pad_top) / scale_h
+            ori_h, ori_w = img_info.ori_shape
+
+            bboxes_data = torch.as_tensor(output.bboxes, dtype=torch.float32).clone()
+
+            # Rescale predictions from model input coords to original image coords.
+            bboxes_data = rescale_bboxes_to_original(
+                bboxes_data,
+                img_shape=(img_h, img_w),
+                ori_shape=(ori_h, ori_w),
+                padding=img_info.padding,
+                scale_factor=img_info.scale_factor,
+            )
 
             bboxes.append(
                 tv_tensors.BoundingBoxes(
@@ -244,24 +247,27 @@ class OVInstanceSegmentationModel(OVModel):
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}
         return super()._compute_metrics(metric, **compute_kwargs)
 
-    def _create_label_info_from_ov_ir(self) -> LabelInfo:
-        """Create label information from the OpenVINO IR model.
+    def _create_label_info_from_model(self) -> LabelInfo:
+        """Create label information from the OpenVINO IR or ONNX model metadata.
 
-        Reads label information from the OpenVINO IR model's runtime information
-        and constructs a LabelInfo object.
+        Reads label information from the model metadata and constructs a LabelInfo object.
 
         Returns:
-            LabelInfo: Label information extracted from the OpenVINO IR model.
+            LabelInfo: Label information extracted from the model.
         """
-        ov_model = self.model.get_model()
-
-        if ov_model.has_rt_info(["model_info", "label_info"]):
+        if self._is_onnx:
+            # For ONNX models, the adapter parses metadata_props into rt_info.
+            serialized = self.model.inference_adapter.get_rt_info(["model_info", "label_info"]).astype(str)
+        else:
+            # For OV IR models, use the explicit has_rt_info check.
+            ov_model = self.model.get_model()
+            if not ov_model.has_rt_info(["model_info", "label_info"]):
+                return super()._create_label_info_from_model()
             serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
-            ir_label_info = LabelInfo.from_json(serialized)
-            if ir_label_info.label_names[0] == "getitune_empty_lbl":
-                ir_label_info.label_names.pop(0)
-                ir_label_info.label_ids.pop(0)
-                ir_label_info.label_groups[0].pop(0)
-            return ir_label_info
 
-        return super()._create_label_info_from_ov_ir()
+        ir_label_info = LabelInfo.from_json(serialized)
+        if ir_label_info.label_names[0] == "getitune_empty_lbl":
+            ir_label_info.label_names.pop(0)
+            ir_label_info.label_ids.pop(0)
+            ir_label_info.label_groups[0].pop(0)
+        return ir_label_info

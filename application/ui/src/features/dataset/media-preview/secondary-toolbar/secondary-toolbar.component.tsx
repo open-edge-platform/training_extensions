@@ -70,10 +70,16 @@ export const SecondaryToolbar = ({
     const videoPlayerContext = useVideoPlayerContext();
     const isPlaying = videoPlayerContext?.videoControls?.isPlaying ?? false;
 
-    const { canSubmit, isSaving, submitAnnotations, initialAnnotations, initialPredictions } = useAnnotationActions();
+    const { canSubmit, isSaving, submitAnnotations, submitPredictions, initialAnnotations, initialPredictions } =
+        useAnnotationActions();
 
     const handleSubmit = async () => {
         await submitAnnotations(subset);
+        onSelectNextMediaItem();
+    };
+
+    const handleSubmitPredictions = async () => {
+        await submitPredictions(subset);
         onSelectNextMediaItem();
     };
 
@@ -130,7 +136,7 @@ export const SecondaryToolbar = ({
                             <PredictionButtons
                                 onModeChange={onModeChange}
                                 isDisabled={isSubmitDisabled}
-                                onSubmit={handleSubmit}
+                                onSubmit={handleSubmitPredictions}
                             />
                         )}
                         {isAnnotationMode && (
