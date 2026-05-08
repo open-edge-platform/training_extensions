@@ -5,12 +5,14 @@ model:
     label_info: 80
     model_name: rtmdet_inst_tiny
 
+    # See rtmdet_inst_tiny.yaml — RTMDet-Inst reference uses AdamW, not
+    # SGD. The previous SGD/lr=1e-3 setup was severely under-fitting.
     optimizer:
-      class_path: torch.optim.SGD
+      class_path: torch.optim.AdamW
       init_args:
-        lr: 0.001
-        momentum: 0.9
-        weight_decay: 0.0001
+        lr: 0.004
+        weight_decay: 0.01
+        betas: [0.9, 0.999]
 
     scheduler:
       class_path: getitune.backend.lightning.schedulers.LinearWarmupSchedulerCallable
@@ -70,7 +72,7 @@ overrides:
       enable_adaptive_tiling: true
 
     train_subset:
-      batch_size: 4
+      batch_size: 8
       num_workers: 8
       augmentations_cpu:
         - class_path: getitune.data.augmentation.transforms.Resize
