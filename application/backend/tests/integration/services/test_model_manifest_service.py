@@ -100,6 +100,7 @@ class TestModelManifestService:
         mock_yaml_result = {
             "id": "test",
             "name": "Test Model",
+            "license": "MIT",
             "pretrained_weights": {
                 "url": "https://example.com/test_model_weights.pth",
                 "mirror_url": "https://mirror.example.com/test_model_weights.pth",

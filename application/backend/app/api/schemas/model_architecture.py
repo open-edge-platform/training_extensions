@@ -18,6 +18,7 @@ class ModelArchitectureView(BaseModel):
     capabilities: Capabilities = Field(
         title="Model Capabilities", description="Special capabilities supported by the model"
     )
+    license: str = Field(title="License", description="License under which the model architecture is released")
     stats: ModelStats = Field(title="Model Statistics", description="Statistics about the model")
     support_status: ModelManifestDeprecationStatus = Field(
         title="Support Status", description="Current support level (active, deprecated, or obsolete)"
