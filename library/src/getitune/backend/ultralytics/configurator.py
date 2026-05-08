@@ -8,7 +8,7 @@ from __future__ import annotations
 import copy
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import yaml
 from jsonargparse import ArgumentParser, Namespace
@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from getitune.types.label import LabelInfo
 
 _SUPPORTED_TASKS: frozenset[str] = frozenset((TaskType.DETECTION.value, TaskType.INSTANCE_SEGMENTATION.value))
+ConfigValue: TypeAlias = str | int | float | bool | None | dict[str, "ConfigValue"] | list["ConfigValue"]
 
 
 class Configurator:
@@ -207,7 +208,7 @@ def _engine_device(engine_config: dict[str, Any]) -> str:
     return str(engine_config.get("device", "auto"))
 
 
-def _set_dot_path(config: dict[str, Any], key: str, value: Any) -> None:
+def _set_dot_path(config: dict[str, Any], key: str, value: ConfigValue) -> None:
     parts = key.split(".")
     if len(parts) < 2:
         msg = f"Override key must be a dot path, got '{key}'"
@@ -218,7 +219,7 @@ def _set_dot_path(config: dict[str, Any], key: str, value: Any) -> None:
         next_value = current.setdefault(part, {})
         if not isinstance(next_value, dict):
             msg = f"Cannot override nested key '{key}' because '{part}' is not a mapping"
-            raise ValueError(msg)
+            raise TypeError(msg)
         current = next_value
     current[parts[-1]] = value
 

@@ -84,7 +84,11 @@ class GetiTuneValidatorMixin:
         self.dataloader = self.dataloader or self._build_adapter_dataloader()  # type: ignore[attr-defined]
 
         model.eval()
-        model.warmup(imgsz=(1, self.data["channels"], imgsz, imgsz))  # pyrefly: ignore[bad-argument-type]  # type: ignore[attr-defined]
+        if isinstance(imgsz, int):
+            warmup_imgsz = (1, int(self.data["channels"]), imgsz, imgsz)
+        else:
+            warmup_imgsz = (1, int(self.data["channels"]), int(imgsz[0]), int(imgsz[1]))
+        model.warmup(imgsz=warmup_imgsz)  # type: ignore[attr-defined]
 
         self.run_callbacks("on_val_start")  # type: ignore[attr-defined]
         dt = tuple(Profile(device=self.device) for _ in range(4))  # type: ignore[attr-defined]

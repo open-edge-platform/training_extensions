@@ -12,6 +12,7 @@ import pytest
 
 from getitune.backend.lightning.models.base import DataInputParams
 from getitune.backend.ultralytics.exporter import UltralyticsModelExporter
+from getitune.config.data import IntensityConfig
 from getitune.types.export import ExportFormat, TaskLevelExportParameters
 from getitune.types.label import LabelInfo
 from getitune.types.precision import Precision
@@ -22,7 +23,12 @@ def _label_info() -> LabelInfo:
 
 
 def _data_input_params(imgsz: int = 640) -> DataInputParams:
-    return DataInputParams(input_size=(imgsz, imgsz), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))
+    return DataInputParams(
+        input_size=(imgsz, imgsz),
+        mean=(0.0, 0.0, 0.0),
+        std=(1.0, 1.0, 1.0),
+        intensity_config=IntensityConfig(mode="scale_to_unit", storage_dtype="uint8"),
+    )
 
 
 def _export_parameters() -> TaskLevelExportParameters:
@@ -108,10 +114,27 @@ class TestExporterMetadata:
         extended = exporter._extend_model_metadata(exporter.metadata)
 
         assert extended[("model_info", "mean_values")] == "0.0 0.0 0.0"
-        assert extended[("model_info", "scale_values")] == "255.0 255.0 255.0"
+        assert extended[("model_info", "scale_values")] == "1.0 1.0 1.0"
         assert extended[("model_info", "resize_type")] == "fit_to_window_letterbox"
         assert extended[("model_info", "pad_value")] == "114"
         assert extended[("model_info", "reverse_input_channels")] == "True"
+        assert extended[("model_info", "input_dtype")] == "u8"
+        assert extended[("model_info", "intensity_mode")] == "scale_to_unit"
+        assert ("model_info", "intensity_max_value") not in extended
+
+    def test_postprocess_openvino_embeds_intensity_metadata(self) -> None:
+        """OpenVINO postprocessing should write the IntensityConfig contract into rt_info."""
+        exporter = _make_exporter()
+        mock_ov_model = MagicMock()
+        mock_ov_model.outputs = []
+        mock_ov_model.inputs = []
+
+        exporter._postprocess_openvino_model(mock_ov_model)
+
+        rt_info = {tuple(call.args[1]): call.args[0] for call in mock_ov_model.set_rt_info.call_args_list}
+        assert rt_info[("model_info", "scale_values")] == "1.0 1.0 1.0"
+        assert rt_info[("model_info", "input_dtype")] == "u8"
+        assert rt_info[("model_info", "intensity_mode")] == "scale_to_unit"
 
     def test_all_metadata_values_are_strings(self) -> None:
         exporter = _make_exporter()

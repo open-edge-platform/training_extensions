@@ -100,7 +100,7 @@ class UltralyticsEngine(Engine):
         if self._datamodule is not None:
             intensity_cfg = getattr(self._datamodule, "input_intensity_config", None)
             if intensity_cfg is not None:
-                self._model._intensity_config = intensity_cfg
+                self._model.set_intensity_config(intensity_cfg)
 
     def train(
         self,
@@ -236,12 +236,12 @@ class UltralyticsEngine(Engine):
             return self._predict_with_datamodule(merged)  # pyrefly: ignore[bad-return]
 
         yolo = self._model.yolo
-        source: str | None = str(merged.pop("source")) if "source" in merged else None
-        if source is None and self._data_root is not None:
-            source = str(self._data_root)
+        resolved_source = str(merged.pop("source")) if "source" in merged else None
+        if resolved_source is None and self._data_root is not None:
+            resolved_source = str(self._data_root)
 
         predict_args = {
-            "source": source,
+            "source": resolved_source,
             "device": self._device,
             "imgsz": self._model.imgsz,
             "project": str(self._work_dir),

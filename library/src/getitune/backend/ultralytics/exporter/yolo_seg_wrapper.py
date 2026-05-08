@@ -19,6 +19,8 @@ it via ``model_type`` metadata in the exported IR.
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import numpy as np
 from model_api.models.detection_model import DetectionModel
 from model_api.models.utils import InstanceSegmentationResult, ResizeMetadata
@@ -85,8 +87,9 @@ class YOLO11Seg(DetectionModel):
         # Identify outputs by shape: detection is rank-3, prototypes is rank-4
         self._det_output_name: str = ""
         self._proto_output_name: str = ""
+        outputs = cast("dict[str, Any]", self.outputs or {})
 
-        for name, output in self.outputs.items():
+        for name, output in outputs.items():
             shape = output.shape
             if len(shape) == 3:
                 self._det_output_name = name
@@ -96,11 +99,11 @@ class YOLO11Seg(DetectionModel):
         if not self._det_output_name or not self._proto_output_name:
             self.raise_error(
                 "Expected one rank-3 detection output and one rank-4 prototype output, "
-                f"but got shapes: {[(name, out.shape) for name, out in self.outputs.items()]}"
+                f"but got shapes: {[(name, out.shape) for name, out in outputs.items()]}"
             )
 
-        det_shape = self.outputs[self._det_output_name].shape
-        proto_shape = self.outputs[self._proto_output_name].shape
+        det_shape = outputs[self._det_output_name].shape
+        proto_shape = outputs[self._proto_output_name].shape
         self._mask_dim = proto_shape[1]  # typically 32
         self._proto_h = proto_shape[2]
         self._proto_w = proto_shape[3]
@@ -124,7 +127,7 @@ class YOLO11Seg(DetectionModel):
         parameters["nms_max_predictions"].update_default_value(30000)
         return parameters
 
-    def postprocess(self, outputs: dict, meta: dict) -> InstanceSegmentationResult:
+    def postprocess(self, outputs: dict[str, Any], meta: dict[str, Any]) -> InstanceSegmentationResult:  # type: ignore[override]
         """Decode detections and instance masks from raw model outputs.
 
         Args:
@@ -150,7 +153,8 @@ class YOLO11Seg(DetectionModel):
         mask_coeffs = pred[:, 4 + self._num_classes :]  # [N, mask_dim]
 
         # Filter by confidence
-        conf_threshold = self.params.confidence_threshold
+        params = cast("Any", self.params)
+        conf_threshold = params.confidence_threshold
         max_scores = class_scores.max(axis=1)
         keep_conf = max_scores > conf_threshold
 
@@ -193,7 +197,7 @@ class YOLO11Seg(DetectionModel):
             original_height=input_img_h,
             model_width=self.orig_width,
             model_height=self.orig_height,
-            resize_type=self.params.resize_type,
+            resize_type=params.resize_type,
         )
 
         coords = boxes_xyxy.copy()
@@ -269,7 +273,7 @@ class YOLO11Seg(DetectionModel):
             original_height=input_img_h,
             model_width=model_w,
             model_height=model_h,
-            resize_type=self.params.resize_type,
+            resize_type=cast("Any", self.params).resize_type,
         )
 
         # Upsample from proto resolution to model input size

@@ -37,10 +37,8 @@ class SegmentationTrainer(GetiTuneDataBridgeMixin, XPUAwareTrainerMixin, _Ultral
     def set_model_attributes(self) -> None:
         """Set model attributes; disable augmentations and overlap mask when using DataModule."""
         super().set_model_attributes()
-        if self._use_getitune_data:
-            # v1: per-instance masks, no overlap.
-            if hasattr(self.args, "overlap_mask"):
-                self.args.overlap_mask = False
+        if self._use_getitune_data and hasattr(self.args, "overlap_mask"):
+            self.args.overlap_mask = False
 
     def get_validator(self) -> _UltralyticsSegmentationValidator:
         """Return a custom segmentation validator that handles pre-normalised images."""

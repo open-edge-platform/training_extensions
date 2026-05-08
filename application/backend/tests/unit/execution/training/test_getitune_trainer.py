@@ -175,7 +175,7 @@ class TestGetiTuneTrainerPrepareWeights:
             / str(parent_model_revision_id)
             / "variants"
             / str(parent_model_variant_id)
-            / "model.ckpt"
+            / "model.pt"
         )
         expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
         expected_weights_path.touch()
@@ -251,7 +251,7 @@ class TestGetiTuneTrainerPrepareWeights:
             / str(parent_model_revision_id)
             / "variants"
             / str(parent_model_variant_id)
-            / "model.ckpt"
+            / "model.pt"
         )
         getitune_trainer = fxt_getitune_trainer()
 
@@ -1240,7 +1240,7 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         getitune_work_dir.mkdir(parents=True)
 
         # Create model checkpoint
-        trained_model_path = getitune_work_dir / "best_checkpoint.ckpt"
+        trained_model_path = getitune_work_dir / "best_checkpoint.pt"
         trained_model_path.write_text("checkpoint content")
 
         # Create exported model files
@@ -1279,8 +1279,8 @@ class TestGetiTuneTrainerStoreModelArtifacts:
 
         pytorch_dir = variants_dir / str(pytorch_variant_id)
         assert pytorch_dir.exists()
-        assert (pytorch_dir / "model.ckpt").exists()
-        assert (pytorch_dir / "model.ckpt").read_text() == "checkpoint content"
+        assert (pytorch_dir / "model.pt").exists()
+        assert (pytorch_dir / "model.pt").read_text() == "checkpoint content"
 
         # Check OpenVINO variant
         openvino_dir = variants_dir / str(openvino_variant_id)

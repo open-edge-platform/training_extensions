@@ -23,7 +23,7 @@ from __future__ import annotations
 import logging
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Protocol
 
 import onnx
 import openvino
@@ -33,11 +33,16 @@ from getitune.types.export import TaskLevelExportParameters
 from getitune.types.precision import Precision
 
 if TYPE_CHECKING:
-    from ultralytics import YOLO
-
     from getitune.backend.lightning.models.base import DataInputParams
 
 logger = logging.getLogger(__name__)
+
+
+class _YOLOExportable(Protocol):
+    """Protocol for the subset of ``ultralytics.YOLO`` used during export."""
+
+    def export(self, **kwargs: object) -> str | Path:
+        """Export the model and return the produced artifact path."""
 
 
 class UltralyticsModelExporter(ModelExporter):
@@ -81,9 +86,9 @@ class UltralyticsModelExporter(ModelExporter):
             input_names=input_names,
         )
 
-    def to_openvino(
+    def to_openvino(  # pyrefly: ignore[bad-override]
         self,
-        model: YOLO,  # type: ignore[override]
+        model: _YOLOExportable,
         output_dir: Path,
         base_model_name: str = "exported_model",
         precision: Precision = Precision.FP32,
@@ -136,9 +141,9 @@ class UltralyticsModelExporter(ModelExporter):
 
         return save_path
 
-    def to_onnx(
+    def to_onnx(  # pyrefly: ignore[bad-override]
         self,
-        model: YOLO,  # type: ignore[override]
+        model: _YOLOExportable,
         output_dir: Path,
         base_model_name: str = "exported_model",
         precision: Precision = Precision.FP32,

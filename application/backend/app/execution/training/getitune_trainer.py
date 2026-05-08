@@ -510,7 +510,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
         pytorch_variant_dir = variants_dir / str(created_variants[ModelFormat.PYTORCH])
         pytorch_variant_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(trained_model_path, pytorch_variant_dir / "model.ckpt")
+        shutil.copyfile(trained_model_path, pytorch_variant_dir / "model.pt")
         logger.info("Stored PyTorch variant at {}", pytorch_variant_dir)
 
         # Copy OpenVINO IR files
@@ -774,7 +774,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         """Get the path to the stored PyTorch checkpoint."""
         model_dir = cls.__base_model_path(data_dir, project_id, model_id)
         variant_dir = model_dir / "variants" / str(model_variant)
-        return variant_dir / "model.ckpt"
+        return variant_dir / "model.pt"
 
     @classmethod
     def __build_model_config_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:

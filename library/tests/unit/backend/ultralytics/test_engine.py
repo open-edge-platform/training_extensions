@@ -10,7 +10,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-import pytest
 import torch
 from torchvision import tv_tensors
 
@@ -314,7 +313,7 @@ class TestExport:
 
         with (
             patch.object(model, "load_checkpoint") as mock_load,
-            patch.object(type(model), "yolo", new_callable=lambda: property(lambda self: mock_yolo)),
+            patch.object(type(model), "yolo", new_callable=lambda: property(lambda _: mock_yolo)),
         ):
             metrics = engine.test(checkpoint=ckpt_file)
 

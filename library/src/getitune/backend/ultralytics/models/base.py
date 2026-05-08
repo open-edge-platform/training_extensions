@@ -6,9 +6,8 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from ultralytics import YOLO
 
@@ -19,6 +18,10 @@ from getitune.types.label import LabelInfo, LabelInfoTypes
 from getitune.types.precision import Precision
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from getitune.backend.ultralytics.exporter import UltralyticsModelExporter
+    from getitune.types import PathLike
 
 
 class UltralyticsModel:
@@ -122,7 +125,7 @@ class UltralyticsModel:
                 input_size=preprocessing_params.get("input_size") or default.input_size,
                 mean=preprocessing_params.get("mean") or default.mean,
                 std=preprocessing_params.get("std") or default.std,
-                intensity_config=intensity_cfg,
+                intensity_config=intensity_cfg if intensity_cfg is not None else default.intensity_config,
             )
         if isinstance(preprocessing_params, DataInputParams):
             return preprocessing_params
@@ -148,7 +151,7 @@ class UltralyticsModel:
 
         return yolo
 
-    def load_checkpoint(self, weights_path: str | Path) -> None:
+    def load_checkpoint(self, weights_path: PathLike) -> None:
         """Load weights from a local checkpoint file.
 
         Args:
@@ -191,7 +194,7 @@ class UltralyticsModel:
         raise ValueError(msg)
 
     @property
-    def _exporter(self) -> Any:
+    def _exporter(self) -> UltralyticsModelExporter:
         """Build and return the model exporter."""
         from getitune.backend.ultralytics.exporter import UltralyticsModelExporter
 
@@ -222,6 +225,10 @@ class UltralyticsModel:
                 intensity_config=intensity_config,
             )
         return params
+
+    def set_intensity_config(self, intensity_config: IntensityConfig) -> None:
+        """Set runtime intensity config propagated from a DataModule."""
+        self._intensity_config = intensity_config
 
     def _resolve_default_params(self) -> DataInputParams:
         """Return the default ``DataInputParams`` for the current ``model_name``."""
