@@ -5,8 +5,6 @@ model:
     label_info: 80
     model_name: rtmdet_inst_tiny
 
-    # See rtmdet_inst_tiny.yaml — RTMDet-Inst reference uses AdamW, not
-    # SGD. The previous SGD/lr=1e-3 setup was severely under-fitting.
     optimizer:
       class_path: torch.optim.AdamW
       init_args:
