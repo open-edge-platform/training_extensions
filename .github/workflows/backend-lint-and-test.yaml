@@ -90,11 +90,13 @@ jobs:
         working-directory: application/backend
         run: just test-integration
 
-  # Temporarily skipping BDD tests on CI due to instability and flakiness. Will be re-enabled once the underlying issues are resolved.
-  #      - name: Run bdd tests
-  #        if: matrix.os == 'ubuntu'
-  #        working-directory: application/backend
-  #        run: just test-bdd
+      - name: Run bdd tests
+        if: matrix.os == 'ubuntu'
+        working-directory: application/backend
+        env:
+          RUNNER: docker
+          IMAGE_TAG: geti-tune-cpu
+        run: just test-bdd
 
   required_check:
     name: Required Check backend-lint-and-test
