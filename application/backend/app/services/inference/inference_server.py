@@ -7,7 +7,7 @@ from uuid import UUID
 from loguru import logger
 
 from app.db import get_db_session
-from app.models import BatchInferenceInput, BatchInferenceMedia, BatchInferencePrediction, BatchInferenceResult, Label
+from app.models import BatchInferenceInput, DatasetItemAnnotation, Label
 from app.models.inference import InferenceModel, InferenceState, InferenceStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.system import DeviceInfo
@@ -123,7 +123,9 @@ class InferenceServer:
             ),
         )
 
-    def infer_batch(self, labels: list[Label], inputs: list[BatchInferenceInput]) -> BatchInferenceResult:
+    def infer_batch(
+        self, labels: list[Label], inputs: list[BatchInferenceInput]
+    ) -> dict[tuple[UUID, int | None], list[DatasetItemAnnotation]]:
         """
         Perform batch inference on the provided inputs using the currently loaded model.
         It processes each input, runs inference, and converts the raw predictions into a structured
@@ -134,7 +136,7 @@ class InferenceServer:
             inputs: List of inputs
 
         Returns:
-            Prediction results for inputs
+            Dictionary mapping (media_id, frame_index) tuples to lists of DatasetItemAnnotation predictions.
         """
         if self._loaded_model is None:
             raise RuntimeError("No model loaded for inference")
@@ -150,17 +152,12 @@ class InferenceServer:
         finally:
             self._lock.release()
 
-        result = BatchInferenceResult(predictions=[])
-        for idx, input in enumerate(inputs):
-            result.predictions.append(
-                BatchInferencePrediction(
-                    media=BatchInferenceMedia(id=input.media_id, frame_index=input.frame_index),
-                    prediction=convert_prediction(
-                        labels=labels, frame_data=input_data[idx], prediction=inference_result[idx]
-                    ),
-                )
+        return {
+            (input.media_id, input.frame_index): convert_prediction(
+                labels=labels, frame_data=input_data[idx], prediction=inference_result[idx]
             )
-        return result
+            for idx, input in enumerate(inputs)
+        }
 
     def stop(self) -> None:
         """

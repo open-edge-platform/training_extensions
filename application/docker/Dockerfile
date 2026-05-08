@@ -198,6 +198,38 @@ USER ${USER_NAME}
 CMD ["python", "app/main.py"]
 
 ######################
+# Cleanup non-redistributable CUDA components per NVIDIA EULA
+######################
+
+FROM cuda-base AS cuda-clean
+
+RUN set -eu; \
+    CLEANUP_ROOT="$("/application/backend/.venv/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    [ -n "$CLEANUP_ROOT" ] && [ -d "$CLEANUP_ROOT" ]; \
+    echo "Removing non-redistributable CUDA components per NVIDIA EULA from ${CLEANUP_ROOT}..." && \
+    # Remove headers and include directories (non-redistributable)
+    find "$CLEANUP_ROOT" -type d \( \
+    -name "include" -o \
+    -name "headers" \
+    \) -path "*cuda*" -exec rm -rf {} + 2>/dev/null || true && \
+    # Remove NVIDIA package includes specifically
+    find "$CLEANUP_ROOT" -type d -path "*/nvidia/*/include" -exec rm -rf {} + 2>/dev/null || true && \
+    # Remove static libraries (typically non-redistributable)
+    find "$CLEANUP_ROOT" -name "*.a" \( -path "*cuda*" -o -path "*nvidia*" \) -delete 2>/dev/null || true && \
+    # Remove non-redistributable headers and binaries from triton nvidia backend
+    find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia/include" -exec rm -rf {} + 2>/dev/null || true && \
+    find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia/bin" -exec rm -rf {} + 2>/dev/null || true && \
+    # Remove specific non-redistributable CUPTI components
+    find "$CLEANUP_ROOT" -type f \( \
+    -name "libcheckpoint.so*" -o \
+    -name "libnvperf_host.so*" -o \
+    -name "libnvperf_target.so*" -o \
+    -name "libpcsamplingutil.so*" \
+    \) -path "*cupti*" -delete 2>/dev/null || true && \
+    # Remove cuSolver MG libraries (enterprise feature)
+    find "$CLEANUP_ROOT" -name "libcusolverMg.so*" -delete 2>/dev/null || true
+
+######################
 # Server (CPU version)
 ######################
 FROM runtime-base AS geti-cpu
@@ -213,7 +245,7 @@ COPY --link --from=web-ui /home/application/ui/dist/ ${STATIC_FILES_DIR}
 ######################
 FROM runtime-base AS geti-cuda
 
-COPY --from=cuda-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
+COPY --from=cuda-clean --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
 # App code + UI assets last – source-only changes only invalidate this layer
 COPY --link application/backend/app /application/backend/app

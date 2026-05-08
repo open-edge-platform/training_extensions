@@ -1,5 +1,6 @@
 # ── Output / working directories ─────────────────────────────────────
 outputs/
+getitune-workspace/
 test_ov_workdir/
 tensorboard/
 debug_pipeline_yolo/
