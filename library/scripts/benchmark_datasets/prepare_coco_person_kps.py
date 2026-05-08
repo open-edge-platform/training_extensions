@@ -57,8 +57,9 @@ _KEYPOINT_NAMES = (
 # Only use the "person" category
 _PERSON_CATEGORY = "person"
 
-# Fraction of val images to use for validation vs test (deterministic split)
-_VAL_FRACTION = 0.4
+# Fraction of val images to use for train / validation / test (deterministic split)
+_TRAIN_FRACTION = 0.7
+_VAL_FRACTION = 0.15
 
 
 def _build_dataset(images_dir: Path, ann_file: Path) -> Dataset:
@@ -101,9 +102,11 @@ def _build_dataset(images_dir: Path, ann_file: Path) -> Dataset:
     # Only include images that have person keypoint annotations
     valid_img_ids = sorted(anns_by_img.keys())
 
-    # Deterministic split: first portion → validation, rest → test
-    val_count = int(len(valid_img_ids) * _VAL_FRACTION)
-    val_ids = set(valid_img_ids[:val_count])
+    # Deterministic split: first portion → training, next → validation, rest → test
+    train_count = int(len(valid_img_ids) * _TRAIN_FRACTION)
+    val_count = int(len(valid_img_ids) * (_TRAIN_FRACTION + _VAL_FRACTION))
+    train_ids = set(valid_img_ids[:train_count])
+    val_ids = set(valid_img_ids[train_count:val_count])
 
     for _img_idx, img_id in enumerate(valid_img_ids):
         img_info = img_lookup[img_id]
@@ -112,7 +115,12 @@ def _build_dataset(images_dir: Path, ann_file: Path) -> Dataset:
         if not img_path.exists():
             continue
 
-        subset = Subset.VALIDATION if img_id in val_ids else Subset.TESTING
+        if img_id in train_ids:
+            subset = Subset.TRAINING
+        elif img_id in val_ids:
+            subset = Subset.VALIDATION
+        else:
+            subset = Subset.TESTING
         anns = anns_by_img[img_id]
 
         width = int(img_info["width"])
