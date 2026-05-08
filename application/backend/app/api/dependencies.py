@@ -103,7 +103,7 @@ def get_inference_model_ttl(request: Request) -> int:
     return request.app.state.settings.inference_model_ttl
 
 
-def get_inference_keyframe_stride(request: Request) -> int | None:
+def get_inference_keyframe_stride(request: Request) -> int:
     """Provides the inference frame skip from settings."""
     return request.app.state.settings.inference_keyframe_stride
 
@@ -225,7 +225,7 @@ def get_media_prediction_service(
     media_service: Annotated[MediaService, Depends(get_media_service)],
     inference_server: Annotated[InferenceServer, Depends(get_inference_server)],
     inference_model_ttl: Annotated[int, Depends(get_inference_model_ttl)],
-    inference_keyframe_stride: Annotated[int | None, Depends(get_inference_keyframe_stride)],
+    inference_keyframe_stride: Annotated[int, Depends(get_inference_keyframe_stride)],
     db: Annotated[Session, Depends(get_db)],
 ) -> MediaPredictionService:
     """Provides a MediaPredictionService instance."""

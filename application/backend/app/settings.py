@@ -85,11 +85,15 @@ class Settings(BaseSettings):
         alias="INFERENCE_MODEL_TTL",
         description="Time to live for a model loaded for inference, before unloading",
     )
-    inference_keyframe_stride: int | None = Field(
+    inference_keyframe_stride: int = Field(
         default=5,
         alias="INFERENCE_KEYFRAME_STRIDE",
-        description="Stride for video frame inference; only frames where frame_index % stride == 0 are processed. "
-        "First and last frames are always processed.",
+        description=(
+            "This stride value controls which video frames are considered 'key frames' and therefore "
+            "sent to the model for inference, while predictions for other frames are interpolated based "
+            "on key frames. Key frames satisfy the condition frame_index % stride == 0. "
+            "Additionally, the first and last frames are also considered key frames."
+        ),
         gt=0,
     )
 

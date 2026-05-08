@@ -58,8 +58,8 @@ class MediaPredictionService(BaseSessionManagedService):
         media_service: MediaService,
         inference_server: InferenceServer,
         inference_model_ttl: int,
+        inference_keyframe_stride: int,
         db_session: Session | None = None,
-        inference_keyframe_stride: int | None = None,
     ) -> None:
         super().__init__(db_session)
         self._label_service = label_service
@@ -92,7 +92,7 @@ class MediaPredictionService(BaseSessionManagedService):
                 not MediaPredictionService._is_frame_index_to_infer(
                     index=idx, frame_indexes=frame_indexes, inference_keyframe_stride=self._inference_keyframe_stride
                 )
-                if self._inference_keyframe_stride is not None
+                if self._inference_keyframe_stride > 1
                 else False
             )
             video_frames.append(Frame(frame_index=frame_index, annotated_frame=annotated_frame, skip=skip))
