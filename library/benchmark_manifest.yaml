@@ -273,7 +273,7 @@ experiments:
     datasets:
       - coco_person_kps
     criteria:
-      accuracy_metric: map_50
+      accuracy_metric: PCK
       thresholds:
         "training:val/{metric}": { compare: ">=", margin: 0.10 }
         "torch:test/{metric}": { compare: ">=", margin: 0.10 }
