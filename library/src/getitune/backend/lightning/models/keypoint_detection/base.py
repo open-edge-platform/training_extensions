@@ -107,19 +107,14 @@ class LightningKeypointDetectionModel(LightningModel):
             if inputs.imgs_info[i] is None:
                 msg = f"The image information for the image {i} is not provided."
                 raise ValueError(msg)
-            # scale to the original image size
-            orig_h, orig_w = inputs.imgs_info[i].ori_shape  # type: ignore[union-attr]
-            kp_scale_h, kp_scale_w = (
-                orig_h / self.data_input_params.input_size[0],
-                orig_w / self.data_input_params.input_size[1],
-            )
-            inverted_scale = max(kp_scale_h, kp_scale_w)
-            kp_scale_h = kp_scale_w = inverted_scale
-            # decode kps
-            kps = torch.as_tensor(output[0], dtype=torch.float32, device=self.device) * torch.tensor(
-                [kp_scale_w, kp_scale_h],
-                device=self.device,
-            )
+            # Keep predicted keypoints in the model's *input* coordinate frame.
+            #
+            # The SimCC head emits joint coordinates in [0, input_size]. The
+            # ground-truth keypoints in ``inputs.keypoints`` have been
+            # transformed by the data pipeline (CPU ``Resize`` to
+            # ``input_size`` and any GPU geometric augmentations) and therefore
+            # also live in input-size coordinates.
+            kps = torch.as_tensor(output[0], dtype=torch.float32, device=self.device)
             score = torch.as_tensor(output[1], dtype=torch.float32, device=self.device)
             visible_keypoints = torch.cat([kps, score.unsqueeze(1) > visibility_threshold], dim=1)
             keypoints.append(visible_keypoints)
