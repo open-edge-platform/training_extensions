@@ -273,7 +273,10 @@ class OVEngine(Engine):
             msg = "Please provide a `metric` when creating a OVModel or pass it in OVEngine.test()."
             raise RuntimeError(msg)
 
-        if model.label_info != datamodule.label_info:
+        if model.label_info != datamodule.label_info and model.task != TaskType.KEYPOINT_DETECTION:
+            # For keypoint detection, label_info encodes the number of keypoints
+            # (set in the recipe), not the dataset's object categories — mismatch
+            # is expected and not an error.
             msg = (
                 "To launch a test pipeline, the label information should be same "
                 "between the training and testing datasets. "
@@ -358,7 +361,10 @@ class OVEngine(Engine):
         predict_result = []
         with Progress() as progress:
             if isinstance(datamodule, DataModule):
-                if model.label_info != datamodule.label_info:
+                if model.label_info != datamodule.label_info and model.task != TaskType.KEYPOINT_DETECTION:
+                    # For keypoint detection, label_info encodes the number of keypoints
+                    # (set in the recipe), not the dataset's object categories — mismatch
+                    # is expected and not an error.
                     msg = (
                         "To launch a predict pipeline, the label information should be same "
                         "between the training and testing datasets. "
