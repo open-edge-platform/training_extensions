@@ -90,12 +90,18 @@ jobs:
         working-directory: application/backend
         run: just test-integration
 
+      - name: Login to GHCR
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run bdd tests
-        if: matrix.os == 'ubuntu'
         working-directory: application/backend
         env:
           RUNNER: docker
-          IMAGE_TAG: geti-tune-cpu
+          IMAGE_TAG: ghcr.io/open-edge-platform/geti-cpu:pr-${{ github.event.pull_request.number }}
         run: just test-bdd
 
   required_check:
