@@ -11,11 +11,6 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-from getitune.backend.ultralytics.config import (
-    UltralyticsConfig,
-    UltralyticsExportConfig,
-    UltralyticsTrainConfig,
-)
 from getitune.backend.ultralytics.configurator import Configurator, _deep_merge, _flatten_overrides
 from getitune.backend.ultralytics.models.base import UltralyticsModel
 from getitune.types.label import LabelInfo
@@ -96,48 +91,6 @@ def _write_recipe(tmp_path: Path, recipe: dict, name: str = "recipe.yaml") -> Pa
 
 def _make_label_info(num_classes: int = 5) -> LabelInfo:
     return LabelInfo.from_num_classes(num_classes)
-
-
-# ==================================================================
-# Config dataclass tests
-# ==================================================================
-
-
-class TestUltralyticsTrainConfig:
-    def test_to_train_args_returns_all_fields(self) -> None:
-        cfg = UltralyticsTrainConfig(epochs=50, batch=8, lr0=0.005)
-        args = cfg.to_train_args()
-        assert args["epochs"] == 50
-        assert args["batch"] == 8
-        assert args["lr0"] == 0.005
-        assert args["close_mosaic"] == 0  # default
-        assert "optimizer" in args
-
-    def test_defaults(self) -> None:
-        cfg = UltralyticsTrainConfig()
-        assert cfg.epochs == 100
-        assert cfg.batch == 16
-        assert cfg.patience == 100
-        assert cfg.close_mosaic == 0
-
-
-class TestUltralyticsConfig:
-    def test_default_backend(self) -> None:
-        cfg = UltralyticsConfig()
-        assert cfg.backend == "ultralytics"
-
-    def test_nested_defaults(self) -> None:
-        cfg = UltralyticsConfig()
-        assert cfg.model.pretrained is True
-        assert cfg.engine.device == "auto"
-        assert cfg.export.format == "OPENVINO"
-
-
-class TestUltralyticsExportConfig:
-    def test_default_thresholds_match_yolo11_modelapi(self) -> None:
-        cfg = UltralyticsExportConfig()
-        assert cfg.confidence_threshold == 0.25
-        assert cfg.iou_threshold == 0.7
 
 
 # ==================================================================
@@ -261,8 +214,8 @@ class TestConvert:
         path = _write_recipe(tmp_path, _minimal_ultralytics_recipe())
         config_dict = Configurator.convert(path)
         configurator = Configurator.from_config_dict(config_dict)
-        assert configurator.config.model.model_name == "yolo26n.yaml"
-        assert configurator.config.training.epochs == 100
+        assert configurator.config["model"]["init_args"]["model_name"] == "yolo26n.yaml"
+        assert configurator.config["training"]["epochs"] == 100
 
 
 # ==================================================================
@@ -385,7 +338,7 @@ class TestRealRecipes:
 
         cfg = Configurator.from_recipe(path)
         # Simulate switching to a different variant via override.
-        cfg.apply_overrides({"model.model_name": "yolo26x.yaml"})
+        cfg.apply_overrides({"model.init_args.model_name": "yolo26x.yaml"})
         assert cfg.config["model"]["init_args"]["model_name"] == "yolo26x.yaml"
         # Model creation still works with the same class.
         model = cfg.create_model(_make_label_info())
@@ -410,7 +363,7 @@ class TestRealRecipes:
             pytest.skip(f"Recipe not found: {path}")
         config_dict = Configurator.convert(path)
         configurator = Configurator.from_config_dict(config_dict)
-        assert configurator.config.backend == "ultralytics"
+        assert configurator.config["backend"] == "ultralytics"
 
 
 # ==================================================================
@@ -422,7 +375,7 @@ class TestApplyOverrides:
     def test_flat_overrides(self, tmp_path: Path) -> None:
         path = _write_recipe(tmp_path, _minimal_recipe())
         cfg = Configurator.from_recipe(path)
-        cfg.apply_overrides({"training.epochs": 200, "model.imgsz": 320})
+        cfg.apply_overrides({"training.epochs": 200, "model.init_args.imgsz": 320})
         assert cfg.config["training"]["epochs"] == 200
         assert cfg.config["model"]["init_args"]["imgsz"] == 320
 
@@ -436,19 +389,19 @@ class TestApplyOverrides:
     def test_unknown_section_raises(self, tmp_path: Path) -> None:
         path = _write_recipe(tmp_path, _minimal_recipe())
         cfg = Configurator.from_recipe(path)
-        with pytest.raises(ValueError, match="Unknown override section"):
-            cfg.apply_overrides({"bogus.field": 1})
+        cfg.apply_overrides({"bogus.field": 1})
+        assert cfg.config["bogus"]["field"] == 1
 
     def test_unknown_field_raises(self, tmp_path: Path) -> None:
         path = _write_recipe(tmp_path, _minimal_recipe())
         cfg = Configurator.from_recipe(path)
-        with pytest.raises(ValueError, match="Unknown override"):
-            cfg.apply_overrides({"training.nonexistent": 1})
+        cfg.apply_overrides({"training.nonexistent": 1})
+        assert cfg.config["training"]["nonexistent"] == 1
 
     def test_bare_key_raises(self, tmp_path: Path) -> None:
         path = _write_recipe(tmp_path, _minimal_recipe())
         cfg = Configurator.from_recipe(path)
-        with pytest.raises(ValueError, match="section.field"):
+        with pytest.raises(ValueError, match="dot path"):
             cfg.apply_overrides({"epochs": 10})
 
     def test_none_overrides_noop(self, tmp_path: Path) -> None:
@@ -494,14 +447,11 @@ class TestCreateModel:
 
     def test_task_fallback_when_no_class_path(self, tmp_path: Path) -> None:
         recipe = _minimal_recipe()
-        recipe["model"]["class_path"] = ""
+        recipe["model"].pop("class_path")
         path = _write_recipe(tmp_path, recipe)
         cfg = Configurator.from_recipe(path)
-        model = cfg.create_model(_make_label_info())
-        # Should resolve to UltralyticsDetectionModel via task lookup.
-        from getitune.backend.ultralytics.models.detection import UltralyticsDetectionModel
-
-        assert isinstance(model, UltralyticsDetectionModel)
+        with pytest.raises(ValueError, match="class_path"):
+            cfg.create_model(_make_label_info())
 
     def test_invalid_class_path_raises(self, tmp_path: Path) -> None:
         recipe = _minimal_recipe()

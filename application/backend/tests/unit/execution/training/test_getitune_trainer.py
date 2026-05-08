@@ -774,15 +774,17 @@ class TestGetiTuneTrainerTrainModel:
                 "app.execution.training.getitune_trainer.DataModule.from_vision_datasets",
                 return_value=mock_datamodule,
             ) as mock_datamodule_factory,
-            patch(
-                "app.execution.training.getitune_trainer.instantiate_model",
-                return_value=mock_getitune_model,
-            ),
+            patch("app.execution.training.getitune_trainer.ArgumentParser") as mock_parser_cls,
             patch(
                 "app.execution.training.getitune_trainer.create_engine",
                 return_value=mock_getitune_engine,
             ) as mock_create_engine,
         ):
+            mock_model_parser = Mock()
+            mock_callbacks_parser = Mock()
+            mock_parser_cls.side_effect = [mock_model_parser, mock_callbacks_parser]
+            mock_model_parser.instantiate_classes.return_value.get.return_value = mock_getitune_model
+            mock_callbacks_parser.instantiate_classes.return_value.get.return_value = []
             # Act
             trained_model_path, returned_engine = getitune_trainer.train_model(
                 training_config=training_config,
@@ -877,9 +879,14 @@ class TestGetiTuneTrainerTrainModel:
             patch(
                 "app.execution.training.getitune_trainer.DataModule.from_vision_datasets", return_value=mock_datamodule
             ),
-            patch("app.execution.training.getitune_trainer.instantiate_model", return_value=mock_model),
+            patch("app.execution.training.getitune_trainer.ArgumentParser") as mock_parser_cls,
             patch("app.execution.training.getitune_trainer.create_engine", return_value=mock_engine),
         ):
+            mock_model_parser = Mock()
+            mock_callbacks_parser = Mock()
+            mock_parser_cls.side_effect = [mock_model_parser, mock_callbacks_parser]
+            mock_model_parser.instantiate_classes.return_value.get.return_value = mock_model
+            mock_callbacks_parser.instantiate_classes.return_value.get.return_value = []
             # Act
             trained_model_path, returned_engine = getitune_trainer.train_model(
                 training_config=training_config,

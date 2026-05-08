@@ -142,7 +142,10 @@ class Configurator:
     def create_model(self, label_info: LabelInfo, weights_path: PathLike | None = None) -> UltralyticsModel:
         """Instantiate the configured Ultralytics model via jsonargparse."""
         model_config = copy.deepcopy(self._config["model"])
-        model_config.setdefault("init_args", {})["label_info"] = label_info
+        if "class_path" not in model_config:
+            msg = "Model config must include class_path"
+            raise ValueError(msg)
+        model_config.setdefault("init_args", {})["label_info"] = label_info.as_dict()
 
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(UltralyticsModel, "model", required=False, fail_untyped=False)

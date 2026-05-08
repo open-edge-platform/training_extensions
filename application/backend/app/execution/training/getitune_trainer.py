@@ -15,7 +15,7 @@ from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
 from getitune import TaskType
 from getitune.backend.lightning.models.base import DataInputParams, LightningModel
-from getitune.backend.ultralytics.configurator import Configurator as UltralyticsConfigurator
+from getitune.backend.ultralytics.models.base import UltralyticsModel
 from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.data.dataset.base import VisionDataset
 from getitune.data.factory import TransformLibFactory
@@ -396,16 +396,14 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             "device": getitune_device_type,
         }
 
-        if training_config.get("backend") == "ultralytics":
-            getitune_model = UltralyticsConfigurator.from_config_dict(training_config).create_model(
-                label_info=datamodule.label_info,
-                weights_path=weights_path if has_parent_revision else None,
-            )
-        else:
-            model_parser = ArgumentParser()
-            model_parser.add_subclass_arguments(LightningModel, "model", required=False, fail_untyped=False)
-            getitune_model = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
-            if has_parent_revision:
+        model_parser = ArgumentParser()
+        model_parser.add_argument("--model", type=LightningModel | UltralyticsModel)
+        getitune_model = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
+
+        if has_parent_revision:
+            if hasattr(getitune_model, "load_checkpoint"):
+                getitune_model.load_checkpoint(weights_path)
+            else:
                 engine_kwargs["checkpoint"] = weights_path
 
         if hasattr(getitune_model, "tile_config"):
