@@ -92,7 +92,8 @@ class TestModelManifestService:
 
         assert model_manifest == fxt_dummy_model_manifest
 
-    def test_parse_manifest_with_relative_path(self):
+    @pytest.mark.parametrize("license_yaml", [None, "MIT"])
+    def test_parse_manifest_with_relative_path(self, license_yaml):
         sources = ("base.yaml", "dummy_base_model_manifest.yaml", "dummy_model_manifest.yaml")
         expected_paths = [str(resources.files(manifests).joinpath(path)) for path in sources]
 
@@ -100,7 +101,6 @@ class TestModelManifestService:
         mock_yaml_result = {
             "id": "test",
             "name": "Test Model",
-            "license": "MIT",
             "pretrained_weights": {
                 "url": "https://example.com/test_model_weights.pth",
                 "mirror_url": "https://mirror.example.com/test_model_weights.pth",
@@ -136,6 +136,8 @@ class TestModelManifestService:
                 "tiling": False,
             },
         }
+        if license_yaml:
+            mock_yaml_result["license"] = license_yaml
 
         with patch("hiyapyco.load") as mock_load:
             mock_load.return_value = mock_yaml_result
@@ -150,6 +152,8 @@ class TestModelManifestService:
                 none_behavior=hiyapyco.NONE_BEHAVIOR_OVERRIDE,
             )
             assert model_manifest == ModelManifest(**mock_yaml_result)  # pyrefly: ignore[bad-argument-type]
+            if not license_yaml:
+                assert model_manifest.license == "Apache 2.0"
 
     def test_get_model_manifests(self) -> None:
         # test that the model manifests can be retrieved without errors

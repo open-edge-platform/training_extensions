@@ -52,6 +52,7 @@ class ModelArchitectures(BaseModel):
                         "id": "object-detection-dfine-m",
                         "task": "detection",
                         "name": "D-FINE-M",
+                        "license": "Apache 2.0",
                         "description": "D-FINE is a powerful real-time object detector that redefines the bounding box"
                         " regression task in DETRs as Fine-grained Distribution Refinement (FDR)."
                         " Combined with the DEIM adaptive augmentation scheduling framework"
