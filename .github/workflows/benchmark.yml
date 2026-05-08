@@ -51,7 +51,7 @@ on:
         options: [train, export, optimize]
       num_seeds:
         description: "Number of seeds per experiment"
-        default: "1"
+        default: "2"
 
 concurrency:
   group: benchmark-${{ github.ref }}

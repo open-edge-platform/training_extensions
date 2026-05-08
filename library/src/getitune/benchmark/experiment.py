@@ -158,6 +158,10 @@ def _scrape_csv_metrics(csv_path: Path, prefix: str) -> dict[str, float]:
     """Read a Lightning ``metrics.csv`` and extract key aggregates.
 
     The prefix is prepended to each metric key (e.g. ``"training:"``).
+    The ``epoch`` column is only meaningful for the training phase; for
+    inference-only phases (test/export/optimize) Lightning still writes an
+    ``epoch=0`` row, so we suppress it to avoid emitting a misleading
+    ``<phase>:epoch = 1`` metric.
     """
     if not csv_path.exists():
         return {}
@@ -167,6 +171,7 @@ def _scrape_csv_metrics(csv_path: Path, prefix: str) -> dict[str, float]:
         logger.warning("Could not parse %s", csv_path)
         return {}
 
+    is_training_phase = prefix == "training:"
     metrics: dict[str, float] = {}
     for col in raw_metrics.columns:
         series = raw_metrics[col].dropna()
@@ -180,6 +185,9 @@ def _scrape_csv_metrics(csv_path: Path, prefix: str) -> dict[str, float]:
             trimmed = series.iloc[min(1, len(series) - 1) :]
             metrics[f"{prefix}{col}"] = float(trimmed.mean())
         elif "epoch" in col:
+            if not is_training_phase:
+                # Inference-only phases don't have a meaningful epoch count.
+                continue
             # Lightning records ``epoch`` as a 0-indexed counter, so the max
             # is ``num_epochs - 1``.  Report the human-readable count instead.
             metrics[f"{prefix}{col}"] = float(series.max()) + 1.0
