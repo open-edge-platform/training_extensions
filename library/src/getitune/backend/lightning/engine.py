@@ -806,7 +806,14 @@ class LightningEngine(Engine):
             # every from_config() call.  The CLI path in
             # OTXCLI.instantiate_model already sets label_info at model
             # construction time, so this branch is normally a no-op.
-            model.label_info = datamodule.label_info
+            #
+            # For keypoint detection, label_info represents the number of
+            # keypoints (set in the recipe), not the number of object
+            # categories from the dataset — skip the override.
+            from getitune.backend.lightning.models.keypoint_detection.base import LightningKeypointDetectionModel
+
+            if not isinstance(model, LightningKeypointDetectionModel):
+                model.label_info = datamodule.label_info
 
         return cls(
             work_dir=instantiated_config.get("work_dir", work_dir),
