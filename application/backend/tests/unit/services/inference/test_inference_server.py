@@ -229,9 +229,11 @@ class TestInferenceServer:
 
         with patch("app.services.inference.inference_server.convert_prediction") as mock_convert_prediction:
             mock_convert_prediction.return_value = [annotation]
-            inference_server.infer_batch(labels=[label], inputs=[input])
+            result = inference_server.infer_batch(labels=[label], inputs=[input])
 
         (passed_batch,) = model.infer_batch.call_args.args
         assert len(passed_batch) == 1
         np.testing.assert_array_equal(passed_batch[0], raw_uint8)
         assert passed_batch[0].dtype == np.uint8
+
+        assert result == {(media_id, 15): [annotation]}
