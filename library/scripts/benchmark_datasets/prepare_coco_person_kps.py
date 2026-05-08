@@ -82,8 +82,8 @@ def _build_dataset(images_dir: Path, ann_file: Path) -> Dataset:
         categories={"labels": CocoCategories(labels=label_names)},
     )
 
-    # Index annotations by image_id, keeping only person annotations with keypoints
-    anns_by_img: dict[int, list[dict]] = {}
+    # Collect valid person annotations with keypoints
+    valid_anns: list[dict] = []
     for ann in coco["annotations"]:
         if ann["category_id"] not in person_cat_ids:
             continue
@@ -94,51 +94,48 @@ def _build_dataset(images_dir: Path, ann_file: Path) -> Dataset:
         num_visible = sum(1 for i in range(2, len(kps), 3) if kps[i] > 0)
         if num_visible < 5:  # At least 5 visible keypoints
             continue
-        anns_by_img.setdefault(ann["image_id"], []).append(ann)
+        valid_anns.append(ann)
+
+    # Sort by annotation id for deterministic ordering
+    valid_anns.sort(key=lambda a: a["id"])
 
     # Build image lookup
     img_lookup = {img["id"]: img for img in coco["images"]}
 
-    # Only include images that have person keypoint annotations
-    valid_img_ids = sorted(anns_by_img.keys())
-
     # Deterministic split: first portion → training, next → validation, rest → test
-    train_count = int(len(valid_img_ids) * _TRAIN_FRACTION)
-    val_count = int(len(valid_img_ids) * (_TRAIN_FRACTION + _VAL_FRACTION))
-    train_ids = set(valid_img_ids[:train_count])
-    val_ids = set(valid_img_ids[train_count:val_count])
+    num_anns = len(valid_anns)
+    train_count = int(num_anns * _TRAIN_FRACTION)
+    val_count = int(num_anns * (_TRAIN_FRACTION + _VAL_FRACTION))
 
-    for _img_idx, img_id in enumerate(valid_img_ids):
+    num_kps = len(_KEYPOINT_NAMES)
+
+    # Create one sample per annotation (top-down: one person per sample)
+    for ann_idx, ann in enumerate(valid_anns):
+        img_id = ann["image_id"]
         img_info = img_lookup[img_id]
         img_path = images_dir / img_info["file_name"]
 
         if not img_path.exists():
             continue
 
-        if img_id in train_ids:
+        if ann_idx < train_count:
             subset = Subset.TRAINING
-        elif img_id in val_ids:
+        elif ann_idx < val_count:
             subset = Subset.VALIDATION
         else:
             subset = Subset.TESTING
-        anns = anns_by_img[img_id]
 
         width = int(img_info["width"])
         height = int(img_info["height"])
 
-        # Build arrays
-        bboxes = np.asarray([a["bbox"] for a in anns], dtype=np.float32)
-        labels = np.zeros((len(anns),), dtype=np.int64)  # all "person" = 0
-        areas = np.asarray([a.get("area", 0.0) for a in anns], dtype=np.float32)
-        iscrowd = np.asarray([a.get("iscrowd", 0) for a in anns], dtype=np.int32)
+        # Single annotation per sample
+        bboxes = np.asarray([ann["bbox"]], dtype=np.float32)
+        labels = np.zeros((1,), dtype=np.int64)  # "person" = 0
+        areas = np.asarray([ann.get("area", 0.0)], dtype=np.float32)
+        iscrowd = np.asarray([ann.get("iscrowd", 0)], dtype=np.int32)
 
-        # Keypoints: each annotation has a flat list [x1, y1, v1, x2, y2, v2, ...]
-        # Convert to shape (num_instances, num_keypoints, 3)
-        num_kps = len(_KEYPOINT_NAMES)
-        keypoints = np.zeros((len(anns), num_kps, 3), dtype=np.float32)
-        for i, ann in enumerate(anns):
-            kps = ann["keypoints"]
-            keypoints[i] = np.array(kps, dtype=np.float32).reshape(num_kps, 3)
+        kps = ann["keypoints"]
+        keypoints = np.array(kps, dtype=np.float32).reshape(1, num_kps, 3)
 
         dataset.append(
             CocoSample(
