@@ -57,7 +57,7 @@ class KeypointDetectionDataset(VisionDataset):
             transforms=transforms,
             max_refetch=max_refetch,
         )
-        labels = dm_subset.schema.attributes["keypoints"].categories.labels
+        labels = dm_subset.label_categories.labels  # type: ignore[missing-attribute]
         self.label_info = LabelInfo(
             label_names=list(labels),
             label_groups=[],
