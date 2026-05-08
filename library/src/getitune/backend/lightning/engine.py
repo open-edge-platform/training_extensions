@@ -280,7 +280,13 @@ class LightningEngine(Engine):
 
         # NOTE: Model's label info should be converted datamodule's label info before ckpt loading
         # This is due to smart weight loading check label name as well as number of classes.
-        if self.model.label_info != self.datamodule.label_info:
+        # For keypoint detection, label_info encodes the number of keypoints (defined by the
+        # model recipe), not the dataset's object categories — skip the override.
+        from getitune.backend.lightning.models.keypoint_detection.base import LightningKeypointDetectionModel
+
+        if self.model.label_info != self.datamodule.label_info and not isinstance(
+            self.model, LightningKeypointDetectionModel
+        ):
             msg = (
                 "Model label_info is not equal to the Datamodule label_info. "
                 f"It will be overriden: {self.model.label_info} => {self.datamodule.label_info}"
@@ -388,7 +394,14 @@ class LightningEngine(Engine):
             model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
-            if (
+            from getitune.backend.lightning.models.keypoint_detection.base import LightningKeypointDetectionModel
+
+            if isinstance(model, LightningKeypointDetectionModel):
+                # For keypoint detection, label_info encodes the number of keypoints
+                # (set in the recipe), not the dataset's object categories — mismatch
+                # is expected and not an error.
+                pass
+            elif (
                 self.task == "SEMANTIC_SEGMENTATION"
                 and "getitune_background_lbl" in self.datamodule.label_info.label_names
                 and (len(self.datamodule.label_info.label_names) - len(model.label_info.label_names) == 1)
@@ -473,14 +486,20 @@ class LightningEngine(Engine):
             model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
-            msg = (
-                "To launch a predict pipeline, the label information should be same "
-                "between the training and testing datasets. "
-                "Please check whether you use the same dataset: "
-                f"model.label_info={model.label_info}, "
-                f"datamodule.label_info={self.datamodule.label_info}"
-            )
-            raise ValueError(msg)
+            from getitune.backend.lightning.models.keypoint_detection.base import LightningKeypointDetectionModel
+
+            if not isinstance(model, LightningKeypointDetectionModel):
+                # For keypoint detection, label_info encodes the number of keypoints
+                # (set in the recipe), not the dataset's object categories — mismatch
+                # is expected and not an error.
+                msg = (
+                    "To launch a predict pipeline, the label information should be same "
+                    "between the training and testing datasets. "
+                    "Please check whether you use the same dataset: "
+                    f"model.label_info={model.label_info}, "
+                    f"datamodule.label_info={self.datamodule.label_info}"
+                )
+                raise ValueError(msg)
 
         self._build_trainer(**kwargs)
 
