@@ -20,28 +20,20 @@ _MP_CONTEXT = multiprocessing.get_context("spawn")
 
 
 class GetiTuneDataBridgeMixin:
-    """Mixin providing shared DataModule bridge logic for Ultralytics trainers.
-
-    When ``_datamodule`` is set (via the engine's dynamic subclass), data
-    loading uses the getitune pipeline and ``preprocess_batch`` skips the
-    default ``/255`` normalisation (images are already float32 [0,1]).
-
-    Subclasses must set :attr:`_include_masks` to control whether the adapter
-    includes instance masks.
-    """
+    """Shared DataModule bridge logic for Ultralytics trainers."""
 
     _datamodule: DataModule | None = None
+    _use_getitune_data: bool = False
     _include_masks: bool = False
-
-    @property
-    def _use_getitune_data(self) -> bool:
-        """Whether the trainer is operating with a getitune DataModule."""
-        return self._datamodule is not None
 
     def get_dataset(self) -> dict[str, Any]:
         """Build data config dict from DataModule or fall back to YAML."""
         if not self._use_getitune_data:
             return super().get_dataset()  # type: ignore[misc]
+
+        if self._datamodule is None:
+            msg = "DataModule is required when _use_getitune_data=True"
+            raise RuntimeError(msg)
 
         li = self._datamodule.label_info  # type: ignore[union-attr]
         names = dict(enumerate(li.label_names))
@@ -63,6 +55,10 @@ class GetiTuneDataBridgeMixin:
         """
         if not self._use_getitune_data:
             return super().build_dataset(img_path, mode, batch)  # type: ignore[misc]
+
+        if self._datamodule is None:
+            msg = "DataModule is required when _use_getitune_data=True"
+            raise RuntimeError(msg)
 
         subset_key = "train" if mode == "train" else "val"
         vision_dataset = self._datamodule.subsets[subset_key]  # type: ignore[union-attr]
@@ -138,6 +134,5 @@ class GetiTuneDataBridgeMixin:
         ):
             if hasattr(self.args, attr):  # type: ignore[attr-defined]
                 setattr(self.args, attr, 0.0)  # type: ignore[attr-defined]
-        # Prevent train_loader.reset() call — plain DataLoader has no reset().
         if hasattr(self.args, "close_mosaic"):  # type: ignore[attr-defined]
             self.args.close_mosaic = 0  # type: ignore[attr-defined]

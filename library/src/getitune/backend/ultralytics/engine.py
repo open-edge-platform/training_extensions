@@ -380,8 +380,11 @@ class UltralyticsEngine(Engine):
             if not isinstance(batch, SampleBatch):
                 msg = f"Expected DataModule.predict_dataloader() to yield SampleBatch, got {type(batch)}"
                 raise TypeError(msg)
+            if not isinstance(batch.images, torch.Tensor):
+                msg = f"Expected collated SampleBatch.images to be a tensor, got {type(batch.images)}"
+                raise TypeError(msg)
 
-            imgs = self._batch_images_to_tensor(batch.images).to(device)
+            imgs = batch.images.to(device)
             raw_results = yolo.predict(  # pyrefly: ignore[bad-argument-type]
                 source=imgs,  # pyrefly: ignore[bad-argument-type]
                 device=device,
@@ -450,7 +453,7 @@ class UltralyticsEngine(Engine):
         if self._datamodule is None:
             return base_cls
 
-        return type(base_cls.__name__, (base_cls,), {"_datamodule": self._datamodule})
+        return type(base_cls.__name__, (base_cls,), {"_datamodule": self._datamodule, "_use_getitune_data": True})
 
     def _make_bound_validator(self) -> type:
         """Return a validator subclass with the DataModule bound as a class attr."""
@@ -462,7 +465,7 @@ class UltralyticsEngine(Engine):
         if self._datamodule is None:
             return base_cls
 
-        return type(base_cls.__name__, (base_cls,), {"_datamodule": self._datamodule})
+        return type(base_cls.__name__, (base_cls,), {"_datamodule": self._datamodule, "_use_getitune_data": True})
 
     def _build_overrides(self, defaults: Mapping[str, Any] | None = None, **kwargs) -> dict[str, Any]:
         """Merge overrides: model defaults < engine kwargs < defaults < call kwargs."""
@@ -536,15 +539,6 @@ class UltralyticsEngine(Engine):
         return predictions
 
     @staticmethod
-    def _batch_images_to_tensor(
-        images: torch.Tensor | tv_tensors.Image | list[torch.Tensor] | list[tv_tensors.Image],
-    ) -> torch.Tensor:
-        """Convert ``SampleBatch.images`` to a BCHW tensor."""
-        if isinstance(images, torch.Tensor):
-            return images
-        return torch.stack([torch.as_tensor(image) for image in images], dim=0)
-
-    @staticmethod
     def _resolve_prediction_input(
         idx: int,
         result: _UltralyticsResultLike,
@@ -565,7 +559,7 @@ class UltralyticsEngine(Engine):
                 )
             return img_tensor, img_info
 
-        img_tensor = torch.from_numpy(result.orig_img).permute(2, 0, 1).float() / 255.0
+        img_tensor = torch.from_numpy(result.orig_img).permute(2, 0, 1).float()
         h, w = result.orig_shape[0], result.orig_shape[1]
         img_info = ImageInfo(  # pyrefly: ignore[no-matching-overload]
             img_idx=idx,

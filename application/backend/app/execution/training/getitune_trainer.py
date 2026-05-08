@@ -14,17 +14,18 @@ import yaml
 from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
 from getitune import TaskType
-from getitune.backend.lightning.models.base import DataInputParams
+from getitune.backend.lightning.models.base import DataInputParams, LightningModel
+from getitune.backend.ultralytics.configurator import Configurator as UltralyticsConfigurator
 from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.data.dataset.base import VisionDataset
 from getitune.data.factory import TransformLibFactory
 from getitune.data.module import DataModule
-from getitune.engine import create_engine, instantiate_model
+from getitune.engine import create_engine
 from getitune.engine.engine import Engine
 from getitune.types.device import DeviceType as GetiTuneDeviceType
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
-from jsonargparse import ArgumentParser
+from jsonargparse import ArgumentParser, Namespace
 from lightning import Callback
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -386,10 +387,6 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             std=datamodule.input_std if datamodule.input_std is not None else (1.0, 1.0, 1.0),
             intensity_config=datamodule.input_intensity_config,
         ).as_dict()
-        getitune_model = instantiate_model(model_cfg)
-        if hasattr(getitune_model, "tile_config"):
-            getitune_model.tile_config = datamodule.tile_config
-
         logger.info("Initializing engine for training (model_id={})", model_id)
         getitune_device_type = (
             GetiTuneDeviceType.gpu if device.type is DeviceType.CUDA else GetiTuneDeviceType(device.type)
@@ -399,11 +396,20 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             "device": getitune_device_type,
         }
 
-        if has_parent_revision:
-            if hasattr(getitune_model, "load_checkpoint"):
-                getitune_model.load_checkpoint(weights_path)
-            else:
+        if training_config.get("backend") == "ultralytics":
+            getitune_model = UltralyticsConfigurator.from_config_dict(training_config).create_model(
+                label_info=datamodule.label_info,
+                weights_path=weights_path if has_parent_revision else None,
+            )
+        else:
+            model_parser = ArgumentParser()
+            model_parser.add_subclass_arguments(LightningModel, "model", required=False, fail_untyped=False)
+            getitune_model = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
+            if has_parent_revision:
                 engine_kwargs["checkpoint"] = weights_path
+
+        if hasattr(getitune_model, "tile_config"):
+            getitune_model.tile_config = datamodule.tile_config
 
         getitune_engine = create_engine(model=getitune_model, data=datamodule, **engine_kwargs)
 
@@ -504,11 +510,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         variants_dir = model_dir / "variants"
         variants_dir.mkdir(parents=True, exist_ok=True)
 
-        # Copy PyTorch checkpoint
         pytorch_variant_dir = variants_dir / str(created_variants[ModelFormat.PYTORCH])
         pytorch_variant_dir.mkdir(parents=True, exist_ok=True)
-        pytorch_dest_name = f"model{trained_model_path.suffix}"
-        shutil.copyfile(trained_model_path, pytorch_variant_dir / pytorch_dest_name)
+        shutil.copyfile(trained_model_path, pytorch_variant_dir / "model.ckpt")
         logger.info("Stored PyTorch variant at {}", pytorch_variant_dir)
 
         # Copy OpenVINO IR files
@@ -769,15 +773,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
     @classmethod
     def __build_model_weights_path(cls, data_dir: Path, project_id: UUID, model_id: UUID, model_variant: UUID) -> Path:
-        """Get the path to the PyTorch checkpoint from a model's variants directory.
-
-        Probes ``.pt`` first, then ``.ckpt`` for backward compatibility.
-        """
+        """Get the path to the stored PyTorch checkpoint."""
         model_dir = cls.__base_model_path(data_dir, project_id, model_id)
         variant_dir = model_dir / "variants" / str(model_variant)
-        pt_path = variant_dir / "model.pt"
-        if pt_path.exists():
-            return pt_path
         return variant_dir / "model.ckpt"
 
     @classmethod

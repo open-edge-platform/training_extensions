@@ -42,7 +42,7 @@ class GetiTuneValidatorMixin:
         return self._run_standalone_eval(model)
 
     def preprocess(self, batch: dict[str, Any]) -> dict[str, Any]:
-        """Move tensors to device; images are already float32 [0,1]."""
+        """Move tensors to device."""
         for k, v in batch.items():
             if isinstance(v, torch.Tensor):
                 batch[k] = v.to(self.device, non_blocking=True)  # type: ignore[attr-defined]
@@ -84,9 +84,7 @@ class GetiTuneValidatorMixin:
         self.dataloader = self.dataloader or self._build_adapter_dataloader()  # type: ignore[attr-defined]
 
         model.eval()
-        model.warmup(
-            imgsz=(1, self.data["channels"], imgsz, imgsz)
-        )  # pyrefly: ignore[bad-argument-type]  # type: ignore[attr-defined]
+        model.warmup(imgsz=(1, self.data["channels"], imgsz, imgsz))  # pyrefly: ignore[bad-argument-type]  # type: ignore[attr-defined]
 
         self.run_callbacks("on_val_start")  # type: ignore[attr-defined]
         dt = tuple(Profile(device=self.device) for _ in range(4))  # type: ignore[attr-defined]

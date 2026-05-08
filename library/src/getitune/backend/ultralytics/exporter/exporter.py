@@ -108,8 +108,6 @@ class UltralyticsModelExporter(ModelExporter):
         """
         imgsz = self.data_input_params.input_size[0]
 
-        # Step 1 — Ultralytics raw FP32 export (save to output_dir to keep
-        # the .pt alongside the final OV model for the application backend)
         raw_result = model.export(
             format="openvino",
             imgsz=imgsz,
@@ -120,11 +118,8 @@ class UltralyticsModelExporter(ModelExporter):
             exist_ok=True,
         )
         raw_path = Path(raw_result)
+        raw_xml = self._find_xml_in_export(Path(raw_path))
 
-        # Step 2 — Find the .xml inside the raw export directory
-        raw_xml = self._find_xml_in_export(raw_path)
-
-        # Step 3 — Load, postprocess (metadata + names), save
         ov_model = openvino.Core().read_model(str(raw_xml))
         ov_model = self._postprocess_openvino_model(ov_model)
 
@@ -137,7 +132,6 @@ class UltralyticsModelExporter(ModelExporter):
             f"{len(ov_model.outputs)} outputs) -> {save_path}"
         )
 
-        # Step 4 — Clean up Ultralytics raw export artefacts
         self._cleanup_raw_export(raw_path, save_path.parent)
 
         return save_path
@@ -169,7 +163,6 @@ class UltralyticsModelExporter(ModelExporter):
         """
         imgsz = self.data_input_params.input_size[0]
 
-        # Step 1 — Ultralytics raw FP32 export
         raw_result = model.export(
             format="onnx",
             imgsz=imgsz,
@@ -181,7 +174,6 @@ class UltralyticsModelExporter(ModelExporter):
         )
         raw_path = Path(raw_result)
 
-        # Step 2 — Load, postprocess (metadata + FP16), save
         onnx_model = onnx.load(str(raw_path))
         onnx_model = self._postprocess_onnx_model(onnx_model, embed_metadata, precision)
 
@@ -191,7 +183,6 @@ class UltralyticsModelExporter(ModelExporter):
 
         logger.info(f"Ultralytics ONNX export done -> {save_path}")
 
-        # Step 3 — Clean up raw export if different from target
         if raw_path.resolve() != save_path.resolve():
             raw_path.unlink(missing_ok=True)
 

@@ -64,7 +64,6 @@ class UltralyticsDatasetAdapter(TorchDataset):
         else:
             bboxes_xywh = np.zeros((0, 4), dtype=np.float32)
 
-        # --- Class labels ---
         labels_raw = getattr(sample, "label", None)
         if labels_raw is not None:
             if isinstance(labels_raw, torch.Tensor):
@@ -86,7 +85,6 @@ class UltralyticsDatasetAdapter(TorchDataset):
             "ratio_pad": ratio_pad,
         }
 
-        # --- Instance masks (for segmentation) ---
         if self._include_masks:
             masks_raw = getattr(sample, "masks", None)
             if masks_raw is not None and len(masks_raw) > 0:

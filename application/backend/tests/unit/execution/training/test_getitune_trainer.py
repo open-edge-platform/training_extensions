@@ -1201,17 +1201,11 @@ class TestGetiTuneTrainerExportModel:
 class TestGetiTuneTrainerStoreModelArtifacts:
     """Tests for the GetiTuneTrainer.store_model_artifacts method."""
 
-    @pytest.mark.parametrize(
-        "checkpoint_name",
-        ["best_checkpoint.ckpt", "best.pt"],
-        ids=["Lightning", "Ultralytics"],
-    )
     def test_store_model_artifacts(
         self,
         fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
         fxt_model_service: Mock,
         tmp_path: Path,
-        checkpoint_name: str,
     ):
         """Test successful storing of model artifacts and cleanup."""
         # Arrange
@@ -1239,7 +1233,7 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         getitune_work_dir.mkdir(parents=True)
 
         # Create model checkpoint
-        trained_model_path = getitune_work_dir / checkpoint_name
+        trained_model_path = getitune_work_dir / "best_checkpoint.ckpt"
         trained_model_path.write_text("checkpoint content")
 
         # Create exported model files
@@ -1276,13 +1270,10 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         variants_dir = model_dir / "variants"
         assert variants_dir.exists()
 
-        # Check PyTorch variant — extension matches the original checkpoint
         pytorch_dir = variants_dir / str(pytorch_variant_id)
-        expected_ext = Path(checkpoint_name).suffix
-        pytorch_filename = f"model{expected_ext}"
         assert pytorch_dir.exists()
-        assert (pytorch_dir / pytorch_filename).exists()
-        assert (pytorch_dir / pytorch_filename).read_text() == "checkpoint content"
+        assert (pytorch_dir / "model.ckpt").exists()
+        assert (pytorch_dir / "model.ckpt").read_text() == "checkpoint content"
 
         # Check OpenVINO variant
         openvino_dir = variants_dir / str(openvino_variant_id)

@@ -13,6 +13,9 @@ def xyxy_abs_to_xywh_norm(
     bboxes: torch.Tensor | np.ndarray,
     img_w: int,
     img_h: int,
+    canvas_size: tuple[int, int] | None = None,
+    scale_factor: tuple[float, float] | None = None,
+    padding: tuple[int, int, int, int] = (0, 0, 0, 0),
 ) -> np.ndarray:
     """Convert absolute XYXY bboxes to normalised xywh (Ultralytics format).
 
@@ -20,6 +23,9 @@ def xyxy_abs_to_xywh_norm(
         bboxes: ``(N, 4)`` tensor or array in ``[x1, y1, x2, y2]`` pixel coords.
         img_w: Image width in pixels.
         img_h: Image height in pixels.
+        canvas_size: Optional ``(H, W)`` bbox coordinate canvas before tensor resize.
+        scale_factor: Optional ``(scale_h, scale_w)`` for letterbox resize.
+        padding: Optional ``(left, top, right, bottom)`` letterbox padding.
 
     Returns:
         ``(N, 4)`` float32 array in ``[cx, cy, w, h]`` normalised by image size.
@@ -30,6 +36,16 @@ def xyxy_abs_to_xywh_norm(
 
     if bboxes.size == 0:
         return np.zeros((0, 4), dtype=np.float32)
+
+    if canvas_size is not None and canvas_size != (img_h, img_w):
+        bboxes = rescale_bboxes_to_tensor_space(
+            bboxes,
+            tensor_h=img_h,
+            tensor_w=img_w,
+            canvas_size=canvas_size,
+            scale_factor=scale_factor,
+            padding=padding,
+        )
 
     x1, y1, x2, y2 = bboxes[:, 0], bboxes[:, 1], bboxes[:, 2], bboxes[:, 3]
     cx = (x1 + x2) / 2.0 / img_w

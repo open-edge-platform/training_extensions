@@ -80,7 +80,8 @@ class OVModel:
             model_api_configuration (dict[str, Any] | None): Configuration for the Model API.
             metric (MetricCallable): Metric callable for evaluation.
         """
-        self.model_type = model_type
+        self._model_type = model_type
+        self._model_adapter: OpenvinoAdapter | None = None
         self.model_path = model_path
         self.force_cpu = force_cpu
         self.async_inference = async_inference
@@ -150,33 +151,21 @@ class OVModel:
             model_adapter (OpenvinoAdapter): Target adapter to read the configuration.
         """
 
-    def _resolve_model_type(self, model_adapter: OpenvinoAdapter) -> str:
-        """Resolve the ModelAPI wrapper name from IR metadata, falling back to the class default.
-
-        New exports embed ``model_type`` into ``rt_info["model_info"]`` at export
-        time (e.g. ``"SSD"`` for Lightning detection, ``"YOLO11"`` for Ultralytics).
-        When the metadata is present it is authoritative; otherwise
-        ``self.model_type`` (set by the subclass constructor default) is returned
-        as a backward-compatible fallback for older IRs that lack the field.
-
-        Args:
-            model_adapter (OpenvinoAdapter): The adapter wrapping the loaded IR.
-
-        Returns:
-            str: The resolved ModelAPI model type name.
-        """
-        if model_adapter.model.has_rt_info(["model_info", "model_type"]):
-            rt_model_type = model_adapter.model.get_rt_info(["model_info", "model_type"]).value
+    @property
+    def model_type(self) -> str:
+        """ModelAPI wrapper name, using IR metadata when available."""
+        if self._model_adapter is not None and self._model_adapter.model.has_rt_info(["model_info", "model_type"]):
+            rt_model_type = self._model_adapter.model.get_rt_info(["model_info", "model_type"]).value
             if rt_model_type:
                 resolved = str(rt_model_type)
-                if resolved != self.model_type:
+                if resolved != self._model_type:
                     logger.info(
                         "Overriding default model_type '%s' with '%s' from IR metadata.",
-                        self.model_type,
+                        self._model_type,
                         resolved,
                     )
                 return resolved
-        return self.model_type
+        return self._model_type
 
     def _create_model(self) -> Model:
         """Create an OpenVINO model using the Model API.
@@ -206,17 +195,14 @@ class OVModel:
             plugin_config=plugin_config,
             model_parameters=self.model_adapter_parameters,
         )
+        self._model_adapter = model_adapter
 
         self._get_hparams_from_adapter(model_adapter)
 
-        model_type = self._resolve_model_type(model_adapter)
-        return Model.create_model(model_adapter, model_type=model_type, configuration=self.model_api_configuration)
+        return Model.create_model(model_adapter, model_type=self.model_type, configuration=self.model_api_configuration)
 
     def _customize_inputs(self, entity: SampleBatch) -> dict[str, Any]:
         """Customize the input data for the model.
-
-        Converts CHW float32 [0,1] tensors to HWC uint8 [0,255] NumPy arrays
-        and swaps RGB→BGR when the model's PrePostProcessor expects BGR input.
 
         Args:
             entity (SampleBatch): Input data batch.
@@ -225,17 +211,6 @@ class OVModel:
             dict[str, Any]: Customized input data.
         """
         images = [np.transpose(im.cpu().numpy(), (1, 2, 0)) for im in entity.images]
-        # ModelAPI's PrePostProcessor declares the input tensor as uint8 and casts
-        # incoming data to u8 BEFORE applying scale/mean normalization. If we feed
-        # float32 [0, 1] values, they get truncated to 0 after the cast. Convert to
-        # uint8 [0, 255] so the PPP pipeline produces correct results.
-        images = [
-            (img * 255).clip(0, 255).astype(np.uint8) if img.dtype == np.float32 and img.max() <= 1.0 + 1e-6 else img
-            for img in images
-        ]
-        # The DataModule provides images in RGB channel order (torchvision convention).
-        # When the model's PPP has reverse_input_channels=True, it expects BGR input
-        # and internally converts BGR→RGB for the model. Feed BGR to match.
         if self._needs_bgr_input:
             images = [img[:, :, ::-1].copy() for img in images]
         return {"inputs": images}

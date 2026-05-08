@@ -81,14 +81,8 @@ class XPUAwareTrainerMixin:
         super()._clear_memory(threshold)  # type: ignore[misc]
 
     def _move_batch_to_device(self, batch: dict[str, Any]) -> dict[str, Any]:
-        """Move tensors to device with ``non_blocking`` on CUDA and XPU.
-
-        This helper is for the DataModule bridge path only. Task-specific
-        fallback preprocessing must continue to use the upstream Ultralytics
-        trainer implementation so that image normalization and multi-scale
-        resizing remain unchanged for new model releases.
-        """
-        non_blocking = self.device.type in ("cuda", "xpu")
+        """Move DataModule tensors to the active XPU device."""
+        non_blocking = self.device.type == "xpu"
         for k, v in batch.items():
             if isinstance(v, torch.Tensor):
                 batch[k] = v.to(self.device, non_blocking=non_blocking)

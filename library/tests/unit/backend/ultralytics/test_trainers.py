@@ -19,6 +19,7 @@ def test_detection_trainer_fallback_uses_upstream_preprocess() -> None:
 
     trainer = object.__new__(DetectionTrainer)
     trainer._datamodule = None
+    trainer._use_getitune_data = False
     trainer.device = torch.device("cpu")
     trainer.args = SimpleNamespace(multi_scale=0.0)
 
@@ -34,6 +35,7 @@ def test_segmentation_trainer_fallback_uses_upstream_preprocess() -> None:
 
     trainer = object.__new__(SegmentationTrainer)
     trainer._datamodule = None
+    trainer._use_getitune_data = False
     trainer.device = torch.device("cpu")
     trainer.args = SimpleNamespace(multi_scale=0.0)
 
@@ -49,6 +51,7 @@ def test_detection_trainer_datamodule_path_skips_divide_by_255() -> None:
 
     trainer = object.__new__(DetectionTrainer)
     trainer._datamodule = MagicMock()
+    trainer._use_getitune_data = True
     trainer.device = torch.device("cpu")
 
     imgs = torch.rand(2, 3, 8, 8, dtype=torch.float32)
@@ -64,6 +67,7 @@ def test_segmentation_trainer_datamodule_path_skips_divide_by_255() -> None:
 
     trainer = object.__new__(SegmentationTrainer)
     trainer._datamodule = MagicMock()
+    trainer._use_getitune_data = True
     trainer.device = torch.device("cpu")
 
     imgs = torch.rand(2, 3, 8, 8, dtype=torch.float32)

@@ -11,11 +11,6 @@ from .base import GetiTuneValidatorMixin
 
 
 class SegmentationValidator(GetiTuneValidatorMixin, _UltralyticsSegmentationValidator):
-    """Instance-segmentation validator for the getitune data bridge.
-
-    Images are already float32 [0,1] from the DataModule pipeline.
-    When ``_datamodule`` is set and called without a trainer, runs
-    standalone validation bypassing Ultralytics' YAML data parsing.
-    """
+    """Instance-segmentation validator for the getitune data bridge."""
 
     _include_masks: bool = True

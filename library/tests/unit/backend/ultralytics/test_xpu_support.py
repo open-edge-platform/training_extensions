@@ -71,8 +71,6 @@ class TestResolveDevice:
         result = UltralyticsEngine._resolve_device("cuda:1")
         assert result == torch.device("cuda:1")
 
-    # --- DeviceType enum inputs ---
-
     def test_device_type_xpu(self) -> None:
         result = UltralyticsEngine._resolve_device(DeviceType.xpu)
         assert result == torch.device("xpu")
