@@ -269,8 +269,8 @@ class UltralyticsEngine(Engine):
         parameters, and FP16 compression are handled by the model's exporter.
 
         Args:
-            checkpoint: Path to a ``.pt`` checkpoint to export.  When given,
-                the model loads weights from this file before exporting.
+            checkpoint: Path to weights to export. When given, the model loads
+                weights from this file before exporting.
             export_format: Target format.
             export_precision: Precision (FP32 or FP16).
             **kwargs: Extra arguments (reserved for future use).

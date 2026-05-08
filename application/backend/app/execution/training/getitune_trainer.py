@@ -362,11 +362,11 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
     ) -> tuple[Path, Engine]:
         """Execute model training.
 
-        Instantiates the model and engine from *training_config* in a
-        backend-agnostic way using ``instantiate_model`` and ``create_engine``
-        from the library.  Lightning callbacks are built when a ``callbacks``
-        section is present in the config; backends that do not support them
-        (e.g. Ultralytics) simply ignore the parameter.
+        Instantiates the model from *training_config* with jsonargparse and
+        creates the engine through ``create_engine`` from the library.
+        Lightning callbacks are built when a ``callbacks`` section is present
+        in the config; backends that do not support them simply ignore the
+        parameter.
         """
         logger.info("Preparing the DataModule for training (model_id={})", model_id)
         datamodule = DataModule.from_vision_datasets(
