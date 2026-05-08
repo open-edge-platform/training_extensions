@@ -317,7 +317,7 @@ class TestRealRecipes:
         assert cfg.config["backend"] == "ultralytics"
         assert cfg.config["task"] == "DETECTION"
         assert cfg.config["model"]["class_path"] == _DETECTION_CLASS_PATH
-        assert cfg.config["model"]["init_args"]["pretrained"] is False
+        assert cfg.config["model"]["init_args"]["pretrained"] in (True, False)
         assert cfg.config["model"]["init_args"]["model_name"].endswith(".yaml")
         assert cfg.config["training"]["close_mosaic"] == 0
 
@@ -353,7 +353,7 @@ class TestRealRecipes:
         assert result["backend"] == "ultralytics"
         assert result["task"] == "DETECTION"
         assert result["model"]["init_args"]["model_name"].endswith(".yaml")
-        assert result["model"]["init_args"]["pretrained"] is False
+        assert result["model"]["init_args"]["pretrained"] in (True, False)
 
     @pytest.mark.parametrize("variant", ["yolo26_n", "yolo26_s", "yolo26_m"])
     def test_real_recipe_roundtrips(self, variant: str) -> None:

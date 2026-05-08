@@ -81,8 +81,12 @@ class XPUAwareTrainerMixin:
         super()._clear_memory(threshold)  # type: ignore[misc]
 
     def _move_batch_to_device(self, batch: dict[str, Any]) -> dict[str, Any]:
-        """Move DataModule tensors to the active XPU device."""
-        non_blocking = self.device.type == "xpu"
+        """Move DataModule tensors to the active device.
+
+        Uses ``non_blocking=True`` for CUDA and XPU to overlap the
+        host-to-device transfer with compute (matching upstream Ultralytics).
+        """
+        non_blocking = self.device.type in ("cuda", "xpu")
         for k, v in batch.items():
             if isinstance(v, torch.Tensor):
                 batch[k] = v.to(self.device, non_blocking=non_blocking)

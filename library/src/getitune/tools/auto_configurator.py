@@ -314,6 +314,8 @@ class AutoConfigurator:
         task: TaskType | None = None,
         input_size: tuple[int, int] | None = None,
         keep_aspect_ratio: bool = False,
+        center_padding: bool = False,
+        pad_value: int = 0,
     ) -> DataModule:
         """Returns an DataModule object with OpenVINO subset transforms applied.
 
@@ -332,6 +334,13 @@ class AutoConfigurator:
                 letterbox.  When ``False``, the OV recipe augmentations are
                 applied as usual (simple stretch resize).
                 Defaults to ``False``.
+            center_padding (bool, optional): When ``True``, patches Resize
+                transforms to use centered letterbox padding (equal on both
+                sides).  This matches ``fit_to_window_letterbox`` preprocessing.
+                Defaults to ``False``.
+            pad_value (int, optional): Padding fill value for Resize when
+                ``keep_aspect_ratio`` is ``True``.  YOLO models use ``114``
+                (gray); default is ``0`` (black).
 
         Returns:
             DataModule: The modified DataModule object with OpenVINO subset transforms applied.
@@ -349,8 +358,16 @@ class AutoConfigurator:
             subset_config.batch_size = ov_subset["batch_size"]
             subset_config.augmentations_cpu = ov_subset["augmentations_cpu"]
             subset_config.augmentations_gpu = ov_subset.get("augmentations_gpu", [])
-            self._patch_resize_keep_aspect_ratio(subset_config.augmentations_cpu)
-            self._patch_resize_keep_aspect_ratio(subset_config.augmentations_gpu)
+            self._patch_resize_keep_aspect_ratio(
+                subset_config.augmentations_cpu,
+                center_padding=center_padding,
+                pad_value=pad_value,
+            )
+            self._patch_resize_keep_aspect_ratio(
+                subset_config.augmentations_gpu,
+                center_padding=center_padding,
+                pad_value=pad_value,
+            )
         else:
             subset_config.batch_size = ov_subset["batch_size"]
             subset_config.augmentations_cpu = ov_subset["augmentations_cpu"]
@@ -410,7 +427,12 @@ class AutoConfigurator:
         )
 
     @staticmethod
-    def _patch_resize_keep_aspect_ratio(augmentations: list[dict]) -> None:
+    def _patch_resize_keep_aspect_ratio(
+        augmentations: list[dict],
+        *,
+        center_padding: bool = False,
+        pad_value: int = 0,
+    ) -> None:
         """Set ``keep_aspect_ratio=True`` on every Resize step in an augmentation list.
 
         The OV recipe templates default to ``keep_aspect_ratio: false``.  When the
@@ -418,11 +440,21 @@ class AutoConfigurator:
         resize was used during training, this method patches the configs so that
         OV inference preprocessing matches training preprocessing exactly.
 
+        When ``center_padding`` is True, also sets ``center_padding=True`` on
+        Resize transforms to match ``fit_to_window_letterbox`` preprocessing.
+
         Args:
             augmentations: List of augmentation config dicts, each with
                 ``class_path`` and optionally ``init_args`` keys.
+            center_padding: Whether to also set ``center_padding=True``.
+            pad_value: Padding fill value for the Resize transform.  YOLO
+                models use ``114`` (gray); default is ``0`` (black).
         """
         for aug in augmentations:
             if "Resize" in aug.get("class_path", ""):
                 init_args = aug.setdefault("init_args", {})
                 init_args["keep_aspect_ratio"] = True
+                if center_padding:
+                    init_args["center_padding"] = True
+                if pad_value != 0:
+                    init_args["pad_value"] = pad_value

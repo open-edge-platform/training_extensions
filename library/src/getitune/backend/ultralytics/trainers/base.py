@@ -5,9 +5,11 @@
 
 from __future__ import annotations
 
+import logging
 import multiprocessing
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
 from torch.utils.data import DataLoader
 
 from getitune.backend.ultralytics.data.adapter import UltralyticsDatasetAdapter
@@ -15,6 +17,8 @@ from getitune.backend.ultralytics.data.collate import collate_fn
 
 if TYPE_CHECKING:
     from getitune.data.module import DataModule
+
+logger = logging.getLogger(__name__)
 
 _MP_CONTEXT = multiprocessing.get_context("spawn")
 
@@ -85,10 +89,69 @@ class GetiTuneDataBridgeMixin:
             num_workers=nw,
             collate_fn=collate_fn,
             pin_memory=True,
-            drop_last=mode == "train",
+            drop_last=False,
             multiprocessing_context=_MP_CONTEXT if nw > 0 else None,
             persistent_workers=nw > 0,
         )
+
+    def _setup_train(self) -> None:
+        """Run parent setup, then fix warmup for small datasets.
+
+        Ultralytics enforces a minimum of 100 warmup iterations regardless
+        of dataset size (``max(round(warmup_epochs * nb), 100)``).  For
+        small datasets this can make warmup consume an unreasonable fraction
+        of total training (e.g. 33+ epochs of warmup with only 3 batches/epoch).
+
+        When the natural warmup (``warmup_epochs * nb``) is below 100 we
+        disable the built-in warmup entirely and register a custom
+        ``on_train_batch_start`` callback that applies the same LR /
+        momentum ramp but respects the natural iteration count.
+        """
+        super()._setup_train()  # type: ignore[misc]
+
+        if not self._use_getitune_data:
+            return
+        if self.args.warmup_epochs <= 0:  # type: ignore[attr-defined]
+            return
+
+        nb = len(self.train_loader)  # type: ignore[attr-defined]
+        natural_nw = round(self.args.warmup_epochs * nb)  # type: ignore[attr-defined]
+        if natural_nw >= 100:
+            return
+
+        logger.info(
+            f"Bypassing Ultralytics 100-iteration warmup minimum. "
+            f"With {nb} batches/epoch, using natural warmup of "
+            f"{natural_nw} iterations ({self.args.warmup_epochs} epochs)."
+        )
+
+        warmup_bias_lr = self.args.warmup_bias_lr  # type: ignore[attr-defined]
+        warmup_momentum = self.args.warmup_momentum  # type: ignore[attr-defined]
+        nbs = self.args.nbs  # type: ignore[attr-defined]
+        batch_size = self.batch_size  # type: ignore[attr-defined]
+        self.args.warmup_epochs = 0  # type: ignore[attr-defined]
+
+        counter = {"ni": 0}
+
+        def _warmup_callback(trainer: Any) -> None:  # noqa: ANN401
+            ni = counter["ni"]
+            if ni <= natural_nw:
+                xi = [0, natural_nw]
+                trainer.accumulate = max(1, int(np.interp(ni, xi, [1, nbs / batch_size]).round()))
+                for pg in trainer.optimizer.param_groups:
+                    pg["lr"] = np.interp(
+                        ni,
+                        xi,
+                        [
+                            warmup_bias_lr if pg.get("param_group") == "bias" else 0.0,
+                            pg["initial_lr"] * trainer.lf(trainer.epoch),
+                        ],
+                    )
+                    if "momentum" in pg:
+                        pg["momentum"] = np.interp(ni, xi, [warmup_momentum, trainer.args.momentum])
+            counter["ni"] += 1
+
+        self.add_callback("on_train_batch_start", _warmup_callback)  # type: ignore[attr-defined]
 
     def set_model_attributes(self) -> None:
         """Set model attributes; disable Ultralytics augmentations when using DataModule."""

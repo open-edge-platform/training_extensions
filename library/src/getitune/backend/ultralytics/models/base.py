@@ -144,15 +144,30 @@ class UltralyticsModel:
         logger.info(f"Building Ultralytics model: {config} (task={self.task})")
         yolo = YOLO(config, task=self.task or None)
 
-        if self.pretrained and self.model_name in self._pretrained_weights:
-            weights_url = self._pretrained_weights[self.model_name]
+        # Normalize model_name for pretrained weight lookup: strip .yaml/.yml
+        # suffixes so "yolo26n.yaml" matches the "yolo26n" key in
+        # _pretrained_weights.
+        base_name = self.model_name.removesuffix(".yaml").removesuffix(".yml")
+        if self.pretrained and base_name in self._pretrained_weights:
+            weights_url = self._pretrained_weights[base_name]
             logger.info(f"Loading pretrained weights: {weights_url}")
             yolo.load(weights_url)
+        elif self.pretrained and self._pretrained_weights:
+            logger.warning(
+                f"pretrained=True but no pretrained weights found for '{base_name}'. "
+                f"Available: {list(self._pretrained_weights.keys())}"
+            )
 
         return yolo
 
     def load_checkpoint(self, weights_path: PathLike) -> None:
         """Load weights from a local checkpoint file.
+
+        Creates a fresh ``YOLO`` instance from the checkpoint so that any
+        in-place layer fusion (performed during training/validation) is
+        discarded.  This is required for reliable ``export()`` after
+        ``train()``, because Ultralytics fuses Conv+BN layers in-place
+        and the resulting model cannot be re-exported without reconstruction.
 
         Args:
             weights_path: Path to a checkpoint file.
@@ -164,8 +179,8 @@ class UltralyticsModel:
         if not path.exists():
             msg = f"Checkpoint file not found: {path}"
             raise FileNotFoundError(msg)
-        logger.info(f"Loading checkpoint weights from: {path}")
-        self.yolo.load(str(path))
+        logger.info(f"Loading checkpoint from: {path}")
+        self._yolo = YOLO(str(path), task=self.task or None)
 
     def export(
         self,
@@ -260,8 +275,8 @@ class UltralyticsModel:
         Subclasses override to set model_type, task_type, and thresholds.
         """
         label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
-        conf = self.extra_overrides.get("conf", 0.25)
-        iou = self.extra_overrides.get("iou", 0.7)
+        conf = self.extra_overrides.get("conf", 0.001)
+        iou = self.extra_overrides.get("iou", 0.65)
         return TaskLevelExportParameters(
             model_type="YOLO11",
             model_name=self.model_name,

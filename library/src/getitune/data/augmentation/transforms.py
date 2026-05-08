@@ -35,6 +35,10 @@ class Resize(tvt_v2.Transform):
         keep_aspect_ratio (bool): If True, preserve the aspect ratio of the original image
             by resizing to fit within the target size and padding to reach exact target dimensions.
             Defaults to False.
+        center_padding (bool): If True and ``keep_aspect_ratio`` is True, distribute padding
+            equally on both sides (centered letterbox, matching Ultralytics LetterBox).
+            If False, padding is applied to bottom-right only (matching DFine/YOLOX
+            post-processing which assumes no left/top offset). Defaults to False.
         pad_value (int or tuple): Padding value for image. Defaults to 0.
         interpolation: Interpolation mode for images. Defaults to InterpolationMode.BILINEAR.
         antialias: Whether to apply antialiasing. Defaults to True.
@@ -45,6 +49,7 @@ class Resize(tvt_v2.Transform):
         size: int | tuple[int, int],
         resize_targets: bool = True,
         keep_aspect_ratio: bool = False,
+        center_padding: bool = False,
         pad_value: int | tuple[int, int, int] = 0,
         interpolation: F.InterpolationMode = F.InterpolationMode.BILINEAR,
         antialias: bool = True,
@@ -53,6 +58,7 @@ class Resize(tvt_v2.Transform):
         self.size = (size, size) if isinstance(size, int) else tuple(size)
         self.resize_targets = resize_targets
         self.keep_aspect_ratio = keep_aspect_ratio
+        self.center_padding = center_padding
         self.pad_value = pad_value
         self.interpolation = interpolation
         self.antialias = antialias
@@ -79,14 +85,22 @@ class Resize(tvt_v2.Transform):
         new_h = round(orig_h * scale)
 
         # Compute padding to reach target size
-        # Use bottom-right padding only (matching develop branch behavior)
-        # This is important because model post-processing assumes no left/top offset
         pad_w = target_w - new_w
         pad_h = target_h - new_h
-        pad_left = 0
-        pad_right = pad_w
-        pad_top = 0
-        pad_bottom = pad_h
+
+        if self.center_padding:
+            # Centered padding (matching Ultralytics LetterBox): equal on both sides.
+            pad_left = pad_w // 2
+            pad_right = pad_w - pad_left
+            pad_top = pad_h // 2
+            pad_bottom = pad_h - pad_top
+        else:
+            # Bottom-right padding only (matching DFine/YOLOX post-processing
+            # which assumes no left/top offset).
+            pad_left = 0
+            pad_right = pad_w
+            pad_top = 0
+            pad_bottom = pad_h
 
         return new_h, new_w, pad_left, pad_top, pad_right, pad_bottom
 

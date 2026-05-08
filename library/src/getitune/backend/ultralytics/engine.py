@@ -332,11 +332,9 @@ class UltralyticsEngine(Engine):
 
     @property
     def datamodule(self) -> DATA:
-        """The datamodule or data-root path, or ``None``."""
+        """The attached DataModule, or ``None``."""
         if self._datamodule is not None:
             return self._datamodule  # type: ignore[return-value]
-        if self._data_root is not None:
-            return self._data_root  # type: ignore[return-value]
         return None  # type: ignore[return-value]
 
     def _test_with_datamodule(self, overrides: dict, checkpoint: PathLike | None = None) -> dict[str, float]:
@@ -442,6 +440,29 @@ class UltralyticsEngine(Engine):
         resolved_checkpoint = checkpoint.resolve()
         self._last_train_checkpoint = resolved_checkpoint
         checkpoint_file.write_text(str(resolved_checkpoint), encoding="utf-8")
+
+    @staticmethod
+    def _create_datamodule(data_root: Path, model: UltralyticsModel) -> DataModule:
+        """Create a DataModule from a data-root path via AutoConfigurator.
+
+        Maps the Ultralytics task string (``"detect"``, ``"segment"``) to a
+        :class:`TaskType` so that ``AutoConfigurator`` can build the correct
+        dataset pipeline.
+        """
+        from getitune.tools.auto_configurator import AutoConfigurator
+        from getitune.types.task import TaskType
+
+        _task_map: dict[str, TaskType] = {
+            "detect": TaskType.DETECTION,
+            "segment": TaskType.INSTANCE_SEGMENTATION,
+        }
+        task = _task_map.get(model.task)
+        if task is None:
+            msg = f"Cannot create DataModule for Ultralytics task '{model.task}'"
+            raise ValueError(msg)
+
+        auto_cfg = AutoConfigurator(data_root=data_root, task=task)
+        return auto_cfg.get_datamodule()
 
     def _make_bound_trainer(self) -> type:
         """Return a trainer subclass with the DataModule bound as a class attr."""

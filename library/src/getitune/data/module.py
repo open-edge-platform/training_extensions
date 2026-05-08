@@ -17,6 +17,7 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
 
 from getitune.config.data import SubsetConfig, TileConfig
+from getitune.data._coco_bbox_fix import apply_coco_bbox_fix
 from getitune.data.augmentation import CPUAugmentationPipeline
 from getitune.data.dataset.tile import TileDatasetFactory
 from getitune.data.factory import DatasetFactory
@@ -107,6 +108,10 @@ class DataModule(LightningDataModule):
 
         self.subsets: dict[str, VisionDataset] = {}
         self.save_hyperparameters(ignore=["input_size"])
+
+        # Workaround: fix Datumaro COCO multi-polygon bbox expansion bug.
+        # See ``_coco_bbox_fix.py`` for details.
+        apply_coco_bbox_fix()
 
         dataset = import_dataset(self.data_root)
 

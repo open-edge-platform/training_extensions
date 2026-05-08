@@ -94,7 +94,10 @@ def test_engine_propagates_intensity_config_from_datamodule(mocker, tmp_path) ->
 def test_engine_default_intensity_config_without_datamodule(tmp_path) -> None:
     """Without DataModule (upstream data path), model should use default uint8 intensity config."""
     model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
-    engine = UltralyticsEngine(model=model, data=tmp_path, work_dir=tmp_path / "work", device="cpu")
+    mock_dm = MagicMock(spec=DataModule)
+    mock_dm.input_intensity_config = None
+    with patch.object(UltralyticsEngine, "_create_datamodule", return_value=mock_dm):
+        engine = UltralyticsEngine(model=model, data=tmp_path, work_dir=tmp_path / "work", device="cpu")
 
     ic = engine._model.data_input_params.intensity_config
     assert ic is not None
@@ -304,7 +307,10 @@ class TestExport:
     def test_test_with_data_root_loads_explicit_checkpoint(self, tmp_path) -> None:
         """Filesystem validation should use a fresh YOLO model for explicit checkpoint."""
         model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
-        engine = UltralyticsEngine(model=model, data=tmp_path, work_dir=tmp_path / "work", device="cpu")
+        mock_dm = MagicMock(spec=DataModule)
+        mock_dm.input_intensity_config = None
+        with patch.object(UltralyticsEngine, "_create_datamodule", return_value=mock_dm):
+            engine = UltralyticsEngine(model=model, data=tmp_path, work_dir=tmp_path / "work", device="cpu")
         ckpt_file = tmp_path / "best.pt"
         ckpt_file.touch()
 

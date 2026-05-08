@@ -12,7 +12,6 @@ import pytest
 
 from getitune.backend.lightning.models.base import DataInputParams
 from getitune.backend.ultralytics.models import UltralyticsDetectionModel
-from getitune.backend.ultralytics.models.base import UltralyticsModel
 from getitune.types.export import TaskLevelExportParameters
 from getitune.types.label import LabelInfo
 
@@ -32,17 +31,18 @@ def test_model_allows_yaml_config_for_scratch_training() -> None:
     assert model.pretrained is False
 
 
-def test_load_checkpoint_calls_yolo_load(tmp_path: Path) -> None:
-    """load_checkpoint should delegate to YOLO.load with the weights path."""
+def test_load_checkpoint_creates_fresh_yolo(tmp_path: Path) -> None:
+    """load_checkpoint should create a fresh YOLO instance from the checkpoint."""
     model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
     fake_weights = tmp_path / "weights.pt"
     fake_weights.write_bytes(b"fake")
 
     mock_yolo = MagicMock()
-    with patch.object(UltralyticsModel, "_build_yolo", return_value=mock_yolo):
+    with patch("getitune.backend.ultralytics.models.base.YOLO", return_value=mock_yolo) as mock_yolo_cls:
         model.load_checkpoint(fake_weights)
 
-    mock_yolo.load.assert_called_once_with(str(fake_weights))
+    mock_yolo_cls.assert_called_once_with(str(fake_weights), task="detect")
+    assert model._yolo is mock_yolo
 
 
 def test_load_checkpoint_raises_on_missing_file() -> None:
@@ -142,8 +142,8 @@ class TestExportParameters:
     def test_default_thresholds(self) -> None:
         model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         params = model._export_parameters
-        assert params.confidence_threshold == 0.25
-        assert params.iou_threshold == 0.7
+        assert params.confidence_threshold == 0.001
+        assert params.iou_threshold == 0.65
 
     def test_optimization_config_empty(self) -> None:
         model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())

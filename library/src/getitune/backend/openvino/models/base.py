@@ -144,6 +144,33 @@ class OVModel:
         resize_type = getattr(getattr(base, "params", None), "resize_type", None)
         return resize_type in _aspect_ratio_resize_types
 
+    @property
+    def center_padding(self) -> bool:
+        """Return True when the model uses letterbox preprocessing with centered padding.
+
+        ``fit_to_window_letterbox`` distributes padding equally on both sides,
+        while ``fit_to_window`` pads only at the bottom-right.  When this
+        property is True, the evaluation pipeline must also use centered
+        padding (``center_padding=True`` on the Resize transform) to match
+        the training preprocessing.
+        """
+        base = self.model.model if isinstance(self.model, Tiler) else self.model
+        resize_type = getattr(getattr(base, "params", None), "resize_type", None)
+        return resize_type == "fit_to_window_letterbox"
+
+    @property
+    def pad_value(self) -> int:
+        """Return the padding value embedded in the exported model metadata.
+
+        YOLO models use ``114`` (gray) while most other architectures use ``0``
+        (black).  The value is read from the ModelAPI model parameters which
+        are populated from the IR ``model_info/pad_value`` metadata key.
+
+        Defaults to ``0`` when the attribute is not accessible.
+        """
+        base = self.model.model if isinstance(self.model, Tiler) else self.model
+        return int(getattr(getattr(base, "params", None), "pad_value", 0))
+
     def _get_hparams_from_adapter(self, model_adapter: OpenvinoAdapter) -> None:
         """Read model configuration from the ModelAPI OpenVINO adapter.
 
@@ -246,6 +273,15 @@ class OVModel:
         """
         async_inference = async_inference and self.async_inference
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
+
+        # ModelAPI's embedded PPP expects raw uint8 [0, 255] images when
+        # input_dtype="u8" — it will internally divide by 255 (scale_to_unit).
+        # The DataModule's CPUAugmentationPipeline already scaled from uint8
+        # [0, 255] to float32 [0, 1].  Reverse this for the inference path
+        # (NOT for transform_fn / quantization, which bypasses PPP).
+        if self._expects_uint8_input:
+            numpy_inputs = [(img * 255).clip(0, 255).astype(np.uint8) for img in numpy_inputs]
+
         outputs = self.model.infer_batch(numpy_inputs) if async_inference else [self.model(im) for im in numpy_inputs]
 
         return self._customize_outputs(outputs, inputs)
@@ -260,6 +296,20 @@ class OVModel:
         """
         base = self.model.model if isinstance(self.model, Tiler) else self.model
         return bool(getattr(getattr(base, "params", None), "reverse_input_channels", False))
+
+    @property
+    def _expects_uint8_input(self) -> bool:
+        """Return True when ModelAPI's embedded PPP expects uint8 [0, 255] input.
+
+        When the model has ``input_dtype="u8"`` (with any intensity mode that
+        scales from integer to float), the embedded PPP internally converts from
+        uint8 to float32 and divides by the max value. The DataModule's intensity
+        transform already performed this conversion, so we must reverse it (multiply
+        by 255 and cast to uint8) to avoid double-scaling.
+        """
+        base = self.model.model if isinstance(self.model, Tiler) else self.model
+        input_dtype = getattr(getattr(base, "params", None), "input_dtype", None)
+        return input_dtype in ("u8", "u16")
 
     def optimize(
         self,
