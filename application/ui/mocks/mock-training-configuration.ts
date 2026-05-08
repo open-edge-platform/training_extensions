@@ -178,7 +178,8 @@ export const getMockedTrainingConfiguration = (): TrainingConfigurationParameter
                 type: 'parameter_group',
                 key: 'intensity_mapping',
                 name: 'Intensity mapping',
-                description: 'Intensity mapping parameters control how raw pixel values are normalised to [0, 1] range before training.',
+                description:
+                    'Intensity mapping parameters control how raw pixel values are normalised to [0, 1] range before training.',
                 parameters: [
                     {
                         type: 'parameter',
