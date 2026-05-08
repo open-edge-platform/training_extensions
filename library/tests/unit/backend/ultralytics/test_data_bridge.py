@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from torchvision import tv_tensors
 
-from getitune.backend.ultralytics.data import UltralyticsDatasetAdapter, ultralytics_collate_fn
+from getitune.backend.ultralytics.data import UltralyticsDatasetAdapter, collate_fn
 from getitune.data.dataset.base import VisionDataset
 from getitune.data.entity.base import ImageInfo
 
@@ -138,7 +138,7 @@ def test_dataset_adapter_rescales_bboxes_with_letterbox_padding() -> None:
     np.testing.assert_allclose(result["bboxes"], np.array([[0.3, 0.1, 0.1, 0.2]], dtype=np.float32), atol=1e-6)
 
 
-def test_ultralytics_collate_fn_matches_expected_detection_contract() -> None:
+def test_collate_fn_matches_expected_detection_contract() -> None:
     batch = [
         {
             "img": torch.rand(3, 16, 16),
@@ -160,7 +160,7 @@ def test_ultralytics_collate_fn_matches_expected_detection_contract() -> None:
         },
     ]
 
-    collated = ultralytics_collate_fn(batch)
+    collated = collate_fn(batch)
 
     assert collated["img"].shape == (2, 3, 16, 16)
     assert collated["cls"].shape == (3, 1)

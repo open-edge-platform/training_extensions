@@ -22,7 +22,6 @@ class UltralyticsDetectionModel(UltralyticsModel):
     """
 
     task: ClassVar[str] = "detect"
-    default_model_name: ClassVar[str] = "yolo26n"
     trainer_cls: ClassVar[type] = DetectionTrainer
     validator_cls: ClassVar[type] = DetectionValidator
 

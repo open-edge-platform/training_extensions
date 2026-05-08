@@ -53,7 +53,7 @@ class TestResolveDevice:
 
     def test_explicit_cuda_string(self) -> None:
         result = UltralyticsEngine._resolve_device("cuda")
-        assert result == torch.device("cuda:0")
+        assert result == torch.device("cuda")
 
     def test_bare_integer_maps_to_cuda(self) -> None:
         result = UltralyticsEngine._resolve_device("0")
@@ -79,7 +79,7 @@ class TestResolveDevice:
 
     def test_device_type_gpu(self) -> None:
         result = UltralyticsEngine._resolve_device(DeviceType.gpu)
-        assert result == torch.device("cuda:0")
+        assert result == torch.device("cuda")
 
     def test_device_type_cpu(self) -> None:
         result = UltralyticsEngine._resolve_device(DeviceType.cpu)
@@ -108,7 +108,7 @@ class TestResolveDevice:
 
     def test_gpu_string_maps_to_cuda(self) -> None:
         result = UltralyticsEngine._resolve_device("gpu")
-        assert result == torch.device("cuda:0")
+        assert result == torch.device("cuda")
 
 
 class TestXPUAwareTrainerMixin:

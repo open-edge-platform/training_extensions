@@ -16,7 +16,7 @@ from ultralytics.utils.ops import Profile
 from ultralytics.utils.torch_utils import select_device, unwrap_model
 
 from getitune.backend.ultralytics.data.adapter import UltralyticsDatasetAdapter
-from getitune.backend.ultralytics.data.collate import ultralytics_collate_fn
+from getitune.backend.ultralytics.data.collate import collate_fn
 
 if TYPE_CHECKING:
     from getitune.data.module import DataModule
@@ -131,6 +131,6 @@ class GetiTuneValidatorMixin:
             adapter,
             batch_size=self.args.batch,  # type: ignore[attr-defined]
             shuffle=False,
-            collate_fn=ultralytics_collate_fn,
+            collate_fn=collate_fn,
             pin_memory=True,
         )

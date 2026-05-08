@@ -5,7 +5,7 @@
 
 This module is the single entry point for creating, configuring, and
 serialising Ultralytics training configs.  The application converter calls
-:meth:`UltralyticsConfigurator.convert` (or the lower-level
+:meth:`Configurator.convert` (or the lower-level
 :meth:`apply_hyper_parameters` + :meth:`to_config_dict`) — no
 backend-specific knowledge is required on the caller side.
 """
@@ -13,7 +13,6 @@ backend-specific knowledge is required on the caller side.
 from __future__ import annotations
 
 import copy
-import importlib
 import logging
 from collections.abc import Mapping
 from dataclasses import fields
@@ -21,6 +20,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import yaml
+from jsonargparse import ArgumentParser, Namespace
 
 from getitune.types.device import DeviceType
 from getitune.types.task import TaskType
@@ -53,7 +53,7 @@ _TASK_TO_DEFAULT_CLASS_PATH: dict[str, str] = {
 _SUPPORTED_TASKS: frozenset[str] = frozenset(_TASK_TO_DEFAULT_CLASS_PATH)
 
 
-class UltralyticsConfigurator:
+class Configurator:
     """Parse Ultralytics recipes, apply hyper-parameters, and construct model / engine instances.
 
     This class consolidates recipe loading, hyper-parameter translation
@@ -68,23 +68,22 @@ class UltralyticsConfigurator:
     ) -> None:
         self._config = config
         self._data_config: dict[str, Any] = data_config or {}
-        self._validate_backend()
-        self._validate_task()
-
+        if self._config.backend != "ultralytics":
+            msg = f"Expected backend 'ultralytics', got '{self._config.backend}'"
+            raise ValueError(msg)
+        if self._config.task not in _SUPPORTED_TASKS:
+            msg = f"Unsupported task '{self._config.task}'. Supported: {sorted(_SUPPORTED_TASKS)}"
+            raise ValueError(msg)
 
     @classmethod
-    def from_recipe(cls, recipe_path: PathLike) -> UltralyticsConfigurator:
+    def from_recipe(cls, recipe_path: PathLike) -> Configurator:
         """Load an Ultralytics recipe YAML.
 
         Args:
             recipe_path: Path to the recipe YAML file.
 
         Returns:
-            Configured ``UltralyticsConfigurator`` instance.
-
-        Raises:
-            FileNotFoundError: If the recipe file does not exist.
-            ValueError: If the recipe has an invalid backend or task.
+            Configured ``Configurator`` instance.
         """
         path = Path(recipe_path)
         if not path.exists():
@@ -111,13 +110,12 @@ class UltralyticsConfigurator:
         return cls(config, data_config=data_config)
 
     @classmethod
-    def from_config_dict(cls, raw: dict[str, Any]) -> UltralyticsConfigurator:
+    def from_config_dict(cls, raw: dict[str, Any]) -> Configurator:
         """Build a configurator from an already-loaded recipe dictionary."""
         config = cls._parse_raw_config(raw)
         data_raw = raw.get("data")
         data_config = dict(data_raw) if isinstance(data_raw, dict) else {}
         return cls(config, data_config=data_config)
-
 
     @property
     def config(self) -> UltralyticsConfig:
@@ -128,7 +126,6 @@ class UltralyticsConfigurator:
     def data_config(self) -> dict[str, Any]:
         """The resolved DataModule-compatible data configuration."""
         return self._data_config
-
 
     @staticmethod
     def is_ultralytics_recipe(recipe_path: Path) -> bool:
@@ -142,15 +139,6 @@ class UltralyticsConfigurator:
         """Load an Ultralytics recipe, apply *hyper_parameters*, return a training config dict.
 
         This is the single entry-point the application converter should call.
-
-        Args:
-            recipe_path: Path to the Ultralytics recipe YAML.
-            hyper_parameters: Standard Geti hyper_parameter dict (same keys as
-                Lightning: ``learning_rate``, ``batch_size``, ``max_epochs``, etc.).
-
-        Returns:
-            A serialised training config dict consumable by
-            :meth:`from_config_dict`.
         """
         configurator = cls.from_recipe(recipe_path)
         if hyper_parameters:
@@ -161,9 +149,8 @@ class UltralyticsConfigurator:
         """Apply standard Geti *hyper_parameters* to this configurator.
 
         Only handles the ``training`` section (learning rate, epochs, batch size,
-        etc.).  Augmentation and tiling updates are **not** applied here — they
-        flow through the standard ``TransformsUpdater`` in the application layer,
-        identically to Lightning recipes.
+        etc.).  Augmentation and tiling updates are applied through the standard
+        ``TransformsUpdater`` in the application layer.
         """
         training = hyper_parameters.get("training", {})
         if training:
@@ -182,7 +169,7 @@ class UltralyticsConfigurator:
             "backend": "ultralytics",
             "task": cfg.task,
             "model": {
-                "class_path": cfg.model.class_path,
+                "class_path": cfg.model.class_path or _TASK_TO_DEFAULT_CLASS_PATH.get(cfg.task, ""),
                 "init_args": {
                     "model_name": cfg.model.model_name,
                     "pretrained": cfg.model.pretrained,
@@ -198,13 +185,8 @@ class UltralyticsConfigurator:
             "data": data,
         }
 
-
     def apply_overrides(self, overrides: Mapping[str, Any] | None = None) -> None:
-        """Merge supported overrides into the current config.
-
-        Accepts dot-separated keys (``"training.epochs"``) or nested dicts
-        (``{"training": {"epochs": 50}}``).  Unknown keys raise ``ValueError``.
-        """
+        """Merge supported overrides into the current config."""
         if not overrides:
             return
 
@@ -212,35 +194,39 @@ class UltralyticsConfigurator:
         for key, value in flat.items():
             self._apply_single_override(key, value)
 
-
     def create_model(
         self,
         label_info: LabelInfo,
         weights_path: PathLike | None = None,
     ) -> UltralyticsModel:
-        """Instantiate the model from recipe config.
-
-        The model is always built from the recipe's ``.yaml`` architecture
-        config (no pretrained weights downloaded by Ultralytics).  When
-        *weights_path* is provided (e.g. from ``BaseWeightsService``), the
-        checkpoint is loaded into the model after construction.
+        """Instantiate the model from recipe config using jsonargparse.
 
         Args:
             label_info: Label metadata for the dataset.
-            weights_path: Optional path to a local ``.pt`` checkpoint
-                (downloaded externally) that will be loaded into the model.
+            weights_path: Optional path to a local checkpoint that will be
+                loaded into the model after construction.
 
         Returns:
             Configured ``UltralyticsModel`` subclass instance.
         """
-        model_cls = self._resolve_model_wrapper_cls()
+        class_path = self._config.model.class_path or _TASK_TO_DEFAULT_CLASS_PATH.get(self._config.task, "")
+        if not class_path:
+            msg = f"Cannot resolve model class for task '{self._config.task}'"
+            raise ValueError(msg)
 
-        model = model_cls(
-            model_name=self._config.model.model_name,
-            label_info=label_info,
-            pretrained=self._config.model.pretrained,
-            imgsz=self._config.model.imgsz,
-        )
+        model_cfg = {
+            "class_path": class_path,
+            "init_args": {
+                "model_name": self._config.model.model_name,
+                "label_info": label_info.label_names,
+                "pretrained": self._config.model.pretrained,
+                "imgsz": self._config.model.imgsz,
+            },
+        }
+
+        parser = ArgumentParser()
+        parser.add_subclass_arguments(UltralyticsModel, "model", required=False, fail_untyped=False)
+        model: UltralyticsModel = parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
 
         if weights_path is not None:
             model.load_checkpoint(weights_path)
@@ -257,8 +243,6 @@ class UltralyticsConfigurator:
     ) -> UltralyticsEngine:
         """Instantiate the engine from recipe config.
 
-        Training defaults from the recipe are passed as train-only defaults.
-
         Args:
             model: Ultralytics model wrapper.
             data: DataModule or filesystem data-root path.
@@ -267,7 +251,6 @@ class UltralyticsConfigurator:
                 ``"auto"``).
             **engine_kwargs: Extra kwargs forwarded to the engine constructor.
         """
-        # Use caller-specified device when it is not "auto"; fall back to recipe.
         resolved_device: str | DeviceType = device
         if str(device) == str(DeviceType.auto) or str(device) == "auto":
             resolved_device = self._config.engine.device
@@ -284,7 +267,6 @@ class UltralyticsConfigurator:
             },
             **engine_kwargs,
         )
-
 
     def _apply_training_params(self, training: dict) -> None:
         """Map standard Geti training params to Ultralytics config fields."""
@@ -305,7 +287,6 @@ class UltralyticsConfigurator:
         batch_size = training.get("batch_size")
         if batch_size is not None:
             cfg.training.batch = int(batch_size)
-            # Propagate to data subsets so DataModule sees the same value.
             for subset in ("train_subset", "val_subset", "test_subset"):
                 if subset in self._data_config:
                     self._data_config[subset]["batch_size"] = int(batch_size)
@@ -331,35 +312,6 @@ class UltralyticsConfigurator:
             cfg.training.patience = 0
         elif early_stopping.get("enable") is True and early_stopping.get("patience") is not None:
             cfg.training.patience = int(early_stopping["patience"])
-
-
-    def _validate_backend(self) -> None:
-        if self._config.backend != "ultralytics":
-            msg = f"Expected backend 'ultralytics', got '{self._config.backend}'"
-            raise ValueError(msg)
-
-    def _validate_task(self) -> None:
-        if self._config.task not in _SUPPORTED_TASKS:
-            msg = f"Unsupported task '{self._config.task}'. Supported: {sorted(_SUPPORTED_TASKS)}"
-            raise ValueError(msg)
-
-
-    def _resolve_model_wrapper_cls(self) -> type[UltralyticsModel]:
-        """Return the model wrapper class from recipe ``class_path`` or task."""
-        class_path = self._config.model.class_path
-        if not class_path:
-            class_path = _TASK_TO_DEFAULT_CLASS_PATH.get(self._config.task, "")
-
-        if not class_path:
-            msg = f"Cannot resolve model class for task '{self._config.task}'"
-            raise ValueError(msg)
-
-        cls = _import_class(class_path)
-        if not issubclass(cls, UltralyticsModel):
-            msg = f"model.class_path must resolve to an UltralyticsModel subclass, got '{class_path}'"
-            raise TypeError(msg)
-        return cls
-
 
     def _apply_single_override(self, key: str, value: object) -> None:
         """Apply a single dot-separated override to the config."""
@@ -389,7 +341,6 @@ class UltralyticsConfigurator:
 
         setattr(section, field_name, value)
 
-
     @classmethod
     def _parse_raw_config(cls, raw: dict[str, Any]) -> UltralyticsConfig:
         """Parse raw YAML dict into typed config dataclasses."""
@@ -398,7 +349,6 @@ class UltralyticsConfigurator:
         training_raw = raw.get("training", {})
         export_raw = raw.get("export", {})
 
-        # Model: flatten class_path + init_args.
         model_init = model_raw.get("init_args", {})
         model_config = UltralyticsModelConfig(
             class_path=model_raw.get("class_path", ""),
@@ -407,19 +357,16 @@ class UltralyticsConfigurator:
             imgsz=model_init.get("imgsz", 640),
         )
 
-        # Engine: accept both flat and nested init_args.
         engine_init = engine_raw.get("init_args", engine_raw)
         engine_config = UltralyticsEngineConfig(
             device=engine_init.get("device", "auto"),
         )
 
-        # Training: only accept known fields.
         training_fields = {f.name for f in fields(UltralyticsTrainConfig)}
         training_config = UltralyticsTrainConfig(
             **{k: v for k, v in training_raw.items() if k in training_fields},
         )
 
-        # Export: only accept known fields.
         export_fields = {f.name for f in fields(UltralyticsExportConfig)}
         export_config = UltralyticsExportConfig(
             **{k: v for k, v in export_raw.items() if k in export_fields},
@@ -445,7 +392,6 @@ class UltralyticsConfigurator:
         if isinstance(data_ref, dict):
             return dict(data_ref)
 
-        # String reference to a base YAML.
         data_path = (recipe_dir / str(data_ref)).resolve()
         if not data_path.exists():
             msg = f"Referenced data config not found: {data_path}"
@@ -456,27 +402,8 @@ class UltralyticsConfigurator:
         return loaded if isinstance(loaded, dict) else {}
 
 
-
-
-def _import_class(class_path: str) -> type:
-    """Import a class from a fully-qualified dotted path."""
-    module_path, _, class_name = class_path.rpartition(".")
-    if not module_path:
-        msg = f"Invalid class_path: '{class_path}' (no module prefix)"
-        raise ValueError(msg)
-
-    try:
-        module = importlib.import_module(module_path)
-    except ModuleNotFoundError as e:
-        msg = f"Cannot import module '{module_path}' from class_path '{class_path}'"
-        raise ValueError(msg) from e
-
-    cls = getattr(module, class_name, None)
-    if cls is None:
-        msg = f"Class '{class_name}' not found in module '{module_path}'"
-        raise ValueError(msg)
-
-    return cls
+# Backward-compatible alias so existing imports don't break.
+UltralyticsConfigurator = Configurator
 
 
 def _flatten_overrides(overrides: Mapping[str, Any], prefix: str = "") -> dict[str, Any]:

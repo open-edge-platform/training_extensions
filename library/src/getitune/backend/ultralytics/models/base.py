@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -14,7 +15,7 @@ from ultralytics import YOLO
 from getitune.backend.lightning.models.base import DataInputParams
 from getitune.config.data import IntensityConfig
 from getitune.types.export import ExportFormat, TaskLevelExportParameters
-from getitune.types.label import LabelInfo
+from getitune.types.label import LabelInfo, LabelInfoTypes
 from getitune.types.precision import Precision
 
 logger = logging.getLogger(__name__)
@@ -25,20 +26,18 @@ class UltralyticsModel:
 
     Args:
         model_name: Model variant identifier (e.g. ``"yolo26n"``).
-            Must match a key in :attr:`_pretrained_weights` and
-            :attr:`_default_preprocessing_params`.
-        label_info: Label metadata used by the engine and DataModule bridge.
-        pretrained: Whether to load pretrained weights. When ``True``, the
-            model architecture is built from the ``.yaml`` config and
-            pretrained weights are loaded from the URL in
-            :attr:`_pretrained_weights`.
-        imgsz: Image size for training / inference. If ``None``, uses the
-            default from :attr:`_default_preprocessing_params`.
+        label_info: Label metadata — accepts the same types as
+            ``LightningModel``: ``list[str]``, ``int``, ``LabelInfo``,
+            or ``dict``.
+        data_input_params: Optional preprocessing parameters. When provided,
+            overrides the per-model defaults. Accepts a ``DataInputParams``
+            instance or a plain ``dict`` (same as Lightning).
+        pretrained: Whether to load pretrained weights.
+        imgsz: Image size for training / inference.
         extra_overrides: Extra Ultralytics config forwarded to train/val/export.
     """
 
     task: ClassVar[str] = ""
-    default_model_name: ClassVar[str] = ""
     metric_keys: ClassVar[dict[str, str]] = {}
     trainer_cls: ClassVar[type | None] = None
     validator_cls: ClassVar[type | None] = None
@@ -48,25 +47,24 @@ class UltralyticsModel:
     def __init__(
         self,
         model_name: str,
-        label_info: LabelInfo | None = None,
+        label_info: LabelInfoTypes | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         *,
         pretrained: bool = True,
         imgsz: int | None = None,
         extra_overrides: dict[str, Any] | None = None,
     ) -> None:
         self.model_name = model_name
-        self.label_info = label_info
+        self.label_info = self._dispatch_label_info(label_info) if label_info is not None else None
         self.pretrained = pretrained
         self.extra_overrides = extra_overrides or {}
 
         if not self.model_name:
             msg = "model_name must be provided."
             raise ValueError(msg)
-        if not self.pretrained and self.model_name.endswith(".pt"):
-            msg = (
-                f"pretrained=False requires a model config, not checkpoint weights: {self.model_name}. "
-                "Use a .yaml model definition or a variant name for scratch training."
-            )
+
+        if self.model_name.endswith(".pt") and not self.pretrained:
+            msg = f"pretrained=False requires a model config (.yaml), not a checkpoint name: {self.model_name}"
             raise ValueError(msg)
 
         # Resolve image size: explicit arg > default from preprocessing params.
@@ -82,6 +80,53 @@ class UltralyticsModel:
 
         self._yolo: YOLO | None = None
         self._intensity_config: IntensityConfig | None = None
+        self._explicit_data_input_params = self._configure_preprocessing_params(data_input_params)
+
+    @staticmethod
+    def _dispatch_label_info(label_info: LabelInfoTypes) -> LabelInfo:
+        """Normalize label_info to a ``LabelInfo`` instance.
+
+        Accepts the same types as ``LightningModel._dispatch_label_info``.
+        """
+        if isinstance(label_info, dict):
+            if "label_ids" not in label_info:
+                label_info["label_ids"] = label_info["label_names"]
+            return LabelInfo(**label_info)
+        if isinstance(label_info, int):
+            return LabelInfo.from_num_classes(num_classes=label_info)
+        if isinstance(label_info, (list, tuple)) and all(isinstance(name, str) for name in label_info):
+            return LabelInfo(
+                label_names=list(label_info),
+                label_groups=[list(label_info)],
+                label_ids=[str(i) for i in range(len(label_info))],
+            )
+        if isinstance(label_info, LabelInfo):
+            if not hasattr(label_info, "label_ids"):
+                label_info.label_ids = label_info.label_names
+            return label_info
+        raise TypeError(label_info)
+
+    def _configure_preprocessing_params(
+        self,
+        preprocessing_params: DataInputParams | dict | None = None,
+    ) -> DataInputParams | None:
+        """Normalize an optional preprocessing-params argument."""
+        if preprocessing_params is None:
+            return None
+        if isinstance(preprocessing_params, dict):
+            intensity_cfg = preprocessing_params.get("intensity_config")
+            if isinstance(intensity_cfg, dict):
+                intensity_cfg = IntensityConfig(**intensity_cfg)
+            default = self._resolve_default_params()
+            return DataInputParams(
+                input_size=preprocessing_params.get("input_size") or default.input_size,
+                mean=preprocessing_params.get("mean") or default.mean,
+                std=preprocessing_params.get("std") or default.std,
+                intensity_config=intensity_cfg,
+            )
+        if isinstance(preprocessing_params, DataInputParams):
+            return preprocessing_params
+        return None
 
     @property
     def yolo(self) -> YOLO:
@@ -92,9 +137,9 @@ class UltralyticsModel:
 
     def _build_yolo(self) -> YOLO:
         """Create the ``ultralytics.YOLO`` model and optionally load pretrained weights."""
-        yaml_name = self._model_yaml_name
-        logger.info(f"Building Ultralytics model: {yaml_name} (task={self.task})")
-        yolo = YOLO(yaml_name, task=self.task or None)
+        config = self.model_name if self.model_name.endswith(".yaml") else f"{self.model_name}.yaml"
+        logger.info(f"Building Ultralytics model: {config} (task={self.task})")
+        yolo = YOLO(config, task=self.task or None)
 
         if self.pretrained and self.model_name in self._pretrained_weights:
             weights_url = self._pretrained_weights[self.model_name]
@@ -103,23 +148,11 @@ class UltralyticsModel:
 
         return yolo
 
-    @property
-    def _model_yaml_name(self) -> str:
-        """Resolve the YAML config name for model architecture construction.
-
-        Subclasses may override to map ``model_name`` to a different YAML file.
-        Default: ``<model_name>.yaml``.
-        """
-        name = self.model_name
-        if name.endswith((".yaml", ".pt")):
-            return name
-        return f"{name}.yaml"
-
     def load_checkpoint(self, weights_path: str | Path) -> None:
         """Load weights from a local checkpoint file.
 
         Args:
-            weights_path: Path to a ``.pt`` checkpoint file.
+            weights_path: Path to a checkpoint file.
 
         Raises:
             FileNotFoundError: If the checkpoint file does not exist.
@@ -140,8 +173,6 @@ class UltralyticsModel:
     ) -> Path:
         """Export this model to the specified output directory.
 
-        Follows the same contract as Lightning's ``LightningModel.export()``.
-
         Args:
             output_dir: Directory for saving the exported model.
             base_name: Base name for the exported model file.
@@ -161,10 +192,7 @@ class UltralyticsModel:
 
     @property
     def _exporter(self) -> Any:
-        """Build and return the model exporter.
-
-        Subclasses may override to customize export behavior.
-        """
+        """Build and return the model exporter."""
         from getitune.backend.ultralytics.exporter import UltralyticsModelExporter
 
         return UltralyticsModelExporter(
@@ -177,24 +205,15 @@ class UltralyticsModel:
 
     @property
     def data_input_params(self) -> DataInputParams:
-        """Resolved data input parameters for this model instance.
+        """Resolved data input parameters for this model instance."""
+        if self._explicit_data_input_params is not None:
+            return self._explicit_data_input_params
 
-        Uses the intensity config propagated from the DataModule (if set by
-        the engine), otherwise falls back to the model's default (uint8,
-        scale_to_unit).
-        """
-        default = self._default_preprocessing_params
-        if isinstance(default, dict):
-            params = default.get(self.model_name)
-            if params is None:
-                params = next(iter(default.values()))
-        else:
-            params = default
+        params = self._resolve_default_params()
 
         # Resolve intensity config: engine-propagated > model default.
         intensity_config = self._intensity_config if self._intensity_config is not None else params.intensity_config
 
-        # Always use self.imgsz — it may have been overridden by the user.
         if params.input_size != (self.imgsz, self.imgsz) or intensity_config is not params.intensity_config:
             return DataInputParams(
                 input_size=(self.imgsz, self.imgsz),
@@ -204,24 +223,21 @@ class UltralyticsModel:
             )
         return params
 
+    def _resolve_default_params(self) -> DataInputParams:
+        """Return the default ``DataInputParams`` for the current ``model_name``."""
+        default = self._default_preprocessing_params
+        if isinstance(default, dict):
+            params = default.get(self.model_name)
+            if params is None:
+                params = next(iter(default.values()))
+            return params
+        return default
+
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
         """Per-model preprocessing parameters.
 
         Subclasses must override to provide model-specific defaults.
-        Returns either a single ``DataInputParams`` or a dict keyed by
-        ``model_name`` (like Lightning models).
-
-        YOLO models expect ``[0, 1]`` float input at inference. The conversion
-        from raw pixels to [0, 1] is handled by ``IntensityConfig`` (mode
-        ``"scale_to_unit"``), which ModelAPI embeds as a PPP step:
-
-        - For uint8: divide by 255.
-        - For uint16: divide by 65535.
-
-        The ``mean`` and ``std`` here represent any *additional* channel-wise
-        normalization applied after intensity scaling. YOLO needs none, so
-        both are identity (0 / 1).
         """
         return DataInputParams(
             input_size=(self.imgsz, self.imgsz),
@@ -235,20 +251,18 @@ class UltralyticsModel:
         """Task-level export parameters for metadata embedding.
 
         Subclasses override to set model_type, task_type, and thresholds.
-
-        Since Ultralytics models are exported without built-in NMS
-        (``end2end=False``), we set ``nms_execute=True`` so that ModelAPI
-        performs NMS during post-processing.
         """
         label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
+        conf = self.extra_overrides.get("conf", 0.25)
+        iou = self.extra_overrides.get("iou", 0.7)
         return TaskLevelExportParameters(
             model_type="YOLO11",
             model_name=self.model_name,
             task_type="detection",
             label_info=label_info,
             optimization_config={},
-            confidence_threshold=0.25,
-            iou_threshold=0.7,
+            confidence_threshold=float(conf),
+            iou_threshold=float(iou),
             nms_execute=True,
         )
 

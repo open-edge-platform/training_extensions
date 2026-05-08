@@ -11,7 +11,7 @@ from typing import Any, ClassVar
 from warnings import warn
 
 from getitune.backend.lightning.cli.utils import get_getitune_root_path
-from getitune.backend.ultralytics.configurator import UltralyticsConfigurator
+from getitune.backend.ultralytics.configurator import Configurator as UltralyticsConfigurator
 from getitune.tools.auto_configurator import AutoConfigurator
 from loguru import logger
 
@@ -717,11 +717,11 @@ class GetiConfigConverter:
 
         model_config_path: Path = TEMPLATE_ID_MAPPING[config["model_manifest_id"]]["recipe_path"]  # type: ignore[assignment]
 
-        # Ultralytics recipes handle tiling through the data section (TransformsUpdater),
-        # not through separate _tile recipe files.  Dispatch early.
-        if model_config_path.suffix != ".yaml":
-            model_config_path = model_config_path / ".yaml"
-        if GetiConfigConverter._is_ultralytics_recipe(model_config_path):
+        if not model_config_path.exists():
+            msg = f"Recipe file not found: {model_config_path}"
+            raise FileNotFoundError(msg)
+
+        if UltralyticsConfigurator.is_ultralytics_recipe(model_config_path):
             config_dict = UltralyticsConfigurator.convert(model_config_path, hyper_parameters)
             # Apply the standard augmentation / tiling updates to the data section.
             # This is the same TransformsUpdater path that Lightning recipes use,
@@ -759,11 +759,6 @@ class GetiConfigConverter:
 
         GetiConfigConverter._remove_unused_key(default_config)
         return default_config
-
-    @staticmethod
-    def _is_ultralytics_recipe(recipe_path: Path) -> bool:
-        """Return whether a recipe declares the Ultralytics backend."""
-        return UltralyticsConfigurator.is_ultralytics_recipe(recipe_path)
 
     @staticmethod
     def _get_params(hyperparameters: dict) -> dict:

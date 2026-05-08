@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 from torch.utils.data import DataLoader
 
 from getitune.backend.ultralytics.data.adapter import UltralyticsDatasetAdapter
-from getitune.backend.ultralytics.data.collate import ultralytics_collate_fn
+from getitune.backend.ultralytics.data.collate import collate_fn
 
 if TYPE_CHECKING:
     from getitune.data.module import DataModule
@@ -87,7 +87,7 @@ class GetiTuneDataBridgeMixin:
             batch_size=batch_size,
             shuffle=shuffle,
             num_workers=nw,
-            collate_fn=ultralytics_collate_fn,
+            collate_fn=collate_fn,
             pin_memory=True,
             drop_last=mode == "train",
             multiprocessing_context=_MP_CONTEXT if nw > 0 else None,

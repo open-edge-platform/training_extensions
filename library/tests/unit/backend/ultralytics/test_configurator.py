@@ -532,7 +532,7 @@ class TestCreateModel:
         recipe["task"] = "DETECTION"
         path = _write_recipe(tmp_path, recipe)
         cfg = UltralyticsConfigurator.from_recipe(path)
-        with pytest.raises(ValueError, match="Cannot import module"):
+        with pytest.raises(ValueError, match="No module named"):
             cfg.create_model(_make_label_info())
 
     def test_class_path_must_resolve_to_ultralytics_model(self, tmp_path: Path) -> None:
@@ -540,7 +540,7 @@ class TestCreateModel:
         recipe["model"]["class_path"] = "pathlib.Path"
         path = _write_recipe(tmp_path, recipe)
         cfg = UltralyticsConfigurator.from_recipe(path)
-        with pytest.raises(TypeError, match="UltralyticsModel subclass"):
+        with pytest.raises(ValueError, match="subclass of UltralyticsModel"):
             cfg.create_model(_make_label_info())
 
 

@@ -9,6 +9,7 @@ from typing import Any
 
 import numpy as np
 import torch
+from torch.utils.data import Dataset as TorchDataset
 
 from getitune.data.dataset.base import VisionDataset
 from getitune.data.entity.base import ImageInfo
@@ -16,12 +17,8 @@ from getitune.data.entity.base import ImageInfo
 from .geometry import build_ratio_pad, xyxy_abs_to_xywh_norm
 
 
-class UltralyticsDatasetAdapter(torch.utils.data.Dataset):
-    """Wraps a getitune ``VisionDataset`` and yields Ultralytics sample dicts.
-
-    Does NOT apply any additional augmentation — the upstream
-    ``VisionDataset`` already produces float32 CHW ``[0, 1]`` samples.
-    """
+class UltralyticsDatasetAdapter(TorchDataset):
+    """Wrap a getitune ``VisionDataset`` as Ultralytics samples."""
 
     def __init__(self, vision_dataset: VisionDataset, *, include_masks: bool = False) -> None:
         self._dataset = vision_dataset
@@ -41,11 +38,9 @@ class UltralyticsDatasetAdapter(torch.utils.data.Dataset):
 
         _, tensor_h, tensor_w = img.shape
 
-        # --- Geometry from ImageInfo ---
         img_info: ImageInfo | None = getattr(sample, "img_info", None)
         if img_info is not None:
             ori_shape = img_info.ori_shape
-            # img_shape is the resized size *before* padding.
             resized_shape = img_info.img_shape
             padding = img_info.padding
         else:
@@ -53,37 +48,19 @@ class UltralyticsDatasetAdapter(torch.utils.data.Dataset):
             resized_shape = (tensor_h, tensor_w)
             padding = (0, 0, 0, 0)
 
-        # Ultralytics validators use ratio_pad for bbox postprocessing.
         ratio_pad = build_ratio_pad(ori_shape, resized_shape, padding)
 
-        # --- Bounding boxes (XYXY absolute -> XYWH normalised) ---
-        # Ultralytics expects centre-xywh normalised by the model input
-        # (tensor) dimensions.  getitune's DataModule may deliver bboxes in
-        # the *original* image coordinate space when ``resize_targets=False``
-        # (typical for val/test subsets).  Detect this via ``canvas_size``
-        # on ``tv_tensors.BoundingBoxes`` and rescale to the tensor space.
         bboxes_raw = getattr(sample, "bboxes", None)
         if bboxes_raw is not None and len(bboxes_raw) > 0:
-            bboxes_for_norm = bboxes_raw
-            # When canvas_size differs from the tensor dims the bboxes are
-            # still in the original (or some other non-tensor) coord space.
             canvas = getattr(bboxes_raw, "canvas_size", None)
-            if canvas is not None and tuple(canvas) != (tensor_h, tensor_w):
-                bboxes_np = bboxes_raw.detach().cpu().numpy().astype(np.float32).copy()
-                # Use scale_factor + padding from ImageInfo for correct
-                # letterbox transformation (simple ratio is wrong when
-                # keep_aspect_ratio padding is present).
-                if img_info is not None and img_info.scale_factor is not None:
-                    scale_h, scale_w = img_info.scale_factor
-                    pad_left, pad_top = padding[0], padding[1]
-                    bboxes_np[:, 0::2] = bboxes_np[:, 0::2] * scale_w + pad_left
-                    bboxes_np[:, 1::2] = bboxes_np[:, 1::2] * scale_h + pad_top
-                else:
-                    canvas_h, canvas_w = canvas
-                    bboxes_np[:, 0::2] *= tensor_w / canvas_w
-                    bboxes_np[:, 1::2] *= tensor_h / canvas_h
-                bboxes_for_norm = bboxes_np
-            bboxes_xywh = xyxy_abs_to_xywh_norm(bboxes_for_norm, img_w=tensor_w, img_h=tensor_h)
+            bboxes_xywh = xyxy_abs_to_xywh_norm(
+                bboxes_raw,
+                img_w=tensor_w,
+                img_h=tensor_h,
+                canvas_size=tuple(canvas) if canvas is not None else None,
+                scale_factor=img_info.scale_factor if img_info is not None else None,
+                padding=padding,
+            )
         else:
             bboxes_xywh = np.zeros((0, 4), dtype=np.float32)
 

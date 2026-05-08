@@ -6,7 +6,7 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 from uuid import UUID
 
 import polars as pl
@@ -14,18 +14,17 @@ import yaml
 from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
 from getitune import TaskType
-from getitune.backend.lightning.engine import LightningEngine
-from getitune.backend.lightning.models.base import DataInputParams, LightningModel
-from getitune.backend.ultralytics.configurator import UltralyticsConfigurator
+from getitune.backend.lightning.models.base import DataInputParams
 from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.data.dataset.base import VisionDataset
 from getitune.data.factory import TransformLibFactory
 from getitune.data.module import DataModule
+from getitune.engine import create_engine, instantiate_model
 from getitune.engine.engine import Engine
 from getitune.types.device import DeviceType as GetiTuneDeviceType
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
-from jsonargparse import ArgumentParser, Namespace
+from jsonargparse import ArgumentParser
 from lightning import Callback
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -67,7 +66,6 @@ from app.services import (
 from .progress import TrainingProgressCallback
 
 MODEL_WEIGHTS_PATH = "model_weights_path"
-BACKEND_ULTRALYTICS = "ultralytics"
 
 
 # TODO: Consider adopting some lightweight DI framework
@@ -361,10 +359,16 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         device: DeviceInfo,
         has_parent_revision: bool,
     ) -> tuple[Path, Engine]:
-        """Execute model training."""
-        # Build the DataModule
+        """Execute model training.
+
+        Instantiates the model and engine from *training_config* in a
+        backend-agnostic way using ``instantiate_model`` and ``create_engine``
+        from the library.  Lightning callbacks are built when a ``callbacks``
+        section is present in the config; backends that do not support them
+        (e.g. Ultralytics) simply ignore the parameter.
+        """
         logger.info("Preparing the DataModule for training (model_id={})", model_id)
-        getitune_datamodule = DataModule.from_vision_datasets(
+        datamodule = DataModule.from_vision_datasets(
             train_dataset=dataset_info.getitune_training_dataset,
             val_dataset=dataset_info.getitune_validation_dataset,
             test_dataset=dataset_info.getitune_testing_dataset,
@@ -373,45 +377,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             test_subset=dataset_info.getitune_testing_subset_config,
         )
 
-        if training_config.get("backend") == BACKEND_ULTRALYTICS:
-            return self._train_ultralytics_model(
-                training_config=training_config,
-                datamodule=getitune_datamodule,
-                weights_path=weights_path,
-                model_id=model_id,
-                device=device,
-                has_parent_revision=has_parent_revision,
-            )
-
-        return self._train_lightning_model(
-            training_config=training_config,
-            datamodule=getitune_datamodule,
-            weights_path=weights_path,
-            model_id=model_id,
-            device=device,
-            has_parent_revision=has_parent_revision,
-        )
-
-    def _train_lightning_model(
-        self,
-        training_config: dict,
-        datamodule: DataModule,
-        weights_path: Path,
-        model_id: UUID,
-        device: DeviceInfo,
-        has_parent_revision: bool,
-    ) -> tuple[Path, LightningEngine]:
-        """Execute Lightning model training."""
-        # TODO use weights path to initialize model from pre-downloaded weights
-        #  after resolving https://github.com/open-edge-platform/training_extensions/issues/5100
-        logger.warning(
-            "Argument 'weights_path' (value='{}') is not used in Lightning fresh training yet; "
-            "the weights location will be determined internally by getitune",
-            weights_path,
-        )
-
-        # Create the LightningModel according to the training configuration
-        logger.info("Instantiating the LightningModel for training (model_id={})", model_id)
+        logger.info("Instantiating model for training (model_id={})", model_id)
         model_cfg = training_config["model"]
         model_cfg["init_args"]["label_info"] = datamodule.label_info.label_names
         model_cfg["init_args"]["data_input_params"] = DataInputParams(
@@ -420,26 +386,27 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             std=datamodule.input_std if datamodule.input_std is not None else (1.0, 1.0, 1.0),
             intensity_config=datamodule.input_intensity_config,
         ).as_dict()
-        model_parser = ArgumentParser()
-        model_parser.add_subclass_arguments(LightningModel, "model", required=False, fail_untyped=False)
-        getitune_model: LightningModel = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
+        getitune_model = instantiate_model(model_cfg)
         if hasattr(getitune_model, "tile_config"):
             getitune_model.tile_config = datamodule.tile_config
 
-        # Set up the LightningEngine
-        logger.info("Initializing the LightningEngine for training (model_id={})", model_id)
+        logger.info("Initializing engine for training (model_id={})", model_id)
         getitune_device_type = (
             GetiTuneDeviceType.gpu if device.type is DeviceType.CUDA else GetiTuneDeviceType(device.type)
         )
-        getitune_engine = LightningEngine(
-            model=getitune_model,
-            data=datamodule,
-            checkpoint=weights_path if has_parent_revision else None,
-            work_dir=self._data_dir / f"getitune-workspace-{model_id}",
-            device=getitune_device_type,
-        )
+        engine_kwargs: dict[str, Any] = {
+            "work_dir": self._data_dir / f"getitune-workspace-{model_id}",
+            "device": getitune_device_type,
+        }
 
-        # Set up the callbacks
+        if has_parent_revision:
+            if hasattr(getitune_model, "load_checkpoint"):
+                getitune_model.load_checkpoint(weights_path)
+            else:
+                engine_kwargs["checkpoint"] = weights_path
+
+        getitune_engine = create_engine(model=getitune_model, data=datamodule, **engine_kwargs)
+
         callbacks_cfg = training_config.get("callbacks", [])
         for cb_cfg in callbacks_cfg:
             if "init_args" in cb_cfg and "dirpath" in cb_cfg["init_args"]:
@@ -450,9 +417,8 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         callbacks_list = parser.instantiate_classes(parsed_callbacks_cfg).get("callbacks", [])
         callbacks_list.append(TrainingProgressCallback(self.update_progress, min_p=10, max_p=80))
 
-        # Start training
-        logger.info("Starting the training loop (model_id={})", model_id)
-        train_kwargs = {
+        logger.info("Starting training loop (model_id={})", model_id)
+        train_kwargs: dict[str, Any] = {
             "max_epochs": training_config["max_epochs"],
             "callbacks": callbacks_list,
         }
@@ -461,47 +427,14 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         if "precision" in training_config:
             train_kwargs["precision"] = training_config["precision"]
         getitune_engine.train(**train_kwargs)  # pyrefly: ignore[bad-argument-type]
+
         trained_model_path = getitune_engine.best_checkpoint
         if trained_model_path is None:
             trained_model_path = Path(getitune_engine.work_dir) / "best_checkpoint.ckpt"
+        if not trained_model_path.exists():
+            raise FileNotFoundError(f"Trained checkpoint not found at {trained_model_path}")
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)
         return trained_model_path, getitune_engine
-
-    def _train_ultralytics_model(
-        self,
-        training_config: dict,
-        datamodule: DataModule,
-        weights_path: Path,
-        model_id: UUID,
-        device: DeviceInfo,
-        has_parent_revision: bool,
-    ) -> tuple[Path, Engine]:
-        """Execute Ultralytics model training."""
-        logger.info("Instantiating the Ultralytics model for training (model_id={})", model_id)
-        configurator = self._build_ultralytics_configurator(training_config)
-        model = configurator.create_model(label_info=datamodule.label_info, weights_path=weights_path)
-
-        getitune_device_type = (
-            GetiTuneDeviceType.gpu if device.type is DeviceType.CUDA else GetiTuneDeviceType(device.type)
-        )
-        engine = configurator.create_engine(
-            model=model,
-            data=datamodule,
-            work_dir=self._data_dir / f"getitune-workspace-{model_id}",
-            device=f"cuda:{device.index or 0}" if device.type is DeviceType.CUDA else getitune_device_type,
-        )
-
-        train_kwargs = dict(training_config.get("training", {}))
-        if has_parent_revision:
-            logger.info("Using parent Ultralytics weights as initialization, not resume state: {}", weights_path)
-
-        logger.info("Starting the Ultralytics training loop (model_id={})", model_id)
-        engine.train(**train_kwargs)
-        checkpoint = engine.best_checkpoint
-        if checkpoint is None or not checkpoint.exists():
-            raise FileNotFoundError(f"Ultralytics trained checkpoint not found in {engine.work_dir}")
-        logger.info("Ultralytics model training completed. Trained model saved at {}", checkpoint)
-        return checkpoint, engine
 
     @step("Evaluate Model", 95)
     def evaluate_model(
@@ -571,8 +504,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         variants_dir = model_dir / "variants"
         variants_dir.mkdir(parents=True, exist_ok=True)
 
-        # Copy PyTorch checkpoint — preserve the source extension so
-        # Ultralytics weights keep the .pt suffix required by ``YOLO.load()``.
+        # Copy PyTorch checkpoint
         pytorch_variant_dir = variants_dir / str(created_variants[ModelFormat.PYTORCH])
         pytorch_variant_dir.mkdir(parents=True, exist_ok=True)
         pytorch_dest_name = f"model{trained_model_path.suffix}"
@@ -602,20 +534,18 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         logger.info("Stored ONNX variant at {}", onnx_variant_dir)
 
         # Store the metrics
-        # Lightning writes to <work_dir>/csv/version_0/metrics.csv;
-        # Ultralytics writes to <work_dir>/train/results.csv.
         metrics_source_path = getitune_work_dir / "csv"
         metrics_dest_path = model_dir / "metrics"
         if metrics_source_path.exists():
             shutil.move(metrics_source_path, metrics_dest_path)
             logger.info("Stored training metrics at {}", metrics_dest_path)
         else:
-            ultralytics_csv = getitune_work_dir / "train" / "results.csv"
-            if ultralytics_csv.exists():
+            results_csv = getitune_work_dir / "train" / "results.csv"
+            if results_csv.exists():
                 dest_version_dir = metrics_dest_path / "version_0"
                 dest_version_dir.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(ultralytics_csv, dest_version_dir / "metrics.csv")
-                logger.info("Stored Ultralytics training metrics at {}", dest_version_dir)
+                shutil.copyfile(results_csv, dest_version_dir / "metrics.csv")
+                logger.info("Stored training metrics at {}", dest_version_dir)
 
         # Cleanup the getitune work directory
         shutil.rmtree(getitune_work_dir)
@@ -841,9 +771,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
     def __build_model_weights_path(cls, data_dir: Path, project_id: UUID, model_id: UUID, model_variant: UUID) -> Path:
         """Get the path to the PyTorch checkpoint from a model's variants directory.
 
-        Ultralytics checkpoints are stored as ``model.pt``; Lightning checkpoints
-        as ``model.ckpt``.  We probe for ``.pt`` first and fall back to ``.ckpt``
-        for backward compatibility.
+        Probes ``.pt`` first, then ``.ckpt`` for backward compatibility.
         """
         model_dir = cls.__base_model_path(data_dir, project_id, model_id)
         variant_dir = model_dir / "variants" / str(model_variant)
@@ -851,11 +779,6 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         if pt_path.exists():
             return pt_path
         return variant_dir / "model.ckpt"
-
-    @staticmethod
-    def _build_ultralytics_configurator(training_config: dict) -> UltralyticsConfigurator:
-        """Build a library configurator from the serialised Ultralytics config dict."""
-        return UltralyticsConfigurator.from_config_dict(training_config)
 
     @classmethod
     def __build_model_config_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:

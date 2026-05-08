@@ -24,7 +24,6 @@ class UltralyticsInstSegModel(UltralyticsModel):
     """
 
     task: ClassVar[str] = "segment"
-    default_model_name: ClassVar[str] = "yolo26n-seg"
     trainer_cls: ClassVar[type] = SegmentationTrainer
     validator_cls: ClassVar[type] = SegmentationValidator
 
@@ -63,14 +62,16 @@ class UltralyticsInstSegModel(UltralyticsModel):
         performs NMS during post-processing.
         """
         label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
+        conf = self.extra_overrides.get("conf", 0.25)
+        iou = self.extra_overrides.get("iou", 0.7)
         return TaskLevelExportParameters(
             model_type="YOLO11-seg",
-            model_name=self.model_name or "",
+            model_name=self.model_name,
             task_type="instance_segmentation",
             label_info=label_info,
             optimization_config={},
-            confidence_threshold=0.25,
-            iou_threshold=0.7,
+            confidence_threshold=float(conf),
+            iou_threshold=float(iou),
             nms_execute=True,
         )
 

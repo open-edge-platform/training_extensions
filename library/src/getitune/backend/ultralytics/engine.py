@@ -102,15 +102,44 @@ class UltralyticsEngine(Engine):
             if intensity_cfg is not None:
                 self._model._intensity_config = intensity_cfg
 
-    def train(self, **kwargs) -> METRICS:
+    def train(
+        self,
+        epochs: int | None = None,
+        batch: int | None = None,
+        lr0: float | None = None,
+        patience: int | None = None,
+        max_epochs: int | None = None,
+        callbacks: list | None = None,
+        **kwargs,
+    ) -> METRICS:
         """Train the model via a custom Ultralytics trainer.
 
         Args:
-            **kwargs: Overrides forwarded to Ultralytics training.
+            epochs: Number of training epochs.
+            batch: Batch size.
+            lr0: Initial learning rate.
+            patience: Early stopping patience (0 to disable).
+            max_epochs: Alias for ``epochs`` (Lightning compatibility).
+            callbacks: Accepted for API compatibility; unused by Ultralytics.
+            **kwargs: Additional overrides forwarded to Ultralytics training.
 
         Returns:
             Translated metric dict.
         """
+        if callbacks is not None:
+            logger.debug("UltralyticsEngine ignores the 'callbacks' parameter")
+        explicit: dict[str, Any] = {}
+        if epochs is not None:
+            explicit["epochs"] = epochs
+        elif max_epochs is not None:
+            explicit["epochs"] = max_epochs
+        if batch is not None:
+            explicit["batch"] = batch
+        if lr0 is not None:
+            explicit["lr0"] = lr0
+        if patience is not None:
+            explicit["patience"] = patience
+        kwargs.update(explicit)
         yolo = self._model.yolo
         merged = self._build_overrides(self._train_args, **kwargs)
 
@@ -303,13 +332,12 @@ class UltralyticsEngine(Engine):
 
     @property
     def datamodule(self) -> DATA:
-        """The datamodule or data-root path."""
+        """The datamodule or data-root path, or ``None``."""
         if self._datamodule is not None:
             return self._datamodule  # type: ignore[return-value]
         if self._data_root is not None:
             return self._data_root  # type: ignore[return-value]
-        msg = "No data source configured."
-        raise RuntimeError(msg)
+        return None  # type: ignore[return-value]
 
     def _test_with_datamodule(self, overrides: dict, checkpoint: PathLike | None = None) -> dict[str, float]:
         """Run validation via a bound validator class with DataModule data."""
@@ -587,7 +615,7 @@ class UltralyticsEngine(Engine):
             return torch.device("xpu")
 
         if device in ("cuda", "gpu"):
-            return torch.device("cuda:0")
+            return torch.device("cuda")
 
         # Bare integer index → CUDA device (Ultralytics convention).
         if device.isdigit():

@@ -10,7 +10,7 @@ from typing import Any
 import torch
 
 
-def ultralytics_collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
+def collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
     """Collate adapter dicts into an Ultralytics-compatible batch.
 
     Stacks images into ``(B, C, H, W)`` and concatenates per-sample

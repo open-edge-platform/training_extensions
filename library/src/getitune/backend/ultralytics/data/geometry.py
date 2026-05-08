@@ -39,6 +39,51 @@ def xyxy_abs_to_xywh_norm(
     return np.stack([cx, cy, w, h], axis=1).astype(np.float32)
 
 
+def rescale_bboxes_to_tensor_space(
+    bboxes: torch.Tensor | np.ndarray,
+    tensor_h: int,
+    tensor_w: int,
+    canvas_size: tuple[int, int],
+    scale_factor: tuple[float, float] | None = None,
+    padding: tuple[int, int, int, int] = (0, 0, 0, 0),
+) -> np.ndarray:
+    """Rescale XYXY bboxes from original/canvas space to tensor pixel space.
+
+    When ``scale_factor`` and ``padding`` are provided (from ``ImageInfo``),
+    the transformation accounts for letterbox padding.  Otherwise a simple
+    proportional rescale is applied.
+
+    Args:
+        bboxes: ``(N, 4)`` tensor or array in ``[x1, y1, x2, y2]`` canvas coords.
+        tensor_h: Height of the model input tensor.
+        tensor_w: Width of the model input tensor.
+        canvas_size: ``(H, W)`` of the coordinate space the bboxes live in.
+        scale_factor: ``(scale_h, scale_w)`` applied during resize.
+        padding: ``(left, top, right, bottom)`` letterbox padding.
+
+    Returns:
+        ``(N, 4)`` float32 array in tensor pixel coordinates.
+    """
+    if isinstance(bboxes, torch.Tensor):
+        bboxes = bboxes.detach().cpu().numpy()
+    bboxes = bboxes.astype(np.float32).copy()
+
+    if bboxes.size == 0:
+        return np.zeros((0, 4), dtype=np.float32)
+
+    if scale_factor is not None:
+        scale_h, scale_w = scale_factor
+        pad_left, pad_top = padding[0], padding[1]
+        bboxes[:, 0::2] = bboxes[:, 0::2] * scale_w + pad_left
+        bboxes[:, 1::2] = bboxes[:, 1::2] * scale_h + pad_top
+    else:
+        canvas_h, canvas_w = canvas_size
+        bboxes[:, 0::2] *= tensor_w / canvas_w
+        bboxes[:, 1::2] *= tensor_h / canvas_h
+
+    return bboxes
+
+
 def build_ratio_pad(
     ori_shape: tuple[int, int],
     img_shape: tuple[int, int],

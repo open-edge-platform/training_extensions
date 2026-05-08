@@ -32,11 +32,6 @@ def test_model_allows_yaml_config_for_scratch_training() -> None:
     assert model.pretrained is False
 
 
-def test_default_model_name_is_variant_key() -> None:
-    """Default model name should be a variant key matching _pretrained_weights."""
-    assert UltralyticsDetectionModel.default_model_name in UltralyticsDetectionModel._pretrained_weights
-
-
 def test_load_checkpoint_calls_yolo_load(tmp_path: Path) -> None:
     """load_checkpoint should delegate to YOLO.load with the weights path."""
     model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
@@ -152,9 +147,6 @@ class TestPretrainedWeights:
 
     def test_pretrained_weights_defined(self) -> None:
         assert len(UltralyticsDetectionModel._pretrained_weights) > 0
-
-    def test_default_model_in_pretrained_weights(self) -> None:
-        assert UltralyticsDetectionModel.default_model_name in UltralyticsDetectionModel._pretrained_weights
 
     def test_build_yolo_loads_pretrained_when_enabled(self) -> None:
         model = UltralyticsDetectionModel(model_name="yolo26n", pretrained=True)

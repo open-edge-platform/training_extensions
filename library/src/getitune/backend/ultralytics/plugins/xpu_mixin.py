@@ -3,11 +3,8 @@
 
 """Mixin that adds XPU device support to Ultralytics trainers.
 
-Ultralytics 8.4.x has no native XPU support — ``select_device("xpu")``
-raises ``ValueError``, and ``BaseTrainer`` hardcodes CUDA in GradScaler,
-autocast, memory utilities, and OOM handling.  This mixin overrides the
-device-touching methods so that training runs on a single Intel XPU card
-via upstream PyTorch (no IPEX dependency).
+Overrides device-touching methods (GradScaler, autocast, memory utilities)
+so that training runs on a single Intel XPU card via upstream PyTorch.
 """
 
 from __future__ import annotations

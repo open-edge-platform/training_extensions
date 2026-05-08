@@ -19,9 +19,9 @@ RECOMMENDED_MODEL_ARCHITECTURES = {
         ModelArchitectureCategory.SPEED: "image-classification-mobilenet-v3-large",
     },
     TaskType.DETECTION: {
-        ModelArchitectureCategory.BALANCE: "object-detection-yolo26-s",
-        ModelArchitectureCategory.ACCURACY: "object-detection-yolo26-m",
-        ModelArchitectureCategory.SPEED: "object-detection-yolo26-n",
+        ModelArchitectureCategory.BALANCE: "object-detection-dfine-m",
+        ModelArchitectureCategory.ACCURACY: "object-detection-dfine-l",
+        ModelArchitectureCategory.SPEED: "object-detection-yolox-s",
     },
     TaskType.INSTANCE_SEGMENTATION: {
         ModelArchitectureCategory.BALANCE: "instance-segmentation-rfdetr-m",

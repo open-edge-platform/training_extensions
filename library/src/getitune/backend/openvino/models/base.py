@@ -215,6 +215,9 @@ class OVModel:
     def _customize_inputs(self, entity: SampleBatch) -> dict[str, Any]:
         """Customize the input data for the model.
 
+        Converts CHW float32 [0,1] tensors to HWC uint8 [0,255] NumPy arrays
+        and swaps RGB→BGR when the model's PrePostProcessor expects BGR input.
+
         Args:
             entity (SampleBatch): Input data batch.
 
@@ -222,6 +225,19 @@ class OVModel:
             dict[str, Any]: Customized input data.
         """
         images = [np.transpose(im.cpu().numpy(), (1, 2, 0)) for im in entity.images]
+        # ModelAPI's PrePostProcessor declares the input tensor as uint8 and casts
+        # incoming data to u8 BEFORE applying scale/mean normalization. If we feed
+        # float32 [0, 1] values, they get truncated to 0 after the cast. Convert to
+        # uint8 [0, 255] so the PPP pipeline produces correct results.
+        images = [
+            (img * 255).clip(0, 255).astype(np.uint8) if img.dtype == np.float32 and img.max() <= 1.0 + 1e-6 else img
+            for img in images
+        ]
+        # The DataModule provides images in RGB channel order (torchvision convention).
+        # When the model's PPP has reverse_input_channels=True, it expects BGR input
+        # and internally converts BGR→RGB for the model. Feed BGR to match.
+        if self._needs_bgr_input:
+            images = [img[:, :, ::-1].copy() for img in images]
         return {"inputs": images}
 
     def _customize_outputs(
@@ -255,19 +271,6 @@ class OVModel:
         """
         async_inference = async_inference and self.async_inference
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
-        # ModelAPI's PrePostProcessor declares the input tensor as uint8 and casts
-        # incoming data to u8 BEFORE applying scale/mean normalization. If we feed
-        # float32 [0, 1] values, they get truncated to 0 after the cast. Convert to
-        # uint8 [0, 255] so the PPP pipeline produces correct results.
-        numpy_inputs = [
-            (img * 255).clip(0, 255).astype(np.uint8) if img.dtype == np.float32 and img.max() <= 1.0 + 1e-6 else img
-            for img in numpy_inputs
-        ]
-        # The DataModule provides images in RGB channel order (torchvision convention).
-        # When the model's PPP has reverse_input_channels=True, it expects BGR input
-        # and internally converts BGR→RGB for the model. Feed BGR to match.
-        if self._needs_bgr_input:
-            numpy_inputs = [img[:, :, ::-1].copy() for img in numpy_inputs]
         outputs = self.model.infer_batch(numpy_inputs) if async_inference else [self.model(im) for im in numpy_inputs]
 
         return self._customize_outputs(outputs, inputs)

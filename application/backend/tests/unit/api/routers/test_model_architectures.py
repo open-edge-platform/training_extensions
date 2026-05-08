@@ -50,15 +50,15 @@ class TestModelArchitecturesEndpoint:
         # Verify top picks
         assert "top_picks" in data
         top_picks = data["top_picks"]
-        assert top_picks["balance"] == "object-detection-yolo26-s"
-        assert top_picks["speed"] == "object-detection-yolo26-n"
-        assert top_picks["accuracy"] == "object-detection-yolo26-m"
+        assert top_picks["balance"] == "object-detection-dfine-m"
+        assert top_picks["speed"] == "object-detection-yolox-s"
+        assert top_picks["accuracy"] == "object-detection-dfine-l"
 
     @pytest.mark.parametrize(
         "task_filter, total_models",
         [
             ("detection", 19),
-            ("instance_segmentation", 8),
+            ("instance_segmentation", 11),
             ("classification", 6),
         ],
     )
