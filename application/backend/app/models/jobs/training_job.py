@@ -31,13 +31,30 @@ class TrainingJob(ProjectJob[TrainingJobParams]):
     params: TrainingJobParams
 
     def on_complete(self) -> None:
-        """Copy the training log to the model's directory upon job completion."""
+        """Copy the training log and clean up the getitune workspace upon job completion."""
         log_path = self.log_dir / self.log_file
         if not log_path.exists():
             logger.warning(f"Log file {log_path} does not exist")
-            return
-        new_path = (
-            self.data_dir / "projects" / str(self.project_id) / "models" / str(self.params.model_id) / "training.log"
-        )
-        new_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(log_path, new_path)
+        else:
+            new_path = (
+                self.data_dir
+                / "projects"
+                / str(self.project_id)
+                / "models"
+                / str(self.params.model_id)
+                / "training.log"
+            )
+            new_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(log_path, new_path)
+
+        # Remove the getitune workspace directory (parent of the timestamped subdir)
+        # so it never lingers on disk regardless of whether the job succeeded or failed.
+        workspace_dir = self.data_dir / f"getitune-workspace-{self.params.model_id}"
+        try:
+            shutil.rmtree(workspace_dir)
+            logger.info(f"Cleaned up getitune workspace directory at {workspace_dir}")
+        except FileNotFoundError:
+            # Directory was never created or already removed; treat as a no-op.
+            pass
+        except Exception as cleanup_exc:
+            logger.error(f"Failed to clean up getitune workspace directory at {workspace_dir}: {cleanup_exc}")
