@@ -8,6 +8,7 @@ import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
 import { http } from '../../../api/utils';
+import { paths } from '../../../constants/paths';
 import { Project } from '../../../constants/shared-types';
 import { server } from '../../../msw-node-setup';
 import { CreateProjectForm } from './create-project-form';
@@ -128,7 +129,7 @@ describe('CreateProjectForm', () => {
     describe('detection and segmentation tasks', () => {
         it.each([
             { taskLabel: 'Object Detection', labelName: 'Car' },
-            { taskLabel: 'Image Segmentation', labelName: 'Tree' },
+            { taskLabel: 'Instance Segmentation', labelName: 'Tree' },
         ])('disables create button with zero labels for $taskLabel', ({ taskLabel }) => {
             renderCreateProjectForm();
 
@@ -139,7 +140,7 @@ describe('CreateProjectForm', () => {
 
         it.each([
             { taskLabel: 'Object Detection', labelName: 'Car' },
-            { taskLabel: 'Image Segmentation', labelName: 'Tree' },
+            { taskLabel: 'Instance Segmentation', labelName: 'Tree' },
         ])('enables create button with one label for $taskLabel', async ({ taskLabel, labelName }) => {
             renderCreateProjectForm();
 
@@ -231,7 +232,7 @@ describe('CreateProjectForm', () => {
 
         it.each([
             { taskLabel: 'Object Detection', taskType: 'detection', labelName: 'Car' },
-            { taskLabel: 'Image Segmentation', taskType: 'instance_segmentation', labelName: 'Tree' },
+            { taskLabel: 'Instance Segmentation', taskType: 'instance_segmentation', labelName: 'Tree' },
         ])('submits $taskLabel project with correct task_type', async ({ taskLabel, taskType, labelName }) => {
             let capturedBody: Record<string, unknown> = {};
 
@@ -258,12 +259,45 @@ describe('CreateProjectForm', () => {
     });
 
     describe('navigation', () => {
-        test('navigates back when "Go Back" button is clicked', () => {
-            renderCreateProjectForm();
+        const mockReferrer = (value: string) => {
+            Object.defineProperty(document, 'referrer', { get: () => value, configurable: true });
+        };
 
+        afterEach(() => {
+            Object.defineProperty(document, 'referrer', { get: () => '', configurable: true });
+        });
+
+        it('navigates to previous page when referrer is from the same origin', () => {
+            mockReferrer('http://localhost/projects');
+            vi.stubGlobal('location', { ...window.location, origin: 'http://localhost' });
+
+            renderCreateProjectForm();
             clickGoBack();
 
             expect(mockNavigate).toHaveBeenCalledWith(-1);
+
+            vi.unstubAllGlobals();
+        });
+
+        it('navigates to projects page when there is no referrer', () => {
+            mockReferrer('');
+
+            renderCreateProjectForm();
+            clickGoBack();
+
+            expect(mockNavigate).toHaveBeenCalledWith(paths.project.index({}));
+        });
+
+        it('navigates to projects page when referrer is from a different origin', () => {
+            mockReferrer('https://external-site.com/page');
+            vi.stubGlobal('location', { ...window.location, origin: 'http://localhost' });
+
+            renderCreateProjectForm();
+            clickGoBack();
+
+            expect(mockNavigate).toHaveBeenCalledWith(paths.project.index({}));
+
+            vi.unstubAllGlobals();
         });
     });
 });

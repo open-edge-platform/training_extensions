@@ -9,7 +9,7 @@ import { isEmpty } from 'lodash-es';
 import type { DatasetSubset, Media } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
-import { isVideoFrame } from '../../../../shared/media-item-utils';
+import { isImage, isVideoFrame } from '../../../../shared/media-item-utils';
 import { Labels } from '../../../annotator/labels/labels.component';
 import { useVideoPlayerContext } from '../../../annotator/video-player/video-player-provider.component';
 import { isClassificationTask, isMultiLabelClassificationTask } from '../../../project/task-type-guards';
@@ -22,7 +22,7 @@ import { getNextItem } from './util';
 
 import classes from './secondary-toolbar.module.scss';
 
-type AnnotationButtonsProps = {
+type ImageAnnotationButtonsProps = {
     onDeleteItem: ([deletedItem]: string[]) => void;
     mediaId: string;
     onSubmit: () => void;
@@ -30,7 +30,13 @@ type AnnotationButtonsProps = {
     isSaving: boolean;
 };
 
-const AnnotationButtons = ({ onDeleteItem, mediaId, onSubmit, isDisabled, isSaving }: AnnotationButtonsProps) => {
+const ImageAnnotationButtons = ({
+    onDeleteItem,
+    mediaId,
+    onSubmit,
+    isDisabled,
+    isSaving,
+}: ImageAnnotationButtonsProps) => {
     return (
         <>
             <DeleteMediaItem itemsIds={[mediaId]} onDeleted={onDeleteItem} />
@@ -38,6 +44,20 @@ const AnnotationButtons = ({ onDeleteItem, mediaId, onSubmit, isDisabled, isSavi
                 Submit
             </Button>
         </>
+    );
+};
+
+type VideoAnnotationButtonsProps = {
+    onSubmit: () => void;
+    isDisabled: boolean;
+    isSaving: boolean;
+};
+
+const VideoAnnotationButtons = ({ onSubmit, isDisabled, isSaving }: VideoAnnotationButtonsProps) => {
+    return (
+        <Button variant='accent' onPress={onSubmit} isPending={isSaving} isDisabled={isDisabled}>
+            Submit
+        </Button>
     );
 };
 
@@ -70,10 +90,16 @@ export const SecondaryToolbar = ({
     const videoPlayerContext = useVideoPlayerContext();
     const isPlaying = videoPlayerContext?.videoControls?.isPlaying ?? false;
 
-    const { canSubmit, isSaving, submitAnnotations, initialAnnotations, initialPredictions } = useAnnotationActions();
+    const { canSubmit, isSaving, submitAnnotations, submitPredictions, initialAnnotations, initialPredictions } =
+        useAnnotationActions();
 
     const handleSubmit = async () => {
         await submitAnnotations(subset);
+        onSelectNextMediaItem();
+    };
+
+    const handleSubmitPredictions = async () => {
+        await submitPredictions(subset);
         onSelectNextMediaItem();
     };
 
@@ -130,16 +156,23 @@ export const SecondaryToolbar = ({
                             <PredictionButtons
                                 onModeChange={onModeChange}
                                 isDisabled={isSubmitDisabled}
-                                onSubmit={handleSubmit}
+                                onSubmit={handleSubmitPredictions}
                             />
                         )}
-                        {isAnnotationMode && (
-                            <AnnotationButtons
+                        {isAnnotationMode && isImage(mediaItem) && (
+                            <ImageAnnotationButtons
                                 mediaId={mediaItem.id}
                                 onDeleteItem={(deleteItems) => handleDeleteItem(deleteItems, items.length - 1)}
                                 onSubmit={handleSubmit}
                                 isSaving={isSaving}
                                 isDisabled={isSubmitDisabled}
+                            />
+                        )}
+                        {isAnnotationMode && !isImage(mediaItem) && (
+                            <VideoAnnotationButtons
+                                onSubmit={handleSubmit}
+                                isDisabled={isSubmitDisabled}
+                                isSaving={isSaving}
                             />
                         )}
 

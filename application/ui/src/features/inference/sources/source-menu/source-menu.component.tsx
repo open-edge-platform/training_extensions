@@ -1,35 +1,83 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Item, Key, Menu, MenuTrigger, toast } from '@geti/ui';
+import { useState } from 'react';
+
+import {
+    ActionButton,
+    Button,
+    ButtonGroup,
+    Content,
+    Dialog,
+    DialogContainer,
+    Divider,
+    Heading,
+    Item,
+    Key,
+    Menu,
+    MenuTrigger,
+    Text,
+    toast,
+} from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
+import { useDisablePipeline } from 'hooks/api/pipeline.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../api/client';
 
-export interface SourceMenuProps {
+type DisconnectSourceWarningDialogProps = {
+    onCancel: () => void;
+    onDisconnect: () => void;
+    name: string;
+    isPending: boolean;
+};
+
+const DisconnectSourceWarningDialog = ({
+    name,
+    onCancel,
+    isPending,
+    onDisconnect,
+}: DisconnectSourceWarningDialogProps) => {
+    return (
+        <Dialog>
+            <Heading>Disconnect {name}</Heading>
+            <Divider />
+            <Content>
+                <Text>
+                    Disconnecting this source will also disable the inference pipeline. Do you want to continue?
+                </Text>
+            </Content>
+            <ButtonGroup>
+                <Button variant={'secondary'} onPress={onCancel}>
+                    Cancel
+                </Button>
+                <Button variant={'accent'} onPress={onDisconnect} isDisabled={isPending}>
+                    Disconnect
+                </Button>
+            </ButtonGroup>
+        </Dialog>
+    );
+};
+
+const SOURCE_MENU_OPTIONS = {
+    CONNECT: 'connect',
+    DISCONNECT: 'disconnect',
+    REMOVE: 'remove',
+    EDIT: 'edit',
+};
+
+export type SourceMenuProps = {
     id: string;
     name: string;
     isConnected: boolean;
     onEdit: () => void;
-}
+    isPipelineRunning: boolean;
+};
 
-export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) => {
+export const SourceMenu = ({ id, name, isConnected, onEdit, isPipelineRunning }: SourceMenuProps) => {
     const project_id = useProjectIdentifier();
-
-    const handleOnAction = (option: Key) => {
-        switch (option) {
-            case 'connect':
-                handleConnect();
-                break;
-            case 'remove':
-                handleDelete();
-                break;
-            default:
-                onEdit();
-                break;
-        }
-    };
+    const [isDisconnectConfirmationDialogVisible, setIsDisconnectConfirmationDialogVisible] = useState<boolean>(false);
+    const disablePipelineMutation = useDisablePipeline();
 
     const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: {
@@ -39,6 +87,33 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
             ],
         },
     });
+
+    const removeSource = $api.useMutation('delete', '/api/sources/{source_id}', {
+        meta: {
+            invalidateQueries: [['get', '/api/sources']],
+        },
+    });
+
+    const handleOnAction = (option: Key) => {
+        switch (option) {
+            case SOURCE_MENU_OPTIONS.CONNECT:
+                handleConnect();
+                break;
+            case SOURCE_MENU_OPTIONS.DISCONNECT:
+                if (isPipelineRunning) {
+                    setIsDisconnectConfirmationDialogVisible(true);
+                } else {
+                    handleDisconnect();
+                }
+                break;
+            case SOURCE_MENU_OPTIONS.REMOVE:
+                handleRemove();
+                break;
+            case SOURCE_MENU_OPTIONS.EDIT:
+                onEdit();
+                break;
+        }
+    };
 
     const handleConnect = () => {
         updatePipeline.mutate(
@@ -57,13 +132,56 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
         );
     };
 
-    const removeSource = $api.useMutation('delete', '/api/sources/{source_id}', {
-        meta: {
-            invalidateQueries: [['get', '/api/sources']],
-        },
-    });
+    const handleDisconnect = () => {
+        updatePipeline.mutate(
+            {
+                params: { path: { project_id } },
+                body: { source_id: null },
+            },
+            {
+                onSuccess: () => {
+                    toast({
+                        type: 'success',
+                        message: `Successfully disconnected from "${name}".`,
+                    });
+                },
+            }
+        );
+    };
 
-    const handleDelete = () => {
+    const handleDisablePipelineAndDisconnect = () => {
+        disablePipelineMutation.mutate(
+            {
+                params: {
+                    path: {
+                        project_id,
+                    },
+                },
+            },
+            {
+                onSuccess: () => {
+                    updatePipeline.mutate(
+                        {
+                            params: { path: { project_id } },
+                            body: { source_id: null },
+                        },
+                        {
+                            onSuccess: () => {
+                                toast({
+                                    type: 'success',
+                                    message: `Successfully disabled pipeline and disconnected from "${name}".`,
+                                });
+
+                                setIsDisconnectConfirmationDialogVisible(false);
+                            },
+                        }
+                    );
+                },
+            }
+        );
+    };
+
+    const handleRemove = () => {
         removeSource.mutate(
             { params: { path: { source_id: id } } },
             {
@@ -78,15 +196,31 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
     };
 
     return (
-        <MenuTrigger>
-            <ActionButton isQuiet aria-label='source menu'>
-                <MoreMenu />
-            </ActionButton>
-            <Menu onAction={handleOnAction} disabledKeys={isConnected ? ['connect', 'remove'] : []}>
-                <Item key='connect'>Connect</Item>
-                <Item key='edit'>Edit</Item>
-                <Item key='remove'>Remove</Item>
-            </Menu>
-        </MenuTrigger>
+        <>
+            <MenuTrigger>
+                <ActionButton isQuiet aria-label='source menu'>
+                    <MoreMenu />
+                </ActionButton>
+                <Menu onAction={handleOnAction} disabledKeys={isConnected ? [SOURCE_MENU_OPTIONS.REMOVE] : []}>
+                    {isConnected ? (
+                        <Item key={SOURCE_MENU_OPTIONS.DISCONNECT}>Disconnect</Item>
+                    ) : (
+                        <Item key={SOURCE_MENU_OPTIONS.CONNECT}>Connect</Item>
+                    )}
+                    <Item key={SOURCE_MENU_OPTIONS.EDIT}>Edit</Item>
+                    <Item key={SOURCE_MENU_OPTIONS.REMOVE}>Remove</Item>
+                </Menu>
+            </MenuTrigger>
+            <DialogContainer onDismiss={() => setIsDisconnectConfirmationDialogVisible(false)}>
+                {isDisconnectConfirmationDialogVisible && (
+                    <DisconnectSourceWarningDialog
+                        name={name}
+                        onDisconnect={handleDisablePipelineAndDisconnect}
+                        isPending={disablePipelineMutation.isPending || updatePipeline.isPending}
+                        onCancel={() => setIsDisconnectConfirmationDialogVisible(false)}
+                    />
+                )}
+            </DialogContainer>
+        </>
     );
 };

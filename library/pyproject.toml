@@ -40,7 +40,7 @@ dependencies = [
     "pytorchcv==0.0.74",
     "timm==1.0.3",
     "openvino~=2026.1.0",
-    "openvino-model-api==0.4.1",
+    "openvino-model-api==0.4.2",
     "onnx==1.21.0",
     "onnxconverter-common==1.16.0",
     "onnxscript==0.6.2",
@@ -61,7 +61,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pytest>=5.3.5",
+    "pytest~=9.0.3",
     "pytest-cov>=4.0.0",
     "pytest-stress",
     "pytest-html",
@@ -73,7 +73,7 @@ dev = [
     "dill",
     "tifffile",
     "py-cpuinfo",
-    "mlflow",
+    "mlflow>=3.11.1",
 ]
 
 lint = [

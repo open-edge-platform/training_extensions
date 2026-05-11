@@ -16,7 +16,7 @@ from model_api.models import Model
 from model_api.models.result import Result
 
 from app.services import ActiveModelService, MetricsService
-from app.services.active_model_service import LoadedModel
+from app.services.inference.model_loader import LoadedModelHandle
 from app.settings import Settings, get_settings
 from app.stream.stream_data import InferenceData, StreamData
 from app.utils import Visualizer
@@ -97,7 +97,7 @@ class InferenceWorker(BaseProcessWorker):
         self._settings: Settings | None = None
         self._metrics_service: MetricsService | None = None
         self._model_service: ActiveModelService | None = None
-        self._loaded_model: LoadedModel | None = None
+        self._loaded_model: LoadedModelHandle | None = None
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
 
         # The reorder buffer ensures that frames are broadcast in order, even if inference results are produced
@@ -154,7 +154,7 @@ class InferenceWorker(BaseProcessWorker):
         self._last_model_obj_id = obj_id
         logger.debug("Installed inference callback for model object with id '{}'", self._last_model_obj_id)
 
-    def _refresh_loaded_model(self) -> LoadedModel | None:
+    def _refresh_loaded_model(self) -> LoadedModelHandle | None:
         """
         Get (or reload) the active model. If reloads are requested repeatedly,
         clear the event until the latest model is loaded.
@@ -195,12 +195,11 @@ class InferenceWorker(BaseProcessWorker):
                     inference_start_time = self._metrics_service.record_inference_start()  # type: ignore
                     self._prediction_buffer.register_expected_timestamp(inference_start_time)
                     rgb_frame = cv2.cvtColor(item.frame_data, cv2.COLOR_BGR2RGB)
-                    rgb_frame = rgb_frame.astype("float32") / 255.0
                     model.infer_async(
                         rgb_frame,
                         user_data={
                             "stream_data": item,
-                            "model_id": self._loaded_model.model_revision_id,
+                            "model_id": self._loaded_model.model_id,
                             "inference_start_time": inference_start_time,
                         },
                     )

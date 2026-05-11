@@ -106,11 +106,7 @@ class PipelineService(BaseSessionManagedService):
         pipeline = self.get_pipeline_by_id(project_id)
         base = pipeline.model_dump()
 
-        # When model_id changes without an explicit model_variant_id, any existing model_variant_id should be cleared
-        # before merging dicts so that _validate_model_and_resolve_variant can default to the FP16 OpenVINO variant.
-        new_model_id = partial_config.get("model_id") or partial_config.get("model_revision_id")
-        if new_model_id is not None and "model_variant_id" not in partial_config:
-            base["model_variant_id"] = None
+        self._validate_model_and_resolve_variant(pipeline=pipeline, partial_config=partial_config)
 
         to_update = type(pipeline).model_validate({**base, **partial_config})
         pipeline_repo = PipelineRepository(self.db_session)
@@ -133,39 +129,52 @@ class PipelineService(BaseSessionManagedService):
                 raise OtherProjectActiveError(
                     requested_project_id=to_update_db.project_id, active_project_id=active_pipeline_db.project_id
                 )
-        if to_update_db.model_revision_id is not None:
-            self._validate_model_and_resolve_variant(to_update_db)
 
         pipeline_db = pipeline_repo.update(to_update_db)
         updated = Pipeline.model_validate(pipeline_db)
         self.__emit_event(pipeline, updated)
         return updated
 
-    def _validate_model_and_resolve_variant(self, pipeline_db: PipelineDB) -> None:
+    def _validate_model_and_resolve_variant(self, pipeline: Pipeline, partial_config: dict) -> None:  # noqa: C901
         """Validate the model revision and resolve/validate the model variant for inference.
 
         Ensures that:
+        - At least the model revision id is provided, or both the model revision id and model variant id
         - The model revision exists and was successfully trained.
         - If a model_variant_id is provided, it belongs to the revision, is in OpenVINO format,
           and the device supports INT8 when the variant is quantized.
         - If no model_variant_id is provided, defaults to the FP16 OpenVINO variant.
 
-        The pipeline_db.model_variant_id field may be mutated in-place when the default variant
-        is resolved.
+        The ``partial_config`` dict may be mutated in-place: when no ``model_variant_id`` is
+        supplied by the caller, this method resolves and writes the default FP16 OpenVINO
+        variant id into ``partial_config["model_variant_id"]``.
 
         Args:
-            pipeline_db: The PipelineDB instance whose model_revision_id and model_variant_id to validate.
+            pipeline: The current Pipeline entity, used as a fallback for fields not present
+                in ``partial_config`` (e.g. ``model_id``, ``device``) and for the project id.
+            partial_config: The partial update dict provided to ``update_pipeline``. Keys of
+                interest are ``model_id``, ``model_variant_id`` and ``device``.
 
         Raises:
-            ResourceNotFoundError: If the model revision or variant is not found.
+            ResourceNotFoundError: If the model revision or variant is not found, or only the model variant is passed.
             ValueError: If the model revision is not successfully trained.
             IncompatibleModelVariantError: If the variant is not OpenVINO or cannot be resolved.
             DeviceInt8NotSupportedError: If the device does not support INT8 inference.
         """
-        model_revision_id: str = pipeline_db.model_revision_id  # type: ignore[union-attr]
+        model_revision_id = partial_config.get("model_id") or partial_config.get("model_revision_id")
+        model_variant_id = partial_config.get("model_variant_id")
+        device = partial_config.get("device", pipeline.device)
+
+        if model_revision_id is None:
+            if model_variant_id is not None:
+                raise ValueError("It is not possible to provide only a model variant ID")
+            return  # Nothing to validate if no model is configured (e.g. clearing the pipeline).
+
+        model_revision_id = str(model_revision_id)
+        model_variant_id = str(model_variant_id) if model_variant_id else None
 
         # Only successfully trained models can be part of a pipeline
-        model_revision_repo = ModelRevisionRepository(project_id=pipeline_db.project_id, db=self.db_session)
+        model_revision_repo = ModelRevisionRepository(project_id=str(pipeline.project_id), db=self.db_session)
         model_revision_db = model_revision_repo.get_by_id(model_revision_id)
         if model_revision_db is None:
             raise ResourceNotFoundError(resource_type=ResourceType.MODEL, resource_id=model_revision_id)
@@ -175,17 +184,16 @@ class PipelineService(BaseSessionManagedService):
                 f"trained (status is {model_revision_db.training_status})."
             )
 
-        # Validate and resolve model_variant_id
+        # Validate and resolve model
         model_variant_repo = ModelVariantRepository(db=self.db_session)
-        if pipeline_db.model_variant_id is not None:
+        if model_revision_id and model_variant_id:
             # Explicit variant specified: validate it
-            variant_db = model_variant_repo.get_by_id(pipeline_db.model_variant_id)
+            variant_db = model_variant_repo.get_by_id(model_variant_id)
             if variant_db is None or variant_db.files_deleted:
-                raise ResourceNotFoundError(resource_type=ResourceType.MODEL, resource_id=pipeline_db.model_variant_id)
+                raise ResourceNotFoundError(resource_type=ResourceType.MODEL_VARIANT, resource_id=model_variant_id)
             if variant_db.model_revision_id != model_revision_id:
                 raise IncompatibleModelVariantError(
-                    f"Model variant '{pipeline_db.model_variant_id}' does not belong to "
-                    f"model revision '{model_revision_id}'."
+                    f"Model variant '{model_variant_id}' does not belong to model revision '{model_revision_id}'."
                 )
             if variant_db.format != ModelFormat.OPENVINO:
                 raise IncompatibleModelVariantError(
@@ -193,7 +201,7 @@ class PipelineService(BaseSessionManagedService):
                     f"The selected variant has format '{variant_db.format}'."
                 )
             if variant_db.precision == ModelPrecision.INT8:
-                self._validate_int8_support(pipeline_db.device)
+                self._validate_int8_support(device)
         else:
             # No variant specified: default to FP16 OpenVINO variant
             default_variant = model_variant_repo.get_by_revision_and_format_and_precision(
@@ -206,7 +214,7 @@ class PipelineService(BaseSessionManagedService):
                     f"No FP16 OpenVINO variant found for model revision '{model_revision_id}'. "
                     f"Please specify a model_variant_id explicitly."
                 )
-            pipeline_db.model_variant_id = default_variant.id
+            partial_config["model_variant_id"] = default_variant.id
 
     def __emit_event(self, pipeline: Pipeline, updated: Pipeline) -> None:
         if self._event_bus is None:
@@ -216,15 +224,16 @@ class PipelineService(BaseSessionManagedService):
             )
         if pipeline.status == PipelineStatus.RUNNING and updated.status == PipelineStatus.RUNNING:
             # If the pipeline source_id or sink_id is being updated while running
-            if pipeline.source.id != updated.source.id:  # type: ignore[union-attr] # source is always there for running pipeline
+            if pipeline.source_id != updated.source_id:
                 self._event_bus.emit_event(EventType.SOURCE_CHANGED)
-            if pipeline.sink_id != updated.sink_id:  # type: ignore[union-attr] # sink is always there for running pipeline
+            if pipeline.sink_id != updated.sink_id:
+                # Sink may be None (disconnected): in that case predictions are only routed to WebRTC.
                 self._event_bus.emit_event(EventType.SINK_CHANGED)
             if pipeline.data_collection != updated.data_collection:
                 self._event_bus.emit_event(EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED)
             if pipeline.device != updated.device:
                 self._event_bus.emit_event(EventType.INFERENCE_DEVICE_CHANGED)
-            if pipeline.model_id != updated.model_revision.id or pipeline.model_variant_id != updated.model_variant_id:  # type: ignore[union-attr] # model_revision is always there for running pipeline
+            if pipeline.model_id != updated.model_id or pipeline.model_variant_id != updated.model_variant_id:
                 self._event_bus.emit_event(EventType.MODEL_CHANGED)
         elif pipeline.status != updated.status:
             # If the pipeline is being activated or stopped

@@ -85,6 +85,29 @@ class Settings(BaseSettings):
         alias="INFERENCE_MODEL_TTL",
         description="Time to live for a model loaded for inference, before unloading",
     )
+    inference_keyframe_stride: int = Field(
+        default=5,
+        alias="INFERENCE_KEYFRAME_STRIDE",
+        description=(
+            "This stride value controls which video frames are considered 'key frames' and therefore "
+            "sent to the model for inference, while predictions for other frames are interpolated based "
+            "on key frames. Key frames satisfy the condition frame_index % stride == 0. "
+            "Additionally, the first and last frames are also considered key frames."
+        ),
+        gt=0,
+    )
+
+    # Video
+    video_cache_ttl: float = Field(
+        default=30.0,
+        alias="VIDEO_CACHE_TTL",
+        description="Time-to-live in seconds for cached video handles before eviction",
+    )
+    video_cache_cleanup_interval: float = Field(
+        default=5.0,
+        alias="VIDEO_CACHE_CLEANUP_INTERVAL",
+        description="Interval in seconds between cache cleanup sweeps",
+    )
 
     @property
     def ice_servers(self) -> list[dict]:
@@ -111,8 +134,18 @@ class Settings(BaseSettings):
 
     @property
     def cors_allowed_origins(self) -> list[str]:
-        """Parsed list of allowed CORS origins."""
-        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        """Parsed list of allowed CORS origins.
+
+        Always includes localhost / 127.0.0.1 entries for the configured server port,
+        so that browser requests from a forwarded / non-default port are accepted.
+        """
+        origins = [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        for host in ("localhost", "127.0.0.1"):
+            for scheme in ("http", "https"):
+                entry = f"{scheme}://{host}:{self.port}"
+                if entry not in origins:
+                    origins.append(entry)
+        return origins
 
     @model_validator(mode="after")
     def set_default_dirs(self) -> "Settings":

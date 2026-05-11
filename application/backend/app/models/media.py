@@ -147,6 +147,6 @@ class MediaPredictionRequest(BaseModel):
 
 class MediaListPredictionRequest(BaseModel):
     model_id: UUID
+    model_variant_id: UUID | None = None
     media: list[MediaPredictionRequest]
-    save_predictions: bool
     device: str

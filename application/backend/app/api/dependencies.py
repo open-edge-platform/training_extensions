@@ -36,6 +36,7 @@ from app.services.event.event_bus import EventBus
 from app.services.inference import InferenceServer
 from app.services.license_service import LicenseService
 from app.services.training_configuration_service import TrainingConfigurationService
+from app.services.video import VideoService
 from app.webrtc.manager import WebRTCManager
 
 
@@ -102,6 +103,11 @@ def get_inference_model_ttl(request: Request) -> int:
     return request.app.state.settings.inference_model_ttl
 
 
+def get_inference_keyframe_stride(request: Request) -> int:
+    """Provides the inference frame skip from settings."""
+    return request.app.state.settings.inference_keyframe_stride
+
+
 def get_event_bus(request: Request) -> EventBus:
     """Provides an EventBus instance."""
     return request.app.state.event_bus
@@ -115,6 +121,11 @@ def get_data_collector(request: Request) -> DataCollector:
 def get_inference_server(request: Request) -> InferenceServer:
     """Provides an InferenceServer instance."""
     return request.app.state.inference_server
+
+
+def get_video_service(request: Request) -> VideoService:
+    """Provides the VideoService instance from application state."""
+    return request.app.state.video_service
 
 
 def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> MetricsService:
@@ -193,10 +204,11 @@ def get_project_service(
 
 def get_media_service(
     data_dir: Annotated[Path, Depends(get_data_dir)],
+    video_service: Annotated[VideoService, Depends(get_video_service)],
     db: Annotated[Session, Depends(get_db)],
 ) -> MediaService:
     """Provides a MediaService instance."""
-    return MediaService(data_dir=data_dir, db_session=db)
+    return MediaService(data_dir=data_dir, video_service=video_service, db_session=db)
 
 
 def get_dataset_service(
@@ -211,18 +223,18 @@ def get_dataset_service(
 def get_media_prediction_service(
     label_service: Annotated[LabelService, Depends(get_label_service)],
     media_service: Annotated[MediaService, Depends(get_media_service)],
-    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     inference_server: Annotated[InferenceServer, Depends(get_inference_server)],
     inference_model_ttl: Annotated[int, Depends(get_inference_model_ttl)],
+    inference_keyframe_stride: Annotated[int, Depends(get_inference_keyframe_stride)],
     db: Annotated[Session, Depends(get_db)],
 ) -> MediaPredictionService:
     """Provides a MediaPredictionService instance."""
     return MediaPredictionService(
         label_service=label_service,
         media_service=media_service,
-        dataset_service=dataset_service,
         inference_server=inference_server,
         inference_model_ttl=inference_model_ttl,
+        inference_keyframe_stride=inference_keyframe_stride,
         db_session=db,
     )
 

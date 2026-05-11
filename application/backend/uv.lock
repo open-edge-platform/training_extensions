@@ -822,6 +822,7 @@ dependencies = [
     { name = "aiofiles" },
     { name = "aiortc" },
     { name = "alembic" },
+    { name = "av" },
     { name = "cv2-enumerate-cameras" },
     { name = "datumaro", extra = ["experimental"] },
     { name = "fastapi", extra = ["standard"] },
@@ -883,6 +884,7 @@ requires-dist = [
     { name = "aiofiles", specifier = "==25.1.0" },
     { name = "aiortc", specifier = "~=1.14.0" },
     { name = "alembic", specifier = "~=1.17.2" },
+    { name = "av", specifier = "~=16.1.0" },
     { name = "cv2-enumerate-cameras", specifier = "==1.3.3" },
     { name = "datumaro", extras = ["experimental"], git = "https://github.com/open-edge-platform/datumaro.git?rev=develop" },
     { name = "fastapi", extras = ["standard"], specifier = "~=0.121.2" },
@@ -914,8 +916,8 @@ provides-extras = ["cpu", "cuda", "installer", "mqtt", "xpu"]
 [package.metadata.requires-dev]
 dev = [
     { name = "behave", specifier = "~=1.3.3" },
-    { name = "pytest", specifier = "~=8.4" },
-    { name = "pytest-asyncio", specifier = "~=1.1.0" },
+    { name = "pytest", specifier = "~=9.0.3" },
+    { name = "pytest-asyncio", specifier = "~=1.3.0" },
     { name = "testcontainers", specifier = "~=4.14.1" },
     { name = "time-machine", specifier = "~=2.19.0" },
 ]
@@ -1004,7 +1006,7 @@ requires-dist = [
     { name = "onnxconverter-common", specifier = "==1.16.0" },
     { name = "onnxscript", specifier = "==0.6.2" },
     { name = "openvino", specifier = "~=2026.1.0" },
-    { name = "openvino-model-api", specifier = "==0.4.1" },
+    { name = "openvino-model-api", specifier = "==0.4.2" },
     { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = "==0.12.0" },
     { name = "pytorchcv", specifier = "==0.0.74" },
     { name = "pyyaml", specifier = "==6.0.3" },
@@ -1041,9 +1043,9 @@ provides-extras = ["cpu", "cuda", "xpu", "docs", "ci-publish"]
 dev = [
     { name = "coverage" },
     { name = "dill" },
-    { name = "mlflow" },
+    { name = "mlflow", specifier = ">=3.11.1" },
     { name = "py-cpuinfo" },
-    { name = "pytest", specifier = ">=5.3.5" },
+    { name = "pytest", specifier = "~=9.0.3" },
     { name = "pytest-cov", specifier = ">=4.0.0" },
     { name = "pytest-csv" },
     { name = "pytest-forked" },
@@ -2290,7 +2292,7 @@ wheels = [
 
 [[package]]
 name = "openvino-model-api"
-version = "0.4.1"
+version = "0.4.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", marker = "(extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-8-getitune-cpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-8-getitune-cuda') or (extra == 'extra-4-geti-xpu' and extra == 'extra-8-getitune-xpu') or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-cuda') or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-xpu') or (extra == 'extra-8-getitune-cuda' and extra == 'extra-8-getitune-xpu')" },
@@ -2298,9 +2300,9 @@ dependencies = [
     { name = "openvino", marker = "(extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-8-getitune-cpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-8-getitune-cuda') or (extra == 'extra-4-geti-xpu' and extra == 'extra-8-getitune-xpu') or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-cuda') or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-xpu') or (extra == 'extra-8-getitune-cuda' and extra == 'extra-8-getitune-xpu')" },
     { name = "pillow", marker = "(extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-8-getitune-cpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-8-getitune-cuda') or (extra == 'extra-4-geti-xpu' and extra == 'extra-8-getitune-xpu') or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-cuda') or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-xpu') or (extra == 'extra-8-getitune-cuda' and extra == 'extra-8-getitune-xpu')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/63/5c4fcf0b46d7158eec3f33cae95263de4602da2e35237e0586e1de9f2776/openvino_model_api-0.4.1.tar.gz", hash = "sha256:b5ac69982f9b5fdd025c2feaa76eab807dda5a99acc1f7ae45960ff8f3c32692", size = 516385, upload-time = "2026-04-09T11:54:55.974Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/39/6f/f9b5c544663795936414577ebf069e3c4537390aff5aa7f4cca63f227b0c/openvino_model_api-0.4.2.tar.gz", hash = "sha256:f7fbed2c72fe2280a9c8d325f8b61a3f66f748fa1db3910366597aacaa6306a4", size = 524414, upload-time = "2026-05-06T11:48:13.149Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d4/53/b894dd4cbf2787d3c4d7851c1ce6cb58a8b764adea2a84e6f05191711280/openvino_model_api-0.4.1-py3-none-any.whl", hash = "sha256:210f4ae13a361a3968726a5cca7c7e8c1a8c4c067abb16b91c98a400076dd083", size = 135028, upload-time = "2026-04-09T11:54:54.621Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/9b/8a958503efe154bc676eec32b7d2cc7fe8253271512427a0bc4c86190d76/openvino_model_api-0.4.2-py3-none-any.whl", hash = "sha256:28d5c959cbb05f3c9f2e54a4fbe600e1609268e55ca37efd277a386ecf3fa0bf", size = 138956, upload-time = "2026-05-06T11:48:11.223Z" },
 ]
 
 [[package]]
@@ -3017,7 +3019,7 @@ wheels = [
 
 [[package]]
 name = "pytest"
-version = "8.4.2"
+version = "9.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-cuda') or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-xpu') or (extra == 'extra-8-getitune-cuda' and extra == 'extra-8-getitune-xpu')" },
@@ -3026,21 +3028,21 @@ dependencies = [
     { name = "pluggy" },
     { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a3/5c/00a0e072241553e1a7496d638deababa67c5058571567b92a7eaa258397c/pytest-8.4.2.tar.gz", hash = "sha256:86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01", size = 1519618, upload-time = "2025-09-04T14:34:22.711Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7d/0d/549bd94f1a0a402dc8cf64563a117c0f3765662e2e668477624baeec44d5/pytest-9.0.3.tar.gz", hash = "sha256:b86ada508af81d19edeb213c681b1d48246c1a91d304c6c81a427674c17eb91c", size = 1572165, upload-time = "2026-04-07T17:16:18.027Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a8/a4/20da314d277121d6534b3a980b29035dcd51e6744bd79075a6ce8fa4eb8d/pytest-8.4.2-py3-none-any.whl", hash = "sha256:872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79", size = 365750, upload-time = "2025-09-04T14:34:20.226Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/24/a372aaf5c9b7208e7112038812994107bc65a84cd00e0354a88c2c77a617/pytest-9.0.3-py3-none-any.whl", hash = "sha256:2c5efc453d45394fdd706ade797c0a81091eccd1d6e4bccfcd476e2b8e0ab5d9", size = 375249, upload-time = "2026-04-07T17:16:16.13Z" },
 ]
 
 [[package]]
 name = "pytest-asyncio"
-version = "1.1.1"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8d/1e/2aa43805d4a320a9489d2b99f7877b69f9094c79aa0732159a1415dd6cd4/pytest_asyncio-1.1.1.tar.gz", hash = "sha256:b72d215c38e2c91dbb32f275e0b5be69602d7869910e109360e375129960a649", size = 46590, upload-time = "2025-09-12T06:36:20.834Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/90/2c/8af215c0f776415f3590cac4f9086ccefd6fd463befeae41cd4d3f193e5a/pytest_asyncio-1.3.0.tar.gz", hash = "sha256:d7f52f36d231b80ee124cd216ffb19369aa168fc10095013c6b014a34d3ee9e5", size = 50087, upload-time = "2025-11-10T16:07:47.256Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/28/de/aba79e9ccdb51b5d0d65c67dd857bd78b00c64723df16b9fc800d8b94ce6/pytest_asyncio-1.1.1-py3-none-any.whl", hash = "sha256:726339d30fcfde24691f589445b9b67d058b311ac632b1d704e97f20f1d878da", size = 14719, upload-time = "2025-09-12T06:36:19.726Z" },
+    { url = "https://files.pythonhosted.org/packages/e5/35/f8b19922b6a25bc0880171a2f1a003eaeb93657475193ab516fd87cac9da/pytest_asyncio-1.3.0-py3-none-any.whl", hash = "sha256:611e26147c7f77640e6d0a92a38ed17c3e9848063698d5c93d5aa7aa11cebff5", size = 15075, upload-time = "2025-11-10T16:07:45.537Z" },
 ]
 
 [[package]]

@@ -27,6 +27,7 @@ from lightning.pytorch.utilities.rank_zero import rank_zero_info
 
 from getitune.backend.lightning.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
 from getitune.backend.lightning.callbacks.aug_scheduler import AugmentationSchedulerCallback
+from getitune.backend.lightning.callbacks.epoch_summary import EpochSummary
 from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
 from getitune.backend.lightning.callbacks.gpu_mem_monitor import GPUMemMonitor
 from getitune.backend.lightning.callbacks.iteration_timer import IterationTimer
@@ -511,17 +512,21 @@ class LightningEngine(Engine):
         export_precision: Precision = Precision.FP32,
         explain: bool = False,
         export_demo_package: bool = False,
+        export_without_nms: bool = False,
         **kwargs,
     ) -> Path:
         r"""Export the trained model to OpenVINO Intermediate Representation (IR) or ONNX formats.
 
         Args:
             checkpoint (PathLike | None, optional): Checkpoint to export. Defaults to None.
-            export_config (ExportConfig | None, optional): Config that allows to set export
-            format and precision. Defaults to None.
+            export_format (ExportFormat, optional): Export format. Defaults to ExportFormat.OPENVINO.
+            export_precision (Precision, optional): Export precision. Defaults to Precision.FP32.
             explain (bool): Whether to get "saliency_map" and "feature_vector" or not.
             export_demo_package (bool): Whether to export demo package with the model.
                 Only OpenVINO model can be exported with demo package.
+            export_without_nms (bool): Whether to exclude NMS from the exported model graph.
+                When True, NMS metadata is embedded so ModelAPI handles NMS at inference time.
+                Defaults to False.
 
         Returns:
             Path: Path to the exported model.
@@ -555,6 +560,11 @@ class LightningEngine(Engine):
                 >>> getitune export ... \
                 ...     --explain True
                 ```
+            5. To export model without NMS, run
+                ```shell
+                >>> getitune export ... \
+                ...     --export_without_nms True
+                ```
         """
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
 
@@ -573,15 +583,18 @@ class LightningEngine(Engine):
         self.model.eval()
 
         self.model.explain_mode = explain
-        exported_model_path = self.model.export(
+
+        # Disable in-graph NMS for detection models if requested.
+        # Only detection models define export_nms; other model types are unaffected.
+        if export_without_nms and hasattr(self.model, "export_nms"):
+            object.__setattr__(self.model, "export_nms", False)
+
+        return self.model.export(
             output_dir=Path(self.work_dir),
             base_name=self._EXPORTED_MODEL_BASE_NAME,
             export_format=export_format,
             precision=export_precision,
         )
-
-        self.model.explain_mode = False
-        return exported_model_path
 
     def benchmark(
         self,
@@ -1037,6 +1050,8 @@ class LightningEngine(Engine):
             )
         if not has_callback(GPUMemMonitor):
             callbacks.append(GPUMemMonitor())
+        if not has_callback(EpochSummary):
+            callbacks.append(EpochSummary())
 
         # Add GPU augmentation callback if GPU augmentations are configured
         if not has_callback(GPUAugmentationCallback):

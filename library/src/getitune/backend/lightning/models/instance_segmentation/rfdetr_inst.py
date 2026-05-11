@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Literal
 
+import torch
 from rfdetr import (
     RFDETRSeg2XLarge,
     RFDETRSegLarge,
@@ -25,6 +26,7 @@ from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRD
 from getitune.backend.lightning.models.instance_segmentation.base import LightningInstanceSegModel
 from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
+from getitune.types.export import TaskLevelExportParameters
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -135,6 +137,14 @@ class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inc
         )
 
     @property
+    def _export_parameters(self) -> TaskLevelExportParameters:
+        """Defines parameters required to export a particular model implementation."""
+        # DETR models use Hungarian matching for one-to-one predictions, but on small datasets
+        # near-duplicate boxes can still appear. Use a conservative IoU threshold (0.8) to only
+        # suppress almost-identical duplicates without removing valid overlapping detections.
+        return super()._export_parameters.wrap(iou_threshold=0.8)
+
+    @property
     def _exporter(self) -> ModelExporter:
         """Creates ModelExporter object for model export."""
         return LightningModelExporter(
@@ -145,13 +155,22 @@ class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inc
             via_onnx=False,
             onnx_export_configuration={
                 "input_names": ["images"],
-                "output_names": ["bboxes", "labels", "scores", "masks"],
+                "output_names": ["boxes", "labels", "masks"],
                 "dynamic_shapes": {"inputs": {0: Dim("batch")}},
                 "autograd_inlining": False,
                 "opset_version": 18,
             },
-            output_names=["bboxes", "labels", "scores", "masks"],
+            output_names=["boxes", "labels", "masks"],
         )
+
+    def forward_for_tracing(self, inputs: torch.Tensor) -> dict[str, torch.Tensor]:
+        """Forward pass used for export (returns dict for reliable OV output naming)."""
+        boxes_with_scores, labels, masks = self.model.export(inputs, merge_scores=True)  # pyrefly: ignore[not-callable]
+        # Scale boxes from normalized [0,1] to pixel coordinates (ModelAPI MaskRCNN expects this)
+        h, w = inputs.shape[2], inputs.shape[3]
+        scale = torch.tensor([w, h, w, h, 1.0], device=inputs.device)
+        boxes_with_scores = boxes_with_scores * scale
+        return {"boxes": boxes_with_scores, "labels": labels, "masks": masks}
 
     @property
     def _default_preprocessing_params(self) -> dict[str, DataInputParams]:  # type: ignore[override]

@@ -15,6 +15,7 @@ class ResourceType(StrEnum):
     SINK = "Sink"
     MEDIA = "Media"
     MODEL = "Model"
+    MODEL_VARIANT = "ModelVariant"
     PIPELINE = "Pipeline"
     PROJECT = "Project"
     DATASET_ITEM = "DatasetItem"

@@ -5,6 +5,7 @@ import asyncio
 from pathlib import Path
 from uuid import UUID, uuid4
 
+import cv2
 import numpy as np
 import pytest
 from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, MediaInfo, export_dataset
@@ -13,13 +14,26 @@ from datumaro.experimental.data_formats.coco.sample import CocoCategories, CocoS
 from datumaro.experimental.export_import import ExportMode
 from datumaro.experimental.fields import ImageInfo, Subset
 
-from app.datumaro_converter import MultilabelClassificationImportExportSample
+from app.datumaro_converter import (
+    MulticlassClassificationImportExportSample,
+    MultilabelClassificationImportExportSample,
+)
 from app.models import AnnotationType, DatasetFormat
 from app.models.dataset import DatasetMetadata
 from app.services import StagedDatasetService
 
 
-def _make_dataset_archive(root: Path, file_name: str, content: bytes = b"data") -> tuple[UUID, Path]:
+def _create_dummy_video(path: Path, num_frames: int = 20, width: int = 64, height: int = 64, fps: int = 10) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fourcc = cv2.VideoWriter.fourcc(*"mp4v")
+    writer = cv2.VideoWriter(str(path), fourcc, fps, (width, height))
+    for _ in range(num_frames):
+        frame = np.random.randint(0, 255, (height, width, 3), dtype=np.uint8)
+        writer.write(frame)
+    writer.release()
+
+
+def _stage_dataset_archive(root: Path, file_name: str, content: bytes = b"data") -> tuple[UUID, Path]:
     dataset_id = uuid4()
     ds_dir = root / str(dataset_id)
     ds_dir.mkdir(parents=True)
@@ -28,7 +42,7 @@ def _make_dataset_archive(root: Path, file_name: str, content: bytes = b"data") 
     return dataset_id, archive_path
 
 
-def _make_multilabel_dataset(root: Path) -> tuple[UUID, Path]:
+def _stage_multilabel_dataset(root: Path) -> tuple[UUID, Path]:
     dataset_id = uuid4()
     parent_dir = root / str(dataset_id)
     parent_dir.mkdir(parents=True)
@@ -68,10 +82,12 @@ def _make_multilabel_dataset(root: Path) -> tuple[UUID, Path]:
             user_reviewed=False,
         )
     )
+    video_path = root / "videos" / "video1.mp4"
+    _create_dummy_video(video_path, num_frames=20)
     dataset.append(
         MultilabelClassificationImportExportSample(
             id=str(uuid4()),
-            media=LazyVideoFrame(video_path=ds_dir / "videos/video1.mp4", frame_index=10),
+            media=LazyVideoFrame(video_path=video_path, frame_index=10),
             media_info=MediaInfo(width=200, height=200),
             label=np.array([]),
             subset=Subset.TRAINING,
@@ -83,7 +99,7 @@ def _make_multilabel_dataset(root: Path) -> tuple[UUID, Path]:
     return dataset_id, ds_dir
 
 
-def _make_coco_dataset(root: Path) -> tuple[UUID, Path]:
+def _stage_coco_dataset(root: Path) -> tuple[UUID, Path]:
     dataset_id = uuid4()
     parent_dir = root / str(dataset_id)
     parent_dir.mkdir(parents=True)
@@ -103,6 +119,39 @@ def _make_coco_dataset(root: Path) -> tuple[UUID, Path]:
             caption_group_ids=None,
             captions=None,
             keypoints=None,
+        )
+    )
+    export_dataset(dataset=dataset, output_path=ds_dir, export_media=ExportMode.SKIP)
+    return dataset_id, ds_dir
+
+
+def _stage_multiclass_dataset(root: Path) -> tuple[UUID, Path]:
+    dataset_id = uuid4()
+    parent_dir = root / str(dataset_id)
+    parent_dir.mkdir(parents=True)
+    ds_dir = parent_dir / "dataset"
+    categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
+    dataset = Dataset(MulticlassClassificationImportExportSample, categories=categories)
+    dataset.append(
+        MulticlassClassificationImportExportSample(
+            id=str(uuid4()),
+            media=LazyImage(ds_dir / "images/image1.jpg"),
+            media_info=MediaInfo(width=200, height=200),
+            label=None,
+            subset=Subset.UNASSIGNED,
+            confidence=None,
+            user_reviewed=False,
+        )
+    )
+    dataset.append(
+        MulticlassClassificationImportExportSample(
+            id=str(uuid4()),
+            media=LazyImage(ds_dir / "images/image2.jpg"),
+            media_info=MediaInfo(width=200, height=200),
+            label=0,
+            subset=Subset.UNASSIGNED,
+            confidence=0.8,
+            user_reviewed=True,
         )
     )
     export_dataset(dataset=dataset, output_path=ds_dir, export_media=ExportMode.SKIP)
@@ -141,7 +190,7 @@ class TestStagedDatasetServiceIntegration:
         assert stored_path.read_bytes() == b"hello world!"
 
     def test_list_all_single_zip_dataset(self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService):
-        dataset_id, archive_path = _make_dataset_archive(tmp_path, "my_coco_dataset.zip", b"123456")
+        dataset_id, archive_path = _stage_dataset_archive(tmp_path, "my_coco_dataset.zip", b"123456")
 
         datasets = fxt_staged_dataset_service.list_all()
 
@@ -156,9 +205,9 @@ class TestStagedDatasetServiceIntegration:
     def test_list_all_multiple_datasets_and_ignores_non_uuid(
         self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
     ):
-        coco_id, coco_path = _make_dataset_archive(tmp_path, "train_coco.zip", b"coco-bytes")
-        voc_id, voc_path = _make_dataset_archive(tmp_path, "some_voc.zip", b"voc-bytes")
-        geti_id, geti_path = _make_multilabel_dataset(tmp_path)
+        coco_id, coco_path = _stage_dataset_archive(tmp_path, "train_coco.zip", b"coco-bytes")
+        voc_id, voc_path = _stage_dataset_archive(tmp_path, "some_voc.zip", b"voc-bytes")
+        geti_id, geti_path = _stage_multilabel_dataset(tmp_path)
 
         # non-UUID dir
         bad_dir = tmp_path / "not-a-uuid"
@@ -189,7 +238,7 @@ class TestStagedDatasetServiceIntegration:
         assert geti_ds.filename == str(geti_path)
         assert geti_ds.metadata == DatasetMetadata(
             num_images=3,
-            num_frames=1,
+            num_frames=20,
             num_videos=1,
             annotation_type=AnnotationType.LABEL,
             num_annotations=3,
@@ -202,7 +251,7 @@ class TestStagedDatasetServiceIntegration:
         empty_id = uuid4()
         (tmp_path / str(empty_id)).mkdir()
 
-        _, valid_path = _make_dataset_archive(tmp_path, "dataset.zip", b"xxx")
+        _, valid_path = _stage_dataset_archive(tmp_path, "dataset.zip", b"xxx")
 
         datasets = fxt_staged_dataset_service.list_all()
 
@@ -224,7 +273,7 @@ class TestStagedDatasetServiceIntegration:
     def test_find_by_id_returns_dataset_when_present(
         self, prefix: str, data_format: DatasetFormat, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
     ):
-        dataset_id, archive_path = _make_dataset_archive(tmp_path, f"my_{prefix}_dataset.zip", b"123456")
+        dataset_id, archive_path = _stage_dataset_archive(tmp_path, f"my_{prefix}_dataset.zip", b"123456")
 
         result = fxt_staged_dataset_service.find_by_id(dataset_id)
 
@@ -238,7 +287,7 @@ class TestStagedDatasetServiceIntegration:
     def test_find_by_id_returns_geti_dataset_when_present(
         self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
     ):
-        dataset_id, dataset_path = _make_multilabel_dataset(tmp_path)
+        dataset_id, dataset_path = _stage_multilabel_dataset(tmp_path)
 
         result = fxt_staged_dataset_service.find_by_id(dataset_id)
 
@@ -250,7 +299,7 @@ class TestStagedDatasetServiceIntegration:
         assert result.format == DatasetFormat.GETI
         assert result.metadata == DatasetMetadata(
             num_images=3,
-            num_frames=1,
+            num_frames=20,
             num_videos=1,
             annotation_type=AnnotationType.LABEL,
             num_annotations=3,
@@ -266,7 +315,7 @@ class TestStagedDatasetServiceIntegration:
         Tests that annotation_type cannot be recommended for datasets with samples that have multiple annotation field
         values set (e.g. both polygons and bboxes).
         """
-        dataset_id, dataset_path = _make_coco_dataset(tmp_path)
+        dataset_id, dataset_path = _stage_coco_dataset(tmp_path)
 
         result = fxt_staged_dataset_service.find_by_id(dataset_id)
 
@@ -286,10 +335,34 @@ class TestStagedDatasetServiceIntegration:
             labels=["bird", "cat", "dog"],
         )
 
+    def test_find_by_id_annotation_type_if_some_samples_unannotated(
+        self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
+    ):
+        """Tests that annotation_type will be set when some samples are unannotated."""
+        dataset_id, dataset_path = _stage_multiclass_dataset(tmp_path)
+
+        result = fxt_staged_dataset_service.find_by_id(dataset_id)
+
+        assert result is not None
+        assert result.id == dataset_id
+        assert result.filename == str(dataset_path)
+        assert result.compressed is False
+        assert result.format == DatasetFormat.GETI
+        assert result.metadata == DatasetMetadata(
+            num_images=2,
+            num_frames=0,
+            num_videos=0,
+            annotation_type=AnnotationType.LABEL,
+            num_annotations=1,
+            num_annotated_images=1,
+            num_annotated_frames=0,
+            labels=["bird", "cat", "dog"],
+        )
+
     def test_find_by_id_returns_geti_dataset_without_metadata_when_archived(
         self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
     ):
-        dataset_id, dataset_path = _make_dataset_archive(tmp_path, "some_geti.zip", b"geti-bytes")
+        dataset_id, dataset_path = _stage_dataset_archive(tmp_path, "some_geti.zip", b"geti-bytes")
 
         result = fxt_staged_dataset_service.find_by_id(dataset_id)
 
@@ -324,7 +397,7 @@ class TestStagedDatasetServiceIntegration:
     def test_delete_by_id_removes_existing_dir_with_files(
         self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
     ):
-        dataset_id, archive_path = _make_dataset_archive(tmp_path, "dataset.zip", b"content")
+        dataset_id, archive_path = _stage_dataset_archive(tmp_path, "dataset.zip", b"content")
 
         result = fxt_staged_dataset_service.delete_by_id(dataset_id)
 

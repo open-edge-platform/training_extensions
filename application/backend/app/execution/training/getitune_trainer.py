@@ -278,7 +278,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
                     dm_dataset = self._dataset_service.get_dm_dataset(
                         project_id=project_id,
                         task=task,
-                        annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                        annotation_status=DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
                         sample_mode=SampleMode.TRAINING,
                     )
                     dataset_revision_id = self._dataset_revision_service.save_revision(
@@ -386,6 +386,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             input_size=cast(tuple[int, int], getitune_datamodule.input_size),
             mean=getitune_datamodule.input_mean if getitune_datamodule.input_mean is not None else (0.0, 0.0, 0.0),
             std=getitune_datamodule.input_std if getitune_datamodule.input_std is not None else (1.0, 1.0, 1.0),
+            intensity_config=getitune_datamodule.input_intensity_config,
         ).as_dict()
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(LightningModel, "model", required=False, fail_untyped=False)

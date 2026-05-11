@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 from collections.abc import Callable
 from enum import StrEnum
 from unittest.mock import MagicMock
@@ -13,7 +12,7 @@ from app.models import DataCollectionConfig, PipelineStatus
 from app.models.data_collection_policy import FixedRateDataCollectionPolicy
 from app.models.model_revision import ModelFormat, ModelPrecision, TrainingStatus
 from app.models.system import DeviceInfo, DeviceType
-from app.services import PipelineService, ResourceNotFoundError, ResourceType, SystemService
+from app.services import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventType
 from app.services.pipeline_service import (
     DeviceInt8NotSupportedError,
@@ -26,18 +25,6 @@ from tests.integration.project_factory import ProjectTestDataFactory
 class PipelineField(StrEnum):
     SOURCE_ID = "source_id"
     SINK_ID = "sink_id"
-
-
-@pytest.fixture
-def fxt_system_service() -> SystemService:
-    """Fixture to create a SystemService instance."""
-    return SystemService()
-
-
-@pytest.fixture
-def fxt_pipeline_service(fxt_event_bus, db_session, fxt_system_service) -> PipelineService:
-    """Fixture to create a PipelineService instance with mocked dependencies."""
-    return PipelineService(system_service=fxt_system_service, event_bus=fxt_event_bus, db_session=db_session)
 
 
 @pytest.fixture
@@ -243,6 +230,22 @@ class TestPipelineServiceIntegration:
         assert str(updated.model_id) == target_model.id
         assert db_updated.model_variant_id == target_variant.id
 
+    def test_switch_variant_only_derives_model_id(
+        self,
+        fxt_project_with_pipeline,
+        fxt_pipeline_service,
+    ):
+        """
+        Providing only `model_variant_id` (no `model_id`) should raise an error
+        """
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        with pytest.raises(ValueError, match="It is not possible to provide only a model variant ID"):
+            _ = fxt_pipeline_service.update_pipeline(
+                db_pipeline.project_id,
+                {"model_variant_id": str(uuid4())},
+            )
+
     def test_switch_model_defaults_to_fp16_openvino_variant(
         self,
         fxt_project_with_pipeline,
@@ -349,7 +352,7 @@ class TestPipelineServiceIntegration:
                 db_pipeline.project_id,
                 {"model_id": target_model.id, "model_variant_id": non_existent_variant_id},
             )
-        assert exc_info.value.resource_type == ResourceType.MODEL
+        assert exc_info.value.resource_type == ResourceType.MODEL_VARIANT
         assert exc_info.value.resource_id == non_existent_variant_id
 
     def test_switch_model_int8_variant_raises_on_unsupported_device(
@@ -488,9 +491,13 @@ class TestPipelineServiceIntegration:
         else:
             assert not db_updated.is_running
 
-    @pytest.mark.parametrize("config", ["sink", "source", "model_revision"])
+    @pytest.mark.parametrize("config", ["source", "model_revision"])
     def test_enable_misconfigured_pipeline(self, config, fxt_project_with_pipeline, fxt_pipeline_service, db_session):
-        """Test enabling a misconfigured pipeline raises error."""
+        """Test enabling a misconfigured pipeline raises error.
+
+        Note: a sink is intentionally NOT required to enable a pipeline. When no sink is configured,
+        predictions are still routed to the WebRTC visualization stream.
+        """
         _, db_pipeline = fxt_project_with_pipeline(is_running=False)
         setattr(db_pipeline, config, None)  # Misconfigure the pipeline
         db_session.flush()
@@ -499,6 +506,19 @@ class TestPipelineServiceIntegration:
             fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": PipelineStatus.RUNNING})
 
         assert not db_session.get(PipelineDB, db_pipeline.project_id).is_running
+
+    def test_enable_pipeline_without_sink(self, fxt_project_with_pipeline, fxt_pipeline_service, db_session):
+        """A pipeline can be enabled even when no sink is configured."""
+        _, db_pipeline = fxt_project_with_pipeline(is_running=False)
+        db_pipeline.sink = None
+        db_pipeline.sink_id = None
+        db_session.flush()
+
+        updated = fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": PipelineStatus.RUNNING})
+
+        assert updated.status == PipelineStatus.RUNNING
+        assert updated.sink_id is None
+        assert db_session.get(PipelineDB, db_pipeline.project_id).is_running
 
     def test_reconfigure_non_existent_pipeline(self, fxt_pipeline_service):
         """Test updating a non-existent pipeline raises error."""

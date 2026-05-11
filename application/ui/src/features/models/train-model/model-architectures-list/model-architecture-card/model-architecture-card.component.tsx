@@ -42,7 +42,7 @@ const ModelArchitectureParameters = () => {
     return (
         <ul className={classes.modelArchitectureParameters}>
             <li>Number of parameters: {modelArchitecture.stats.trainable_parameters} million</li>
-            <li>License: Apache 2.0</li>
+            <li>License: {modelArchitecture.license}</li>
         </ul>
     );
 };
@@ -60,7 +60,7 @@ const ModelArchitectureDetailedParameters = () => {
                     {accuracyMetric.label}: {accuracyMetric.value}%
                 </li>
             )}
-            <li>License: Apache 2.0</li>
+            <li>License: {modelArchitecture.license}</li>
         </ul>
     );
 };

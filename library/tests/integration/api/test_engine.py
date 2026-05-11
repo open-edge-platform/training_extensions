@@ -209,6 +209,15 @@ def test_engine_workflow(
     assert ov_xml_path.exists()
     assert ov_xml_path.suffix == ".xml"
 
+    # For 16-bit datasets, verify that intensity config is properly embedded
+    # in the exported model's rt_info metadata.
+    if "16bit" in spec.dataset_dir:
+        import openvino
+
+        ov_model = openvino.Core().read_model(str(ov_xml_path))
+        assert ov_model.get_rt_info(["model_info", "input_dtype"]).astype(str) == "u16"
+        assert ov_model.get_rt_info(["model_info", "intensity_mode"]).astype(str) == "scale_to_unit"
+
     ov_engine = create_engine(
         model=ov_xml_path,
         data=engine.datamodule,

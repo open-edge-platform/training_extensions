@@ -7,7 +7,6 @@ from fastapi import APIRouter, status
 
 from app.api.schemas.model_architecture import ModelArchitectures, ModelArchitectureView, TopPicks
 from app.models import TaskType
-from app.models.model_architecture import ModelArchitecture
 from app.services import ModelManifestService
 from app.supported_models import RECOMMENDED_MODEL_ARCHITECTURES
 
@@ -34,16 +33,13 @@ def get_model_architectures(task: TaskType) -> ModelArchitectures:
     """
 
     model_manifests = ModelManifestService.get_model_manifests()
-    model_architectures = [
-        ModelArchitecture.from_manifest(manifest) for manifest in model_manifests.values() if manifest.task == task
-    ]
-
     top_picks = RECOMMENDED_MODEL_ARCHITECTURES.get(task, None)
 
     return ModelArchitectures(
         model_architectures=[
-            ModelArchitectureView.model_validate(model_architecture, from_attributes=True)
-            for model_architecture in model_architectures
+            ModelArchitectureView.model_validate(manifest, from_attributes=True)
+            for manifest in model_manifests.values()
+            if manifest.task == task
         ],
         top_picks=TopPicks.model_validate(top_picks, from_attributes=True),
     )

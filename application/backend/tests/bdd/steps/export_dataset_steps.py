@@ -76,7 +76,9 @@ def step_project_dataset_has_images(context: Context) -> None:
                 media_id = media_response.json()["id"]
 
                 # 2. Add annotation based on task type
-                annotation_body = {}
+                annotation_body = {
+                    "subset": subset.lower(),
+                }
                 match project.task.task_type:
                     case TaskType.CLASSIFICATION:
                         annotation_body = {
@@ -127,15 +129,6 @@ def step_project_dataset_has_images(context: Context) -> None:
                     f"Failed to add annotation, status code: {response.status_code}, response: {response.text}"
                 )
 
-                # 3. Assign subset
-                response = requests.patch(
-                    f"{context.base_url}/api/projects/{project.id}/dataset/items/{media_id}/subset",
-                    json={"subset": subset.lower()},
-                )
-                assert response.status_code == 200, (
-                    f"Failed to assign subset, status code: {response.status_code}, response: {response.text}"
-                )
-
 
 @given("the project contains the following video frame distribution:")  # pyrefly: ignore
 def step_project_dataset_has_video_frames(context: Context) -> None:
@@ -172,7 +165,9 @@ def step_project_dataset_has_video_frames(context: Context) -> None:
             count = int(row.get(subset, "0").strip())
             for i in range(count):
                 # 1. Add annotation based on task type
-                annotation_body = {}
+                annotation_body = {
+                    "subset": subset.lower(),
+                }
                 match project.task.task_type:
                     case TaskType.CLASSIFICATION:
                         annotation_body = {
@@ -222,16 +217,6 @@ def step_project_dataset_has_video_frames(context: Context) -> None:
                 )
                 assert response.status_code == 201, (
                     f"Failed to add annotation, status code: {response.status_code}, response: {response.text}"
-                )
-                media_id = response.json()["media_id"]
-
-                # 3. Assign subset
-                response = requests.patch(
-                    f"{context.base_url}/api/projects/{project.id}/dataset/items/{media_id}/subset",
-                    json={"subset": subset.lower()},
-                )
-                assert response.status_code == 200, (
-                    f"Failed to assign subset, status code: {response.status_code}, response: {response.text}"
                 )
                 frame_idx += 1
 

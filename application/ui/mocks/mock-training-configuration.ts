@@ -174,6 +174,39 @@ export const getMockedTrainingConfiguration = (): TrainingConfigurationParameter
                     },
                 ],
             },
+            {
+                type: 'parameter_group',
+                key: 'intensity_mapping',
+                name: 'Intensity mapping',
+                description:
+                    'Intensity mapping parameters control how raw pixel values are normalised to [0, 1] range before training.',
+                parameters: [
+                    {
+                        type: 'parameter',
+                        key: 'mode',
+                        name: 'Intensity mapping mode',
+                        description: '',
+                        value: 'Unit interval scaling',
+                        default_value: 'Unit interval scaling',
+                        value_type: 'str',
+                        allowed_values: ['Unit interval scaling', 'Windowing', 'Range scaling with clipping'],
+                        depends_on: null,
+                    },
+                    {
+                        type: 'parameter',
+                        key: 'max_intensity_value',
+                        name: 'Maximum pixel intensity',
+                        description: '',
+                        value: 255.0,
+                        default_value: 255.0,
+                        value_type: 'float',
+                        min_value: 0,
+                        max_value: null,
+                        allowed_values: null,
+                        depends_on: { mode: 'Unit interval scaling' },
+                    },
+                ],
+            },
         ],
     };
 

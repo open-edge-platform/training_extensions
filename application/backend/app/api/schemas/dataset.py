@@ -92,7 +92,7 @@ class MediaCountsView(BaseModel):
 
 
 class InstancesPerLabelView(BaseModel):
-    label_id: UUID = Field(..., description="Unique identifier of label")
+    label_id: UUID | None = Field(..., description="Unique identifier of label")
     instances: int = Field(0, description="Number of annotation instances with this label in dataset")
 
     model_config = {

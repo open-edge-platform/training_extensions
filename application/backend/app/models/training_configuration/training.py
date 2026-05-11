@@ -3,7 +3,7 @@
 
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 
 class EarlyStopping(BaseModel):
@@ -21,10 +21,15 @@ class EarlyStopping(BaseModel):
 
 
 class SchedulerType(StrEnum):
-    """Learning rate scheduler type"""
+    """
+    Learning rate scheduler type
 
-    REDUCE_LR_ON_PLATEAU = "reduce_lr_on_plateau"
-    COSINE_ANNEALING = "cosine_annealing"
+    Important: the enum keys must match the lowercase strings expected by the training library (getitune),
+    whereas the values correspond to the user-friendly names shown in the UI.
+    """
+
+    REDUCE_LR_ON_PLATEAU = "Reduce LR on loss plateau"
+    COSINE_ANNEALING = "Cosine annealing"
 
 
 class LrLinearWarmupParameters(BaseModel):
@@ -51,6 +56,7 @@ class SchedulerParameters(BaseModel):
             "metric stops improving. With CosineAnnealing, the learning rate will follow a cosine decay schedule, "
             "gradually decreasing over the course of training."
         ),
+        json_schema_extra={"read_only": True},
     )
     warmup: LrLinearWarmupParameters = Field(
         default_factory=LrLinearWarmupParameters,
@@ -85,6 +91,27 @@ class SchedulerParameters(BaseModel):
         description="Minimum learning rate after annealing.",
         json_schema_extra={"depends_on": {"type": "cosine_annealing"}},
     )
+
+    @field_validator("type", mode="before")
+    @classmethod
+    def validate_mode(cls, value: str) -> SchedulerType:
+        """Accept both the user-friendly enum value and the lowercase key name."""
+        try:
+            return SchedulerType(value)
+        except ValueError:
+            # Try matching by uppercase key name (e.g. "reduce_lr_on_plateau" -> "REDUCE_LR_ON_PLATEAU")
+            try:
+                return SchedulerType[value.upper()]
+            except KeyError:
+                raise ValueError(f"Invalid intensity mapping mode: {value!r}") from None
+
+    @field_serializer("type")
+    @staticmethod
+    def serialize_mode(value: SchedulerType | str) -> str:
+        """Serialize mode as the lowercase enum key name expected by the training library."""
+        if not isinstance(value, SchedulerType):
+            value = SchedulerType(value)
+        return value.name.lower()
 
 
 class GradientAccumulationParameters(BaseModel):

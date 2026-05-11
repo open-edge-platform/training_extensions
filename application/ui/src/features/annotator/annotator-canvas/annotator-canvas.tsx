@@ -3,16 +3,22 @@
 
 import { MouseEvent, useEffect, useRef } from 'react';
 
+import { Loading } from '@geti/ui';
+import { useIsFetching } from '@tanstack/react-query';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import type { Media } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
+import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
 import { VideoAnnotations, VideoPredictions } from '../annotations/video-annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
+import { loadImageQueryOptions } from '../hooks/use-load-image-query.hook';
 import { ToolManager } from '../tools/tool-manager.component';
 import { usePrefetchVideoFramesAnnotations } from '../video-player/api/use-video-frames-annotations';
 import {
@@ -160,11 +166,18 @@ type AnnotatorCanvasProps = {
 };
 
 export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: AnnotatorCanvasProps) => {
+    const projectId = useProjectIdentifier();
     const isSceneBusy = useIsAnnotatorSceneBusy();
+    const { canvasRef } = useAnnotator();
+    const isFetchingMedia = useIsFetching({ queryKey: loadImageQueryOptions(projectId, mediaItem).queryKey });
 
+    const isLoadingMedia = isFetchingMedia > 0;
     const areToolsDisabled = isSceneBusy || isReadOnly;
-
     const size = { width: mediaItem.width, height: mediaItem.height };
+
+    if (isLoadingMedia) {
+        return <Loading size='M' />;
+    }
 
     return (
         <ZoomTransform target={size}>
@@ -172,9 +185,9 @@ export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: 
                 style={{ position: 'relative', height: '100%', width: '100%' }}
                 onContextMenu={(event: MouseEvent): void => event.preventDefault()}
                 className={isReadOnly ? classes.readOnlyCanvas : undefined}
+                ref={canvasRef}
             >
                 <MediaImage image={image} mediaItem={mediaItem} />
-
                 <MediaAnnotations mediaItem={mediaItem} mode={mode} />
 
                 {!areToolsDisabled && <ToolManager />}

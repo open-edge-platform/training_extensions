@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Callable
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -25,69 +24,9 @@ from app.models import (
     VideoFrame,
 )
 from app.models.media import MediaAdapter
-from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import DatasetItemFilters, DatasetService, SubsetAlreadyAssignedError
-from app.services.event.event_bus import EventBus
 from app.services.media_service import MediaService
-
-
-@pytest.fixture
-def fxt_event_bus() -> EventBus:
-    """Fixture to create a EventBus instance."""
-    return EventBus()
-
-
-@pytest.fixture
-def fxt_system_service() -> SystemService:
-    """Fixture to create a SystemService instance."""
-    return SystemService()
-
-
-@pytest.fixture
-def fxt_pipeline_service(
-    fxt_event_bus: EventBus, db_session: Session, fxt_system_service: SystemService
-) -> PipelineService:
-    """Fixture to create a PipelineService instance."""
-    return PipelineService(event_bus=fxt_event_bus, db_session=db_session, system_service=fxt_system_service)
-
-
-@pytest.fixture
-def fxt_label_service(db_session: Session) -> LabelService:
-    """Fixture to create a LabelService instance."""
-    return LabelService(db_session=db_session)
-
-
-@pytest.fixture
-def fxt_media_service(
-    fxt_projects_dir: Path,
-    db_session: Session,
-) -> MediaService:
-    """Fixture to create a MediaService instance."""
-    return MediaService(data_dir=fxt_projects_dir.parent, db_session=db_session)
-
-
-@pytest.fixture
-def fxt_project_service(
-    fxt_projects_dir: Path, db_session: Session, fxt_pipeline_service: PipelineService, fxt_label_service: LabelService
-) -> ProjectService:
-    """Fixture to create a ProjectService instance."""
-    return ProjectService(
-        fxt_projects_dir.parent,
-        db_session=db_session,
-        pipeline_service=fxt_pipeline_service,
-        label_service=fxt_label_service,
-    )
-
-
-@pytest.fixture
-def fxt_dataset_service(
-    fxt_label_service: LabelService,
-    fxt_media_service: MediaService,
-    db_session: Session,
-) -> DatasetService:
-    """Fixture to create a DatasetService instance."""
-    return DatasetService(label_service=fxt_label_service, media_service=fxt_media_service, db_session=db_session)
 
 
 @pytest.fixture
@@ -226,26 +165,8 @@ def fxt_project_with_annotation_status_items(
         ),
     ]
 
-    # To review items (annotation_data is not null and user_reviewed is False)
-    to_review_items = [
-        DatasetItemDB(
-            subset="unassigned",
-            annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
-            user_reviewed=False,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
-        ),
-        DatasetItemDB(
-            subset="unassigned",
-            annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
-            user_reviewed=False,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
-        ),
-    ]
-
     db_dataset_items = []
-    for list in [unannotated_items, reviewed_items, to_review_items]:
+    for list in [unannotated_items, reviewed_items]:
         for idx, dataset_item in enumerate(list):
             db_media = MediaDB(
                 type="image",
@@ -266,7 +187,7 @@ def fxt_project_with_annotation_status_items(
     db_session.flush()
 
     # Link labels to annotated dataset items
-    for item in [*reviewed_items, *to_review_items]:
+    for item in [*reviewed_items]:
         db_session.add(DatasetItemLabelDB(dataset_item_id=item.id, label_id=str(project.task.labels[0].id)))
     db_session.flush()
 
@@ -540,6 +461,23 @@ def fxt_project_with_rich_dataset_items(fxt_project_with_pipeline, db_session) -
     )
     db_media_items.append(annotated_image)
     db_dataset_items.append(item_annotated_image)
+
+    # Image (annotated with no objects - empty annotations)
+    no_object_image = MediaDB(
+        id=str(uuid4()),
+        type="image",
+        name="no_object_img",
+        format="jpg",
+        **default_media_values,
+    )
+    item_no_object_image = DatasetItemDB(
+        id=str(no_object_image.id),
+        **default_item_values,
+        annotation_data=[],
+        user_reviewed=True,
+    )
+    db_media_items.append(no_object_image)
+    db_dataset_items.append(item_no_object_image)
 
     # Video (annotated frames)
     annotated_video = MediaDB(
@@ -857,7 +795,6 @@ class TestDatasetServiceIntegration:
             (0, 0),  # Set annotation with new label to unannotated item
             (2, 0),  # Set annotation with existing label on already reviewed item
             (2, 1),  # Set annotation with new label to already reviewed item
-            (5, 1),  # Set annotation with new label to an item to review
         ],
     )
     def test_set_dataset_item_annotations(
@@ -1058,17 +995,16 @@ class TestDatasetServiceIntegration:
     @pytest.mark.parametrize(
         "annotation_status, expected_count",
         [
-            (None, 7),  # All items
-            ("unannotated", 2),  # 2 unannotated items
-            ("reviewed", 3),  # 3 reviewed items
-            ("to_review", 4),  # 2 unannotated items + 2 with 'user_reviewed=False'
+            (None, 5),  # All items
+            (DatasetItemAnnotationStatus.MISSING_ANNOTATIONS, 2),  # 2 items without annotations
+            (DatasetItemAnnotationStatus.WITH_ANNOTATIONS, 3),  # 3 items with annotations
         ],
     )
     def test_count_dataset_items_with_annotation_status(
         self,
         fxt_dataset_service: DatasetService,
         fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
-        annotation_status: str | None,
+        annotation_status: DatasetItemAnnotationStatus | None,
         expected_count: int,
     ) -> None:
         """Test counting dataset items with annotation_status filter."""
@@ -1081,10 +1017,9 @@ class TestDatasetServiceIntegration:
     @pytest.mark.parametrize(
         "annotation_status, expected_names",
         [
-            (None, ["unannotated1", "unannotated2", "reviewed1", "reviewed2", "reviewed3", "to_review1", "to_review2"]),
-            (DatasetItemAnnotationStatus.UNANNOTATED, ["unannotated1", "unannotated2"]),
-            (DatasetItemAnnotationStatus.REVIEWED, ["reviewed1", "reviewed2", "reviewed3"]),
-            (DatasetItemAnnotationStatus.TO_REVIEW, ["unannotated1", "unannotated2", "to_review1", "to_review2"]),
+            (None, ["unannotated1", "unannotated2", "reviewed1", "reviewed2", "reviewed3"]),
+            (DatasetItemAnnotationStatus.MISSING_ANNOTATIONS, ["unannotated1", "unannotated2"]),
+            (DatasetItemAnnotationStatus.WITH_ANNOTATIONS, ["reviewed1", "reviewed2", "reviewed3"]),
         ],
     )
     def test_list_dataset_items_with_annotation_status(
@@ -1106,33 +1041,15 @@ class TestDatasetServiceIntegration:
 
         assert len(dataset_items) == len(expected_names)
 
-    def test_list_dataset_items_with_media_without_predictions(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
-    ) -> None:
-        """Test listing dataset items when keep_predictions=False removes annotation_data from each item."""
-        project, db_dataset_items = fxt_project_with_annotation_status_items
-
-        dataset_items_with_media = fxt_dataset_service.list_dataset_items_with_media(
-            project_id=project.id,
-            filters=DatasetItemFilters(
-                annotation_status=DatasetItemAnnotationStatus.TO_REVIEW,
-            ),
-            keep_predictions=False,
-        )
-
-        assert all(not item[0].annotation_data for item in dataset_items_with_media)
-
     @pytest.mark.parametrize(
         "annotation_status, limit, offset, expected_count",
         [
-            (DatasetItemAnnotationStatus.UNANNOTATED, 1, 0, 1),  # First page of unannotated
-            (DatasetItemAnnotationStatus.UNANNOTATED, 1, 1, 1),  # Second page of unannotated
-            (DatasetItemAnnotationStatus.UNANNOTATED, 1, 2, 0),  # Beyond available unannotated items
-            (DatasetItemAnnotationStatus.REVIEWED, 2, 0, 2),  # First page of reviewed
-            (DatasetItemAnnotationStatus.REVIEWED, 2, 2, 1),  # Second page of reviewed (only 1 left)
-            (DatasetItemAnnotationStatus.TO_REVIEW, 10, 0, 4),  # All items with user_reviewed=False
+            (DatasetItemAnnotationStatus.MISSING_ANNOTATIONS, 1, 0, 1),  # First page of unannotated
+            (DatasetItemAnnotationStatus.MISSING_ANNOTATIONS, 1, 1, 1),  # Second page of unannotated
+            (DatasetItemAnnotationStatus.MISSING_ANNOTATIONS, 1, 2, 0),  # Beyond available unannotated items
+            (DatasetItemAnnotationStatus.WITH_ANNOTATIONS, 2, 0, 2),  # First page of reviewed
+            (DatasetItemAnnotationStatus.WITH_ANNOTATIONS, 2, 2, 1),  # Second page of reviewed (only 1 left)
+            (None, 10, 0, 5),  # All items
         ],
     )
     def test_list_dataset_items_with_annotation_status_pagination(
@@ -1172,7 +1089,7 @@ class TestDatasetServiceIntegration:
             filters=DatasetItemFilters(
                 start_date=datetime.fromisoformat("2025-01-01T00:00:00Z"),
                 end_date=datetime.fromisoformat("2025-02-02T00:00:00Z"),
-                annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                annotation_status=DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
             ),
         )
         assert len(dataset_items) == 3
@@ -1185,7 +1102,7 @@ class TestDatasetServiceIntegration:
             filters=DatasetItemFilters(
                 start_date=datetime.fromisoformat("2025-03-01T00:00:00Z"),
                 end_date=datetime.fromisoformat("2025-03-31T00:00:00Z"),
-                annotation_status=DatasetItemAnnotationStatus.UNANNOTATED,
+                annotation_status=DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
             ),
         )
         assert len(dataset_items) == 0
@@ -1202,7 +1119,7 @@ class TestDatasetServiceIntegration:
         unannotated_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
             filters=DatasetItemFilters(
-                annotation_status=DatasetItemAnnotationStatus.UNANNOTATED,
+                annotation_status=DatasetItemAnnotationStatus.MISSING_ANNOTATIONS,
             ),
         )
         assert len(unannotated_items) == 2
@@ -1213,23 +1130,12 @@ class TestDatasetServiceIntegration:
         reviewed_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
             filters=DatasetItemFilters(
-                annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                annotation_status=DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
             ),
         )
         assert len(reviewed_items) == 3
         for item in reviewed_items:
             assert item.user_reviewed is True
-
-        # To review items should have user_reviewed=False
-        to_review_items = fxt_dataset_service.list_dataset_items(
-            project_id=project.id,
-            filters=DatasetItemFilters(
-                annotation_status=DatasetItemAnnotationStatus.TO_REVIEW,
-            ),
-        )
-        assert len(to_review_items) == 4
-        for item in to_review_items:
-            assert item.user_reviewed is False
 
     def test_list_dataset_items_filter_by_single_label(
         self,
@@ -1510,21 +1416,25 @@ class TestDatasetServiceIntegration:
         statistics = fxt_dataset_service.get_dataset_statistics(project_id=project.id)
 
         # Media counts
-        assert statistics.media_counts.images == 2
+        assert statistics.media_counts.images == 3
         assert statistics.media_counts.videos == 2
         assert statistics.media_counts.video_frames == 35
 
         # Annotation counts
-        assert statistics.annotations_counts.annotated_images == 1
+        assert statistics.annotations_counts.annotated_images == 2
         assert statistics.annotations_counts.annotated_videos == 1
         assert statistics.annotations_counts.annotated_video_frames == 2
 
         # Instances counts
         assert statistics.annotations_counts.instances == 5
-        assert len(statistics.annotations_counts.instances_per_label) == 2
-        label_counts = {str(lbl.label_id): lbl.instances for lbl in statistics.annotations_counts.instances_per_label}
+        assert len(statistics.annotations_counts.instances_per_label) == 3
+        label_counts = {
+            str(lbl.label_id) if lbl.label_id is not None else None: lbl.instances
+            for lbl in statistics.annotations_counts.instances_per_label
+        }
         assert label_counts[str(project.task.labels[0].id)] == 3
         assert label_counts[str(project.task.labels[1].id)] == 2
+        assert label_counts[None] == 1
 
     def test_get_dataset_statistics_no_annotations(
         self,
@@ -1571,7 +1481,9 @@ class TestDatasetServiceIntegration:
         assert statistics.media_counts.video_frames == 0
         assert statistics.annotations_counts.annotated_images == 0
         assert statistics.annotations_counts.instances == 0
-        assert statistics.annotations_counts.instances_per_label == []
+        assert len(statistics.annotations_counts.instances_per_label) == 1
+        assert statistics.annotations_counts.instances_per_label[0].label_id is None
+        assert statistics.annotations_counts.instances_per_label[0].instances == 0
 
     def test_get_dataset_statistics_mixed_annotated_and_unannotated(
         self,
@@ -1646,6 +1558,10 @@ class TestDatasetServiceIntegration:
         assert statistics.media_counts.images == 2
         assert statistics.annotations_counts.annotated_images == 1
         assert statistics.annotations_counts.instances == 1
-        assert len(statistics.annotations_counts.instances_per_label) == 1
-        assert str(statistics.annotations_counts.instances_per_label[0].label_id) == label_id
-        assert statistics.annotations_counts.instances_per_label[0].instances == 1
+        assert len(statistics.annotations_counts.instances_per_label) == 2
+        label_counts = {
+            str(lbl.label_id) if lbl.label_id is not None else None: lbl.instances
+            for lbl in statistics.annotations_counts.instances_per_label
+        }
+        assert label_counts[label_id] == 1
+        assert label_counts[None] == 0
