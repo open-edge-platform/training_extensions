@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { expect } from '@playwright/test';
@@ -688,6 +688,168 @@ test.describe('Annotator', () => {
 
             await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
             await expect(page.getByLabel('label No object background')).toHaveCount(1);
+        });
+    });
+
+    test.describe('Edit mode deselection', () => {
+        const mockedSegmentationProject = getMockedProject({
+            id: '123e4567-e89b-12d3-a456-426614174000',
+            task: {
+                exclusive_labels: true,
+                task_type: 'instance_segmentation',
+                labels: [redLabel, blueLabel],
+            },
+        });
+
+        const smallPolygon = {
+            type: 'polygon' as const,
+            points: [
+                { x: 100, y: 100 },
+                { x: 250, y: 100 },
+                { x: 250, y: 250 },
+                { x: 100, y: 250 },
+            ],
+        };
+
+        const secondPolygon = {
+            type: 'polygon' as const,
+            points: [
+                { x: 400, y: 300 },
+                { x: 550, y: 300 },
+                { x: 550, y: 450 },
+                { x: 400, y: 450 },
+            ],
+        };
+
+        test('detection task — bounding box tool deselects annotation in edit mode', async ({
+            page,
+            boundingBoxTool,
+            annotatorPage,
+        }) => {
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
+
+            await test.step('Draw first bounding box and verify it enters edit mode', async () => {
+                await boundingBoxTool.selectTool();
+                await boundingBoxTool.drawBoundingBox({ x: 100, y: 100, width: 150, height: 150 });
+
+                // After drawing, the newly created annotation is automatically selected
+                // and should show edit anchors (edit mode)
+                await expect(page.getByLabel(/^Edit bounding box points/)).toHaveCount(1);
+            });
+
+            await test.step('Draw second bounding box with bounding box tool', async () => {
+                await boundingBoxTool.selectTool();
+                await boundingBoxTool.drawBoundingBox({ x: 350, y: 250, width: 150, height: 150 });
+            });
+
+            await test.step('Second annotation is in edit mode, first is not', async () => {
+                // Only one annotation should be in edit mode (the newly drawn second one)
+                await expect(page.getByLabel(/^Edit bounding box points/)).toHaveCount(1);
+                // Two annotation rects should exist in total
+                expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(2);
+            });
+        });
+
+        test('detection task — entering edit mode via selection tool then drawing deselects original', async ({
+            page,
+            boundingBoxTool,
+            annotatorPage,
+        }) => {
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
+
+            await test.step('Draw first bounding box', async () => {
+                await boundingBoxTool.selectTool();
+                await boundingBoxTool.drawBoundingBox({ x: 100, y: 100, width: 150, height: 150 });
+            });
+
+            await test.step('Enter edit mode via selection tool', async () => {
+                await page.getByRole('button', { name: 'selection tool' }).click();
+                await page.getByLabel('annotation rect').nth(1).click();
+
+                await expect(page.getByLabel(/^Edit bounding box points/)).toHaveCount(1);
+            });
+
+            await test.step('Draw second bounding box', async () => {
+                await boundingBoxTool.selectTool();
+                await boundingBoxTool.drawBoundingBox({ x: 350, y: 250, width: 150, height: 150 });
+            });
+
+            await test.step('Second annotation is in edit mode, first is not', async () => {
+                await expect(page.getByLabel(/^Edit bounding box points/)).toHaveCount(1);
+
+                expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(2);
+            });
+        });
+
+        test('instance segmentation task — polygon tool deselects annotation in edit mode', async ({
+            page,
+            polygonTool,
+            annotatorPage,
+            network,
+        }) => {
+            network.use(
+                http.get('/api/projects/{project_id}', () => {
+                    return HttpResponse.json(mockedSegmentationProject);
+                })
+            );
+
+            await annotatorPage.goto(mockedSegmentationProject.id, 'item-1');
+
+            await test.step('Draw first polygon and verify it enters edit mode', async () => {
+                await polygonTool.selectPolygonTool();
+                await polygonTool.drawPolygon(smallPolygon);
+
+                await expect(page.locator('[id^="edit-polygon-points-"]')).toHaveCount(1);
+            });
+
+            await test.step('Draw second polygon with polygon tool', async () => {
+                await polygonTool.selectPolygonTool();
+                await polygonTool.drawPolygon(secondPolygon);
+            });
+
+            await test.step('Second annotation is in edit mode, first is not', async () => {
+                await expect(page.locator('[id^="edit-polygon-points-"]')).toHaveCount(1);
+
+                expect(await annotatorPage.getAnnotationsListItems('annotation polygon')).toHaveLength(2);
+            });
+        });
+
+        test('instance segmentation task — entering edit mode via selection tool then drawing deselects original', async ({
+            page,
+            polygonTool,
+            annotatorPage,
+            network,
+        }) => {
+            network.use(
+                http.get('/api/projects/{project_id}', () => {
+                    return HttpResponse.json(mockedSegmentationProject);
+                })
+            );
+
+            await annotatorPage.goto(mockedSegmentationProject.id, 'item-1');
+
+            await test.step('Draw first polygon', async () => {
+                await polygonTool.selectPolygonTool();
+                await polygonTool.drawPolygon(smallPolygon);
+            });
+
+            await test.step('Enter edit mode via selection tool', async () => {
+                await page.getByRole('button', { name: 'selection tool' }).click();
+                await page.getByLabel('annotation polygon').nth(1).click();
+
+                await expect(page.locator('[id^="edit-polygon-points-"]')).toHaveCount(1);
+            });
+
+            await test.step('Draw second polygon', async () => {
+                await polygonTool.selectPolygonTool();
+                await polygonTool.drawPolygon(secondPolygon);
+            });
+
+            await test.step('Second annotation is in edit mode, first is not', async () => {
+                await expect(page.locator('[id^="edit-polygon-points-"]')).toHaveCount(1);
+
+                expect(await annotatorPage.getAnnotationsListItems('annotation polygon')).toHaveLength(2);
+            });
         });
     });
 

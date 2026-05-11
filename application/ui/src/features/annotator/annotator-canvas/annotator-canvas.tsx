@@ -12,6 +12,7 @@ import type { Media } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
+import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
@@ -167,6 +168,7 @@ type AnnotatorCanvasProps = {
 export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: AnnotatorCanvasProps) => {
     const projectId = useProjectIdentifier();
     const isSceneBusy = useIsAnnotatorSceneBusy();
+    const { canvasRef } = useAnnotator();
     const isFetchingMedia = useIsFetching({ queryKey: loadImageQueryOptions(projectId, mediaItem).queryKey });
 
     const isLoadingMedia = isFetchingMedia > 0;
@@ -183,6 +185,7 @@ export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: 
                 style={{ position: 'relative', height: '100%', width: '100%' }}
                 onContextMenu={(event: MouseEvent): void => event.preventDefault()}
                 className={isReadOnly ? classes.readOnlyCanvas : undefined}
+                ref={canvasRef}
             >
                 <MediaImage image={image} mediaItem={mediaItem} />
                 <MediaAnnotations mediaItem={mediaItem} mode={mode} />
