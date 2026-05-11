@@ -2,10 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { getMockedLabel } from 'mocks/mock-labels';
+import { getMockedProject } from 'mocks/mock-project';
+import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
+import { http } from '../../../api/utils';
 import type { Label } from '../../../constants/shared-types';
+import { server } from '../../../msw-node-setup';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
 import { Labels } from './labels.component';
 
@@ -64,52 +69,61 @@ describe('Labels', () => {
         mockSelectedLabelId.current = 'label-1';
         mockSelectedAnnotations.current = new Set();
         mockAnnotations.current = [];
+
+        server.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(getMockedProject());
+            })
+        );
     });
 
-    it('renders all labels as badges', () => {
+    it('renders all labels as badges', async () => {
         render(<Labels />);
 
-        expect(screen.getByRole('button', { name: 'Label Person' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Label Car' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Label Dog' })).toBeInTheDocument();
+        expect(await screen.findByRole('button', { name: 'Label Person' })).toBeInTheDocument();
+        expect(await screen.findByRole('button', { name: 'Label Car' })).toBeInTheDocument();
+        expect(await screen.findByRole('button', { name: 'Label Dog' })).toBeInTheDocument();
     });
 
-    it('shows selected label with aria-pressed true', () => {
+    it('shows selected label with aria-pressed true', async () => {
         render(<Labels />);
 
-        const personButton = screen.getByRole('button', { name: 'Label Person' });
-        const carButton = screen.getByRole('button', { name: 'Label Car' });
+        const personButton = await screen.findByRole('button', { name: 'Label Person' });
+        const carButton = await screen.findByRole('button', { name: 'Label Car' });
 
         expect(personButton).toHaveAttribute('aria-pressed', 'true');
         expect(carButton).toHaveAttribute('aria-pressed', 'false');
     });
 
-    it('calls setSelectedLabelId when clicking a label', () => {
+    it('calls setSelectedLabelId when clicking a label', async () => {
+        const user = userEvent.setup();
         render(<Labels />);
 
-        const carButton = screen.getByRole('button', { name: 'Label Car' });
-        fireEvent.click(carButton);
+        const carButton = await screen.findByRole('button', { name: 'Label Car' });
+        await user.click(carButton);
 
         expect(mockSetSelectedLabelId).toHaveBeenCalledWith('label-2');
     });
 
-    it('displays label names in badges', () => {
+    it('displays label names in badges', async () => {
         render(<Labels />);
 
-        expect(screen.getByText('Person')).toBeInTheDocument();
-        expect(screen.getByText('Car')).toBeInTheDocument();
-        expect(screen.getByText('Dog')).toBeInTheDocument();
+        expect(await screen.findByText('Person')).toBeInTheDocument();
+        expect(await screen.findByText('Car')).toBeInTheDocument();
+        expect(await screen.findByText('Dog')).toBeInTheDocument();
     });
 
-    it('selects label when pressing configured hotkey', () => {
+    it('selects label when pressing configured hotkey', async () => {
         render(<Labels />);
 
+        await screen.findByRole('button', { name: 'Label Person' });
         fireEvent.keyDown(document, { key: 'p', code: 'KeyP' });
 
         expect(mockSetSelectedLabelId).toHaveBeenCalledWith('label-1');
     });
 
-    it('updates selected annotations when clicking a different label', () => {
+    it('updates selected annotations when clicking a different label', async () => {
+        const user = userEvent.setup();
         mockSelectedAnnotations.current = new Set(['annotation-1']);
         mockAnnotations.current = [
             { id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } },
@@ -118,27 +132,29 @@ describe('Labels', () => {
 
         render(<Labels />);
 
-        const carButton = screen.getByRole('button', { name: 'Label Car' });
-        fireEvent.click(carButton);
+        const carButton = await screen.findByRole('button', { name: 'Label Car' });
+        await user.click(carButton);
 
         expect(mockSetSelectedLabelId).toHaveBeenCalledWith('label-2');
         expect(mockUpdateAnnotations).toHaveBeenCalledWith([mockAnnotations.current[0]], [mockLabels[1]]);
     });
 
-    it('does not update annotations when no annotations are selected', () => {
+    it('does not update annotations when no annotations are selected', async () => {
+        const user = userEvent.setup();
         mockSelectedAnnotations.current = new Set();
         mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } }];
 
         render(<Labels />);
 
-        const carButton = screen.getByRole('button', { name: 'Label Car' });
-        fireEvent.click(carButton);
+        const carButton = await screen.findByRole('button', { name: 'Label Car' });
+        await user.click(carButton);
 
         expect(mockSetSelectedLabelId).toHaveBeenCalledWith('label-2');
         expect(mockUpdateAnnotations).not.toHaveBeenCalled();
     });
 
-    it('removes label when all selected annotations already have it', () => {
+    it('removes label when all selected annotations already have it', async () => {
+        const user = userEvent.setup();
         mockSelectedAnnotations.current = new Set(['annotation-1', 'annotation-2']);
         mockAnnotations.current = [
             { id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } },
@@ -147,8 +163,8 @@ describe('Labels', () => {
 
         render(<Labels />);
 
-        const personButton = screen.getByRole('button', { name: 'Label Person' });
-        fireEvent.click(personButton);
+        const personButton = await screen.findByRole('button', { name: 'Label Person' });
+        await user.click(personButton);
 
         expect(mockUpdateAnnotations).toHaveBeenCalledWith([
             { id: 'annotation-1', labels: [], shape: { type: 'RECTANGLE' } },
@@ -157,7 +173,8 @@ describe('Labels', () => {
         expect(mockSetSelectedLabelId).toHaveBeenCalledWith(null);
     });
 
-    it('adds label when at least one selected annotation does not have it', () => {
+    it('adds label when at least one selected annotation does not have it', async () => {
+        const user = userEvent.setup();
         mockSelectedAnnotations.current = new Set(['annotation-1', 'annotation-2']);
         mockAnnotations.current = [
             { id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } },
@@ -166,8 +183,8 @@ describe('Labels', () => {
 
         render(<Labels />);
 
-        const personButton = screen.getByRole('button', { name: 'Label Person' });
-        fireEvent.click(personButton);
+        const personButton = await screen.findByRole('button', { name: 'Label Person' });
+        await user.click(personButton);
 
         expect(mockSetSelectedLabelId).toHaveBeenCalledWith('label-1');
         expect(mockUpdateAnnotations).toHaveBeenCalledWith(
@@ -177,92 +194,98 @@ describe('Labels', () => {
     });
 
     describe('classification mode', () => {
-        it('creates full_image annotation when no annotations exist', () => {
+        it('creates full_image annotation when no annotations exist', async () => {
+            const user = userEvent.setup();
             mockAnnotations.current = [];
 
-            render(<Labels isClassification />);
+            render(<Labels isClassification={true} />);
 
-            const personButton = screen.getByRole('button', { name: 'Label Person' });
-            fireEvent.click(personButton);
+            const personButton = await screen.findByRole('button', { name: 'Label Person' });
+            await user.click(personButton);
 
             expect(mockAddAnnotations).toHaveBeenCalledWith([{ type: 'full_image' }], [mockLabels[0]]);
         });
 
-        it('replaces labels in single-label mode', () => {
+        it('replaces labels in single-label mode', async () => {
+            const user = userEvent.setup();
             mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
 
-            render(<Labels isClassification isMultiLabel={false} />);
+            render(<Labels isClassification={true} isMultiLabel={false} />);
 
-            const carButton = screen.getByRole('button', { name: 'Label Car' });
-            fireEvent.click(carButton);
+            const carButton = await screen.findByRole('button', { name: 'Label Car' });
+            await user.click(carButton);
 
             expect(mockUpdateAnnotations).toHaveBeenCalledWith([
                 { ...mockAnnotations.current[0], labels: [mockLabels[1]] },
             ]);
         });
 
-        it('toggles label on in multi-label mode', () => {
+        it('toggles label on in multi-label mode', async () => {
+            const user = userEvent.setup();
             mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
 
-            render(<Labels isClassification isMultiLabel />);
+            render(<Labels isClassification={true} isMultiLabel={true} />);
 
-            const carButton = screen.getByRole('button', { name: 'Label Car' });
-            fireEvent.click(carButton);
+            const carButton = await screen.findByRole('button', { name: 'Label Car' });
+            await user.click(carButton);
 
             expect(mockUpdateAnnotations).toHaveBeenCalledWith([
                 { ...mockAnnotations.current[0], labels: [mockLabels[0], mockLabels[1]] },
             ]);
         });
 
-        it('toggles label off in multi-label mode', () => {
+        it('toggles label off in multi-label mode', async () => {
+            const user = userEvent.setup();
             mockAnnotations.current = [
                 { id: 'annotation-1', labels: [mockLabels[0], mockLabels[1]], shape: { type: 'full_image' } },
             ];
 
-            render(<Labels isClassification isMultiLabel />);
+            render(<Labels isClassification={true} isMultiLabel={true} />);
 
-            const personButton = screen.getByRole('button', { name: 'Label Person' });
-            fireEvent.click(personButton);
+            const personButton = await screen.findByRole('button', { name: 'Label Person' });
+            await user.click(personButton);
 
             expect(mockUpdateAnnotations).toHaveBeenCalledWith([
                 { ...mockAnnotations.current[0], labels: [mockLabels[1]] },
             ]);
         });
 
-        it('keeps annotation with empty labels when removing last label in multi-label mode', () => {
+        it('keeps annotation with empty labels when removing last label in multi-label mode', async () => {
+            const user = userEvent.setup();
             mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
 
-            render(<Labels isClassification isMultiLabel />);
+            render(<Labels isClassification={true} isMultiLabel={true} />);
 
-            const personButton = screen.getByRole('button', { name: 'Label Person' });
-            fireEvent.click(personButton);
+            const personButton = await screen.findByRole('button', { name: 'Label Person' });
+            await user.click(personButton);
 
             expect(mockUpdateAnnotations).toHaveBeenCalledWith([{ ...mockAnnotations.current[0], labels: [] }]);
             expect(mockDeleteAnnotations).not.toHaveBeenCalled();
         });
 
-        it('does not require selected annotations for classification', () => {
+        it('does not require selected annotations for classification', async () => {
+            const user = userEvent.setup();
             mockSelectedAnnotations.current = new Set(); // No annotations selected
             mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
 
-            render(<Labels isClassification />);
+            render(<Labels isClassification={true} />);
 
-            const carButton = screen.getByRole('button', { name: 'Label Car' });
-            fireEvent.click(carButton);
+            const carButton = await screen.findByRole('button', { name: 'Label Car' });
+            await user.click(carButton);
 
             expect(mockUpdateAnnotations).toHaveBeenCalled();
         });
 
-        it('shows badge as selected when label is applied to annotation', () => {
+        it('shows badge as selected when label is applied to annotation', async () => {
             mockAnnotations.current = [
                 { id: 'annotation-1', labels: [mockLabels[0], mockLabels[1]], shape: { type: 'full_image' } },
             ];
 
-            render(<Labels isClassification isMultiLabel />);
+            render(<Labels isClassification={true} isMultiLabel={true} />);
 
-            const personButton = screen.getByRole('button', { name: 'Label Person' });
-            const carButton = screen.getByRole('button', { name: 'Label Car' });
-            const dogButton = screen.getByRole('button', { name: 'Label Dog' });
+            const personButton = await screen.findByRole('button', { name: 'Label Person' });
+            const carButton = await screen.findByRole('button', { name: 'Label Car' });
+            const dogButton = await screen.findByRole('button', { name: 'Label Dog' });
 
             expect(personButton).toHaveAttribute('aria-pressed', 'true');
             expect(carButton).toHaveAttribute('aria-pressed', 'true');

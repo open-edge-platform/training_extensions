@@ -68,6 +68,12 @@ export const NewLabelRow = ({ onSave, onCancel, validateName, validateHotkey }: 
         }
     };
 
+    const handleHotkeyChange = () => {
+        if (validateHotkey(hotkey) === undefined) {
+            onSave(name.trim(), color, hotkey.trim() === '' ? undefined : hotkey.trim());
+        }
+    };
+
     return (
         <Grid
             ref={rowRef}
@@ -99,6 +105,7 @@ export const NewLabelRow = ({ onSave, onCancel, validateName, validateHotkey }: 
                 <HotkeyField
                     value={hotkey}
                     onChange={setHotkey}
+                    onEnter={handleHotkeyChange}
                     aria-label={'New label hotkey'}
                     errorMessage={hotkeyValidationError}
                     validationState={hotkeyValidationError ? 'invalid' : undefined}

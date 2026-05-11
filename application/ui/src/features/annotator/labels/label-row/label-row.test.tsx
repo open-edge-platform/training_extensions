@@ -18,6 +18,7 @@ describe('LabelRow', () => {
         onTogglePin = vi.fn(),
         onUpdate = vi.fn(),
         validateName = vi.fn(() => undefined),
+        validateHotkey = vi.fn(() => undefined),
     }: Partial<LabelRowProps> = {}) => {
         render(
             <LabelRow
@@ -29,10 +30,11 @@ describe('LabelRow', () => {
                 onTogglePin={onTogglePin}
                 onUpdate={onUpdate}
                 validateName={validateName}
+                validateHotkey={validateHotkey}
             />
         );
 
-        return { onUpdate };
+        return { onUpdate, onSelect, onDelete, onTogglePin };
     };
 
     describe('handleUpdateName', () => {
@@ -100,6 +102,70 @@ describe('LabelRow', () => {
             await userEvent.tab();
 
             expect(onUpdate).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('handleHotkeyChange', () => {
+        const label = getMockedLabel({ id: 'label-1', name: 'old name', color: '#ffff00', hotkey: 'a' });
+
+        it('calls onUpdate on Enter when hotkey is valid', async () => {
+            const onUpdate = vi.fn();
+
+            renderApp({ label, onUpdate });
+
+            const hotkeyInput = screen.getByLabelText(/Edited hotkey/i);
+            await userEvent.click(hotkeyInput);
+            await userEvent.keyboard('{Enter}');
+
+            expect(onUpdate).toHaveBeenCalledWith(label.id, expect.objectContaining({ hotkey: 'a' }));
+        });
+
+        it('does not call onUpdate when hotkey has validation error', async () => {
+            const onUpdate = vi.fn();
+            const validateHotkey = vi.fn(() => 'Hotkey already in use');
+
+            renderApp({ label, onUpdate, validateHotkey });
+
+            const hotkeyInput = screen.getByLabelText(/Edited hotkey/i);
+            await userEvent.click(hotkeyInput);
+            await userEvent.keyboard('{Enter}');
+
+            expect(onUpdate).not.toHaveBeenCalled();
+        });
+
+        it('sends undefined for hotkey when hotkey is empty', async () => {
+            const onUpdate = vi.fn();
+            const labelNoHotkey = getMockedLabel({ id: 'label-1', name: 'old name', color: '#ffff00', hotkey: '' });
+
+            renderApp({ label: labelNoHotkey, onUpdate });
+
+            const hotkeyInput = screen.getByLabelText(/Edited hotkey/i);
+            await userEvent.click(hotkeyInput);
+            await userEvent.keyboard('{Enter}');
+
+            expect(onUpdate).toHaveBeenCalledWith(labelNoHotkey.id, expect.objectContaining({ hotkey: undefined }));
+        });
+    });
+
+    describe('name validation display', () => {
+        it('displays validation error message for name', () => {
+            const label = getMockedLabel({ name: 'duplicate' });
+            const validateName = vi.fn(() => 'Name already exists');
+
+            renderApp({ label, validateName });
+
+            expect(screen.getByText('Name already exists')).toBeInTheDocument();
+        });
+    });
+
+    describe('hotkey validation display', () => {
+        it('displays validation error message for hotkey', () => {
+            const label = getMockedLabel({ hotkey: 'a' });
+            const validateHotkey = vi.fn(() => 'Hotkey already in use');
+
+            renderApp({ label, validateHotkey });
+
+            expect(screen.getByText('Hotkey already in use')).toBeInTheDocument();
         });
     });
 });
