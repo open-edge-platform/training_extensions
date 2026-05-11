@@ -121,6 +121,8 @@ export const SegmentAnythingTool = () => {
         cancellableThrottledDecodingQueryFn.cancel();
         addAndSelectAnnotations(previewShapes, selectedLabel ? [selectedLabel] : []);
         setPreviewShapes([]);
+        pendingDecodesRef.current = 0;
+        setIsDecoding(false);
     };
 
     const handlePointerLeave = () => {
