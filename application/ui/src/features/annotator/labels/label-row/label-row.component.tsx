@@ -10,6 +10,7 @@ import { LabelColorPicker } from '../../../../components/label-fields/label-colo
 import { SilentCheckbox } from '../../../../components/label-fields/silent-checkbox.component';
 import type { Label } from '../../../../constants/shared-types';
 import { useDebounce } from '../../../../hooks/use-debounce.hook';
+import { isNonEmptyString } from '../../../../shared/util';
 import { HotkeyField } from './hotkey-field/hotkey-field.component';
 
 import classes from './label-row.module.scss';
@@ -49,29 +50,28 @@ export const LabelRow = ({
 
     const validationError = validateName(name, label.id);
     const hotkeyValidationError = validateHotkey(hotkey, label.id);
+    const trimmedHotkey = isNonEmptyString(hotkey) ? hotkey.trim() : undefined;
+    const hasValidationErrors =
+        validationError !== undefined || hotkeyValidationError !== undefined || name.trim() === '';
 
     const getValidName = () => (validationError || name.trim() === '' ? label.name : name.trim());
 
     const handleUpdateName = () => {
-        if (validationError || name.trim() === '') return;
-        if (name === label.name) return;
+        const isNameUnchanged = name.trim() === label.name;
+        if (hasValidationErrors || isNameUnchanged) return;
 
-        onUpdate(label.id, { name: name.trim(), color, hotkey });
+        onUpdate(label.id, { name: name.trim(), color, hotkey: trimmedHotkey });
     };
 
     const handleHotkeyChange = () => {
-        if (validateHotkey(hotkey, label.id) === undefined) {
-            onUpdate(label.id, {
-                name: name.trim(),
-                color,
-                hotkey: hotkey.trim() === '' ? undefined : hotkey.trim(),
-            });
-        }
+        if (hasValidationErrors) return;
+
+        onUpdate(label.id, { name: name.trim(), color, hotkey: trimmedHotkey });
     };
 
     const debouncedUpdate = useDebounce(
         (newColor: string, currentName: string) => {
-            onUpdate(label.id, { name: currentName, color: newColor, hotkey });
+            onUpdate(label.id, { name: currentName, color: newColor, hotkey: trimmedHotkey });
         },
         COLOR_DEBOUNCE_MS,
         [onUpdate, label.id, hotkey]

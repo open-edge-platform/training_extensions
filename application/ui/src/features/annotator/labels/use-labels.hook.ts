@@ -12,8 +12,9 @@ import type { Label } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { EMPTY_LABEL_ID, filterOutEmptyLabels } from '../../../shared/annotator/labels';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
-import { TASK_HOTKEYS } from '../../../shared/hotkeys-definition';
+import { convertHotkeyToOSFormat, TASK_HOTKEYS } from '../../../shared/hotkeys-definition';
 import type { Annotation } from '../../../shared/types';
+import { isNonEmptyString } from '../../../shared/util';
 import { toggleLabel } from '../../dataset/media-preview/secondary-toolbar/util';
 import { useAnnotatorLabels } from '../annotator-labels-provider.component';
 import { useUpdateLabel } from './api/use-update-label.hook';
@@ -179,7 +180,9 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
     const validateHotkey = (newHotkey: string, excludeId?: string) => {
         const taskType = project.data.task.task_type;
         const filteredLabels = labels.filter(({ id }) => id !== excludeId);
-        const labelsHotkeys = filteredLabels.map(({ hotkey }) => hotkey).filter((hotkey) => hotkey != null);
+        const labelsHotkeys = filteredLabels
+            .map(({ hotkey }) => (isNonEmptyString(hotkey) ? convertHotkeyToOSFormat(hotkey) : null))
+            .filter((hotkey) => hotkey != null);
 
         const appHotkeys = Object.values(TASK_HOTKEYS[taskType]);
         const allHotkeys = [...labelsHotkeys, ...appHotkeys];

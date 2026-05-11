@@ -114,10 +114,12 @@ describe('LabelRow', () => {
             renderApp({ label, onUpdate });
 
             const hotkeyInput = screen.getByLabelText(/Edited hotkey/i);
+            await userEvent.type(hotkeyInput, 'test 1');
             await userEvent.click(hotkeyInput);
+            await userEvent.keyboard('a');
             await userEvent.keyboard('{Enter}');
 
-            expect(onUpdate).toHaveBeenCalledWith(label.id, expect.objectContaining({ hotkey: 'a' }));
+            expect(onUpdate).toHaveBeenCalledWith(label.id, expect.objectContaining({ hotkey: 'A' }));
         });
 
         it('does not call onUpdate when hotkey has validation error', async () => {

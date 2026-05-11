@@ -69,9 +69,11 @@ export const NewLabelRow = ({ onSave, onCancel, validateName, validateHotkey }: 
     };
 
     const handleHotkeyChange = () => {
-        if (validateHotkey(hotkey) === undefined) {
-            onSave(name.trim(), color, hotkey.trim() === '' ? undefined : hotkey.trim());
+        if (validateHotkey(hotkey) !== undefined) {
+            return;
         }
+
+        handleSave();
     };
 
     return (

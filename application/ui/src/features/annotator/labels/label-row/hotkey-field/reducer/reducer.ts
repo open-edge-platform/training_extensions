@@ -31,7 +31,10 @@ export const reducer = (state: HotkeyFieldState, action: Action): HotkeyFieldSta
             return {
                 ...state,
                 isDirty: true,
-                keys: keys.join('+').toLocaleUpperCase(),
+                keys: keys.join('+'),
             };
+
+        default:
+            return state;
     }
 };
