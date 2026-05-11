@@ -38,7 +38,7 @@ describe('getAllModelsWithOpenVINOVariants', () => {
         });
 
         expect(getAllModelsWithOpenVINOVariants([model])).toEqual([
-            { id: 'v-ov', name: 'My Model [FP16]', modelId: 'model-1' },
+            { modelVariantId: 'v-ov', name: 'My Model [FP16]', modelId: 'model-1' },
         ]);
     });
 
@@ -54,9 +54,9 @@ describe('getAllModelsWithOpenVINOVariants', () => {
         });
 
         expect(getAllModelsWithOpenVINOVariants([model])).toEqual([
-            { id: 'v-fp16', name: 'My Model [FP16]', modelId: 'model-1' },
-            { id: 'v-fp32', name: 'My Model [FP32]', modelId: 'model-1' },
-            { id: 'v-int8', name: 'My Model [INT8]', modelId: 'model-1' },
+            { modelVariantId: 'v-fp16', name: 'My Model [FP16]', modelId: 'model-1' },
+            { modelVariantId: 'v-fp32', name: 'My Model [FP32]', modelId: 'model-1' },
+            { modelVariantId: 'v-int8', name: 'My Model [INT8]', modelId: 'model-1' },
         ]);
     });
 
@@ -71,7 +71,7 @@ describe('getAllModelsWithOpenVINOVariants', () => {
         });
 
         expect(getAllModelsWithOpenVINOVariants([model])).toEqual([
-            { id: 'v-ov', name: 'My Model [FP16]', modelId: 'model-1' },
+            { modelVariantId: 'v-ov', name: 'My Model [FP16]', modelId: 'model-1' },
         ]);
     });
 
@@ -92,9 +92,9 @@ describe('getAllModelsWithOpenVINOVariants', () => {
         });
 
         expect(getAllModelsWithOpenVINOVariants([modelA, modelB, modelC])).toEqual([
-            { id: 'v-a-ov', name: 'Model A [FP16]', modelId: 'model-a' },
-            { id: 'v-c-fp32', name: 'Model C [FP32]', modelId: 'model-c' },
-            { id: 'v-c-int8', name: 'Model C [INT8]', modelId: 'model-c' },
+            { modelVariantId: 'v-a-ov', name: 'Model A [FP16]', modelId: 'model-a' },
+            { modelVariantId: 'v-c-fp32', name: 'Model C [FP32]', modelId: 'model-c' },
+            { modelVariantId: 'v-c-int8', name: 'Model C [INT8]', modelId: 'model-c' },
         ]);
     });
 });
