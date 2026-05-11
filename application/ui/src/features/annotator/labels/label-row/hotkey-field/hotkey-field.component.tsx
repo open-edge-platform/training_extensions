@@ -6,7 +6,6 @@ import { useEffect, useReducer, useRef } from 'react';
 import { TextField, TextFieldRef, type SpectrumTextFieldProps } from '@geti/ui';
 import { useEventListener } from 'hooks/event-listener.hook';
 
-import { isEnter } from '../util';
 import { HOTKEY_EDITION_ACTION } from './reducer/actions';
 import { HotkeyFieldState, reducer } from './reducer/reducer';
 import { getKeyBoardKey, isModifierKey, KeyboardEvents } from './utils';
@@ -22,6 +21,10 @@ const initialState: HotkeyFieldState = {
     isFocused: false,
     isDirty: true,
     keys: '',
+};
+
+const isEnter = (event: KeyboardEvent) => {
+    return event.key === 'Enter';
 };
 
 export const HotkeyField = ({
