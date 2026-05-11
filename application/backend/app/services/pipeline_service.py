@@ -224,15 +224,16 @@ class PipelineService(BaseSessionManagedService):
             )
         if pipeline.status == PipelineStatus.RUNNING and updated.status == PipelineStatus.RUNNING:
             # If the pipeline source_id or sink_id is being updated while running
-            if pipeline.source.id != updated.source.id:  # type: ignore[union-attr] # source is always there for running pipeline
+            if pipeline.source_id != updated.source_id:
                 self._event_bus.emit_event(EventType.SOURCE_CHANGED)
-            if pipeline.sink_id != updated.sink_id:  # type: ignore[union-attr] # sink is always there for running pipeline
+            if pipeline.sink_id != updated.sink_id:
+                # Sink may be None (disconnected): in that case predictions are only routed to WebRTC.
                 self._event_bus.emit_event(EventType.SINK_CHANGED)
             if pipeline.data_collection != updated.data_collection:
                 self._event_bus.emit_event(EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED)
             if pipeline.device != updated.device:
                 self._event_bus.emit_event(EventType.INFERENCE_DEVICE_CHANGED)
-            if pipeline.model_id != updated.model_revision.id or pipeline.model_variant_id != updated.model_variant_id:  # type: ignore[union-attr] # model_revision is always there for running pipeline
+            if pipeline.model_id != updated.model_id or pipeline.model_variant_id != updated.model_variant_id:
                 self._event_bus.emit_event(EventType.MODEL_CHANGED)
         elif pipeline.status != updated.status:
             # If the pipeline is being activated or stopped

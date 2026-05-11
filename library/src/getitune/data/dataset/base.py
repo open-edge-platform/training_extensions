@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING, Callable, Iterable, List, Union
+from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Union
 
 import torch
 from torch.utils.data import Dataset as TorchDataset
@@ -148,6 +148,23 @@ class VisionDataset(TorchDataset):
 
     def __len__(self) -> int:
         return len(self.dm_subset)
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(num_samples={len(self)}, num_classes={self.label_info.num_classes})"
+
+    def describe(self) -> dict[str, Any]:
+        """Return a summary of the dataset.
+
+        Returns:
+            A dictionary containing dataset summary information.
+        """
+        return {
+            "class_name": type(self).__name__,
+            "num_samples": len(self),
+            "num_classes": self.label_info.num_classes,
+            "label_names": list(self.label_info.label_names),
+            "has_transforms": self.transforms is not None,
+        }
 
     def _apply_transforms(self, entity: BaseSample) -> BaseSample | None:
         # Intensity mapping: convert raw pixels to float32 [0, 1].

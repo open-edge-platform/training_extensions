@@ -60,6 +60,7 @@ const downloadModelLogsFile = async (projectId: string, modelId: string) => {
 
     const url = URL.createObjectURL(data);
     downloadFile(url, `training-logs-${modelId}.log`);
+    toast({ type: 'info', message: 'Training logs download started' });
 };
 
 export const useDownloadModelLogs = (modelId: string) => {

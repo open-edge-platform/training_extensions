@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen, within } from '@testing-library/react';
@@ -133,6 +133,34 @@ describe('ModelRow', () => {
             );
 
             expect(screen.getByText('Failed')).toBeInTheDocument();
+        });
+
+        it('renders "Deleted weights" badge when model files_deleted is true', () => {
+            const deletedWeightsModel = getMockedModel({ files_deleted: true });
+
+            render(
+                <ModelRow
+                    model={deletedWeightsModel}
+                    datasetRevision={datasetRevision}
+                    groupBy={'dataset'}
+                    modelArchitecture={modelArchitecture}
+                />
+            );
+
+            expect(screen.getByText('Deleted weights')).toBeInTheDocument();
+        });
+
+        it('does not render "Deleted weights" badge when model files_deleted is false', () => {
+            render(
+                <ModelRow
+                    model={defaultModel}
+                    datasetRevision={datasetRevision}
+                    groupBy={'dataset'}
+                    modelArchitecture={modelArchitecture}
+                />
+            );
+
+            expect(screen.queryByText('Deleted weights')).not.toBeInTheDocument();
         });
     });
 

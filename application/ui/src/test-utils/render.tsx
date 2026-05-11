@@ -69,7 +69,8 @@ export const renderHook = <TProps, TResult>(callback: (props: TProps) => TResult
     const testQueryClient = options.queryClient ?? createQueryClient();
 
     const Wrapper = ({ children }: { children: ReactNode }) => {
-        const router = createTestRouter(children, options, testQueryClient);
+        const wrappedChildren = options.wrapper ? <options.wrapper>{children}</options.wrapper> : children;
+        const router = createTestRouter(wrappedChildren, options, testQueryClient);
 
         return (
             <RouterProvider

@@ -352,7 +352,7 @@ class MaskRCNN(LightningInstanceSegModel):
                 "autograd_inlining": False,
                 "dynamo": False,
             },
-            output_names=["bboxes", "labels", "masks", "feature_vector", "saliency_map"] if self.explain_mode else None,
+            output_names=["boxes", "labels", "masks", "feature_vector", "saliency_map"] if self.explain_mode else None,
         )
 
     @property

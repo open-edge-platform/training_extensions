@@ -14,6 +14,7 @@ from datumaro.experimental import Dataset, LazyImage
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, Subset
 from getitune import TaskType as GetiTuneTaskType
+from getitune.config.data import IntensityConfig
 from getitune.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from getitune.metrics.types import MetricCallable
@@ -567,7 +568,7 @@ class TestGetiTuneTrainerCreateTrainingDataset:
                 fxt_dataset_service.get_dm_dataset.assert_called_once_with(
                     project_id=project_id,
                     task=task,
-                    annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                    annotation_status=DatasetItemAnnotationStatus.WITH_ANNOTATIONS,
                     sample_mode=SampleMode.TRAINING,
                 )
                 fxt_dataset_revision_service.save_revision.assert_called_once_with(
@@ -748,6 +749,13 @@ class TestGetiTuneTrainerTrainModel:
         mock_datamodule.input_size = (640, 640)
         mock_datamodule.input_mean = [0.485, 0.456, 0.406]
         mock_datamodule.input_std = [0.229, 0.224, 0.225]
+        mock_datamodule.input_intensity_config = IntensityConfig(
+            storage_dtype="uint16",
+            mode="range_scale",
+            min_value=500,
+            max_value=1200,
+            scale_factor=0.5,
+        )
         mock_datamodule.tile_config = None
 
         # Mock LightningModel

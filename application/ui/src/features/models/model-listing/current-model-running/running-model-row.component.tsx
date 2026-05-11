@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { AlertDialog, Button, DialogContainer, Flex, Grid, Loading, Tag, Text } from '@geti/ui';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
+import { useStreamJobStatus } from 'hooks/api/jobs/jobs.hook';
 import { isTrainJob } from 'hooks/api/util';
 
 import { DatasetRevision, Job, ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
@@ -48,23 +49,23 @@ const CancelRunningJob = ({ job, onCancel }: CancelRunningJobProps) => {
     return (
         <>
             <Button
-                isDisabled={job.status !== 'RUNNING'}
+                isDisabled={job.status !== 'RUNNING' && job.status !== 'PENDING'}
                 variant={'negative'}
                 onPress={() => setIsDeleteDialogOpen(true)}
-                aria-label={'Cancel running job'}
+                aria-label={'Cancel job'}
             >
                 Cancel
             </Button>
             <DialogContainer onDismiss={() => setIsDeleteDialogOpen(false)}>
                 {isDeleteDialogOpen && (
                     <AlertDialog
-                        title='Stop running job'
+                        title='Stop job'
                         variant='destructive'
                         primaryActionLabel='Cancel'
                         onPrimaryAction={onCancel}
                         cancelLabel='Close'
                     >
-                        Are you sure you want to stop this running job?
+                        Are you sure you want to stop this job?
                     </AlertDialog>
                 )}
             </DialogContainer>
@@ -94,6 +95,8 @@ export const RunningModelRow = ({
     groupBy,
     modelArchitectures,
 }: RunningModelRowProps) => {
+    useStreamJobStatus(job.job_id);
+
     const modelId = 'model' in job.metadata ? job.metadata.model?.id : undefined;
     const { data: trainingModel } = useGetModel(modelId);
 

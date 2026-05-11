@@ -1355,7 +1355,7 @@ requires-dist = [
     { name = "onnxconverter-common", specifier = "==1.16.0" },
     { name = "onnxscript", specifier = "==0.6.2" },
     { name = "openvino", specifier = "~=2026.1.0" },
-    { name = "openvino-model-api", specifier = "==0.4.1" },
+    { name = "openvino-model-api", specifier = "==0.4.2" },
     { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = "==0.12.0" },
     { name = "pytorchcv", specifier = "==0.0.74" },
     { name = "pyyaml", specifier = "==6.0.3" },
@@ -1394,7 +1394,7 @@ dev = [
     { name = "dill" },
     { name = "mlflow", specifier = ">=3.11.1" },
     { name = "py-cpuinfo" },
-    { name = "pytest", specifier = ">=5.3.5" },
+    { name = "pytest", specifier = "~=9.0.3" },
     { name = "pytest-cov", specifier = ">=4.0.0" },
     { name = "pytest-csv" },
     { name = "pytest-forked" },
@@ -3397,7 +3397,7 @@ wheels = [
 
 [[package]]
 name = "openvino-model-api"
-version = "0.4.1"
+version = "0.4.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
@@ -3405,9 +3405,9 @@ dependencies = [
     { name = "openvino" },
     { name = "pillow" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/63/5c4fcf0b46d7158eec3f33cae95263de4602da2e35237e0586e1de9f2776/openvino_model_api-0.4.1.tar.gz", hash = "sha256:b5ac69982f9b5fdd025c2feaa76eab807dda5a99acc1f7ae45960ff8f3c32692", size = 516385, upload-time = "2026-04-09T11:54:55.974Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/39/6f/f9b5c544663795936414577ebf069e3c4537390aff5aa7f4cca63f227b0c/openvino_model_api-0.4.2.tar.gz", hash = "sha256:f7fbed2c72fe2280a9c8d325f8b61a3f66f748fa1db3910366597aacaa6306a4", size = 524414, upload-time = "2026-05-06T11:48:13.149Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d4/53/b894dd4cbf2787d3c4d7851c1ce6cb58a8b764adea2a84e6f05191711280/openvino_model_api-0.4.1-py3-none-any.whl", hash = "sha256:210f4ae13a361a3968726a5cca7c7e8c1a8c4c067abb16b91c98a400076dd083", size = 135028, upload-time = "2026-04-09T11:54:54.621Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/9b/8a958503efe154bc676eec32b7d2cc7fe8253271512427a0bc4c86190d76/openvino_model_api-0.4.2-py3-none-any.whl", hash = "sha256:28d5c959cbb05f3c9f2e54a4fbe600e1609268e55ca37efd277a386ecf3fa0bf", size = 138956, upload-time = "2026-05-06T11:48:11.223Z" },
 ]
 
 [[package]]

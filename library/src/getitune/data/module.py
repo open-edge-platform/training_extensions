@@ -129,10 +129,10 @@ class DataModule(LightningDataModule):
             self.input_mean = None
             self.input_std = None
         self.input_size = input_size
-        # propagate intensity config from train subset for use in export
-        self.input_intensity_config = getattr(self.train_subset, "intensity", None)
 
         self._setup_dataset(dataset)
+        # Propagate intensity config from train subset for use in export.
+        self.input_intensity_config = getattr(self.train_subset, "intensity", None)
 
     def _setup_dataset(self, dataset: Dataset) -> None:
         """Setup VisionDataset instances from a Datumaro experimental Dataset.

@@ -8,12 +8,14 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import defusedxml.ElementTree as Elet
 import numpy as np
+import onnx
 import torch
 from lightning.pytorch.loggers import CSVLogger
+from model_api.adapters.utils import load_parameters_from_onnx
 from rich.progress import Progress
 
 from getitune.backend.openvino.models import OVModel
@@ -36,7 +38,10 @@ class OVEngine(Engine):
     """OV Engine.
 
     This class defines the OV Engine for getitune, which governs each step of the OpenVINO validation workflow.
+    Supports both OpenVINO IR (.xml) and ONNX (.onnx) model formats for test and predict operations.
     """
+
+    _SUPPORTED_MODEL_SUFFIXES: ClassVar[list[str]] = [".xml", ".onnx"]
 
     def __init__(
         self,
@@ -51,16 +56,16 @@ class OVEngine(Engine):
                 If a path is provided, the engine will automatically create a datamodule
                 based on the data root and model.
             model (OVModel | PathLike): The OV model for the engine.
-                A PathLike object to an OpenVINO IR XML file can also be provided. Defaults to None.
+                A PathLike object to an OpenVINO IR XML or ONNX file can also be provided.
             work_dir (PathLike, optional): Working directory for the engine. Defaults to "./getitune-workspace".
         """
         self._work_dir = work_dir
-        if isinstance(model, (str, os.PathLike)) and Path(model).suffix in [".xml"]:
-            task: TaskType | None = self._derive_task_from_ir(model)
+        if isinstance(model, (str, os.PathLike)) and Path(model).suffix in self._SUPPORTED_MODEL_SUFFIXES:
+            task: TaskType | None = self._derive_task_from_model(model)
         elif isinstance(model, OVModel):
             task = model.task  # type: ignore[assignment]
         else:
-            msg = "Please provide a valid OpenVINO model or a path to an OpenVINO IR XML file."
+            msg = "Please provide a valid OpenVINO model or a path to an OpenVINO IR XML/.onnx file."
             raise ValueError(msg)
         self._auto_configurator = AutoConfigurator(
             data_root=data if isinstance(data, (str, os.PathLike)) else None,
@@ -133,6 +138,78 @@ class OVEngine(Engine):
             raise ValueError(msg)
 
         return task_map[task_name]
+
+    def _derive_task_from_onnx(self, onnx_path: PathLike) -> TaskType:
+        """Derive the task type from ONNX model metadata_props.
+
+        Args:
+            onnx_path (PathLike): Path to the ONNX model file.
+
+        Returns:
+            TaskType: The derived task type.
+
+        Raises:
+            ValueError: If the task type is unsupported or the ONNX metadata is missing.
+        """
+        task_map = {
+            "classification_hcl": TaskType.H_LABEL_CLS,
+            "classification_mlc": TaskType.MULTI_LABEL_CLS,
+            "classification_mc": TaskType.MULTI_CLASS_CLS,
+            "segmentation": TaskType.SEMANTIC_SEGMENTATION,
+            "detection": TaskType.DETECTION,
+            "instance_segmentation": TaskType.INSTANCE_SEGMENTATION,
+            "keypoint_detection": TaskType.KEYPOINT_DETECTION,
+        }
+
+        onnx_model = onnx.load(str(onnx_path), load_external_data=False)
+        metadata = load_parameters_from_onnx(onnx_model)
+
+        model_info = metadata.get("model_info", {})
+        task_type = model_info.get("task_type")
+        if task_type is None:
+            msg = "No 'task_type' found in ONNX model metadata. Please ensure the model was exported by getitune."
+            raise ValueError(msg)
+
+        if task_type == "classification":
+            if model_info.get("hierarchical") == "True":
+                task_name = task_type + "_hcl"
+            elif model_info.get("multilabel") == "True":
+                task_name = task_type + "_mlc"
+            else:
+                task_name = task_type + "_mc"
+        else:
+            task_name = task_type
+
+        if task_name not in task_map:
+            msg = f"Unsupported task type '{task_name}' derived from the ONNX model metadata."
+            raise ValueError(msg)
+
+        return task_map[task_name]
+
+    def _derive_task_from_model(self, model_path: PathLike) -> TaskType:
+        """Derive the task type from a model file (.xml or .onnx).
+
+        Args:
+            model_path (PathLike): Path to the model file.
+
+        Returns:
+            TaskType: The derived task type.
+
+        Raises:
+            ValueError: If the model format is unsupported.
+        """
+        path = Path(str(model_path))
+        if path.suffix == ".xml":
+            return self._derive_task_from_ir(model_path)
+        if path.suffix == ".onnx":
+            return self._derive_task_from_onnx(model_path)
+        msg = f"Unsupported model format: '{path.suffix}'. Supported formats: {self._SUPPORTED_MODEL_SUFFIXES}"
+        raise ValueError(msg)
+
+    @property
+    def _is_onnx(self) -> bool:
+        """Check if the currently loaded model is an ONNX model."""
+        return self.model is not None and Path(str(self.model.model_path)).suffix == ".onnx"
 
     def train(self, *args, **kwargs) -> METRICS:
         """Train method is not supported for OVEngine."""
@@ -342,6 +419,10 @@ class OVEngine(Engine):
 
         PTQ performs int-8 quantization on the input model, resulting in mixed precision.
 
+        Note:
+            Only OpenVINO IR (.xml) models are supported for optimization.
+            ONNX models must be converted to OpenVINO IR format first.
+
         Args:
             checkpoint (PathLike | None, optional): Checkpoint to optimize. Defaults to None.
             datamodule (DataModule | None, optional): The data module to use for optimization.
@@ -352,7 +433,16 @@ class OVEngine(Engine):
 
         Returns:
             Path: Path to the optimized model.
+
+        Raises:
+            RuntimeError: If an ONNX model is used (not supported for optimization).
         """
+        target_is_onnx = (checkpoint is not None and Path(str(checkpoint)).suffix == ".onnx") or (
+            checkpoint is None and self._is_onnx
+        )
+        if target_is_onnx:
+            msg = "OVEngine.optimize() does not support ONNX models. Please convert to OpenVINO IR format first."
+            raise RuntimeError(msg)
         optimize_datamodule = datamodule if datamodule is not None else self.datamodule
         model = self._update_checkpoint(checkpoint)
         optimize_datamodule = self._auto_configurator.update_ov_subset_pipeline(
@@ -384,7 +474,7 @@ class OVEngine(Engine):
             check_model = True
         elif isinstance(model, (str, os.PathLike)):
             model_path = Path(model)
-            check_model = model_path.suffix in [".xml"]
+            check_model = model_path.suffix in OVEngine._SUPPORTED_MODEL_SUFFIXES
         if isinstance(data, DataModule):
             check_data = True
         elif isinstance(data, (str, os.PathLike)):
@@ -397,7 +487,7 @@ class OVEngine(Engine):
         """Update the OVModel with the given checkpoint path.
 
         Args:
-            checkpoint (PathLike | None): The new IR XML file path.
+            checkpoint (PathLike | None): The new model file path (.xml or .onnx).
 
         Returns:
             OVModel: The updated OVModel instance.
@@ -409,11 +499,14 @@ class OVEngine(Engine):
         if checkpoint is None and self.model is None:
             msg = "Please provide either a model or a checkpoint path."
             raise ValueError(msg)
-        if checkpoint is not None and Path(str(checkpoint)).suffix not in [".xml"]:
-            msg = "OV Engine supports only OV IR checkpoints"
+        if checkpoint is not None and Path(str(checkpoint)).suffix not in self._SUPPORTED_MODEL_SUFFIXES:
+            msg = (
+                f"OVEngine supports only {self._SUPPORTED_MODEL_SUFFIXES} checkpoints, "
+                f"got '{Path(str(checkpoint)).suffix}'"
+            )
             raise RuntimeError(msg)
         if checkpoint is not None:
-            task = self._derive_task_from_ir(checkpoint)
+            task = self._derive_task_from_model(checkpoint)
             return self._auto_configurator.get_ov_model(model_name=str(checkpoint), task=task)
 
         return self.model  # type: ignore[return-value]

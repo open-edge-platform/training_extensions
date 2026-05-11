@@ -10,7 +10,7 @@ Original implementation: https://github.com/roboflow/rf-detr
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 from rfdetr import RFDETRBase, RFDETRLarge, RFDETRMedium, RFDETRNano, RFDETRSmall
 from torch.export import Dim
@@ -23,8 +23,10 @@ from getitune.backend.lightning.models.detection.base import LightningDetectionM
 from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
 from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
+from getitune.types.export import TaskLevelExportParameters
 
 if TYPE_CHECKING:
+    import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
@@ -135,6 +137,14 @@ class RFDETR(RFDETRMixin, LightningDetectionModel):  # pyrefly: ignore[inconsist
         )
 
     @property
+    def _export_parameters(self) -> TaskLevelExportParameters:
+        """Defines parameters required to export a particular model implementation."""
+        # DETR models use Hungarian matching for one-to-one predictions, but on small datasets
+        # near-duplicate boxes can still appear. Use a conservative IoU threshold (0.8) to only
+        # suppress almost-identical duplicates without removing valid overlapping detections.
+        return super()._export_parameters.wrap(iou_threshold=0.8, nms_execute=True)
+
+    @property
     def _exporter(self) -> ModelExporter:
         """Creates ModelExporter object for model export."""
         return LightningModelExporter(
@@ -152,6 +162,11 @@ class RFDETR(RFDETRMixin, LightningDetectionModel):  # pyrefly: ignore[inconsist
             },
             output_names=["bboxes", "labels", "scores"],
         )
+
+    def forward_for_tracing(self, inputs: torch.Tensor) -> dict[str, Any]:
+        """Forward pass used for export (returns dict for reliable OV output naming)."""
+        boxes, labels, scores = self.model.export(inputs)  # pyrefly: ignore[not-callable]
+        return {"bboxes": boxes, "labels": labels, "scores": scores}
 
     @property
     def _default_preprocessing_params(self) -> dict[str, DataInputParams]:  # type: ignore[override]

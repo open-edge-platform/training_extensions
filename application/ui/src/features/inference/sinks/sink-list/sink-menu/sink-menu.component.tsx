@@ -5,16 +5,23 @@ import { Key } from 'react';
 
 import { ActionButton, Item, Menu, MenuTrigger, toast } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../../api/client';
-import { useProjectIdentifier } from '../../../../../hooks/use-project-identifier.hook';
 
-export interface SinkMenuProps {
+const SINK_MENU_OPTIONS = {
+    CONNECT: 'connect',
+    DISCONNECT: 'disconnect',
+    REMOVE: 'remove',
+    EDIT: 'edit',
+};
+
+export type SinkMenuProps = {
     id: string;
     name: string;
     isConnected: boolean;
     onEdit: () => void;
-}
+};
 
 export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
     const project_id = useProjectIdentifier();
@@ -32,13 +39,16 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
 
     const handleOnAction = (option: Key) => {
         switch (option) {
-            case 'connect':
+            case SINK_MENU_OPTIONS.CONNECT:
                 handleConnect();
                 break;
-            case 'remove':
-                handleDelete();
+            case SINK_MENU_OPTIONS.DISCONNECT:
+                handleDisconnect();
                 break;
-            default:
+            case SINK_MENU_OPTIONS.REMOVE:
+                handleRemove();
+                break;
+            case SINK_MENU_OPTIONS.EDIT:
                 onEdit();
                 break;
         }
@@ -61,7 +71,7 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
         );
     };
 
-    const handleDelete = () => {
+    const handleRemove = () => {
         removeSink.mutate(
             { params: { path: { sink_id: id } } },
             {
@@ -75,15 +85,36 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
         );
     };
 
+    const handleDisconnect = () => {
+        updatePipeline.mutate(
+            {
+                params: { path: { project_id } },
+                body: { sink_id: null },
+            },
+            {
+                onSuccess: () => {
+                    toast({
+                        type: 'success',
+                        message: `Successfully disconnected from "${name}"`,
+                    });
+                },
+            }
+        );
+    };
+
     return (
         <MenuTrigger>
             <ActionButton isQuiet aria-label='sink menu'>
                 <MoreMenu />
             </ActionButton>
-            <Menu onAction={handleOnAction} disabledKeys={isConnected ? ['connect', 'remove'] : []}>
-                <Item key='connect'>Connect</Item>
-                <Item key='edit'>Edit</Item>
-                <Item key='remove'>Remove</Item>
+            <Menu onAction={handleOnAction} disabledKeys={isConnected ? [SINK_MENU_OPTIONS.REMOVE] : []}>
+                {isConnected ? (
+                    <Item key={SINK_MENU_OPTIONS.DISCONNECT}>Disconnect</Item>
+                ) : (
+                    <Item key={SINK_MENU_OPTIONS.CONNECT}>Connect</Item>
+                )}
+                <Item key={SINK_MENU_OPTIONS.EDIT}>Edit</Item>
+                <Item key={SINK_MENU_OPTIONS.REMOVE}>Remove</Item>
             </Menu>
         </MenuTrigger>
     );
