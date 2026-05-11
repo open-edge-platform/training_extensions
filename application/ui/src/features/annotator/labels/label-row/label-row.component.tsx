@@ -3,13 +3,14 @@
 
 import { KeyboardEvent, useState } from 'react';
 
-import { ActionButton, Grid, TextField, Tooltip, TooltipTrigger, View } from '@geti/ui';
+import { ActionButton, Flex, Grid, TextField, Tooltip, TooltipTrigger } from '@geti/ui';
 import { Delete, Pin, Unpin } from '@geti/ui/icons';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
 import { SilentCheckbox } from '../../../../components/label-fields/silent-checkbox.component';
 import type { Label } from '../../../../constants/shared-types';
 import { useDebounce } from '../../../../hooks/use-debounce.hook';
+import { HotkeyField } from './hotkey-field/hotkey-field.component';
 
 import classes from './label-row.module.scss';
 
@@ -24,6 +25,7 @@ export type LabelRowProps = {
     onTogglePin: (label: Label) => void;
     onUpdate: (labelId: string, updates: { name: string; color: string; hotkey: string | null | undefined }) => void;
     validateName: (name: string, excludeId?: string) => string | undefined;
+    validateHotkey: (newHotkey: string, excludeId?: string) => string | undefined;
 };
 
 const onEnter = (handler: () => void) => (event: KeyboardEvent) => {
@@ -39,11 +41,14 @@ export const LabelRow = ({
     onTogglePin,
     onUpdate,
     validateName,
+    validateHotkey,
 }: LabelRowProps) => {
     const [name, setName] = useState(label.name);
     const [color, setColor] = useState(label.color);
+    const [hotkey, setHotkey] = useState(label.hotkey ?? '');
 
     const validationError = validateName(name, label.id);
+    const hotkeyValidationError = validateHotkey(hotkey, label.id);
 
     const getValidName = () => (validationError || name.trim() === '' ? label.name : name.trim());
 
@@ -51,15 +56,25 @@ export const LabelRow = ({
         if (validationError || name.trim() === '') return;
         if (name === label.name) return;
 
-        onUpdate(label.id, { name: name.trim(), color, hotkey: label.hotkey });
+        onUpdate(label.id, { name: name.trim(), color, hotkey });
+    };
+
+    const handleHotkeyChange = () => {
+        if (validateHotkey(hotkey, label.id) === undefined) {
+            onUpdate(label.id, {
+                name: name.trim(),
+                color,
+                hotkey: hotkey.trim() === '' ? undefined : hotkey.trim(),
+            });
+        }
     };
 
     const debouncedUpdate = useDebounce(
         (newColor: string, currentName: string) => {
-            onUpdate(label.id, { name: currentName, color: newColor, hotkey: label.hotkey });
+            onUpdate(label.id, { name: currentName, color: newColor, hotkey });
         },
         COLOR_DEBOUNCE_MS,
-        [onUpdate, label.id, label.hotkey]
+        [onUpdate, label.id, hotkey]
     );
 
     const handleColorChange = (newColor: string) => {
@@ -79,7 +94,7 @@ export const LabelRow = ({
 
             <LabelColorPicker color={color} onChange={handleColorChange} />
 
-            <View>
+            <Flex gap={'size-100'}>
                 <TextField
                     width={'100%'}
                     value={name}
@@ -91,7 +106,16 @@ export const LabelRow = ({
                     errorMessage={validationError}
                     validationState={validationError ? 'invalid' : undefined}
                 />
-            </View>
+
+                <HotkeyField
+                    value={hotkey}
+                    onChange={setHotkey}
+                    onEnter={handleHotkeyChange}
+                    aria-label={'Edited hotkey'}
+                    errorMessage={hotkeyValidationError}
+                    validationState={hotkeyValidationError ? 'invalid' : undefined}
+                />
+            </Flex>
 
             <TooltipTrigger>
                 <ActionButton
