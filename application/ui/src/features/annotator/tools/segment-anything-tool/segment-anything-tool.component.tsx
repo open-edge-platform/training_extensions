@@ -168,9 +168,7 @@ export const SegmentAnythingTool = () => {
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerLeave}
             style={{
-                cursor: isDecoding
-                    ? 'progress'
-                    : `url(${selectionCursor}) ${CURSOR_OFFSET}, auto`,
+                cursor: isDecoding ? 'progress' : `url(${selectionCursor}) ${CURSOR_OFFSET}, auto`,
             }}
         >
             <PreviewAnnotations previewAnnotations={previewAnnotations} image={image} />
