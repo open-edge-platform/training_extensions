@@ -5,12 +5,17 @@
 
 from __future__ import annotations
 
+import gc
 import logging
 import multiprocessing
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from torch.utils.data import DataLoader
+import torch
+from ultralytics.data.build import InfiniteDataLoader, seed_worker
+
+if TYPE_CHECKING:
+    from torch.utils.data import DataLoader
 
 from getitune.backend.ultralytics.data.adapter import UltralyticsDatasetAdapter
 from getitune.backend.ultralytics.data.collate import collate_fn
@@ -29,6 +34,7 @@ class GetiTuneDataBridgeMixin:
     _datamodule: DataModule | None = None
     _use_getitune_data: bool = False
     _include_masks: bool = False
+    _val_interval: int = 5
 
     def get_dataset(self) -> dict[str, Any]:
         """Build data config dict from DataModule or fall back to YAML."""
@@ -82,20 +88,22 @@ class GetiTuneDataBridgeMixin:
         dataset = self.build_dataset(dataset_path, mode, batch_size)
         shuffle = mode == "train"
         nw = self.args.workers  # type: ignore[attr-defined]
-        return DataLoader(
+        return InfiniteDataLoader(
             dataset,
             batch_size=batch_size,
             shuffle=shuffle,
             num_workers=nw,
+            prefetch_factor=4 if nw > 0 else None,
             collate_fn=collate_fn,
             pin_memory=True,
             drop_last=False,
             multiprocessing_context=_MP_CONTEXT if nw > 0 else None,
             persistent_workers=nw > 0,
+            worker_init_fn=seed_worker,
         )
 
     def _setup_train(self) -> None:
-        """Run parent setup, then fix warmup for small datasets.
+        """Run parent setup, then fix warmup for small datasets and add periodic validation.
 
         Ultralytics enforces a minimum of 100 warmup iterations regardless
         of dataset size (``max(round(warmup_epochs * nb), 100)``).  For
@@ -106,52 +114,149 @@ class GetiTuneDataBridgeMixin:
         disable the built-in warmup entirely and register a custom
         ``on_train_batch_start`` callback that applies the same LR /
         momentum ramp but respects the natural iteration count.
+
+        Additionally, registers a callback that validates and saves only
+        every ``_val_interval`` epochs instead of every epoch.  The upstream
+        loop already handles ``final_epoch``, ``stopper.possible_stop``, and
+        ``self.stop`` independently, so periodic toggling of ``args.val`` /
+        ``args.save`` is safe.
         """
         super()._setup_train()  # type: ignore[misc]
 
         if not self._use_getitune_data:
             return
         if self.args.warmup_epochs <= 0:  # type: ignore[attr-defined]
+            self._disable_automatic_gc()
+            self._register_periodic_val_callback()
+            self._register_close_mosaic_callback()
             return
 
         nb = len(self.train_loader)  # type: ignore[attr-defined]
         natural_nw = round(self.args.warmup_epochs * nb)  # type: ignore[attr-defined]
-        if natural_nw >= 100:
-            return
+        if natural_nw < 100:
+            logger.info(
+                f"Bypassing Ultralytics 100-iteration warmup minimum. "
+                f"With {nb} batches/epoch, using natural warmup of "
+                f"{natural_nw} iterations ({self.args.warmup_epochs} epochs)."
+            )
 
-        logger.info(
-            f"Bypassing Ultralytics 100-iteration warmup minimum. "
-            f"With {nb} batches/epoch, using natural warmup of "
-            f"{natural_nw} iterations ({self.args.warmup_epochs} epochs)."
-        )
+            warmup_bias_lr = self.args.warmup_bias_lr  # type: ignore[attr-defined]
+            warmup_momentum = self.args.warmup_momentum  # type: ignore[attr-defined]
+            nbs = self.args.nbs  # type: ignore[attr-defined]
+            batch_size = self.batch_size  # type: ignore[attr-defined]
+            self.args.warmup_epochs = 0  # type: ignore[attr-defined]
 
-        warmup_bias_lr = self.args.warmup_bias_lr  # type: ignore[attr-defined]
-        warmup_momentum = self.args.warmup_momentum  # type: ignore[attr-defined]
-        nbs = self.args.nbs  # type: ignore[attr-defined]
-        batch_size = self.batch_size  # type: ignore[attr-defined]
-        self.args.warmup_epochs = 0  # type: ignore[attr-defined]
+            counter = {"ni": 0}
 
-        counter = {"ni": 0}
+            def _warmup_callback(trainer: Any) -> None:  # noqa: ANN401
+                ni = counter["ni"]
+                if ni <= natural_nw:
+                    xi = [0, natural_nw]
+                    trainer.accumulate = max(1, int(np.interp(ni, xi, [1, nbs / batch_size]).round()))
+                    for pg in trainer.optimizer.param_groups:
+                        pg["lr"] = np.interp(
+                            ni,
+                            xi,
+                            [
+                                warmup_bias_lr if pg.get("param_group") == "bias" else 0.0,
+                                pg["initial_lr"] * trainer.lf(trainer.epoch),
+                            ],
+                        )
+                        if "momentum" in pg:
+                            pg["momentum"] = np.interp(ni, xi, [warmup_momentum, trainer.args.momentum])
+                counter["ni"] += 1
 
-        def _warmup_callback(trainer: Any) -> None:  # noqa: ANN401
-            ni = counter["ni"]
-            if ni <= natural_nw:
-                xi = [0, natural_nw]
-                trainer.accumulate = max(1, int(np.interp(ni, xi, [1, nbs / batch_size]).round()))
-                for pg in trainer.optimizer.param_groups:
-                    pg["lr"] = np.interp(
-                        ni,
-                        xi,
-                        [
-                            warmup_bias_lr if pg.get("param_group") == "bias" else 0.0,
-                            pg["initial_lr"] * trainer.lf(trainer.epoch),
-                        ],
-                    )
-                    if "momentum" in pg:
-                        pg["momentum"] = np.interp(ni, xi, [warmup_momentum, trainer.args.momentum])
-            counter["ni"] += 1
+            self.add_callback("on_train_batch_start", _warmup_callback)  # type: ignore[attr-defined]
 
-        self.add_callback("on_train_batch_start", _warmup_callback)  # type: ignore[attr-defined]
+        self._disable_automatic_gc()
+        self._register_periodic_val_callback()
+        self._register_close_mosaic_callback()
+
+    def _register_periodic_val_callback(self) -> None:
+        """Register a callback that validates/saves only every ``_val_interval`` epochs.
+
+        Ultralytics validates and saves checkpoints every single epoch by
+        default.  For small datasets the per-epoch overhead (validation,
+        ``deepcopy`` of EMA / optimizer, serialisation, disk I/O) dominates
+        training time.  This callback toggles ``args.val`` and ``args.save``
+        so that they only fire every *N* epochs, similar to Lightning's
+        adaptive validation scheduling.
+
+        The upstream ``_do_train`` loop checks ``final_epoch``,
+        ``stopper.possible_stop``, and ``self.stop`` independently of
+        ``args.val``, so the early-stopping contract is preserved.
+        """
+        val_interval = self._val_interval
+
+        def _periodic_val_save(trainer: Any) -> None:  # noqa: ANN401
+            should = (trainer.epoch + 1) % val_interval == 0
+            trainer.args.val = should
+            trainer.args.save = should
+
+        self.add_callback("on_train_epoch_end", _periodic_val_save)  # type: ignore[attr-defined]
+
+    def _disable_automatic_gc(self) -> None:
+        """Disable Python's automatic garbage collection during training.
+
+        Python's generational GC (thresholds 2000/10/10) runs automatically
+        based on allocation counts.  In a tight training loop with many
+        temporary objects (batch dicts, tensors, augmentation intermediates),
+        gen-1 and gen-2 collections trigger frequently and must walk the
+        entire object graph — including large dataset caches, spawn-worker
+        shared memory, and Datumaro structures.  This causes the oscillating
+        fast/slow epoch pattern observed in profiling.
+
+        This method disables automatic GC and registers callbacks to:
+        - Manually collect at periodic validation boundaries (where overhead
+          is already accepted)
+        - Re-enable automatic GC when training ends (normal or early stop)
+
+        This is a well-established optimization used by PyTorch Lightning,
+        HuggingFace Transformers, and NVIDIA Apex.
+        """
+        gc.disable()
+        logger.info("Disabled automatic GC for training (manual collect at validation intervals)")
+
+        val_interval = self._val_interval
+
+        def _manual_gc_at_val(trainer: Any) -> None:  # noqa: ANN401
+            if (trainer.epoch + 1) % val_interval == 0:
+                gc.collect()
+
+        def _reenable_gc(_trainer: Any) -> None:  # noqa: ANN401
+            gc.collect()
+            gc.enable()
+            logger.info("Re-enabled automatic GC after training")
+
+        self.add_callback("on_train_epoch_end", _manual_gc_at_val)  # type: ignore[attr-defined]
+        self.add_callback("on_train_end", _reenable_gc)  # type: ignore[attr-defined]
+
+    def _clear_memory(self, threshold: float | None = None) -> None:
+        """Lightweight memory clearing that skips ``gc.collect()``.
+
+        The upstream implementation calls ``gc.collect()`` every epoch which
+        forces a full Python garbage-collection cycle.  This is expensive
+        with large object graphs (spawn-based DataLoader workers, Datumaro
+        caches, etc.) and unnecessary during tight training loops where
+        memory pressure is manageable via CUDA cache management alone.
+
+        Falls back to the upstream implementation when running without the
+        DataModule bridge (native YOLO data path).
+        """
+        if not self._use_getitune_data:
+            return super()._clear_memory(threshold)  # type: ignore[misc]
+
+        if self.device.type == "cpu":  # type: ignore[attr-defined]
+            return None
+
+        if threshold is not None and self._get_memory(fraction=True) <= threshold:  # type: ignore[attr-defined]
+            return None
+
+        if self.device.type == "mps":  # type: ignore[attr-defined]
+            torch.mps.empty_cache()
+        else:
+            torch.cuda.empty_cache()
+        return None
 
     def set_model_attributes(self) -> None:
         """Set model attributes; disable Ultralytics augmentations when using DataModule."""
@@ -178,7 +283,14 @@ class GetiTuneDataBridgeMixin:
         return super().auto_batch()  # type: ignore[misc]
 
     def _disable_ultralytics_augmentations(self) -> None:
-        """Zero out Ultralytics augmentation hyperparams."""
+        """Zero out Ultralytics augmentation hyperparams.
+
+        Preserves ``close_mosaic`` for the bridge's own implementation
+        (see :meth:`_register_close_mosaic_callback`), then zeros it so
+        the upstream ``_close_dataloader_mosaic()`` never fires.
+        """
+        self._bridge_close_mosaic = getattr(self.args, "close_mosaic", 0)  # type: ignore[attr-defined]
+
         for attr in (
             "mosaic",
             "mixup",
@@ -199,3 +311,67 @@ class GetiTuneDataBridgeMixin:
                 setattr(self.args, attr, 0.0)  # type: ignore[attr-defined]
         if hasattr(self.args, "close_mosaic"):  # type: ignore[attr-defined]
             self.args.close_mosaic = 0  # type: ignore[attr-defined]
+
+    def _register_close_mosaic_callback(self) -> None:
+        """Disable CachedMosaic / CachedMixUp for the last ``close_mosaic`` epochs.
+
+        Upstream Ultralytics disables its native mosaic augmentation for the
+        final N epochs (``close_mosaic`` parameter) so the model fine-tunes
+        on clean images.  The upstream mechanism
+        (``_close_dataloader_mosaic`` + ``reset()``) cannot work with our
+        DataModule pipeline, so we implement the equivalent: at the right
+        epoch, walk the train dataset's transforms and set ``prob = 0.0``
+        on any :class:`CachedMosaic` or :class:`CachedMixUp`.
+
+        For multi-worker DataLoaders the train DataLoader is rebuilt so
+        worker processes pick up the change.
+        """
+        close_mosaic = getattr(self, "_bridge_close_mosaic", 0)
+        if close_mosaic <= 0:
+            return
+
+        fired = {"done": False}
+
+        def _close_mosaic_cb(trainer: Any) -> None:  # noqa: ANN401
+            if fired["done"]:
+                return
+            close_epoch = trainer.epochs - close_mosaic
+            if trainer.epoch >= close_epoch:
+                fired["done"] = True
+                self._disable_bridge_mosaic()
+
+        self.add_callback("on_train_epoch_start", _close_mosaic_cb)  # type: ignore[attr-defined]
+
+    def _disable_bridge_mosaic(self) -> None:
+        """Set ``prob = 0.0`` on CachedMosaic / CachedMixUp in the train transforms.
+
+        If workers > 0 the train DataLoader is rebuilt so spawned worker
+        processes receive the updated transforms.
+        """
+        from getitune.data.augmentation.pipeline import CPUAugmentationPipeline
+        from getitune.data.augmentation.transforms import CachedMixUp, CachedMosaic
+
+        if not self._use_getitune_data or self._datamodule is None:
+            return
+
+        train_dataset = self._datamodule.subsets.get("train")  # type: ignore[union-attr]
+        if train_dataset is None:
+            return
+
+        transforms = getattr(train_dataset, "transforms", None)
+        disabled = False
+
+        if isinstance(transforms, CPUAugmentationPipeline):
+            for aug in transforms.augmentations:
+                if isinstance(aug, (CachedMosaic, CachedMixUp)):
+                    aug.prob = 0.0
+                    logger.info(f"close_mosaic: disabled {type(aug).__name__}")
+                    disabled = True
+
+        if disabled and self.args.workers > 0:  # type: ignore[attr-defined]
+            self.train_loader = self.get_dataloader(  # type: ignore[attr-defined]
+                dataset_path="",
+                batch_size=self.batch_size,  # type: ignore[attr-defined]
+                rank=0,
+                mode="train",
+            )

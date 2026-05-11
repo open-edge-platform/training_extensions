@@ -128,6 +128,19 @@ class UltralyticsEngine(Engine):
         """
         if callbacks is not None:
             logger.debug("UltralyticsEngine ignores the 'callbacks' parameter")
+        # Translate Lightning-specific 'devices' to Ultralytics device selection.
+        if "devices" in kwargs:
+            devices = kwargs.pop("devices")
+            if isinstance(devices, list) and len(devices) >= 1:
+                idx = devices[0]
+                if len(devices) > 1:
+                    logger.warning(f"UltralyticsEngine does not support multi-device; using first device: {idx}")
+                # Only set index for accelerator devices; CPU doesn't support indices.
+                dev_type = self._device.type
+                if dev_type != "cpu":
+                    self._device = torch.device(f"{dev_type}:{idx}")
+        # Drop Lightning-only kwargs that have no Ultralytics equivalent.
+        kwargs.pop("precision", None)
         explicit: dict[str, Any] = {}
         if epochs is not None:
             explicit["epochs"] = epochs

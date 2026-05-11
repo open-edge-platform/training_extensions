@@ -24,7 +24,7 @@ training:
   cls: 0.5
   dfl: 1.5
   patience: 100
-  close_mosaic: 0
+  close_mosaic: 10
 
 export:
   format: OPENVINO
@@ -41,6 +41,7 @@ overrides:
       - 640
     train_subset:
       batch_size: 16
+      num_workers: 4
       augmentations_cpu:
         - class_path: getitune.data.augmentation.transforms.CachedMosaic
           init_args:
@@ -49,15 +50,13 @@ overrides:
             random_pop: false
             pad_val: 114.0
             p: 1.0
-        - class_path: torchvision.transforms.v2.RandomResizedCrop
+            scale: 0.5
+            translate: 0.1
+        - class_path: getitune.data.augmentation.transforms.FilterBoundingBoxes
           init_args:
-            size: $(input_size)
-            scale: [0.5, 1.0]
-            ratio: [0.75, 1.333]
-            antialias: true
-        - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
-          init_args:
-            min_size: 1
+            min_wh: 2
+            max_aspect_ratio: 20.0
+            min_area: 4.0
         - class_path: torchvision.transforms.v2.ColorJitter
           init_args:
             brightness: 0.4
@@ -67,14 +66,12 @@ overrides:
         - class_path: torchvision.transforms.v2.RandomHorizontalFlip
           init_args:
             p: 0.5
-        - class_path: torchvision.transforms.v2.RandomErasing
-          init_args:
-            p: 0.4
       augmentations_gpu: []
       sampler:
         class_path: getitune.data.samplers.balanced_sampler.BalancedSampler
     val_subset:
       batch_size: 16
+      num_workers: 4
       augmentations_cpu:
         - class_path: getitune.data.augmentation.transforms.Resize
           init_args:
@@ -87,6 +84,7 @@ overrides:
         class_path: torch.utils.data.SequentialSampler
     test_subset:
       batch_size: 16
+      num_workers: 4
       augmentations_cpu:
         - class_path: getitune.data.augmentation.transforms.Resize
           init_args:

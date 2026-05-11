@@ -277,7 +277,7 @@ class TestToConfigDict:
     def test_keys_present(self) -> None:
         cfg = Configurator.from_config_dict(_minimal_ultralytics_recipe())
         result = cfg.to_config_dict()
-        assert set(result.keys()) == {"backend", "task", "model", "engine", "training", "export", "data"}
+        assert set(result.keys()) == {"backend", "task", "model", "engine", "training", "export", "data", "max_epochs"}
 
     def test_model_section(self) -> None:
         cfg = Configurator.from_config_dict(_minimal_ultralytics_recipe())
@@ -319,7 +319,7 @@ class TestRealRecipes:
         assert cfg.config["model"]["class_path"] == _DETECTION_CLASS_PATH
         assert cfg.config["model"]["init_args"]["pretrained"] in (True, False)
         assert cfg.config["model"]["init_args"]["model_name"].endswith(".yaml")
-        assert cfg.config["training"]["close_mosaic"] == 0
+        assert cfg.config["training"]["close_mosaic"] == 10
 
     @pytest.mark.parametrize("variant", ["yolo26_n", "yolo26_s", "yolo26_m"])
     def test_yolo26_recipe_has_data_config(self, variant: str) -> None:

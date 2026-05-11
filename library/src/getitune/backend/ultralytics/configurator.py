@@ -126,11 +126,21 @@ class Configurator:
                 train_cfg["patience"] = int(early_stopping["patience"])
 
     def to_config_dict(self) -> dict:
-        """Return the config consumed by the application trainer."""
+        """Return the config consumed by the application trainer.
+
+        Places ``max_epochs`` at the top level so the application trainer
+        can access it uniformly regardless of backend (Lightning stores it
+        top-level via jsonargparse CLI resolution).
+        """
         config = copy.deepcopy(self._config)
         data = config.setdefault("data", {})
         if isinstance(data, dict):
             data.setdefault("tile_config", {"enable_tiler": False, "enable_adaptive_tiling": False})
+
+        training = config.get("training", {})
+        if "epochs" in training:
+            config.setdefault("max_epochs", training["epochs"])
+
         return config
 
     def apply_overrides(self, overrides: Mapping[str, Any] | None = None) -> None:

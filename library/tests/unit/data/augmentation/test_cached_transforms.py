@@ -71,16 +71,16 @@ class TestCachedMosaicInit:
 class TestCachedMosaicForward:
     """Functional tests for CachedMosaic augmentation."""
 
-    def test_cache_too_small_returns_input(self):
-        """With fewer than 4 cached images, forward returns input unchanged."""
+    def test_cache_too_small_returns_img_scale(self):
+        """With fewer than 4 cached images, forward applies letterbox+affine (output is img_scale)."""
         mosaic = CachedMosaic(img_scale=(32, 32), p=1.0, max_cached_images=10)
         sample = _make_det_sample(h=32, w=32)
         result = mosaic(sample)
-        # After first call, cache has 1 item → should return input image unchanged
-        assert result.image.shape == sample.image.shape
+        # After first call, cache has 1 item → no mosaic but still letterbox+affine → img_scale output
+        assert result.image.shape[-2:] == (32, 32)
 
     def test_mosaic_applied_after_cache_fills(self):
-        """After 4+ samples cached, mosaic produces 2x img_scale canvas output."""
+        """After 4+ samples cached, mosaic produces img_scale output (with built-in affine crop)."""
         mosaic = CachedMosaic(img_scale=(32, 32), p=1.0, max_cached_images=40)
         for _ in range(4):
             sample = _make_det_sample(h=32, w=32, n_boxes=2)
@@ -88,8 +88,8 @@ class TestCachedMosaicForward:
         # After 4 calls, cache is full enough; 5th call should produce mosaic
         sample = _make_det_sample(h=32, w=32, n_boxes=2)
         result = mosaic(sample)
-        # Mosaic output should be 2x the img_scale
-        assert result.image.shape[-2:] == (64, 64)
+        # Output is always img_scale (built-in affine crop from 2x → 1x)
+        assert result.image.shape[-2:] == (32, 32)
         # Image values should be in [0, 1]
         assert result.image.min() >= 0.0
         assert result.image.max() <= 1.0
@@ -100,19 +100,19 @@ class TestCachedMosaicForward:
         for _ in range(5):
             sample = _make_det_sample(h=32, w=32, n_boxes=2)
             result = mosaic(sample)
-        # After enough samples, mosaic should produce masks
+        # After enough samples, mosaic should produce masks at img_scale
         assert result.masks is not None
-        assert result.masks.shape[-2:] == (64, 64)
+        assert result.masks.shape[-2:] == (32, 32)
 
-    def test_probability_zero_returns_input(self):
-        """With probability=0, mosaic never applies (even with full cache)."""
+    def test_probability_zero_returns_img_scale(self):
+        """With probability=0, mosaic never applies but output is still img_scale (letterbox+affine)."""
         mosaic = CachedMosaic(img_scale=(32, 32), p=0.0, max_cached_images=40)
         for _ in range(5):
             sample = _make_det_sample(h=32, w=32)
             _ = mosaic(sample)
         sample = _make_det_sample(h=32, w=32)
         result = mosaic(sample)
-        # prob=0 → always skip → original size preserved
+        # prob=0 → skip mosaic → letterbox+affine → img_scale output
         assert result.image.shape[-2:] == (32, 32)
 
     def test_cache_eviction(self):
@@ -153,11 +153,13 @@ class TestCachedMosaicForward:
         assert all(0 <= i < 10 for i in indices)
 
     def test_repr(self):
-        mosaic = CachedMosaic(img_scale=(320, 320), p=0.8)
+        mosaic = CachedMosaic(img_scale=(320, 320), p=0.8, scale=0.5, translate=0.1)
         r = repr(mosaic)
         assert "CachedMosaic" in r
         assert "320" in r
         assert "0.8" in r
+        assert "scale=0.5" in r
+        assert "translate=0.1" in r
 
 
 # =====================================================================

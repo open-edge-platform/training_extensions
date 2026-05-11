@@ -430,6 +430,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             train_kwargs["devices"] = [device.index]
         if "precision" in training_config:
             train_kwargs["precision"] = training_config["precision"]
+        # Forward backend-specific training args (e.g. patience for Ultralytics).
+        if "training" in training_config:
+            train_kwargs.update(training_config["training"])
         getitune_engine.train(**train_kwargs)  # pyrefly: ignore[bad-argument-type]
 
         trained_model_path = getitune_engine.best_checkpoint
