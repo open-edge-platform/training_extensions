@@ -57,6 +57,4 @@ class TrainingJob(ProjectJob[TrainingJobParams]):
             # Directory was never created or already removed; treat as a no-op.
             pass
         except Exception as cleanup_exc:
-            logger.error(
-                f"Failed to clean up getitune workspace directory at {workspace_dir}: {cleanup_exc}"
-            )
+            logger.error(f"Failed to clean up getitune workspace directory at {workspace_dir}: {cleanup_exc}")
