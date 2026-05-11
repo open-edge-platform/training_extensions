@@ -56,6 +56,7 @@ const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsPro
 
 export const SegmentAnythingTool = () => {
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
+    const [isDecoding, setIsDecoding] = useState(false);
     const ref = useRef<SVGSVGElement>(null);
 
     const zoom = useZoom();
@@ -70,6 +71,9 @@ export const SegmentAnythingTool = () => {
 
     const canvasRef = useRef<SVGRectElement>(null);
     const hasShownErrorToastRef = useRef(false);
+    // Counter (not boolean) because pointer moves overlap and we cancel
+    // intermediate ones — the cursor stays busy while ANY call is pending.
+    const pendingDecodesRef = useRef(0);
 
     const clampPoint = clampPointBetweenImage(image);
 
@@ -82,6 +86,9 @@ export const SegmentAnythingTool = () => {
             getRelativePoint(canvasRef.current, { x: event.clientX, y: event.clientY }, zoom.scale)
         );
 
+        pendingDecodesRef.current += 1;
+        setIsDecoding(true);
+
         cancellableThrottledDecodingQueryFn
             .call([{ ...point, positive: true }])
             .then((shapes) => {
@@ -89,6 +96,12 @@ export const SegmentAnythingTool = () => {
             })
             .catch(() => {
                 return [];
+            })
+            .finally(() => {
+                pendingDecodesRef.current = Math.max(0, pendingDecodesRef.current - 1);
+                if (pendingDecodesRef.current === 0) {
+                    setIsDecoding(false);
+                }
             });
     };
 
@@ -113,6 +126,8 @@ export const SegmentAnythingTool = () => {
     const handlePointerLeave = () => {
         cancellableThrottledDecodingQueryFn.cancel();
         setPreviewShapes([]);
+        pendingDecodesRef.current = 0;
+        setIsDecoding(false);
     };
 
     const previewAnnotations = previewShapes.map((shape, idx): Annotation => {
@@ -152,7 +167,11 @@ export const SegmentAnythingTool = () => {
             onPointerMove={handleMouseMove}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerLeave}
-            style={{ cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto` }}
+            style={{
+                cursor: isDecoding
+                    ? 'progress'
+                    : `url(${selectionCursor}) ${CURSOR_OFFSET}, auto`,
+            }}
         >
             <PreviewAnnotations previewAnnotations={previewAnnotations} image={image} />
         </SvgToolCanvas>
