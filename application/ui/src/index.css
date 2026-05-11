@@ -98,7 +98,7 @@ a {
     text-decoration: none;
 }
 
-button {
+button:not(:disabled) {
     cursor: pointer !important;
 }
 
