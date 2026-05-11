@@ -4,14 +4,16 @@
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
+from .datetime import UTCDateTime
+
 
 class Base(DeclarativeBase):
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
-    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), server_default=func.current_timestamp())
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), server_default=func.current_timestamp())
 
 
 class BaseID(Base):
@@ -85,8 +87,8 @@ class ModelRevisionDB(BaseID):
     training_configuration: Mapped[dict] = mapped_column(JSON, nullable=False)
     training_dataset_id: Mapped[str | None] = mapped_column(Text, ForeignKey("dataset_revisions.id"), nullable=True)
     label_schema_revision: Mapped[dict] = mapped_column(JSON, nullable=False)
-    training_started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    training_finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    training_started_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    training_finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
     project = relationship("ProjectDB", back_populates="model_revisions")
@@ -119,7 +121,7 @@ class DatasetItemDB(Base):
         Text, ForeignKey("model_revisions.id", ondelete="SET NULL"), nullable=True
     )
     subset: Mapped[str | None] = mapped_column(String(20), nullable=False)
-    subset_assigned_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    subset_assigned_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
 
 
 class MediaDB(BaseID):
