@@ -25,14 +25,11 @@ from app.services import (
     SystemService,
 )
 from app.services.inference import InferenceServer
-from app.services.inference.inference_server import MODELAPI_NSTREAMS
+from app.services.inference.model_loader import MODELAPI_NSTREAMS
 from app.services.media_prediction_service import Frame, LoadedMedia
-from app.services.video import CacheableVideoService, VideoService
+from app.services.video import VideoService, CacheConfig
 
 seconds_to_run = 120
-
-VIDEO_CACHE_ENABLED = os.getenv("GETI_VIDEO_CACHE_ENABLED", "0")
-AV_GPU_ACCEL_ENABLED = os.getenv("GETI_AV_GPU_ACCEL_ENABLED", "0")
 
 
 def _read_cli(args: list[str]) -> tuple[str, Path, UUID, UUID, UUID, str]:
@@ -61,23 +58,9 @@ def __init(
     label_service = LabelService(db_session=db)
     device = system_service.get_inference_device_info(device_name)
 
-    if VIDEO_CACHE_ENABLED != "0":
-        ttl = 30
-        cleanup_interval = 5
-        max_cached_frames_per_video = 1000
-        video_service = CacheableVideoService(
-            ttl=ttl,
-            cleanup_interval=cleanup_interval,
-            max_cached_frames_per_video=max_cached_frames_per_video,
-            video_service=VideoService(),
-        )
-        log.info(
-            f"Using cacheable video service, ttl={ttl}, cleanup_interval={cleanup_interval}, "
-            f"max_cached_frames_per_video={max_cached_frames_per_video}"
-        )
-    else:
-        log.info("Using simple video service")
-        video_service = VideoService()
+    ttl = 30
+    cleanup_interval = 5
+    video_service = VideoService(cache_config=CacheConfig(ttl=ttl, cleanup_interval=cleanup_interval))
 
     media_service = MediaService(data_dir=data_dir, db_session=db, video_service=video_service)
     video = media_service.get_media_by_id(project_id=project_id, media_id=media_id)
