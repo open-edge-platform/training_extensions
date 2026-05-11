@@ -18,7 +18,7 @@ vi.mock('../../label-utils', async (importOriginal) => {
 
 describe('NewLabelRow', () => {
     const getNameInput = () => screen.getByRole('textbox', { name: 'New label name' });
-    const getHotkeyInput = () => screen.getByRole('textbox', { name: 'New label hotkey' });
+    const getHotkeyInput = () => screen.getByRole('textbox', { name: 'Hotkey input' });
 
     it('renders name input and row controls', () => {
         render(
@@ -222,7 +222,7 @@ describe('NewLabelRow', () => {
         await user.type(getNameInput(), 'MyLabel');
         const hotkeyInput = getHotkeyInput();
         await user.type(hotkeyInput, 'D');
-        fireEvent.keyUp(hotkeyInput, { key: 'Enter' });
+        await user.type(hotkeyInput, '{Enter}');
 
         expect(onSave).toHaveBeenCalledWith('MyLabel', '#123456', 'D');
     });
@@ -243,7 +243,7 @@ describe('NewLabelRow', () => {
         await user.type(getNameInput(), 'MyLabel');
         const hotkeyInput = getHotkeyInput();
         await user.type(hotkeyInput, 'B');
-        fireEvent.keyUp(hotkeyInput, { key: 'Enter' });
+        await user.type(hotkeyInput, '{Enter}');
 
         expect(onSave).not.toHaveBeenCalled();
     });
@@ -264,7 +264,9 @@ describe('NewLabelRow', () => {
         await user.type(getNameInput(), 'MyLabel');
         const hotkeyInput = getHotkeyInput();
         await user.click(hotkeyInput);
-        fireEvent.keyUp(hotkeyInput, { key: 'Enter' });
+        await user.type(hotkeyInput, '{Enter}');
+
+        screen.debug();
 
         expect(onSave).toHaveBeenCalledWith('MyLabel', '#123456', undefined);
     });

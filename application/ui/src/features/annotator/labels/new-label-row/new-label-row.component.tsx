@@ -6,9 +6,9 @@ import { FocusEvent, KeyboardEvent, useRef, useState } from 'react';
 import { ActionButton, DOMRefValue, Flex, Grid, TextField, useUnwrapDOMRef, View } from '@geti/ui';
 import { Add, Close } from '@geti/ui/icons';
 
+import { HotkeyField } from '../../../../components/label-fields/hotkey-field.component';
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
 import { getRandomDistinctColor } from '../../label-utils';
-import { HotkeyField } from '../label-row/hotkey-field/hotkey-field.component';
 
 import classes from '../label-row/label-row.module.scss';
 
@@ -28,7 +28,6 @@ export const NewLabelRow = ({ onSave, onCancel, validateName, validateHotkey }: 
 
     const isEmptyName = name.trim().length === 0;
     const validationError = isEmptyName ? undefined : validateName(name);
-    const hotkeyValidationError = validateHotkey(hotkey);
 
     const canSave = (newName: string) => {
         const trimmedName = newName.trim();
@@ -52,6 +51,10 @@ export const NewLabelRow = ({ onSave, onCancel, validateName, validateHotkey }: 
         }
     };
 
+    const handleHotkeyChange = (newHotkey: string | null) => {
+        setHotkey(newHotkey ?? '');
+    };
+
     const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
         // Check if the blur target is within the row (e.g., clicking color picker)
         const relatedTarget = event.relatedTarget as Node | null;
@@ -68,7 +71,7 @@ export const NewLabelRow = ({ onSave, onCancel, validateName, validateHotkey }: 
         }
     };
 
-    const handleHotkeyChange = () => {
+    const handleHotkeyUpdate = () => {
         if (validateHotkey(hotkey) !== undefined) {
             return;
         }
@@ -105,12 +108,11 @@ export const NewLabelRow = ({ onSave, onCancel, validateName, validateHotkey }: 
                 />
 
                 <HotkeyField
-                    value={hotkey}
-                    onChange={setHotkey}
-                    onEnter={handleHotkeyChange}
+                    hotkey={hotkey}
+                    onEnter={handleHotkeyUpdate}
+                    onHotkeyChange={handleHotkeyChange}
                     aria-label={'New label hotkey'}
-                    errorMessage={hotkeyValidationError}
-                    validationState={hotkeyValidationError ? 'invalid' : undefined}
+                    errorMessage={validateHotkey(hotkey)}
                 />
             </Flex>
 

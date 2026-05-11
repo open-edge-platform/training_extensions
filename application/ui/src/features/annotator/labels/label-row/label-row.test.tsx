@@ -113,13 +113,13 @@ describe('LabelRow', () => {
 
             renderApp({ label, onUpdate });
 
-            const hotkeyInput = screen.getByLabelText(/Edited hotkey/i);
+            const hotkeyInput = screen.getByLabelText(/Hotkey input/i);
             await userEvent.type(hotkeyInput, 'test 1');
             await userEvent.click(hotkeyInput);
             await userEvent.keyboard('a');
             await userEvent.keyboard('{Enter}');
 
-            expect(onUpdate).toHaveBeenCalledWith(label.id, expect.objectContaining({ hotkey: 'A' }));
+            expect(onUpdate).toHaveBeenCalledWith(label.id, expect.objectContaining({ hotkey: 'a' }));
         });
 
         it('does not call onUpdate when hotkey has validation error', async () => {
@@ -128,7 +128,7 @@ describe('LabelRow', () => {
 
             renderApp({ label, onUpdate, validateHotkey });
 
-            const hotkeyInput = screen.getByLabelText(/Edited hotkey/i);
+            const hotkeyInput = screen.getByLabelText(/Hotkey input/i);
             await userEvent.click(hotkeyInput);
             await userEvent.keyboard('{Enter}');
 
@@ -141,7 +141,7 @@ describe('LabelRow', () => {
 
             renderApp({ label: labelNoHotkey, onUpdate });
 
-            const hotkeyInput = screen.getByLabelText(/Edited hotkey/i);
+            const hotkeyInput = screen.getByLabelText(/Hotkey input/i);
             await userEvent.click(hotkeyInput);
             await userEvent.keyboard('{Enter}');
 

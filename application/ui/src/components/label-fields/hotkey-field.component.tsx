@@ -9,18 +9,25 @@ import { formatHotkeyForDisplay } from '../../shared/hotkeys-definition';
 
 type HotkeyFieldProps = {
     hotkey: string | null | undefined;
+    onEnter?: () => void;
     onHotkeyChange: (hotkey: string | null) => void;
     errorMessage?: string;
 };
 
-export const HotkeyField = ({ hotkey, onHotkeyChange, errorMessage }: HotkeyFieldProps) => {
+const isEnter = (event: KeyboardEvent) => {
+    return event.key === 'Enter';
+};
+
+export const HotkeyField = ({ hotkey, errorMessage, onEnter, onHotkeyChange }: HotkeyFieldProps) => {
     const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
         event.preventDefault();
 
         const { key, ctrlKey, altKey, shiftKey, metaKey } = event;
 
         // Ignore standalone modifier keys
-        if (['Control', 'Alt', 'Shift', 'Meta'].includes(key)) {
+        if (['Control', 'Alt', 'Shift', 'Meta', 'Enter'].includes(key)) {
+            isEnter(event) && onEnter?.();
+
             return;
         }
 
