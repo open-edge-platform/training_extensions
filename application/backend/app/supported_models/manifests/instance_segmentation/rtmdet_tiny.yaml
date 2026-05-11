@@ -81,7 +81,7 @@ hyperparameters:
         sharpness: 0.5
         probability: 0.5
   training:
-    learning_rate: 0.004
+    learning_rate: 0.0007
     weight_decay: 0.01
     scheduler:
       factor: 0.1
