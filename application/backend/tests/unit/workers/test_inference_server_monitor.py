@@ -28,7 +28,7 @@ class TestInferenceServerMonitorThread:
         assert monitor_thread._ttl == ttl_value
         assert monitor_thread._ttl_start_time > 0
         orig_set_inference_model.assert_called_once_with(
-            project_id=project_id, model_id=model_id, device="AUTO", ttl=ttl_value
+            project_id=project_id, model_id=model_id, device="AUTO", ttl=ttl_value, model_variant_id=None
         )
 
     def test_set_inference_model_not_loaded(self) -> None:
@@ -50,7 +50,7 @@ class TestInferenceServerMonitorThread:
         assert monitor_thread._ttl == 0
         assert monitor_thread._ttl_start_time < 0
         orig_set_inference_model.assert_called_once_with(
-            project_id=project_id, model_id=model_id, device="AUTO", ttl=60
+            project_id=project_id, model_id=model_id, device="AUTO", ttl=60, model_variant_id=None
         )
 
     def test_infer_batch(self) -> None:

@@ -4,6 +4,7 @@
 import { expect } from '@playwright/test';
 import { getMockedMediaImage } from 'mocks/mock-media';
 import { getMockedModel } from 'mocks/mock-model';
+import { getMockedVariant } from 'mocks/mock-model-variant';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
@@ -472,7 +473,11 @@ test.describe('Annotator', () => {
         test('Annotation vs Prediction', async ({ page, annotatorPage, boundingBoxTool, network }) => {
             network.use(
                 http.get('/api/projects/{project_id}/models', async () => {
-                    return HttpResponse.json([getMockedModel()]);
+                    return HttpResponse.json([
+                        getMockedModel({
+                            variants: [getMockedVariant({})],
+                        }),
+                    ]);
                 }),
                 http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
                     return HttpResponse.json({
@@ -573,7 +578,11 @@ test.describe('Annotator', () => {
                     });
                 }),
                 http.get('/api/projects/{project_id}/models', async () => {
-                    return HttpResponse.json([getMockedModel()]);
+                    return HttpResponse.json([
+                        getMockedModel({
+                            variants: [getMockedVariant({})],
+                        }),
+                    ]);
                 }),
                 http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
                     return HttpResponse.json({
@@ -659,7 +668,11 @@ test.describe('Annotator', () => {
         }) => {
             network.use(
                 http.get('/api/projects/{project_id}/models', async () => {
-                    return HttpResponse.json([getMockedModel()]);
+                    return HttpResponse.json([
+                        getMockedModel({
+                            variants: [getMockedVariant({})],
+                        }),
+                    ]);
                 }),
                 http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
                     return HttpResponse.json(
