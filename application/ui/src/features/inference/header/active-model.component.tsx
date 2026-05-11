@@ -54,7 +54,7 @@ export const ActiveModel = () => {
                 selectedKey={activeModel.model_variant_id ?? null}
                 minWidth={'size-3400'}
             >
-                {(item) => <Item>{item.name}</Item>}
+                {(item) => <Item key={item.modelVariantId}>{item.name}</Item>}
             </Picker>
         </>
     );
