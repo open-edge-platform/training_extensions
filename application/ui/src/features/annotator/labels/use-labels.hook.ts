@@ -3,15 +3,18 @@
 
 import { useCallback } from 'react';
 
+import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
 
-import { validateLabelName } from '../../../components/label-fields/label-validation';
+import { validateLabelHotkey, validateLabelName } from '../../../components/label-fields/label-validation';
 import type { Label } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { EMPTY_LABEL_ID, filterOutEmptyLabels } from '../../../shared/annotator/labels';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
+import { convertHotkeyToOSFormat, TASK_HOTKEYS } from '../../../shared/hotkeys-definition';
 import type { Annotation } from '../../../shared/types';
+import { isNonEmptyString } from '../../../shared/util';
 import { toggleLabel } from '../../dataset/media-preview/secondary-toolbar/util';
 import { useAnnotatorLabels } from '../annotator-labels-provider.component';
 import { useUpdateLabel } from './api/use-update-label.hook';
@@ -22,10 +25,11 @@ type UseLabelsOptions = {
 };
 
 export const useLabels = ({ isClassification = false, isMultiLabel = false }: UseLabelsOptions = {}) => {
-    const { selectedLabelId, setSelectedLabelId, labels } = useAnnotatorLabels();
     const { selectedAnnotations } = useSelectedAnnotations();
+    const { selectedLabelId, setSelectedLabelId, labels } = useAnnotatorLabels();
     const { annotations, addAnnotations, updateAnnotations, addAnnotationWithEmptyLabel } = useAnnotationActions();
 
+    const project = useProject();
     const projectId = useProjectIdentifier();
     const updateLabelMutation = useUpdateLabel();
 
@@ -129,16 +133,12 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
         return selectedLabelId === label.id;
     };
 
-    const addLabel = (name: string, color: string) => {
+    const addLabel = (name: string, color: string, hotkey?: string) => {
         updateLabelMutation.mutate({
             body: {
-                labels_to_add: [{ name, color, hotkey: null }],
+                labels_to_add: [{ name, color, hotkey: hotkey ?? null }],
             },
-            params: {
-                path: {
-                    project_id: projectId,
-                },
-            },
+            params: { path: { project_id: projectId } },
         });
     };
 
@@ -177,6 +177,19 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
         return validateLabelName(name, editableLabels, excludeId);
     };
 
+    const validateHotkey = (newHotkey: string, excludeId?: string) => {
+        const taskType = project.data.task.task_type;
+        const filteredLabels = labels.filter(({ id }) => id !== excludeId);
+        const labelsHotkeys = filteredLabels
+            .map(({ hotkey }) => (isNonEmptyString(hotkey) ? convertHotkeyToOSFormat(hotkey) : null))
+            .filter((hotkey) => hotkey != null);
+
+        const appHotkeys = Object.values(TASK_HOTKEYS[taskType]);
+        const allHotkeys = [...labelsHotkeys, ...appHotkeys];
+
+        return newHotkey ? validateLabelHotkey(newHotkey, allHotkeys) : undefined;
+    };
+
     return {
         labels,
         editableLabels,
@@ -189,5 +202,6 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
         toggleLabelOnAnnotations,
         isLabelActive,
         validateName,
+        validateHotkey,
     };
 };

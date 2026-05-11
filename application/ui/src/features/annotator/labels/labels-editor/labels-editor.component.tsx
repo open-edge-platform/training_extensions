@@ -28,11 +28,19 @@ export const LabelsEditor = ({
     onRequestDeleteLabel,
     autoCreateNewLabel = false,
 }: LabelsEditorProps) => {
-    const { editableLabels, isUpdating, toggleLabelOnAnnotations, isLabelActive, addLabel, updateLabel, validateName } =
-        useLabels({
-            isClassification,
-            isMultiLabel,
-        });
+    const {
+        isUpdating,
+        editableLabels,
+        toggleLabelOnAnnotations,
+        isLabelActive,
+        addLabel,
+        updateLabel,
+        validateName,
+        validateHotkey,
+    } = useLabels({
+        isClassification,
+        isMultiLabel,
+    });
 
     const projectId = useProjectIdentifier();
     const { isPinned, togglePin } = usePinnedLabels(projectId);
@@ -43,8 +51,8 @@ export const LabelsEditor = ({
         setIsCreatingLabel(true);
     };
 
-    const handleSaveNewLabel = (name: string, color: string) => {
-        addLabel(name, color);
+    const handleSaveNewLabel = (name: string, color: string, hotkey?: string) => {
+        addLabel(name, color, hotkey);
         setIsCreatingLabel(false);
     };
 
@@ -70,6 +78,7 @@ export const LabelsEditor = ({
                         onTogglePin={handleTogglePin}
                         onUpdate={updateLabel}
                         validateName={validateName}
+                        validateHotkey={validateHotkey}
                     />
                 ))}
                 {isCreatingLabel ? (
@@ -77,6 +86,7 @@ export const LabelsEditor = ({
                         onSave={handleSaveNewLabel}
                         onCancel={handleCancelNewLabel}
                         validateName={validateName}
+                        validateHotkey={validateHotkey}
                     />
                 ) : (
                     <ActionButton isQuiet onPress={handleAddNewLabel} aria-label='Add new label'>
