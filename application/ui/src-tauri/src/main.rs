@@ -28,8 +28,15 @@ fn main() {
         // should quit the whole process (default macOS behaviour is to keep
         // the app alive in the dock, which leaks the backend side-car).
         .on_window_event(|window, event| {
-            if let WindowEvent::CloseRequested { .. } = event {
-                window.app_handle().exit(0);
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                // Prevent the default close so we can shut down gracefully.
+                // Destroying the window first lets the WebView2 / Chromium
+                // widget tear down cleanly before the process exits, avoiding
+                // the "Failed to unregister class Chrome_WidgetWin_0" error.
+                api.prevent_close();
+                let handle = window.app_handle().clone();
+                window.destroy().unwrap_or_default();
+                handle.exit(0);
             }
         })
         .invoke_handler(tauri::generate_handler![])
