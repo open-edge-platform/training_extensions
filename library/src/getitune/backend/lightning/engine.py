@@ -1051,9 +1051,6 @@ class LightningEngine(Engine):
         if not has_callback(GPUMemMonitor):
             callbacks.append(GPUMemMonitor())
         if not has_callback(EpochSummary):
-            # One-line per-epoch summary so captured logs (nohup, CI artifacts)
-            # contain a permanent record of progress, complementing the
-            # transient RichProgressBar display.
             callbacks.append(EpochSummary())
 
         # Add GPU augmentation callback if GPU augmentations are configured

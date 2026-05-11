@@ -101,7 +101,7 @@ class EpochSummary(Callback):
 
         # Always show the epoch counter even when no whitelisted metric is
         # present (e.g. very first epoch with only train metrics flushed).
-        epoch = trainer.current_epoch
+        epoch = trainer.current_epoch + 1  # Epochs are 0 indexed, add one to clearly log current epoch
         max_epochs = trainer.max_epochs
         header = f"epoch {epoch:>3}/{max_epochs}" if max_epochs else f"epoch {epoch:>3}"
 

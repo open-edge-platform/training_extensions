@@ -87,7 +87,7 @@ def test_renders_known_metrics_in_declared_order(caplog: pytest.LogCaptureFixtur
 
     assert len(caplog.records) == 1
     msg = caplog.records[0].getMessage()
-    assert "epoch   3/200" in msg
+    assert "epoch   4/200" in msg
     assert "train/total_loss=-0.5290" in msg
     assert "val/PCK=0.0021" in msg
     assert "lr=0.0010" in msg
@@ -122,7 +122,7 @@ def test_header_without_max_epochs(caplog: pytest.LogCaptureFixture) -> None:
             pl_module=_PL_MODULE,
         )
     msg = caplog.records[0].getMessage()
-    assert "epoch  12 |" in msg
+    assert "epoch  13 |" in msg
     assert "/None" not in msg
 
 
@@ -158,5 +158,5 @@ def test_runs_inside_lightning_trainer(tmp_path, caplog: pytest.LogCaptureFixtur
         trainer.fit(BoringModel())
 
     assert len(caplog.records) == 2
-    assert "epoch   0/2" in caplog.records[0].getMessage()
-    assert "epoch   1/2" in caplog.records[1].getMessage()
+    assert "epoch   1/2" in caplog.records[0].getMessage()
+    assert "epoch   2/2" in caplog.records[1].getMessage()
