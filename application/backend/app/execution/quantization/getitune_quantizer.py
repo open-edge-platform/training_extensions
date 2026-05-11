@@ -253,9 +253,12 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         params: QuantizationJobParams,
         quantized_model_path: Path,
         model_variant_id: UUID,
-        getitune_work_dir: Path,
     ) -> None:
-        """Store quantized model files and clean up temporary files."""
+        """Store quantized model files.
+
+        The getitune workspace itself is removed by ``QuantizationJob.on_complete``
+        after the job terminates, so this step does not clean it up.
+        """
         model_dir = self._base_model_path(params.project_id, params.model_id)
         variant_dir = model_dir / "variants" / str(model_variant_id)
         variant_dir.mkdir(parents=True, exist_ok=True)
@@ -267,81 +270,54 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
             shutil.copyfile(bin_path, variant_dir / "model.bin")
         logger.info("Stored quantized model variant at {}", variant_dir)
 
-        # Cleanup the getitune work directory
-        if getitune_work_dir.exists():
-            shutil.rmtree(getitune_work_dir)
-            logger.info("Cleaned up getitune quantization work directory at {}", getitune_work_dir)
-
     def execute(self, params: QuantizationJobParams) -> None:
         """Execute the full quantization pipeline."""
-        # Parent of the timestamped getitune quantization workspace; cleaned up unconditionally below.
-        getitune_workspace_dir = self._data_dir / f"getitune-quantize-workspace-{params.model_id}"
-        try:
-            model = self.validate_model(params=params)
+        model = self.validate_model(params=params)
 
-            with self._db_session_factory() as db:
-                self._project_service.set_db_session(db)
-                project = self._project_service.get_project_by_id(params.project_id)
-            task = project.task
+        with self._db_session_factory() as db:
+            self._project_service.set_db_session(db)
+            project = self._project_service.get_project_by_id(params.project_id)
+        task = project.task
 
-            datamodule = self.prepare_calibration_dataset(params=params, model=model)
-            ov_engine = self.initialize_engine(params=params, model=model, datamodule=datamodule)
-            quantized_model_path = self.run_quantization(
-                ov_engine=ov_engine,
-                subset_size=params.max_calibration_subset_size,
-                max_drop=params.max_drop,
-            )
+        datamodule = self.prepare_calibration_dataset(params=params, model=model)
+        ov_engine = self.initialize_engine(params=params, model=model, datamodule=datamodule)
+        quantized_model_path = self.run_quantization(
+            ov_engine=ov_engine,
+            subset_size=params.max_calibration_subset_size,
+            max_drop=params.max_drop,
+        )
 
-            quantization_info = {
-                "type": "PTQ" if params.max_drop is None else "Accuracy-aware PTQ",
-                "max_calibration_subset_size": params.max_calibration_subset_size,
-                "max_drop": params.max_drop,
-            }
+        quantization_info = {
+            "type": "PTQ" if params.max_drop is None else "Accuracy-aware PTQ",
+            "max_calibration_subset_size": params.max_calibration_subset_size,
+            "max_drop": params.max_drop,
+        }
 
-            with self._db_session_factory() as db:
-                self._model_service.set_db_session(db)
-                variant = self._model_service.create_variant(
-                    model_revision_id=params.model_id,
-                    format=ModelFormat.OPENVINO,
-                    precision=ModelPrecision.INT8,
-                    quantization_info=quantization_info,
-                    model_variant_id=params.model_variant_id,
-                )
-            logger.info("Created INT8 variant record (id={})", variant.id)
-
-            self.evaluate_quantized_model(
-                ov_engine=ov_engine,
-                quantized_model_path=quantized_model_path,
-                task=task,
+        with self._db_session_factory() as db:
+            self._model_service.set_db_session(db)
+            variant = self._model_service.create_variant(
                 model_revision_id=params.model_id,
-                model_variant_id=variant.id,
-                dataset_revision_id=model.training_info.dataset_revision_id,
+                format=ModelFormat.OPENVINO,
+                precision=ModelPrecision.INT8,
+                quantization_info=quantization_info,
+                model_variant_id=params.model_variant_id,
             )
+        logger.info("Created INT8 variant record (id={})", variant.id)
 
-            self.store_artifacts(
-                params=params,
-                quantized_model_path=quantized_model_path,
-                model_variant_id=variant.id,
-                getitune_work_dir=Path(ov_engine.work_dir),
-            )
-        finally:
-            # Always remove the getitune quantization workspace folder so it never lingers on disk,
-            # regardless of whether the job succeeded or failed.
-            try:
-                shutil.rmtree(getitune_workspace_dir)
-                logger.info("Cleaned up getitune quantization workspace directory at {}", getitune_workspace_dir)
-            except FileNotFoundError:
-                # Directory was never created or already removed (e.g., concurrent cleanup); treat as a no-op.
-                logger.debug(
-                    "getitune quantization workspace directory at {} does not exist; nothing to clean up",
-                    getitune_workspace_dir,
-                )
-            except Exception as cleanup_exc:
-                logger.error(
-                    "Failed to clean up getitune quantization workspace directory at {}: {}",
-                    getitune_workspace_dir,
-                    cleanup_exc,
-                )
+        self.evaluate_quantized_model(
+            ov_engine=ov_engine,
+            quantized_model_path=quantized_model_path,
+            task=task,
+            model_revision_id=params.model_id,
+            model_variant_id=variant.id,
+            dataset_revision_id=model.training_info.dataset_revision_id,
+        )
+
+        self.store_artifacts(
+            params=params,
+            quantized_model_path=quantized_model_path,
+            model_variant_id=variant.id,
+        )
 
     def _base_model_path(self, project_id: UUID, model_id: UUID) -> Path:
         return self._data_dir / "projects" / str(project_id) / "models" / str(model_id)

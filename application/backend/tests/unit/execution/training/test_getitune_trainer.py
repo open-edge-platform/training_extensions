@@ -979,117 +979,6 @@ class TestGetiTuneTrainerExecuteCancellation:
         last_status_call = status_calls[-1]
         assert last_status_call.kwargs.get("training_status") == TrainingStatus.FAILED
 
-    def test_execute_failure_cleans_up_getitune_workspace(
-        self,
-        fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
-        tmp_path: Path,
-    ):
-        """When training fails, the getitune-workspace-{model_id} parent directory must be removed."""
-        # Arrange
-        getitune_trainer = fxt_getitune_trainer()
-        project_id = uuid4()
-        model_id = uuid4()
-        dataset_revision_id = uuid4()
-
-        params = TrainingJobParams(
-            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
-            project_id=project_id,
-            model_id=model_id,
-            model_architecture_id="object-detection-yolox-s",
-            task=Task(task_type=TaskType.DETECTION),
-            parent_model_revision_id=None,
-            job_id=uuid4(),
-            dataset_revision_id=dataset_revision_id,
-        )
-
-        mock_training_config = Mock(spec=TrainingConfiguration)
-        mock_getitune_training_config = {"key": "value"}
-        mock_dataset_info = Mock(spec=DatasetInfo)
-        mock_dataset_info.revision_id = dataset_revision_id
-        mock_weights_path = Path("/fake/weights.pth")
-
-        # Pre-create the workspace folder, simulating what LightningEngine would create.
-        workspace_dir = tmp_path / f"getitune-workspace-{model_id}"
-        timestamp_dir = workspace_dir / "20260101_000000"
-        timestamp_dir.mkdir(parents=True)
-        (timestamp_dir / "leftover.txt").write_text("temp")
-
-        with (
-            patch.object(getitune_trainer, "prepare_weights", return_value=mock_weights_path),
-            patch.object(
-                getitune_trainer,
-                "prepare_training_configuration",
-                return_value=(mock_training_config, mock_getitune_training_config),
-            ),
-            patch.object(getitune_trainer, "assign_subsets"),
-            patch.object(getitune_trainer, "prepare_training_dataset", return_value=mock_dataset_info),
-            patch.object(getitune_trainer, "prepare_model"),
-            patch.object(getitune_trainer, "train_model", side_effect=RuntimeError("getitune crashed")),
-            pytest.raises(RuntimeError, match="getitune crashed"),
-        ):
-            getitune_trainer.execute(params)
-
-        # Assert - workspace directory (including the timestamp subdir) is gone
-        assert not workspace_dir.exists()
-
-    def test_execute_success_cleans_up_getitune_workspace_parent(
-        self,
-        fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
-        tmp_path: Path,
-    ):
-        """On a successful run, the getitune-workspace-{model_id} parent directory must not linger."""
-        # Arrange
-        getitune_trainer = fxt_getitune_trainer()
-        project_id = uuid4()
-        model_id = uuid4()
-        dataset_revision_id = uuid4()
-
-        params = TrainingJobParams(
-            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
-            project_id=project_id,
-            model_id=model_id,
-            model_architecture_id="object-detection-yolox-s",
-            task=Task(task_type=TaskType.DETECTION),
-            parent_model_revision_id=None,
-            job_id=uuid4(),
-            dataset_revision_id=dataset_revision_id,
-        )
-
-        mock_training_config = Mock(spec=TrainingConfiguration)
-        mock_getitune_training_config = {"key": "value"}
-        mock_dataset_info = Mock(spec=DatasetInfo)
-        mock_dataset_info.revision_id = dataset_revision_id
-        mock_weights_path = Path("/fake/weights.pth")
-        mock_trained_model_path = Path("/fake/best_checkpoint.ckpt")
-
-        # Simulate the engine workspace, which lives at <data_dir>/getitune-workspace-<model_id>/<timestamp>.
-        workspace_dir = tmp_path / f"getitune-workspace-{model_id}"
-        timestamp_dir = workspace_dir / "20260101_000000"
-        timestamp_dir.mkdir(parents=True)
-        mock_getitune_engine = Mock()
-        mock_getitune_engine.work_dir = str(timestamp_dir)
-
-        with (
-            patch.object(getitune_trainer, "prepare_weights", return_value=mock_weights_path),
-            patch.object(
-                getitune_trainer,
-                "prepare_training_configuration",
-                return_value=(mock_training_config, mock_getitune_training_config),
-            ),
-            patch.object(getitune_trainer, "assign_subsets"),
-            patch.object(getitune_trainer, "prepare_training_dataset", return_value=mock_dataset_info),
-            patch.object(getitune_trainer, "prepare_model"),
-            patch.object(getitune_trainer, "train_model", return_value=(mock_trained_model_path, mock_getitune_engine)),
-            patch.object(getitune_trainer, "export_model", return_value=Mock(spec=ExportedModels)),
-            patch.object(getitune_trainer, "create_model_variants", return_value={fmt: uuid4() for fmt in ModelFormat}),
-            patch.object(getitune_trainer, "evaluate_model"),
-            patch.object(getitune_trainer, "store_model_artifacts"),
-        ):
-            getitune_trainer.execute(params)
-
-        # Assert - parent workspace directory is gone (not just the timestamp subdir)
-        assert not workspace_dir.exists()
-
 
 class TestGetiTuneTrainerEvaluateModel:
     """Tests for the GetiTuneTrainer.evaluate_model method."""
@@ -1306,8 +1195,9 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         assert (model_dir / "metrics" / "metrics.csv").exists()
         assert (model_dir / "metrics" / "metrics.csv").read_text() == "epoch,loss\n1,0.5\n"
 
-        # Check getitune work directory was cleaned up
-        assert not getitune_work_dir.exists()
+        # The getitune work directory is no longer cleaned up here; it is removed
+        # by ``TrainingJob.on_complete`` after the job finishes.
+        assert getitune_work_dir.exists()
 
 
 # ---------------------------------------------------------------------------

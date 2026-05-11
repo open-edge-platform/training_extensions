@@ -486,13 +486,16 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         exported_model_paths: ExportedModels,
         created_variants: dict[ModelFormat, UUID],
     ) -> None:
-        """Copy training artifacts into variant directories and clean up the workspace.
+        """Copy training artifacts into variant directories.
 
         Each variant's files are stored under model_dir/variants/<variant_id>/model.*
 
+        The getitune workspace itself is removed by ``TrainingJob.on_complete`` after
+        the job terminates, so this step does not clean it up.
+
         Args:
             model_dir: The base model directory.
-            getitune_work_dir: The getitune workspace directory to clean up.
+            getitune_work_dir: The getitune workspace directory containing the source artifacts.
             trained_model_path: Path to the trained checkpoint inside the workspace.
             exported_model_paths: Paths to exported model files inside the workspace.
             created_variants: Mapping of ModelFormat to variant UUID (from create_model_variants).
@@ -535,10 +538,6 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             shutil.move(metrics_source_path, metrics_dest_path)
             logger.info("Stored training metrics at {}", metrics_dest_path)
 
-        # Cleanup the getitune work directory
-        shutil.rmtree(getitune_work_dir)
-        logger.info("Cleaned up getitune work directory at {}", getitune_work_dir)
-
     def create_model_variants(self, model_revision_id: UUID) -> dict[ModelFormat, UUID]:
         """Create variant records in the database for all exported formats.
 
@@ -577,110 +576,89 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             project_id=project_id,
             model_id=params.model_id,
         )
-        # Parent of the timestamped getitune workspace; cleaned up unconditionally below.
-        getitune_workspace_dir = self._data_dir / f"getitune-workspace-{params.model_id}"
 
+        weights_path = self.prepare_weights(training_params=params)
+        training_config, getitune_training_config = self.prepare_training_configuration(
+            training_params=params, task=task
+        )
+        self.assign_subsets(training_config=training_config, project_id=project_id)
+        dataset_info = self.prepare_training_dataset(
+            project_id=project_id,
+            task=task,
+            getitune_training_config=getitune_training_config,
+            training_config=training_config,
+            dataset_revision_id=params.dataset_revision_id,
+        )
+        self.prepare_model(
+            training_params=params, dataset_revision_id=dataset_info.revision_id, configuration=training_config
+        )
         try:
-            weights_path = self.prepare_weights(training_params=params)
-            training_config, getitune_training_config = self.prepare_training_configuration(
-                training_params=params, task=task
-            )
-            self.assign_subsets(training_config=training_config, project_id=project_id)
-            dataset_info = self.prepare_training_dataset(
+            self.__update_model_revision_training_status(
                 project_id=project_id,
+                model_id=params.model_id,
+                status=TrainingStatus.IN_PROGRESS,
+                training_started_at=training_start_time,
+            )
+            trained_model_path, getitune_engine = self.train_model(
+                training_config=getitune_training_config,
+                dataset_info=dataset_info,
+                weights_path=weights_path,
+                model_id=params.model_id,
+                device=params.device,
+                has_parent_revision=params.parent_model_revision_id is not None,
+            )
+            exported_model_paths = self.export_model(
+                getitune_engine=getitune_engine, model_checkpoint_path=trained_model_path
+            )
+
+            # Create variant DB records first (no file I/O yet)
+            created_variants = self.create_model_variants(model_revision_id=params.model_id)
+
+            # Evaluate while the workspace and checkpoint still exist
+            self.evaluate_model(
+                getitune_engine=getitune_engine,
+                model_checkpoint_path=trained_model_path,
                 task=task,
-                getitune_training_config=getitune_training_config,
-                training_config=training_config,
-                dataset_revision_id=params.dataset_revision_id,
+                model_revision_id=params.model_id,
+                model_variant_id=created_variants[ModelFormat.PYTORCH],
+                dataset_revision_id=dataset_info.revision_id,
             )
-            self.prepare_model(
-                training_params=params, dataset_revision_id=dataset_info.revision_id, configuration=training_config
+
+            # Now copy files into variant dirs and clean up the workspace
+            self.store_model_artifacts(
+                model_dir=model_dir,
+                getitune_work_dir=Path(getitune_engine.work_dir),
+                trained_model_path=trained_model_path,
+                exported_model_paths=exported_model_paths,
+                created_variants=created_variants,
             )
+            training_finish_time = datetime.now(UTC)
+            self.__update_model_revision_training_status(
+                project_id=project_id,
+                model_id=params.model_id,
+                status=TrainingStatus.SUCCESSFUL,
+                training_finished_at=training_finish_time,
+            )
+        except CancelledExc:
             try:
-                self.__update_model_revision_training_status(
-                    project_id=project_id,
-                    model_id=params.model_id,
-                    status=TrainingStatus.IN_PROGRESS,
-                    training_started_at=training_start_time,
-                )
-                trained_model_path, getitune_engine = self.train_model(
-                    training_config=getitune_training_config,
-                    dataset_info=dataset_info,
-                    weights_path=weights_path,
-                    model_id=params.model_id,
-                    device=params.device,
-                    has_parent_revision=params.parent_model_revision_id is not None,
-                )
-                exported_model_paths = self.export_model(
-                    getitune_engine=getitune_engine, model_checkpoint_path=trained_model_path
-                )
-
-                # Create variant DB records first (no file I/O yet)
-                created_variants = self.create_model_variants(model_revision_id=params.model_id)
-
-                # Evaluate while the workspace and checkpoint still exist
-                self.evaluate_model(
-                    getitune_engine=getitune_engine,
-                    model_checkpoint_path=trained_model_path,
-                    task=task,
-                    model_revision_id=params.model_id,
-                    model_variant_id=created_variants[ModelFormat.PYTORCH],
-                    dataset_revision_id=dataset_info.revision_id,
-                )
-
-                # Now copy files into variant dirs and clean up the workspace
-                self.store_model_artifacts(
-                    model_dir=model_dir,
-                    getitune_work_dir=Path(getitune_engine.work_dir),
-                    trained_model_path=trained_model_path,
-                    exported_model_paths=exported_model_paths,
-                    created_variants=created_variants,
-                )
-                training_finish_time = datetime.now(UTC)
-                self.__update_model_revision_training_status(
-                    project_id=project_id,
-                    model_id=params.model_id,
-                    status=TrainingStatus.SUCCESSFUL,
-                    training_finished_at=training_finish_time,
-                )
-            except CancelledExc:
-                try:
-                    self.__delete_model_revision(project_id=project_id, model_id=params.model_id)
-                except Exception as cleanup_exc:
-                    logger.error(
-                        "Failed to delete model revision during cancellation (project_id={}, model_id={}): {}",
-                        project_id,
-                        params.model_id,
-                        cleanup_exc,
-                    )
-                raise
-            except Exception:
-                training_finish_time = datetime.now(UTC)
-                self.__update_model_revision_training_status(
-                    project_id=project_id,
-                    model_id=params.model_id,
-                    status=TrainingStatus.FAILED,
-                    training_finished_at=training_finish_time,
-                )
-                raise
-        finally:
-            # Always remove the getitune workspace folder so it never lingers on disk,
-            # regardless of whether the job succeeded, failed, or was cancelled.
-            try:
-                shutil.rmtree(getitune_workspace_dir)
-                logger.info("Cleaned up getitune workspace directory at {}", getitune_workspace_dir)
-            except FileNotFoundError:
-                # Directory was never created or already removed (e.g., concurrent cleanup); treat as a no-op.
-                logger.debug(
-                    "getitune workspace directory at {} does not exist; nothing to clean up",
-                    getitune_workspace_dir,
-                )
+                self.__delete_model_revision(project_id=project_id, model_id=params.model_id)
             except Exception as cleanup_exc:
                 logger.error(
-                    "Failed to clean up getitune workspace directory at {}: {}",
-                    getitune_workspace_dir,
+                    "Failed to delete model revision during cancellation (project_id={}, model_id={}): {}",
+                    project_id,
+                    params.model_id,
                     cleanup_exc,
                 )
+            raise
+        except Exception:
+            training_finish_time = datetime.now(UTC)
+            self.__update_model_revision_training_status(
+                project_id=project_id,
+                model_id=params.model_id,
+                status=TrainingStatus.FAILED,
+                training_finished_at=training_finish_time,
+            )
+            raise
 
     def _build_filter_conditions(
         self,
