@@ -16,6 +16,7 @@ from datumaro.experimental.fields import Subset
 from getitune import TaskType
 from getitune.backend.lightning.engine import LightningEngine
 from getitune.backend.lightning.models.base import DataInputParams, LightningModel
+from getitune.backend.openvino.engine import OVEngine
 from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.data.dataset.base import VisionDataset
 from getitune.data.factory import TransformLibFactory
@@ -438,14 +439,73 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         self,
         getitune_engine: LightningEngine,
         model_checkpoint_path: Path,
+        exported_model_paths: ExportedModels,
         task: Task,
+        model_revision_id: UUID,
+        created_variants: dict[ModelFormat, UUID],
+        dataset_revision_id: UUID,
+    ) -> None:
+        """Evaluate the trained model variants (PyTorch, OpenVINO, ONNX) on the testing set.
+
+        Each variant is evaluated using its own dedicated engine so that the recorded
+        metrics reflect the runtime that will actually serve it. Results are persisted
+        against the corresponding model variant id.
+        """
+        metric_callable = get_metric_by_task(task)
+
+        # PyTorch evaluation via the LightningEngine used for training
+        logger.info("Evaluating the PyTorch model...")
+        pytorch_metrics = getitune_engine.test(checkpoint=model_checkpoint_path, metric=metric_callable)
+        self._save_evaluation_result(
+            metrics=pytorch_metrics,
+            model_revision_id=model_revision_id,
+            model_variant_id=created_variants[ModelFormat.PYTORCH],
+            dataset_revision_id=dataset_revision_id,
+        )
+
+        # OpenVINO IR and ONNX evaluations both go through OVEngine, which now accepts
+        # either a .xml (OpenVINO IR) or a .onnx checkpoint.
+        ov_work_dir_base = Path(getitune_engine.work_dir)
+        datamodule = getitune_engine.datamodule
+
+        ov_xml_path = exported_model_paths.openvino_model_path.with_suffix(".xml")
+        logger.info("Evaluating the OpenVINO model...")
+        ov_engine = OVEngine(
+            model=ov_xml_path,
+            data=datamodule,
+            work_dir=ov_work_dir_base / "ov_eval",
+        )
+        ov_metrics = ov_engine.test(checkpoint=ov_xml_path, metric=metric_callable)
+        self._save_evaluation_result(
+            metrics=ov_metrics,
+            model_revision_id=model_revision_id,
+            model_variant_id=created_variants[ModelFormat.OPENVINO],
+            dataset_revision_id=dataset_revision_id,
+        )
+
+        onnx_path = exported_model_paths.onnx_model_path.with_suffix(".onnx")
+        logger.info("Evaluating the ONNX model...")
+        onnx_engine = OVEngine(
+            model=onnx_path,
+            data=datamodule,
+            work_dir=ov_work_dir_base / "onnx_eval",
+        )
+        onnx_metrics = onnx_engine.test(checkpoint=onnx_path, metric=metric_callable)
+        self._save_evaluation_result(
+            metrics=onnx_metrics,
+            model_revision_id=model_revision_id,
+            model_variant_id=created_variants[ModelFormat.ONNX],
+            dataset_revision_id=dataset_revision_id,
+        )
+
+    def _save_evaluation_result(
+        self,
+        metrics: dict,
         model_revision_id: UUID,
         model_variant_id: UUID,
         dataset_revision_id: UUID,
     ) -> None:
-        """Evaluate the trained model on the testing set"""
-        logger.info("Evaluating the model on the testing set...")
-        metrics = getitune_engine.test(checkpoint=model_checkpoint_path, metric=get_metric_by_task(task))
+        """Persist a single EvaluationResult tagged with the given model variant id."""
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
             self._model_service.save_evaluation_result(
@@ -620,9 +680,10 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             self.evaluate_model(
                 getitune_engine=getitune_engine,
                 model_checkpoint_path=trained_model_path,
+                exported_model_paths=exported_model_paths,
                 task=task,
                 model_revision_id=params.model_id,
-                model_variant_id=created_variants[ModelFormat.PYTORCH],
+                created_variants=created_variants,
                 dataset_revision_id=dataset_info.revision_id,
             )
 
