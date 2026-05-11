@@ -5,7 +5,7 @@ import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 
 import { useGetActiveModel } from '../models/hooks/api/use-get-active-model.hook';
 import { useGetSuccessfulModels } from '../models/hooks/api/use-get-models.hook';
-import { getAllModelsWithOpenVinoVariants, SelectableModel } from '../models/utils';
+import { getAllModelsWithOpenVINOVariants, SelectableModel } from '../models/utils';
 
 type PredictionsSetupContextProps = {
     selectableModels: SelectableModel[];
@@ -20,14 +20,15 @@ export const PredictionsSetupProvider = ({ children }: { children: ReactNode }) 
     const { data: models } = useGetSuccessfulModels();
     const activeModel = useGetActiveModel();
 
-    const selectableModels = useMemo(() => getAllModelsWithOpenVinoVariants(models), [models]);
+    const selectableModels = useMemo(() => getAllModelsWithOpenVINOVariants(models), [models]);
 
     const defaultSelectedId =
-        selectableModels.find((m) => m.modelId === activeModel?.model_variant_id)?.id ?? selectableModels.at(0)?.id;
+        selectableModels.find((model) => model.modelId === activeModel?.model_variant_id)?.modelVariantId ??
+        selectableModels.at(0)?.modelVariantId;
 
     const [selectedModelId, setSelectedModelId] = useState<string | undefined>(defaultSelectedId);
 
-    const selectedModel = selectableModels.find((model) => model.id === selectedModelId);
+    const selectedModel = selectableModels.find((model) => model.modelVariantId === selectedModelId);
 
     return (
         <PredictionSetupContext

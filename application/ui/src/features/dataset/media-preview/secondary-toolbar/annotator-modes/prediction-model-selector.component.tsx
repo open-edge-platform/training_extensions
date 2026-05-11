@@ -26,7 +26,7 @@ export const PredictionModelSelector = ({ isDisabled }: PredictionModelSelectorP
             isDisabled={isDisabled}
             onSelectionChange={(key) => key !== null && changeSelectedModelId(String(key))}
         >
-            {(item) => <Item key={item.id}>{item.name}</Item>}
+            {(item) => <Item key={item.modelVariantId}>{item.name}</Item>}
         </Picker>
     );
 };

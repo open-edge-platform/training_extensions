@@ -4,17 +4,17 @@
 import { getMockedModel } from 'mocks/mock-model';
 import { getMockedVariant } from 'mocks/mock-model-variant';
 
-import { getAllModelsWithOpenVinoVariants, getModelIdentifierPayload, SelectableModel } from './utils';
+import { getAllModelsWithOpenVINOVariants, getModelIdentifierPayload, SelectableModel } from './utils';
 
-describe('getAllModelsWithOpenVinoVariants', () => {
+describe('getAllModelsWithOpenVINOVariants', () => {
     it('returns empty array for empty models array', () => {
-        expect(getAllModelsWithOpenVinoVariants([])).toEqual([]);
+        expect(getAllModelsWithOpenVINOVariants([])).toEqual([]);
     });
 
     it('returns empty array when model has no variants', () => {
         const model = getMockedModel({ id: 'model-1', name: 'My Model', variants: [] });
 
-        expect(getAllModelsWithOpenVinoVariants([model])).toEqual([]);
+        expect(getAllModelsWithOpenVINOVariants([model])).toEqual([]);
     });
 
     it('returns empty array when model has no openvino variants', () => {
@@ -27,7 +27,7 @@ describe('getAllModelsWithOpenVinoVariants', () => {
             ],
         });
 
-        expect(getAllModelsWithOpenVinoVariants([model])).toEqual([]);
+        expect(getAllModelsWithOpenVINOVariants([model])).toEqual([]);
     });
 
     it('returns openvino variant with precision uppercased and parent modelId', () => {
@@ -37,7 +37,7 @@ describe('getAllModelsWithOpenVinoVariants', () => {
             variants: [getMockedVariant({ id: 'v-ov', format: 'openvino', precision: 'fp16' })],
         });
 
-        expect(getAllModelsWithOpenVinoVariants([model])).toEqual([
+        expect(getAllModelsWithOpenVINOVariants([model])).toEqual([
             { id: 'v-ov', name: 'My Model [FP16]', modelId: 'model-1' },
         ]);
     });
@@ -53,7 +53,7 @@ describe('getAllModelsWithOpenVinoVariants', () => {
             ],
         });
 
-        expect(getAllModelsWithOpenVinoVariants([model])).toEqual([
+        expect(getAllModelsWithOpenVINOVariants([model])).toEqual([
             { id: 'v-fp16', name: 'My Model [FP16]', modelId: 'model-1' },
             { id: 'v-fp32', name: 'My Model [FP32]', modelId: 'model-1' },
             { id: 'v-int8', name: 'My Model [INT8]', modelId: 'model-1' },
@@ -70,7 +70,7 @@ describe('getAllModelsWithOpenVinoVariants', () => {
             ],
         });
 
-        expect(getAllModelsWithOpenVinoVariants([model])).toEqual([
+        expect(getAllModelsWithOpenVINOVariants([model])).toEqual([
             { id: 'v-ov', name: 'My Model [FP16]', modelId: 'model-1' },
         ]);
     });
@@ -91,7 +91,7 @@ describe('getAllModelsWithOpenVinoVariants', () => {
             ],
         });
 
-        expect(getAllModelsWithOpenVinoVariants([modelA, modelB, modelC])).toEqual([
+        expect(getAllModelsWithOpenVINOVariants([modelA, modelB, modelC])).toEqual([
             { id: 'v-a-ov', name: 'Model A [FP16]', modelId: 'model-a' },
             { id: 'v-c-fp32', name: 'Model C [FP32]', modelId: 'model-c' },
             { id: 'v-c-int8', name: 'Model C [INT8]', modelId: 'model-c' },
@@ -101,7 +101,7 @@ describe('getAllModelsWithOpenVinoVariants', () => {
 
 describe('getModelIdentifierPayload', () => {
     it('returns both model_id (parent) and model_variant_id', () => {
-        const model: SelectableModel = { id: 'v-ov', name: 'My Model [FP16]', modelId: 'model-1' };
+        const model: SelectableModel = { modelVariantId: 'v-ov', name: 'My Model [FP16]', modelId: 'model-1' };
 
         expect(getModelIdentifierPayload(model)).toEqual({ model_id: 'model-1', model_variant_id: 'v-ov' });
     });

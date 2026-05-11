@@ -10,7 +10,7 @@ import { isEmpty } from 'lodash-es';
 
 import { useGetActiveModel } from '../../models/hooks/api/use-get-active-model.hook';
 import { useGetSuccessfulModels } from '../../models/hooks/api/use-get-models.hook';
-import { getAllModelsWithOpenVinoVariants, getModelIdentifierPayload } from '../../models/utils';
+import { getAllModelsWithOpenVINOVariants, getModelIdentifierPayload } from '../../models/utils';
 
 export const ActiveModel = () => {
     const { data: models } = useGetSuccessfulModels();
@@ -18,14 +18,14 @@ export const ActiveModel = () => {
     const projectId = useProjectIdentifier();
     const updatePipeline = usePatchPipeline();
 
-    const allModelsWithOpenVinoQuantizedModels = useMemo(() => getAllModelsWithOpenVinoVariants(models), [models]);
+    const allModelsWithOpenVinoQuantizedModels = useMemo(() => getAllModelsWithOpenVINOVariants(models), [models]);
 
     const handleChange = (key: Key | null) => {
         if (key === null) {
             return;
         }
 
-        const selectedModel = allModelsWithOpenVinoQuantizedModels.find((model) => model.id === key);
+        const selectedModel = allModelsWithOpenVinoQuantizedModels.find((model) => model.modelVariantId === key);
 
         if (selectedModel === undefined) {
             return;

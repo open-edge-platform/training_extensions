@@ -41,7 +41,7 @@ export const ModelVariantActions = ({ modelVariant, onDownload }: ModelVariantAc
             <ActionButton isQuiet aria-label={`Model variant actions ${modelVariant.id}`}>
                 <MoreMenu />
             </ActionButton>
-            <Menu onAction={handleAction} aria-label={'Model actions menu'}>
+            <Menu onAction={handleAction} aria-label={'Model variant actions menu'}>
                 <Item key={MODEL_VARIANT_ACTIONS.ACTIVATE}>Set as active</Item>
                 <Item key={MODEL_VARIANT_ACTIONS.DOWNLOAD}>Download</Item>
             </Menu>
