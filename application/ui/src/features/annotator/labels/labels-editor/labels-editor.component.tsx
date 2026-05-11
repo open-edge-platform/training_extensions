@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { ActionButton, Flex, View } from '@geti/ui';
+import { ActionButton, Flex, Loading, View } from '@geti/ui';
 import { Add } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
@@ -28,10 +28,11 @@ export const LabelsEditor = ({
     onRequestDeleteLabel,
     autoCreateNewLabel = false,
 }: LabelsEditorProps) => {
-    const { editableLabels, toggleLabelOnAnnotations, isLabelActive, addLabel, updateLabel, validateName } = useLabels({
-        isClassification,
-        isMultiLabel,
-    });
+    const { editableLabels, isUpdating, toggleLabelOnAnnotations, isLabelActive, addLabel, updateLabel, validateName } =
+        useLabels({
+            isClassification,
+            isMultiLabel,
+        });
 
     const projectId = useProjectIdentifier();
     const { isPinned, togglePin } = usePinnedLabels(projectId);
@@ -79,7 +80,7 @@ export const LabelsEditor = ({
                     />
                 ) : (
                     <ActionButton isQuiet onPress={handleAddNewLabel} aria-label='Add new label'>
-                        <Add />
+                        {isUpdating ? <Loading mode='inline' size='S' /> : <Add />}
                     </ActionButton>
                 )}
             </Flex>
