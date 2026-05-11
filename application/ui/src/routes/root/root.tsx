@@ -3,11 +3,12 @@
 
 import { ReactNode, Suspense } from 'react';
 
-import { Flex, Heading, IntelBrandedLoading } from '@geti/ui';
+import { Flex, Heading } from '@geti/ui';
 import { Outlet } from 'react-router';
 
 import { $api } from '../../api/client';
 import { License } from '../../features/license/license.component';
+import { IntelBrandedLoading } from '../../shared/components/intel-branded-loading/intel-branded-loading.component';
 import { ServerErrorFallback } from './server-error-fallback.component';
 
 const REFETCH_INTERVAL = 5000;
