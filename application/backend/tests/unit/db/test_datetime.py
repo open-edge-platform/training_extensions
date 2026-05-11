@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta, timezone
 from unittest.mock import Mock
 
 import pytest
-from sqlalchemy import Dialect
+from sqlalchemy.engine import Dialect
 
 from app.db.datetime import UTCDateTime
 
