@@ -12,11 +12,13 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Sequence
 
 import torch
+import torch.nn.functional as F
 from torchvision import tv_tensors
 
 from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import Prediction, SampleBatch
 from getitune.data.module import DataModule
+from getitune.data.utils.structures.mask.mask_util import encode_rle
 from getitune.engine.engine import Engine
 from getitune.types.device import DeviceType
 from getitune.types.export import ExportFormat
@@ -396,11 +398,17 @@ class UltralyticsEngine(Engine):
         computes the metric.  Returns a flat dict with ``test/`` prefixed keys
         identical to those produced by ``LightningEngine.test()``.
 
-        Target bounding boxes from the DataModule are in original image
-        coordinates (``resize_targets=False``), while YOLO predictions are
-        in the letterbox-padded model input space.  This method transforms
-        target boxes into the prediction coordinate space before metric
-        update.
+        Supports both detection and instance segmentation:
+
+        - **Detection**: predictions contain ``boxes``, ``scores``, ``labels``.
+        - **Instance segmentation**: predictions additionally contain ``masks``
+          as RLE-encoded dicts, matching ``MaskRLEMeanAveragePrecision`` format.
+
+        Target bounding boxes and masks from the DataModule are in original
+        image coordinates (``resize_targets=False``), while YOLO predictions
+        are in the letterbox-padded model input space.  This method transforms
+        both boxes and masks into the prediction coordinate space before
+        metric update.
 
         Args:
             metric_callable: A function ``(LabelInfo) -> Metric``.
@@ -443,7 +451,7 @@ class UltralyticsEngine(Engine):
 
             preds_list = []
             for result in raw_results:
-                pred_dict: dict[str, torch.Tensor] = {
+                pred_dict: dict[str, Any] = {
                     "boxes": torch.zeros((0, 4), device=device),
                     "scores": torch.zeros(0, device=device),
                     "labels": torch.zeros(0, dtype=torch.long, device=device),
@@ -452,11 +460,13 @@ class UltralyticsEngine(Engine):
                     pred_dict["boxes"] = result.boxes.xyxy.to(device)  # pyrefly: ignore[missing-attribute]
                     pred_dict["scores"] = result.boxes.conf.to(device).float()  # pyrefly: ignore[missing-attribute]
                     pred_dict["labels"] = result.boxes.cls.to(device).long()  # pyrefly: ignore[missing-attribute]
+                if result.masks is not None and len(result.masks):
+                    pred_dict["masks"] = [encode_rle((m > 0.5).cpu()) for m in result.masks.data]  # pyrefly: ignore[missing-attribute]
                 preds_list.append(pred_dict)
 
             target_list = []
             for i in range(len(raw_results)):
-                tgt_dict: dict[str, torch.Tensor] = {
+                tgt_dict: dict[str, Any] = {
                     "boxes": torch.zeros((0, 4), device=device),
                     "labels": torch.zeros(0, dtype=torch.long, device=device),
                 }
@@ -467,6 +477,11 @@ class UltralyticsEngine(Engine):
                     tgt_dict["boxes"] = boxes
                 if batch.labels is not None and i < len(batch.labels):
                     tgt_dict["labels"] = batch.labels[i].to(device).long()
+                if batch.masks is not None and i < len(batch.masks):
+                    target_masks = batch.masks[i].data  # (N, ori_h, ori_w)
+                    mask_ori_h, mask_ori_w = target_masks.shape[-2:]
+                    scaled_masks = self._scale_masks_to_letterbox(target_masks, mask_ori_h, mask_ori_w, imgsz)
+                    tgt_dict["masks"] = [encode_rle(m) for m in scaled_masks]
                 target_list.append(tgt_dict)
 
             metric.update(preds=preds_list, target=target_list)
@@ -504,6 +519,43 @@ class UltralyticsEngine(Engine):
         scaled[:, 2] = boxes[:, 2] * scale + pad_x
         scaled[:, 3] = boxes[:, 3] * scale + pad_y
         return scaled
+
+    @staticmethod
+    def _scale_masks_to_letterbox(masks: torch.Tensor, ori_h: int, ori_w: int, imgsz: int) -> torch.Tensor:
+        """Transform binary masks from original image coords to letterbox-padded coords.
+
+        Analogous to ``_scale_boxes_to_letterbox`` but for spatial mask tensors.
+        Resizes each mask with nearest-neighbor interpolation to preserve binary
+        values, then center-pads to ``(imgsz, imgsz)``.
+
+        Args:
+            masks: ``(N, ori_h, ori_w)`` binary mask tensor.
+            ori_h: Original image height.
+            ori_w: Original image width.
+            imgsz: Model input size (square).
+
+        Returns:
+            ``(N, imgsz, imgsz)`` binary mask tensor in letterbox coords.
+        """
+        if masks.numel() == 0:
+            return torch.zeros((0, imgsz, imgsz), dtype=torch.bool, device=masks.device)
+
+        scale = min(imgsz / ori_h, imgsz / ori_w)
+        new_h = int(round(ori_h * scale))
+        new_w = int(round(ori_w * scale))
+
+        resized = F.interpolate(
+            masks.unsqueeze(1).float(),
+            size=(new_h, new_w),
+            mode="nearest",
+        ).squeeze(1)
+
+        pad_y = (imgsz - new_h) // 2
+        pad_x = (imgsz - new_w) // 2
+
+        result = torch.zeros((masks.shape[0], imgsz, imgsz), dtype=torch.bool, device=masks.device)
+        result[:, pad_y : pad_y + new_h, pad_x : pad_x + new_w] = resized > 0.5
+        return result
 
     def _predict_with_datamodule(self, overrides: dict[str, Any]) -> list[Prediction]:
         """Run inference through ``DataModule.predict_dataloader()``."""

@@ -592,3 +592,183 @@ class TestScaleBoxesToLetterbox:
         boxes = torch.zeros((0, 4))
         result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=480, ori_w=640, imgsz=640)
         assert result.shape == (0, 4)
+
+
+class TestScaleMasksToLetterbox:
+    """Tests for _scale_masks_to_letterbox coordinate transformation."""
+
+    def test_identity_when_image_fits_exactly(self) -> None:
+        """When original image matches imgsz, masks should not change spatially."""
+        mask = torch.zeros((1, 640, 640), dtype=torch.bool)
+        mask[0, 100:200, 100:300] = True
+        result = UltralyticsEngine._scale_masks_to_letterbox(mask, ori_h=640, ori_w=640, imgsz=640)
+        assert result.shape == (1, 640, 640)
+        assert torch.equal(result, mask)
+
+    def test_landscape_image_vertical_padding(self) -> None:
+        """480x640 image letterboxed to 640x640: mask gets 80px vertical padding."""
+        mask = torch.zeros((1, 480, 640), dtype=torch.bool)
+        mask[0, 0:10, 0:10] = True  # top-left block
+        result = UltralyticsEngine._scale_masks_to_letterbox(mask, ori_h=480, ori_w=640, imgsz=640)
+        assert result.shape == (1, 640, 640)
+        # scale=1.0, pad_y=80 → block shifted down by 80
+        assert result[0, 80:90, 0:10].all()
+        assert not result[0, 0:80, :].any()
+
+    def test_portrait_image_horizontal_padding(self) -> None:
+        """640x480 image letterboxed to 640x640: mask gets 80px horizontal padding."""
+        mask = torch.zeros((1, 640, 480), dtype=torch.bool)
+        mask[0, 0:10, 0:10] = True
+        result = UltralyticsEngine._scale_masks_to_letterbox(mask, ori_h=640, ori_w=480, imgsz=640)
+        assert result.shape == (1, 640, 640)
+        # scale=1.0, pad_x=80 → block shifted right by 80
+        assert result[0, 0:10, 80:90].all()
+        assert not result[0, :, 0:80].any()
+
+    def test_small_image_scale_up(self) -> None:
+        """320x320 image scaled 2x to 640x640: mask scaled up."""
+        mask = torch.zeros((1, 320, 320), dtype=torch.bool)
+        mask[0, 0:10, 0:10] = True  # 10x10 block at top-left
+        result = UltralyticsEngine._scale_masks_to_letterbox(mask, ori_h=320, ori_w=320, imgsz=640)
+        assert result.shape == (1, 640, 640)
+        # Scaled 2x → 20x20 block, no padding
+        assert result[0, 0:20, 0:20].all()
+
+    def test_multiple_masks(self) -> None:
+        """Multiple masks (N > 1) should all be transformed."""
+        masks = torch.zeros((3, 320, 320), dtype=torch.bool)
+        masks[0, 0:10, 0:10] = True
+        masks[1, 100:120, 100:120] = True
+        masks[2, 200:220, 200:220] = True
+        result = UltralyticsEngine._scale_masks_to_letterbox(masks, ori_h=320, ori_w=320, imgsz=640)
+        assert result.shape == (3, 640, 640)
+        # Each scaled 2x
+        assert result[0, 0:20, 0:20].all()
+        assert result[1, 200:240, 200:240].all()
+        assert result[2, 400:440, 400:440].all()
+
+    def test_empty_masks(self) -> None:
+        """Empty mask tensor should return correctly shaped zeros."""
+        masks = torch.zeros((0, 480, 640), dtype=torch.bool)
+        result = UltralyticsEngine._scale_masks_to_letterbox(masks, ori_h=480, ori_w=640, imgsz=640)
+        assert result.shape == (0, 640, 640)
+
+
+class TestInstSegTorchmetrics:
+    """Tests for instance segmentation torchmetrics evaluation."""
+
+    def test_test_includes_masks_when_model_produces_them(self, mocker, tmp_path) -> None:
+        """test() should include RLE masks in preds/targets for instance seg."""
+        model = UltralyticsInstSegModel(model_name="yolo26n-seg", label_info=_label_info())
+        datamodule = mocker.MagicMock(spec=DataModule)
+        engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
+
+        yolo = MagicMock()
+        model._yolo = yolo
+
+        pred_mask = torch.zeros((2, 64, 64))
+        pred_mask[0, 10:30, 10:30] = 1.0
+        pred_mask[1, 40:60, 40:60] = 1.0
+
+        mock_result = MagicMock()
+        mock_result.boxes = MagicMock()
+        mock_result.boxes.__len__ = lambda _: 2
+        mock_result.boxes.xyxy = torch.tensor([[10, 10, 30, 30], [40, 40, 60, 60]], dtype=torch.float32)
+        mock_result.boxes.conf = torch.tensor([0.9, 0.7], dtype=torch.float32)
+        mock_result.boxes.cls = torch.tensor([0, 1], dtype=torch.float32)
+        mock_result.masks = MagicMock()
+        mock_result.masks.__len__ = lambda _: 2
+        mock_result.masks.data = pred_mask
+
+        yolo.predict = MagicMock(return_value=[mock_result])
+        yolo.model = MagicMock()
+        yolo.model.to = MagicMock(return_value=yolo.model)
+        yolo.model.eval = MagicMock(return_value=yolo.model)
+
+        target_mask = torch.zeros((1, 64, 64), dtype=torch.bool)
+        target_mask[0, 10:30, 10:30] = True
+
+        batch = SampleBatch(
+            images=torch.rand(1, 3, 64, 64),
+            bboxes=[
+                tv_tensors.BoundingBoxes(torch.tensor([[10.0, 10.0, 30.0, 30.0]]), format="XYXY", canvas_size=(64, 64))
+            ],
+            labels=[torch.tensor([0])],
+            masks=[tv_tensors.Mask(target_mask)],
+            imgs_info=[ImageInfo(img_idx=0, img_shape=(64, 64), ori_shape=(64, 64))],
+        )
+        engine._datamodule.test_dataloader = MagicMock(return_value=[batch])
+        engine._datamodule.label_info = _label_info()
+
+        mock_metric = MagicMock()
+        mock_metric.to = MagicMock(return_value=mock_metric)
+        mock_metric.compute = MagicMock(
+            return_value={
+                "map": torch.tensor(0.60),
+                "map_50": torch.tensor(0.80),
+            }
+        )
+        metric_callable = MagicMock(return_value=mock_metric)
+
+        result = engine.test(metric=metric_callable)
+
+        mock_metric.update.assert_called_once()
+        call_kwargs = mock_metric.update.call_args
+        preds_arg = call_kwargs.kwargs.get("preds") or call_kwargs[1].get("preds") or call_kwargs[0][0]
+        targets_arg = call_kwargs.kwargs.get("target") or call_kwargs[1].get("target") or call_kwargs[0][1]
+
+        assert "masks" in preds_arg[0]
+        assert len(preds_arg[0]["masks"]) == 2
+        assert "counts" in preds_arg[0]["masks"][0]
+        assert "size" in preds_arg[0]["masks"][0]
+
+        assert "masks" in targets_arg[0]
+        assert len(targets_arg[0]["masks"]) == 1
+        assert "counts" in targets_arg[0]["masks"][0]
+        assert "size" in targets_arg[0]["masks"][0]
+
+        assert result["test/map"] == pytest.approx(0.60)
+        assert result["test/map_50"] == pytest.approx(0.80)
+
+    def test_detection_has_no_masks_key(self, mocker, tmp_path) -> None:
+        """Detection-only model should not produce masks key in pred/target dicts."""
+        engine, yolo = _make_engine(tmp_path, mocker)
+
+        mock_result = MagicMock()
+        mock_result.boxes = MagicMock()
+        mock_result.boxes.__len__ = lambda _: 1
+        mock_result.boxes.xyxy = torch.tensor([[10, 20, 30, 40]], dtype=torch.float32)
+        mock_result.boxes.conf = torch.tensor([0.9], dtype=torch.float32)
+        mock_result.boxes.cls = torch.tensor([0], dtype=torch.float32)
+        mock_result.masks = None
+
+        yolo.predict = MagicMock(return_value=[mock_result])
+        yolo.model = MagicMock()
+        yolo.model.to = MagicMock(return_value=yolo.model)
+        yolo.model.eval = MagicMock(return_value=yolo.model)
+
+        batch = SampleBatch(
+            images=torch.rand(1, 3, 64, 64),
+            bboxes=[
+                tv_tensors.BoundingBoxes(torch.tensor([[10.0, 20.0, 30.0, 40.0]]), format="XYXY", canvas_size=(64, 64))
+            ],
+            labels=[torch.tensor([0])],
+            masks=None,
+            imgs_info=[ImageInfo(img_idx=0, img_shape=(64, 64), ori_shape=(64, 64))],
+        )
+        engine._datamodule.test_dataloader = MagicMock(return_value=[batch])
+        engine._datamodule.label_info = _label_info()
+
+        mock_metric = MagicMock()
+        mock_metric.to = MagicMock(return_value=mock_metric)
+        mock_metric.compute = MagicMock(return_value={"map": torch.tensor(0.50)})
+        metric_callable = MagicMock(return_value=mock_metric)
+
+        engine.test(metric=metric_callable)
+
+        call_kwargs = mock_metric.update.call_args
+        preds_arg = call_kwargs.kwargs.get("preds") or call_kwargs[1].get("preds") or call_kwargs[0][0]
+        targets_arg = call_kwargs.kwargs.get("target") or call_kwargs[1].get("target") or call_kwargs[0][1]
+
+        assert "masks" not in preds_arg[0]
+        assert "masks" not in targets_arg[0]
