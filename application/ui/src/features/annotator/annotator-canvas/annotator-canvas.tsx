@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { MouseEvent, PointerEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { MouseEvent, PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { Loading } from '@geti/ui';
 import { useIsFetching } from '@tanstack/react-query';
@@ -166,55 +166,62 @@ type AnnotatorCanvasProps = {
     mode: AnnotatorMode;
 };
 
+type UseToolLayerPointerPassthroughProps = {
+    canEditSelectedAnnotation: boolean;
+};
+
+const useToolLayerPointerPassthrough = ({ canEditSelectedAnnotation }: UseToolLayerPointerPassthroughProps) => {
+    const { activeTool } = useTool();
+    const isSelectionToolActive = activeTool === 'selection';
+    const toolLayerRef = useRef<HTMLDivElement>(null);
+    const [isToolLayerPointerPassthrough, setIsToolLayerPointerPassthrough] = useState(false);
+
+    const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+        if (!canEditSelectedAnnotation || isSelectionToolActive) {
+            setIsToolLayerPointerPassthrough(false);
+            return;
+        }
+
+        const toolLayer = toolLayerRef.current;
+
+        if (toolLayer == null) {
+            return;
+        }
+
+        const previousPointerEvents = toolLayer.style.pointerEvents;
+        toolLayer.style.pointerEvents = 'none';
+
+        const hitElement = document.elementFromPoint(event.clientX, event.clientY);
+
+        toolLayer.style.pointerEvents = previousPointerEvents;
+
+        const shouldAllowAnnotationEdit =
+            hitElement instanceof Element && hitElement.closest("[data-resize-anchor='true']") !== null;
+
+        setIsToolLayerPointerPassthrough(shouldAllowAnnotationEdit);
+    };
+
+    const toolLayerPointerEvents =
+        isSelectionToolActive || (canEditSelectedAnnotation && isToolLayerPointerPassthrough) ? 'none' : 'auto';
+
+    return { toolLayerRef, toolLayerPointerEvents, handlePointerMove } as const;
+};
+
 export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: AnnotatorCanvasProps) => {
     const projectId = useProjectIdentifier();
     const isSceneBusy = useIsAnnotatorSceneBusy();
     const { canvasRef } = useAnnotator();
     const { isVisible } = useAnnotationVisibility();
     const { selectedAnnotations } = useSelectedAnnotations();
-    const { activeTool } = useTool();
     const isFetchingMedia = useIsFetching({ queryKey: loadImageQueryOptions(projectId, mediaItem).queryKey });
-    const toolLayerRef = useRef<HTMLDivElement>(null);
-    const [isToolLayerPointerPassthrough, setIsToolLayerPointerPassthrough] = useState(false);
 
     const isLoadingMedia = isFetchingMedia > 0;
     const areToolsDisabled = isSceneBusy || isReadOnly;
     const size = { width: mediaItem.width, height: mediaItem.height };
     const canEditSelectedAnnotation = !areToolsDisabled && isVisible && selectedAnnotations.size === 1;
-    const isSelectionToolActive = activeTool === 'selection';
-
-    const handlePointerMove = useCallback(
-        (event: PointerEvent<HTMLDivElement>) => {
-            if (!canEditSelectedAnnotation || isSelectionToolActive) {
-                setIsToolLayerPointerPassthrough(false);
-                return;
-            }
-
-            const toolLayer = toolLayerRef.current;
-
-            if (toolLayer == null) {
-                return;
-            }
-
-            const previousPointerEvents = toolLayer.style.pointerEvents;
-            toolLayer.style.pointerEvents = 'none';
-
-            const hitElement = document.elementFromPoint(event.clientX, event.clientY);
-
-            toolLayer.style.pointerEvents = previousPointerEvents;
-
-            const shouldAllowAnnotationEdit =
-                hitElement instanceof Element && hitElement.closest("[data-editable-annotation='true']") !== null;
-
-            setIsToolLayerPointerPassthrough((current) => {
-                return current === shouldAllowAnnotationEdit ? current : shouldAllowAnnotationEdit;
-            });
-        },
-        [canEditSelectedAnnotation, isSelectionToolActive]
-    );
-
-    const toolLayerPointerEvents =
-        isSelectionToolActive || (canEditSelectedAnnotation && isToolLayerPointerPassthrough) ? 'none' : 'auto';
+    const { toolLayerRef, toolLayerPointerEvents, handlePointerMove } = useToolLayerPointerPassthrough({
+        canEditSelectedAnnotation,
+    });
 
     if (isLoadingMedia) {
         return <Loading size='M' />;

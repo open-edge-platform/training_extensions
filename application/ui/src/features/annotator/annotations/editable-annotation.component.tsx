@@ -72,7 +72,7 @@ export const EditableAnnotation = ({ children }: EditAnnotationProps) => {
     if (shouldDisplayEditAnchors) {
         if (isPolygon(annotation)) {
             return (
-                <g ref={ref} data-editable-annotation='true'>
+                <g ref={ref}>
                     <EditPolygon annotation={annotation} zoom={scale} />
                     <UnselectAnnotationOnOutsideClick ref={ref} />
                 </g>
@@ -83,7 +83,7 @@ export const EditableAnnotation = ({ children }: EditAnnotationProps) => {
             const { shape } = annotation;
 
             return (
-                <g ref={ref} data-editable-annotation='true'>
+                <g ref={ref}>
                     <EditBoundingBox
                         key={`box-${shape.x}-${shape.y}-${shape.width}-${shape.height}`}
                         annotation={annotation}
