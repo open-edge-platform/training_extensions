@@ -1099,7 +1099,7 @@ class TestGetiTuneTrainerEvaluateModel:
             )
 
         # Assert: PyTorch evaluation via the LightningEngine
-        mock_getitune_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path, metric=metric_callable)
+        mock_getitune_engine.test.assert_called_once_with(metric=metric_callable)
 
         # Assert: OVEngine instantiated twice (OV + ONNX) and tested with the right checkpoints
         assert mock_ov_engine_cls.call_count == 2
@@ -1117,8 +1117,8 @@ class TestGetiTuneTrainerEvaluateModel:
                 ),
             ]
         )
-        mock_ov_engine.test.assert_called_once_with(checkpoint=ov_xml_path, metric=metric_callable)
-        mock_onnx_engine.test.assert_called_once_with(checkpoint=onnx_path, metric=metric_callable)
+        mock_ov_engine.test.assert_called_once_with(metric=metric_callable)
+        mock_onnx_engine.test.assert_called_once_with(metric=metric_callable)
 
         # Assert: each variant's metrics are persisted with the matching variant id
         save_calls = fxt_model_service.save_evaluation_result.call_args_list
