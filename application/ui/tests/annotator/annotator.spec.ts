@@ -1065,11 +1065,10 @@ test.describe('Annotator', () => {
                         status: 'idle',
                         source: null,
                         sink: null,
-                        // model_variant.id must equal the model's id to match active model resolution logic
                         // @ts-expect-error We care only about mocking the active model resolution behavior
                         model: olderModel,
                         // @ts-expect-error model_revision_id is not included in getMockedVariant
-                        model_variant: getMockedVariant({ id: olderModel.id }),
+                        model_variant: getMockedVariant({ id: olderModel.variants[0].id }),
                         device: 'cpu',
                     });
                 }),

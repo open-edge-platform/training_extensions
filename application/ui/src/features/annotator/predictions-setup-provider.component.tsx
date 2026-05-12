@@ -34,10 +34,10 @@ const useSelectedModelId = (models: Model[]) => {
     const selectableModels = useMemo(() => getAllModelsWithOpenVINOVariants(models), [models]);
 
     const defaultSelectedId =
-        selectableModels.find((model) => model.modelId === activeModel?.model_variant_id)?.modelVariantId ??
+        selectableModels.find((model) => model.modelVariantId === activeModel?.model_variant_id)?.modelVariantId ??
         getLatestModel(models);
 
-    return useLocalStorage<string | null>(`${projectId}-active-model-id`, defaultSelectedId);
+    return useLocalStorage<string | null>(`${projectId}-model-variant-id`, defaultSelectedId);
 };
 
 export const PredictionsSetupProvider = ({ children }: { children: ReactNode }) => {
