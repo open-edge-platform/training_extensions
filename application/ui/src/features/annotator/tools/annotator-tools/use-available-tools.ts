@@ -4,11 +4,11 @@
 import { BoundingBox, DetectionTool, Polygon, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
 
 import { ReactComponent as MagneticLasso } from '../../../../assets/icons/magnetic-lasso.svg';
-import BoundingBoxImg from '../../../../assets/tools/bounding-box.gif';
-import MagneticLassoImg from '../../../../assets/tools/magnetic-lasso.gif';
-import PolygonImg from '../../../../assets/tools/polygon.gif';
-import SAMDetectionImg from '../../../../assets/tools/sam-detection.gif';
-import SAMSegmentationImg from '../../../../assets/tools/sam-segmentation.gif';
+import BoundingBoxImg from '../../../../assets/tools/bounding-box.webp';
+import MagneticLassoImg from '../../../../assets/tools/magnetic-lasso.webp';
+import PolygonImg from '../../../../assets/tools/polygon.webp';
+import SAMDetectionImg from '../../../../assets/tools/sam-detection.webp';
+import SAMSegmentationImg from '../../../../assets/tools/sam-segmentation.webp';
 import { useProjectTask } from '../../../../hooks/use-project-task.hook';
 import { HOTKEYS } from '../../../../shared/hotkeys-definition';
 import { ToolConfig } from '../interface';
