@@ -87,7 +87,7 @@ export const SegmentAnythingTool = () => {
         );
 
         pendingDecodesRef.current += 1;
-        setIsDecoding(true);
+        if (!isDecoding) setIsDecoding(true);
 
         cancellableThrottledDecodingQueryFn
             .call([{ ...point, positive: true }])

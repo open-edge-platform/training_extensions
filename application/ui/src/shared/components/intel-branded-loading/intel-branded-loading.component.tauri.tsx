@@ -8,9 +8,9 @@
 
 import { Flex, Loading } from '@geti/ui';
 
-interface IntelBrandedLoadingProps {
+type IntelBrandedLoadingProps = {
     height?: string;
-}
+};
 
 export const IntelBrandedLoading = ({ height = '100vh' }: IntelBrandedLoadingProps) => {
     return (
