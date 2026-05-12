@@ -3,11 +3,42 @@
 
 mod backend;
 
+use std::process::Child;
 use std::sync::{Arc, Mutex};
 
 use tauri::{Manager, RunEvent, WindowEvent};
 
 use crate::backend::spawn_backend;
+
+/// Kill a process and all its descendants.
+///
+/// - **Windows**: `taskkill /F /T /PID` terminates the entire process tree.
+/// - **Unix**: sends `SIGKILL` to the process group (`kill -- -<pid>`).  The
+///   backend inherits the Tauri-created process group so all its multiprocessing
+///   workers are included.
+fn kill_process_tree(child: &mut Child) {
+    let pid = child.id();
+
+    #[cfg(windows)]
+    {
+        use std::process::Command;
+        let _ = Command::new("taskkill")
+            .args(["/F", "/T", "/PID", &pid.to_string()])
+            .output();
+    }
+
+    #[cfg(unix)]
+    {
+        use std::process::Command;
+        // kill -- -PID sends the signal to the whole process group.
+        let _ = Command::new("kill")
+            .args(["-9", "--", &format!("-{pid}")])
+            .output();
+    }
+
+    // Reap the main child so we don't leave a zombie.
+    let _ = child.wait();
+}
 
 fn main() {
     // Shared handle so we can kill the backend on exit.
@@ -47,7 +78,7 @@ fn main() {
     app.run(move |_app_handle, event| {
         if let RunEvent::Exit = event {
             if let Some(mut child) = exit_handle.lock().unwrap().take() {
-                let _ = child.kill();
+                kill_process_tree(&mut child);
                 log::info!("⛔ Backend terminated");
             }
         }
