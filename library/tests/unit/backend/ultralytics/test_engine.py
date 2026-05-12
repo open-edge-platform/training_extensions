@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+import pytest
 import torch
 from torchvision import tv_tensors
 
@@ -448,3 +449,146 @@ class TestPerClassMetrics:
         assert metrics["val/map_50"] == 0.75
         # No per-class keys
         assert not any("/" in k and k.count("/") >= 2 for k in metrics)
+
+
+class TestTorchmetricsEval:
+    """Tests for torchmetrics-based test() evaluation."""
+
+    def test_test_uses_torchmetrics_when_metric_provided(self, mocker, tmp_path) -> None:
+        """test() should use torchmetrics path when metric callable is provided."""
+        engine, yolo = _make_engine(tmp_path, mocker)
+
+        mock_result = MagicMock()
+        mock_result.boxes = MagicMock()
+        mock_result.boxes.__len__ = lambda _: 2
+        mock_result.boxes.xyxy = torch.tensor([[10, 20, 30, 40], [50, 60, 70, 80]], dtype=torch.float32)
+        mock_result.boxes.conf = torch.tensor([0.9, 0.7], dtype=torch.float32)
+        mock_result.boxes.cls = torch.tensor([0, 1], dtype=torch.float32)
+
+        yolo.predict = MagicMock(return_value=[mock_result])
+        yolo.model = MagicMock()
+        yolo.model.to = MagicMock(return_value=yolo.model)
+        yolo.model.eval = MagicMock(return_value=yolo.model)
+
+        batch = SampleBatch(
+            images=torch.rand(1, 3, 64, 64),
+            bboxes=[
+                tv_tensors.BoundingBoxes(torch.tensor([[10.0, 20.0, 30.0, 40.0]]), format="XYXY", canvas_size=(64, 64))
+            ],
+            labels=[torch.tensor([0])],
+            imgs_info=[ImageInfo(img_idx=0, img_shape=(64, 64), ori_shape=(64, 64))],
+        )
+        engine._datamodule.test_dataloader = MagicMock(return_value=[batch])
+        engine._datamodule.label_info = _label_info()
+
+        mock_metric = MagicMock()
+        mock_metric.to = MagicMock(return_value=mock_metric)
+        mock_metric.compute = MagicMock(
+            return_value={
+                "map": torch.tensor(0.75),
+                "map_50": torch.tensor(0.90),
+                "map_75": torch.tensor(0.60),
+                "mar_1": torch.tensor(0.50),
+                "mar_10": torch.tensor(0.65),
+                "mar_100": torch.tensor(0.70),
+                "classes": torch.tensor([0, 1]),
+            }
+        )
+        metric_callable = MagicMock(return_value=mock_metric)
+
+        result = engine.test(metric=metric_callable)
+
+        metric_callable.assert_called_once()
+        mock_metric.update.assert_called_once()
+        mock_metric.compute.assert_called_once()
+
+        assert result["test/map"] == pytest.approx(0.75)
+        assert result["test/map_50"] == pytest.approx(0.90)
+        assert result["test/map_75"] == pytest.approx(0.60)
+        assert "test/classes" not in result
+
+    def test_test_falls_back_to_yolo_without_metric(self, mocker, tmp_path) -> None:
+        """test() should use YOLO validator when no metric callable is provided."""
+        engine, yolo = _make_engine(tmp_path, mocker)
+
+        validator_instance = MagicMock()
+        validator_instance.return_value = SimpleNamespace(
+            results_dict={"metrics/mAP50(B)": 0.80},
+        )
+
+        with patch.object(engine, "_make_bound_validator", return_value=MagicMock(return_value=validator_instance)):
+            validator_instance.return_value = SimpleNamespace(
+                results_dict={"metrics/mAP50(B)": 0.80},
+            )
+            result = engine.test(metric=None)
+
+        assert "val/map_50" in result
+
+    def test_format_torchmetrics_results_skips_non_scalar(self) -> None:
+        """Non-scalar tensors and known auxiliary keys should be excluded."""
+        results = {
+            "map": torch.tensor(0.75),
+            "map_50": torch.tensor(0.90),
+            "classes": torch.tensor([0, 1, 2]),
+            "map_per_class": torch.tensor([0.6, 0.7, 0.8]),
+            "mar_100_per_class": torch.tensor([0.5, 0.6, 0.7]),
+            "ious": {"bbox": torch.ones(3, 3)},
+            "f-measure": torch.tensor(0.85),
+        }
+        formatted = UltralyticsEngine._format_torchmetrics_results(results)
+
+        assert formatted["test/map"] == pytest.approx(0.75)
+        assert formatted["test/map_50"] == pytest.approx(0.90)
+        assert formatted["test/f-measure"] == pytest.approx(0.85)
+        assert "test/classes" not in formatted
+        assert "test/map_per_class" not in formatted
+        assert "test/mar_100_per_class" not in formatted
+        assert "test/ious" not in formatted
+
+
+class TestScaleBoxesToLetterbox:
+    """Tests for _scale_boxes_to_letterbox coordinate transformation."""
+
+    def test_identity_when_image_fits_exactly(self) -> None:
+        """When original image matches imgsz, boxes should not change."""
+        boxes = torch.tensor([[10.0, 20.0, 100.0, 200.0]])
+        result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=640, ori_w=640, imgsz=640)
+        assert torch.allclose(result, boxes)
+
+    def test_landscape_image_vertical_padding(self) -> None:
+        """480x640 image letterboxed to 640x640: vertical padding of 80px each side."""
+        boxes = torch.tensor([[0.0, 0.0, 640.0, 480.0]])
+        result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=480, ori_w=640, imgsz=640)
+        # scale = min(640/480, 640/640) = 1.0, pad_x = 0, pad_y = 80
+        expected = torch.tensor([[0.0, 80.0, 640.0, 560.0]])
+        assert torch.allclose(result, expected)
+
+    def test_portrait_image_horizontal_padding(self) -> None:
+        """640x480 image letterboxed to 640x640: horizontal padding of 80px each side."""
+        boxes = torch.tensor([[100.0, 50.0, 300.0, 400.0]])
+        result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=640, ori_w=480, imgsz=640)
+        # scale = min(640/640, 640/480) = 1.0, pad_x = 80, pad_y = 0
+        expected = torch.tensor([[180.0, 50.0, 380.0, 400.0]])
+        assert torch.allclose(result, expected)
+
+    def test_small_image_scale_up(self) -> None:
+        """320x320 image scaled 2x to fill 640x640: no padding, boxes scaled."""
+        boxes = torch.tensor([[10.0, 20.0, 100.0, 200.0]])
+        result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=320, ori_w=320, imgsz=640)
+        # scale = 2.0, pad_x = 0, pad_y = 0
+        expected = torch.tensor([[20.0, 40.0, 200.0, 400.0]])
+        assert torch.allclose(result, expected)
+
+    def test_non_square_with_scaling(self) -> None:
+        """960x1280 image scaled 0.5x to 640x640: vertical padding."""
+        boxes = torch.tensor([[0.0, 0.0, 1280.0, 960.0]])
+        result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=960, ori_w=1280, imgsz=640)
+        # scale = min(640/960, 640/1280) = 0.5, pad_x = 0, pad_y = (640-480)/2 = 80
+        expected = torch.tensor([[0.0, 80.0, 640.0, 560.0]])
+        assert torch.allclose(result, expected)
+
+    def test_empty_boxes(self) -> None:
+        """Empty box tensor should pass through unchanged."""
+        boxes = torch.zeros((0, 4))
+        result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=480, ori_w=640, imgsz=640)
+        assert result.shape == (0, 4)

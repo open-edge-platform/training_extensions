@@ -184,30 +184,38 @@ class UltralyticsEngine(Engine):
         return self._translate_metrics(results)
 
     def test(self, checkpoint: PathLike | None = None, metric: object | None = None, **kwargs) -> METRICS:
-        """Validate the model.
+        """Evaluate the model using torchmetrics or the Ultralytics validator.
 
-        When a DataModule is attached, a custom validator bypasses the
-        Ultralytics YAML data config and reads from the adapter pipeline.
-        When a data-root path is attached, ``yolo.val()`` is used directly.
+        When a ``metric`` callable is provided **and** a DataModule is
+        attached, evaluation uses the same torchmetrics pipeline as
+        Lightning (e.g. ``MeanAveragePrecision``).  This ensures metric
+        consistency across backends.
+
+        When ``metric`` is ``None``, falls back to the Ultralytics
+        built-in validator (``DetMetrics``).
 
         Args:
-            checkpoint: Optional ``.pt`` checkpoint to validate.
-            metric: Accepted for API compatibility with ``LightningEngine``
-                but ignored — Ultralytics computes metrics internally.
+            checkpoint: Optional ``.pt`` checkpoint to evaluate.
+            metric: A ``MetricCallable`` — a function that accepts
+                ``LabelInfo`` and returns a ``torchmetrics.Metric``.
+                When provided, the torchmetrics evaluation path is used.
             **kwargs: Overrides forwarded to validation.
 
         Returns:
-            Translated metric dict.
+            Metric dict.  Keys are prefixed with ``test/`` when using
+            torchmetrics, or ``val/`` when using the YOLO validator.
         """
-        if metric is not None:
-            logger.debug("UltralyticsEngine ignores the 'metric' parameter; metrics are computed internally")
+        if checkpoint is not None:
+            self._model.load_checkpoint(checkpoint)
+
+        if metric is not None and self._datamodule is not None:
+            return self._test_with_torchmetrics(metric)
+
         merged = self._build_overrides(**kwargs)
 
         if self._datamodule is not None:
-            return self._test_with_datamodule(merged, checkpoint=checkpoint)
+            return self._test_with_datamodule(merged, checkpoint=None)
 
-        if checkpoint is not None:
-            self._model.load_checkpoint(checkpoint)
         yolo = self._model.yolo
         if self._data_root is not None and "data" not in merged:
             merged["data"] = str(self._data_root)
@@ -379,6 +387,123 @@ class UltralyticsEngine(Engine):
             self._model.load_checkpoint(checkpoint)
         results = validator(model=self._model.yolo.model)
         return self._translate_metrics(results)
+
+    def _test_with_torchmetrics(self, metric_callable: Any) -> dict[str, float]:  # noqa: ANN401
+        """Evaluate using torchmetrics — same metrics as Lightning models.
+
+        Iterates the DataModule's test dataloader, runs YOLO predictions on
+        each batch, converts outputs to the torchmetrics dict format, and
+        computes the metric.  Returns a flat dict with ``test/`` prefixed keys
+        identical to those produced by ``LightningEngine.test()``.
+
+        Target bounding boxes from the DataModule are in original image
+        coordinates (``resize_targets=False``), while YOLO predictions are
+        in the letterbox-padded model input space.  This method transforms
+        target boxes into the prediction coordinate space before metric
+        update.
+
+        Args:
+            metric_callable: A function ``(LabelInfo) -> Metric``.
+
+        Returns:
+            Flat metric dict, e.g. ``{"test/map": 0.75, "test/map_50": 0.90}``.
+        """
+        assert self._datamodule is not None  # noqa: S101
+
+        label_info = self._model.label_info or self._datamodule.label_info
+        metric = metric_callable(label_info)
+        device = self._device
+
+        yolo = self._model.yolo
+        yolo.model.to(device).eval()  # pyrefly: ignore[missing-attribute]
+        metric = metric.to(device)
+
+        dataloader = self._datamodule.test_dataloader()
+        imgsz = self._model.imgsz
+
+        logger.info(
+            f"Starting torchmetrics evaluation: model={self._model.model_name}, "
+            f"metric={type(metric).__name__}, batches={len(dataloader)}"
+        )
+
+        for batch in dataloader:
+            if not isinstance(batch, SampleBatch):
+                msg = f"Expected test_dataloader to yield SampleBatch, got {type(batch)}"
+                raise TypeError(msg)
+
+            imgs = batch.images.to(device) if isinstance(batch.images, torch.Tensor) else batch.images
+            raw_results = yolo.predict(  # pyrefly: ignore[bad-argument-type]
+                source=imgs,  # pyrefly: ignore[bad-argument-type]
+                device=device,
+                imgsz=imgsz,
+                conf=0.001,
+                save=False,
+                verbose=False,
+            )
+
+            preds_list = []
+            for result in raw_results:
+                pred_dict: dict[str, torch.Tensor] = {
+                    "boxes": torch.zeros((0, 4), device=device),
+                    "scores": torch.zeros(0, device=device),
+                    "labels": torch.zeros(0, dtype=torch.long, device=device),
+                }
+                if result.boxes is not None and len(result.boxes):
+                    pred_dict["boxes"] = result.boxes.xyxy.to(device)  # pyrefly: ignore[missing-attribute]
+                    pred_dict["scores"] = result.boxes.conf.to(device).float()  # pyrefly: ignore[missing-attribute]
+                    pred_dict["labels"] = result.boxes.cls.to(device).long()  # pyrefly: ignore[missing-attribute]
+                preds_list.append(pred_dict)
+
+            target_list = []
+            for i in range(len(raw_results)):
+                tgt_dict: dict[str, torch.Tensor] = {
+                    "boxes": torch.zeros((0, 4), device=device),
+                    "labels": torch.zeros(0, dtype=torch.long, device=device),
+                }
+                if batch.bboxes is not None and i < len(batch.bboxes):
+                    boxes = batch.bboxes[i].data.to(device).float()
+                    ori_h, ori_w = batch.bboxes[i].canvas_size
+                    boxes = self._scale_boxes_to_letterbox(boxes, ori_h, ori_w, imgsz)
+                    tgt_dict["boxes"] = boxes
+                if batch.labels is not None and i < len(batch.labels):
+                    tgt_dict["labels"] = batch.labels[i].to(device).long()
+                target_list.append(tgt_dict)
+
+            metric.update(preds=preds_list, target=target_list)
+
+        results = metric.compute()
+        return self._format_torchmetrics_results(results)
+
+    @staticmethod
+    def _scale_boxes_to_letterbox(boxes: torch.Tensor, ori_h: int, ori_w: int, imgsz: int) -> torch.Tensor:
+        """Transform bounding boxes from original image coords to letterbox-padded coords.
+
+        The DataModule's test augmentations use ``Resize(keep_aspect_ratio=True,
+        center_padding=True, resize_targets=False)``, so target boxes remain in
+        the original image coordinate space.  YOLO predictions, however, are in
+        the letterbox-padded ``imgsz x imgsz`` space.  This method applies the
+        same scale + center-pad offset to align the two.
+
+        Args:
+            boxes: ``(N, 4)`` tensor of xyxy boxes in original coords.
+            ori_h: Original image height.
+            ori_w: Original image width.
+            imgsz: Model input size (square).
+
+        Returns:
+            Transformed ``(N, 4)`` tensor in letterbox coords.
+        """
+        if boxes.numel() == 0:
+            return boxes
+        scale = min(imgsz / ori_h, imgsz / ori_w)
+        pad_x = (imgsz - ori_w * scale) / 2.0
+        pad_y = (imgsz - ori_h * scale) / 2.0
+        scaled = boxes.clone()
+        scaled[:, 0] = boxes[:, 0] * scale + pad_x
+        scaled[:, 1] = boxes[:, 1] * scale + pad_y
+        scaled[:, 2] = boxes[:, 2] * scale + pad_x
+        scaled[:, 3] = boxes[:, 3] * scale + pad_y
+        return scaled
 
     def _predict_with_datamodule(self, overrides: dict[str, Any]) -> list[Prediction]:
         """Run inference through ``DataModule.predict_dataloader()``."""
@@ -598,6 +723,34 @@ class UltralyticsEngine(Engine):
             metrics[f"val/recall/{class_name}"] = float(r)
             metrics[f"val/map_50/{class_name}"] = float(ap50)
             metrics[f"val/map/{class_name}"] = float(ap)
+
+    @staticmethod
+    def _format_torchmetrics_results(results: dict[str, Any]) -> dict[str, float]:
+        """Convert torchmetrics compute output to a flat ``test/``-prefixed dict.
+
+        Mirrors the logic in ``LightningModel._log_metrics``: only scalar
+        tensors are included; auxiliary keys (``classes``, ``map_per_class``,
+        ``mar_100_per_class``, ``ious``) are skipped.
+
+        Args:
+            results: Dict returned by ``metric.compute()``.
+
+        Returns:
+            Flat dict, e.g. ``{"test/map": 0.75, "test/map_50": 0.90}``.
+        """
+        _skip_keys = {"classes", "map_per_class", "mar_100_per_class", "ious"}
+        formatted: dict[str, float] = {}
+        for name, value in results.items():
+            if name in _skip_keys:
+                continue
+            if isinstance(value, torch.Tensor):
+                if value.numel() == 1:
+                    formatted[f"test/{name}"] = value.item()
+                else:
+                    logger.debug(f"Skipping non-scalar torchmetric '{name}' with {value.numel()} elements")
+            elif isinstance(value, (int, float)):
+                formatted[f"test/{name}"] = float(value)
+        return formatted
 
     @staticmethod
     def _convert_predictions(
