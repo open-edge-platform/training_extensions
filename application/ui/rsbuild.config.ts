@@ -91,7 +91,7 @@ export default defineConfig({
     html: {
         template: './public/index.html',
         title: 'Geti',
-        favicon: './src/assets/icons/favicon.webp',
+        favicon: './src/assets/icons/favicon.ico',
         meta: {
             description:
                 'Geti provides a "recipe" for every supported task type, which consolidates ' +
