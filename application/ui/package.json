@@ -13,7 +13,7 @@
         "build:api": "npx openapi-typescript ./src/api/openapi-spec.json -o ./src/api/openapi-spec.d.ts  --root-types && prettier --write src/api/openapi-spec.d.ts",
         "build:api:download": "curl -o ./src/api/openapi-spec.json http://localhost:7860/api/openapi.json && prettier --write src/api/openapi-spec.json",
         "update-spec": "npm run build:api:download && npm run build:api",
-        "clone-geti-ui-packages": "npx tiged --force --mode=git https://github.com/open-edge-platform/geti.git/web_ui/packages/config#f8d800c66ffcc87b29c313a02e3ff910b1ca91a1 packages/config && npx tiged --force --mode=git https://github.com/open-edge-platform/geti.git/web_ui/packages/ui#f8d800c66ffcc87b29c313a02e3ff910b1ca91a1 packages/ui && npx tiged --force --mode=git https://github.com/open-edge-platform/geti.git/web_ui/packages/smart-tools#f8d800c66ffcc87b29c313a02e3ff910b1ca91a1 packages/smart-tools",
+        "clone-geti-ui-packages": "npx tiged --force --mode=git https://github.com/open-edge-platform/geti.git/web_ui/packages/config#c8c02772ba6f1a0ad2326fe863685dfbe6db8118 packages/config && npx tiged --force --mode=git https://github.com/open-edge-platform/geti.git/web_ui/packages/ui#c8c02772ba6f1a0ad2326fe863685dfbe6db8118 packages/ui && npx tiged --force --mode=git https://github.com/open-edge-platform/geti.git/web_ui/packages/smart-tools#c8c02772ba6f1a0ad2326fe863685dfbe6db8118 packages/smart-tools",
         "cyclic-deps-check": "npx madge --circular src/**/*.ts*",
         "start": "rsbuild dev",
         "start:tauri": "cross-env BUILD_TARGET=tauri rsbuild dev",
