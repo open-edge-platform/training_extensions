@@ -80,7 +80,7 @@ const getSegmentAnythingEncodingQueryKey = (mediaItem: Media) => {
         : ['segment-anything-model', 'encoding', mediaItem.id];
 };
 
-export const segmentAnythingEncodingQueryOptions = (
+const segmentAnythingEncodingQueryOptions = (
     mediaItem: Media,
     model: SegmentAnythingRemoteInstance | undefined,
     image: ImageData,

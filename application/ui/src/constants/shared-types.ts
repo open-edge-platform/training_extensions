@@ -38,16 +38,11 @@ export type PrepareImportDatasetJob = Job & {
     metadata: components['schemas']['PrepareDatasetForImportRequest'];
 };
 
-export type ImportDatasetToProjectJob = Job & {
-    type: 'import_dataset_to_project';
-    metadata: components['schemas']['ImportDatasetToProjectRequest'];
-};
-
 export type DatasetStatisticsView = components['schemas']['DatasetStatisticsView'];
 
 export type MediaImage = components['schemas']['ImageView'];
 export type MediaVideo = components['schemas']['VideoView'];
-export type MediaVideoFrameDTO = components['schemas']['VideoFrameView'];
+type MediaVideoFrameDTO = components['schemas']['VideoFrameView'];
 export type MediaVideoFrame = Omit<MediaVideo, 'type'> & {
     frame_number: number;
     frame_stride: number;
@@ -60,7 +55,6 @@ export type Media = MediaImage | MediaVideo | MediaVideoFrame;
 
 export type MediaItemState = 'accepted' | 'rejected';
 
-export type DeviceType = components['schemas']['DeviceType'];
 export type TrainingDevice = components['schemas']['DeviceInfoView'];
 
 export type DatasetSubset = components['schemas']['DatasetItemSubset'];
@@ -77,7 +71,7 @@ export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSource
 export type IPCameraSourceConfig = components['schemas']['IPCameraSourceConfigView'];
 export type USBCameraSourceConfig = components['schemas']['USBCameraSourceConfigView'];
 export type VideoFileSourceConfig = components['schemas']['VideoFileSourceConfigView'];
-export type DisconnectedSourceConfig = components['schemas']['DisconnectedSourceConfigView'];
+type DisconnectedSourceConfig = components['schemas']['DisconnectedSourceConfigView'];
 
 export type SourceConfig =
     | DisconnectedSourceConfig
@@ -105,8 +99,8 @@ export type AnnotationType = components['schemas']['AnnotationType'];
 
 export type BoolConfigurableParameter = components['schemas']['BoolParameterView'];
 export type StringConfigurableParameter = components['schemas']['StringParameterView'];
-export type IntConfigurableParameter = components['schemas']['IntParameterView'];
-export type FloatConfigurableParameter = components['schemas']['FloatParameterView'];
+type IntConfigurableParameter = components['schemas']['IntParameterView'];
+type FloatConfigurableParameter = components['schemas']['FloatParameterView'];
 export type FloatConfigurableRangeParameter = components['schemas']['FloatRangeParameterView'];
 
 export type NumberConfigurableParameter = IntConfigurableParameter | FloatConfigurableParameter;
@@ -120,8 +114,6 @@ type CreateEnumerableConfigurableParameterType<T extends StringConfigurableParam
 
 export type NumberEnumConfigurableParameter = CreateEnumerableConfigurableParameterType<NumberConfigurableParameter>;
 export type StringEnumConfigurableParameter = CreateEnumerableConfigurableParameterType<StringConfigurableParameter>;
-
-export type EnumConfigurableParameter = StringEnumConfigurableParameter | NumberEnumConfigurableParameter;
 
 export type ConfigurableParameter =
     | BoolConfigurableParameter

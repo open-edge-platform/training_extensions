@@ -11,7 +11,7 @@ import { getQueryKey } from '../../../../query-client/query-client';
 import { EMPTY_LABEL_ID } from '../../../../shared/annotator/labels';
 import { isVideoFrame } from '../../../../shared/media-item-utils';
 
-export const isUnannotatedError = (error: unknown): boolean => {
+const isUnannotatedError = (error: unknown): boolean => {
     return isObject(error) && 'detail' in error && /Media has not been annotated yet/i.test(String(error.detail));
 };
 
@@ -42,7 +42,7 @@ export const annotationsQueryOptions = (projectId: string, media: Media) =>
         queryFn: () => annotationsQueryFn(projectId, media),
     });
 
-export const annotationsQueryFn = async (
+const annotationsQueryFn = async (
     projectId: string,
     media: Media
 ): Promise<{ annotations: AnnotationDTO[]; user_reviewed: boolean; subset: DatasetSubset } | undefined> => {
