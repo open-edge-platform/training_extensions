@@ -395,3 +395,56 @@ class TestExtractProgressCallback:
         assert fn is None
         assert min_p == 0.0
         assert max_p == 100.0
+
+
+class TestPerClassMetrics:
+    """Tests for per-class metric extraction in _translate_metrics."""
+
+    def test_per_class_metrics_extracted(self, mocker, tmp_path) -> None:
+        """Per-class precision/recall/mAP50/mAP should appear in translated metrics."""
+        engine, _ = _make_engine(tmp_path, mocker)
+
+        results = SimpleNamespace(
+            results_dict={
+                "metrics/mAP50(B)": 0.75,
+                "metrics/mAP50-95(B)": 0.45,
+                "metrics/precision(B)": 0.80,
+                "metrics/recall(B)": 0.70,
+            },
+            names={0: "cat", 1: "dog"},
+            ap_class_index=[0, 1],
+        )
+        results.class_result = lambda i: [
+            (0.85, 0.75, 0.80, 0.50),
+            (0.70, 0.60, 0.65, 0.40),
+        ][i]
+
+        metrics = engine._translate_metrics(results)
+
+        # Aggregate metrics translated
+        assert metrics["val/map_50"] == 0.75
+        assert metrics["val/map"] == 0.45
+
+        # Per-class metrics
+        assert metrics["val/precision/cat"] == 0.85
+        assert metrics["val/recall/cat"] == 0.75
+        assert metrics["val/map_50/cat"] == 0.80
+        assert metrics["val/map/cat"] == 0.50
+        assert metrics["val/precision/dog"] == 0.70
+        assert metrics["val/recall/dog"] == 0.60
+        assert metrics["val/map_50/dog"] == 0.65
+        assert metrics["val/map/dog"] == 0.40
+
+    def test_no_per_class_when_missing_attrs(self, mocker, tmp_path) -> None:
+        """Should gracefully skip per-class extraction when results lacks attrs."""
+        engine, _ = _make_engine(tmp_path, mocker)
+
+        results = SimpleNamespace(
+            results_dict={"metrics/mAP50(B)": 0.75},
+        )
+
+        metrics = engine._translate_metrics(results)
+
+        assert metrics["val/map_50"] == 0.75
+        # No per-class keys
+        assert not any("/" in k and k.count("/") >= 2 for k in metrics)

@@ -66,7 +66,7 @@ def convert_metrics(metrics: dict) -> dict[str, float]:
     """
     result: dict[str, float] = {}
     for k, v in metrics.items():
-        name = k.split("/")[1] if "/" in k else k
+        name = "/".join(k.split("/")[1:]) if "/" in k else k
         if isinstance(v, torch.Tensor):
             if v.numel() == 1:
                 result[name] = v.item()

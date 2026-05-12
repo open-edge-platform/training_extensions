@@ -553,7 +553,12 @@ class UltralyticsEngine(Engine):
         return overrides
 
     def _translate_metrics(self, results: object) -> dict[str, float]:
-        """Map Ultralytics metric keys to getitune names."""
+        """Map Ultralytics metric keys to getitune names.
+
+        Translates aggregate metrics via ``metric_keys`` and extracts
+        per-class precision, recall, mAP50, and mAP50-95 when available.
+        Per-class keys use the format ``val/<metric>/<class_name>``.
+        """
         if results is None:
             return {}
 
@@ -568,7 +573,31 @@ class UltralyticsEngine(Engine):
             gt_key = self._model.metric_keys.get(ultra_key, f"ultralytics/{ultra_key}")
             translated[gt_key] = float(value) if not isinstance(value, float) else value
 
+        self._add_per_class_metrics(results, translated)
         return translated
+
+    @staticmethod
+    def _add_per_class_metrics(results: object, metrics: dict[str, float]) -> None:
+        """Extract per-class metrics from the Ultralytics results object.
+
+        Adds keys like ``val/precision/<ClassName>``, ``val/recall/<ClassName>``,
+        ``val/map_50/<ClassName>``, ``val/map/<ClassName>`` to *metrics* in-place.
+        """
+        names = getattr(results, "names", None)
+        ap_class_index = getattr(results, "ap_class_index", None)
+        if names is None or ap_class_index is None:
+            return
+
+        for i, cls_idx in enumerate(ap_class_index):
+            class_name = names.get(cls_idx, str(cls_idx))
+            try:
+                p, r, ap50, ap = results.class_result(i)
+            except (IndexError, AttributeError, TypeError):
+                continue
+            metrics[f"val/precision/{class_name}"] = float(p)
+            metrics[f"val/recall/{class_name}"] = float(r)
+            metrics[f"val/map_50/{class_name}"] = float(ap50)
+            metrics[f"val/map/{class_name}"] = float(ap)
 
     @staticmethod
     def _convert_predictions(
