@@ -126,6 +126,17 @@ with op.batch_alter_table("projects") as batch_op:
     batch_op.drop_column("old_field")
 ```
 
+> ⚠️ **SQLite foreign key constraint caveat:** `batch_alter_table` works by dropping and recreating the table. If _other_ tables have foreign keys pointing **to** the table being rebuilt, SQLite will raise `FOREIGN KEY constraint failed` on the `DROP TABLE` step — even if no rows would actually be violated. Wrap the batch operation with `PRAGMA foreign_keys = OFF/ON` to suppress this:
+>
+> ```python
+> op.execute("PRAGMA foreign_keys = OFF")
+> with op.batch_alter_table("my_table") as batch_op:
+>     batch_op.alter_column("some_col", nullable=False)
+> op.execute("PRAGMA foreign_keys = ON")
+> ```
+>
+> This is safe because Alembic's batch mode copies all data into the new table before dropping the old one — referential integrity is preserved in practice. You only need this when other tables have FK references **pointing to** the table you are rebuilding (not when the table itself has outbound FKs).
+
 ---
 
 ## Examples
@@ -172,9 +183,13 @@ def upgrade() -> None:
     op.add_column("projects", sa.Column("priority", sa.Integer(), nullable=True))
     # 2. Backfill existing rows
     op.execute("UPDATE projects SET priority = 0 WHERE priority IS NULL")
-    # 3. Make it non-nullable via batch mode (required for SQLite)
+    # 3. Make it non-nullable via batch mode (required for SQLite).
+    #    Disable FK checks because other tables reference `projects` and SQLite
+    #    would refuse to DROP the table during the batch rebuild otherwise.
+    op.execute("PRAGMA foreign_keys = OFF")
     with op.batch_alter_table("projects") as batch_op:
         batch_op.alter_column("priority", nullable=False)
+    op.execute("PRAGMA foreign_keys = ON")
 ```
 
 ---
@@ -192,13 +207,19 @@ def upgrade() -> None:
 
 ```python
 def upgrade() -> None:
+    # `projects` is referenced by other tables, so disable FK checks during
+    # the batch rebuild to avoid "FOREIGN KEY constraint failed" on DROP TABLE.
+    op.execute("PRAGMA foreign_keys = OFF")
     with op.batch_alter_table("projects") as batch_op:
         batch_op.drop_column("old_field")
+    op.execute("PRAGMA foreign_keys = ON")
 
 def downgrade() -> None:
     # Restore the column (data will be lost)
+    op.execute("PRAGMA foreign_keys = OFF")
     with op.batch_alter_table("projects") as batch_op:
         batch_op.add_column(sa.Column("old_field", sa.String(100), nullable=True))
+    op.execute("PRAGMA foreign_keys = ON")
 ```
 
 > **Tip for graceful removal:** If you want a non-breaking transition, deprecate the column in one release (stop writing to it), then remove it in the next release.
@@ -232,17 +253,22 @@ def upgrade() -> None:
         SELECT id, id, format, size FROM media
     """)
 
-    # 3. Drop the migrated columns from the original table
+    # 3. Drop the migrated columns from the original table.
+    #    `media` is referenced by `dataset_items`, so disable FK checks during rebuild.
+    op.execute("PRAGMA foreign_keys = OFF")
     with op.batch_alter_table("media") as batch_op:
         batch_op.drop_column("format")
         batch_op.drop_column("size")
+    op.execute("PRAGMA foreign_keys = ON")
 
 
 def downgrade() -> None:
     # 1. Re-add columns
+    op.execute("PRAGMA foreign_keys = OFF")
     with op.batch_alter_table("media") as batch_op:
         batch_op.add_column(sa.Column("format", sa.String(50), nullable=True))
         batch_op.add_column(sa.Column("size", sa.Integer(), nullable=True))
+    op.execute("PRAGMA foreign_keys = ON")
 
     # 2. Copy data back
     op.execute("""
