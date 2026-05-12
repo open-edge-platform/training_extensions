@@ -23,7 +23,7 @@ export const isBoolParameter = (input: unknown): input is BoolConfigurableParame
     return isObject(input) && get(input, 'value_type') === 'bool' && isBoolean(get(input, 'value'));
 };
 
-export const isStringParameter = (input: ConfigurableParameter): input is StringConfigurableParameter => {
+const isStringParameter = (input: ConfigurableParameter): input is StringConfigurableParameter => {
     return input.value_type === 'str';
 };
 

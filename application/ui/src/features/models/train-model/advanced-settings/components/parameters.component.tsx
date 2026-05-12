@@ -116,7 +116,7 @@ const ParameterContextualHelp = ({ text }: { text: string }) => {
     );
 };
 
-export const ParameterName = ({ name, description, marginStart, gridColumn }: ParameterNameProps) => {
+const ParameterName = ({ name, description, marginStart, gridColumn }: ParameterNameProps) => {
     return (
         <Text marginStart={marginStart} gridColumn={gridColumn}>
             {name}
@@ -142,7 +142,7 @@ type ParameterReadOnlyProps = {
 
 type ParameterReadOnlyValueProps = Pick<ConfigurableParameter, 'value' | 'name'>;
 
-export const ParameterReadOnlyValue = ({ value, name }: ParameterReadOnlyValueProps) => {
+const ParameterReadOnlyValue = ({ value, name }: ParameterReadOnlyValueProps) => {
     if (isBoolean(value)) {
         return <span aria-label={name}>{value ? 'On' : 'Off'}</span>;
     }
@@ -370,7 +370,7 @@ const ParametersContainer = ({
     );
 };
 
-export const ParametersEnableGroup = ({
+const ParametersEnableGroup = ({
     parameters,
     onChange,
     isReadOnly,
@@ -425,7 +425,7 @@ const createTestId = (keys: string[] | undefined, parameterKey: string) => {
     return parameterKey;
 };
 
-export const ParametersGroup = ({
+const ParametersGroup = ({
     parametersGroup,
     onChange,
     isReadOnly = false,

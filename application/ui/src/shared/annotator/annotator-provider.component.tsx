@@ -7,7 +7,7 @@ type AnnotatorContextProps = {
     canvasRef: RefObject<HTMLDivElement | null>;
 };
 
-export const AnnotatorContext = createContext<AnnotatorContextProps | null>(null);
+const AnnotatorContext = createContext<AnnotatorContextProps | null>(null);
 
 type AnnotatorProviderProps = {
     children: ReactNode;
