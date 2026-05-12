@@ -58,22 +58,40 @@ fn main() {
         // Geti is a single-window utility app, so closing the main window
         // should quit the whole process (default macOS behaviour is to keep
         // the app alive in the dock, which leaks the backend side-car).
-        .on_window_event(|window, event| {
-            if let WindowEvent::CloseRequested { api, .. } = event {
-                // Prevent the default close so we can shut down gracefully.
-                // Destroying the window first lets the WebView2 / Chromium
-                // widget tear down cleanly before the process exits, avoiding
-                // the "Failed to unregister class Chrome_WidgetWin_0" error.
-                api.prevent_close();
-                let handle = window.app_handle().clone();
-                window.destroy().unwrap_or_default();
-                handle.exit(0);
+        .on_window_event({
+            let child_handle = child_handle.clone();
+            move |window, event| {
+                if let WindowEvent::CloseRequested { api, .. } = event {
+                    // Prevent the default close so we can shut down gracefully.
+                    // Destroying the window first lets the WebView2 / Chromium
+                    // widget tear down cleanly before the process exits,
+                    // avoiding the "Failed to unregister class
+                    // Chrome_WidgetWin_0" error on Windows.
+                    api.prevent_close();
+
+                    // Kill the backend *before* exiting so worker processes
+                    // cannot outlive the UI — even if RunEvent::Exit is
+                    // short-circuited by exit(0).
+                    if let Some(mut child) = child_handle.lock().unwrap().take() {
+                        kill_process_tree(&mut child);
+                        log::info!("⛔ Backend terminated");
+                    }
+
+                    let handle = window.app_handle().clone();
+                    if let Err(e) = window.destroy() {
+                        log::warn!("Failed to destroy window during shutdown: {e}");
+                    }
+                    handle.exit(0);
+                }
             }
         })
         .invoke_handler(tauri::generate_handler![])
         .build(tauri::generate_context!())
         .expect("error building Tauri");
 
+    // Belt-and-suspenders: also handle RunEvent::Exit for cases where the app
+    // exits without going through the CloseRequested path (e.g. Cmd+Q on
+    // macOS, or programmatic shutdown).
     let exit_handle = child_handle.clone();
     app.run(move |_app_handle, event| {
         if let RunEvent::Exit = event {
