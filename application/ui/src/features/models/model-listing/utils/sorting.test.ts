@@ -161,7 +161,7 @@ describe('sortModels', () => {
                 ],
             });
 
-        it('sorts models by primary testing metric value ascending', () => {
+        it('sorts models by primary testing metric value descending', () => {
             const models = [
                 makeModelWithScore('high', 0.9),
                 makeModelWithScore('low', 0.5),
@@ -170,18 +170,18 @@ describe('sortModels', () => {
 
             const sorted = sortModels(models, 'score', []);
 
-            expect(sorted[0].id).toBe('low');
+            expect(sorted[0].id).toBe('high');
             expect(sorted[1].id).toBe('mid');
-            expect(sorted[2].id).toBe('high');
+            expect(sorted[2].id).toBe('low');
         });
 
-        it('places models with no testing metric first (value 0)', () => {
+        it('places models with no testing metric last (value 0)', () => {
             const models = [getMockedModel({ id: 'no-metric', variants: [] }), makeModelWithScore('has-metric', 0.8)];
 
             const sorted = sortModels(models, 'score', []);
 
-            expect(sorted[0].id).toBe('no-metric');
-            expect(sorted[1].id).toBe('has-metric');
+            expect(sorted[0].id).toBe('has-metric');
+            expect(sorted[1].id).toBe('no-metric');
         });
     });
 
