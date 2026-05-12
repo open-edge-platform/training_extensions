@@ -83,7 +83,7 @@ const SSIM_TOOL_CONFIG: ToolConfig = {
     type: 'ssim',
     icon: DetectionTool,
     hotkey: HOTKEYS.ssimTool,
-    label: 'SSIM',
+    label: 'Detection assistant',
 };
 
 const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
