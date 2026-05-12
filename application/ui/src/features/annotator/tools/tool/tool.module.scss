@@ -1,0 +1,49 @@
+.hotkeyText {
+    color: var(--spectrum-global-color-gray-800);
+    font-size: var(--spectrum-global-dimension-font-size-25);
+}
+
+.drawingToolsTooltipsContent {
+    text-align: left;
+    padding: var(--spectrum-global-dimension-size-200);
+}
+
+.drawingToolsTooltipsImg {
+    display: block;
+    order: 1;
+    height: var(--spectrum-global-dimension-size-3400);
+    width: var(--spectrum-global-dimension-size-3400);
+}
+
+.drawingToolsTooltipsTitle {
+    margin: 0;
+    font-size: var(--spectrum-global-dimension-static-font-size-200);
+}
+
+.drawingToolsTooltipsDescription {
+    display: block;
+    font-size: var(--spectrum-global-dimension-size-175);
+    margin-top: var(--spectrum-global-dimension-size-225);
+    line-height: var(--spectrum-global-dimension-size-250);
+}
+
+.drawingToolsTooltips {
+    padding: 0;
+    border-radius: 0;
+    box-shadow: 0 0 10px 1px var(--spectrum-global-color-gray-50);
+    background-color: var(--spectrum-global-color-gray-75) !important;
+    transform: translate(
+        var(--spectrum-global-dimension-size-200),
+        var(--spectrum-global-dimension-size-800)
+    ) !important;
+    max-width: var(--spectrum-global-dimension-size-3600) !important; // Fix for safari
+
+    & > span:nth-child(1) {
+        width: auto;
+        max-width: min-content;
+    }
+
+    & > span:nth-child(2) {
+        display: none;
+    }
+}
