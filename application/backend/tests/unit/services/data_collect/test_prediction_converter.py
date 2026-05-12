@@ -96,6 +96,60 @@ def test_convert_prediction_classification() -> None:
     ]
 
 
+def test_convert_prediction_classification_label_with_space() -> None:
+    # Arrange
+    frame_data = np.random.rand(100, 100, 3)
+    project_id, label_1_id, label_2_id = uuid4(), uuid4(), uuid4()
+    labels = [
+        Label(id=label_1_id, project_id=project_id, name="1 bear", color="#00ff00", hotkey="d"),
+        Label(id=label_2_id, project_id=project_id, name="2 bears", color="#ff0000", hotkey="c"),
+    ]
+    raw_prediction = ClassificationResult(
+        top_labels=[
+            model_api.models.result.Label(id=0, name="1_bear", confidence=0.81),
+            model_api.models.result.Label(id=1, name="2_bears", confidence=0.65),
+        ],
+    )
+
+    # Act
+    annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=raw_prediction)
+
+    # Assert
+    assert annotations == [
+        DatasetItemAnnotation(
+            shape=FullImage(),
+            labels=[LabelReference(id=labels[0].id), LabelReference(id=labels[1].id)],
+            confidences=[0.81, 0.65],
+        )
+    ]
+
+
+def test_convert_prediction_classification_renamed_label() -> None:
+    # Arrange
+    frame_data = np.random.rand(100, 100, 3)
+    project_id, label_id = uuid4(), uuid4()
+    labels = [
+        Label(id=label_id, project_id=project_id, name="new label", color="#00ff00", hotkey="n"),
+    ]
+    raw_prediction = ClassificationResult(
+        top_labels=[
+            model_api.models.result.Label(id=0, name="old_label", confidence=0.81),
+        ],
+    )
+
+    # Act
+    annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=raw_prediction)
+
+    # Assert
+    assert annotations == [
+        DatasetItemAnnotation(
+            shape=FullImage(),
+            labels=[LabelReference(id=labels[0].id)],
+            confidences=[0.81],
+        )
+    ]
+
+
 def test_convert_prediction_detection() -> None:
     # Arrange
     frame_data = np.random.rand(100, 100, 3)
