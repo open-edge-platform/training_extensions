@@ -290,6 +290,9 @@ class TransformsUpdater:
                 "torchvision.transforms.v2.ColorJitter",
             ],
             "stage": "gpu",
+            "drop_params": {
+                "torchvision.transforms.v2.ColorJitter": {"p"},
+            },
         },
         "iou_random_crop": {
             "class_paths": ["getitune.data.augmentation.transforms.RandomIoUCrop"],
@@ -413,6 +416,7 @@ class TransformsUpdater:
                     class_path = aug_config.get("class_path", "")
                     per_aug_rename = cls._get_param_rename(registry_entry, class_path)
                     init_args = cls._remap_params(params, per_aug_rename, aug_name=aug_name)
+                    cls._drop_unsupported_params(init_args, registry_entry, class_path)
                     if "init_args" not in aug_config:
                         aug_config["init_args"] = {}
                     aug_config["init_args"].update(init_args)
@@ -422,6 +426,7 @@ class TransformsUpdater:
                     class_path, target_stage = cls._choose_variant(registry_entry, is_ultralytics)
                     per_aug_rename = cls._get_param_rename(registry_entry, class_path)
                     init_args = cls._remap_params(params, per_aug_rename, aug_name=aug_name)
+                    cls._drop_unsupported_params(init_args, registry_entry, class_path)
 
                     target_list = train_subset.setdefault(f"augmentations_{target_stage}", [])
                     new_aug: dict[str, Any] = {"class_path": class_path}
@@ -478,6 +483,24 @@ class TransformsUpdater:
         if not param_rename:
             return None
         return param_rename.get(class_path)
+
+    @classmethod
+    def _drop_unsupported_params(cls, init_args: dict, registry_entry: dict, class_path: str) -> None:
+        """Remove parameters that the target class does not accept.
+
+        Some torchvision transforms lack parameters that their kornia
+        counterparts support (e.g. ``ColorJitter`` has no ``p``).  The
+        ``drop_params`` registry field lists parameter names to strip
+        per class path.
+        """
+        drop_params = registry_entry.get("drop_params")
+        if not drop_params:
+            return
+        to_drop = drop_params.get(class_path)
+        if not to_drop:
+            return
+        for key in to_drop:
+            init_args.pop(key, None)
 
     @classmethod
     def _remap_params(
