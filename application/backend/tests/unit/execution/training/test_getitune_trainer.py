@@ -32,7 +32,13 @@ from app.datumaro_converter.domain.samples.training import (
 )
 from app.execution.base import ExecutionErr
 from app.execution.common.geti_config_converter import GetiConfigConverter
-from app.execution.training.getitune_trainer import DatasetInfo, ExportedModels, GetiTuneTrainer, TrainingDependencies
+from app.execution.training.getitune_trainer import (
+    DatasetInfo,
+    ExportedModels,
+    GetiTuneTrainer,
+    ModelVariantDescriptor,
+    TrainingDependencies,
+)
 from app.models import (
     DatasetItemAnnotationStatus,
     DatasetItemSubset,
@@ -1044,16 +1050,26 @@ class TestGetiTuneTrainerEvaluateModel:
         model_checkpoint_path.touch()
         ov_export_path = tmp_path / "exported_model"
         onnx_export_path = tmp_path / "exported_model"
-        exported_model_paths = ExportedModels(
-            openvino_model_path=ov_export_path,
-            onnx_model_path=onnx_export_path,
-        )
+        ov_xml_path = ov_export_path.with_suffix(".xml")
+        onnx_path = onnx_export_path.with_suffix(".onnx")
 
-        created_variants = {
-            ModelFormat.PYTORCH: pytorch_variant_id,
-            ModelFormat.OPENVINO: openvino_variant_id,
-            ModelFormat.ONNX: onnx_variant_id,
-        }
+        model_variants = [
+            ModelVariantDescriptor(
+                id=pytorch_variant_id,
+                path=model_checkpoint_path,
+                format=ModelFormat.PYTORCH,
+            ),
+            ModelVariantDescriptor(
+                id=openvino_variant_id,
+                path=ov_xml_path,
+                format=ModelFormat.OPENVINO,
+            ),
+            ModelVariantDescriptor(
+                id=onnx_variant_id,
+                path=onnx_path,
+                format=ModelFormat.ONNX,
+            ),
+        ]
 
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
@@ -1076,11 +1092,9 @@ class TestGetiTuneTrainerEvaluateModel:
         ) as mock_ov_engine_cls:
             getitune_trainer.evaluate_model(
                 getitune_engine=mock_getitune_engine,
-                model_checkpoint_path=model_checkpoint_path,
-                exported_model_paths=exported_model_paths,
                 task=training_params.task,
                 model_revision_id=model_id,
-                created_variants=created_variants,
+                model_variants=model_variants,
                 dataset_revision_id=dataset_revision_id,
             )
 
@@ -1089,8 +1103,6 @@ class TestGetiTuneTrainerEvaluateModel:
 
         # Assert: OVEngine instantiated twice (OV + ONNX) and tested with the right checkpoints
         assert mock_ov_engine_cls.call_count == 2
-        ov_xml_path = ov_export_path.with_suffix(".xml")
-        onnx_path = onnx_export_path.with_suffix(".onnx")
         mock_ov_engine_cls.assert_has_calls(
             calls=[
                 call(

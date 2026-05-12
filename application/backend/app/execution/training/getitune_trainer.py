@@ -103,6 +103,21 @@ class ExportedModels:
     onnx_model_path: Path
 
 
+@dataclass(frozen=True)
+class ModelVariantDescriptor:
+    """Describes a single trained/exported model variant to be evaluated and stored.
+
+    Attributes:
+        id: The UUID of the variant record in the database.
+        path: Path to the variant's main file (.ckpt for PyTorch, .xml for OpenVINO IR, .onnx for ONNX).
+        format: The format of the variant.
+    """
+
+    id: UUID
+    path: Path
+    format: ModelFormat
+
+
 class GetiTuneTrainer(Execution[TrainingJobParams]):
     """getitune-specific trainer implementation."""
 
@@ -438,65 +453,52 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
     def evaluate_model(
         self,
         getitune_engine: LightningEngine,
-        model_checkpoint_path: Path,
-        exported_model_paths: ExportedModels,
         task: Task,
         model_revision_id: UUID,
-        created_variants: dict[ModelFormat, UUID],
+        model_variants: list[ModelVariantDescriptor],
         dataset_revision_id: UUID,
     ) -> None:
-        """Evaluate the trained model variants (PyTorch, OpenVINO, ONNX) on the testing set.
+        """Evaluate the trained model variants on the testing set.
 
         Each variant is evaluated using its own dedicated engine so that the recorded
         metrics reflect the runtime that will actually serve it. Results are persisted
         against the corresponding model variant id.
+
+        - PyTorch (.ckpt) variants are evaluated with the LightningEngine used for training.
+        - OpenVINO (.xml) and ONNX (.onnx) variants are evaluated with OVEngine, which
+          natively supports both checkpoint types.
         """
         metric_callable = get_metric_by_task(task)
-
-        # PyTorch evaluation via the LightningEngine used for training
-        logger.info("Evaluating the PyTorch model...")
-        pytorch_metrics = getitune_engine.test(checkpoint=model_checkpoint_path, metric=metric_callable)
-        self._save_evaluation_result(
-            metrics=pytorch_metrics,
-            model_revision_id=model_revision_id,
-            model_variant_id=created_variants[ModelFormat.PYTORCH],
-            dataset_revision_id=dataset_revision_id,
-        )
-
-        # OpenVINO IR and ONNX evaluations both go through OVEngine, which now accepts
-        # either a .xml (OpenVINO IR) or a .onnx checkpoint.
         ov_work_dir_base = Path(getitune_engine.work_dir)
         datamodule = getitune_engine.datamodule
 
-        ov_xml_path = exported_model_paths.openvino_model_path.with_suffix(".xml")
-        logger.info("Evaluating the OpenVINO model...")
-        ov_engine = OVEngine(
-            model=ov_xml_path,
-            data=datamodule,
-            work_dir=ov_work_dir_base / "ov_eval",
-        )
-        ov_metrics = ov_engine.test(checkpoint=ov_xml_path, metric=metric_callable)
-        self._save_evaluation_result(
-            metrics=ov_metrics,
-            model_revision_id=model_revision_id,
-            model_variant_id=created_variants[ModelFormat.OPENVINO],
-            dataset_revision_id=dataset_revision_id,
-        )
+        for variant in model_variants:
+            logger.info("Evaluating the {} model...", variant.format.value)
+            match variant.format:
+                case ModelFormat.PYTORCH:
+                    engine = getitune_engine
+                case ModelFormat.OPENVINO:
+                    engine = OVEngine(
+                        model=variant.path,
+                        data=datamodule,
+                        work_dir=ov_work_dir_base / "ov_eval",
+                    )
+                case ModelFormat.ONNX:
+                    engine = OVEngine(
+                        model=variant.path,
+                        data=datamodule,
+                        work_dir=ov_work_dir_base / "onnx_eval",
+                    )
+                case _:
+                    raise ExecutionErr(f"Unsupported model variant format for evaluation: {variant.format}")
 
-        onnx_path = exported_model_paths.onnx_model_path.with_suffix(".onnx")
-        logger.info("Evaluating the ONNX model...")
-        onnx_engine = OVEngine(
-            model=onnx_path,
-            data=datamodule,
-            work_dir=ov_work_dir_base / "onnx_eval",
-        )
-        onnx_metrics = onnx_engine.test(checkpoint=onnx_path, metric=metric_callable)
-        self._save_evaluation_result(
-            metrics=onnx_metrics,
-            model_revision_id=model_revision_id,
-            model_variant_id=created_variants[ModelFormat.ONNX],
-            dataset_revision_id=dataset_revision_id,
-        )
+            metrics = engine.test(metric=metric_callable)
+            self._save_evaluation_result(
+                metrics=metrics,
+                model_revision_id=model_revision_id,
+                model_variant_id=variant.id,
+                dataset_revision_id=dataset_revision_id,
+            )
 
     def _save_evaluation_result(
         self,
@@ -676,14 +678,31 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             # Create variant DB records first (no file I/O yet)
             created_variants = self.create_model_variants(model_revision_id=params.model_id)
 
+            # Build descriptors mapping each variant id to its source file path inside the workspace
+            model_variants = [
+                ModelVariantDescriptor(
+                    id=created_variants[ModelFormat.PYTORCH],
+                    path=trained_model_path,
+                    format=ModelFormat.PYTORCH,
+                ),
+                ModelVariantDescriptor(
+                    id=created_variants[ModelFormat.OPENVINO],
+                    path=exported_model_paths.openvino_model_path.with_suffix(".xml"),
+                    format=ModelFormat.OPENVINO,
+                ),
+                ModelVariantDescriptor(
+                    id=created_variants[ModelFormat.ONNX],
+                    path=exported_model_paths.onnx_model_path.with_suffix(".onnx"),
+                    format=ModelFormat.ONNX,
+                ),
+            ]
+
             # Evaluate while the workspace and checkpoint still exist
             self.evaluate_model(
                 getitune_engine=getitune_engine,
-                model_checkpoint_path=trained_model_path,
-                exported_model_paths=exported_model_paths,
                 task=task,
                 model_revision_id=params.model_id,
-                created_variants=created_variants,
+                model_variants=model_variants,
                 dataset_revision_id=dataset_info.revision_id,
             )
 
