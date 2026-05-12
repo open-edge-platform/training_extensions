@@ -56,6 +56,16 @@ pub fn spawn_backend(app: &AppHandle) -> std::io::Result<Child> {
         use std::os::windows::process::CommandExt;
         command.creation_flags(0x08000000); // CREATE_NO_WINDOW
     }
+
+    // Put the backend into its own process group so that on shutdown we can
+    // `kill -- -<pid>` to terminate it together with all worker processes it
+    // spawns via Python multiprocessing.
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt as _;
+        command.process_group(0);
+    }
+
     let child = command.spawn()?;
 
     log::info!("▶ Spawned backend: {:?}", backend_path);
