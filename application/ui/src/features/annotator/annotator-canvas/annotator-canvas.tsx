@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { MouseEvent, useEffect, useRef } from 'react';
+import { MouseEvent, PointerEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Loading } from '@geti/ui';
 import { useIsFetching } from '@tanstack/react-query';
@@ -14,6 +14,7 @@ import { useAnnotationVisibility } from '../../../shared/annotator/annotation-vi
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
+import { useTool } from '../../../shared/annotator/tool-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
 import { VideoAnnotations, VideoPredictions } from '../annotations/video-annotations.component';
@@ -169,11 +170,51 @@ export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: 
     const projectId = useProjectIdentifier();
     const isSceneBusy = useIsAnnotatorSceneBusy();
     const { canvasRef } = useAnnotator();
+    const { isVisible } = useAnnotationVisibility();
+    const { selectedAnnotations } = useSelectedAnnotations();
+    const { activeTool } = useTool();
     const isFetchingMedia = useIsFetching({ queryKey: loadImageQueryOptions(projectId, mediaItem).queryKey });
+    const toolLayerRef = useRef<HTMLDivElement>(null);
+    const [isToolLayerPointerPassthrough, setIsToolLayerPointerPassthrough] = useState(false);
 
     const isLoadingMedia = isFetchingMedia > 0;
     const areToolsDisabled = isSceneBusy || isReadOnly;
     const size = { width: mediaItem.width, height: mediaItem.height };
+    const canEditSelectedAnnotation = !areToolsDisabled && isVisible && selectedAnnotations.size === 1;
+    const isSelectionToolActive = activeTool === 'selection';
+
+    const handlePointerMove = useCallback(
+        (event: PointerEvent<HTMLDivElement>) => {
+            if (!canEditSelectedAnnotation || isSelectionToolActive) {
+                setIsToolLayerPointerPassthrough(false);
+                return;
+            }
+
+            const toolLayer = toolLayerRef.current;
+
+            if (toolLayer == null) {
+                return;
+            }
+
+            const previousPointerEvents = toolLayer.style.pointerEvents;
+            toolLayer.style.pointerEvents = 'none';
+
+            const hitElement = document.elementFromPoint(event.clientX, event.clientY);
+
+            toolLayer.style.pointerEvents = previousPointerEvents;
+
+            const shouldAllowAnnotationEdit =
+                hitElement instanceof Element && hitElement.closest("[data-editable-annotation='true']") !== null;
+
+            setIsToolLayerPointerPassthrough((current) => {
+                return current === shouldAllowAnnotationEdit ? current : shouldAllowAnnotationEdit;
+            });
+        },
+        [canEditSelectedAnnotation, isSelectionToolActive]
+    );
+
+    const toolLayerPointerEvents =
+        isSelectionToolActive || (canEditSelectedAnnotation && isToolLayerPointerPassthrough) ? 'none' : 'auto';
 
     if (isLoadingMedia) {
         return <Loading size='M' />;
@@ -184,13 +225,25 @@ export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: 
             <div
                 style={{ position: 'relative', height: '100%', width: '100%' }}
                 onContextMenu={(event: MouseEvent): void => event.preventDefault()}
+                onPointerMove={handlePointerMove}
                 className={isReadOnly ? classes.readOnlyCanvas : undefined}
                 ref={canvasRef}
             >
                 <MediaImage image={image} mediaItem={mediaItem} />
                 <MediaAnnotations mediaItem={mediaItem} mode={mode} />
 
-                {!areToolsDisabled && <ToolManager />}
+                {!areToolsDisabled && (
+                    <div
+                        ref={toolLayerRef}
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            pointerEvents: toolLayerPointerEvents,
+                        }}
+                    >
+                        <ToolManager />
+                    </div>
+                )}
             </div>
         </ZoomTransform>
     );
