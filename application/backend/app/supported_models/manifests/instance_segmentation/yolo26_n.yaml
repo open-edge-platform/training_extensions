@@ -1,5 +1,6 @@
 id: instance-segmentation-yolo26-n
 name: YOLO26-N-Seg
+license: AGPL-3.0
 
 pretrained_weights:
   url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-seg.pt
