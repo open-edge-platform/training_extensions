@@ -15,6 +15,7 @@ import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { useTool } from '../../../shared/annotator/tool-provider.component';
+import { useEditableAnnotationState } from '../../../shared/annotator/use-editable-annotation-state.hook';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
 import { VideoAnnotations, VideoPredictions } from '../annotations/video-annotations.component';
@@ -211,14 +212,13 @@ export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: 
     const projectId = useProjectIdentifier();
     const isSceneBusy = useIsAnnotatorSceneBusy();
     const { canvasRef } = useAnnotator();
-    const { isVisible } = useAnnotationVisibility();
-    const { selectedAnnotations } = useSelectedAnnotations();
+    const { isSingleEditableSelection } = useEditableAnnotationState();
     const isFetchingMedia = useIsFetching({ queryKey: loadImageQueryOptions(projectId, mediaItem).queryKey });
 
     const isLoadingMedia = isFetchingMedia > 0;
     const areToolsDisabled = isSceneBusy || isReadOnly;
     const size = { width: mediaItem.width, height: mediaItem.height };
-    const canEditSelectedAnnotation = !areToolsDisabled && isVisible && selectedAnnotations.size === 1;
+    const canEditSelectedAnnotation = !areToolsDisabled && isSingleEditableSelection;
     const { toolLayerRef, toolLayerPointerEvents, handlePointerMove } = useToolLayerPointerPassthrough({
         canEditSelectedAnnotation,
     });
