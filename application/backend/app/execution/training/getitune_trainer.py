@@ -151,7 +151,12 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
                     "Can't start training - the parent revision has no variants (it may have failed). "
                     "Review the previous revision and retry."
                 )
-            parent_pytorch_variant = next(v for v in parent_variants if v.format == ModelFormat.PYTORCH)
+            parent_pytorch_variant = next((v for v in parent_variants if v.format == ModelFormat.PYTORCH), None)
+            if parent_pytorch_variant is None:
+                raise ExecutionErr(
+                    "Can't start training - the parent revision has no PyTorch variant. "
+                    "Review the previous revision and retry."
+                )
             weights_path = self.__build_model_weights_path(
                 self._data_dir, project_id, parent_model_revision_id, parent_pytorch_variant.id
             )
@@ -400,11 +405,13 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         model_parser.add_argument("--model", type=LightningModel | UltralyticsModel)
         getitune_model = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
 
-        if has_parent_revision:
-            if hasattr(getitune_model, "load_checkpoint"):
-                getitune_model.load_checkpoint(weights_path)
-            else:
-                engine_kwargs["checkpoint"] = weights_path
+        # Load weights for both fresh training (base weights from manifest) and
+        # parent-revision training (previous checkpoint).  prepare_weights()
+        # always returns a valid path regardless of the scenario.
+        if hasattr(getitune_model, "load_checkpoint"):
+            getitune_model.load_checkpoint(weights_path)
+        else:
+            engine_kwargs["checkpoint"] = weights_path
 
         if hasattr(getitune_model, "tile_config"):
             getitune_model.tile_config = datamodule.tile_config

@@ -14629,9 +14629,9 @@
       "severity": "error"
     },
     {
-      "line": 83,
+      "line": 86,
       "column": 22,
-      "stop_line": 83,
+      "stop_line": 86,
       "stop_column": 90,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14641,9 +14641,9 @@
       "severity": "error"
     },
     {
-      "line": 85,
+      "line": 88,
       "column": 45,
-      "stop_line": 85,
+      "stop_line": 88,
       "stop_column": 65,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14653,9 +14653,9 @@
       "severity": "error"
     },
     {
-      "line": 86,
+      "line": 89,
       "column": 31,
-      "stop_line": 86,
+      "stop_line": 89,
       "stop_column": 55,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14665,9 +14665,9 @@
       "severity": "error"
     },
     {
-      "line": 115,
+      "line": 118,
       "column": 9,
-      "stop_line": 115,
+      "stop_line": 118,
       "stop_column": 27,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14677,9 +14677,9 @@
       "severity": "error"
     },
     {
-      "line": 151,
+      "line": 154,
       "column": 41,
-      "stop_line": 156,
+      "stop_line": 159,
       "stop_column": 18,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14689,9 +14689,9 @@
       "severity": "error"
     },
     {
-      "line": 166,
+      "line": 169,
       "column": 41,
-      "stop_line": 166,
+      "stop_line": 169,
       "stop_column": 57,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14701,9 +14701,9 @@
       "severity": "error"
     },
     {
-      "line": 177,
+      "line": 180,
       "column": 23,
-      "stop_line": 177,
+      "stop_line": 180,
       "stop_column": 81,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14713,9 +14713,9 @@
       "severity": "error"
     },
     {
-      "line": 188,
+      "line": 191,
       "column": 19,
-      "stop_line": 188,
+      "stop_line": 191,
       "stop_column": 77,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,

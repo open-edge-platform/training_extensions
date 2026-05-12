@@ -26,9 +26,9 @@ class UltralyticsDetectionModel(UltralyticsModel):
     validator_cls: ClassVar[type] = DetectionValidator
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "yolo26n": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo26n.pt",
-        "yolo26s": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo26s.pt",
-        "yolo26m": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo26m.pt",
+        "yolo26n": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt",
+        "yolo26s": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s.pt",
+        "yolo26m": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m.pt",
     }
 
     @property

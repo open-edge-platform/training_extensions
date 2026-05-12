@@ -28,9 +28,9 @@ class UltralyticsInstSegModel(UltralyticsModel):
     validator_cls: ClassVar[type] = SegmentationValidator
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "yolo26n-seg": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo26n-seg.pt",
-        "yolo26s-seg": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo26s-seg.pt",
-        "yolo26m-seg": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo26m-seg.pt",
+        "yolo26n-seg": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-seg.pt",
+        "yolo26s-seg": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s-seg.pt",
+        "yolo26m-seg": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-seg.pt",
     }
 
     @property

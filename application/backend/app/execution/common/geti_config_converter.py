@@ -239,6 +239,15 @@ class TransformsUpdater:
 
     # Geti name -> (class_path, stage)
     # class_paths is a list to match multiple possible implementations in configs
+    # (e.g. kornia GPU variant and torchvision CPU variant).
+    #
+    # For augmentations with both kornia and torchvision variants the first
+    # entry is the kornia (GPU) default; the second is the torchvision (CPU)
+    # fallback used by Ultralytics recipes which run all augmentations on CPU.
+    #
+    # ``param_rename`` maps *class_path* -> {manifest_name: class_arg_name}
+    # for class paths that need parameter renaming beyond the global
+    # ``PARAM_RENAME`` table.
     AUGMENTATION_REGISTRY: ClassVar[dict[str, dict]] = {
         "random_resize_crop": {
             "class_paths": [
@@ -251,11 +260,17 @@ class TransformsUpdater:
             "stage": "gpu",
         },
         "random_horizontal_flip": {
-            "class_paths": ["kornia.augmentation.RandomHorizontalFlip"],
+            "class_paths": [
+                "kornia.augmentation.RandomHorizontalFlip",
+                "torchvision.transforms.v2.RandomHorizontalFlip",
+            ],
             "stage": "gpu",
         },
         "random_vertical_flip": {
-            "class_paths": ["kornia.augmentation.RandomVerticalFlip"],
+            "class_paths": [
+                "kornia.augmentation.RandomVerticalFlip",
+                "torchvision.transforms.v2.RandomVerticalFlip",
+            ],
             "stage": "gpu",
         },
         "gaussian_blur": {
@@ -265,11 +280,15 @@ class TransformsUpdater:
         "gaussian_noise": {
             "class_paths": ["kornia.augmentation.RandomGaussianNoise"],
             "stage": "gpu",
-            # kornia.augmentation.RandomGaussianNoise uses ``std``; manifests use ``sigma``
-            "param_rename": {"sigma": "std"},
+            "param_rename": {
+                "kornia.augmentation.RandomGaussianNoise": {"sigma": "std"},
+            },
         },
         "color_jitter": {
-            "class_paths": ["kornia.augmentation.ColorJiggle"],
+            "class_paths": [
+                "kornia.augmentation.ColorJiggle",
+                "torchvision.transforms.v2.ColorJitter",
+            ],
             "stage": "gpu",
         },
         "iou_random_crop": {
@@ -289,16 +308,28 @@ class TransformsUpdater:
             "stage": "cpu",
         },
         "random_erasing": {
-            "class_paths": ["kornia.augmentation.RandomErasing"],
+            "class_paths": [
+                "kornia.augmentation.RandomErasing",
+                "torchvision.transforms.v2.RandomErasing",
+            ],
             "stage": "gpu",
         },
         "random_grayscale": {
-            "class_paths": ["kornia.augmentation.RandomGrayscale"],
+            "class_paths": [
+                "kornia.augmentation.RandomGrayscale",
+                "torchvision.transforms.v2.RandomGrayscale",
+            ],
             "stage": "gpu",
         },
         "random_sharpness": {
-            "class_paths": ["kornia.augmentation.RandomSharpness"],
+            "class_paths": [
+                "kornia.augmentation.RandomSharpness",
+                "torchvision.transforms.v2.RandomAdjustSharpness",
+            ],
             "stage": "gpu",
+            "param_rename": {
+                "torchvision.transforms.v2.RandomAdjustSharpness": {"sharpness": "sharpness_factor"},
+            },
         },
     }
 
@@ -314,7 +345,7 @@ class TransformsUpdater:
     }
 
     @classmethod
-    def update(cls, augmentation_params: dict, config: dict) -> None:  # noqa: C901, PLR0912
+    def update(cls, augmentation_params: dict, config: dict) -> None:  # noqa: C901, PLR0912, PLR0915
         """Update augmentations in the config based on Geti model template.
 
         For each augmentation in augmentation_params:
@@ -325,6 +356,12 @@ class TransformsUpdater:
 
         Special case: disabling random_resize_crop replaces it with plain Resize.
 
+        Backend routing:
+        - Ultralytics recipes run all augmentations on CPU.  When a new
+          augmentation is added the torchvision / getitune CPU variant is
+          preferred and placed in ``augmentations_cpu``.
+        - Lightning recipes use the registry default (typically kornia on GPU).
+
         Args:
             augmentation_params: Dict mapping Geti aug names to their parameter dicts.
             config: The full getitune config dictionary.
@@ -334,6 +371,7 @@ class TransformsUpdater:
 
         tiling = config["data"].get("tile_config", {}).get("enable_tiler", False)
         train_subset = config["data"]["train_subset"]
+        is_ultralytics = config.get("backend") == "ultralytics"
 
         for aug_name, aug_value in augmentation_params.items():
             if aug_name not in cls.AUGMENTATION_REGISTRY:
@@ -344,58 +382,126 @@ class TransformsUpdater:
                 raise ValueError(msg)
 
             registry_entry = cls.AUGMENTATION_REGISTRY[aug_name]
-            # Work on a copy so we don't mutate the original
             params = dict(aug_value)
             enable = params.pop("enable", True)
-            stage_key = f"augmentations_{registry_entry['stage']}"
 
-            # Ensure the stage list exists
-            if stage_key not in train_subset:
-                train_subset[stage_key] = []
+            # --- Locate existing augmentation in either stage list ---
+            primary_stage = registry_entry["stage"]
+            primary_key = f"augmentations_{primary_stage}"
+            alt_stage = "cpu" if primary_stage == "gpu" else "gpu"
+            alt_key = f"augmentations_{alt_stage}"
 
-            aug_list = train_subset[stage_key]
+            if primary_key not in train_subset:
+                train_subset[primary_key] = []
+
+            aug_list = train_subset[primary_key]
             existing_idx = cls._find_augmentation(aug_list, registry_entry["class_paths"])
 
-            if enable:
-                init_args = cls._remap_params(params, registry_entry.get("param_rename"))
+            # Fallback: search the other stage list (e.g. YOLO recipes place
+            # torchvision augmentations in augmentations_cpu while the registry
+            # default stage is "gpu" for the kornia variant).
+            if existing_idx is None and alt_key in train_subset:
+                alt_idx = cls._find_augmentation(train_subset[alt_key], registry_entry["class_paths"])
+                if alt_idx is not None:
+                    aug_list = train_subset[alt_key]
+                    existing_idx = alt_idx
 
+            if enable:
                 if existing_idx is not None:
-                    # Update existing augmentation parameters
+                    # --- Update existing augmentation parameters ---
                     aug_config = aug_list[existing_idx]
+                    class_path = aug_config.get("class_path", "")
+                    per_aug_rename = cls._get_param_rename(registry_entry, class_path)
+                    init_args = cls._remap_params(params, per_aug_rename, aug_name=aug_name)
                     if "init_args" not in aug_config:
                         aug_config["init_args"] = {}
                     aug_config["init_args"].update(init_args)
                     aug_config.pop("enable", None)
                 else:
-                    # Add new augmentation with template params
-                    new_aug: dict[str, Any] = {"class_path": registry_entry["class_paths"][0]}
+                    # --- Add new augmentation ---
+                    class_path, target_stage = cls._choose_variant(registry_entry, is_ultralytics)
+                    per_aug_rename = cls._get_param_rename(registry_entry, class_path)
+                    init_args = cls._remap_params(params, per_aug_rename, aug_name=aug_name)
+
+                    target_list = train_subset.setdefault(f"augmentations_{target_stage}", [])
+                    new_aug: dict[str, Any] = {"class_path": class_path}
                     if init_args:
                         new_aug["init_args"] = init_args
-                    insert_idx = cls._get_insert_position(aug_list, registry_entry["stage"])
-                    aug_list.insert(insert_idx, new_aug)
+                    insert_idx = cls._get_insert_position(target_list, target_stage)
+                    target_list.insert(insert_idx, new_aug)
             elif existing_idx is not None:
                 if aug_name == "random_resize_crop":
-                    # Replace crop with simple Resize to keep the pipeline valid
                     aug_list[existing_idx] = {
                         "class_path": "getitune.data.augmentation.transforms.Resize",
                         "init_args": {"size": "$(input_size)"},
+                    }
+                elif aug_name == "mosaic":
+                    # CachedMosaic includes a built-in letterbox resize; replace
+                    # with a plain Resize so the pipeline still produces
+                    # correctly sized images when mosaic is disabled.
+                    aug_list[existing_idx] = {
+                        "class_path": "getitune.data.augmentation.transforms.Resize",
+                        "init_args": {
+                            "size": "$(input_size)",
+                            "keep_aspect_ratio": True,
+                            "center_padding": True,
+                        },
                     }
                 else:
                     aug_list.pop(existing_idx)
 
     @classmethod
-    def _remap_params(cls, params: dict, per_aug_rename: dict[str, str] | None = None) -> dict:
+    def _choose_variant(cls, registry_entry: dict, is_ultralytics: bool) -> tuple[str, str]:
+        """Choose class_path and target stage for a new augmentation.
+
+        For Ultralytics backends, prefers torchvision / getitune CPU variants.
+        For other backends, uses the registry default (typically kornia GPU).
+
+        Returns:
+            Tuple of ``(class_path, stage)``.
+        """
+        if is_ultralytics:
+            for cp in registry_entry["class_paths"]:
+                if cp.startswith(("torchvision.", "getitune.")):
+                    return cp, "cpu"
+        return registry_entry["class_paths"][0], registry_entry["stage"]
+
+    @classmethod
+    def _get_param_rename(cls, registry_entry: dict, class_path: str) -> dict[str, str] | None:
+        """Get per-variant parameter rename map for the chosen class path.
+
+        The ``param_rename`` field maps *specific class paths* to their rename
+        dictionaries.  Only class paths that need renaming beyond the global
+        ``PARAM_RENAME`` table are listed.
+        """
+        param_rename = registry_entry.get("param_rename")
+        if not param_rename:
+            return None
+        return param_rename.get(class_path)
+
+    @classmethod
+    def _remap_params(
+        cls,
+        params: dict,
+        per_aug_rename: dict[str, str] | None = None,
+        *,
+        aug_name: str = "",
+    ) -> dict:
         """Rename Geti parameter names to kornia/torchvision names and adjust values.
 
         1. Rename keys via PARAM_RENAME (probability->p, max_translate_ratio->translate, etc.)
            plus any per-augmentation overrides supplied via per_aug_rename.
         2. Adjust values where kornia expects a different format than a single scalar.
+           These adjustments are scoped to the augmentation that needs them so that
+           parameters with the same name on other augmentations (e.g. ``translate``
+           on CachedMosaic) are not accidentally transformed.
 
         Args:
             params: Raw Geti parameter dict for the augmentation.
             per_aug_rename: Optional extra rename map applied after PARAM_RENAME.  Use this
                 when a kornia class uses a different argument name than the global default
                 (e.g. RandomGaussianNoise uses ``std`` while the manifest stores ``sigma``).
+            aug_name: Geti augmentation name (used to scope value adjustments).
         """
         # Step 1: rename keys (global renames + per-augmentation overrides)
         rename_map = {**cls.PARAM_RENAME, **(per_aug_rename or {})}
@@ -405,14 +511,15 @@ class TransformsUpdater:
                 continue
             init_args[rename_map.get(key, key)] = value
 
-        # Step 2: adjust values to match kornia expected formats
-        if "translate" in init_args and not isinstance(init_args["translate"], list):
-            v = init_args["translate"]
-            init_args["translate"] = [v, v]
-        if "shear" in init_args and not isinstance(init_args["shear"], list):
-            v = init_args["shear"]
-            init_args["shear"] = [-v, v]
-        if "kernel_size" in init_args and isinstance(init_args["kernel_size"], int):
+        # Step 2: per-augmentation value adjustments
+        if aug_name == "random_affine":
+            if "translate" in init_args and not isinstance(init_args["translate"], list):
+                v = init_args["translate"]
+                init_args["translate"] = [v, v]
+            if "shear" in init_args and not isinstance(init_args["shear"], list):
+                v = init_args["shear"]
+                init_args["shear"] = [-v, v]
+        if aug_name == "gaussian_blur" and "kernel_size" in init_args and isinstance(init_args["kernel_size"], int):
             v = init_args["kernel_size"]
             init_args["kernel_size"] = [v, v]
 

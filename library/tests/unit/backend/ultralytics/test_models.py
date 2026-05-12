@@ -143,7 +143,7 @@ class TestExportParameters:
         model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         params = model._export_parameters
         assert params.confidence_threshold == 0.001
-        assert params.iou_threshold == 0.65
+        assert params.iou_threshold == 0.7
 
     def test_optimization_config_empty(self) -> None:
         model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())

@@ -30,7 +30,7 @@ export:
   format: OPENVINO
   precision: FP32
   confidence_threshold: 0.001
-  iou_threshold: 0.65
+  iou_threshold: 0.7
 
 data: ../_base_/data/detection.yaml
 
