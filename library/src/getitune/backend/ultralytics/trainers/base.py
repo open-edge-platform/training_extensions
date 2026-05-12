@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import gc
 import logging
 import multiprocessing
 from typing import TYPE_CHECKING, Any
@@ -119,8 +118,6 @@ class GetiTuneDataBridgeMixin:
         if not self._use_getitune_data:
             return
         if self.args.warmup_epochs <= 0:  # type: ignore[attr-defined]
-            self._disable_automatic_gc()
-            self._register_close_mosaic_callback()
             return
 
         nb = len(self.train_loader)  # type: ignore[attr-defined]
@@ -159,41 +156,6 @@ class GetiTuneDataBridgeMixin:
                 counter["ni"] += 1
 
             self.add_callback("on_train_batch_start", _warmup_callback)  # type: ignore[attr-defined]
-
-        self._disable_automatic_gc()
-        self._register_close_mosaic_callback()
-
-    def _disable_automatic_gc(self) -> None:
-        """Disable Python's automatic garbage collection during training.
-
-        Python's generational GC (thresholds 2000/10/10) runs automatically
-        based on allocation counts.  In a tight training loop with many
-        temporary objects (batch dicts, tensors, augmentation intermediates),
-        gen-1 and gen-2 collections trigger frequently and must walk the
-        entire object graph — including large dataset caches, spawn-worker
-        shared memory, and Datumaro structures.  This causes the oscillating
-        fast/slow epoch pattern observed in profiling.
-
-        This method disables automatic GC and registers callbacks to:
-        - Manually collect every epoch (after validation)
-        - Re-enable automatic GC when training ends (normal or early stop)
-
-        This is a well-established optimization used by PyTorch Lightning,
-        HuggingFace Transformers, and NVIDIA Apex.
-        """
-        gc.disable()
-        logger.info("Disabled automatic GC for training (manual collect every epoch)")
-
-        def _manual_gc(trainer: Any) -> None:  # noqa: ANN401
-            gc.collect()
-
-        def _reenable_gc(_trainer: Any) -> None:  # noqa: ANN401
-            gc.collect()
-            gc.enable()
-            logger.info("Re-enabled automatic GC after training")
-
-        self.add_callback("on_train_epoch_end", _manual_gc)  # type: ignore[attr-defined]
-        self.add_callback("on_train_end", _reenable_gc)  # type: ignore[attr-defined]
 
     def _clear_memory(self, threshold: float | None = None) -> None:
         """Lightweight memory clearing that skips ``gc.collect()``.
@@ -249,12 +211,10 @@ class GetiTuneDataBridgeMixin:
     def _disable_ultralytics_augmentations(self) -> None:
         """Zero out Ultralytics augmentation hyperparams.
 
-        Preserves ``close_mosaic`` for the bridge's own implementation
-        (see :meth:`_register_close_mosaic_callback`), then zeros it so
-        the upstream ``_close_dataloader_mosaic()`` never fires.
+        All augmentations are handled by the DataModule pipeline, so we
+        disable all upstream augmentation parameters to prevent double
+        augmentation.
         """
-        self._bridge_close_mosaic = getattr(self.args, "close_mosaic", 0)  # type: ignore[attr-defined]
-
         for attr in (
             "mosaic",
             "mixup",
@@ -270,72 +230,7 @@ class GetiTuneDataBridgeMixin:
             "scale",
             "shear",
             "perspective",
+            "close_mosaic",
         ):
             if hasattr(self.args, attr):  # type: ignore[attr-defined]
-                setattr(self.args, attr, 0.0)  # type: ignore[attr-defined]
-        if hasattr(self.args, "close_mosaic"):  # type: ignore[attr-defined]
-            self.args.close_mosaic = 0  # type: ignore[attr-defined]
-
-    def _register_close_mosaic_callback(self) -> None:
-        """Disable CachedMosaic / CachedMixUp for the last ``close_mosaic`` epochs.
-
-        Upstream Ultralytics disables its native mosaic augmentation for the
-        final N epochs (``close_mosaic`` parameter) so the model fine-tunes
-        on clean images.  The upstream mechanism
-        (``_close_dataloader_mosaic`` + ``reset()``) cannot work with our
-        DataModule pipeline, so we implement the equivalent: at the right
-        epoch, walk the train dataset's transforms and set ``prob = 0.0``
-        on any :class:`CachedMosaic` or :class:`CachedMixUp`.
-
-        For multi-worker DataLoaders the train DataLoader is rebuilt so
-        worker processes pick up the change.
-        """
-        close_mosaic = getattr(self, "_bridge_close_mosaic", 0)
-        if close_mosaic <= 0:
-            return
-
-        fired = {"done": False}
-
-        def _close_mosaic_cb(trainer: Any) -> None:  # noqa: ANN401
-            if fired["done"]:
-                return
-            close_epoch = trainer.epochs - close_mosaic
-            if trainer.epoch >= close_epoch:
-                fired["done"] = True
-                self._disable_bridge_mosaic()
-
-        self.add_callback("on_train_epoch_start", _close_mosaic_cb)  # type: ignore[attr-defined]
-
-    def _disable_bridge_mosaic(self) -> None:
-        """Set ``prob = 0.0`` on CachedMosaic / CachedMixUp in the train transforms.
-
-        If workers > 0 the train DataLoader is rebuilt so spawned worker
-        processes receive the updated transforms.
-        """
-        from getitune.data.augmentation.pipeline import CPUAugmentationPipeline
-        from getitune.data.augmentation.transforms import CachedMixUp, CachedMosaic
-
-        if not self._use_getitune_data or self._datamodule is None:
-            return
-
-        train_dataset = self._datamodule.subsets.get("train")  # type: ignore[union-attr]
-        if train_dataset is None:
-            return
-
-        transforms = getattr(train_dataset, "transforms", None)
-        disabled = False
-
-        if isinstance(transforms, CPUAugmentationPipeline):
-            for aug in transforms.augmentations:
-                if isinstance(aug, (CachedMosaic, CachedMixUp)):
-                    aug.prob = 0.0
-                    logger.info(f"close_mosaic: disabled {type(aug).__name__}")
-                    disabled = True
-
-        if disabled and self.args.workers > 0:  # type: ignore[attr-defined]
-            self.train_loader = self.get_dataloader(  # type: ignore[attr-defined]
-                dataset_path="",
-                batch_size=self.batch_size,  # type: ignore[attr-defined]
-                rank=0,
-                mode="train",
-            )
+                setattr(self.args, attr, 0.0 if attr != "close_mosaic" else 0)  # type: ignore[attr-defined]
