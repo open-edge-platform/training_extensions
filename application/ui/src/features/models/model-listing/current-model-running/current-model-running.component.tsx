@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Flex, Heading, View } from '@geti/ui';
-import { useCancelJob, useGetCurrentRunningJob } from 'hooks/api/jobs/jobs.hook';
+import { useCancelJob, useGetCurrentRunningJobs } from 'hooks/api/jobs/jobs.hook';
+import { isEmpty, isNil } from 'lodash-es';
 
 import { type DatasetRevision } from '../../../../constants/shared-types';
 import { useGetTaskModelArchitectures } from '../../hooks/api/use-get-model-architectures.hook';
@@ -16,18 +17,17 @@ type CurrentModelRunningProps = {
 };
 
 export const CurrentModelRunning = ({ groupBy, datasetRevisions }: CurrentModelRunningProps) => {
-    const activeRunningJob = useGetCurrentRunningJob();
     const cancelJobMutation = useCancelJob();
-
+    const activeRunningJobs = useGetCurrentRunningJobs();
     const { modelArchitectures } = useGetTaskModelArchitectures();
 
-    const handleCancelRunning = () => {
-        if (activeRunningJob?.job_id) {
-            cancelJobMutation.mutate({ params: { path: { job_id: activeRunningJob.job_id } } });
+    const handleCancelRunning = (jobId: string | undefined) => {
+        if (jobId) {
+            cancelJobMutation.mutate({ params: { path: { job_id: jobId } } });
         }
     };
 
-    if (!activeRunningJob) {
+    if (isNil(activeRunningJobs) || isEmpty(activeRunningJobs)) {
         return null;
     }
 
@@ -45,13 +45,18 @@ export const CurrentModelRunning = ({ groupBy, datasetRevisions }: CurrentModelR
             <View backgroundColor={'gray-75'}>
                 <ModelsTableHeader />
 
-                <RunningModelRow
-                    job={activeRunningJob}
-                    onCancel={handleCancelRunning}
-                    groupBy={groupBy}
-                    datasetRevisions={datasetRevisions}
-                    modelArchitectures={modelArchitectures}
-                />
+                <View overflow={'auto'} maxHeight={'size-2400'}>
+                    {activeRunningJobs.map((job) => (
+                        <RunningModelRow
+                            key={job.job_id}
+                            job={job}
+                            onCancel={() => handleCancelRunning(job.job_id)}
+                            groupBy={groupBy}
+                            datasetRevisions={datasetRevisions}
+                            modelArchitectures={modelArchitectures}
+                        />
+                    ))}
+                </View>
             </View>
         </Flex>
     );

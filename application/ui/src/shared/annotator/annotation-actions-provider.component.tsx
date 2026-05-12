@@ -14,9 +14,10 @@ import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-t
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
 import { isVideoFrame } from '../media-item-utils';
 import type { Annotation, Shape } from '../types';
+import { isNonEmptyArray } from '../util';
 import { mapLocalAnnotationsToServer, mapServerAnnotationsToLocal } from './annotation-mappers';
 import type { AnnotatorMode } from './annotator-mode';
-import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
+import { EMPTY_LABEL_ID, isNonEmptyLabel, useProjectLabelsWithEmptyLabel } from './labels';
 import { incrementCachedAnnotatedFrameCount } from './util';
 
 type AnnotationsContextValue = {
@@ -28,6 +29,7 @@ type AnnotationsContextValue = {
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[], labels?: Label[]) => void;
     submitAnnotations: (subset: DatasetSubset) => Promise<void>;
+    submitPredictions: (subset: DatasetSubset) => Promise<void>;
     resetAnnotations: () => void;
     replaceAnnotations: (annotations: Annotation[]) => void;
     isUserReviewed: boolean;
@@ -39,7 +41,7 @@ type AnnotationsContextValue = {
 
 const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
 
-type AnnotationActionsProviderProps = {
+export type AnnotationActionsProviderProps = {
     children: ReactNode;
     initialAnnotationsDTO: AnnotationDTO[];
     initialPredictionsDTO: AnnotationDTO[];
@@ -161,11 +163,7 @@ export const AnnotationActionsProvider = ({
     };
 
     const saveAnnotations = async (annotationsDTO: AnnotationDTO[], subset?: DatasetSubset) => {
-        const query = isVideoFrame(mediaItem)
-            ? {
-                  frame_index: mediaItem.frame_number,
-              }
-            : undefined;
+        const query = isVideoFrame(mediaItem) ? { frame_index: mediaItem.frame_number } : undefined;
 
         await saveMutation
             .mutateAsync({
@@ -182,22 +180,18 @@ export const AnnotationActionsProvider = ({
     };
 
     const submitPredictions = async (subset: DatasetSubset) => {
-        const serverFormattedAnnotationsWithoutConfidences: AnnotationDTO[] = mapLocalAnnotationsToServer(
-            predictions
-        ).map(({ confidences, ...restOfAnnotation }) => restOfAnnotation);
+        const serverFormattedAnnotationsWithoutConfidences = mapLocalAnnotationsToServer(predictions)
+            .map(({ confidences, ...restOfAnnotation }) => restOfAnnotation)
+            .filter((annotation) => isNonEmptyArray(annotation.labels) && annotation.labels.every(isNonEmptyLabel));
 
         await saveAnnotations(serverFormattedAnnotationsWithoutConfidences, subset);
     };
 
     const submitAnnotations = async (subset: DatasetSubset) => {
-        if (mode === 'prediction') {
-            await submitPredictions(subset);
-        } else {
-            const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
-            const serverAnnotations = mapLocalAnnotationsToServer(filteredAnnotations);
+        const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
+        const serverAnnotations = mapLocalAnnotationsToServer(filteredAnnotations);
 
-            await saveAnnotations(serverAnnotations, subset);
-        }
+        await saveAnnotations(serverAnnotations, subset);
     };
 
     const hasChangedAnnotations = useMemo(() => {
@@ -243,6 +237,7 @@ export const AnnotationActionsProvider = ({
 
                 // Remote
                 submitAnnotations,
+                submitPredictions,
 
                 isSaving: saveMutation.isPending,
                 isReadOnlyMode,

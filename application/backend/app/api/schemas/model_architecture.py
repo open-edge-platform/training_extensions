@@ -18,6 +18,7 @@ class ModelArchitectureView(BaseModel):
     capabilities: Capabilities = Field(
         title="Model Capabilities", description="Special capabilities supported by the model"
     )
+    license: str = Field(title="License", description="License under which the model architecture is released")
     stats: ModelStats = Field(title="Model Statistics", description="Statistics about the model")
     support_status: ModelManifestDeprecationStatus = Field(
         title="Support Status", description="Current support level (active, deprecated, or obsolete)"
@@ -51,6 +52,7 @@ class ModelArchitectures(BaseModel):
                         "id": "object-detection-dfine-m",
                         "task": "detection",
                         "name": "D-FINE-M",
+                        "license": "Apache 2.0",
                         "description": "D-FINE is a powerful real-time object detector that redefines the bounding box"
                         " regression task in DETRs as Fine-grained Distribution Refinement (FDR)."
                         " Combined with the DEIM adaptive augmentation scheduling framework"

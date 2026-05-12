@@ -1,21 +1,23 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { KeyboardEvent, useState } from 'react';
 
-import { ActionButton, Grid, TextField, Tooltip, TooltipTrigger, View } from '@geti/ui';
+import { ActionButton, Flex, Grid, TextField, Tooltip, TooltipTrigger } from '@geti/ui';
 import { Delete, Pin, Unpin } from '@geti/ui/icons';
 
+import { HotkeyField } from '../../../../components/label-fields/hotkey-field.component';
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
 import { SilentCheckbox } from '../../../../components/label-fields/silent-checkbox.component';
 import type { Label } from '../../../../constants/shared-types';
 import { useDebounce } from '../../../../hooks/use-debounce.hook';
+import { isNonEmptyString } from '../../../../shared/util';
 
 import classes from './label-row.module.scss';
 
 const COLOR_DEBOUNCE_MS = 300;
 
-type LabelRowProps = {
+export type LabelRowProps = {
     label: Label;
     isSelected: boolean;
     isPinned: boolean;
@@ -24,6 +26,11 @@ type LabelRowProps = {
     onTogglePin: (label: Label) => void;
     onUpdate: (labelId: string, updates: { name: string; color: string; hotkey: string | null | undefined }) => void;
     validateName: (name: string, excludeId?: string) => string | undefined;
+    validateHotkey: (newHotkey: string, excludeId?: string) => string | undefined;
+};
+
+const onEnter = (handler: () => void) => (event: KeyboardEvent) => {
+    event.key === 'Enter' && handler();
 };
 
 export const LabelRow = ({
@@ -35,27 +42,39 @@ export const LabelRow = ({
     onTogglePin,
     onUpdate,
     validateName,
+    validateHotkey,
 }: LabelRowProps) => {
     const [name, setName] = useState(label.name);
     const [color, setColor] = useState(label.color);
+    const [hotkey, setHotkey] = useState(label.hotkey ?? '');
 
     const validationError = validateName(name, label.id);
+    const hotkeyValidationError = validateHotkey(hotkey, label.id);
+    const trimmedHotkey = isNonEmptyString(hotkey) ? hotkey.trim() : undefined;
+    const hasValidationErrors =
+        validationError !== undefined || hotkeyValidationError !== undefined || name.trim() === '';
 
     const getValidName = () => (validationError || name.trim() === '' ? label.name : name.trim());
 
-    const handleNameBlur = () => {
-        if (validationError || name.trim() === '') return;
-        if (name === label.name) return;
+    const handleUpdateName = () => {
+        const isNameUnchanged = name.trim() === label.name;
+        if (hasValidationErrors || isNameUnchanged) return;
 
-        onUpdate(label.id, { name: name.trim(), color, hotkey: label.hotkey });
+        onUpdate(label.id, { name: name.trim(), color, hotkey: trimmedHotkey });
+    };
+
+    const handleHotkeyChange = () => {
+        if (hasValidationErrors) return;
+
+        onUpdate(label.id, { name: name.trim(), color, hotkey: trimmedHotkey });
     };
 
     const debouncedUpdate = useDebounce(
         (newColor: string, currentName: string) => {
-            onUpdate(label.id, { name: currentName, color: newColor, hotkey: label.hotkey });
+            onUpdate(label.id, { name: currentName, color: newColor, hotkey: trimmedHotkey });
         },
         COLOR_DEBOUNCE_MS,
-        [onUpdate, label.id, label.hotkey]
+        [onUpdate, label.id, hotkey]
     );
 
     const handleColorChange = (newColor: string) => {
@@ -75,18 +94,27 @@ export const LabelRow = ({
 
             <LabelColorPicker color={color} onChange={handleColorChange} />
 
-            <View>
+            <Flex gap={'size-100'}>
                 <TextField
+                    width={'100%'}
+                    value={name}
                     aria-label={'Label name'}
                     placeholder={'Label name'}
-                    value={name}
                     onChange={setName}
-                    onBlur={handleNameBlur}
-                    width={'100%'}
+                    onBlur={handleUpdateName}
+                    onKeyDown={onEnter(handleUpdateName)}
                     errorMessage={validationError}
                     validationState={validationError ? 'invalid' : undefined}
                 />
-            </View>
+
+                <HotkeyField
+                    hotkey={hotkey}
+                    onHotkeyChange={(newHotkey) => setHotkey(newHotkey ?? '')}
+                    onEnter={handleHotkeyChange}
+                    aria-label={'Edited hotkey'}
+                    errorMessage={hotkeyValidationError}
+                />
+            </Flex>
 
             <TooltipTrigger>
                 <ActionButton

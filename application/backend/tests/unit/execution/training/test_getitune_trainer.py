@@ -1203,8 +1203,9 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         assert (model_dir / "metrics" / "metrics.csv").exists()
         assert (model_dir / "metrics" / "metrics.csv").read_text() == "epoch,loss\n1,0.5\n"
 
-        # Check getitune work directory was cleaned up
-        assert not getitune_work_dir.exists()
+        # The getitune work directory is no longer cleaned up here; it is removed
+        # by ``TrainingJob.on_complete`` after the job finishes.
+        assert getitune_work_dir.exists()
 
 
 # ---------------------------------------------------------------------------

@@ -43,9 +43,7 @@ class TestModelLoader:
 
         with (
             patch("app.services.inference.model_loader.create_core") as mock_create_core,
-            patch(
-                "app.services.inference.model_loader.FP32OpenvinoAdapter", return_value=fake_adapter
-            ) as mock_adapter_cls,
+            patch("app.services.inference.model_loader.OpenvinoAdapter", return_value=fake_adapter) as mock_adapter_cls,
             patch(
                 "app.services.inference.model_loader.Model.create_model", return_value=fake_model
             ) as mock_create_model,

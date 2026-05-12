@@ -85,3 +85,23 @@ class TestTrainingJob:
             / "training.log"
         )
         assert not expected_path.exists()
+
+    def test_on_complete_removes_getitune_workspace(self, fxt_training_job):
+        """Test that the getitune workspace directory is removed on job completion."""
+        # Create the workspace directory with a timestamped subdir and a stray file
+        workspace_dir = fxt_training_job.data_dir / f"getitune-workspace-{fxt_training_job.params.model_id}"
+        timestamp_dir = workspace_dir / "20260101_000000"
+        timestamp_dir.mkdir(parents=True)
+        (timestamp_dir / "leftover.txt").write_text("temp")
+
+        fxt_training_job.on_complete()
+
+        assert not workspace_dir.exists()
+
+    def test_on_complete_no_op_when_workspace_missing(self, fxt_training_job):
+        """on_complete must not raise when the getitune workspace was never created."""
+        workspace_dir = fxt_training_job.data_dir / f"getitune-workspace-{fxt_training_job.params.model_id}"
+        assert not workspace_dir.exists()
+
+        # Should not raise
+        fxt_training_job.on_complete()

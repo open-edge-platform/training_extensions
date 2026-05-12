@@ -4,7 +4,8 @@
 """Module for getitune custom callbacks."""
 
 from .batchsize_finder import BatchSizeFinder
+from .epoch_summary import EpochSummary
 from .gpu_augmentation import GPUAugmentationCallback
 from .lr_monitor import SimpleLearningRateMonitor
 
-__all__ = ["BatchSizeFinder", "GPUAugmentationCallback", "SimpleLearningRateMonitor"]
+__all__ = ["BatchSizeFinder", "EpochSummary", "GPUAugmentationCallback", "SimpleLearningRateMonitor"]

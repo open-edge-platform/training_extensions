@@ -67,6 +67,15 @@ class DatasetFactory:
         # Reads only metadata (e.g. PNG IHDR), no pixel data is decoded.
         storage_dtype = cls._detect_storage_dtype(dm_subset)
 
+        # Propagate the detected dtype into the intensity config so it is
+        # exported into the model's rt_info (input_dtype) for inference.
+        if cfg_subset.intensity.storage_dtype != storage_dtype:
+            logger.info(
+                f"Auto-detected image storage dtype '{storage_dtype}' "
+                f"(intensity config had '{cfg_subset.intensity.storage_dtype}')",
+            )
+            cfg_subset.intensity.storage_dtype = storage_dtype
+
         common_kwargs = {
             "dm_subset": dm_subset,
             "transforms": transforms,

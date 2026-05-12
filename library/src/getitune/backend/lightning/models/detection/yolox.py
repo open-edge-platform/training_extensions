@@ -99,6 +99,20 @@ class YOLOX(LightningDetectionModel):
             tile_config=tile_config,
         )
 
+        # Raw uint8 models expect [0, 255] inputs; intensity scaling must not be exported.
+        if model_name in _RAW_UINT8_MODELS:
+            if (
+                self.data_input_params.intensity_config is not None
+                and self.data_input_params.intensity_config.storage_dtype in ("uint16", "int16")
+            ):
+                msg = (
+                    f"YOLOX ({model_name}) does not support high-bit-depth inputs "
+                    f"(got storage_dtype='{self.data_input_params.intensity_config.storage_dtype}'). "
+                    "Use yolox_tiny or a model with normalization for 16-bit images."
+                )
+                raise ValueError(msg)
+            self.data_input_params = dataclasses.replace(self.data_input_params, intensity_config=None)
+
     def _create_model(self, num_classes: int | None = None) -> SingleStageDetector:
         num_classes = num_classes if num_classes is not None else self.num_classes
         train_cfg: dict[str, Any] = {"assigner": SimOTAAssigner(center_radius=2.5)}

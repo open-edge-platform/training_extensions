@@ -92,7 +92,7 @@ export const SegmentAnythingTool = () => {
             });
     };
 
-    const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
+    const handlePointerUp = (event: PointerEvent<SVGSVGElement>) => {
         if (!ref.current) {
             return;
         }
@@ -150,7 +150,7 @@ export const SegmentAnythingTool = () => {
             canvasRef={canvasRef}
             aria-label='SAM tool canvas'
             onPointerMove={handleMouseMove}
-            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerLeave}
             style={{ cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto` }}
         >

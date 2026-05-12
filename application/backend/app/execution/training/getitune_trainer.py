@@ -487,13 +487,16 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         exported_model_paths: ExportedModels,
         created_variants: dict[ModelFormat, UUID],
     ) -> None:
-        """Copy training artifacts into variant directories and clean up the workspace.
+        """Copy training artifacts into variant directories.
 
         Each variant's files are stored under model_dir/variants/<variant_id>/model.*
 
+        The getitune workspace itself is removed by ``TrainingJob.on_complete`` after
+        the job terminates, so this step does not clean it up.
+
         Args:
             model_dir: The base model directory.
-            getitune_work_dir: The getitune workspace directory to clean up.
+            getitune_work_dir: The getitune workspace directory containing the source artifacts.
             trained_model_path: Path to the trained checkpoint inside the workspace.
             exported_model_paths: Paths to exported model files inside the workspace.
             created_variants: Mapping of ModelFormat to variant UUID (from create_model_variants).
@@ -535,10 +538,6 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         if metrics_source_path.exists():
             shutil.move(metrics_source_path, metrics_dest_path)
             logger.info("Stored training metrics at {}", metrics_dest_path)
-
-        # Cleanup the getitune work directory
-        shutil.rmtree(getitune_work_dir)
-        logger.info("Cleaned up getitune work directory at {}", getitune_work_dir)
 
     def create_model_variants(self, model_revision_id: UUID) -> dict[ModelFormat, UUID]:
         """Create variant records in the database for all exported formats.

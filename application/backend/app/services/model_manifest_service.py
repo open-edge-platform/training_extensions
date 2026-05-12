@@ -101,7 +101,7 @@ class ModelManifestService:
         model_manifests = {}
 
         # Iterate through task type directories
-        for task_dir in [d for d in manifests_dir.iterdir() if os.path.isdir(str(d))]:
+        for task_dir in [d for d in manifests_dir.iterdir() if d.is_dir()]:
             task_base_yaml = os.path.join(task_dir.name, "base.yaml")
 
             # Find all model files in this task directory

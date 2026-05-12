@@ -18,9 +18,17 @@ vi.mock('../../label-utils', async (importOriginal) => {
 
 describe('NewLabelRow', () => {
     const getNameInput = () => screen.getByRole('textbox', { name: 'New label name' });
+    const getHotkeyInput = () => screen.getByRole('textbox', { name: 'Hotkey input' });
 
     it('renders name input and row controls', () => {
-        render(<NewLabelRow onSave={vi.fn()} onCancel={vi.fn()} validateName={vi.fn(() => undefined)} />);
+        render(
+            <NewLabelRow
+                validateHotkey={vi.fn()}
+                onSave={vi.fn()}
+                onCancel={vi.fn()}
+                validateName={vi.fn(() => undefined)}
+            />
+        );
 
         expect(getNameInput()).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Create new label' })).toBeInTheDocument();
@@ -31,7 +39,9 @@ describe('NewLabelRow', () => {
         const user = userEvent.setup();
         const validateName = vi.fn((name: string) => (name === 'valid-label' ? undefined : 'invalid name'));
 
-        render(<NewLabelRow onSave={vi.fn()} onCancel={vi.fn()} validateName={validateName} />);
+        render(
+            <NewLabelRow validateHotkey={vi.fn()} onSave={vi.fn()} onCancel={vi.fn()} validateName={validateName} />
+        );
 
         const nameInput = getNameInput();
         const createButton = screen.getByRole('button', { name: 'Create new label' });
@@ -54,19 +64,34 @@ describe('NewLabelRow', () => {
         const user = userEvent.setup();
         const onSave = vi.fn();
 
-        render(<NewLabelRow onSave={onSave} onCancel={vi.fn()} validateName={vi.fn(() => undefined)} />);
+        render(
+            <NewLabelRow
+                validateHotkey={vi.fn()}
+                onSave={onSave}
+                onCancel={vi.fn()}
+                validateName={vi.fn(() => undefined)}
+            />
+        );
 
         await user.type(getNameInput(), '  New class  ');
+        await user.type(getHotkeyInput(), 'D');
         fireEvent.click(screen.getByRole('button', { name: 'Create new label' }));
 
-        expect(onSave).toHaveBeenCalledWith('New class', '#123456');
+        expect(onSave).toHaveBeenCalledWith('New class', '#123456', 'D');
     });
 
     it('does not call onSave when create is clicked for invalid name', async () => {
         const user = userEvent.setup();
         const onSave = vi.fn();
 
-        render(<NewLabelRow onSave={onSave} onCancel={vi.fn()} validateName={vi.fn(() => 'invalid name')} />);
+        render(
+            <NewLabelRow
+                validateHotkey={vi.fn()}
+                onSave={onSave}
+                onCancel={vi.fn()}
+                validateName={vi.fn(() => 'invalid name')}
+            />
+        );
 
         await user.type(getNameInput(), 'invalid-label');
         fireEvent.click(screen.getByRole('button', { name: 'Create new label' }));
@@ -78,21 +103,36 @@ describe('NewLabelRow', () => {
         const user = userEvent.setup();
         const onSave = vi.fn();
 
-        render(<NewLabelRow onSave={onSave} onCancel={vi.fn()} validateName={vi.fn(() => undefined)} />);
+        render(
+            <NewLabelRow
+                validateHotkey={vi.fn()}
+                onSave={onSave}
+                onCancel={vi.fn()}
+                validateName={vi.fn(() => undefined)}
+            />
+        );
 
         const nameInput = getNameInput();
         await user.type(nameInput, '  Enter label  ');
+        await user.type(getHotkeyInput(), 'D');
 
         fireEvent.keyDown(nameInput, { key: 'Enter' });
 
-        expect(onSave).toHaveBeenCalledWith('Enter label', '#123456');
+        expect(onSave).toHaveBeenCalledWith('Enter label', '#123456', 'D');
     });
 
     it('cancels when Escape is pressed', async () => {
         const user = userEvent.setup();
         const onCancel = vi.fn();
 
-        render(<NewLabelRow onSave={vi.fn()} onCancel={onCancel} validateName={vi.fn(() => undefined)} />);
+        render(
+            <NewLabelRow
+                validateHotkey={vi.fn()}
+                onSave={vi.fn()}
+                onCancel={onCancel}
+                validateName={vi.fn(() => undefined)}
+            />
+        );
 
         const nameInput = getNameInput();
         await user.type(nameInput, '  Enter label  ');
@@ -107,7 +147,14 @@ describe('NewLabelRow', () => {
         const onSave = vi.fn();
         const onCancel = vi.fn();
 
-        render(<NewLabelRow onSave={onSave} onCancel={onCancel} validateName={vi.fn(() => undefined)} />);
+        render(
+            <NewLabelRow
+                validateHotkey={vi.fn()}
+                onSave={onSave}
+                onCancel={onCancel}
+                validateName={vi.fn(() => undefined)}
+            />
+        );
 
         const nameInput = getNameInput();
         const cancelButton = screen.getByRole('button', { name: 'Cancel new label' });
@@ -123,7 +170,14 @@ describe('NewLabelRow', () => {
         const user = userEvent.setup();
         const onSave = vi.fn();
 
-        render(<NewLabelRow onSave={onSave} onCancel={vi.fn()} validateName={vi.fn(() => undefined)} />);
+        render(
+            <NewLabelRow
+                validateHotkey={vi.fn()}
+                onSave={onSave}
+                onCancel={vi.fn()}
+                validateName={vi.fn(() => undefined)}
+            />
+        );
 
         const nameInput = getNameInput();
         await user.type(nameInput, '  Blur save  ');
@@ -136,12 +190,84 @@ describe('NewLabelRow', () => {
         const user = userEvent.setup();
         const onCancel = vi.fn();
 
-        render(<NewLabelRow onSave={vi.fn()} onCancel={onCancel} validateName={vi.fn(() => undefined)} />);
+        render(
+            <NewLabelRow
+                validateHotkey={vi.fn()}
+                onSave={vi.fn()}
+                onCancel={onCancel}
+                validateName={vi.fn(() => undefined)}
+            />
+        );
 
         const nameInput = getNameInput();
         await user.type(nameInput, '   ');
         fireEvent.blur(nameInput, { relatedTarget: null });
 
         expect(onCancel).toHaveBeenCalled();
+    });
+
+    it('calls onSave when Enter is pressed in hotkey field with a valid hotkey', async () => {
+        const user = userEvent.setup();
+        const onSave = vi.fn();
+
+        render(
+            <NewLabelRow
+                validateHotkey={vi.fn(() => undefined)}
+                onSave={onSave}
+                onCancel={vi.fn()}
+                validateName={vi.fn(() => undefined)}
+            />
+        );
+
+        await user.type(getNameInput(), 'MyLabel');
+        const hotkeyInput = getHotkeyInput();
+        await user.type(hotkeyInput, 'D');
+        await user.type(hotkeyInput, '{Enter}');
+
+        expect(onSave).toHaveBeenCalledWith('MyLabel', '#123456', 'D');
+    });
+
+    it('does not call onSave when Enter is pressed in hotkey field with an invalid hotkey', async () => {
+        const user = userEvent.setup();
+        const onSave = vi.fn();
+
+        render(
+            <NewLabelRow
+                validateHotkey={vi.fn(() => 'That hotkey is already in use')}
+                onSave={onSave}
+                onCancel={vi.fn()}
+                validateName={vi.fn(() => undefined)}
+            />
+        );
+
+        await user.type(getNameInput(), 'MyLabel');
+        const hotkeyInput = getHotkeyInput();
+        await user.type(hotkeyInput, 'B');
+        await user.type(hotkeyInput, '{Enter}');
+
+        expect(onSave).not.toHaveBeenCalled();
+    });
+
+    it('calls onSave with undefined hotkey when Enter is pressed with empty hotkey', async () => {
+        const user = userEvent.setup();
+        const onSave = vi.fn();
+
+        render(
+            <NewLabelRow
+                validateHotkey={vi.fn(() => undefined)}
+                onSave={onSave}
+                onCancel={vi.fn()}
+                validateName={vi.fn(() => undefined)}
+            />
+        );
+
+        await user.type(getNameInput(), 'MyLabel');
+        const hotkeyInput = getHotkeyInput();
+        await user.click(hotkeyInput);
+        await user.type(hotkeyInput, '{Enter}');
+
+        screen.debug();
+
+        expect(onSave).toHaveBeenCalledWith('MyLabel', '#123456', undefined);
     });
 });

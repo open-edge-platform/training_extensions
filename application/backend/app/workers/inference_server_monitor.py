@@ -43,8 +43,20 @@ class InferenceServerMonitorThread(BaseThreadWorker):
         orig_set_inference_model = self._server.set_inference_model
 
         @wraps(orig_set_inference_model)
-        def wrapped_set_inference_model(project_id: UUID, model_id: UUID, device: DeviceInfo, ttl: int):
-            model_loaded = orig_set_inference_model(project_id=project_id, model_id=model_id, device=device, ttl=ttl)
+        def wrapped_set_inference_model(
+            project_id: UUID,
+            model_id: UUID,
+            device: DeviceInfo,
+            ttl: int,
+            model_variant_id: UUID | None = None,
+        ):
+            model_loaded = orig_set_inference_model(
+                project_id=project_id,
+                model_id=model_id,
+                device=device,
+                ttl=ttl,
+                model_variant_id=model_variant_id,
+            )
             if model_loaded:
                 self._ttl = ttl
                 logger.debug("Model loaded with TTL of {} seconds, starting countdown", self._ttl)

@@ -28,6 +28,7 @@ from getitune.config.data import TileConfig
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
+from getitune.types.export import TaskLevelExportParameters
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -293,6 +294,14 @@ class RTDETR(LightningDetectionModel):
             visited.extend(list(params.keys()))
 
         return param_groups
+
+    @property
+    def _export_parameters(self) -> TaskLevelExportParameters:
+        """Defines parameters required to export a particular model implementation."""
+        # DETR models use Hungarian matching for one-to-one predictions, but on small datasets
+        # near-duplicate boxes can still appear. Use a conservative IoU threshold (0.8) to only
+        # suppress almost-identical duplicates without removing valid overlapping detections.
+        return super()._export_parameters.wrap(iou_threshold=0.8, nms_execute=True)
 
     @property
     def _exporter(self) -> ModelExporter:

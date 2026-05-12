@@ -217,7 +217,7 @@ class ModelExporter:
             extra_data[("model_info", "intensity_min_value")] = str(intensity_cfg.min_value)
 
             if intensity_cfg.repeat_channels > 0:
-                extra_data[("model_info", "intensity_repeat_channels")] = str(intensity_cfg.repeat_channels)
+                extra_data[("model_info", "intensity_repeat_channels")] = "True"
 
         extra_data.update(metadata)
 

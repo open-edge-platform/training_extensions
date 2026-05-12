@@ -3,7 +3,7 @@
 import os
 import tempfile
 from collections.abc import Callable
-from datetime import datetime
+from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
 from unittest.mock import ANY, MagicMock, PropertyMock, call
@@ -326,6 +326,40 @@ class TestMediaEndpoints:
                 offset=2,
                 start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=ZoneInfo("UTC")),
                 end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("UTC")),
+                annotation_status=None,
+                label_ids=None,
+                subset=None,
+            ),
+            exclude_types=[MediaType.VIDEO_FRAME],
+        )
+
+    def test_list_media_naive_dates_are_normalized_to_utc(
+        self, fxt_get_project, fxt_image_media, fxt_video_media, fxt_media_service, fxt_client
+    ):
+        fxt_media_service.count_media.return_value = 2
+        fxt_media_service.list_media.return_value = [fxt_image_media, fxt_video_media]
+
+        response = fxt_client.get(
+            f"/api/projects/{str(uuid4())}/dataset/media?start_date=2025-01-09T00:00:00&end_date=2025-12-31T23:59:59"
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_media_service.count_media.assert_called_once_with(
+            project=fxt_get_project,
+            start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=UTC),
+            end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=UTC),
+            annotation_status=None,
+            label_ids=None,
+            subset=None,
+            exclude_types=[MediaType.VIDEO_FRAME],
+        )
+        fxt_media_service.list_media.assert_called_once_with(
+            project_id=fxt_get_project.id,
+            filters=MediaFilters(
+                limit=10,
+                offset=0,
+                start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=UTC),
+                end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=UTC),
                 annotation_status=None,
                 label_ids=None,
                 subset=None,

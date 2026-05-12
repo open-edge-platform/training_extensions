@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Divider, Flex, Heading } from '@geti/ui';
-import { useGetCurrentRunningJob } from 'hooks/api/jobs/jobs.hook';
+import { useGetCurrentRunningJobs } from 'hooks/api/jobs/jobs.hook';
 import { isEmpty, isString } from 'lodash-es';
 
 import { ReactComponent as NoTrainedModels } from '../../../assets/no-trained-models.svg';
@@ -14,8 +14,8 @@ import { ModelListing } from './model-listing.component';
 import { ModelListingProvider, useModelListing } from './provider/model-listing-provider';
 
 const ModelListingContent = () => {
+    const runningJobs = useGetCurrentRunningJobs();
     const { groupedModels, searchBy, datasetRevisions, groupBy } = useModelListing();
-    const runningJob = useGetCurrentRunningJob();
 
     const hasNoResults = groupedModels.length === 0 && searchBy.length > 0;
     const hasNoModels = groupedModels.length === 0 && searchBy.length === 0;
@@ -26,12 +26,12 @@ const ModelListingContent = () => {
                 direction={'column'}
                 height={'100%'}
                 alignItems={'center'}
-                justifyContent={isEmpty(runningJob) ? 'center' : 'start'}
+                justifyContent={isEmpty(runningJobs) ? 'center' : 'start'}
                 UNSAFE_style={{ padding: dimensionValue('size-300') }}
             >
                 <CurrentModelRunning groupBy={groupBy} datasetRevisions={datasetRevisions} />
 
-                {isEmpty(runningJob) && (
+                {isEmpty(runningJobs) && (
                     <Flex direction={'column'} alignItems={'center'} gap={'size-100'} marginTop={'size-600'}>
                         <NoTrainedModels />
                         <Heading level={2}>No models yet. Train your first model to get started.</Heading>

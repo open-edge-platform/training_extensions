@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 from collections.abc import Callable
 from enum import StrEnum
 from unittest.mock import MagicMock
@@ -231,6 +230,22 @@ class TestPipelineServiceIntegration:
         assert str(updated.model_id) == target_model.id
         assert db_updated.model_variant_id == target_variant.id
 
+    def test_switch_variant_only_derives_model_id(
+        self,
+        fxt_project_with_pipeline,
+        fxt_pipeline_service,
+    ):
+        """
+        Providing only `model_variant_id` (no `model_id`) should raise an error
+        """
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        with pytest.raises(ValueError, match="It is not possible to provide only a model variant ID"):
+            _ = fxt_pipeline_service.update_pipeline(
+                db_pipeline.project_id,
+                {"model_variant_id": str(uuid4())},
+            )
+
     def test_switch_model_defaults_to_fp16_openvino_variant(
         self,
         fxt_project_with_pipeline,
@@ -337,7 +352,7 @@ class TestPipelineServiceIntegration:
                 db_pipeline.project_id,
                 {"model_id": target_model.id, "model_variant_id": non_existent_variant_id},
             )
-        assert exc_info.value.resource_type == ResourceType.MODEL
+        assert exc_info.value.resource_type == ResourceType.MODEL_VARIANT
         assert exc_info.value.resource_id == non_existent_variant_id
 
     def test_switch_model_int8_variant_raises_on_unsupported_device(

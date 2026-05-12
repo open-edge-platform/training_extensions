@@ -23,8 +23,8 @@ class BaseServerRunner(ABC):
         """Prepare temporary directories and common setup."""
         self.tmp_dir = Path(tempfile.mkdtemp(prefix="behave_test_"))
         self.context.tmp_path = self.tmp_dir
-        (self.tmp_dir / "data").mkdir()
-        (self.tmp_dir / "logs").mkdir()
+        for subdir in ["data", "logs"]:
+            (self.tmp_dir / subdir).mkdir()
 
     @abstractmethod
     def start_server(self):
