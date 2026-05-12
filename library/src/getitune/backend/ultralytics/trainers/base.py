@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import gc
 import logging
-import multiprocessing
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -24,8 +23,6 @@ if TYPE_CHECKING:
     from getitune.data.module import DataModule
 
 logger = logging.getLogger(__name__)
-
-_MP_CONTEXT = multiprocessing.get_context("spawn")
 
 
 class GetiTuneDataBridgeMixin:
@@ -87,18 +84,23 @@ class GetiTuneDataBridgeMixin:
 
         dataset = self.build_dataset(dataset_path, mode, batch_size)
         shuffle = mode == "train"
-        nw = self.args.workers  # type: ignore[attr-defined]
+        # Force workers=0 for the DataModule bridge path.  The datumaro
+        # parquet-backed VisionDataset + augmentation pipeline is too heavy
+        # to pickle across ``spawn`` worker processes (each spawn re-imports
+        # the entire module tree and unpickles the full dataset, which causes
+        # multi-minute startup delays or outright hangs).  Data loading runs
+        # in the main thread instead; for the small-to-medium datasets that
+        # flow through the Geti application this is fast enough and avoids
+        # the pickle/spawn overhead entirely.
+        nw = 0
         return InfiniteDataLoader(
             dataset,
             batch_size=batch_size,
             shuffle=shuffle,
             num_workers=nw,
-            prefetch_factor=4 if nw > 0 else None,
             collate_fn=collate_fn,
             pin_memory=True,
             drop_last=False,
-            multiprocessing_context=_MP_CONTEXT if nw > 0 else None,
-            persistent_workers=nw > 0,
             worker_init_fn=seed_worker,
         )
 
