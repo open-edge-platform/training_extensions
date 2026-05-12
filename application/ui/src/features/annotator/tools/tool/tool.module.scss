@@ -22,7 +22,7 @@
 
 .drawingToolsTooltipsDescription {
     display: block;
-    font-size: var(--spectrum-global-dimension-size-175);
+    font-size: var(--spectrum-global-dimension-font-size-100);
     margin-top: var(--spectrum-global-dimension-size-225);
     line-height: var(--spectrum-global-dimension-size-250);
 }
@@ -30,7 +30,7 @@
 .drawingToolsTooltips {
     padding: 0;
     border-radius: 0;
-    box-shadow: 0 0 10px 1px var(--spectrum-global-color-gray-50);
+    box-shadow: 0 0 var(--spectrum-global-dimension-size-125) 1px var(--spectrum-global-color-gray-50);
     background-color: var(--spectrum-global-color-gray-75) !important;
     transform: translate(
         var(--spectrum-global-dimension-size-200),

@@ -9,9 +9,9 @@ import type { ToolConfig, ToolType } from '../interface';
 
 import classes from './tool.module.scss';
 
-interface HotkeyProps {
+type HotkeyProps = {
     hotkey: string;
-}
+};
 
 export const Hotkey = ({ hotkey }: HotkeyProps) => {
     return (
@@ -42,12 +42,12 @@ export const DrawingToolsTooltip = ({ tool }: DrawingToolsTooltipProps) => {
     );
 };
 
-interface ToolProps {
+type ToolProps = {
     tool: ToolConfig;
     activeTool: ToolType | null;
     setActiveTool: (tool: ToolType) => void;
     isDisabled?: boolean;
-}
+};
 
 export const Tool = ({ tool, activeTool, setActiveTool, isDisabled }: ToolProps) => {
     useHotkeys(tool.hotkey, () => setActiveTool(tool.type), [setActiveTool, isDisabled], { enabled: !isDisabled });
@@ -65,7 +65,7 @@ export const Tool = ({ tool, activeTool, setActiveTool, isDisabled }: ToolProps)
                     <tool.icon data-tool={tool.type} />
                 </IconWrapper>
             </ActionButton>
-            <Tooltip UNSAFE_className={tool.tooltip ? classes.drawingToolsTooltips : ''}>
+            <Tooltip UNSAFE_className={tool.tooltip ? classes.drawingToolsTooltips : undefined}>
                 {tool.tooltip === undefined ? `${tool.label} (${tool.hotkey})` : <DrawingToolsTooltip tool={tool} />}
             </Tooltip>
         </TooltipTrigger>

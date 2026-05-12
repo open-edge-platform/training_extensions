@@ -6,12 +6,12 @@ import { Fragment } from 'react';
 import type { ToolConfig, ToolType } from './interface';
 import { Tool } from './tool/tool.component';
 
-interface ToolsProps {
+type ToolsProps = {
     tools: ToolConfig[];
     activeTool: ToolType | null;
     setActiveTool: (tool: ToolType) => void;
     isDisabled?: boolean;
-}
+};
 
 export const Tools = ({ tools, activeTool, setActiveTool, isDisabled }: ToolsProps) => {
     if (tools.length === 0) {
