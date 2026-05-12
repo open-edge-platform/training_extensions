@@ -87,7 +87,7 @@ describe('ExportCompletedJob', () => {
         const mockExportJob = getMockedJobExportJob({ status: 'FINISHED' });
         renderApp(mockExportJob);
 
-        expect(await screen.findByText('Dataset is ready for download')).toBeInTheDocument();
+        expect(await screen.findByText('Dataset is ready for download')).toBeVisible();
     });
 
     it('shows job message when job is done with invalid staged dataset', async () => {
@@ -98,7 +98,7 @@ describe('ExportCompletedJob', () => {
         });
         renderApp(mockExportJob);
 
-        expect(await screen.findByText('Export completed but dataset was cleaned up')).toBeInTheDocument();
+        expect(await screen.findByText('Export completed but dataset was cleaned up')).toBeVisible();
         const downloadButton = await screen.findByRole('button', { name: 'download dataset' });
         expect(downloadButton).toBeDisabled();
     });
@@ -114,7 +114,7 @@ describe('ExportCompletedJob', () => {
         );
 
         const mockExportJob = getMockedJobExportJob({
-            status: 'FINISHED',
+            status: 'DONE',
             metadata: { dataset_id: null, project_id: 'project-123', filters: { include_unannotated: false } },
         });
         renderApp(mockExportJob);
@@ -135,6 +135,6 @@ describe('ExportCompletedJob', () => {
         const downloadButton = await screen.findByRole('button', { name: 'download dataset' });
         await userEvent.click(downloadButton);
 
-        expect(await screen.findByText('Dataset download started')).toBeInTheDocument();
+        expect(await screen.findByText('Dataset download started')).toBeVisible();
     });
 });
