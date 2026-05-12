@@ -59,7 +59,9 @@ class UltralyticsModelExporter(ModelExporter):
             (mean, std, input_size).
         resize_mode: Resize strategy embedded in export metadata.
         pad_value: Padding value for letterbox resize.
-        swap_rgb: Whether the model expects RGB input (True for YOLO).
+        swap_rgb: Whether to embed ``reverse_input_channels=True`` in
+            metadata so model_api swaps BGR→RGB at inference.  Set to
+            ``False`` (default) because the Geti backend already sends RGB.
         output_names: Optional output tensor names to embed.
         input_names: Optional input tensor names to embed.
     """
@@ -72,7 +74,7 @@ class UltralyticsModelExporter(ModelExporter):
             "crop", "standard", "fit_to_window", "fit_to_window_letterbox"
         ] = "fit_to_window_letterbox",
         pad_value: int = 114,
-        swap_rgb: bool = True,
+        swap_rgb: bool = False,
         output_names: list[str] | None = None,
         input_names: list[str] | None = None,
     ) -> None:

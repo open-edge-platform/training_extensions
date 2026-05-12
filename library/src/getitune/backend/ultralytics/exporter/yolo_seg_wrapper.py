@@ -119,7 +119,7 @@ class YOLO11Seg(DetectionModel):
         parameters = super().parameters()
         parameters["pad_value"].update_default_value(114)
         parameters["resize_type"].update_default_value("fit_to_window_letterbox")
-        parameters["reverse_input_channels"].update_default_value(True)
+        parameters["reverse_input_channels"].update_default_value(False)
         parameters["scale_values"].update_default_value([255.0])
         parameters["confidence_threshold"].update_default_value(0.25)
         parameters["nms_execute"].update_default_value(default_value=True)

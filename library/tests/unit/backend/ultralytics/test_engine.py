@@ -367,7 +367,7 @@ class TestModelExporter:
 
         assert exporter.resize_mode == "fit_to_window_letterbox"
         assert exporter.pad_value == 114
-        assert exporter.swap_rgb is True
+        assert exporter.swap_rgb is False
 
 
 class TestExtractProgressCallback:

@@ -66,7 +66,7 @@ class TestUltralyticsModelExporterInit:
 
     def test_default_swap_rgb(self) -> None:
         exporter = _make_exporter()
-        assert exporter.swap_rgb is True
+        assert exporter.swap_rgb is False
 
     def test_inherits_from_model_exporter(self) -> None:
         from getitune.backend.lightning.exporter.base import ModelExporter
@@ -117,7 +117,7 @@ class TestExporterMetadata:
         assert extended[("model_info", "scale_values")] == "1.0 1.0 1.0"
         assert extended[("model_info", "resize_type")] == "fit_to_window_letterbox"
         assert extended[("model_info", "pad_value")] == "114"
-        assert extended[("model_info", "reverse_input_channels")] == "True"
+        assert extended[("model_info", "reverse_input_channels")] == "False"
         assert extended[("model_info", "input_dtype")] == "u8"
         assert extended[("model_info", "intensity_mode")] == "scale_to_unit"
         assert ("model_info", "intensity_max_value") not in extended

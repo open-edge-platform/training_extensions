@@ -218,7 +218,7 @@ class UltralyticsModel:
             data_input_params=self.data_input_params,
             resize_mode="fit_to_window_letterbox",
             pad_value=114,
-            swap_rgb=True,
+            swap_rgb=False,
         )
 
     @property
