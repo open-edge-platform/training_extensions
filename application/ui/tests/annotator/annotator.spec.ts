@@ -946,4 +946,237 @@ test.describe('Annotator', () => {
             await expect(annotatorPage.getSelectedSubset()).toHaveText('Training');
         });
     });
+
+    test.describe('Prediction mode model', () => {
+        const olderModel = getMockedModel({
+            id: 'older-model-id',
+            name: 'Older_Model (older)',
+            variants: [getMockedVariant({ id: 'older-variant-id', format: 'openvino', precision: 'fp32' })],
+            training_info: {
+                status: 'successful',
+                label_schema_revision: { labels: [{ id: 'label-1', name: 'cat' }] },
+                start_time: '2025-01-01T10:00:00.000000+00:00',
+                end_time: '2025-01-01T12:00:00.000000+00:00',
+                dataset_revision_id: 'dataset-1',
+            },
+        });
+
+        const newerModel = getMockedModel({
+            id: 'newer-model-id',
+            name: 'Newer_Model (newer)',
+            variants: [getMockedVariant({ id: 'newer-variant-id', format: 'openvino', precision: 'fp16' })],
+            training_info: {
+                status: 'successful',
+                label_schema_revision: { labels: [{ id: 'label-1', name: 'cat' }] },
+                start_time: '2025-02-01T10:00:00.000000+00:00',
+                end_time: '2025-02-01T12:00:00.000000+00:00',
+                dataset_revision_id: 'dataset-2',
+            },
+        });
+
+        const emptyPredictHandler = http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+            return HttpResponse.json({ predictions: [{ media: { id: 'item-1' }, prediction: [] }] });
+        });
+
+        test('shows no model selector when no models are available', async ({ page, annotatorPage, network }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([]);
+                }),
+                emptyPredictHandler
+            );
+
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
+
+            await test.step('open prediction mode', async () => {
+                await annotatorPage.openPredictionMode();
+            });
+
+            await test.step('model selector is not visible when no models available', async () => {
+                await expect(page.getByRole('button', { name: 'Select prediction model' })).toBeHidden();
+            });
+        });
+
+        test('shows no model selector when models have no OpenVINO variants', async ({
+            page,
+            annotatorPage,
+            network,
+        }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([
+                        getMockedModel({
+                            id: 'pytorch-only-model',
+                            variants: [getMockedVariant({ id: 'pytorch-variant', format: 'pytorch' })],
+                        }),
+                    ]);
+                }),
+                emptyPredictHandler
+            );
+
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
+
+            await test.step('open prediction mode', async () => {
+                await annotatorPage.openPredictionMode();
+            });
+
+            await test.step('model selector is not visible when no OpenVINO models available', async () => {
+                await expect(page.getByRole('button', { name: 'Select prediction model' })).toBeHidden();
+            });
+        });
+
+        test('selects latest model by training end time when no active model is set', async ({
+            page,
+            annotatorPage,
+            network,
+        }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([olderModel, newerModel]);
+                }),
+                emptyPredictHandler
+            );
+
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
+
+            await test.step('open prediction mode', async () => {
+                await annotatorPage.openPredictionMode();
+            });
+
+            await test.step('the newer model is pre-selected in the picker', async () => {
+                await expect(page.getByRole('button', { name: 'Select prediction model' })).toContainText(
+                    'Newer_Model'
+                );
+            });
+        });
+
+        test('active model takes priority over default latest model selection', async ({
+            page,
+            annotatorPage,
+            network,
+        }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([olderModel, newerModel]);
+                }),
+                http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
+                    return response(200).json({
+                        project_id: mockedDetectionProject.id,
+                        status: 'idle',
+                        source: null,
+                        sink: null,
+                        // @ts-expect-error We care only about mocking the active model resolution behavior
+                        model: olderModel,
+                        // @ts-expect-error model_revision_id is not included in getMockedVariant
+                        model_variant: getMockedVariant({ id: olderModel.variants[0].id }),
+                        device: 'cpu',
+                    });
+                }),
+                emptyPredictHandler
+            );
+
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
+
+            await test.step('open prediction mode', async () => {
+                await annotatorPage.openPredictionMode();
+            });
+
+            await test.step('the active model is pre-selected instead of the latest model', async () => {
+                await expect(page.getByRole('button', { name: 'Select prediction model' })).toContainText(
+                    'Older_Model'
+                );
+            });
+        });
+
+        test('changing model selection uses the newly selected model for predictions', async ({
+            page,
+            annotatorPage,
+            network,
+        }) => {
+            let capturedModelVariantId: string | undefined;
+
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([olderModel, newerModel]);
+                }),
+                http.post('/api/projects/{project_id}/dataset/media/media:predict', async ({ request }) => {
+                    const body = await request.json();
+                    capturedModelVariantId = (body as unknown as Record<string, string>).model_variant_id;
+
+                    return HttpResponse.json({ predictions: [{ media: { id: 'item-1' }, prediction: [] }] });
+                })
+            );
+
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
+
+            await test.step('open prediction mode — newer model should be selected by default', async () => {
+                await annotatorPage.openPredictionMode();
+
+                await expect(page.getByRole('button', { name: 'Select prediction model' })).toContainText(
+                    'Newer_Model'
+                );
+            });
+
+            await test.step('select the older model from the picker', async () => {
+                const predictResponsePromise = page.waitForResponse((res) => res.url().includes('media:predict'));
+
+                await page.getByRole('button', { name: 'Select prediction model' }).click();
+                await page.getByRole('option', { name: /Older_Model/ }).click();
+
+                await expect(page.getByRole('button', { name: 'Select prediction model' })).toContainText(
+                    'Older_Model'
+                );
+
+                await predictResponsePromise;
+            });
+
+            await test.step('predictions are requested with the newly selected model variant', async () => {
+                expect(capturedModelVariantId).toBe(olderModel.variants[0].id);
+            });
+        });
+
+        test('last used model is used by default', async ({ page, annotatorPage, network }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([olderModel, newerModel]);
+                }),
+                emptyPredictHandler
+            );
+
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
+
+            await test.step('open prediction mode — newer model is auto-selected by default', async () => {
+                await annotatorPage.openPredictionMode();
+
+                await expect(page.getByRole('button', { name: 'Select prediction model' })).toContainText(
+                    'Newer_Model'
+                );
+            });
+
+            await test.step('change selection to the older model', async () => {
+                const predictResponsePromise = page.waitForResponse((res) => res.url().includes('media:predict'));
+
+                await page.getByRole('button', { name: 'Select prediction model' }).click();
+                await page.getByRole('option', { name: /Older_Model/ }).click();
+
+                await expect(page.getByRole('button', { name: 'Select prediction model' })).toContainText(
+                    'Older_Model'
+                );
+
+                await predictResponsePromise;
+            });
+
+            await test.step('reload the page', async () => {
+                await page.reload();
+            });
+
+            await test.step('open prediction mode after reload — older model is still selected', async () => {
+                await annotatorPage.openPredictionMode();
+
+                await expect(page.getByRole('button', { name: 'Select prediction model' })).toContainText(
+                    'Older_Model'
+                );
+            });
+        });
+    });
 });
