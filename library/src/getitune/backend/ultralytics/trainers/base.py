@@ -34,7 +34,6 @@ class GetiTuneDataBridgeMixin:
     _datamodule: DataModule | None = None
     _use_getitune_data: bool = False
     _include_masks: bool = False
-    _val_interval: int = 5
 
     def get_dataset(self) -> dict[str, Any]:
         """Build data config dict from DataModule or fall back to YAML."""
@@ -103,7 +102,7 @@ class GetiTuneDataBridgeMixin:
         )
 
     def _setup_train(self) -> None:
-        """Run parent setup, then fix warmup for small datasets and add periodic validation.
+        """Run parent setup, then fix warmup for small datasets.
 
         Ultralytics enforces a minimum of 100 warmup iterations regardless
         of dataset size (``max(round(warmup_epochs * nb), 100)``).  For
@@ -114,12 +113,6 @@ class GetiTuneDataBridgeMixin:
         disable the built-in warmup entirely and register a custom
         ``on_train_batch_start`` callback that applies the same LR /
         momentum ramp but respects the natural iteration count.
-
-        Additionally, registers a callback that validates and saves only
-        every ``_val_interval`` epochs instead of every epoch.  The upstream
-        loop already handles ``final_epoch``, ``stopper.possible_stop``, and
-        ``self.stop`` independently, so periodic toggling of ``args.val`` /
-        ``args.save`` is safe.
         """
         super()._setup_train()  # type: ignore[misc]
 
@@ -127,7 +120,6 @@ class GetiTuneDataBridgeMixin:
             return
         if self.args.warmup_epochs <= 0:  # type: ignore[attr-defined]
             self._disable_automatic_gc()
-            self._register_periodic_val_callback()
             self._register_close_mosaic_callback()
             return
 
@@ -169,31 +161,7 @@ class GetiTuneDataBridgeMixin:
             self.add_callback("on_train_batch_start", _warmup_callback)  # type: ignore[attr-defined]
 
         self._disable_automatic_gc()
-        self._register_periodic_val_callback()
         self._register_close_mosaic_callback()
-
-    def _register_periodic_val_callback(self) -> None:
-        """Register a callback that validates/saves only every ``_val_interval`` epochs.
-
-        Ultralytics validates and saves checkpoints every single epoch by
-        default.  For small datasets the per-epoch overhead (validation,
-        ``deepcopy`` of EMA / optimizer, serialisation, disk I/O) dominates
-        training time.  This callback toggles ``args.val`` and ``args.save``
-        so that they only fire every *N* epochs, similar to Lightning's
-        adaptive validation scheduling.
-
-        The upstream ``_do_train`` loop checks ``final_epoch``,
-        ``stopper.possible_stop``, and ``self.stop`` independently of
-        ``args.val``, so the early-stopping contract is preserved.
-        """
-        val_interval = self._val_interval
-
-        def _periodic_val_save(trainer: Any) -> None:  # noqa: ANN401
-            should = (trainer.epoch + 1) % val_interval == 0
-            trainer.args.val = should
-            trainer.args.save = should
-
-        self.add_callback("on_train_epoch_end", _periodic_val_save)  # type: ignore[attr-defined]
 
     def _disable_automatic_gc(self) -> None:
         """Disable Python's automatic garbage collection during training.
@@ -207,28 +175,24 @@ class GetiTuneDataBridgeMixin:
         fast/slow epoch pattern observed in profiling.
 
         This method disables automatic GC and registers callbacks to:
-        - Manually collect at periodic validation boundaries (where overhead
-          is already accepted)
+        - Manually collect every epoch (after validation)
         - Re-enable automatic GC when training ends (normal or early stop)
 
         This is a well-established optimization used by PyTorch Lightning,
         HuggingFace Transformers, and NVIDIA Apex.
         """
         gc.disable()
-        logger.info("Disabled automatic GC for training (manual collect at validation intervals)")
+        logger.info("Disabled automatic GC for training (manual collect every epoch)")
 
-        val_interval = self._val_interval
-
-        def _manual_gc_at_val(trainer: Any) -> None:  # noqa: ANN401
-            if (trainer.epoch + 1) % val_interval == 0:
-                gc.collect()
+        def _manual_gc(trainer: Any) -> None:  # noqa: ANN401
+            gc.collect()
 
         def _reenable_gc(_trainer: Any) -> None:  # noqa: ANN401
             gc.collect()
             gc.enable()
             logger.info("Re-enabled automatic GC after training")
 
-        self.add_callback("on_train_epoch_end", _manual_gc_at_val)  # type: ignore[attr-defined]
+        self.add_callback("on_train_epoch_end", _manual_gc)  # type: ignore[attr-defined]
         self.add_callback("on_train_end", _reenable_gc)  # type: ignore[attr-defined]
 
     def _clear_memory(self, threshold: float | None = None) -> None:

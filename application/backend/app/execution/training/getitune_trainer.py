@@ -405,12 +405,13 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         model_parser.add_argument("--model", type=LightningModel | UltralyticsModel)
         getitune_model = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
 
-        # Load weights for both fresh training (base weights from manifest) and
-        # parent-revision training (previous checkpoint).  prepare_weights()
-        # always returns a valid path regardless of the scenario.
+        # Ultralytics models handle their own weight loading (pretrained or
+        # parent checkpoint) via load_checkpoint — call it unconditionally.
+        # Lightning models expect the checkpoint only for parent-revision
+        # training; fresh training uses the model's built-in initialization.
         if hasattr(getitune_model, "load_checkpoint"):
             getitune_model.load_checkpoint(weights_path)
-        else:
+        elif has_parent_revision:
             engine_kwargs["checkpoint"] = weights_path
 
         if hasattr(getitune_model, "tile_config"):

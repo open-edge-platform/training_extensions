@@ -63,7 +63,7 @@ class UltralyticsInstSegModel(UltralyticsModel):
         """
         label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
         conf = self.extra_overrides.get("conf", 0.25)
-        iou = self.extra_overrides.get("iou", 0.7)
+        iou = self.extra_overrides.get("iou", 0.5)
         return TaskLevelExportParameters(
             model_type="YOLO11-seg",
             model_name=self.model_name,

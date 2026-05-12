@@ -275,15 +275,18 @@ class UltralyticsModel:
         Subclasses override to set model_type, task_type, and thresholds.
         """
         label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
-        conf = self.extra_overrides.get("conf", 0.001)
-        iou = self.extra_overrides.get("iou", 0.7)
+        iou = self.extra_overrides.get("iou", 0.5)
+        # confidence_threshold is intentionally omitted so that model_api uses
+        # its class default (0.25 for YOLO11).  The Ultralytics validation conf
+        # (typically 0.001 for full mAP computation) is a training concern and
+        # should NOT be baked into the exported IR used for deployment inference.
         return TaskLevelExportParameters(
             model_type="YOLO11",
             model_name=self.model_name,
             task_type="detection",
             label_info=label_info,
             optimization_config={},
-            confidence_threshold=float(conf),
+            confidence_threshold=None,
             iou_threshold=float(iou),
             nms_execute=True,
         )

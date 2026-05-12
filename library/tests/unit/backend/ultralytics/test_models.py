@@ -142,8 +142,9 @@ class TestExportParameters:
     def test_default_thresholds(self) -> None:
         model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         params = model._export_parameters
-        assert params.confidence_threshold == 0.001
-        assert params.iou_threshold == 0.7
+        # confidence_threshold is None so model_api uses its YOLO11 class default (0.25)
+        assert params.confidence_threshold is None
+        assert params.iou_threshold == 0.5
 
     def test_optimization_config_empty(self) -> None:
         model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())

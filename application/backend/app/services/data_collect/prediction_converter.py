@@ -12,6 +12,25 @@ from model_api.models.result import Result
 from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
 
 
+def _find_label(labels: Sequence[Label], label_name: str) -> Label | None:
+    """Find a project label matching the predicted label name.
+
+    Model API embeds label names in a space-separated ``rt_info`` field, so
+    spaces inside label names are replaced with underscores during export
+    (see ``TaskLevelExportParameters.to_metadata``).  This helper first tries
+    an exact match and, if none is found, retries after converting underscores
+    back to spaces so that multi-word project labels (e.g. "Cabernet Franc")
+    are matched correctly.
+    """
+    match = next((label for label in labels if label.name == label_name), None)
+    if match is not None:
+        return match
+    normalized = label_name.replace("_", " ")
+    if normalized != label_name:
+        return next((label for label in labels if label.name == normalized), None)
+    return None
+
+
 def _convert_classification_prediction(
     labels: Sequence[Label], prediction: ClassificationResult
 ) -> list[DatasetItemAnnotation]:
@@ -21,7 +40,7 @@ def _convert_classification_prediction(
         raise RuntimeError("The prediction is malformed because it does not contain labels")
     for predicted_label in prediction.top_labels:
         label_name = predicted_label.name
-        label = next((label for label in labels if label.name == label_name), None)
+        label = _find_label(labels, label_name)
         if not label:
             logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue
@@ -40,7 +59,7 @@ def _convert_detection_prediction(labels: Sequence[Label], prediction: Detection
     for idx, box in enumerate(prediction.bboxes):
         label_name = prediction.label_names[idx]
         bbox_confidence = prediction_scores_list[idx]
-        label = next((label for label in labels if label.name == label_name), None)
+        label = _find_label(labels, label_name)
         if not label:
             logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue
@@ -65,7 +84,7 @@ def _convert_segmentation_prediction(
     for idx, box in enumerate(prediction.bboxes):
         label_name = prediction.label_names[idx]
         polygon_confidence = prediction_scores_list[idx]
-        label = next((label for label in labels if label.name == label_name), None)
+        label = _find_label(labels, label_name)
         if not label:
             logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue

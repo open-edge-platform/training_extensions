@@ -39,7 +39,7 @@ def _export_parameters() -> TaskLevelExportParameters:
         label_info=_label_info(),
         optimization_config={},
         confidence_threshold=0.25,
-        iou_threshold=0.7,
+        iou_threshold=0.5,
     )
 
 
@@ -99,7 +99,7 @@ class TestExporterMetadata:
         exporter = _make_exporter()
         metadata = exporter.metadata
         assert metadata[("model_info", "confidence_threshold")] == "0.25"
-        assert metadata[("model_info", "iou_threshold")] == "0.7"
+        assert metadata[("model_info", "iou_threshold")] == "0.5"
 
     def test_metadata_includes_getitune_version(self) -> None:
         import getitune

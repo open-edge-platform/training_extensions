@@ -47,8 +47,11 @@ def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
             img = img.permute(2, 0, 1)
         # Check for HCW format: channels in the middle dimension
         elif img.shape[1] in (1, 3, 4) and img.shape[0] > 4 and img.shape[2] > 4:
-            # HCW format detected, convert to CHW
-            img = img.permute(1, 0, 2)
+            # Middle-channel layout produced by the datumaro parquet bug:
+            # ``TensorField.from_polars()`` applies ``np.transpose(data, (2, 0, 1))``
+            # to stored CHW data, yielding WCH = (W, C, H).  The correct
+            # inverse is ``(1, 2, 0)`` which recovers (C, H, W).
+            img = img.permute(1, 2, 0)
         # If 4 channels (RGBA), convert to 3 channels (RGB)
         if img.shape[0] == 4:
             img = img[:3]

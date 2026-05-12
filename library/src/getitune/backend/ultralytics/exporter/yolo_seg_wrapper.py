@@ -123,7 +123,7 @@ class YOLO11Seg(DetectionModel):
         parameters["scale_values"].update_default_value([255.0])
         parameters["confidence_threshold"].update_default_value(0.25)
         parameters["nms_execute"].update_default_value(default_value=True)
-        parameters["iou_threshold"].update_default_value(0.7)
+        parameters["iou_threshold"].update_default_value(0.5)
         parameters["nms_max_predictions"].update_default_value(30000)
         return parameters
 

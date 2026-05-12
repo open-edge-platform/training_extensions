@@ -188,7 +188,7 @@ class Configurator:
             train_args=copy.deepcopy(self._config.get("training", {})),
             export_args={
                 "confidence_threshold": export.get("confidence_threshold", 0.25),
-                "iou_threshold": export.get("iou_threshold", 0.7),
+                "iou_threshold": export.get("iou_threshold", 0.5),
             },
             **engine_kwargs,
         )

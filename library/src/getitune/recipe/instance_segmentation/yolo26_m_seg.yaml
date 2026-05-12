@@ -30,7 +30,7 @@ export:
   format: OPENVINO
   precision: FP32
   confidence_threshold: 0.25
-  iou_threshold: 0.7
+  iou_threshold: 0.5
 
 data: ../_base_/data/instance_segmentation.yaml
 
