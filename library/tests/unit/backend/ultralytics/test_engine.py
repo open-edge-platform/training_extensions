@@ -368,3 +368,30 @@ class TestModelExporter:
         assert exporter.resize_mode == "fit_to_window_letterbox"
         assert exporter.pad_value == 114
         assert exporter.swap_rgb is True
+
+
+class TestExtractProgressCallback:
+    """Tests for _extract_progress_callback in UltralyticsEngine."""
+
+    def test_extracts_progress_from_callback(self) -> None:
+        """Should extract fn, min_p, max_p from a callback with matching attrs."""
+        cb = SimpleNamespace(_on_progress_update=lambda p: None, _min_p=10.0, _max_p=80.0)
+        fn, min_p, max_p = UltralyticsEngine._extract_progress_callback([cb])
+        assert fn is cb._on_progress_update
+        assert min_p == 10.0
+        assert max_p == 80.0
+
+    def test_returns_none_when_no_callbacks(self) -> None:
+        """Should return (None, 0, 100) when callbacks is None."""
+        fn, min_p, max_p = UltralyticsEngine._extract_progress_callback(None)
+        assert fn is None
+        assert min_p == 0.0
+        assert max_p == 100.0
+
+    def test_returns_none_when_no_matching_callback(self) -> None:
+        """Should return (None, 0, 100) when no callback has _on_progress_update."""
+        cb = SimpleNamespace(some_other_attr=True)
+        fn, min_p, max_p = UltralyticsEngine._extract_progress_callback([cb])
+        assert fn is None
+        assert min_p == 0.0
+        assert max_p == 100.0

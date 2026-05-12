@@ -168,3 +168,52 @@ class TestClearMemory:
             trainer._clear_memory(threshold=0.5)
 
         mock_super.assert_called_once_with(0.5)
+
+
+class TestProgressCallback:
+    """Tests for progress reporting in the Ultralytics bridge."""
+
+    def test_progress_callback_emits_progress(self) -> None:
+        """Progress callback should emit linearly interpolated values."""
+        trainer = object.__new__(DetectionTrainer)
+        trainer._use_getitune_data = True
+        trainer._datamodule = MagicMock()
+
+        progress_values: list[float] = []
+        trainer._progress_fn = lambda p: progress_values.append(p)
+        trainer._progress_min = 10.0
+        trainer._progress_max = 80.0
+
+        # Simulate train_loader with 3 batches and 10 epochs
+        trainer.train_loader = list(range(3))
+        trainer.epochs = 10
+
+        registered: list = []
+        trainer.add_callback = lambda event, fn: registered.append((event, fn))
+
+        trainer._register_progress_callback()
+
+        assert len(registered) == 1
+        event, callback = registered[0]
+        assert event == "on_train_batch_end"
+
+        # Simulate 5 batch-end calls (total_steps = 30)
+        for _ in range(5):
+            callback(trainer)
+
+        assert len(progress_values) == 5
+        # step 5/30 = 1/6, progress = 10 + (1/6) * 70 ≈ 21.67
+        assert pytest.approx(progress_values[4], abs=0.01) == 10.0 + (5 / 30) * 70.0
+
+    def test_progress_callback_noop_when_no_fn(self) -> None:
+        """No callback should be registered when _progress_fn is None."""
+        trainer = object.__new__(DetectionTrainer)
+        trainer._use_getitune_data = True
+        trainer._progress_fn = None
+
+        registered: list = []
+        trainer.add_callback = lambda event, fn: registered.append((event, fn))
+
+        trainer._register_progress_callback()
+
+        assert len(registered) == 0

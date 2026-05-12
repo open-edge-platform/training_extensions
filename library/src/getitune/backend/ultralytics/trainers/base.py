@@ -33,6 +33,9 @@ class GetiTuneDataBridgeMixin:
     _datamodule: DataModule | None = None
     _use_getitune_data: bool = False
     _include_masks: bool = False
+    _progress_fn: Any = None
+    _progress_min: float = 0.0
+    _progress_max: float = 100.0
 
     def get_dataset(self) -> dict[str, Any]:
         """Build data config dict from DataModule or fall back to YAML."""
@@ -117,6 +120,9 @@ class GetiTuneDataBridgeMixin:
 
         if not self._use_getitune_data:
             return
+
+        self._register_progress_callback()
+
         if self.args.warmup_epochs <= 0:  # type: ignore[attr-defined]
             return
 
@@ -156,6 +162,33 @@ class GetiTuneDataBridgeMixin:
                 counter["ni"] += 1
 
             self.add_callback("on_train_batch_start", _warmup_callback)  # type: ignore[attr-defined]
+
+    def _register_progress_callback(self) -> None:
+        """Register a progress-reporting callback for the training loop.
+
+        Bridges the application's progress callable (passed via
+        ``_progress_fn``) into the Ultralytics callback system.
+        Computes progress as a linear interpolation between ``_progress_min``
+        and ``_progress_max`` based on ``current_step / total_steps``.
+        """
+        if self._progress_fn is None:
+            return
+
+        progress_fn = self._progress_fn
+        min_p = self._progress_min
+        max_p = self._progress_max
+        nb = len(self.train_loader)  # type: ignore[attr-defined]
+        total_steps = max(1, self.epochs * nb)  # type: ignore[attr-defined]
+        step_counter = {"step": 0}
+
+        def _progress_callback(_trainer: Any) -> None:  # noqa: ANN401
+            step_counter["step"] += 1
+            ratio = step_counter["step"] / total_steps
+            progress = min_p + ratio * (max_p - min_p)
+            progress_fn(progress)
+
+        self.add_callback("on_train_batch_end", _progress_callback)  # type: ignore[attr-defined]
+        logger.info(f"Registered progress callback: {total_steps} total steps, range [{min_p}, {max_p}]")
 
     def _clear_memory(self, threshold: float | None = None) -> None:
         """Lightweight memory clearing that skips ``gc.collect()``.

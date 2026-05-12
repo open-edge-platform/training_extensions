@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Sequence
 
 import torch
@@ -126,8 +127,7 @@ class UltralyticsEngine(Engine):
         Returns:
             Translated metric dict.
         """
-        if callbacks is not None:
-            logger.debug("UltralyticsEngine ignores the 'callbacks' parameter")
+        progress_fn, progress_min, progress_max = self._extract_progress_callback(callbacks)
         # Translate Lightning-specific 'devices' to Ultralytics device selection.
         if "devices" in kwargs:
             devices = kwargs.pop("devices")
@@ -159,7 +159,11 @@ class UltralyticsEngine(Engine):
         if self._data_root is not None and "data" not in merged:
             merged["data"] = str(self._data_root)
 
-        trainer_cls = self._make_bound_trainer()
+        trainer_cls = self._make_bound_trainer(
+            progress_fn=progress_fn,
+            progress_min=progress_min,
+            progress_max=progress_max,
+        )
         train_args = {
             "trainer": trainer_cls,
             "device": self._device,
@@ -477,7 +481,12 @@ class UltralyticsEngine(Engine):
         auto_cfg = AutoConfigurator(data_root=data_root, task=task)
         return auto_cfg.get_datamodule()
 
-    def _make_bound_trainer(self) -> type:
+    def _make_bound_trainer(
+        self,
+        progress_fn: Callable[[float], None] | None = None,
+        progress_min: float = 0.0,
+        progress_max: float = 100.0,
+    ) -> type:
         """Return a trainer subclass with the DataModule bound as a class attr."""
         base_cls = self._model.trainer_cls
         if base_cls is None:
@@ -487,7 +496,39 @@ class UltralyticsEngine(Engine):
         if self._datamodule is None:
             return base_cls
 
-        return type(base_cls.__name__, (base_cls,), {"_datamodule": self._datamodule, "_use_getitune_data": True})
+        attrs: dict[str, Any] = {
+            "_datamodule": self._datamodule,
+            "_use_getitune_data": True,
+            "_progress_fn": progress_fn,
+            "_progress_min": progress_min,
+            "_progress_max": progress_max,
+        }
+        return type(base_cls.__name__, (base_cls,), attrs)
+
+    @staticmethod
+    def _extract_progress_callback(
+        callbacks: list | None,
+    ) -> tuple[Callable[[float], None] | None, float, float]:
+        """Extract progress reporting callable from Lightning-style callbacks.
+
+        Scans for any callback with ``_on_progress_update``, ``_min_p``, and
+        ``_max_p`` attributes (duck-typed to avoid coupling to the application
+        backend's ``TrainingProgressCallback``).
+
+        Returns:
+            (progress_fn, min_p, max_p) or (None, 0, 100) if not found.
+        """
+        if callbacks is None:
+            return None, 0.0, 100.0
+
+        for cb in callbacks:
+            fn = getattr(cb, "_on_progress_update", None)
+            if fn is not None:
+                min_p = getattr(cb, "_min_p", 0.0)
+                max_p = getattr(cb, "_max_p", 100.0)
+                return fn, min_p, max_p
+
+        return None, 0.0, 100.0
 
     def _make_bound_validator(self) -> type:
         """Return a validator subclass with the DataModule bound as a class attr."""
