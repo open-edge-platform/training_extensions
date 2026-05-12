@@ -471,7 +471,7 @@ class TestGetiTuneQuantizerStoreArtifacts:
         fxt_getitune_quantizer: Callable[[], GetiTuneQuantizer],
         fxt_quantization_params: QuantizationJobParams,
     ):
-        """Quantized XML+BIN are copied into the variant directory and the work dir is removed."""
+        """Quantized XML+BIN are copied into the variant directory."""
         quantizer = fxt_getitune_quantizer()
 
         variant_id = uuid4()
@@ -488,7 +488,6 @@ class TestGetiTuneQuantizerStoreArtifacts:
             params=fxt_quantization_params,
             quantized_model_path=quantized_xml,
             model_variant_id=variant_id,
-            getitune_work_dir=getitune_work_dir,
         )
 
         # Verify copies
@@ -504,8 +503,8 @@ class TestGetiTuneQuantizerStoreArtifacts:
         assert (variant_dir / "model.xml").read_text() == "<quantized/>"
         assert (variant_dir / "model.bin").read_bytes() == b"\x00\x01\x02"
 
-        # Verify work dir cleaned up
-        assert not getitune_work_dir.exists()
+        # Work dir is no longer cleaned up here; that is handled by ``QuantizationJob.on_complete``.
+        assert getitune_work_dir.exists()
 
     def test_store_artifacts_skips_missing_bin(
         self,
@@ -527,7 +526,6 @@ class TestGetiTuneQuantizerStoreArtifacts:
             params=fxt_quantization_params,
             quantized_model_path=quantized_xml,
             model_variant_id=variant_id,
-            getitune_work_dir=getitune_work_dir,
         )
 
         variant_dir = (
@@ -658,8 +656,9 @@ class TestGetiTuneQuantizerExecute:
         assert (variant_dir / "model.xml").read_text() == "<q/>"
         assert (variant_dir / "model.bin").read_bytes() == b"\x00"
 
-        # getitune workspace cleaned up
-        assert not getitune_work_dir.exists()
+        # The getitune workspace is no longer cleaned up by execute(); cleanup is
+        # performed by ``QuantizationJob.on_complete`` after the job finishes.
+        assert getitune_work_dir.exists()
 
     def test_execute_accuracy_aware_ptq(
         self,
@@ -748,7 +747,11 @@ class TestGetiTuneQuantizerExecute:
         fxt_model_service: Mock,
         fxt_project_service: Mock,
     ):
-        """If quantization fails, the getitune workspace is still cleaned up."""
+        """If quantization fails, the exception propagates to the job runner.
+
+        Workspace cleanup is now performed by ``QuantizationJob.on_complete`` and is
+        covered by ``tests/unit/models/jobs/test_quantization_job.py``.
+        """
         quantizer = fxt_getitune_quantizer()
         project_id = uuid4()
         model_id = uuid4()
@@ -798,9 +801,6 @@ class TestGetiTuneQuantizerExecute:
 
             with pytest.raises(RuntimeError, match="NNCF exploded"):
                 quantizer.execute(params)
-
-        # Workspace must be cleaned up despite the failure
-        assert not getitune_work_dir.exists()
 
 
 class TestGetiTuneQuantizerHelpers:

@@ -31,6 +31,7 @@ import {
     getPrimaryTestingMetricValue,
     getVariantPerformanceValue,
 } from '../utils/variant-metrics';
+import { ModelVariantActions } from './model-variant-actions.component';
 import { ValueWithDelta } from './model-variant-delta.component';
 
 type ModelVariantTableProps = {
@@ -147,13 +148,18 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
                             </Cell>
                             <Cell>
                                 <Flex gap={'size-100'} justifyContent='end' alignItems='center'>
-                                    <ActionButton
-                                        isQuiet
-                                        aria-label={`Download model ${variant.id}`}
-                                        onPress={() => handleDownloadModel(variant.id)}
-                                    >
-                                        <DownloadIcon />
-                                    </ActionButton>
+                                    {format !== 'openvino' && (
+                                        <ActionButton
+                                            isQuiet
+                                            aria-label={`Download model ${variant.id}`}
+                                            onPress={() => handleDownloadModel(variant.id)}
+                                        >
+                                            <DownloadIcon />
+                                        </ActionButton>
+                                    )}
+                                    {format === 'openvino' && (
+                                        <ModelVariantActions modelVariant={variant} onDownload={handleDownloadModel} />
+                                    )}
                                 </Flex>
                             </Cell>
                         </Row>

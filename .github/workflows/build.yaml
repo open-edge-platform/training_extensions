@@ -176,6 +176,32 @@ jobs:
 
           docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1
 
+      - name: Install Python, uv and Just
+        if: matrix.device == 'cpu'
+        uses: ./.github/actions/install-common-deps
+        with:
+          uv-version-file: application/backend/pyproject.toml # Install the uv version specified in pyproject.toml
+
+      - name: Prepare venv and install Python dependencies
+        if: matrix.device == 'cpu'
+        working-directory: application/backend
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
+        run: just venv
+
+      - name: Run bdd tests
+        if: matrix.device == 'cpu'
+        working-directory: application/backend
+        env:
+          # For PRs use local image, for other events use first pushed tag
+          IMAGE_SOURCE: ${{ github.event_name == 'pull_request' && steps.docker_build.outputs.image-name || steps.meta.outputs.tags }}
+          RUNNER: docker
+          TESTCONTAINERS_RYUK_DISABLED: true
+        run: |
+          export IMAGE_TAG=$(echo "${IMAGE_SOURCE}" | head -n1)
+          export DOCKER_HOST=$(docker context inspect --format '{{.Endpoints.docker.Host}}')
+          just test-bdd
+
       - name: Get Docker image size
         if: github.event_name == 'pull_request'
         id: image_size

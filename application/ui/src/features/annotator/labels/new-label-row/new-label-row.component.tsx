@@ -3,24 +3,27 @@
 
 import { FocusEvent, KeyboardEvent, useRef, useState } from 'react';
 
-import { ActionButton, DOMRefValue, Grid, TextField, useUnwrapDOMRef, View } from '@geti/ui';
+import { ActionButton, DOMRefValue, Flex, Grid, TextField, useUnwrapDOMRef, View } from '@geti/ui';
 import { Add, Close } from '@geti/ui/icons';
 
+import { HotkeyField } from '../../../../components/label-fields/hotkey-field.component';
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
 import { getRandomDistinctColor } from '../../label-utils';
 
 import classes from '../label-row/label-row.module.scss';
 
 type NewLabelRowProps = {
-    onSave: (name: string, color: string) => void;
+    onSave: (name: string, color: string, hotkey?: string) => void;
     onCancel: () => void;
     validateName: (name: string, excludeId?: string) => string | undefined;
+    validateHotkey: (newHotkey: string, excludeId?: string) => string | undefined;
 };
 
-export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps) => {
+export const NewLabelRow = ({ onSave, onCancel, validateName, validateHotkey }: NewLabelRowProps) => {
     const rowRef = useRef<DOMRefValue<HTMLDivElement>>(null);
     const rowRefUnwrapped = useUnwrapDOMRef(rowRef);
     const [name, setName] = useState('');
+    const [hotkey, setHotkey] = useState('');
     const [color, setColor] = useState(getRandomDistinctColor);
 
     const isEmptyName = name.trim().length === 0;
@@ -36,7 +39,7 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
 
     const handleSave = () => {
         if (canSave(name)) {
-            onSave(name.trim(), color);
+            onSave(name.trim(), color, hotkey.trim() === '' ? undefined : hotkey.trim());
         }
     };
 
@@ -46,6 +49,10 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
         } else if (event.key === 'Escape') {
             onCancel();
         }
+    };
+
+    const handleHotkeyChange = (newHotkey: string | null) => {
+        setHotkey(newHotkey ?? '');
     };
 
     const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
@@ -64,6 +71,14 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
         }
     };
 
+    const handleHotkeyUpdate = () => {
+        if (validateHotkey(hotkey) !== undefined) {
+            return;
+        }
+
+        handleSave();
+    };
+
     return (
         <Grid
             ref={rowRef}
@@ -77,7 +92,7 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
 
             <LabelColorPicker color={color} onChange={setColor} />
 
-            <View>
+            <Flex gap={'size-100'}>
                 <TextField
                     // eslint-disable-next-line jsx-a11y/no-autofocus
                     autoFocus
@@ -91,7 +106,15 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
                     errorMessage={validationError}
                     validationState={validationError ? 'invalid' : undefined}
                 />
-            </View>
+
+                <HotkeyField
+                    hotkey={hotkey}
+                    onEnter={handleHotkeyUpdate}
+                    onHotkeyChange={handleHotkeyChange}
+                    aria-label={'New label hotkey'}
+                    errorMessage={validateHotkey(hotkey)}
+                />
+            </Flex>
 
             <ActionButton
                 isQuiet
