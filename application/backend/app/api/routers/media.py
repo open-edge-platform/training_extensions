@@ -28,7 +28,7 @@ from app.api.schemas.media import (
     MediaWithPagination,
     SetMediaAnnotations,
 )
-from app.api.validators import MediaID
+from app.api.validators import MediaID, normalize_datetime_to_utc
 from app.core.models import Pagination
 from app.models import BatchInferenceResult, DatasetItemAnnotationStatus, DatasetItemSubset, Media, Project, Video
 from app.models.media import ImageFormat, MediaListPredictionRequest, MediaType, NotAnnotatedVideoFrame, VideoFormat
@@ -221,6 +221,9 @@ def list_media(  # noqa: PLR0913
     subset: Annotated[DatasetItemSubset | None, Query()] = None,
 ) -> MediaWithPagination:
     """List the available media and their metadata. This endpoint supports pagination."""
+    start_date = normalize_datetime_to_utc(start_date)
+    end_date = normalize_datetime_to_utc(end_date)
+
     if start_date is not None and end_date is not None and start_date > end_date:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Start date must be before end date."

@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -95,6 +95,38 @@ class TestDatasetItemEndpoints:
                 offset=2,
                 start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=ZoneInfo("UTC")),
                 end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("UTC")),
+                annotation_status=None,
+                label_ids=None,
+                subset=None,
+            ),
+        )
+
+    def test_list_dataset_items_naive_dates_are_normalized_to_utc(
+        self, fxt_get_project, fxt_dataset_item, fxt_dataset_service, fxt_client
+    ):
+        fxt_dataset_service.count_dataset_items.return_value = 1
+        fxt_dataset_service.list_dataset_items.return_value = [fxt_dataset_item]
+
+        response = fxt_client.get(
+            f"/api/projects/{str(uuid4())}/dataset/items?start_date=2025-01-09T00:00:00&end_date=2025-12-31T23:59:59"
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_dataset_service.count_dataset_items.assert_called_once_with(
+            project=fxt_get_project,
+            start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=UTC),
+            end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=UTC),
+            annotation_status=None,
+            label_ids=None,
+            subset=None,
+        )
+        fxt_dataset_service.list_dataset_items.assert_called_once_with(
+            project_id=fxt_get_project.id,
+            filters=DatasetItemFilters(
+                limit=10,
+                offset=0,
+                start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=UTC),
+                end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=UTC),
                 annotation_status=None,
                 label_ids=None,
                 subset=None,

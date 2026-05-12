@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -40,6 +41,15 @@ def validate_uuid_param(value: str, param_name: str) -> UUID:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid {param_name}: '{value}' must be a valid UUID format.",
         )
+
+
+def normalize_datetime_to_utc(value: datetime | None) -> datetime | None:
+    """Normalize datetimes to UTC and attach UTC tzinfo for naive values."""
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
 
 
 JobID = Annotated[UUID, Depends(lambda job_id: validate_uuid_param(job_id, "job_id"))]
