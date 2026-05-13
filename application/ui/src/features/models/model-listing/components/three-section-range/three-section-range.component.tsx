@@ -54,14 +54,14 @@ export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingV
     ];
 
     const labelledPercentages = [
-        { label: 'Training', percentage: trainingPercentage },
-        { label: 'Validation', percentage: validationPercentage },
-        { label: 'Test', percentage: testingPercentage },
+        { label: 'Training', percentage: trainingPercentage, color: 'var(--moss-tint-1)' },
+        { label: 'Validation', percentage: validationPercentage, color: 'var(--brand-daisy-tint)' },
+        { label: 'Test', percentage: testingPercentage, color: 'var(--geode-tint)' },
     ];
 
     return (
         <Flex alignItems={'center'} width={'100%'} data-testid={id}>
-            <Text UNSAFE_className={classes.label}>TRAINING SUBSETS</Text>
+            <Text UNSAFE_className={classes.label}>Dataset split</Text>
 
             <Grid
                 columns={gridColumns}
@@ -91,9 +91,23 @@ export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingV
                 )}
             </Grid>
 
-            <Text UNSAFE_className={classes.label}>
-                {labelledPercentages.map(({ label, percentage }) => `${label} ${percentage}%`).join(' / ')}
-            </Text>
+            <Flex gap={'size-150'} alignItems={'center'} UNSAFE_className={classes.label}>
+                {labelledPercentages.map(({ label, percentage, color }) => (
+                    <Flex key={label} gap={'size-75'} alignItems={'center'}>
+                        <span
+                            style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                backgroundColor: color,
+                                display: 'inline-block',
+                                flexShrink: 0,
+                            }}
+                        />
+                        <Text UNSAFE_className={classes.label}>{`${label} ${percentage}%`}</Text>
+                    </Flex>
+                ))}
+            </Flex>
         </Flex>
     );
 };
