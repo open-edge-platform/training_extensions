@@ -19,6 +19,10 @@ _RTSP_FFMPEG_OPTIONS = (
     "rtsp_transport;tcp|fflags;nobuffer|flags;low_delay|max_delay;500000|reorder_queue_size;0|stimeout;5000000"
 )
 
+# Maximum dimension (longest edge) for frames passed to inference.
+# Frames larger than this are downscaled to reduce CPU/memory pressure.
+_MAX_FRAME_DIMENSION = int(os.environ.get("GETI_MAX_FRAME_DIMENSION", "1920"))
+
 
 def _apply_ffmpeg_capture_options() -> None:
     """Set OpenCV's FFmpeg capture options before constructing VideoCapture."""
@@ -115,7 +119,20 @@ class IPCameraStream(BaseOpenCVStream):
                     self._frame_available.notify_all()
                 time.sleep(self.BACKOFF_FACTOR)
 
+    @staticmethod
+    def _downscale_if_needed(frame: np.ndarray) -> np.ndarray:
+        """Downscale frame if it exceeds _MAX_FRAME_DIMENSION on either axis."""
+        h, w = frame.shape[:2]
+        longest = max(h, w)
+        if longest <= _MAX_FRAME_DIMENSION:
+            return frame
+        scale = _MAX_FRAME_DIMENSION / longest
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        return cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
     def _publish_frame(self, frame: np.ndarray) -> None:
+        frame = self._downscale_if_needed(frame)
         with self._frame_available:
             self._latest_frame = frame
             self._latest_timestamp = time.time()
