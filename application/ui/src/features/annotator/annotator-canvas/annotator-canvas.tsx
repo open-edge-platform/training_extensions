@@ -189,6 +189,15 @@ const useToolLayerPointerPassthrough = ({ canEditSelectedAnnotation }: UseToolLa
             return;
         }
 
+        // Layers, order matters:
+        // 1) Canvas layer: image/video.
+        // 2) Annotations layer: annotation shapes and edit anchors.
+        // 3) Tool layer: active drawing tool overlay.
+        //
+        // The tool layer sits above annotations and can consume pointer events while drawing tools are active.
+        // To detect whether the pointer is over an editable anchor, we temporarily disable pointer events on the tool
+        // layer, call `elementFromPoint`, then restore the previous pointer-events value.
+
         const previousPointerEvents = toolLayer.style.pointerEvents;
         toolLayer.style.pointerEvents = 'none';
 
