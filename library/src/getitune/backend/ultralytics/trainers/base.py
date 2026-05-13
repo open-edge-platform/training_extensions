@@ -213,6 +213,8 @@ class GetiTuneDataBridgeMixin:
 
         if self.device.type == "mps":  # type: ignore[attr-defined]
             torch.mps.empty_cache()
+        elif self.device.type == "xpu":  # type: ignore[attr-defined]
+            torch.xpu.empty_cache()
         else:
             torch.cuda.empty_cache()
         return None

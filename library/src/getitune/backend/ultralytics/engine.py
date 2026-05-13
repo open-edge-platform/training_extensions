@@ -8,11 +8,10 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Sequence
 
 import torch
-import torch.nn.functional as F
+from torch.nn import functional
 from torchvision import tv_tensors
 
 from getitune.data.entity.base import ImageInfo
@@ -28,7 +27,7 @@ from getitune.utils.device import is_xpu_available
 from .models.base import UltralyticsModel
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
 
     from ultralytics import YOLO
 
@@ -461,7 +460,8 @@ class UltralyticsEngine(Engine):
                     pred_dict["scores"] = result.boxes.conf.to(device).float()  # pyrefly: ignore[missing-attribute]
                     pred_dict["labels"] = result.boxes.cls.to(device).long()  # pyrefly: ignore[missing-attribute]
                 if result.masks is not None and len(result.masks):
-                    pred_dict["masks"] = [encode_rle((m > 0.5).cpu()) for m in result.masks.data]  # pyrefly: ignore[missing-attribute]
+                    masks_data = result.masks.data  # pyrefly: ignore[missing-attribute]
+                    pred_dict["masks"] = [encode_rle((m > 0.5).cpu()) for m in masks_data]
                 preds_list.append(pred_dict)
 
             target_list = []
@@ -541,10 +541,10 @@ class UltralyticsEngine(Engine):
             return torch.zeros((0, imgsz, imgsz), dtype=torch.bool, device=masks.device)
 
         scale = min(imgsz / ori_h, imgsz / ori_w)
-        new_h = int(round(ori_h * scale))
-        new_w = int(round(ori_w * scale))
+        new_h = round(ori_h * scale)
+        new_w = round(ori_w * scale)
 
-        resized = F.interpolate(
+        resized = functional.interpolate(
             masks.unsqueeze(1).float(),
             size=(new_h, new_w),
             mode="nearest",
@@ -768,7 +768,7 @@ class UltralyticsEngine(Engine):
         for i, cls_idx in enumerate(ap_class_index):
             class_name = names.get(cls_idx, str(cls_idx))
             try:
-                p, r, ap50, ap = results.class_result(i)
+                p, r, ap50, ap = results.class_result(i)  # pyrefly: ignore[missing-attribute]
             except (IndexError, AttributeError, TypeError):
                 continue
             metrics[f"val/precision/{class_name}"] = float(p)

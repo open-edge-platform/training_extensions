@@ -26,37 +26,87 @@ class XPUAwareTrainerMixin:
 
         class DetectionTrainer(XPUAwareTrainerMixin, _UltralyticsDetectionTrainer):
             ...
+
+    **Mixed precision on XPU** uses pure bf16 model weights
+    (``model.bfloat16()``) rather than ``torch.amp.autocast``.  This
+    avoids autocast's per-op dispatch overhead — which is significant
+    for a 260-layer model with thousands of ops per forward pass — while
+    providing native bf16 compute performance on XPU.
+
+    We achieve this by:
+
+    1. Letting ``check_amp`` return ``False`` so Ultralytics' internal
+       autocast scope is a no-op (``autocast(False)``).
+    2. Converting the model to bf16 via ``model.bfloat16()`` after setup.
+       bf16 has the same exponent range as fp32 (8 bits), so BatchNorm
+       and other precision-sensitive ops work correctly — the crash was
+       specific to fp16 (``model.half()``), not bf16.
+    3. Casting input images to bf16 in ``_move_batch_to_device`` to
+       match the model dtype.
+    4. Keeping ``GradScaler`` disabled — bf16 does not need loss scaling.
+    5. Keeping ``ModelEMA`` in fp32 for precise exponential averaging
+       (bf16's 7-bit mantissa would lose small EMA updates where
+       ``1 - decay ≈ 0.0001``).
+    6. Converting the model to fp32 for validation when EMA is not
+       available, then back to bf16.
     """
 
     args: Any
     device: torch.device
+    model: Any
     scaler: Any
 
-    def train(self) -> None:  # type: ignore[override]
-        """Wrap the training loop in XPU autocast when running on an Intel GPU.
+    def _setup_train(self) -> None:  # type: ignore[override]
+        """Run base setup with XPU-specific bf16 configuration.
 
-        Ultralytics' internal ``autocast("cuda")`` is a no-op for XPU
-        tensors, so we enable ``torch.amp.autocast("xpu")`` at a higher
-        level.  CUDA and CPU paths are unchanged.
+        On XPU we:
+
+        1. Patch ``check_amp`` to return ``False`` so Ultralytics' internal
+           ``autocast(self.amp)`` scope is a no-op (``enabled=False``).
+        2. Convert the model to bf16 via ``model.bfloat16()`` for native
+           XPU bf16 compute without autocast per-op dispatch overhead.
+           ``ModelEMA`` (created by the parent as a ``deepcopy`` of the
+           fp32 model) stays fp32 — critical for precise averaging.
+        3. Replace the CUDA ``GradScaler`` with a disabled one.
+        """
+        if self.device.type == "xpu":
+            import ultralytics.engine.trainer as _trainer_mod
+
+            _orig_check_amp = _trainer_mod.check_amp
+            _trainer_mod.check_amp = lambda *_a, **_kw: False
+            try:
+                super()._setup_train()  # type: ignore[misc]
+            finally:
+                _trainer_mod.check_amp = _orig_check_amp
+
+            # Convert model to bf16 for native XPU compute.
+            # ModelEMA was created by super() as a deepcopy of the fp32
+            # model, so it stays fp32 — important for precise averaging.
+            self.model.bfloat16()
+
+            self.scaler = torch.amp.GradScaler(self.device.type, enabled=False)
+            logger.info("XPU: bf16 training (model.bfloat16), EMA fp32, GradScaler disabled")
+        else:
+            super()._setup_train()  # type: ignore[misc]
+
+    def validate(self) -> Any:  # type: ignore[override]  # noqa: ANN401
+        """Run validation in fp32 on XPU when EMA is not available.
+
+        When ``ModelEMA`` is active (the common case), Ultralytics passes
+        ``self.ema.ema`` (fp32) to the validator, so no conversion is needed.
+        When EMA is not used, the training model (bf16) would be passed
+        directly — we convert it to fp32 for validation precision, then
+        convert back to bf16 afterward.
         """
         if getattr(self, "device", None) is not None and self.device.type == "xpu":
-            amp_enabled = bool(getattr(self.args, "amp", True))
-            logger.info(f"Enabling XPU autocast (bf16, enabled={amp_enabled}) for training")
-            with torch.amp.autocast("xpu", enabled=amp_enabled, dtype=torch.bfloat16):
-                return super().train()  # type: ignore[misc]
-        return super().train()  # type: ignore[misc]
-
-    def _setup_train(self) -> None:  # type: ignore[override]
-        """Run base setup, then replace the CUDA GradScaler on XPU.
-
-        The parent creates ``GradScaler("cuda", enabled=self.amp)``.
-        On XPU we replace it with a disabled scaler because bf16 does
-        not require loss scaling.
-        """
-        super()._setup_train()  # type: ignore[misc]
-        if self.device.type == "xpu":
-            self.scaler = torch.amp.GradScaler(self.device.type, enabled=False)
-            logger.debug("Replaced GradScaler with disabled XPU scaler")
+            has_ema = hasattr(self, "ema") and self.ema is not None
+            if not has_ema:
+                self.model.float()
+                try:
+                    return super().validate()  # type: ignore[misc]
+                finally:
+                    self.model.bfloat16()
+        return super().validate()  # type: ignore[misc]
 
     def _get_memory(self, fraction: bool = False) -> float:  # type: ignore[override]
         """Return reserved GPU memory (GiB) or fraction, with an XPU branch."""
@@ -84,10 +134,13 @@ class XPUAwareTrainerMixin:
         """Move DataModule tensors to the active device.
 
         Uses ``non_blocking=True`` for CUDA and XPU to overlap the
-        host-to-device transfer with compute (matching upstream Ultralytics).
+        host-to-device transfer with compute.  On XPU, images are cast
+        to bf16 to match the model's dtype for native bf16 compute.
         """
         non_blocking = self.device.type in ("cuda", "xpu")
         for k, v in batch.items():
             if isinstance(v, torch.Tensor):
                 batch[k] = v.to(self.device, non_blocking=non_blocking)
+        if self.device.type == "xpu":
+            batch["img"] = batch["img"].bfloat16()
         return batch

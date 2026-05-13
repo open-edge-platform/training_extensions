@@ -62,7 +62,13 @@ class GetiTuneValidatorMixin:
         self.training = False  # type: ignore[attr-defined]
         callbacks.add_integration_callbacks(self)
 
-        dev = select_device(self.args.device) if RANK == -1 else torch.device("cuda", RANK)  # type: ignore[attr-defined]
+        raw_dev = self.args.device  # type: ignore[attr-defined]
+        if isinstance(raw_dev, torch.device) and raw_dev.type == "xpu":
+            dev = raw_dev
+        elif isinstance(raw_dev, str) and "xpu" in raw_dev:
+            dev = torch.device(raw_dev)
+        else:
+            dev = select_device(raw_dev) if RANK == -1 else torch.device("cuda", RANK)
         model = AutoBackend(
             model=model or self.args.model,  # pyrefly: ignore[bad-argument-type]  # type: ignore[attr-defined]
             device=dev,  # pyrefly: ignore[bad-argument-type]
