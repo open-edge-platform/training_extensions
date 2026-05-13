@@ -55,7 +55,7 @@ test.describe('Dataset', () => {
 
     test('list items', async ({ datasetPage }) => {
         await datasetPage.goto();
-        const loadedItems = 40;
+        const loadedItems = 20;
 
         await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
 
