@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Sequence
-from numbers import Integral
 from typing import cast
 
 import cv2
@@ -13,20 +12,42 @@ from model_api.models.result import Result
 from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
 
 
-def _get_project_label(
-    labels: Sequence[Label], label_name: str, predicted_class_index: Integral | None = None
+def _find_project_label(
+    labels: Sequence[Label], label_name: str | None, predicted_class_index: int | None = None
 ) -> Label | None:
+    """
+    Find a project label matching the predicted label using a three-stage fallback strategy.
+
+    Resolution order:
+    1. **Exact name match** - returns the first label whose ``name`` equals ``label_name``.
+    2. **Unmangled name match** - if the exact match fails, replaces underscores in ``label_name`` with spaces and
+       retries. This handles models that serialize label names with underscores (e.g. ``"my_cat"`` → ``"my cat"``).
+    3. **Index fallback** - if both name lookups fail, returns ``labels[predicted_class_index]`` when the index is a
+       non-negative integer within the bounds of ``labels``. This handles renamed labels whose in-model
+       name no longer matches any project label.
+
+    Args:
+        labels: Ordered sequence of project labels to search.
+        label_name: The label name as reported by the model. May be ``None`` when the model does not provide a name,
+            in which case stages 1 and 2 are skipped.
+        predicted_class_index: Zero-based class index produced by the model. Used only when name-based lookup fails.
+            Defaults to ``None``, which disables the index fallback.
+
+    Returns:
+        The matched :class:`Label`, or ``None`` if no stage produced a match.
+    """
     label = next((project_label for project_label in labels if project_label.name == label_name), None)
     if label:
         return label
 
-    unmangled_label_name = label_name.replace("_", " ")
-    label = next((project_label for project_label in labels if project_label.name == unmangled_label_name), None)
-    if label:
-        return label
+    if label_name:
+        unmangled_label_name = label_name.replace("_", " ")
+        label = next((project_label for project_label in labels if project_label.name == unmangled_label_name), None)
+        if label:
+            return label
 
-    if isinstance(predicted_class_index, Integral) and 0 <= predicted_class_index < len(labels):
-        return labels[int(predicted_class_index)]
+    if predicted_class_index is not None and 0 <= predicted_class_index < len(labels):
+        return labels[predicted_class_index]
     return None
 
 
@@ -39,7 +60,7 @@ def _convert_classification_prediction(
         raise RuntimeError("The prediction is malformed because it does not contain labels")
     for predicted_label in prediction.top_labels:
         label_name = predicted_label.name
-        label = _get_project_label(labels=labels, label_name=label_name, predicted_class_index=predicted_label.id)
+        label = _find_project_label(labels=labels, label_name=label_name, predicted_class_index=predicted_label.id)
         if not label:
             logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue
@@ -58,8 +79,8 @@ def _convert_detection_prediction(labels: Sequence[Label], prediction: Detection
     for idx, box in enumerate(prediction.bboxes):
         label_name = prediction.label_names[idx]
         bbox_confidence = prediction_scores_list[idx]
-        label = _get_project_label(
-            labels=labels, label_name=label_name, predicted_class_index=prediction.labels[idx]
+        label = _find_project_label(
+            labels=labels, label_name=label_name, predicted_class_index=int(prediction.labels[idx])
         )
         if not label:
             logger.warning("Prediction label {} cannot be found in the project", label_name)
@@ -85,8 +106,8 @@ def _convert_segmentation_prediction(
     for idx, box in enumerate(prediction.bboxes):
         label_name = prediction.label_names[idx]
         polygon_confidence = prediction_scores_list[idx]
-        label = _get_project_label(
-            labels=labels, label_name=label_name, predicted_class_index=prediction.labels[idx]
+        label = _find_project_label(
+            labels=labels, label_name=label_name, predicted_class_index=int(prediction.labels[idx])
         )
         if not label:
             logger.warning("Prediction label {} cannot be found in the project", label_name)

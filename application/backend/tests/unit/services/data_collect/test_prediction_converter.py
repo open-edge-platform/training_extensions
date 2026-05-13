@@ -5,6 +5,7 @@ from uuid import uuid4
 import cv2
 import model_api.models.result
 import numpy as np
+import pytest
 from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
 
 from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
@@ -68,18 +69,26 @@ def test_get_confidence_scores_segmentation() -> None:
     assert confidence_scores == [0.32, 0.58]
 
 
-def test_convert_prediction_classification() -> None:
+@pytest.mark.parametrize(
+    "label_names, predicted_label_names",
+    [
+        (["cat", "dog"], ["cat", "dog"]),
+        (["black cat", "white dog"], ["black_cat", "white_dog"]),
+        (["black cat", "white dog"], ["cat", "dog"]),
+    ],
+)
+def test_convert_prediction_classification(label_names: list[str], predicted_label_names: list[str]) -> None:
     # Arrange
     frame_data = np.random.rand(100, 100, 3)
     project_id, label_1_id, label_2_id = uuid4(), uuid4(), uuid4()
     labels = [
-        Label(id=label_1_id, project_id=project_id, name="dog", color="#00ff00", hotkey="d"),
-        Label(id=label_2_id, project_id=project_id, name="cat", color="#ff0000", hotkey="c"),
+        Label(id=label_1_id, project_id=project_id, name=label_names[0], color="#00ff00", hotkey="d"),
+        Label(id=label_2_id, project_id=project_id, name=label_names[1], color="#ff0000", hotkey="c"),
     ]
     raw_prediction = ClassificationResult(  # multilabel sample with two labels
         top_labels=[
-            model_api.models.result.Label(id=0, name=labels[0].name, confidence=0.81),
-            model_api.models.result.Label(id=1, name=labels[1].name, confidence=0.65),
+            model_api.models.result.Label(id=0, name=predicted_label_names[0], confidence=0.81),
+            model_api.models.result.Label(id=1, name=predicted_label_names[1], confidence=0.65),
         ],
     )
 
@@ -96,74 +105,28 @@ def test_convert_prediction_classification() -> None:
     ]
 
 
-def test_convert_prediction_classification_label_with_space() -> None:
+@pytest.mark.parametrize(
+    "label_names, predicted_label_names",
+    [
+        (["cat", "dog"], ["cat", "dog"]),
+        (["black cat", "white dog"], ["black_cat", "white_dog"]),
+        (["black cat", "white dog"], ["cat", "dog"]),
+    ],
+)
+def test_convert_prediction_detection(label_names: list[str], predicted_label_names: list[str]) -> None:
     # Arrange
     frame_data = np.random.rand(100, 100, 3)
     project_id, label_1_id, label_2_id = uuid4(), uuid4(), uuid4()
     labels = [
-        Label(id=label_1_id, project_id=project_id, name="1 bear", color="#00ff00", hotkey="d"),
-        Label(id=label_2_id, project_id=project_id, name="2 bears", color="#ff0000", hotkey="c"),
-    ]
-    raw_prediction = ClassificationResult(
-        top_labels=[
-            model_api.models.result.Label(id=0, name="1_bear", confidence=0.81),
-            model_api.models.result.Label(id=1, name="2_bears", confidence=0.65),
-        ],
-    )
-
-    # Act
-    annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=raw_prediction)
-
-    # Assert
-    assert annotations == [
-        DatasetItemAnnotation(
-            shape=FullImage(),
-            labels=[LabelReference(id=labels[0].id), LabelReference(id=labels[1].id)],
-            confidences=[0.81, 0.65],
-        )
-    ]
-
-
-def test_convert_prediction_classification_renamed_label() -> None:
-    # Arrange
-    frame_data = np.random.rand(100, 100, 3)
-    project_id, label_id = uuid4(), uuid4()
-    labels = [
-        Label(id=label_id, project_id=project_id, name="new label", color="#00ff00", hotkey="n"),
-    ]
-    raw_prediction = ClassificationResult(
-        top_labels=[
-            model_api.models.result.Label(id=0, name="old_label", confidence=0.81),
-        ],
-    )
-
-    # Act
-    annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=raw_prediction)
-
-    # Assert
-    assert annotations == [
-        DatasetItemAnnotation(
-            shape=FullImage(),
-            labels=[LabelReference(id=labels[0].id)],
-            confidences=[0.81],
-        )
-    ]
-
-
-def test_convert_prediction_detection() -> None:
-    # Arrange
-    frame_data = np.random.rand(100, 100, 3)
-    project_id, label_1_id, label_2_id = uuid4(), uuid4(), uuid4()
-    labels = [
-        Label(id=label_1_id, project_id=project_id, name="cat", color="#ff0000", hotkey="c"),
-        Label(id=label_2_id, project_id=project_id, name="dog", color="#00ff00", hotkey="d"),
+        Label(id=label_1_id, project_id=project_id, name=label_names[0], color="#ff0000", hotkey="c"),
+        Label(id=label_2_id, project_id=project_id, name=label_names[1], color="#00ff00", hotkey="d"),
     ]
     coords = [[12, 41, 30, 65], [130, 213, 164, 244]]  # bboxes in xyxy format
     raw_prediction = DetectionResult(
         bboxes=np.array(coords),
         labels=np.array([1, 0]),
         scores=np.array([0.81, 0.84]),
-        label_names=["dog", "cat"],
+        label_names=[predicted_label_names[1], predicted_label_names[0]],
     )
 
     # Act
@@ -184,7 +147,15 @@ def test_convert_prediction_detection() -> None:
     ]
 
 
-def test_convert_prediction_segmentation() -> None:
+@pytest.mark.parametrize(
+    "label_names, predicted_label_names",
+    [
+        (["cat", "dog"], ["cat", "dog"]),
+        (["black cat", "white dog"], ["black_cat", "white_dog"]),
+        (["black cat", "white dog"], ["cat", "dog"]),
+    ],
+)
+def test_convert_prediction_segmentation(label_names: list[str], predicted_label_names: list[str]) -> None:
     # Arrange
     frame_data = np.zeros((100, 200, 3), dtype=np.uint8)
 
@@ -196,8 +167,8 @@ def test_convert_prediction_segmentation() -> None:
     mask2 = np.zeros((100, 200), dtype=np.uint8)
     cv2.rectangle(mask2, (120, 30), (180, 80), 255, -1)
 
-    label_cat = Label(id=uuid4(), project_id=uuid4(), name="cat", color="#ff0000", hotkey="c")
-    label_dog = Label(id=uuid4(), project_id=uuid4(), name="dog", color="#00ff00", hotkey="d")
+    label_cat = Label(id=uuid4(), project_id=uuid4(), name=label_names[0], color="#ff0000", hotkey="c")
+    label_dog = Label(id=uuid4(), project_id=uuid4(), name=label_names[1], color="#00ff00", hotkey="d")
 
     # Bounding boxes corresponding to the masks (xyxy format)
     coords = [[10, 20, 50, 70], [120, 30, 180, 80]]
@@ -206,7 +177,7 @@ def test_convert_prediction_segmentation() -> None:
         labels=np.array([0, 1]),
         masks=np.array([mask1, mask2]),
         scores=np.array([0.81, 0.92]),
-        label_names=["cat", "dog"],
+        label_names=[predicted_label_names[0], predicted_label_names[1]],
     )
 
     # Act
