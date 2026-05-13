@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Text, View } from '@geti/ui';
+import { Flex, Grid, Text } from '@geti/ui';
 
 import classes from './three-section-range.module.scss';
 
@@ -72,23 +72,20 @@ export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingV
                 UNSAFE_className={classes.rangeGrid}
             >
                 {trainingValue > 0 && (
-                    <View
-                        height='100%'
-                        UNSAFE_style={{ backgroundColor: 'var(--moss-tint-1)' }}
+                    <div
+                        style={{ height: '100%', backgroundColor: 'var(--moss-tint-1)' }}
                         aria-label={`Training: ${trainingPercentage}%`}
                     />
                 )}
                 {validationValue > 0 && (
-                    <View
-                        height='100%'
-                        UNSAFE_style={{ backgroundColor: 'var(--brand-daisy-tint)' }}
+                    <div
+                        style={{ height: '100%', backgroundColor: 'var(--brand-daisy-tint)' }}
                         aria-label={`Validation: ${validationPercentage}%`}
                     />
                 )}
                 {testingValue > 0 && (
-                    <View
-                        height='100%'
-                        UNSAFE_style={{ backgroundColor: 'var(--geode-tint)' }}
+                    <div
+                        style={{ height: '100%', backgroundColor: 'var(--geode-tint)' }}
                         aria-label={`Test: ${testingPercentage}%`}
                     />
                 )}

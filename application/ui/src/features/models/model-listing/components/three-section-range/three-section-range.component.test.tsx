@@ -18,6 +18,14 @@ describe('ThreeSectionRange', () => {
         expect(screen.getByText('Training 70% / Validation 20% / Test 10%')).toBeInTheDocument();
     });
 
+    it('exposes each colored segment via an aria-label that includes the subset name and percentage', () => {
+        render(<ThreeSectionRange trainingValue={70} validationValue={20} testingValue={10} />);
+
+        expect(screen.getByLabelText('Training: 70%')).toBeInTheDocument();
+        expect(screen.getByLabelText('Validation: 20%')).toBeInTheDocument();
+        expect(screen.getByLabelText('Test: 10%')).toBeInTheDocument();
+    });
+
     it('renders a zero percentage for every subset when there are no items', () => {
         render(<ThreeSectionRange trainingValue={0} validationValue={0} testingValue={0} />);
 
