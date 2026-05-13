@@ -6,10 +6,10 @@ import { ReactNode, RefObject, useRef } from 'react';
 import { useEventListener } from 'hooks/event-listener.hook';
 
 import { useZoom } from '../../../components/zoom/zoom.provider';
-import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { useTool } from '../../../shared/annotator/tool-provider.component';
+import { useEditableAnnotationState } from '../../../shared/annotator/use-editable-annotation-state.hook';
 import { EditBoundingBox } from '../tools/edit-bounding-box/edit-bounding-box.component';
 import { EditPolygon } from '../tools/edit-polygon/edit-polygon.component';
 import { useAnnotation } from './annotation-context';
@@ -62,12 +62,10 @@ const UnselectAnnotationOnOutsideClick = ({ ref }: { ref: RefObject<SVGGElement 
 export const EditableAnnotation = ({ children }: EditAnnotationProps) => {
     const { scale } = useZoom();
     const annotation = useAnnotation();
-    const { selectedAnnotations } = useSelectedAnnotations();
-    const { isVisible } = useAnnotationVisibility();
+    const { isAnnotationEditable } = useEditableAnnotationState();
     const ref = useRef<SVGGElement>(null);
 
-    const isSelected = selectedAnnotations.has(annotation.id);
-    const shouldDisplayEditAnchors = isVisible && isSelected && selectedAnnotations.size === 1;
+    const shouldDisplayEditAnchors = isAnnotationEditable(annotation.id);
 
     if (shouldDisplayEditAnchors) {
         if (isPolygon(annotation)) {
