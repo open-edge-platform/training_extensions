@@ -5,10 +5,12 @@ import isObject from 'lodash-es/isObject';
 
 import { Job, QuantizeJob, TrainJob } from '../../constants/shared-types';
 
+const INVALID_STAGED_FILE_REGEX = /^Staged dataset.*not found/i;
+
 export const isInvalidStagedFile = (error: unknown): boolean => {
     if (isObject(error) && 'detail' in error) {
-        const detail = String(error.detail);
-        return detail.includes('not found');
+        const detail = String(error.detail).trim();
+        return INVALID_STAGED_FILE_REGEX.test(detail);
     }
 
     return false;

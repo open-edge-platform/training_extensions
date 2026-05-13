@@ -64,15 +64,13 @@ export const createQueryClient = () => {
                 }
             },
             onError: (error, _variables, _context, mutation) => {
-                if (mutation.meta?.error?.notify?.(error) === false) {
-                    return;
+                if (mutation.meta?.error?.notify?.(error) ?? true) {
+                    toast({
+                        type: 'error',
+                        message: getErrorMessage(error),
+                        duration: TOAST_DURATION,
+                    });
                 }
-
-                toast({
-                    type: 'error',
-                    message: getErrorMessage(error),
-                    duration: TOAST_DURATION,
-                });
             },
         }),
     });

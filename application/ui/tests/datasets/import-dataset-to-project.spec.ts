@@ -213,6 +213,7 @@ test.describe('Import dataset to project', () => {
         const errorMessage = `Staged dataset with ID '${STAGED_DATASET_ID}' not found.`;
         const failedImportJob = getMockedImportJob('import_dataset_to_project', {
             status: 'FAILED',
+            message: 'Import failed due to server error',
         });
 
         const preparePoll = jobPollHandler({
