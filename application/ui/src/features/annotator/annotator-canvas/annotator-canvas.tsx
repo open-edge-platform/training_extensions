@@ -176,16 +176,52 @@ const useToolLayerPointerPassthrough = ({ canEditSelectedAnnotation }: UseToolLa
     const isSelectionToolActive = activeTool === 'selection';
     const toolLayerRef = useRef<HTMLDivElement>(null);
     const [isToolLayerPointerPassthrough, setIsToolLayerPointerPassthrough] = useState(false);
+    const pendingPointerRef = useRef<{ x: number; y: number } | null>(null);
+    const animationFrameRef = useRef<number | null>(null);
 
-    const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const evaluatePointerHit = () => {
+        animationFrameRef.current = null;
+
         if (!canEditSelectedAnnotation || isSelectionToolActive) {
             setIsToolLayerPointerPassthrough(false);
             return;
         }
 
         const toolLayer = toolLayerRef.current;
+        const pendingPointer = pendingPointerRef.current;
 
-        if (toolLayer == null) {
+        if (toolLayer == null || pendingPointer == null) {
+            return;
+        }
+
+        const previousPointerEvents = toolLayer.style.pointerEvents;
+        toolLayer.style.pointerEvents = 'none';
+
+        const hitElement = document.elementFromPoint(pendingPointer.x, pendingPointer.y);
+
+        toolLayer.style.pointerEvents = previousPointerEvents;
+
+        const shouldAllowAnnotationEdit =
+            hitElement instanceof Element && hitElement.closest("[data-resize-anchor='true']") !== null;
+
+        setIsToolLayerPointerPassthrough(shouldAllowAnnotationEdit);
+    };
+
+    const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+        if (!canEditSelectedAnnotation || isSelectionToolActive) {
+            if (animationFrameRef.current !== null) {
+                cancelAnimationFrame(animationFrameRef.current);
+                animationFrameRef.current = null;
+            }
+
+            pendingPointerRef.current = null;
+            setIsToolLayerPointerPassthrough(false);
+            return;
+        }
+
+        pendingPointerRef.current = { x: event.clientX, y: event.clientY };
+
+        if (animationFrameRef.current !== null) {
             return;
         }
 
@@ -197,19 +233,17 @@ const useToolLayerPointerPassthrough = ({ canEditSelectedAnnotation }: UseToolLa
         // The tool layer sits above annotations and can consume pointer events while drawing tools are active.
         // To detect whether the pointer is over an editable anchor, we temporarily disable pointer events on the tool
         // layer, call `elementFromPoint`, then restore the previous pointer-events value.
-
-        const previousPointerEvents = toolLayer.style.pointerEvents;
-        toolLayer.style.pointerEvents = 'none';
-
-        const hitElement = document.elementFromPoint(event.clientX, event.clientY);
-
-        toolLayer.style.pointerEvents = previousPointerEvents;
-
-        const shouldAllowAnnotationEdit =
-            hitElement instanceof Element && hitElement.closest("[data-resize-anchor='true']") !== null;
-
-        setIsToolLayerPointerPassthrough(shouldAllowAnnotationEdit);
+        // We run this check at most once per animation frame to avoid doing DOM hit-testing on every pointer event.
+        animationFrameRef.current = requestAnimationFrame(evaluatePointerHit);
     };
+
+    useEffect(() => {
+        return () => {
+            if (animationFrameRef.current !== null) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
+    }, []);
 
     const toolLayerPointerEvents =
         isSelectionToolActive || (canEditSelectedAnnotation && isToolLayerPointerPassthrough) ? 'none' : 'auto';
