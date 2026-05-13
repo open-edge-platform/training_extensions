@@ -346,7 +346,12 @@ def get_media_binary(
     binary_path = media_service.get_media_binary_path_by_id(project_id=project.id, media_id=media.id)
 
     # Normalize high bit depth images on the fly for display; cheap mode-check first
-    if not raw and needs_display_normalization(binary_path):
+    if (
+        not raw
+        and media.type == MediaType.IMAGE
+        and isinstance(media.format, ImageFormat)
+        and needs_display_normalization(binary_path)
+    ):
         png_bytes = normalize_image_to_png_bytes(binary_path)
         return write_bytes_to_response(bytes=BytesIO(png_bytes), filename=f"{media.name}.png", media_type="image/png")
 
