@@ -170,6 +170,30 @@ test.describe('Annotator', () => {
 
             await expect(page.getByLabel(`label No object background`)).toHaveCount(1);
         });
+
+        test('drawing a new annotation removes global annotation', async ({ page, boundingBoxTool, annotatorPage }) => {
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
+
+            await test.step('Verify global "No object" annotation is visible initially', async () => {
+                await expect(page.getByLabel('label No object background')).toHaveCount(1);
+            });
+
+            await test.step('Remove the label, annotation still exists', async () => {
+                await page.getByRole('button', { name: 'Remove No object' }).click();
+                await expect(page.getByLabel('label No label background')).toHaveCount(1);
+            });
+
+            await test.step('Draw a new annotation', async () => {
+                await boundingBoxTool.selectTool();
+                await boundingBoxTool.drawBoundingBox({ x: 220, y: 180, width: 180, height: 160 });
+            });
+
+            await test.step('Global annotation without the label is removed and new annotation is visible', async () => {
+                await expect(page.getByLabel('label No label background')).toHaveCount(0);
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(1);
+                await expect(page.getByLabel(`label ${redLabel.name} background`).first()).toBeVisible();
+            });
+        });
     });
 
     test('Tool selection persists across media items', async ({ polygonTool, annotatorPage, network }) => {
