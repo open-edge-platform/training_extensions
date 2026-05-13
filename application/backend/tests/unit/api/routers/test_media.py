@@ -695,7 +695,7 @@ class TestMediaEndpoints:
         media = MagicMock(spec=Video, id=video_id, format=VideoFormat.MP4, type=MediaType.VIDEO, frame_count=100)
         fxt_media_service.get_media_by_id.return_value = media
 
-        video_frame = MagicMock(spec=VideoFrame, id=video_frame_id, format=ImageFormat.JPG)
+        video_frame = MagicMock(spec=VideoFrame, id=video_frame_id, format=ImageFormat.JPG, type=MediaType.VIDEO_FRAME)
         type(video_frame).name = PropertyMock(return_value="test_10")
         fxt_media_service.get_video_frame_by_video_id_and_index.return_value = video_frame
 
