@@ -145,7 +145,7 @@ def _entrypoint(
 
     try:
         conn.send(Started())
-        with logging_ctx(LogConfig(log_folder=str(get_settings().job_dir), log_file=log_file)):
+        with logging_ctx(LogConfig(log_folder=str(get_settings().job_dir), log_file=log_file, level="DEBUG")):
             runnable.run(ExecutionContext(payload=payload, report=report))
         conn.send(Done())
     except CancelledExc:
