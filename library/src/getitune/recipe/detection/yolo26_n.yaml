@@ -12,7 +12,7 @@ engine:
   device: auto
 
 training:
-  epochs: 100
+  epochs: 150
   batch: 16
   optimizer: auto
   lr0: 0.01
@@ -23,7 +23,7 @@ training:
   box: 7.5
   cls: 0.5
   dfl: 1.5
-  patience: 100
+  patience: 0
   close_mosaic: 10
 
 export:
