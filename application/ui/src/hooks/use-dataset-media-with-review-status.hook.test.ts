@@ -15,6 +15,8 @@ type HandlerOptions = {
     mediaTotal: number;
     datasetTotal: number;
     initialDelayMs?: number;
+    mediaInitialDelayMs?: number;
+    datasetInitialDelayMs?: number;
     mediaNextPageDelayMs?: number;
     datasetNextPageDelayMs?: number;
 };
@@ -39,14 +41,19 @@ const setupHandlers = ({
     mediaTotal,
     datasetTotal,
     initialDelayMs = 0,
+    mediaInitialDelayMs,
+    datasetInitialDelayMs,
     mediaNextPageDelayMs = 0,
     datasetNextPageDelayMs = 0,
 }: HandlerOptions) => {
+    const resolvedMediaInitialDelayMs = mediaInitialDelayMs ?? initialDelayMs;
+    const resolvedDatasetInitialDelayMs = datasetInitialDelayMs ?? initialDelayMs;
+
     server.use(
         http.get('/api/projects/{project_id}/dataset/media', async ({ request }) => {
             const offset = getOffsetFromRequest(request);
 
-            await applyDelayForOffset(offset, initialDelayMs, mediaNextPageDelayMs);
+            await applyDelayForOffset(offset, resolvedMediaInitialDelayMs, mediaNextPageDelayMs);
 
             return HttpResponse.json({
                 items: [getMockedMediaImage({ id: `media-${offset + 1}` })],
@@ -61,7 +68,7 @@ const setupHandlers = ({
         http.get('/api/projects/{project_id}/dataset/items', async ({ request }) => {
             const offset = getOffsetFromRequest(request);
 
-            await applyDelayForOffset(offset, initialDelayMs, datasetNextPageDelayMs);
+            await applyDelayForOffset(offset, resolvedDatasetInitialDelayMs, datasetNextPageDelayMs);
 
             return HttpResponse.json({
                 items: [getMockedDatasetItem({ id: `item-${offset + 1}`, user_reviewed: false })],
@@ -138,6 +145,33 @@ describe('useDatasetMediaWithReviewStatus', () => {
             setupHandlers({ mediaTotal: 1, datasetTotal: 1 });
 
             const { result } = renderHook(() => useDatasetMediaWithReviewStatus());
+
+            await waitFor(() => {
+                expect(result.current.isPending).toBe(false);
+            });
+
+            expect(result.current.isFetchingNextPage).toBe(false);
+        });
+
+        it('stays true while one initial query is still pending after the other resolves', async () => {
+            setupHandlers({
+                mediaTotal: 40,
+                datasetTotal: 40,
+                mediaInitialDelayMs: 0,
+                datasetInitialDelayMs: 200,
+            });
+
+            const { result } = renderHook(() => useDatasetMediaWithReviewStatus());
+
+            expect(result.current.isFetchingNextPage).toBe(true);
+
+            // Wait until the media query has resolved its initial page but the dataset query is still pending.
+            await waitFor(() => {
+                expect(result.current.items.length).toBeGreaterThan(0);
+            });
+
+            expect(result.current.isPending).toBe(true);
+            expect(result.current.isFetchingNextPage).toBe(true);
 
             await waitFor(() => {
                 expect(result.current.isPending).toBe(false);
