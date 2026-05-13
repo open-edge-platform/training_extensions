@@ -17,6 +17,7 @@ from app.models import DataCollectionConfig, DataCollectionPolicyAdapter, Pipeli
 from app.services import PipelineMetricsService, PipelineService, SystemService
 from app.services.pipeline_service import (
     DeviceInt8NotSupportedError,
+    FolderSinkNotAccessibleError,
     IncompatibleModelVariantError,
     OtherProjectActiveError,
 )
@@ -186,7 +187,7 @@ def enable_pipeline(
     """
     try:
         pipeline_service.update_pipeline(project_id, {"status": PipelineStatus.RUNNING})
-    except OtherProjectActiveError as e:
+    except (OtherProjectActiveError, FolderSinkNotAccessibleError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 

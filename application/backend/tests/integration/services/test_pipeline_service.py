@@ -16,6 +16,7 @@ from app.services import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventType
 from app.services.pipeline_service import (
     DeviceInt8NotSupportedError,
+    FolderSinkNotAccessibleError,
     IncompatibleModelVariantError,
     OtherProjectActiveError,
 )
@@ -504,6 +505,22 @@ class TestPipelineServiceIntegration:
         db_session.flush()
 
         with pytest.raises(ValueError, match="Pipeline cannot be in 'running' state"):
+            fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": PipelineStatus.RUNNING})
+
+        assert not db_session.get(PipelineDB, db_pipeline.project_id).is_running
+
+    def test_enable_pipeline_with_inaccessible_folder_sink(
+        self,
+        fxt_project_with_pipeline,
+        fxt_pipeline_service,
+        db_session,
+    ):
+        """
+        Test that enabling a pipeline with a folder sink that cannot be created raises FolderSinkNotAccessibleError.
+        """
+        _, db_pipeline = fxt_project_with_pipeline(is_running=False)
+
+        with pytest.raises(FolderSinkNotAccessibleError):
             fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": PipelineStatus.RUNNING})
 
         assert not db_session.get(PipelineDB, db_pipeline.project_id).is_running
