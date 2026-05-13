@@ -256,11 +256,15 @@ class PipelineService(BaseSessionManagedService):
             sink_config: The FolderSinkConfig to validate.
 
         Raises:
-            FolderSinkNotAccessibleError: If the folder cannot be created.
+            FolderSinkNotAccessibleError: If the folder cannot be created or written to.
         """
         folder_path = sink_config.config_data.folder_path
+        probe_file_path = os.path.join(folder_path, ".folder_sink_write_probe")
         try:
             os.makedirs(folder_path, exist_ok=True)
+            with open(probe_file_path, "wb") as probe_file:
+                probe_file.write(b"")
+            os.remove(probe_file_path)
         except OSError as e:
             raise FolderSinkNotAccessibleError(folder_path, str(e)) from e
 

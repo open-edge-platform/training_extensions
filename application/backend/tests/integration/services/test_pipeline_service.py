@@ -514,11 +514,20 @@ class TestPipelineServiceIntegration:
         fxt_project_with_pipeline,
         fxt_pipeline_service,
         db_session,
+        tmp_path,
     ):
         """
         Test that enabling a pipeline with a folder sink that cannot be created raises FolderSinkNotAccessibleError.
         """
         _, db_pipeline = fxt_project_with_pipeline(is_running=False)
+
+        # Create a file, then try to use it as a parent directory - always fails regardless of privileges
+        blocking_file = tmp_path / "not_a_directory"
+        blocking_file.write_bytes(b"")
+        inaccessible_path = str(blocking_file / "subdir")
+
+        db_pipeline.sink.config_data = {"folder_path": inaccessible_path}
+        db_session.flush()
 
         with pytest.raises(FolderSinkNotAccessibleError):
             fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": PipelineStatus.RUNNING})
