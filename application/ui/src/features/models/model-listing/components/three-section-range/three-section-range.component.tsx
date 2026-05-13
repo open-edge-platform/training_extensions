@@ -12,9 +12,7 @@ type ThreeSectionRangeProps = {
     testingValue: number;
 };
 
-// Distribute rounded percentages so that they always sum to 100% (largest
-// remainder method). Independent rounding of each percentage can otherwise
-// produce totals like 101% (e.g. 65.4 / 23.6 / 11.7 -> 65 / 24 / 12).
+// Distribute rounded percentages so that they always sum to 100%
 const computeRoundedPercentages = (values: number[]): number[] => {
     const total = values.reduce((sum, value) => sum + value, 0);
 
