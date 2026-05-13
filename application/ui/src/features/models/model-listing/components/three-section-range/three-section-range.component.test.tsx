@@ -37,8 +37,8 @@ describe('ThreeSectionRange', () => {
     });
 
     it('rounds percentages so that they always sum to 100% (largest remainder method)', () => {
-        // Exact percentages: 65.4 / 23.6 / 11.7 (sum 100.7 -> independent rounding gives 65/24/12 = 101)
-        render(<ThreeSectionRange trainingValue={654} validationValue={236} testingValue={117} />);
+        // Exact percentages: 75.0/ 12.5 / 12.5 (sum 100 -> independent rounding gives 75/13/13 = 101)
+        render(<ThreeSectionRange trainingValue={750} validationValue={125} testingValue={125} />);
 
         const displayed = getDisplayedPercentages();
         expect(displayed.reduce((sum, value) => sum + value, 0)).toBe(100);
