@@ -233,7 +233,7 @@ test.describe('Import dataset to project', () => {
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-expect-error
                     { detail: errorMessage },
-                    { status: 500 }
+                    { status: 404 }
                 );
             })
         );
