@@ -52,7 +52,9 @@ export const IntensityMapping = ({
             <Accordion.Content>
                 <Accordion.Description>{intensityMappingParameters.description}</Accordion.Description>
                 <Accordion.Divider marginY={'size-250'} />
-                <Parameters parameters={parameters} onChange={handleParameterChange} />
+                <Parameters.Container>
+                    <Parameters parameters={parameters} onChange={handleParameterChange} />
+                </Parameters.Container>
             </Accordion.Content>
         </Accordion>
     );

@@ -18,17 +18,16 @@ import type {
 } from '../../webworkers/segment-anything.worker.interface';
 import { executeWithTimeout } from '../execute-with-timeout';
 import { convertToolShapeToGetiShape } from '../utils';
+import {
+    SAM_DECODER_TIMEOUT_MS,
+    SAM_ENCODER_TIMEOUT_MS,
+    SAM_ENCODING_GC_TIME_MS,
+    SAM_WORKER_BUILD_TIMEOUT_MS,
+    SAM_WORKER_INIT_TIMEOUT_MS,
+} from './sam-timeouts';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
 type SegmentAnythingRemoteInstance = Remote<SegmentAnythingWorkerInstance>;
-const SAM_DECODER_TIMEOUT_MS = 20000;
-const SAM_ENCODER_TIMEOUT_MS = 30000;
-const SAM_WORKER_BUILD_TIMEOUT_MS = 10000;
-const SAM_WORKER_INIT_TIMEOUT_MS = SAM_ENCODER_TIMEOUT_MS;
-// How long an unobserved encoding (a large Float32 tensor per image) is kept in
-// the query cache before being garbage-collected. Short on purpose: encodings
-// are heavy and are cheap-ish to recompute, so we favor memory over perf.
-const SAM_ENCODING_GC_TIME_MS = 60_000;
 
 // A single shared worker hosts BOTH the encoder and decoder ONNX sessions.
 // Spawning two workers used to double the OpenCV + ONNX Runtime WASM footprint
@@ -157,10 +156,9 @@ const useDecodingFn = (model: SegmentAnythingRemoteInstance | undefined, encodin
             model.processDecoder(encoding, {
                 points,
                 boxes: [],
-                ouputConfig: {
+                outputConfig: {
                     type: decoderOutput,
                 },
-                image: undefined,
             }),
             'SAM decoder',
             SAM_DECODER_TIMEOUT_MS
