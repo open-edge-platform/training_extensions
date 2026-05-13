@@ -63,7 +63,11 @@ export const createQueryClient = () => {
                     });
                 }
             },
-            onError: (error) => {
+            onError: (error, _variables, _context, mutation) => {
+                if (mutation.meta?.error?.notify?.(error) === false) {
+                    return;
+                }
+
                 toast({
                     type: 'error',
                     message: getErrorMessage(error),

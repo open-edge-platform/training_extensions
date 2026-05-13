@@ -204,4 +204,64 @@ test.describe('Import dataset to project', () => {
             await expect(importDatasetPage.getDialog()).toBeHidden();
         });
     });
+
+    test('failed import status card can be dismissed even when deleting staged file fails', async ({
+        page,
+        network,
+        importDatasetPage,
+    }) => {
+        const errorMessage = `Staged dataset with ID '${STAGED_DATASET_ID}' not found.`;
+        const failedImportJob = getMockedImportJob('import_dataset_to_project', {
+            status: 'FAILED',
+        });
+
+        const preparePoll = jobPollHandler({
+            jobId: PREPARE_JOB_ID,
+            whileRunning: getMockedPrepareJob(),
+            whenDone: getMockedPrepareJob({ status: 'DONE', progress: 100, message: 'Preparation completed' }),
+        });
+
+        network.use(
+            http.get('/api/jobs/{job_id}', ({ params }) => {
+                const jobId = params.job_id as string;
+                const job = jobId === IMPORT_JOB_ID ? failedImportJob : preparePoll(jobId);
+                return HttpResponse.json(job, { status: 200 });
+            }),
+            http.delete('/api/staged_datasets/{staged_dataset_id}', ({}) => {
+                return HttpResponse.json(
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-expect-error
+                    { detail: errorMessage },
+                    { status: 500 }
+                );
+            })
+        );
+
+        await page.goto(`projects/${mockedProject.id}/dataset`);
+
+        await importDatasetPage.openImportDialog();
+
+        await test.step('Upload and complete preparation', async () => {
+            await importDatasetPage.loadZipFile(DATASET_FILENAME);
+            await expect(importDatasetPage.getPreparingStatus()).toBeVisible();
+            await expect(importDatasetPage.getStatisticsHeading()).toBeVisible();
+        });
+
+        await test.step('Submit import', async () => {
+            await importDatasetPage.submit();
+            await expect(importDatasetPage.getDialog()).toBeHidden();
+        });
+
+        await test.step('Verify failed job card is visible', async () => {
+            await expect(page.getByText(`Import dataset - ${DATASET_FILENAME} - 16 B`)).toBeVisible();
+            expect(await page.getByText(String(failedImportJob.message)).count()).toBe(2);
+        });
+
+        await test.step('Dismiss the failed status card despite delete failure', async () => {
+            await importDatasetPage.closeImportStatus();
+
+            await expect(page.getByText(errorMessage)).not.toBeInViewport();
+            await expect(page.getByText(`Import dataset - ${DATASET_FILENAME} - 16 B`)).not.toBeInViewport();
+        });
+    });
 });
