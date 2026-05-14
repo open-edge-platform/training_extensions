@@ -70,6 +70,7 @@ export const mediaPredictionsQueryOptions = ({
                 return predictionItem;
             });
         },
+        staleTime: 1000 * 60 * 5,
         enabled: selectedModel !== undefined,
     });
 
