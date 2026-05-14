@@ -14,7 +14,7 @@ test.describe('Inference', () => {
                 return HttpResponse.json(getMockedProject({ id: 'id-1' }));
             }),
             http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
-                return response(200).json(getMockedPipeline({ status: 'running' }));
+                return response(200).json(getMockedPipeline({ status: 'idle' }));
             }),
             http.get('/api/sources', () => {
                 return HttpResponse.json([]);
