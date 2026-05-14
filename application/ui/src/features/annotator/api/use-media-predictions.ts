@@ -87,14 +87,7 @@ export const useMediaPredictions = ({
     return useQuery(mediaPredictionsQueryOptions({ projectId, selectedModel, mediaId, range }));
 };
 
-/**
- * Returns true only when the prediction query that is directly relevant to the
- * current view is in-flight:
- *  - video playing  → the range chunk that covers the current frame
- *  - video paused / image → the single-frame (or null-range) query
- */
-
-const useIsFetchingFrameRangePredictions = (mediaId: string) => {
+export const useIsFetchingCurrentRangeFramesPredictions = (mediaId: string) => {
     const projectId = useProjectIdentifier();
 
     const { selectedModel } = usePredictionSetup();
@@ -121,7 +114,7 @@ const useIsFetchingFrameRangePredictions = (mediaId: string) => {
     return useIsFetching({ queryKey: rangeQueryKey, exact: true }) > 0;
 };
 
-const useIsFetchingSingleFramePredictions = (mediaId: string) => {
+export const useIsFetchingCurrentFramePredictions = (mediaId: string) => {
     const projectId = useProjectIdentifier();
     const { selectedModel } = usePredictionSetup();
     const { mediaItem } = useSelectedMediaItem();
@@ -145,8 +138,8 @@ export const useIsFetchingPredictions = (mediaId: string) => {
 
     const isPlaying = videoContext?.videoControls.isPlaying ?? false;
 
-    const isFetchingRange = useIsFetchingFrameRangePredictions(mediaId);
-    const isFetchingSingleFrame = useIsFetchingSingleFramePredictions(mediaId);
+    const isFetchingRange = useIsFetchingCurrentRangeFramesPredictions(mediaId);
+    const isFetchingSingleFrame = useIsFetchingCurrentFramePredictions(mediaId);
 
     return isPlaying ? isFetchingRange : isFetchingSingleFrame;
 };
