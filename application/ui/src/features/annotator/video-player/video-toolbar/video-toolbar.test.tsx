@@ -17,30 +17,39 @@ const mockVideoFrame = getMockedVideoFrame({
     duration: 10,
 });
 
+const MOCKED_VIDEO_PLAYER_CONTEXT = {
+    videoFrame: mockVideoFrame,
+    step: 1,
+    changeStep: vi.fn(),
+    isMuted: false,
+    toggleMute: vi.fn(),
+    playbackRate: 1,
+    changePlaybackRate: vi.fn(),
+    videoControls: {
+        isPlaying: false,
+        play: vi.fn(),
+        pause: vi.fn(),
+        goto: vi.fn(),
+        previousFrame: vi.fn(),
+        nextFrame: vi.fn(),
+        canSelectPreviousFrame: true,
+        canSelectNextFrame: true,
+    },
+};
+
 vi.mock('../video-player-provider.component', () => ({
-    useVideoPlayer: () => ({
-        videoFrame: mockVideoFrame,
-        step: 1,
-        changeStep: vi.fn(),
-        isMuted: false,
-        toggleMute: vi.fn(),
-        playbackRate: 1,
-        changePlaybackRate: vi.fn(),
-        videoControls: {
-            isPlaying: false,
-            play: vi.fn(),
-            pause: vi.fn(),
-            goto: vi.fn(),
-            previousFrame: vi.fn(),
-            nextFrame: vi.fn(),
-            canSelectPreviousFrame: true,
-            canSelectNextFrame: true,
-        },
-    }),
+    useVideoPlayer: () => MOCKED_VIDEO_PLAYER_CONTEXT,
+    useVideoPlayerContext: () => MOCKED_VIDEO_PLAYER_CONTEXT,
 }));
 
 vi.mock('../../../../hooks/use-project-labels.hook', () => ({
     useProjectLabels: () => [getMockedLabel({ id: 'label-1', name: 'Cat' })],
+}));
+
+vi.mock('../../selected-media-item-provider.component', () => ({
+    useSelectedMediaItem: () => ({
+        mediaItem: getMockedVideoFrame(),
+    }),
 }));
 
 vi.mock('../../predictions-setup-provider.component', async (importOriginal) => ({
