@@ -174,30 +174,79 @@ class TestSystemService:
             assert fxt_system_service.validate_device("cuda-0") is False
 
     def test_get_inference_devices_with_multiple_devices(self, fxt_system_service: SystemService):
-        """Test getting inference devices when multiple GPUs are available"""
-        with patch("app.services.system_service.torch") as mock_torch:
-            # Mock XPU device
-            mock_xpu_dp = MagicMock()
-            mock_xpu_dp.name = "Intel(R) Graphics [0x7d41]"
-            mock_xpu_dp.total_memory = 36022263808
+        """Test getting inference devices via OpenVINO when CPU and GPU(s) are available"""
 
-            mock_torch.xpu.is_available.return_value = True
-            mock_torch.xpu.device_count.return_value = 1
-            mock_torch.xpu.get_device_properties.return_value = mock_xpu_dp
+        def fake_get_property(device: str, prop: str):
+            if prop == "FULL_DEVICE_NAME":
+                return {
+                    "GPU.0": "Intel(R) Graphics [0x7d41]",
+                    "GPU.1": "Intel(R) Arc(TM) A770",
+                }[device]
+            if prop == "GPU_DEVICE_TOTAL_MEM_SIZE":
+                return {"GPU.0": 36022263808, "GPU.1": 17179869184}[device]
+            raise KeyError(prop)
 
-            # Mock CUDA device
-            mock_cuda_dp = MagicMock()
-            mock_cuda_dp.name = "NVIDIA GeForce RTX 4090"
-            mock_cuda_dp.total_memory = 25769803776
+        mock_core = MagicMock()
+        mock_core.available_devices = ["CPU", "GPU.0", "GPU.1"]
+        mock_core.get_property.side_effect = fake_get_property
 
-            mock_torch.cuda.is_available.return_value = True
-            mock_torch.cuda.device_count.return_value = 1
-            mock_torch.cuda.get_device_properties.return_value = mock_cuda_dp
-
+        with patch("openvino.Core", return_value=mock_core):
             inference_devices = fxt_system_service.get_inference_devices()
 
-            assert len(inference_devices) == 2
-            assert not any(device.type == "cuda" for device in inference_devices)
+        assert len(inference_devices) == 3
+        assert not any(device.type == "cuda" for device in inference_devices)
+        assert inference_devices[0].type == "cpu"
+        assert inference_devices[0].name == "CPU"
+        assert inference_devices[0].memory is None
+        assert inference_devices[0].index is None
+        assert inference_devices[1].type == "xpu"
+        assert inference_devices[1].name == "Intel(R) Graphics [0x7d41]"
+        assert inference_devices[1].memory == 36022263808
+        assert inference_devices[1].index == 0
+        assert inference_devices[2].type == "xpu"
+        assert inference_devices[2].index == 1
+        assert inference_devices[2].memory == 17179869184
+
+    def test_get_inference_devices_cpu_only(self, fxt_system_service: SystemService):
+        """Test getting inference devices when only CPU is available via OpenVINO"""
+        mock_core = MagicMock()
+        mock_core.available_devices = ["CPU"]
+
+        with patch("openvino.Core", return_value=mock_core):
+            inference_devices = fxt_system_service.get_inference_devices()
+
+        assert len(inference_devices) == 1
+        assert inference_devices[0].type == "cpu"
+
+    def test_get_inference_devices_gpu_alias(self, fxt_system_service: SystemService):
+        """Test that 'GPU' (alias for 'GPU.0') is deduplicated when both are reported"""
+
+        def fake_get_property(device: str, prop: str):
+            if prop == "FULL_DEVICE_NAME":
+                return "Intel(R) Graphics [0x7d41]"
+            if prop == "GPU_DEVICE_TOTAL_MEM_SIZE":
+                return 36022263808
+            raise KeyError(prop)
+
+        mock_core = MagicMock()
+        mock_core.available_devices = ["CPU", "GPU", "GPU.0"]
+        mock_core.get_property.side_effect = fake_get_property
+
+        with patch("openvino.Core", return_value=mock_core):
+            inference_devices = fxt_system_service.get_inference_devices()
+
+        # CPU + a single GPU at index 0 (GPU aliases GPU.0)
+        assert len(inference_devices) == 2
+        assert inference_devices[1].type == "xpu"
+        assert inference_devices[1].index == 0
+
+    def test_get_inference_devices_fallback_on_error(self, fxt_system_service: SystemService):
+        """Test fallback to CPU-only when OpenVINO query fails"""
+        with patch("openvino.Core", side_effect=RuntimeError("boom")):
+            inference_devices = fxt_system_service.get_inference_devices()
+
+        assert len(inference_devices) == 1
+        assert inference_devices[0].type == "cpu"
 
     def test_validate_device_invalid_type(self, fxt_system_service: SystemService):
         """Test validating invalid device types"""

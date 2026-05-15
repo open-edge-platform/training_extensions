@@ -4,6 +4,7 @@ import platform
 import re
 
 import cv2
+import openvino as ov
 import psutil
 import torch
 from cv2_enumerate_cameras import enumerate_cameras
@@ -84,14 +85,56 @@ class SystemService:
 
         return devices
 
-    def get_inference_devices(self) -> list[DeviceInfo]:
+    @staticmethod
+    def get_inference_devices() -> list[DeviceInfo]:
         """
-        Get available compute devices for inference (CPU, XPU, ...)
+        Get available compute devices for inference (CPU, XPU, ...).
+
+        Unlike training (which relies on PyTorch), inference is performed via OpenVINO, so devices are listed using
+        OpenVINO's `core.available_devices` API.
+
+        OpenVINO returns device names such as 'CPU', 'GPU', 'GPU.0', 'GPU.1', ... Per the OpenVINO documentation,
+        when an integrated GPU is present it always takes id 0, and 'GPU' is an alias for 'GPU.0'.
 
         Returns:
-            list[DeviceInfo]: List of available devices
+            list[DeviceInfo]: List of available inference devices.
         """
-        return [device for device in self.get_devices() if device.type != DeviceType.CUDA]
+        try:
+            core = ov.Core()
+            available_devices: list[str] = list(core.available_devices)
+        except Exception:
+            logger.exception("Failed to query OpenVINO inference devices; falling back to CPU only.")
+            return [DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)]
+
+        devices: list[DeviceInfo] = []
+        seen_gpu_indices: set[int] = set()
+        for ov_device in available_devices:
+            try:
+                if ov_device == "CPU":
+                    devices.append(DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None))
+                elif ov_device == "GPU" or ov_device.startswith("GPU."):
+                    # 'GPU' aliases 'GPU.0'; deduplicate if both are reported.
+                    index = 0 if ov_device == "GPU" else int(ov_device.split(".", 1)[1])
+                    if index in seen_gpu_indices:
+                        continue
+                    seen_gpu_indices.add(index)
+                    name = core.get_property(ov_device, "FULL_DEVICE_NAME")
+                    try:
+                        memory = int(core.get_property(ov_device, "GPU_DEVICE_TOTAL_MEM_SIZE"))
+                    except Exception:
+                        memory = None
+                    devices.append(DeviceInfo(type=DeviceType.XPU, name=str(name), memory=memory, index=index))
+                else:
+                    # Other OpenVINO devices (e.g., NPU) are not currently mapped to DeviceType.
+                    logger.debug("Skipping unsupported OpenVINO inference device: {}", ov_device)
+            except Exception:
+                logger.exception("Failed to query properties for OpenVINO device '{}'", ov_device)
+
+        # Ensure CPU is always present.
+        if not any(d.type == DeviceType.CPU for d in devices):
+            devices.insert(0, DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None))
+
+        return devices
 
     def get_training_devices(self) -> list[DeviceInfo]:
         """
@@ -158,6 +201,8 @@ class SystemService:
         """
         Get DeviceInfo for a given device string, ensuring it's valid for inference.
 
+        Inference device availability is determined via OpenVINO (see `get_inference_devices`).
+
         Args:
             device_str: Device string in format '<target>[-<index>]'
                 (e.g., 'auto', 'cpu', 'xpu', 'xpu-2')
@@ -165,10 +210,23 @@ class SystemService:
         Returns:
             DeviceInfo: Information about the specified inference device
         """
-        device_info = self.get_device_info(device_str)
-        if device_info.type == DeviceType.CUDA:
+        try:
+            device_type, device_index = self._parse_device(device_str)
+        except ValueError as ex:
+            raise ValueError(f"Device '{device_str}' is not valid for inference.") from ex
+
+        if device_type == DeviceType.CUDA:
             raise ValueError(f"Device '{device_str}' is not valid for inference (CUDA devices are not supported).")
-        return device_info
+        if device_type == DeviceType.AUTO:
+            return DeviceInfo(type=DeviceType.AUTO, name="AUTO", memory=None, index=None)
+        if device_type == DeviceType.CPU:
+            return DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
+
+        for available_device in self.get_inference_devices():
+            if device_type == available_device.type and device_index == (available_device.index or 0):
+                return available_device
+
+        raise ValueError(f"Device '{device_str}' is not available for inference on the system.")
 
     def get_training_device_info(self, device_str: str) -> DeviceInfo:
         """
