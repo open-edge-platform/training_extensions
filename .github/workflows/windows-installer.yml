@@ -1,15 +1,23 @@
 name: windows-installer
 on:
+  merge_group:
+    branches:
+      - develop
+      - release/**
+  push:
+    tags:
+      - "v*"
+  pull_request:
   workflow_call:
     inputs:
       build_version:
         description: "Specifies the build version to apply to all binaries produced by this workflow"
         type: string
-        required: true
+        required: false
       device:
         description: "Specifies the device to build the backend for (cpu, xpu, cuda)"
         type: string
-        required: true
+        required: false
         default: "xpu"
       debug_build:
         description: "If the debug build should be produced"
@@ -62,21 +70,63 @@ env:
   SIGNTOOL_PATH: "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.26100.0\\x64\\signtool.exe"
 
 permissions: {} # No permissions by default on workflow level
+concurrency:
+  group: windows-installer-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  # Determines if workflow should execute based on event type and changed paths
+  # If workflow_dispatch or workflow_call -> always run
+  # If PR or merge_group -> run only if files in specified paths changed
+  check_paths:
+    name: Check if workflow should run
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    outputs:
+      run_workflow: ${{ steps.check_paths.outputs.run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check_paths
+        uses: ./.github/actions/check-paths
+        with:
+          files_yaml: |
+            test:
+              - application/backend/**
+              - application/ui/**
+              - .github/workflows/windows-installer.yml
+
   windows-installer:
     name: Build windows installer
     runs-on: windows-latest
+    needs: check_paths
+    if: needs.check_paths.outputs.run_workflow == 'true'
     permissions:
       contents: read
     timeout-minutes: 60
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.checkout_sha || github.sha }}
+          persist-credentials: false
+
+      - name: Read application version
+        id: version
+        if: inputs.build_version == ''
+        run: |
+          echo "value=$(cat application/VERSION | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
+
       - name: Define paths
         env:
-          DEBUG_BUILD: ${{ inputs.debug_build }}
-          DEVICE: ${{ inputs.device || 'xpu' }}
-          BUILD_VERSION: ${{ inputs.build_version }}
+          DEBUG_BUILD: ${{ inputs.debug_build || false }}
+          # On PR/merge_group: always use CPU; On workflow_call/dispatch: use inputs.device
+          DEVICE: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'cpu' || inputs.device || 'xpu' }}
+          BUILD_VERSION: ${{ inputs.build_version || steps.version.outputs.value }}
         run: |
           Write-Host "DEBUG_BUILD=$env:DEBUG_BUILD"
 
@@ -94,12 +144,6 @@ jobs:
           $MSIX_FILE_PATH = $UI_MSIX_BUNDLE_PATH + "\" + $MSIX_FILE_NAME
           Write-Host "MSIX_FILE_PATH=$MSIX_FILE_PATH"
           Add-Content -Path $env:GITHUB_ENV -Value "MSIX_FILE_PATH=$MSIX_FILE_PATH"
-
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.checkout_sha || github.sha }}
-          persist-credentials: false
 
       # Install and setup build tools
 
@@ -125,7 +169,7 @@ jobs:
         working-directory: application/backend
         env:
           GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
-          DEVICE: ${{ inputs.device || 'xpu' }}
+          DEVICE: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'cpu' || inputs.device || 'xpu' }}
         run: just venv --accelerator "$env:DEVICE"
 
       - name: Build OpenAPI spec
@@ -135,7 +179,7 @@ jobs:
       - name: Build executable
         working-directory: application/backend
         env:
-          DEVICE: ${{ inputs.device || 'xpu' }}
+          DEVICE: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'cpu' || inputs.device || 'xpu' }}
         run: just pyinstaller --accelerator "$env:DEVICE"
 
       # Copy backend artifacts to UI
@@ -199,6 +243,8 @@ jobs:
           & "${{ env.MAKEAPP_PATH }}" pack /d $env:UI_MSIX_BUNDLE_PATH /p $env:MSIX_FILE_PATH
 
       - name: Sign MSIX package
+        # Skip signing on fork PRs (secrets not available from forks)
+        if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && secrets.MSIX_SIGN_CERTIFICATE != ''
         env:
           MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
           MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
@@ -215,8 +261,32 @@ jobs:
           }
 
       - name: Upload MSIX package
+        # Skip artifact upload on PR and merge_group builds to save storage
+        if: github.event_name == 'workflow_call' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: geti-${{ inputs.device || 'xpu' }}-${{ inputs.build_version }}
+          name: geti-${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'cpu' || inputs.device || 'xpu' }}-${{ inputs.build_version || steps.version.outputs.value }}
           path: ${{ env.MSIX_FILE_PATH }}
           retention-days: 20
+
+  required_check:
+    name: Required Check windows-installer
+    needs:
+      - check_paths
+      - windows-installer
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done
