@@ -24,8 +24,7 @@ const VIEW_MODE_SETTINGS: Record<ViewModes, GridLayoutOptions> = {
     [ViewModes.LARGE]: { minItemSize: new Size(180, 180), minSpace: new Size(6, 6), preserveAspectRatio: true },
     [ViewModes.MEDIUM]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
     [ViewModes.SMALL]: { minItemSize: new Size(80, 80), minSpace: new Size(4, 4), preserveAspectRatio: true },
-    [ViewModes.DETAILS]: { minItemSize: new Size(80, 80), minSpace: new Size(4, 4), preserveAspectRatio: true },
-};
+} as Record<ViewModes, GridLayoutOptions>;
 
 type SubsetGalleryProps = {
     items: DatasetRevisionItem[];
