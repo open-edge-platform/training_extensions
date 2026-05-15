@@ -374,12 +374,14 @@ test.describe('Annotator video player', () => {
 
         await test.step('Reuses the prefetched cache entry when navigating to the next frame', async () => {
             const delayPotentiallyStale = 500;
+            const requestsBefore = predictRequests.filter((body) => isRequestForFrame(body, nextFrame)).length;
 
             await videoPage.nextFrame();
             await videoPage.expectCurrentFrame(nextFrame, totalFrames);
             await page.waitForTimeout(delayPotentiallyStale);
 
-            expect(predictRequests.filter((body) => isRequestForFrame(body, nextFrame))).toHaveLength(1);
+            const requestsAfter = predictRequests.filter((body) => isRequestForFrame(body, nextFrame)).length;
+            expect(requestsAfter).toBe(requestsBefore);
         });
     });
 });

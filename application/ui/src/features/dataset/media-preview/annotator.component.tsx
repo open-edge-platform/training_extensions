@@ -97,7 +97,8 @@ const Annotator = ({
         delay: 400,
         minDuration: 200,
     });
-    useNextPredictionPrefetch(mediaItem, items);
+
+    useNextPredictionPrefetch(mediaItem, items, isPredictionMode);
 
     usePlayPauseVideoBySystem(isLoadingCurrentRangePredictions);
 

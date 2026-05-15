@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { usePrefetchQuery } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Media } from '../../../constants/shared-types';
@@ -10,26 +10,30 @@ import { mediaPredictionsQueryOptions } from '../../annotator/api/use-media-pred
 import { usePredictionSetup } from '../../annotator/predictions-setup-provider.component';
 import { useNextMediaItem } from './utils';
 
-export const useNextPredictionPrefetch = (currentMediaItem: Media, allMediaItems: Media[]) => {
+export const useNextPredictionPrefetch = (currentMediaItem: Media, allMediaItems: Media[], isEnabled: boolean) => {
+    const queryClient = useQueryClient();
     const projectId = useProjectIdentifier();
     const { selectedModel } = usePredictionSetup();
     const nextMediaItem = useNextMediaItem(currentMediaItem, allMediaItems);
 
-    const mediaToPrefetch = nextMediaItem ?? currentMediaItem;
-    const range = isVideoFrame(mediaToPrefetch)
+    if (isEnabled === false || nextMediaItem === undefined) {
+        return;
+    }
+
+    const range = isVideoFrame(nextMediaItem)
         ? {
-              start_frame: mediaToPrefetch.frame_number,
-              end_frame: mediaToPrefetch.frame_number,
-              stride: mediaToPrefetch.frame_stride,
+              stride: nextMediaItem.frame_stride,
+              end_frame: nextMediaItem.frame_number,
+              start_frame: nextMediaItem.frame_number,
           }
         : null;
 
-    usePrefetchQuery({
-        ...mediaPredictionsQueryOptions({
+    queryClient.prefetchQuery(
+        mediaPredictionsQueryOptions({
             projectId,
             selectedModel,
-            mediaId: mediaToPrefetch.id,
+            mediaId: nextMediaItem.id,
             range,
-        }),
-    });
+        })
+    );
 };
