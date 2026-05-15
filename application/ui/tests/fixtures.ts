@@ -187,6 +187,12 @@ const test = testBase.extend<Fixtures>({
                             pagination: { offset: 0, limit: 20, count: 1, total: 1 },
                         });
                     }),
+                    http.get('/api/projects/{project_id}/dataset/items', () => {
+                        return HttpResponse.json({
+                            items: [],
+                            pagination: { offset: 0, limit: 20, count: 0, total: 0 },
+                        });
+                    }),
                     http.get('/api/jobs/{job_id}/status', () => {
                         // Just a valid SSE response with no data
                         return new HttpResponse(':ok\n\n', {
