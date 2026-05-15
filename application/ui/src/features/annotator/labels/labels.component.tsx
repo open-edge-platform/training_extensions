@@ -11,6 +11,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 
 import type { Label } from '../../../constants/shared-types';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
+import { formatHotkeyForDisplay } from '../../../shared/hotkeys-definition';
 import { usePinnedLabels } from './hooks/use-pinned-labels.hook';
 import { LabelsEditorPopover } from './labels-editor/labels-editor-popover.component';
 import { useLabels } from './use-labels.hook';
@@ -39,7 +40,7 @@ const LabelBadge = ({ label, isSelected, onClick }: LabelBadgeProps) => {
                     <Text UNSAFE_className={classes.badgeText}>{label.name}</Text>
                 </button>
             </Pressable>
-            <Tooltip>Hotkey: {label.hotkey?.toUpperCase()}</Tooltip>
+            <Tooltip>Hotkey: {formatHotkeyForDisplay(label.hotkey ?? '')}</Tooltip>
         </TooltipTrigger>
     );
 };
