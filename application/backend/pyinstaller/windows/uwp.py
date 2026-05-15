@@ -45,10 +45,8 @@ def _main() -> None:
 
     app_data_folder = Path(local_app_data) / "Intel" / "Geti"
 
-    print(f"Setup Hook: Using local state folder: {app_data_folder}")
+    print(f"Setup Hook: Using folder: {app_data_folder}")
     os.environ["DATA_DIR"] = str(app_data_folder)
-
-    print(f"Setup Hook: Writing log to: {app_data_folder}")
     os.environ["LOG_DIR"] = str(app_data_folder)
 
     _copy_initial_data(app_data_folder)
