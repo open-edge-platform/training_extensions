@@ -1,15 +1,16 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 from uuid import UUID
 
 from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.db.schema import PipelineDB
-from app.models import Pipeline, PipelineStatus
+from app.models import FolderSinkConfig, Pipeline, PipelineStatus, SinkAdapter
 from app.models.model_revision import ModelFormat, ModelPrecision, TrainingStatus
-from app.repositories import PipelineRepository
+from app.repositories import PipelineRepository, SinkRepository
 from app.repositories.model_revision_repo import ModelRevisionRepository
 from app.repositories.model_variant_repo import ModelVariantRepository
 from app.repositories.project_repo import ProjectRepository
@@ -53,6 +54,16 @@ class DeviceInt8NotSupportedError(Exception):
         super().__init__(
             f"INT8 inference is not supported on device '{device}'. "
             f"Please select a non-quantized (FP16/FP32) model variant or use a device that supports INT8."
+        )
+
+
+class FolderSinkNotAccessibleError(Exception):
+    """Exception raised when the folder sink path cannot be created or written to."""
+
+    def __init__(self, folder_path: str, reason: str):
+        super().__init__(
+            f"Folder sink path '{folder_path}' is not accessible: {reason}. "
+            f"Please ensure the path exists or can be created and that write permissions are granted."
         )
 
 
@@ -142,6 +153,13 @@ class PipelineService(BaseSessionManagedService):
                     active_project_name=active_project.name if active_project is not None else "",
                     active_project_id=active_pipeline_db.project_id,
                 )
+            # Validate folder sink accessibility when activating the pipeline
+            if to_update_db.sink_id:
+                sink_id = to_update_db.sink_id
+                db_sink = SinkRepository(self.db_session).get_by_id(sink_id)
+                sink_config = SinkAdapter.validate_python(db_sink, from_attributes=True)
+                if isinstance(sink_config, FolderSinkConfig):
+                    self._validate_folder_sink(sink_config)
 
         pipeline_db = pipeline_repo.update(to_update_db)
         updated = Pipeline.model_validate(pipeline_db)
@@ -228,6 +246,27 @@ class PipelineService(BaseSessionManagedService):
                     f"Please specify a model_variant_id explicitly."
                 )
             partial_config["model_variant_id"] = default_variant.id
+
+    @staticmethod
+    def _validate_folder_sink(sink_config: FolderSinkConfig) -> None:
+        """
+        Validate that the folder sink path can be created and written to.
+
+        Args:
+            sink_config: The FolderSinkConfig to validate.
+
+        Raises:
+            FolderSinkNotAccessibleError: If the folder cannot be created or written to.
+        """
+        folder_path = sink_config.config_data.folder_path
+        probe_file_path = os.path.join(folder_path, ".folder_sink_write_probe")
+        try:
+            os.makedirs(folder_path, exist_ok=True)
+            with open(probe_file_path, "wb") as probe_file:
+                probe_file.write(b"")
+            os.remove(probe_file_path)
+        except OSError as e:
+            raise FolderSinkNotAccessibleError(folder_path, str(e)) from e
 
     def __emit_event(self, pipeline: Pipeline, updated: Pipeline) -> None:
         if self._event_bus is None:
