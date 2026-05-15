@@ -6,6 +6,7 @@ import { MouseEvent, PointerEvent, useEffect, useRef, useState } from 'react';
 import { Loading } from '@geti/ui';
 import { useIsFetching } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { useSpinDelay } from 'spin-delay';
 
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import type { Media } from '../../../constants/shared-types';
@@ -256,9 +257,9 @@ export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: 
     const isSceneBusy = useIsAnnotatorSceneBusy();
     const { canvasRef } = useAnnotator();
     const { isSingleEditableSelection } = useEditableAnnotationState();
-    const isFetchingMedia = useIsFetching({ queryKey: loadImageQueryOptions(projectId, mediaItem).queryKey });
+    const isFetchingMedia = useIsFetching({ queryKey: loadImageQueryOptions(projectId, mediaItem).queryKey }) > 0;
 
-    const isLoadingMedia = isFetchingMedia > 0;
+    const isLoadingMedia = useSpinDelay(isFetchingMedia, { delay: 300, minDuration: 200 });
     const areToolsDisabled = isSceneBusy || isReadOnly;
     const size = { width: mediaItem.width, height: mediaItem.height };
     const canEditSelectedAnnotation = !areToolsDisabled && isSingleEditableSelection;
