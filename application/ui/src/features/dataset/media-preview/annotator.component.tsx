@@ -21,6 +21,7 @@ import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
+import { useNextPredictionPrefetch } from './use-next-prediction-prefetch.hook';
 import { useNextMediaPrefetch, usePlayPauseVideoBySystem } from './utils';
 
 const DATASET_SUBSETS: DatasetSubset[] = ['unassigned', 'training', 'validation', 'testing'];
@@ -96,6 +97,7 @@ const Annotator = ({
         delay: 400,
         minDuration: 200,
     });
+    useNextPredictionPrefetch(mediaItem, items);
 
     usePlayPauseVideoBySystem(isLoadingCurrentRangePredictions);
 

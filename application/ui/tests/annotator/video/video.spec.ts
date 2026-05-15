@@ -8,10 +8,12 @@ import { fileURLToPath } from 'node:url';
 import { expect } from '@playwright/test';
 import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedVideoFrame } from 'mocks/mock-media';
+import { getMockedModel } from 'mocks/mock-model';
+import { getMockedVariant } from 'mocks/mock-model-variant';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
-import { AnnotationDTO } from '../../../src/constants/shared-types';
+import { AnnotationDTO, MediaListPredictionRequest } from '../../../src/constants/shared-types';
 import { http, test } from '../../fixtures';
 import { candyPngBuffer, redLabel } from '../annotator-fixtures';
 import { ANNOTATIONS_MOCKS, PREDICTIONS_MOCKS } from './mocks';
@@ -311,5 +313,73 @@ test.describe('Annotator video player', () => {
                 await expect(videoPage.getLabelSegment(Number(media.frame_index), fishLabel.name)).toBeVisible();
             })
         );
+    });
+
+    test('Prefetches predictions for the next video frame', async ({ page, videoPage, annotatorPage, network }) => {
+        const fishLabel = getMockedLabel({ id: 'a6efefed-e469-4b1c-b803-c2e21ea0597b', name: 'Fish' });
+
+        const mockedProject = getMockedProject({
+            task: {
+                exclusive_labels: true,
+                task_type: 'instance_segmentation',
+                labels: [fishLabel],
+            },
+        });
+
+        const predictRequests: MediaListPredictionRequest[] = [];
+
+        network.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(mockedProject);
+            }),
+            http.get('/api/projects/{project_id}/models', async () => {
+                return HttpResponse.json([getMockedModel({ variants: [getMockedVariant({})] })]);
+            }),
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/frames', async () => {
+                return HttpResponse.json(ANNOTATIONS_MOCKS);
+            }),
+            http.post('/api/projects/{project_id}/dataset/media/media:predict', async ({ request }) => {
+                const body = (await request.json()) as MediaListPredictionRequest;
+                predictRequests.push(body);
+
+                return HttpResponse.json({
+                    predictions: PREDICTIONS_MOCKS,
+                });
+            })
+        );
+
+        const currentFrame = mockVideoFrame.frame_number;
+        const nextFrame = mockVideoFrame.frame_number + mockVideoFrame.frame_stride;
+
+        const isRequestForFrame = (body: MediaListPredictionRequest, frameNumber: number) =>
+            body.media.some(
+                ({ media_id, range }) =>
+                    media_id === mockVideoFrame.id &&
+                    range?.stride === mockVideoFrame.frame_stride &&
+                    range?.end_frame === frameNumber &&
+                    range?.start_frame === frameNumber
+            );
+
+        await test.step('Opens the video in prediction mode', async () => {
+            await videoPage.openVideoFromDataset(mockedProject.id, mockVideoFrame.name);
+            await videoPage.expandToolbar();
+            await annotatorPage.openPredictionMode();
+            await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
+        });
+
+        await test.step('Fetches predictions for the current frame and prefetches the next frame', async () => {
+            await expect.poll(() => predictRequests.some((body) => isRequestForFrame(body, currentFrame))).toBe(true);
+            await expect.poll(() => predictRequests.some((body) => isRequestForFrame(body, nextFrame))).toBe(true);
+        });
+
+        await test.step('Reuses the prefetched cache entry when navigating to the next frame', async () => {
+            const delayPotentiallyStale = 500;
+
+            await videoPage.nextFrame();
+            await videoPage.expectCurrentFrame(nextFrame, totalFrames);
+            await page.waitForTimeout(delayPotentiallyStale);
+
+            expect(predictRequests.filter((body) => isRequestForFrame(body, nextFrame))).toHaveLength(1);
+        });
     });
 });
