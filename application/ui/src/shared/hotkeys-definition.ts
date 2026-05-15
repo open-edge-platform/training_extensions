@@ -35,6 +35,7 @@ const COMMON_HOTKEYS = {
     fitToScreen: HOTKEYS.fitToScreen,
     selectAllAnnotations: HOTKEYS.selectAllAnnotations,
     deselectAllAnnotations: HOTKEYS.deselectAllAnnotations,
+    submit: HOTKEYS.submit,
 } as const;
 
 const SELECTION_TOOL_HOTKEY = {
