@@ -3,10 +3,10 @@
 
 import { useState } from 'react';
 
-import { Flex, Loading } from '@geti/ui';
+import { Flex, Grid, Loading, minmax, repeat } from '@geti/ui';
+import { useIsVisible } from 'hooks/use-is-visible.hook';
 
 import type { LineMetric } from '../../../../constants/shared-types';
-import { useIsVisible } from '../../../../hooks/use-is-visible.hook';
 import { Box } from '../components/box/box.component';
 import { MetricGraph, type MetricGraphPoint } from './metric-graph.component';
 
@@ -73,10 +73,10 @@ export const ModelMetricsGraphs = ({ trainingMetrics }: ModelMetricsGraphsProps)
     }));
 
     return (
-        <Flex width={'100%'} gap={'size-300'} wrap>
+        <Grid columns={repeat('auto-fit', minmax('size-6000', '1fr'))} gap={'size-300'}>
             {graphs.map((graph) => (
                 <LazyMetricGraph key={graph.key} graph={graph} />
             ))}
-        </Flex>
+        </Grid>
     );
 };
