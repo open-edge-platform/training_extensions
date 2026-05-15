@@ -32,12 +32,8 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
 
     return (
         <Box
-            title={
-                <Flex alignItems={'center'} justifyContent={'space-between'} width={'100%'}>
-                    <span>{`${title} ${formatter.format(subsetPercentage)} (${totalCount})`}</span>
-                    <MediaViewModes viewMode={viewMode} setViewMode={setViewMode} items={VIEW_MODE_ITEMS} />
-                </Flex>
-            }
+            title={`${title} ${formatter.format(subsetPercentage)} (${totalCount})`}
+            actions={<MediaViewModes viewMode={viewMode} setViewMode={setViewMode} items={VIEW_MODE_ITEMS} />}
             content={
                 <SubsetGallery
                     items={items}
