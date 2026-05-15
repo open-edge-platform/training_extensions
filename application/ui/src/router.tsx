@@ -71,16 +71,16 @@ export const router = createBrowserRouter([
             },
             {
                 path: paths.project.details.pattern,
-                element: (
-                    <WebRTCConnectionProvider>
-                        <Layout />
-                    </WebRTCConnectionProvider>
-                ),
+                element: <Layout />,
                 children: [
                     {
                         index: true,
                         path: paths.project.inference.pattern,
-                        element: <Inference />,
+                        element: (
+                            <WebRTCConnectionProvider>
+                                <Inference />
+                            </WebRTCConnectionProvider>
+                        ),
                     },
                     {
                         path: paths.project.dataset.index.pattern,

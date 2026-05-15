@@ -6,8 +6,12 @@ import { Page } from '@playwright/test';
 export class StreamPage {
     constructor(private page: Page) {}
 
+    getStartStreamButton() {
+        return this.page.getByLabel('Start stream');
+    }
+
     async startStream() {
-        await this.page.getByLabel('Start stream').click();
+        await this.getStartStreamButton().click();
     }
 
     async isConnected() {
