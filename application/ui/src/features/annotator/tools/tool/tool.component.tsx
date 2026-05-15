@@ -60,6 +60,7 @@ export const Tool = ({ tool, activeTool, setActiveTool, isDisabled }: ToolProps)
                 onPress={() => setActiveTool(tool.type)}
                 aria-label={`${tool.type} tool`}
                 isDisabled={isDisabled}
+                aria-pressed={activeTool === tool.type}
             >
                 <IconWrapper isSelected={activeTool === tool.type} isDisabled={isDisabled}>
                     <tool.icon data-tool={tool.type} />
