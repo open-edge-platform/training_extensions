@@ -45,6 +45,12 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.value }}
     steps:
+      - &harden-runner
+        name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -89,6 +95,8 @@ jobs:
     outputs:
       issue_exists: ${{ steps.check.outputs.issue_exists }}
     steps:
+      - *harden-runner
+
       - name: Check for existing open issue
         id: check
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -134,6 +142,8 @@ jobs:
     permissions:
       issues: write # Permission to create issues
     steps:
+      - *harden-runner
+
       - name: Create GitHub Issue
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:

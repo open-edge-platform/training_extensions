@@ -25,6 +25,12 @@ jobs:
       run_actions: "${{ steps.prepare_outputs.outputs.run_actions }}"
       run_rust: "${{ steps.prepare_outputs.outputs.run_rust }}"
     steps:
+      - &harden-runner
+        name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
       - &checkout
         name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -102,6 +108,8 @@ jobs:
             run: ${{ needs.check_paths.outputs.run_rust || 'true' }}
 
     steps:
+      - *harden-runner
+
       - *checkout
 
       # Initializes the CodeQL tools for scanning.
