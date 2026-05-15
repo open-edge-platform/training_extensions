@@ -3,8 +3,9 @@
 
 import { Suspense, useState } from 'react';
 
-import { Content, Dialog, DialogContainer, Flex, Grid, Loading, Size, Text, View } from '@geti/ui';
+import { Content, Dialog, DialogContainer, Flex, Grid, Loading, Size, Text, View, ViewModes } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { GridLayoutOptions } from 'react-aria-components';
 
 import { MediaItem } from '../../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
@@ -19,16 +20,17 @@ import { useLoadImageQuery } from '../../../annotator/hooks/use-load-image-query
 import { getImageData } from '../../../annotator/tools/utils';
 import { datasetRevisionItemToMedia } from './utils';
 
-const layoutOptions = {
-    minSpace: new Size(4, 4),
-    minItemSize: new Size(80, 80),
-    maxColumns: 4,
-    preserveAspectRatio: true,
+const VIEW_MODE_SETTINGS: Record<ViewModes, GridLayoutOptions> = {
+    [ViewModes.LARGE]: { minItemSize: new Size(180, 180), minSpace: new Size(6, 6), preserveAspectRatio: true },
+    [ViewModes.MEDIUM]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
+    [ViewModes.SMALL]: { minItemSize: new Size(80, 80), minSpace: new Size(4, 4), preserveAspectRatio: true },
+    [ViewModes.DETAILS]: { minItemSize: new Size(80, 80), minSpace: new Size(4, 4), preserveAspectRatio: true },
 };
 
 type SubsetGalleryProps = {
     items: DatasetRevisionItem[];
     datasetRevisionId: string;
+    viewMode: ViewModes;
     fetchNextPage: () => void;
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
@@ -86,6 +88,7 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
 
 export const SubsetGallery = ({
     items,
+    viewMode,
     datasetRevisionId,
     hasNextPage,
     isFetchingNextPage,
@@ -118,7 +121,7 @@ export const SubsetGallery = ({
                     items={items}
                     ariaLabel={'subset media grid'}
                     selectionMode='none'
-                    layoutOptions={layoutOptions}
+                    layoutOptions={VIEW_MODE_SETTINGS[viewMode]}
                     isLoadingMore={isFetchingNextPage}
                     onLoadMore={() => hasNextPage && fetchNextPage()}
                     contentItem={(item) => (

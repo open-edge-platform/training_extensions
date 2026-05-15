@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Text } from '@geti/ui';
-import { Filter, GridSmall, Search, SortUpDown } from '@geti/ui/icons';
+import { Flex, MediaViewModes, Text, useViewMode, ViewModes } from '@geti/ui';
 import { useNumberFormatter } from 'react-aria';
 
 import type { DatasetRevision, DatasetSubset } from '../../../../constants/shared-types';
@@ -17,26 +16,7 @@ type SubsetBoxProps = {
     totalItems: number;
 };
 
-// TODO: Uncomment when we want to support subset actions
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const BoxActions = () => {
-    return (
-        <Flex marginStart={'auto'} gap={'size-50'}>
-            <ActionButton isQuiet aria-label='Search dataset'>
-                <Search />
-            </ActionButton>
-            <ActionButton isQuiet aria-label='Filter dataset'>
-                <Filter />
-            </ActionButton>
-            <ActionButton isQuiet aria-label='Grid view'>
-                <GridSmall />
-            </ActionButton>
-            <ActionButton isQuiet aria-label='Sort dataset'>
-                <SortUpDown />
-            </ActionButton>
-        </Flex>
-    );
-};
+const VIEW_MODE_ITEMS = [ViewModes.LARGE, ViewModes.MEDIUM, ViewModes.SMALL];
 
 const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxProps) => {
     const { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount } = useGetDatasetRevisionItems(
@@ -45,17 +25,24 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
             subset,
         }
     );
+    const [viewMode, setViewMode] = useViewMode(`model-training-datasets-${subset}-view-mode`, ViewModes.MEDIUM);
 
     const formatter = useNumberFormatter({ style: 'percent', maximumFractionDigits: 0 });
     const subsetPercentage = totalItems > 0 ? totalCount / totalItems : 0;
 
     return (
         <Box
-            title={`${title} ${formatter.format(subsetPercentage)} (${totalCount})`}
+            title={
+                <Flex alignItems={'center'} justifyContent={'space-between'} width={'100%'}>
+                    <span>{`${title} ${formatter.format(subsetPercentage)} (${totalCount})`}</span>
+                    <MediaViewModes viewMode={viewMode} setViewMode={setViewMode} items={VIEW_MODE_ITEMS} />
+                </Flex>
+            }
             content={
                 <SubsetGallery
                     items={items}
                     datasetRevisionId={datasetRevisionId}
+                    viewMode={viewMode}
                     fetchNextPage={fetchNextPage}
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
