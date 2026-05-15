@@ -28,6 +28,10 @@ export const useTerminateAnnotatorWorkersOnUnmount = () => {
 
     useEffect(() => {
         return () => {
+            void queryClient.cancelQueries({ queryKey: ['workers'] });
+
+            // Catch already-resolved workers (cancellation is a no-op for
+            // settled queries, so they need explicit termination).
             const workerQueries = queryClient.getQueryCache().findAll({ queryKey: ['workers'] });
 
             for (const query of workerQueries) {
