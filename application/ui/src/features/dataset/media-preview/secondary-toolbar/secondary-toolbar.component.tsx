@@ -5,10 +5,12 @@ import { ActionButton, Button, ButtonGroup, Divider, Flex, Icon, Text } from '@g
 import { CloseSemiBold } from '@geti/ui/icons';
 import { useProject } from 'hooks/api/project.hook';
 import { isEmpty } from 'lodash-es';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 import type { DatasetSubset, Media } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
+import { HOTKEYS } from '../../../../shared/hotkeys-definition';
 import { isImage, isVideoFrame } from '../../../../shared/media-item-utils';
 import { Labels } from '../../../annotator/labels/labels.component';
 import { useVideoPlayerContext } from '../../../annotator/video-player/video-player-provider.component';
@@ -118,6 +120,21 @@ export const SecondaryToolbar = ({
 
     // If annotations are not changed but subset has changed we want to allow user to submit
     const isSubmitDisabled = (!canSubmit && !hasSubsetChanged) || isSaving || isLoadingPredictions;
+
+    useHotkeys(
+        HOTKEYS.submit,
+        (event) => {
+            event.preventDefault();
+
+            if (isPredictionMode) {
+                handleSubmitPredictions();
+            } else {
+                handleSubmit();
+            }
+        },
+        { enabled: !isSubmitDisabled },
+        [isSubmitDisabled, isPredictionMode, handleSubmitPredictions, handleSubmit]
+    );
 
     return (
         <Flex
