@@ -262,3 +262,47 @@ class TestSourceEndpoints:
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_source_update_service.create_source.assert_not_called()
+
+    def test_test_source_reachable(
+        self, fxt_usb_camera_source_view, fxt_get_source, fxt_source_update_service, fxt_client
+    ):
+        source_id = str(fxt_usb_camera_source_view.id)
+        fxt_source_update_service.test_source.return_value = {"reachable": True, "latency_ms": 12.3}
+
+        response = fxt_client.post(f"/api/sources/{source_id}:test")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["reachable"] is True
+        assert response.json()["latency_ms"] == 12.3
+        assert response.json()["error"] is None
+        fxt_source_update_service.test_source.assert_called_once_with(fxt_get_source)
+
+    def test_test_source_not_reachable(
+        self, fxt_usb_camera_source_view, fxt_get_source, fxt_source_update_service, fxt_client
+    ):
+        source_id = str(fxt_usb_camera_source_view.id)
+        fxt_source_update_service.test_source.return_value = {
+            "reachable": False,
+            "error": "Cannot open USB camera device 1",
+        }
+
+        response = fxt_client.post(f"/api/sources/{source_id}:test")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["reachable"] is False
+        assert response.json()["error"] == "Cannot open USB camera device 1"
+        assert response.json()["latency_ms"] is None
+        fxt_source_update_service.test_source.assert_called_once_with(fxt_get_source)
+
+    def test_test_source_not_found(self, fxt_source_update_service, fxt_client):
+        source_id = str(uuid4())
+        fxt_source_update_service.get_by_id.side_effect = ResourceNotFoundError(ResourceType.SOURCE, source_id)
+
+        response = fxt_client.post(f"/api/sources/{source_id}:test")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_test_source_invalid_id(self, fxt_source_update_service, fxt_client):
+        response = fxt_client.post("/api/sources/invalid-id:test")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
