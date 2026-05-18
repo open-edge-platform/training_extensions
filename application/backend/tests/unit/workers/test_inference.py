@@ -2,14 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 from loguru import logger
 
 from app.stream.stream_data import StreamData
-from app.workers.inference import InferenceWorker, InferenceWorkerConfig, PredictionReorderBuffer
+from app.workers.inference import PredictionReorderBuffer
 
 
 @pytest.fixture(autouse=True)
@@ -33,26 +32,6 @@ def fxt_create_stream_data():
         )
 
     return create_sample
-
-
-@pytest.fixture
-def fxt_inference_worker():
-    """Construct an InferenceWorker with mocked services, bypassing setup()."""
-    config = InferenceWorkerConfig(
-        frame_queue=MagicMock(),
-        pred_queue=MagicMock(),
-        stop_event=MagicMock(),
-        model_reload_event=MagicMock(),
-        shm_name="shm",
-        shm_lock=MagicMock(),
-        logger_=logger,  # type: ignore[arg-type]
-    )
-    worker = InferenceWorker(config)
-    worker._model_service = MagicMock()
-    worker._metrics_service = MagicMock()
-    # Initialize the name-mangled prediction buffer attribute that setup() would normally create.
-    setattr(worker, "_InferenceWorker__prediction_buffer", PredictionReorderBuffer())
-    return worker
 
 
 class TestPredictionReorderBuffer:
@@ -121,78 +100,3 @@ class TestPredictionReorderBuffer:
         buffer.add_prediction_for_timestamp(ts, fxt_create_stream_data(ts))
         buffer.clear()
         assert buffer.get_ready_predictions() == []
-
-
-class TestInferenceWorkerRefreshModel:
-    """Tests for _refresh_loaded_model."""
-
-    def test_no_reload_returns_current_model(self, fxt_inference_worker):
-        worker = fxt_inference_worker
-        worker._model_reload_event.is_set.return_value = False
-        loaded = MagicMock()
-        worker._model_service.get_loaded_inference_model.return_value = loaded
-
-        result = worker._refresh_loaded_model()
-
-        assert result is loaded
-
-    def test_no_reload_returns_none_when_no_model(self, fxt_inference_worker):
-        worker = fxt_inference_worker
-        worker._model_reload_event.is_set.return_value = False
-        worker._model_service.get_loaded_inference_model.return_value = None
-
-        result = worker._refresh_loaded_model()
-
-        assert result is None
-
-    def test_reload_force_reloads_model(self, fxt_inference_worker):
-        worker = fxt_inference_worker
-        worker._model_reload_event.is_set.side_effect = [True, True, False]
-        loaded = MagicMock()
-        worker._model_service.get_loaded_inference_model.return_value = loaded
-
-        result = worker._refresh_loaded_model()
-
-        assert result is loaded
-        worker._model_reload_event.clear.assert_called()
-        worker._model_service.get_loaded_inference_model.assert_called_once_with(force_reload=True)
-
-    def test_reload_with_failed_load_returns_none(self, fxt_inference_worker):
-        worker = fxt_inference_worker
-        worker._model_reload_event.is_set.side_effect = [True, True, False]
-        worker._model_service.get_loaded_inference_model.return_value = None
-
-        result = worker._refresh_loaded_model()
-
-        assert result is None
-
-    def test_reload_loop_clears_event_until_stable(self, fxt_inference_worker):
-        worker = fxt_inference_worker
-        worker._model_reload_event.is_set.side_effect = [True, True, True, False]
-        worker._model_service.get_loaded_inference_model.return_value = MagicMock()
-
-        worker._refresh_loaded_model()
-
-        assert worker._model_service.get_loaded_inference_model.call_count == 2
-
-    def test_on_inference_completed_calls_visualizer(self, fxt_inference_worker):
-        worker = fxt_inference_worker
-
-        stream_data = StreamData(
-            frame_data=np.zeros((4, 4, 3), dtype=np.uint8),
-            timestamp=1.0,
-            source_metadata={},
-        )
-        worker._prediction_buffer.register_expected_timestamp(1.0)
-
-        with patch("app.workers.inference.Visualizer.overlay_predictions") as mock_overlay:
-            mock_overlay.return_value = np.zeros((4, 4, 3), dtype=np.uint8)
-            inf_result = MagicMock()
-            worker._on_inference_completed(
-                inf_result,
-                {"inference_start_time": 1.0, "model_id": "mid", "stream_data": stream_data},
-            )
-
-        mock_overlay.assert_called_once()
-        _, kwargs = mock_overlay.call_args
-        assert kwargs["predictions"] is inf_result

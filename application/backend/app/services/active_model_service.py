@@ -29,11 +29,6 @@ class ActiveModelService:
         self._model_activation_state: ModelActivationState = self._load_state()
         self._loaded_model: LoadedModelHandle | None = None
 
-    @property
-    def active_project_id(self) -> UUID | None:
-        """Project ID of the currently active model, or None if no model is active."""
-        return self._model_activation_state.project_id
-
     @staticmethod
     def _load_state() -> ModelActivationState:
         """Load the state from the DB if it exists, otherwise initialize an empty state"""
