@@ -80,12 +80,14 @@ jobs:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.checkout_sha || github.sha }}
           persist-credentials: false
 
-      - name: Get build version from AppxManifest.xml
+      - name: Get build version from application/VERSION
         id: get_version
         run: |
-          [xml]$manifest = Get-Content "${{ env.UI_SRC_TAURI_PATH }}\msix\AppxManifest.xml"
-          $version = $manifest.Package.Identity.Version
-          Write-Host "Version from AppxManifest.xml: $version"
+          $version = (Get-Content "application\VERSION" -Raw).Trim()
+          if (-not $version) {
+            throw "application/VERSION is empty"
+          }
+          Write-Host "Version from application/VERSION: $version"
           Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$version"
 
       - name: Define paths
