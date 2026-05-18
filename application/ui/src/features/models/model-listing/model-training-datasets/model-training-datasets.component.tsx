@@ -6,6 +6,7 @@ import { useNumberFormatter } from 'react-aria';
 
 import type { DatasetRevision, DatasetSubset } from '../../../../constants/shared-types';
 import { useGetDatasetRevisionItems } from '../../../../hooks/use-get-dataset-revision-items.hook';
+import { GALLERY_VIEW_MODES, type GalleryViewMode } from '../../../../shared/gallery-view-modes';
 import { Box } from '../components/box/box.component';
 import { SubsetGallery } from './subset-gallery.component';
 
@@ -15,8 +16,6 @@ type SubsetBoxProps = {
     datasetRevisionId: string;
     totalItems: number;
 };
-
-const VIEW_MODE_ITEMS = [ViewModes.LARGE, ViewModes.MEDIUM, ViewModes.SMALL];
 
 const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxProps) => {
     const { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount } = useGetDatasetRevisionItems(
@@ -33,12 +32,12 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
     return (
         <Box
             title={`${title} ${formatter.format(subsetPercentage)} (${totalCount})`}
-            actions={<MediaViewModes viewMode={viewMode} setViewMode={setViewMode} items={VIEW_MODE_ITEMS} />}
+            actions={<MediaViewModes viewMode={viewMode} setViewMode={setViewMode} items={GALLERY_VIEW_MODES} />}
             content={
                 <SubsetGallery
                     items={items}
                     datasetRevisionId={datasetRevisionId}
-                    viewMode={viewMode}
+                    viewMode={viewMode as GalleryViewMode}
                     fetchNextPage={fetchNextPage}
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}

@@ -15,21 +15,22 @@ import { AnnotatorProviders } from '../../../../features/dataset/media-preview/a
 import { useAnnotationsQuery } from '../../../../features/dataset/media-preview/api/use-annotations-query';
 import { ReadOnlyAnnotator } from '../../../../features/dataset/media-preview/read-only-annotator.component';
 import { getInitialAnnotations } from '../../../../features/dataset/media-preview/utils';
+import { type GalleryViewMode } from '../../../../shared/gallery-view-modes';
 import { getDatasetRevisionThumbnailUrl } from '../../../../shared/media-url.utils';
 import { useLoadImageQuery } from '../../../annotator/hooks/use-load-image-query.hook';
 import { getImageData } from '../../../annotator/tools/utils';
 import { datasetRevisionItemToMedia } from './utils';
 
-const VIEW_MODE_SETTINGS: Record<ViewModes, GridLayoutOptions> = {
+const VIEW_MODE_SETTINGS: Record<GalleryViewMode, GridLayoutOptions> = {
     [ViewModes.LARGE]: { minItemSize: new Size(180, 180), minSpace: new Size(6, 6), preserveAspectRatio: true },
     [ViewModes.MEDIUM]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
     [ViewModes.SMALL]: { minItemSize: new Size(80, 80), minSpace: new Size(4, 4), preserveAspectRatio: true },
-} as Record<ViewModes, GridLayoutOptions>;
+};
 
 type SubsetGalleryProps = {
     items: DatasetRevisionItem[];
     datasetRevisionId: string;
-    viewMode: ViewModes;
+    viewMode: GalleryViewMode;
     fetchNextPage: () => void;
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
