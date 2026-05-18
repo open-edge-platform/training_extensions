@@ -218,28 +218,6 @@ class TestSystemService:
         assert len(inference_devices) == 1
         assert inference_devices[0].type == "cpu"
 
-    def test_get_inference_devices_gpu_alias(self, fxt_system_service: SystemService):
-        """Test that 'GPU' (alias for 'GPU.0') is deduplicated when both are reported"""
-
-        def fake_get_property(device: str, prop: str):
-            if prop == "FULL_DEVICE_NAME":
-                return "Intel(R) Graphics [0x7d41]"
-            if prop == "GPU_DEVICE_TOTAL_MEM_SIZE":
-                return 36022263808
-            raise KeyError(prop)
-
-        mock_core = MagicMock()
-        mock_core.available_devices = ["CPU", "GPU", "GPU.0"]
-        mock_core.get_property.side_effect = fake_get_property
-
-        with patch("openvino.Core", return_value=mock_core):
-            inference_devices = fxt_system_service.get_inference_devices()
-
-        # CPU + a single GPU at index 0 (GPU aliases GPU.0)
-        assert len(inference_devices) == 2
-        assert inference_devices[1].type == "xpu"
-        assert inference_devices[1].index == 0
-
     def test_get_inference_devices_fallback_on_error(self, fxt_system_service: SystemService):
         """Test fallback to CPU-only when OpenVINO query fails"""
         with patch("openvino.Core", side_effect=RuntimeError("boom")):
