@@ -10,13 +10,14 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
-from app.api.dependencies import get_data_collector, get_label_service, get_project, get_project_service
+from app.api.dependencies import get_data_collector, get_event_bus, get_label_service, get_project, get_project_service
 from app.api.schemas import LabelView, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView
 from app.api.validators import ProjectID
 from app.models import Label, LabelReference, LabelUpdateInfo, Task
 from app.models.project import Project
 from app.services import LabelService, ProjectService, ResourceInUseError, ResourceWithIdAlreadyExistsError
 from app.services.data_collect import DataCollector
+from app.services.event.event_bus import EventBus, EventType
 from app.services.label_service import DuplicateLabelsError
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
@@ -189,6 +190,7 @@ def update_labels(
         ),
     ],
     label_service: Annotated[LabelService, Depends(get_label_service)],
+    event_bus: Annotated[EventBus, Depends(get_event_bus)],
 ) -> list[LabelView]:
     """Update labels for a given project"""
     try:
@@ -202,6 +204,8 @@ def update_labels(
         )
     except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError, ValueError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+    event_bus.emit_event(EventType.LABELS_CHANGED)
 
     return [LabelView.model_validate(label, from_attributes=True) for label in updated_labels]
 
