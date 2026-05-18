@@ -40,7 +40,7 @@ describe('useUploadProgress', () => {
             result.current.startUploadProgress(1);
         });
 
-        expect(await screen.findByText('Uploading 1 item(s)…')).toBeVisible();
+        expect(await screen.findByText('Uploading 1 item(s)...')).toBeVisible();
         expect(screen.getByLabelText('Loading...')).toBeVisible();
     });
 
@@ -84,7 +84,7 @@ describe('useUploadProgress', () => {
             result.current.updateUploadProgress({ settledResults: [fulfilledResult('a')] });
         });
 
-        expect(await screen.findByText('Uploading 3 item(s)… (1 succeeded)')).toBeVisible();
+        expect(await screen.findByText('Uploading 3 item(s)... (1 succeeded)')).toBeVisible();
     });
 
     it('shows only failed count when there are no successes yet', async () => {
@@ -95,7 +95,7 @@ describe('useUploadProgress', () => {
             result.current.updateUploadProgress({ settledResults: [rejectedResult(new Error('bad'))] });
         });
 
-        expect(await screen.findByText('Uploading 3 item(s)… (1 failed)')).toBeVisible();
+        expect(await screen.findByText('Uploading 3 item(s)... (1 failed)')).toBeVisible();
     });
 
     it('shows both counts when there are mixed results', async () => {
@@ -108,7 +108,7 @@ describe('useUploadProgress', () => {
             });
         });
 
-        expect(await screen.findByText('Uploading 3 item(s)… (1 succeeded, 1 failed)')).toBeVisible();
+        expect(await screen.findByText('Uploading 3 item(s)... (1 succeeded, 1 failed)')).toBeVisible();
     });
 
     it('marks progress as finished on final batch update', () => {

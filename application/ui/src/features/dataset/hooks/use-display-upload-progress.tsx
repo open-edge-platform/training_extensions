@@ -58,7 +58,7 @@ export const useUploadProgress = () => {
         toast({
             id: UPLOAD_TOAST_ID,
             type: 'neutral',
-            message: <InProgressMessage text={`Uploading ${total} item(s)…`} />,
+            message: <InProgressMessage text={`Uploading ${total} item(s)...`} />,
             duration: Infinity,
         });
     };
@@ -78,7 +78,7 @@ export const useUploadProgress = () => {
             ]
                 .filter(Boolean)
                 .join(', ');
-            const msg = `Uploading ${total} item(s)…${parts ? ` (${parts})` : ''}`;
+            const msg = `Uploading ${total} item(s)...${parts ? ` (${parts})` : ''}`;
 
             toast({
                 id: UPLOAD_TOAST_ID,
