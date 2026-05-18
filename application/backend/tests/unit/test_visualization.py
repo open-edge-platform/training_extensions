@@ -14,10 +14,6 @@ from app.utils.visualization import (
     InstanceSegmentationVisualizerCreator,
     VisualizationDispatcher,
     _compute_scale,
-    _contrasting_fg,
-    _hex_to_rgb,
-    _normalize_label_name,
-    _split_label_and_score,
 )
 
 bboxes = np.array([[10, 20, 50, 60], [30, 40, 70, 80], [15, 25, 55, 65]], dtype=np.int32)
@@ -87,70 +83,3 @@ class TestVisualizationHelpers(unittest.TestCase):
         # 4K longer edge → ~3.0
         img = np.zeros((2160, 3840, 3), dtype=np.uint8)
         assert _compute_scale(img) == pytest.approx(3.0, rel=1e-3)
-
-    def test_hex_to_rgb_short_form(self):
-        assert _hex_to_rgb("#f00") == (255, 0, 0)
-
-    def test_hex_to_rgb_long_form(self):
-        assert _hex_to_rgb("#00ff80") == (0, 255, 128)
-
-    def test_hex_to_rgb_passthrough_tuple(self):
-        assert _hex_to_rgb((1, 2, 3)) == (1, 2, 3)
-
-    def test_contrasting_fg_light_bg_picks_black(self):
-        assert _contrasting_fg("#ffffff") == "black"
-
-    def test_contrasting_fg_dark_bg_picks_white(self):
-        assert _contrasting_fg("#000000") == "white"
-
-    def test_normalize_label_name_lowercases_and_replaces_spaces(self):
-        assert _normalize_label_name("Hello World") == "hello_world"
-        assert _normalize_label_name("  Foo Bar ") == "foo_bar"
-        assert _normalize_label_name("ALREADY_OK") == "already_ok"
-        assert _normalize_label_name("a   b") == "a___b"
-
-    def test_split_label_and_score_with_score(self):
-        assert _split_label_and_score("cat (0.95)") == ("cat", " (0.95)")
-
-    def test_split_label_and_score_without_score(self):
-        assert _split_label_and_score("cat") == ("cat", "")
-        # Trailing paren but no leading " (": treated as plain label
-        assert _split_label_and_score("weird)") == ("weird)", "")
-
-
-class TestRecolorPrimitives(unittest.TestCase):
-    """End-to-end check that label_colors overrides upstream colors in the rendered scene."""
-
-    def test_detection_recolor_overrides_bbox_and_label_colors(self):
-        creator = DetectionVisualizerCreator()
-        original_image = np.zeros((100, 100, 3), dtype=np.uint8)
-        predictions = DetectionResult(bboxes, labels)
-
-        # The upstream label_name from model_api uses the numeric label index as a string
-        # (e.g. "1", "2", "3"). We map names with arbitrary casing/separators to make sure
-        # _normalize_label_name handles them.
-        label_colors = {"1": "#abcdef", "2": "#123456", "3": "#fedcba"}
-        result = creator.create_visualization(original_image, predictions, label_colors=label_colors)
-
-        assert isinstance(result, np.ndarray)
-        assert not np.array_equal(result, original_image)
-
-    def test_detection_no_label_colors_still_renders(self):
-        creator = DetectionVisualizerCreator()
-        original_image = np.zeros((100, 100, 3), dtype=np.uint8)
-        predictions = DetectionResult(bboxes, labels)
-        result = creator.create_visualization(original_image, predictions, label_colors=None)
-        assert isinstance(result, np.ndarray)
-        assert not np.array_equal(result, original_image)
-
-    def test_classification_with_label_colors(self):
-        creator = ClassificationVisualizerCreator()
-        original_image = np.zeros((100, 100, 3), dtype=np.uint8)
-        classification_labels = [Label(id=1, name="cat", confidence=0.9), Label(id=2, name="dog", confidence=0.1)]
-        predictions = ClassificationResult(classification_labels)
-        # Use a normalization-equivalent key to verify name matching is loose.
-        result = creator.create_visualization(
-            original_image, predictions, label_colors={"Cat": "#ff0000", "DOG": "#00ff00"}
-        )
-        assert isinstance(result, np.ndarray)
-        assert not np.array_equal(result, original_image)

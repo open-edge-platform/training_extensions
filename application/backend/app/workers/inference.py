@@ -99,8 +99,6 @@ class InferenceWorker(BaseProcessWorker):
         self._model_service: ActiveModelService | None = None
         self._loaded_model: LoadedModelHandle | None = None
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
-        # Cached {label_name: hex_color} mapping for the active project. Refreshed on model reload.
-        self._label_colors: dict[str, str] = {}
 
         # The reorder buffer ensures that frames are broadcast in order, even if inference results are produced
         # out of order due to async processing. It is initialized in setup() to ensure it's created after the process
@@ -126,7 +124,7 @@ class InferenceWorker(BaseProcessWorker):
 
         stream_data: StreamData = userdata["stream_data"]
         frame_with_predictions = Visualizer.overlay_predictions(
-            original_image=stream_data.frame_data, predictions=inf_result, label_colors=self._label_colors
+            original_image=stream_data.frame_data, predictions=inf_result
         )
         inference_data = InferenceData(
             prediction=inf_result,
@@ -163,25 +161,17 @@ class InferenceWorker(BaseProcessWorker):
         """
         # If no reload requested, return current model
         if self._model_reload_event is None or not self._model_reload_event.is_set():
-            model = self._model_service.get_loaded_inference_model()  # type: ignore
-            # Populate the label-color cache on first successful load.
-            if model is not None and not self._label_colors:
-                self._label_colors = self._model_service.get_label_colors()  # type: ignore
-            return model
+            return self._model_service.get_loaded_inference_model()  # type: ignore
 
         # Process reload requests - keep reloading until event stabilizes
         loaded_model = None
         while self._model_reload_event.is_set():
             self._model_reload_event.clear()
             loaded_model = self._model_service.get_loaded_inference_model(force_reload=True)  # type: ignore
-            # Drop the cached label-color map so the next visualization picks up any edits
-            self._model_service.invalidate_label_colors_cache()  # type: ignore
 
         if loaded_model is not None:
             # Clear prediction buffer
             self._prediction_buffer.clear()
-            # Refresh the label color map for the (possibly new) active project.
-            self._label_colors = self._model_service.get_label_colors()  # type: ignore
 
         return loaded_model
 

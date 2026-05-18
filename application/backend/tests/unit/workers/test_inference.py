@@ -123,33 +123,20 @@ class TestPredictionReorderBuffer:
         assert buffer.get_ready_predictions() == []
 
 
-class TestInferenceWorkerLabelColors:
-    """Tests for the label-color caching wired into _refresh_loaded_model and _on_inference_completed."""
+class TestInferenceWorkerRefreshModel:
+    """Tests for _refresh_loaded_model."""
 
-    def test_no_reload_populates_label_colors_on_first_load(self, fxt_inference_worker):
+    def test_no_reload_returns_current_model(self, fxt_inference_worker):
         worker = fxt_inference_worker
         worker._model_reload_event.is_set.return_value = False
         loaded = MagicMock()
         worker._model_service.get_loaded_inference_model.return_value = loaded
-        worker._model_service.get_label_colors.return_value = {"cat": "#ff0000"}
 
         result = worker._refresh_loaded_model()
 
         assert result is loaded
-        assert worker._label_colors == {"cat": "#ff0000"}
-        worker._model_service.get_label_colors.assert_called_once_with()
 
-    def test_no_reload_does_not_refetch_when_already_cached(self, fxt_inference_worker):
-        worker = fxt_inference_worker
-        worker._model_reload_event.is_set.return_value = False
-        worker._label_colors = {"cat": "#ff0000"}
-        worker._model_service.get_loaded_inference_model.return_value = MagicMock()
-
-        worker._refresh_loaded_model()
-
-        worker._model_service.get_label_colors.assert_not_called()
-
-    def test_no_reload_does_not_fetch_label_colors_when_model_is_none(self, fxt_inference_worker):
+    def test_no_reload_returns_none_when_no_model(self, fxt_inference_worker):
         worker = fxt_inference_worker
         worker._model_reload_event.is_set.return_value = False
         worker._model_service.get_loaded_inference_model.return_value = None
@@ -157,58 +144,39 @@ class TestInferenceWorkerLabelColors:
         result = worker._refresh_loaded_model()
 
         assert result is None
-        worker._model_service.get_label_colors.assert_not_called()
-        assert worker._label_colors == {}
 
-    def test_reload_invalidates_cache_and_refreshes_label_colors(self, fxt_inference_worker):
+    def test_reload_force_reloads_model(self, fxt_inference_worker):
         worker = fxt_inference_worker
-        # is_set() is called once to enter the reload branch, then once per while-loop check.
         worker._model_reload_event.is_set.side_effect = [True, True, False]
         loaded = MagicMock()
         worker._model_service.get_loaded_inference_model.return_value = loaded
-        worker._model_service.get_label_colors.return_value = {"new_label": "#123456"}
-        # Pre-existing cache from a previous project
-        worker._label_colors = {"stale": "#000000"}
 
         result = worker._refresh_loaded_model()
 
         assert result is loaded
         worker._model_reload_event.clear.assert_called()
         worker._model_service.get_loaded_inference_model.assert_called_once_with(force_reload=True)
-        worker._model_service.invalidate_label_colors_cache.assert_called_once_with()
-        worker._model_service.get_label_colors.assert_called_once_with()
-        assert worker._label_colors == {"new_label": "#123456"}
 
-    def test_reload_with_failed_load_does_not_refresh_label_colors(self, fxt_inference_worker):
+    def test_reload_with_failed_load_returns_none(self, fxt_inference_worker):
         worker = fxt_inference_worker
         worker._model_reload_event.is_set.side_effect = [True, True, False]
         worker._model_service.get_loaded_inference_model.return_value = None
-        worker._label_colors = {"stale": "#000000"}
 
         result = worker._refresh_loaded_model()
 
         assert result is None
-        # Cache is still invalidated on the service side, but the worker's local copy
-        # is only refreshed when a model was successfully loaded.
-        worker._model_service.invalidate_label_colors_cache.assert_called_once_with()
-        worker._model_service.get_label_colors.assert_not_called()
-        assert worker._label_colors == {"stale": "#000000"}
 
     def test_reload_loop_clears_event_until_stable(self, fxt_inference_worker):
         worker = fxt_inference_worker
-        # Outer guard + 2 reload iterations + exit: True, True, True, False
         worker._model_reload_event.is_set.side_effect = [True, True, True, False]
         worker._model_service.get_loaded_inference_model.return_value = MagicMock()
-        worker._model_service.get_label_colors.return_value = {}
 
         worker._refresh_loaded_model()
 
         assert worker._model_service.get_loaded_inference_model.call_count == 2
-        assert worker._model_service.invalidate_label_colors_cache.call_count == 2
 
-    def test_on_inference_completed_passes_label_colors_to_visualizer(self, fxt_inference_worker):
+    def test_on_inference_completed_calls_visualizer(self, fxt_inference_worker):
         worker = fxt_inference_worker
-        worker._label_colors = {"cat": "#ff0000"}
 
         stream_data = StreamData(
             frame_data=np.zeros((4, 4, 3), dtype=np.uint8),
@@ -227,5 +195,4 @@ class TestInferenceWorkerLabelColors:
 
         mock_overlay.assert_called_once()
         _, kwargs = mock_overlay.call_args
-        assert kwargs["label_colors"] == {"cat": "#ff0000"}
         assert kwargs["predictions"] is inf_result

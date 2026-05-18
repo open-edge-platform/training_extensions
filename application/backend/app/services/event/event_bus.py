@@ -11,7 +11,6 @@ class EventType(StrEnum):
     SOURCE_CHANGED = "SOURCE_CHANGED"
     SINK_CHANGED = "SINK_CHANGED"
     MODEL_CHANGED = "MODEL_CHANGED"
-    LABELS_CHANGED = "LABELS_CHANGED"
     PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED = "PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED"
     PIPELINE_STATUS_CHANGED = "PIPELINE_STATUS_CHANGED"
     INFERENCE_DEVICE_CHANGED = "INFERENCE_DEVICE_CHANGED"
@@ -58,7 +57,7 @@ class EventBus(BaseEventBus[EventType]):
 
     @staticmethod
     def _should_notify_model(event_type: EventType) -> bool:
-        return event_type in (EventType.MODEL_CHANGED, EventType.PIPELINE_STATUS_CHANGED, EventType.LABELS_CHANGED)
+        return event_type in (EventType.MODEL_CHANGED, EventType.PIPELINE_STATUS_CHANGED)
 
     @staticmethod
     def _should_notify_device(event_type: EventType) -> bool:
