@@ -14,12 +14,10 @@ import { DetailedModelArchitecture, ModelArchitecture } from './model-architectu
 import { ModelArchitecturesListLayout } from './model-architectures-list-layout/model-architectures-list-layout.component';
 
 const renderModelArchitecture = ({
-    activeModelArchitectureId = undefined,
     selectedModelArchitectureId = null,
     onSelectedModelArchitectureIdChange = vi.fn(),
     modelArchitecture = getMockedModelArchitecture(),
 }: {
-    activeModelArchitectureId?: string;
     selectedModelArchitectureId?: string | null;
     onSelectedModelArchitectureIdChange?: ReturnType<typeof vi.fn>;
     modelArchitecture?: ModelArchitectureWithPerformanceCategory;
@@ -31,7 +29,6 @@ const renderModelArchitecture = ({
             ariaLabel={'Model architectures'}
         >
             <ModelArchitecture
-                activeModelArchitectureId={activeModelArchitectureId}
                 modelArchitecture={modelArchitecture}
                 selectedModelArchitectureId={selectedModelArchitectureId}
                 onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
@@ -43,12 +40,10 @@ const renderModelArchitecture = ({
 };
 
 const renderDetailedModelArchitecture = ({
-    activeModelArchitectureId = undefined,
     selectedModelArchitectureId = null,
     onSelectedModelArchitectureIdChange = vi.fn(),
     modelArchitecture = getMockedModelArchitecture(),
 }: {
-    activeModelArchitectureId?: string;
     selectedModelArchitectureId?: string | null;
     onSelectedModelArchitectureIdChange?: ReturnType<typeof vi.fn>;
     modelArchitecture?: ModelArchitectureWithPerformanceCategory;
@@ -60,7 +55,6 @@ const renderDetailedModelArchitecture = ({
             ariaLabel={'Model architectures'}
         >
             <DetailedModelArchitecture
-                activeModelArchitectureId={activeModelArchitectureId}
                 modelArchitecture={modelArchitecture}
                 selectedModelArchitectureId={selectedModelArchitectureId}
                 onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
@@ -82,24 +76,6 @@ describe('ModelArchitecture', () => {
         ).toBeVisible();
     });
 
-    it('does not render the "Active model" badge when the architecture is not active', () => {
-        renderModelArchitecture({
-            activeModelArchitectureId: 'some-other-id',
-            modelArchitecture: getMockedModelArchitecture({ id: 'Object_Detection_Deim_DFine_L' }),
-        });
-
-        expect(screen.queryByText('Active model')).not.toBeInTheDocument();
-    });
-
-    it('renders the "Active model" badge when the architecture is active', () => {
-        renderModelArchitecture({
-            activeModelArchitectureId: 'Object_Detection_Deim_DFine_L',
-            modelArchitecture: getMockedModelArchitecture({ id: 'Object_Detection_Deim_DFine_L' }),
-        });
-
-        expect(screen.getByText('Active model')).toBeVisible();
-    });
-
     it('does not render a performance category badge when performanceCategory is undefined', () => {
         renderModelArchitecture({ modelArchitecture: getMockedModelArchitecture({ performanceCategory: undefined }) });
 
@@ -110,16 +86,6 @@ describe('ModelArchitecture', () => {
         renderModelArchitecture({ modelArchitecture: getMockedModelArchitecture({ performanceCategory: 'speed' }) });
 
         expect(screen.getByText('Speed')).toBeVisible();
-    });
-
-    it('renders both "Active model" badge and performance category badge when both apply', () => {
-        renderModelArchitecture({
-            activeModelArchitectureId: 'Object_Detection_Deim_DFine_L',
-            modelArchitecture: getMockedModelArchitecture({ performanceCategory: 'balance' }),
-        });
-
-        expect(screen.getByText('Active model')).toBeVisible();
-        expect(screen.getByText('Balance')).toBeVisible();
     });
 
     it('calls onSelectedModelArchitectureIdChange with the architecture id when clicked', async () => {
