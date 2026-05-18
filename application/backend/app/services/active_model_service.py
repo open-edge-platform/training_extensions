@@ -28,6 +28,37 @@ class ActiveModelService:
         self.projects_dir = data_dir / "projects"
         self._model_activation_state: ModelActivationState = self._load_state()
         self._loaded_model: LoadedModelHandle | None = None
+        self._label_colors_cache: dict[UUID, dict[str, str]] = {}
+
+    @property
+    def active_project_id(self) -> UUID | None:
+        """Project ID of the currently active model, or None if no model is active."""
+        return self._model_activation_state.project_id
+
+    def get_label_colors(self) -> dict[str, str]:
+        """Return a ``{label_name: hex_color}`` map for the active project.
+
+        The map is cached per project ID; call this after a model reload to pick
+        up label edits. Returns an empty dict if no project is active.
+        """
+        project_id = self._model_activation_state.project_id
+        if project_id is None:
+            return {}
+        cached = self._label_colors_cache.get(project_id)
+        if cached is not None:
+            return cached
+        # Lazy import to avoid a circular import at module load time.
+        from app.repositories.label_repo import LabelRepository
+
+        with get_db_session() as db:
+            labels = LabelRepository(project_id=str(project_id), db=db).list_all()
+            colors = {lbl.name: lbl.color for lbl in labels if lbl.name and lbl.color}
+        self._label_colors_cache[project_id] = colors
+        return colors
+
+    def invalidate_label_colors_cache(self) -> None:
+        """Clear the cached label-color map (call after the active model is reloaded)."""
+        self._label_colors_cache.clear()
 
     @staticmethod
     def _load_state() -> ModelActivationState:
