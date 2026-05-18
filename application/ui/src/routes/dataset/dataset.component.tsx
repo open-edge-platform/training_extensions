@@ -9,6 +9,7 @@ import { Gallery } from '../../features/dataset/gallery/gallery.component';
 import { Toolbar } from '../../features/dataset/gallery/toolbar/toolbar.component';
 import { ExportJobsList } from '../../features/dataset/import-export/export-jobs-list/export-jobs-list.component';
 import { ImportJobsList } from '../../features/dataset/import-export/import-jobs-list/import-jobs-list.component';
+import { GalleryViewMode } from '../../shared/gallery-view-modes';
 
 export const Dataset = () => {
     const [viewMode, setViewMode] = useViewMode('dataset-gallery-view-mode');
@@ -42,7 +43,7 @@ export const Dataset = () => {
             <View gridRow='3 / 4'>
                 <Gallery
                     items={items}
-                    viewMode={viewMode}
+                    viewMode={viewMode as GalleryViewMode}
                     isPending={isPending}
                     fetchNextPage={fetchNextPage}
                     isMediaItemReviewedById={isMediaItemReviewedById}
