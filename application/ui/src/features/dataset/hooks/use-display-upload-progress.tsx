@@ -57,7 +57,7 @@ export const useUploadProgress = () => {
 
         toast({
             id: UPLOAD_TOAST_ID,
-            type: 'info',
+            type: 'neutral',
             message: <InProgressMessage text={`Uploading ${total} item(s)…`} />,
             duration: Infinity,
         });
