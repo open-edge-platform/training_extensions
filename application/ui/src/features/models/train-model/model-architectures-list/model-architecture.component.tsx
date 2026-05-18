@@ -1,8 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from '@geti/ui';
-
 import type { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 import { PerformanceCategoryBadge } from '../../model-listing/components/model-row/performance-category-badge.component';
 import { ModelArchitectureCard } from './model-architecture-card/model-architecture-card.component';
@@ -30,12 +28,10 @@ export const ModelArchitecture = ({
             <ModelArchitectureCard.Parameters />
 
             {modelArchitecture.performanceCategory !== undefined && (
-                <Flex gap={'size-100'} alignItems={'center'}>
-                    <PerformanceCategoryBadge
-                        performanceCategory={modelArchitecture.performanceCategory}
-                        color={'var(--spectrum-global-color-gray-100)'}
-                    />
-                </Flex>
+                <PerformanceCategoryBadge
+                    performanceCategory={modelArchitecture.performanceCategory}
+                    color={'var(--spectrum-global-color-gray-100)'}
+                />
             )}
         </ModelArchitectureCard>
     );
