@@ -28,7 +28,7 @@ import uvicorn
 from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from app.cached_static_files import CachedStaticFiles
 from loguru import logger
 
 from app.api.routers import (
@@ -139,7 +139,7 @@ if static_dir is not None and static_dir.is_dir() and any(static_dir.iterdir()):
     asset_prefix = getenv("ASSET_PREFIX", "/html")
     logger.info("Serving static files from {} by context {}", static_dir, asset_prefix)
 
-    app.mount(asset_prefix, StaticFiles(directory=static_dir), name="static")
+    app.mount(asset_prefix, CachedStaticFiles(directory=static_dir), name="static")
 
     @app.get("/", include_in_schema=False)
     @app.get("/{full_path:path}", include_in_schema=False)
