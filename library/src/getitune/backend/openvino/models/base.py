@@ -87,6 +87,9 @@ class OVModel:
         self.num_requests = max_num_requests or get_default_num_async_infer_requests()
         self.use_throughput_mode = use_throughput_mode
         self.model_api_configuration = model_api_configuration or {}
+        # DataModule provides RGB images; disable ModelAPI's BGR→RGB swap
+        # which assumes OpenCV-sourced (BGR) input.
+        self.model_api_configuration.setdefault("reverse_input_channels", False)
         self.hparams: dict[str, Any] = {}
         self.model = self._create_model()
         self.metric_callable = metric
@@ -226,6 +229,7 @@ class OVModel:
         """
         async_inference = async_inference and self.async_inference
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
+
         outputs = self.model.infer_batch(numpy_inputs) if async_inference else [self.model(im) for im in numpy_inputs]
 
         return self._customize_outputs(outputs, inputs)

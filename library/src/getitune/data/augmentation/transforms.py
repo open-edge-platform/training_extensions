@@ -79,10 +79,10 @@ class Resize(tvt_v2.Transform):
         new_h = round(orig_h * scale)
 
         # Compute padding to reach target size
-        # Use bottom-right padding only (matching develop branch behavior)
-        # This is important because model post-processing assumes no left/top offset
         pad_w = target_w - new_w
         pad_h = target_h - new_h
+
+        # Pad only bottom-right
         pad_left = 0
         pad_right = pad_w
         pad_top = 0

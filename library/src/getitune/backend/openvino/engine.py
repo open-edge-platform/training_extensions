@@ -479,7 +479,7 @@ class OVEngine(Engine):
             check_data = True
         elif isinstance(data, (str, os.PathLike)):
             data_path = Path(data)
-            check_data = data_path.is_dir()
+            check_data = data_path.exists()
 
         return check_model and check_data
 
