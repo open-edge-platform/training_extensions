@@ -111,8 +111,8 @@ class SystemService:
             try:
                 if ov_device == "CPU":
                     devices.append(DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None))
-                elif ov_device.startswith("GPU."):
-                    index = int(ov_device.split(".", 1)[1])
+                elif ov_device.startswith("GPU"):
+                    index = 0 if ov_device == "GPU" else int(ov_device.split(".", 1)[1])
                     name = core.get_property(ov_device, "FULL_DEVICE_NAME")
                     try:
                         memory = int(core.get_property(ov_device, "GPU_DEVICE_TOTAL_MEM_SIZE"))
