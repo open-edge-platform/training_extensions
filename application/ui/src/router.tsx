@@ -4,6 +4,7 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 
 import { paths } from './constants/paths';
+import { useTerminateAnnotatorWorkersOnUnmount } from './features/annotator/tools/terminate-annotator-workers-on-unmount.hook';
 import { ImportDatasetDialogStateProvider } from './features/dataset/providers/export-import-dataset-dialog-provider.component';
 import { SelectedDataProvider } from './features/dataset/providers/selected-data-provider.component';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
@@ -47,6 +48,20 @@ const Redirect = () => {
     return <Navigate to={path} replace />;
 };
 
+// Owns the lifetime of the annotator-tool web workers (SAM/SSIM/scissors): they boot lazily inside
+// the annotator and are terminated here, freeing the ~100 MB WASM heap when the user leaves the dataset section.
+const DatasetSection = () => {
+    useTerminateAnnotatorWorkersOnUnmount();
+
+    return (
+        <ImportDatasetDialogStateProvider>
+            <SelectedDataProvider>
+                <Outlet />
+            </SelectedDataProvider>
+        </ImportDatasetDialogStateProvider>
+    );
+};
+
 export const router = createBrowserRouter([
     {
         path: paths.root.pattern,
@@ -84,13 +99,7 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: paths.project.dataset.index.pattern,
-                        element: (
-                            <ImportDatasetDialogStateProvider>
-                                <SelectedDataProvider>
-                                    <Outlet />
-                                </SelectedDataProvider>
-                            </ImportDatasetDialogStateProvider>
-                        ),
+                        element: <DatasetSection />,
                         children: [
                             {
                                 index: true,

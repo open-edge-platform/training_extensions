@@ -53,11 +53,11 @@ export const BottomToolbar = ({
                             {hasAnnotationStatus && (
                                 <Tag
                                     className={clsx({
-                                        [classes.accepted]: isUserReviewed,
+                                        [classes.reviewed]: isUserReviewed,
                                         [classes.forReview]: !isUserReviewed,
                                     })}
                                     prefix={isUserReviewed ? <Accept /> : <Search />}
-                                    text={isUserReviewed ? 'Accepted' : 'For Review'}
+                                    text={isUserReviewed ? 'Reviewed' : 'For Review'}
                                 />
                             )}
 

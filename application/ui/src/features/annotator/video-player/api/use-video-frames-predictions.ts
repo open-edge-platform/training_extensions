@@ -10,8 +10,8 @@ import { usePredictionSetup } from '../../predictions-setup-provider.component';
 import { useVideoPlayer } from '../video-player-provider.component';
 import { getVideoFrameRangeIndexes } from './utils';
 
-export const PREDICTION_CHUNK_SIZE = 10;
-export const PREDICTION_FRAME_SKIP = 5;
+export const PREDICTION_CHUNK_SIZE = 15;
+export const PREDICTION_FRAME_SKIP = 1;
 
 const useVideoFramesPredictionsQueryOptions = ({
     frameNumber,
@@ -62,6 +62,27 @@ export const usePrefetchVideoFramesPredictions = ({
     });
 
     return usePrefetchQuery(queryOptions);
+};
+
+export const useKeepVideoFramesPredictionsSubscribed = ({
+    frameNumber,
+    frameSkip,
+    rangeStride,
+    chunkSize,
+}: {
+    frameNumber: number;
+    frameSkip: number;
+    rangeStride?: number;
+    chunkSize?: number;
+}) => {
+    const queryOptions = useVideoFramesPredictionsQueryOptions({ frameSkip, frameNumber, chunkSize, rangeStride });
+
+    useQuery({
+        ...queryOptions,
+        notifyOnChangeProps: [],
+        staleTime: Infinity,
+        refetchOnMount: false,
+    });
 };
 
 export const useVideoFramesPredictions = <T>({
