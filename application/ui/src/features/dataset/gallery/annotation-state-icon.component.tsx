@@ -2,29 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { View } from '@geti/ui';
-import { CanceledIcon, CheckCircleOutlined, Search } from '@geti/ui/icons';
-
-import type { MediaItemState } from '../../../constants/shared-types';
+import { CheckCircleOutlined, Search } from '@geti/ui/icons';
 
 import classes from './annotation-state-icon.module.scss';
 
 type AnnotationStatusIconProps = {
-    state: MediaItemState | undefined;
+    isReviewed: boolean;
 };
 
-export const AnnotationStatusIcon = ({ state }: AnnotationStatusIconProps) => {
-    if (state === 'reviewed') {
+export const AnnotationStatusIcon = ({ isReviewed }: AnnotationStatusIconProps) => {
+    if (isReviewed) {
         return (
             <View UNSAFE_className={classes.reviewed}>
                 <CheckCircleOutlined />
-            </View>
-        );
-    }
-
-    if (state === 'rejected') {
-        return (
-            <View UNSAFE_className={classes.rejected}>
-                <CanceledIcon />
             </View>
         );
     }

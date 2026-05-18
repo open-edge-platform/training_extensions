@@ -115,7 +115,7 @@ const GalleryList = ({
                             </Flex>
                         )}
                         bottomRightElement={() => (
-                            <AnnotationStatusIcon state={isMediaItemReviewedById(item.id) ? 'reviewed' : undefined} />
+                            <AnnotationStatusIcon isReviewed={isMediaItemReviewedById(item.id)} />
                         )}
                     />
                 );

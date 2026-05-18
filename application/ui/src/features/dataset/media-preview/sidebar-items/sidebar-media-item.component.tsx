@@ -29,7 +29,7 @@ export const SidebarMediaItem = ({ item, isUserReviewed, onSelectedMediaItem }: 
                 />
             )}
             bottomRightElement={() => {
-                return <AnnotationStatusIcon state={isUserReviewed ? 'reviewed' : undefined} />;
+                return <AnnotationStatusIcon isReviewed={isUserReviewed} />;
             }}
         />
     );

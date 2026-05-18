@@ -53,8 +53,6 @@ export type MediaDTO = MediaImage | MediaVideo | MediaVideoFrameDTO;
 
 export type Media = MediaImage | MediaVideo | MediaVideoFrame;
 
-export type MediaItemState = 'reviewed' | 'rejected';
-
 export type TrainingDevice = components['schemas']['DeviceInfoView'];
 
 export type DatasetSubset = components['schemas']['DatasetItemSubset'];
