@@ -294,9 +294,9 @@ export const AnnotatorCanvas = ({
         canEditSelectedAnnotation,
     });
 
-    const isEmptyImage = image.width === 1;
+    const isPlaceholderImage = image.width === 1 && image.height === 1;
 
-    if (isLoadingMedia && isEmptyImage) {
+    if (isLoadingMedia && isPlaceholderImage) {
         return <Loading size='M' />;
     }
 
