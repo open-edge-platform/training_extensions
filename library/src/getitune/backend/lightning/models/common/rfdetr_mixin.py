@@ -76,6 +76,15 @@ class RFDETRMixin:
         detector.model.reinitialize_detection_head(num_classes)
         detector.model.args.num_classes = num_classes
 
+        # Reset classification biases to zero (sigmoid=0.5 neutral prior).
+        # The upstream reinitialize_detection_head slices COCO-pretrained biases
+        # (~-4.6, i.e. sigmoid~0.01) which are meaningless for the new label
+        # space and too negative for few-class models to overcome.
+        torch.nn.init.zeros_(lwdetr_model.class_embed.bias)
+        if getattr(lwdetr_model, "two_stage", False):
+            for enc_cls_embed in lwdetr_model.transformer.enc_out_class_embed:
+                torch.nn.init.zeros_(enc_cls_embed.bias)
+
         # Build criterion and postprocessor
         model_cfg = detector.get_model_config().model_dump()
         train_cfg = detector.get_train_config(dataset_dir="").model_dump()
