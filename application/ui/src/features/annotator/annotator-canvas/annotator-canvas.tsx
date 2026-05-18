@@ -185,6 +185,7 @@ type AnnotatorCanvasProps = {
     image: ImageData;
     isReadOnly?: boolean;
     mode: AnnotatorMode;
+    isLoadingPredictions?: boolean;
 };
 
 type UseToolLayerPointerPassthroughProps = {
@@ -271,7 +272,13 @@ const useToolLayerPointerPassthrough = ({ canEditSelectedAnnotation }: UseToolLa
     return { toolLayerRef, toolLayerPointerEvents, handlePointerMove } as const;
 };
 
-export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: AnnotatorCanvasProps) => {
+export const AnnotatorCanvas = ({
+    mode,
+    mediaItem,
+    image,
+    isReadOnly = false,
+    isLoadingPredictions = false,
+}: AnnotatorCanvasProps) => {
     const projectId = useProjectIdentifier();
     const isSceneBusy = useIsAnnotatorSceneBusy();
     const { canvasRef } = useAnnotator();
@@ -287,7 +294,9 @@ export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: 
         canEditSelectedAnnotation,
     });
 
-    if (isLoadingMedia) {
+    const isEmptyImage = image.width === 1;
+
+    if (isLoadingMedia && isEmptyImage) {
         return <Loading size='M' />;
     }
 
@@ -300,6 +309,7 @@ export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: 
                 className={isReadOnly ? classes.readOnlyCanvas : undefined}
                 ref={canvasRef}
             >
+                {(isLoadingMedia || isLoadingPredictions) && <Loading mode={'overlay'} />}
                 <MediaImage image={image} mediaItem={mediaItem} />
                 <MediaAnnotations mediaItem={mediaItem} mode={mode} />
 

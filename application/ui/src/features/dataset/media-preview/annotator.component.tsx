@@ -3,7 +3,7 @@
 
 import { useRef, useState } from 'react';
 
-import { Key, Loading, View } from '@geti/ui';
+import { Key, View } from '@geti/ui';
 import { useSpinDelay } from 'spin-delay';
 
 import type { DatasetSubset, Media } from '../../../constants/shared-types';
@@ -147,9 +147,14 @@ const Annotator = ({
             </View>
 
             <View gridArea={'canvas'} overflow={'hidden'} position={'relative'}>
-                {isLoadingFramesPredictionsDelayed && <Loading mode={'overlay'} />}
                 <AnnotatorCanvasSettings>
-                    <AnnotatorCanvas mediaItem={mediaItem} image={image} mode={mode} isReadOnly={isPredictionMode} />
+                    <AnnotatorCanvas
+                        isLoadingPredictions={isLoadingFramesPredictionsDelayed}
+                        mediaItem={mediaItem}
+                        image={image}
+                        mode={mode}
+                        isReadOnly={isPredictionMode}
+                    />
                 </AnnotatorCanvasSettings>
             </View>
         </>
