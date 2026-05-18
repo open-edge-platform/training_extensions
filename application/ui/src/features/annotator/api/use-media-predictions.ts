@@ -137,7 +137,7 @@ export const useIsFetchingCurrentFramePredictions = (mediaId: string) => {
 export const useIsFetchingPredictions = (mediaId: string) => {
     const videoContext = useVideoPlayerContext();
 
-    const isPlaying = videoContext?.videoControls.isPlaying ?? false;
+    const isPlaying = videoContext?.videoControls.isPlaying === true;
 
     const isFetchingRange = useIsFetchingCurrentRangeFramesPredictions(mediaId);
     const isFetchingSingleFrame = useIsFetchingCurrentFramePredictions(mediaId);

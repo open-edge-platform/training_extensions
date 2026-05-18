@@ -3,7 +3,8 @@
 
 import { useRef, useState } from 'react';
 
-import { Key, Loading, View } from '@geti/ui';
+import { Key, View } from '@geti/ui';
+import { useSpinDelay } from 'spin-delay';
 
 import type { DatasetSubset, Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
@@ -91,6 +92,11 @@ const Annotator = ({
     const isLoadingCurrentRangePredictions =
         useIsFetchingCurrentRangeFramesPredictions(mediaItem.id) && isPredictionMode;
 
+    const isLoadingFramesPredictionsDelayed = useSpinDelay(isLoadingPredictions, {
+        delay: 400,
+        minDuration: 200,
+    });
+
     usePlayPauseVideoBySystem(isLoadingCurrentRangePredictions);
 
     const selectNextMediaItem = async () => {
@@ -141,9 +147,14 @@ const Annotator = ({
             </View>
 
             <View gridArea={'canvas'} overflow={'hidden'} position={'relative'}>
-                {isLoadingPredictions && <Loading mode={'overlay'} />}
                 <AnnotatorCanvasSettings>
-                    <AnnotatorCanvas mediaItem={mediaItem} image={image} mode={mode} isReadOnly={isPredictionMode} />
+                    <AnnotatorCanvas
+                        isLoadingPredictions={isLoadingFramesPredictionsDelayed}
+                        mediaItem={mediaItem}
+                        image={image}
+                        mode={mode}
+                        isReadOnly={isPredictionMode}
+                    />
                 </AnnotatorCanvasSettings>
             </View>
         </>
