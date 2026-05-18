@@ -1,27 +1,24 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, View } from '@geti/ui';
+import { Flex } from '@geti/ui';
 
 import type { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 import { PerformanceCategoryBadge } from '../../model-listing/components/model-row/performance-category-badge.component';
 import { ModelArchitectureCard } from './model-architecture-card/model-architecture-card.component';
 
 type ModelArchitectureProps = {
-    activeModelArchitectureId: string | undefined;
     modelArchitecture: ModelArchitectureWithPerformanceCategory;
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
 };
 
 export const ModelArchitecture = ({
-    activeModelArchitectureId,
     modelArchitecture,
     selectedModelArchitectureId,
     onSelectedModelArchitectureIdChange,
 }: ModelArchitectureProps) => {
     const isSelected = modelArchitecture.id === selectedModelArchitectureId;
-    const isActive = activeModelArchitectureId === modelArchitecture.id;
 
     return (
         <ModelArchitectureCard
@@ -32,19 +29,12 @@ export const ModelArchitecture = ({
             <ModelArchitectureCard.Name />
             <ModelArchitectureCard.Parameters />
 
-            {(isActive || modelArchitecture.performanceCategory !== undefined) && (
+            {modelArchitecture.performanceCategory !== undefined && (
                 <Flex gap={'size-100'} alignItems={'center'}>
-                    {isActive && (
-                        <View justifySelf={'start'}>
-                            <ModelArchitectureCard.Active />
-                        </View>
-                    )}
-                    {modelArchitecture.performanceCategory !== undefined && (
-                        <PerformanceCategoryBadge
-                            performanceCategory={modelArchitecture.performanceCategory}
-                            color={'var(--spectrum-global-color-gray-100)'}
-                        />
-                    )}
+                    <PerformanceCategoryBadge
+                        performanceCategory={modelArchitecture.performanceCategory}
+                        color={'var(--spectrum-global-color-gray-100)'}
+                    />
                 </Flex>
             )}
         </ModelArchitectureCard>
@@ -52,13 +42,11 @@ export const ModelArchitecture = ({
 };
 
 export const DetailedModelArchitecture = ({
-    activeModelArchitectureId,
     modelArchitecture,
     selectedModelArchitectureId,
     onSelectedModelArchitectureIdChange,
 }: ModelArchitectureProps) => {
     const isSelected = modelArchitecture.id === selectedModelArchitectureId;
-    const isActive = activeModelArchitectureId === modelArchitecture.id;
 
     return (
         <ModelArchitectureCard
@@ -68,12 +56,6 @@ export const DetailedModelArchitecture = ({
         >
             <ModelArchitectureCard.Name />
             <ModelArchitectureCard.DetailedParameters />
-
-            {isActive && (
-                <View justifySelf={'start'}>
-                    <ModelArchitectureCard.Active />
-                </View>
-            )}
         </ModelArchitectureCard>
     );
 };
