@@ -33,6 +33,16 @@ describe('useUploadProgress', () => {
         });
     });
 
+    it('shows an info toast immediately when upload starts', async () => {
+        const { result } = renderHook(() => useUploadProgress());
+
+        act(() => {
+            result.current.startUploadProgress(1);
+        });
+
+        expect(await screen.findByText('Uploading 1 item(s)…')).toBeVisible();
+    });
+
     it('updates progress from settled batch results', () => {
         const { result } = renderHook(() => useUploadProgress());
 

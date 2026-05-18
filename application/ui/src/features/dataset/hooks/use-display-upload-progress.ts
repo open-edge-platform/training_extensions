@@ -47,6 +47,12 @@ export const useUploadProgress = () => {
             failed: 0,
             isUploading: true,
         }));
+
+        toast({
+            id: UPLOAD_TOAST_ID,
+            type: 'info',
+            message: `Uploading ${total} item(s)…`,
+        });
     };
 
     const updateUploadProgress = ({ settledResults }: UploadProgressUpdate): void => {
@@ -58,7 +64,7 @@ export const useUploadProgress = () => {
             const nextSucceeded = previousProgress.succeeded + succeeded;
             const nextFailed = previousProgress.failed + failed;
 
-            const msg = `Uploading ${total} item(s)... (${nextSucceeded} succeeded, ${nextFailed} failed)`;
+            const msg = `Uploading ${total} item(s)… (${nextSucceeded} succeeded, ${nextFailed} failed)`;
 
             toast({
                 id: UPLOAD_TOAST_ID,
