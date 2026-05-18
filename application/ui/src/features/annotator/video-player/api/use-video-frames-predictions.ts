@@ -64,6 +64,27 @@ export const usePrefetchVideoFramesPredictions = ({
     return usePrefetchQuery(queryOptions);
 };
 
+export const useKeepVideoFramesPredictionsSubscribed = ({
+    frameNumber,
+    frameSkip,
+    rangeStride,
+    chunkSize,
+}: {
+    frameNumber: number;
+    frameSkip: number;
+    rangeStride?: number;
+    chunkSize?: number;
+}) => {
+    const queryOptions = useVideoFramesPredictionsQueryOptions({ frameSkip, frameNumber, chunkSize, rangeStride });
+
+    useQuery({
+        ...queryOptions,
+        notifyOnChangeProps: [],
+        staleTime: Infinity,
+        refetchOnMount: false,
+    });
+};
+
 export const useVideoFramesPredictions = <T>({
     frameNumber,
     frameSkip,
