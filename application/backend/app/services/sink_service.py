@@ -1,13 +1,17 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import os
+import socket
+import time
 from uuid import UUID
 
+import requests
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.schema import SinkDB
 from app.models import OutputFormat, Sink, SinkAdapter, SinkType
-from app.models.sink import SinkConfig
+from app.models.sink import FolderSinkConfig, MqttSinkConfig, SinkConfig, WebhookSinkConfig
 from app.repositories import SinkRepository
 from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 
@@ -109,3 +113,63 @@ class SinkService:
     def get_active_sink_id(self) -> UUID | None:
         id = SinkRepository(self._db_session).get_active_sink_id()
         return UUID(id) if id else None
+
+    _TEST_TIMEOUT_SECONDS = 5
+
+    def test_sink(self, sink: Sink) -> dict:
+        """Perform a connectivity check on the sink.
+
+        Verifies that the sink can be reached based on its type:
+        - Folder: verifies the folder path exists and is writable
+        - MQTT: attempts a TCP connection to the broker host and port
+        - Webhook: sends a HEAD request to the webhook URL
+        """
+        start = time.monotonic()
+
+        try:
+            match sink:
+                case FolderSinkConfig():
+                    reachable, error = self._test_folder(sink)
+                case MqttSinkConfig():
+                    reachable, error = self._test_mqtt(sink)
+                case WebhookSinkConfig():
+                    reachable, error = self._test_webhook(sink)
+                case _:
+                    return {"reachable": False, "error": f"Unsupported sink type: {sink.sink_type}"}
+        except Exception as e:
+            return {"reachable": False, "error": str(e)}
+
+        if not reachable:
+            return {"reachable": False, "error": error}
+
+        elapsed_ms = (time.monotonic() - start) * 1000
+        return {"reachable": True, "latency_ms": round(elapsed_ms, 1)}
+
+    def _test_folder(self, sink: FolderSinkConfig) -> tuple[bool, str | None]:
+        folder_path = sink.config_data.folder_path
+        if not os.path.isdir(folder_path):
+            return False, f"Directory not found: {folder_path}"
+        if not os.access(folder_path, os.W_OK):
+            return False, f"Directory is not writable: {folder_path}"
+        return True, None
+
+    def _test_mqtt(self, sink: MqttSinkConfig) -> tuple[bool, str | None]:
+        host = sink.config_data.broker_host
+        port = sink.config_data.broker_port
+        try:
+            sock = socket.create_connection((host, port), timeout=self._TEST_TIMEOUT_SECONDS)
+            sock.close()
+        except OSError as e:
+            return False, f"Cannot connect to MQTT broker at {host}:{port}: {e}"
+        return True, None
+
+    def _test_webhook(self, sink: WebhookSinkConfig) -> tuple[bool, str | None]:
+        url = sink.config_data.webhook_url
+        headers = sink.config_data.headers or {}
+        try:
+            response = requests.head(url, headers=headers, timeout=self._TEST_TIMEOUT_SECONDS)
+            if response.status_code >= 500:
+                return False, f"Webhook at {url} returned server error: {response.status_code}"
+        except requests.RequestException as e:
+            return False, f"Cannot reach webhook at {url}: {e}"
+        return True, None
