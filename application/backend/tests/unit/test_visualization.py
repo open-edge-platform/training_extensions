@@ -54,7 +54,6 @@ class TestDetectionVisualizerCreator(unittest.TestCase):
 
 
 class TestInstanceSegmentationVisualizerCreator(unittest.TestCase):
-    @pytest.mark.skip(reason="Disabled due to model api bug https://github.com/open-edge-platform/model_api/issues/328")
     def test_creates_visualization(self):
         creator = InstanceSegmentationVisualizerCreator()
         original_image = np.zeros((100, 100, 3), dtype=np.uint8)
@@ -104,11 +103,11 @@ class TestVisualizationHelpers(unittest.TestCase):
     def test_contrasting_fg_dark_bg_picks_white(self):
         assert _contrasting_fg("#000000") == "white"
 
-    def test_normalize_label_name_lowercases_and_collapses_separators(self):
+    def test_normalize_label_name_lowercases_and_replaces_spaces(self):
         assert _normalize_label_name("Hello World") == "hello_world"
-        assert _normalize_label_name("  Foo--Bar!! ") == "foo_bar"
+        assert _normalize_label_name("  Foo Bar ") == "foo_bar"
         assert _normalize_label_name("ALREADY_OK") == "already_ok"
-        assert _normalize_label_name("a   b") == "a_b"
+        assert _normalize_label_name("a   b") == "a___b"
 
     def test_split_label_and_score_with_score(self):
         assert _split_label_and_score("cat (0.95)") == ("cat", " (0.95)")

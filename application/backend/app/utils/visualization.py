@@ -54,21 +54,12 @@ def _contrasting_fg(bg_color: str | tuple[int, int, int]) -> str:
 def _normalize_label_name(name: str) -> str:
     """Normalize a label name for matching.
 
-    ``model_api`` rewrites label names to be identifier-friendly (e.g. spaces
-    are replaced with underscores), so a prediction's ``label_name`` won't be
-    byte-equal to the UI/DB name. We canonicalize both sides by lower-casing
-    and collapsing any run of non-alphanumeric characters to a single ``_``.
+    During model export, label names have spaces replaced with underscores
+    (see ``TaskLevelExportParameters.to_metadata``), so a prediction's label
+    name won't be byte-equal to the UI/DB name. We canonicalize both sides by
+    lower-casing and replacing spaces with underscores.
     """
-    out: list[str] = []
-    prev_sep = False
-    for ch in name.strip().lower():
-        if ch.isalnum():
-            out.append(ch)
-            prev_sep = False
-        elif not prev_sep:
-            out.append("_")
-            prev_sep = True
-    return "".join(out).strip("_")
+    return name.strip().lower().replace(" ", "_")
 
 
 def _build_normalized_color_map(label_colors: dict[str, str]) -> dict[str, str]:
