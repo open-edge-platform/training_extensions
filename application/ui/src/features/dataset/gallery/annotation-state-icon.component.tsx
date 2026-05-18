@@ -13,9 +13,9 @@ type AnnotationStatusIconProps = {
 };
 
 export const AnnotationStatusIcon = ({ state }: AnnotationStatusIconProps) => {
-    if (state === 'accepted') {
+    if (state === 'reviewed') {
         return (
-            <View UNSAFE_className={classes.accepted}>
+            <View UNSAFE_className={classes.reviewed}>
                 <CheckCircleOutlined />
             </View>
         );

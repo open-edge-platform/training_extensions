@@ -59,10 +59,10 @@ describe('BottomToolbar', () => {
         expect(screen.getByText('test-image.jpg (1920 x 1080 px)')).toBeInTheDocument();
     });
 
-    it('displays "Accepted" tag when user has reviewed the media', () => {
+    it('displays "Reviewed" tag when user has reviewed the media', () => {
         renderBottomToolbar({ isUserReviewed: true });
 
-        expect(screen.getByLabelText('Accepted')).toBeInTheDocument();
+        expect(screen.getByLabelText('Reviewed')).toBeInTheDocument();
     });
 
     it('displays "For Review" tag when user has not reviewed the media', () => {

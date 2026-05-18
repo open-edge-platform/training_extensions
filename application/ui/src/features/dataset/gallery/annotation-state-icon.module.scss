@@ -1,11 +1,11 @@
-.accepted,
+.reviewed,
 .rejected,
 .toReview {
     border-radius: var(--spectrum-global-dimension-size-200);
     padding: var(--spectrum-global-dimension-size-50) var(--spectrum-global-dimension-size-100);
 }
 
-.accepted {
+.reviewed {
     background: var(--moss-tint-1);
     color: var(--spectrum-global-color-gray-50);
 }
