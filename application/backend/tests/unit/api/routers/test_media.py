@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
-from unittest.mock import ANY, MagicMock, PropertyMock, call
+from unittest.mock import ANY, MagicMock, PropertyMock, call, patch
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -606,7 +606,10 @@ class TestMediaEndpoints:
             with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_file:
                 temp_file_path = Path(tmp_file.name)
                 fxt_media_service.get_media_binary_path_by_id.return_value = temp_file_path
-                response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media.id)}/binary")
+                # needs_display_normalization is tested separately; mock it out so that
+                # arbitrary (possibly non-image) temp files don't cause PIL errors here.
+                with patch("app.api.routers.media.needs_display_normalization", return_value=False):
+                    response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media.id)}/binary")
 
         finally:
             if temp_file_path and os.path.exists(temp_file_path):
@@ -618,6 +621,73 @@ class TestMediaEndpoints:
             project_id=fxt_get_project.id, media_id=media.id
         )
 
+    @pytest.mark.parametrize(
+        "image_format, suffix",
+        [
+            (ImageFormat.TIF, ".tif"),
+            (ImageFormat.PNG, ".png"),
+        ],
+    )
+    def test_get_media_binary_normalizes_high_bit_depth(
+        self, fxt_get_project, fxt_media_service, fxt_client, image_format, suffix
+    ):
+        """High bit depth images are normalized to 8-bit PNG on the fly, regardless of format."""
+        import numpy as np
+
+        media = MagicMock(spec=Image, id=uuid4(), format=image_format, type=MediaType.IMAGE)
+        type(media).name = PropertyMock(return_value="test_16bit")
+        fxt_media_service.get_media_by_id.return_value = media
+
+        temp_file_path = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_file:
+                temp_file_path = Path(tmp_file.name)
+                img = PILImage.fromarray(np.ones((10, 10), dtype="uint16") * 1000, mode="I;16")
+                img.save(temp_file_path)
+                fxt_media_service.get_media_binary_path_by_id.return_value = temp_file_path
+                response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media.id)}/binary")
+        finally:
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert "image/png" in response.headers.get("content-type", "")
+
+    @pytest.mark.parametrize(
+        "image_format, suffix",
+        [
+            (ImageFormat.TIF, ".tif"),
+            (ImageFormat.PNG, ".png"),
+        ],
+    )
+    def test_get_media_binary_raw_skips_normalization(
+        self, fxt_get_project, fxt_media_service, fxt_client, image_format, suffix
+    ):
+        """When raw=true, the normalization function is never called regardless of format."""
+        import numpy as np
+
+        media = MagicMock(spec=Image, id=uuid4(), format=image_format, type=MediaType.IMAGE)
+        type(media).name = PropertyMock(return_value="test_16bit")
+        fxt_media_service.get_media_by_id.return_value = media
+
+        temp_file_path = None
+        try:
+            with (
+                tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_file,
+                patch("app.api.routers.media.normalize_image_to_png_bytes") as mock_normalize_image,
+            ):
+                temp_file_path = Path(tmp_file.name)
+                img = PILImage.fromarray(np.ones((10, 10), dtype="uint16") * 1000, mode="I;16")
+                img.save(temp_file_path)
+                fxt_media_service.get_media_binary_path_by_id.return_value = temp_file_path
+                response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media.id)}/binary?raw=true")
+        finally:
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+
+        assert response.status_code == status.HTTP_200_OK
+        mock_normalize_image.assert_not_called()
+
     def test_get_video_frame_binary_on_the_fly_annotated(self, fxt_get_project, fxt_media_service, fxt_client):
         video_id = uuid4()
         video_frame_id = uuid4()
@@ -625,19 +695,21 @@ class TestMediaEndpoints:
         media = MagicMock(spec=Video, id=video_id, format=VideoFormat.MP4, type=MediaType.VIDEO, frame_count=100)
         fxt_media_service.get_media_by_id.return_value = media
 
-        video_frame = MagicMock(spec=VideoFrame, id=video_frame_id, format=ImageFormat.JPG)
+        video_frame = MagicMock(spec=VideoFrame, id=video_frame_id, format=ImageFormat.JPG, type=MediaType.VIDEO_FRAME)
         type(video_frame).name = PropertyMock(return_value="test_10")
         fxt_media_service.get_video_frame_by_video_id_and_index.return_value = video_frame
 
         temp_file_path = None
         try:
-            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
+            with (
+                tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file,
+                patch("app.api.routers.media.needs_display_normalization", return_value=False),
+            ):
                 temp_file_path = Path(tmp_file.name)
                 fxt_media_service.get_media_binary_path_by_id.return_value = temp_file_path
                 response = fxt_client.get(
                     f"/api/projects/{str(uuid4())}/dataset/media/{str(video_id)}/binary?frame_index=10"
                 )
-
         finally:
             if temp_file_path and os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)

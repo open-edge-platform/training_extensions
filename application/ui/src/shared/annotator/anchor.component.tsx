@@ -95,7 +95,7 @@ export const Anchor = ({
     };
 
     return (
-        <g ref={triggerRef}>
+        <g ref={triggerRef} data-resize-anchor='true'>
             {children}
             <rect
                 x={x - size}

@@ -13,7 +13,7 @@ export interface RegionOfInterest {
 export type Point = components['schemas']['Point'];
 export type Rect = components['schemas']['Rectangle'];
 export type Polygon = components['schemas']['Polygon'];
-export type FullImage = components['schemas']['FullImage'];
+type FullImage = components['schemas']['FullImage'];
 
 export type Shape = Rect | Polygon | FullImage;
 

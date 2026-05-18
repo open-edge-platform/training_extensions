@@ -1,17 +1,19 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 from uuid import UUID
 
 from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.db.schema import PipelineDB
-from app.models import Pipeline, PipelineStatus
+from app.models import FolderSinkConfig, Pipeline, PipelineStatus, SinkAdapter
 from app.models.model_revision import ModelFormat, ModelPrecision, TrainingStatus
-from app.repositories import PipelineRepository
+from app.repositories import PipelineRepository, SinkRepository
 from app.repositories.model_revision_repo import ModelRevisionRepository
 from app.repositories.model_variant_repo import ModelVariantRepository
+from app.repositories.project_repo import ProjectRepository
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus, EventType
 from app.services.parent_process_guard import parent_process_only
@@ -27,11 +29,17 @@ class OtherProjectActiveError(Exception):
     Exception raised when trying to run a pipeline in one project, while a pipeline of another project is still running.
     """
 
-    def __init__(self, requested_project_id: str, active_project_id: str):
+    def __init__(
+        self,
+        requested_project_name: str,
+        requested_project_id: str,
+        active_project_name: str,
+        active_project_id: str,
+    ):
         super().__init__(
-            f"Attempted to enable a pipeline in project with ID {requested_project_id}, while a pipeline is still "
-            f"enabled in another project with ID {active_project_id}. Please first disable pipeline in project with "
-            f"ID {active_project_id}"
+            f"Attempted to enable a pipeline in project '{requested_project_name}' (ID: {requested_project_id}), "
+            f"while a pipeline is still enabled in another project '{active_project_name}' (ID: {active_project_id}). "
+            f"Please first disable pipeline in project '{active_project_name}' (ID: {active_project_id})."
         )
 
 
@@ -46,6 +54,16 @@ class DeviceInt8NotSupportedError(Exception):
         super().__init__(
             f"INT8 inference is not supported on device '{device}'. "
             f"Please select a non-quantized (FP16/FP32) model variant or use a device that supports INT8."
+        )
+
+
+class FolderSinkNotAccessibleError(Exception):
+    """Exception raised when the folder sink path cannot be created or written to."""
+
+    def __init__(self, folder_path: str, reason: str):
+        super().__init__(
+            f"Folder sink path '{folder_path}' is not accessible: {reason}. "
+            f"Please ensure the path exists or can be created and that write permissions are granted."
         )
 
 
@@ -126,9 +144,22 @@ class PipelineService(BaseSessionManagedService):
             # Only one pipeline can run at the same time. Note that only one pipeline per project exists.
             active_pipeline_db = pipeline_repo.get_active_pipeline()
             if active_pipeline_db is not None and to_update_db.project_id != active_pipeline_db.project_id:
+                project_repo = ProjectRepository(db=self.db_session)
+                to_update_project = project_repo.get_by_id(to_update_db.project_id)
+                active_project = project_repo.get_by_id(active_pipeline_db.project_id)
                 raise OtherProjectActiveError(
-                    requested_project_id=to_update_db.project_id, active_project_id=active_pipeline_db.project_id
+                    requested_project_name=to_update_project.name if to_update_project is not None else "",
+                    requested_project_id=to_update_db.project_id,
+                    active_project_name=active_project.name if active_project is not None else "",
+                    active_project_id=active_pipeline_db.project_id,
                 )
+            # Validate folder sink accessibility when activating the pipeline
+            if to_update_db.sink_id:
+                sink_id = to_update_db.sink_id
+                db_sink = SinkRepository(self.db_session).get_by_id(sink_id)
+                sink_config = SinkAdapter.validate_python(db_sink, from_attributes=True)
+                if isinstance(sink_config, FolderSinkConfig):
+                    self._validate_folder_sink(sink_config)
 
         pipeline_db = pipeline_repo.update(to_update_db)
         updated = Pipeline.model_validate(pipeline_db)
@@ -215,6 +246,27 @@ class PipelineService(BaseSessionManagedService):
                     f"Please specify a model_variant_id explicitly."
                 )
             partial_config["model_variant_id"] = default_variant.id
+
+    @staticmethod
+    def _validate_folder_sink(sink_config: FolderSinkConfig) -> None:
+        """
+        Validate that the folder sink path can be created and written to.
+
+        Args:
+            sink_config: The FolderSinkConfig to validate.
+
+        Raises:
+            FolderSinkNotAccessibleError: If the folder cannot be created or written to.
+        """
+        folder_path = sink_config.config_data.folder_path
+        probe_file_path = os.path.join(folder_path, ".folder_sink_write_probe")
+        try:
+            os.makedirs(folder_path, exist_ok=True)
+            with open(probe_file_path, "wb") as probe_file:
+                probe_file.write(b"")
+            os.remove(probe_file_path)
+        except OSError as e:
+            raise FolderSinkNotAccessibleError(folder_path, str(e)) from e
 
     def __emit_event(self, pipeline: Pipeline, updated: Pipeline) -> None:
         if self._event_bus is None:

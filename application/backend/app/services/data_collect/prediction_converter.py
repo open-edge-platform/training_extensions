@@ -12,6 +12,61 @@ from model_api.models.result import Result
 from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
 
 
+def _build_label_maps(labels: Sequence[Label]) -> tuple[dict[str, Label], dict[str, Label]]:
+    """Precompute name→label and unmangled-name→label dicts for O(1) lookup."""
+    name_map = {label.name: label for label in labels}
+    unmangled_map = {label.name.replace(" ", "_"): label for label in labels if " " in label.name}
+    return name_map, unmangled_map
+
+
+def _find_project_label(
+    name_map: dict[str, Label],
+    unmangled_map: dict[str, Label],
+    labels: Sequence[Label],
+    label_name: str | None,
+    predicted_class_index: int | None = None,
+) -> Label | None:
+    """
+    Find a project label matching the predicted label using a three-stage fallback strategy.
+
+    Resolution order:
+    1. **Exact name match** - performs an O(1) lookup of ``label_name`` in ``name_map``.
+    2. **Unmangled name match** - if the exact match fails and ``label_name`` contains underscores, performs an O(1)
+       lookup in ``unmangled_map``. This handles models that serialize label names with underscores instead of spaces
+       (e.g. ``"my_cat"`` → ``"my cat"``). The lookup is skipped entirely when ``label_name`` contains no underscores.
+    3. **Index fallback** - if both name lookups fail, returns ``labels[predicted_class_index]`` when the index is a
+       non-negative integer within the bounds of ``labels``. This handles renamed labels whose in-model
+       name no longer matches any project label.
+
+    Args:
+        name_map: Mapping of label name → ``Label`` for O(1) exact-name lookup.
+        unmangled_map: Mapping of underscore-mangled label name → ``Label`` for O(1) unmangled-name lookup.
+            Only contains entries for labels whose names include spaces.
+        labels: Ordered sequence of project labels to search.
+        label_name: The label name as reported by the model. May be ``None`` when the model does not provide a name,
+            in which case stages 1 and 2 are skipped.
+        predicted_class_index: Zero-based class index produced by the model. Used only when name-based lookup fails.
+            Defaults to ``None``, which disables the index fallback.
+
+    Returns:
+        The matched ``Label``, or ``None`` if no stage produced a match.
+    """
+    if label_name is not None:
+        label = name_map.get(label_name)
+        if label:
+            return label
+
+        # Only attempt unmangled lookup if "_" is present (avoids unnecessary dict lookup noise)
+        if "_" in label_name:
+            label = unmangled_map.get(label_name)
+            if label:
+                return label
+
+    if predicted_class_index is not None and 0 <= predicted_class_index < len(labels):
+        return labels[predicted_class_index]
+    return None
+
+
 def _convert_classification_prediction(
     labels: Sequence[Label], prediction: ClassificationResult
 ) -> list[DatasetItemAnnotation]:
@@ -19,9 +74,16 @@ def _convert_classification_prediction(
     predicted_confidences: list[float] = []
     if prediction.top_labels is None:
         raise RuntimeError("The prediction is malformed because it does not contain labels")
+    name_map, unmangled_map = _build_label_maps(labels)
     for predicted_label in prediction.top_labels:
         label_name = predicted_label.name
-        label = next((label for label in labels if label.name == label_name), None)
+        label = _find_project_label(
+            name_map=name_map,
+            unmangled_map=unmangled_map,
+            labels=labels,
+            label_name=label_name,
+            predicted_class_index=predicted_label.id,
+        )
         if not label:
             logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue
@@ -35,12 +97,19 @@ def _convert_classification_prediction(
 
 
 def _convert_detection_prediction(labels: Sequence[Label], prediction: DetectionResult) -> list[DatasetItemAnnotation]:
+    name_map, unmangled_map = _build_label_maps(labels)
     result = []
     prediction_scores_list = prediction.scores.tolist()
     for idx, box in enumerate(prediction.bboxes):
         label_name = prediction.label_names[idx]
         bbox_confidence = prediction_scores_list[idx]
-        label = next((label for label in labels if label.name == label_name), None)
+        label = _find_project_label(
+            name_map=name_map,
+            unmangled_map=unmangled_map,
+            labels=labels,
+            label_name=label_name,
+            predicted_class_index=int(prediction.labels[idx]),
+        )
         if not label:
             logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue
@@ -59,13 +128,20 @@ def _convert_segmentation_prediction(
     frame_data: np.ndarray,
     prediction: InstanceSegmentationResult,
 ) -> list[DatasetItemAnnotation]:
+    name_map, unmangled_map = _build_label_maps(labels)
     height, width, _ = frame_data.shape
     result = []
     prediction_scores_list = prediction.scores.tolist()
     for idx, box in enumerate(prediction.bboxes):
         label_name = prediction.label_names[idx]
         polygon_confidence = prediction_scores_list[idx]
-        label = next((label for label in labels if label.name == label_name), None)
+        label = _find_project_label(
+            name_map=name_map,
+            unmangled_map=unmangled_map,
+            labels=labels,
+            label_name=label_name,
+            predicted_class_index=int(prediction.labels[idx]),
+        )
         if not label:
             logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue

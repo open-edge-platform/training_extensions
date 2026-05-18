@@ -34,7 +34,7 @@ export const getMockedModelArchitecture = (
     id: 'Object_Detection_Deim_DFine_L',
     task: 'detection',
     name: 'Deim-DFine-L',
-    license: "Apache 2.0",
+    license: 'Apache 2.0',
     description: 'DEIM is an advanced training framework designed to enhance the matching mechanism in DETRs.',
     capabilities: {
         xai: true,

@@ -10,7 +10,7 @@ import { MediaItem } from '../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { Media } from '../../../constants/shared-types';
-import { getMediaBinaryUrl, getThumbnailUrl } from '../../../shared/media-url.utils';
+import { getMediaDownloadUrl, getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../providers/selected-data-provider.component';
 import { AnnotationStatusIcon } from './annotation-state-icon.component';
@@ -73,7 +73,7 @@ const GalleryList = ({
             onSelectionChange={setSelectedKeys}
             contentItem={(item) => {
                 const mediaUrl = getThumbnailUrl(projectId, item.id);
-                const fullMediaUrl = getMediaBinaryUrl(projectId, item.id);
+                const downloadUrl = getMediaDownloadUrl(projectId, item.id);
                 const mediaFileName = `${item.name}.${item.format}`;
 
                 return (
@@ -108,7 +108,7 @@ const GalleryList = ({
                                 <MediaItemActions
                                     id={item.id}
                                     onDeleted={toggleSelectedKeys}
-                                    mediaUrl={fullMediaUrl}
+                                    mediaUrl={downloadUrl}
                                     mediaFileName={mediaFileName}
                                     onAnnotate={() => onSelectedMediaItemChange(item)}
                                 />

@@ -19,6 +19,9 @@ export const getThumbnailUrl = (projectId: string, itemId: string) => `${getMedi
 
 export const getMediaBinaryUrl = (projectId: string, itemId: string) => `${getMediaBaseUrl(projectId, itemId)}/binary`;
 
+export const getMediaDownloadUrl = (projectId: string, itemId: string) =>
+    `${getMediaBaseUrl(projectId, itemId)}/binary?raw=true`;
+
 export const getDatasetRevisionThumbnailUrl = (projectId: string, datasetRevisionId: string, itemId: string) =>
     `${getDatasetRevisionItemBaseUrl(projectId, datasetRevisionId, itemId)}/thumbnail`;
 

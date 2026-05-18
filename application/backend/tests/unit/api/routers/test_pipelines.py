@@ -16,6 +16,7 @@ from app.models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, ResourceType
 from app.services.pipeline_service import (
     DeviceInt8NotSupportedError,
+    FolderSinkNotAccessibleError,
     IncompatibleModelVariantError,
     OtherProjectActiveError,
 )
@@ -179,10 +180,20 @@ class TestPipelineEndpoints:
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_pipeline_service.update_pipeline.assert_called_once_with(project_id, {"status": pipeline_status})
 
-    def test_cannot_enable_pipeline(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
-        fxt_pipeline_service.update_pipeline.side_effect = OtherProjectActiveError(
-            requested_project_id="this_project_id", active_project_id="active_project_id"
-        )
+    @pytest.mark.parametrize(
+        "error",
+        [
+            OtherProjectActiveError(
+                requested_project_name="this_project_name",
+                requested_project_id="requested-project-id",
+                active_project_name="active_project_name",
+                active_project_id="active-project-id",
+            ),
+            FolderSinkNotAccessibleError(folder_path="/root/predictions", reason="Read-only file system"),
+        ],
+    )
+    def test_cannot_enable_pipeline(self, error, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        fxt_pipeline_service.update_pipeline.side_effect = error
 
         response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:enable")
 

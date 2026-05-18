@@ -19,7 +19,8 @@
                 "minHeight": 600,
                 "resizable": true,
                 "fullscreen": false,
-                "dragDropEnabled": false
+                "dragDropEnabled": false,
+                "additionalBrowserArgs": "--enable-unsafe-webgpu --enable-features=Vulkan"
             }
         ],
         "security": {

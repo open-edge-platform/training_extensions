@@ -142,7 +142,7 @@ const filterSSIMResults = (
     return collector;
 };
 
-export const guessNumberOfItemsThreshold = (matches: SSIMMatch[], confidenceThreshold = 0.9): number => {
+const guessNumberOfItemsThreshold = (matches: SSIMMatch[], confidenceThreshold = 0.9): number => {
     const guess = matches.findIndex(({ confidence }) => confidence < confidenceThreshold);
 
     return guess === -1 ? matches.length : guess;
