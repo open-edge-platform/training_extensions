@@ -33,7 +33,7 @@ describe('useUploadProgress', () => {
         });
     });
 
-    it('shows an info toast immediately when upload starts', async () => {
+    it('shows a spinner toast immediately when upload starts', async () => {
         const { result } = renderHook(() => useUploadProgress());
 
         act(() => {
@@ -41,6 +41,20 @@ describe('useUploadProgress', () => {
         });
 
         expect(await screen.findByText('Uploading 1 item(s)…')).toBeVisible();
+        expect(screen.getByLabelText('Loading...')).toBeVisible();
+    });
+
+    it('removes the spinner when upload finishes', async () => {
+        const { result } = renderHook(() => useUploadProgress());
+
+        act(() => {
+            result.current.startUploadProgress(1);
+            result.current.updateUploadProgress({ settledResults: [{ status: 'fulfilled', value: 'a' }] });
+            result.current.finishUploadProgress();
+        });
+
+        expect(await screen.findByText('Uploaded 1 item(s)')).toBeVisible();
+        expect(screen.queryByLabelText('Loading...')).toBeNull();
     });
 
     it('updates progress from settled batch results', () => {
@@ -60,6 +74,41 @@ describe('useUploadProgress', () => {
             failed: 1,
             isUploading: true,
         });
+    });
+
+    it('shows only succeeded count when there are no failures yet', async () => {
+        const { result } = renderHook(() => useUploadProgress());
+
+        act(() => {
+            result.current.startUploadProgress(3);
+            result.current.updateUploadProgress({ settledResults: [fulfilledResult('a')] });
+        });
+
+        expect(await screen.findByText('Uploading 3 item(s)… (1 succeeded)')).toBeVisible();
+    });
+
+    it('shows only failed count when there are no successes yet', async () => {
+        const { result } = renderHook(() => useUploadProgress());
+
+        act(() => {
+            result.current.startUploadProgress(3);
+            result.current.updateUploadProgress({ settledResults: [rejectedResult(new Error('bad'))] });
+        });
+
+        expect(await screen.findByText('Uploading 3 item(s)… (1 failed)')).toBeVisible();
+    });
+
+    it('shows both counts when there are mixed results', async () => {
+        const { result } = renderHook(() => useUploadProgress());
+
+        act(() => {
+            result.current.startUploadProgress(3);
+            result.current.updateUploadProgress({
+                settledResults: [fulfilledResult('a'), rejectedResult(new Error('bad'))],
+            });
+        });
+
+        expect(await screen.findByText('Uploading 3 item(s)… (1 succeeded, 1 failed)')).toBeVisible();
     });
 
     it('marks progress as finished on final batch update', () => {
