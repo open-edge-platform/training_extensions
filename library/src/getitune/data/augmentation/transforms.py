@@ -122,7 +122,8 @@ class Resize(tvt_v2.Transform):
             interpolation=self.interpolation,
             antialias=self.antialias,
         )
-        sample.image = sample.image.clamp(0, 1)
+        if sample.image.is_floating_point():
+            sample.image = sample.image.clamp(0, 1)
         # Apply padding if needed
         if pad_left > 0 or pad_top > 0 or pad_right > 0 or pad_bottom > 0:
             # Normalise pad value to match the image's value range.

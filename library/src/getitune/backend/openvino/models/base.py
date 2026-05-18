@@ -87,9 +87,6 @@ class OVModel:
         self.num_requests = max_num_requests or get_default_num_async_infer_requests()
         self.use_throughput_mode = use_throughput_mode
         self.model_api_configuration = model_api_configuration or {}
-        # DataModule provides RGB images; disable ModelAPI's BGR→RGB swap
-        # which assumes OpenCV-sourced (BGR) input.
-        self.model_api_configuration.setdefault("reverse_input_channels", False)
         self.hparams: dict[str, Any] = {}
         self.model = self._create_model()
         self.metric_callable = metric
@@ -184,7 +181,18 @@ class OVModel:
 
         self._get_hparams_from_adapter(model_adapter)
 
-        return Model.create_model(model_adapter, model_type=self.model_type, configuration=self.model_api_configuration)
+        # getitune's data pipeline handles all preprocessing (resize, intensity
+        # normalization to float32 [0,1]).  Override ModelAPI's embedded preprocessing
+        # to accept already-preprocessed float32 input and avoid double-normalization.
+        configuration: dict[str, Any] = {
+            "input_dtype": "f32",
+            "mean_values": [],
+            "scale_values": [],
+            "intensity_mode": "none",
+        }
+        configuration.update(self.model_api_configuration)
+
+        return Model.create_model(model_adapter, model_type=self.model_type, configuration=configuration)
 
     def _customize_inputs(self, entity: SampleBatch) -> dict[str, Any]:
         """Customize the input data for the model.
