@@ -10,7 +10,8 @@ import { MediaItem } from '../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { Media } from '../../../constants/shared-types';
-import { getMediaBinaryUrl, getThumbnailUrl } from '../../../shared/media-url.utils';
+import { type GalleryViewMode } from '../../../shared/gallery-view-modes';
+import { getMediaDownloadUrl, getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../providers/selected-data-provider.component';
 import { AnnotationStatusIcon } from './annotation-state-icon.component';
@@ -24,7 +25,7 @@ import { useUploadFiles } from './use-upload-files';
 
 type GalleryProps = {
     items: Media[];
-    viewMode: ViewModes;
+    viewMode: GalleryViewMode;
     isPending: boolean;
     hasActiveFilter: boolean;
     isFetchingNextPage: boolean;
@@ -32,16 +33,15 @@ type GalleryProps = {
     isMediaItemReviewedById: (mediaItemId: string) => boolean;
 };
 
-// DetailsView isn’t needed, so we’re forcing the cast to prevent TS from complaining about missing properties
-const VIEW_MODE_SETTINGS = {
+const VIEW_MODE_SETTINGS: Record<GalleryViewMode, GridLayoutOptions> = {
     [ViewModes.LARGE]: { minItemSize: new Size(300, 300), minSpace: new Size(10, 10), preserveAspectRatio: true },
     [ViewModes.MEDIUM]: { minItemSize: new Size(200, 200), minSpace: new Size(6, 6), preserveAspectRatio: true },
     [ViewModes.SMALL]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
-} as Record<ViewModes, GridLayoutOptions>;
+};
 
 type GalleryListProps = {
     items: Media[];
-    viewMode: ViewModes;
+    viewMode: GalleryViewMode;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
     isMediaItemReviewedById: (mediaItemId: string) => boolean;
@@ -73,7 +73,7 @@ const GalleryList = ({
             onSelectionChange={setSelectedKeys}
             contentItem={(item) => {
                 const mediaUrl = getThumbnailUrl(projectId, item.id);
-                const fullMediaUrl = getMediaBinaryUrl(projectId, item.id);
+                const downloadUrl = getMediaDownloadUrl(projectId, item.id);
                 const mediaFileName = `${item.name}.${item.format}`;
 
                 return (
@@ -108,14 +108,14 @@ const GalleryList = ({
                                 <MediaItemActions
                                     id={item.id}
                                     onDeleted={toggleSelectedKeys}
-                                    mediaUrl={fullMediaUrl}
+                                    mediaUrl={downloadUrl}
                                     mediaFileName={mediaFileName}
                                     onAnnotate={() => onSelectedMediaItemChange(item)}
                                 />
                             </Flex>
                         )}
                         bottomRightElement={() => (
-                            <AnnotationStatusIcon state={isMediaItemReviewedById(item.id) ? 'accepted' : undefined} />
+                            <AnnotationStatusIcon isReviewed={isMediaItemReviewedById(item.id)} />
                         )}
                     />
                 );

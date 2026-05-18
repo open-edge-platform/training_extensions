@@ -3,13 +3,15 @@
 
 import { CSSProperties, Fragment, useMemo } from 'react';
 
-import { Divider, Flex, Text } from '@geti/ui';
+import { Divider, Flex, Pressable, Text, Tooltip, TooltipTrigger } from '@geti/ui';
 import { clsx } from 'clsx';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { isEmpty } from 'lodash-es';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import type { Label } from '../../../constants/shared-types';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
+import { formatHotkeyForDisplay } from '../../../shared/hotkeys-definition';
 import { usePinnedLabels } from './hooks/use-pinned-labels.hook';
 import { LabelsEditorPopover } from './labels-editor/labels-editor-popover.component';
 import { useLabels } from './use-labels.hook';
@@ -26,15 +28,20 @@ type LabelBadgeProps = {
 
 const LabelBadge = ({ label, isSelected, onClick }: LabelBadgeProps) => {
     return (
-        <button
-            onClick={onClick}
-            style={{ '--labelBgColor': label.color } as CSSProperties}
-            className={clsx(classes.badge, { [classes.selected]: isSelected })}
-            aria-pressed={isSelected}
-            aria-label={`Label ${label.name}`}
-        >
-            <Text UNSAFE_className={classes.badgeText}>{label.name}</Text>
-        </button>
+        <TooltipTrigger isDisabled={isEmpty(label.hotkey)}>
+            <Pressable>
+                <button
+                    onClick={onClick}
+                    style={{ '--labelBgColor': label.color } as CSSProperties}
+                    className={clsx(classes.badge, { [classes.selected]: isSelected })}
+                    aria-pressed={isSelected}
+                    aria-label={`Label ${label.name}`}
+                >
+                    <Text UNSAFE_className={classes.badgeText}>{label.name}</Text>
+                </button>
+            </Pressable>
+            <Tooltip>Hotkey: {formatHotkeyForDisplay(label.hotkey ?? '')}</Tooltip>
+        </TooltipTrigger>
     );
 };
 
@@ -51,9 +58,7 @@ type LabelHotkeyBindingProps = {
 const LabelHotkeyBinding = ({ label, onTrigger }: LabelHotkeyBindingProps) => {
     const hotkey = label.hotkey ?? '';
 
-    useHotkeys(hotkey ?? '', () => onTrigger(label), [label, onTrigger], {
-        enabled: !!label.hotkey,
-    });
+    useHotkeys(hotkey, () => onTrigger(label), [label, onTrigger]);
 
     return null;
 };
@@ -85,9 +90,11 @@ export const Labels = ({ isClassification = false, isMultiLabel = false }: Label
 
     return (
         <Flex alignItems='start' gap='size-100' minWidth={0} flex='1'>
-            {editableLabels.map((label) => (
-                <LabelHotkeyBinding key={`hotkey-${label.id}`} label={label} onTrigger={toggleLabelOnAnnotations} />
-            ))}
+            {labels
+                .filter((label) => !isEmpty(label.hotkey))
+                .map((label) => (
+                    <LabelHotkeyBinding key={`hotkey-${label.id}`} label={label} onTrigger={toggleLabelOnAnnotations} />
+                ))}
 
             {hasLabels && (
                 <div aria-label={'Labels'} className={classes.labelsContainer}>

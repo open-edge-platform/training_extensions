@@ -81,25 +81,7 @@ export const VideoPredictions = () => {
         selector: (data) => {
             const idxToPredictionsMap = new Map(data.map((frame) => [frame.media.frame_index, frame.prediction]));
 
-            if (idxToPredictionsMap.has(videoFrame.frame_number)) {
-                return mapServerAnnotationsToLocal(idxToPredictionsMap.get(videoFrame.frame_number) ?? [], labels);
-            }
-
-            for (let i = 0; i < PREDICTION_CHUNK_SIZE; i++) {
-                if (idxToPredictionsMap.has(videoFrame.frame_number + i)) {
-                    return mapServerAnnotationsToLocal(
-                        idxToPredictionsMap.get(videoFrame.frame_number + i) ?? [],
-                        labels
-                    );
-                } else if (idxToPredictionsMap.has(videoFrame.frame_number - i)) {
-                    return mapServerAnnotationsToLocal(
-                        idxToPredictionsMap.get(videoFrame.frame_number - i) ?? [],
-                        labels
-                    );
-                }
-            }
-
-            return mapServerAnnotationsToLocal([], labels);
+            return mapServerAnnotationsToLocal(idxToPredictionsMap.get(videoFrame.frame_number) ?? [], labels);
         },
     });
 

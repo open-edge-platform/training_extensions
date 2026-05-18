@@ -1,12 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Text } from '@geti/ui';
-import { Filter, GridSmall, Search, SortUpDown } from '@geti/ui/icons';
+import { Flex, MediaViewModes, Text, useViewMode, ViewModes } from '@geti/ui';
 import { useNumberFormatter } from 'react-aria';
 
 import type { DatasetRevision, DatasetSubset } from '../../../../constants/shared-types';
 import { useGetDatasetRevisionItems } from '../../../../hooks/use-get-dataset-revision-items.hook';
+import { GALLERY_VIEW_MODES, type GalleryViewMode } from '../../../../shared/gallery-view-modes';
 import { Box } from '../components/box/box.component';
 import { SubsetGallery } from './subset-gallery.component';
 
@@ -17,27 +17,6 @@ type SubsetBoxProps = {
     totalItems: number;
 };
 
-// TODO: Uncomment when we want to support subset actions
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const BoxActions = () => {
-    return (
-        <Flex marginStart={'auto'} gap={'size-50'}>
-            <ActionButton isQuiet aria-label='Search dataset'>
-                <Search />
-            </ActionButton>
-            <ActionButton isQuiet aria-label='Filter dataset'>
-                <Filter />
-            </ActionButton>
-            <ActionButton isQuiet aria-label='Grid view'>
-                <GridSmall />
-            </ActionButton>
-            <ActionButton isQuiet aria-label='Sort dataset'>
-                <SortUpDown />
-            </ActionButton>
-        </Flex>
-    );
-};
-
 const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxProps) => {
     const { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount } = useGetDatasetRevisionItems(
         {
@@ -45,6 +24,7 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
             subset,
         }
     );
+    const [viewMode, setViewMode] = useViewMode(`model-training-datasets-${subset}-view-mode`, ViewModes.MEDIUM);
 
     const formatter = useNumberFormatter({ style: 'percent', maximumFractionDigits: 0 });
     const subsetPercentage = totalItems > 0 ? totalCount / totalItems : 0;
@@ -52,10 +32,12 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
     return (
         <Box
             title={`${title} ${formatter.format(subsetPercentage)} (${totalCount})`}
+            actions={<MediaViewModes viewMode={viewMode} setViewMode={setViewMode} items={GALLERY_VIEW_MODES} />}
             content={
                 <SubsetGallery
                     items={items}
                     datasetRevisionId={datasetRevisionId}
+                    viewMode={viewMode as GalleryViewMode}
                     fetchNextPage={fetchNextPage}
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}

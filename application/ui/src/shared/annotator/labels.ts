@@ -10,8 +10,8 @@ import type { Label, TaskType } from '../../constants/shared-types';
 import { isClassificationTask } from '../../features/project/task-type-guards';
 
 export const EMPTY_LABEL_ID = 'empty-label';
-const NO_LABEL: Label = { id: EMPTY_LABEL_ID, name: 'No label', color: '#FFF' };
-const NO_OBJECT_LABEL: Label = { id: EMPTY_LABEL_ID, name: 'No object', color: '#FFF' };
+const NO_LABEL: Label = { id: EMPTY_LABEL_ID, name: 'No label', color: '#FFF', hotkey: 'N' };
+const NO_OBJECT_LABEL: Label = { id: EMPTY_LABEL_ID, name: 'No object', color: '#FFF', hotkey: 'N' };
 
 export const isEmptyLabel = <T extends { id: string }>({ id }: T): boolean => id === EMPTY_LABEL_ID;
 export const isNonEmptyLabel = negate(isEmptyLabel);

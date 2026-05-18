@@ -4,6 +4,7 @@
 import {
     getDatasetRevisionThumbnailUrl,
     getMediaBinaryUrl,
+    getMediaDownloadUrl,
     getProjectThumbnailUrl,
     getThumbnailUrl,
     getVideoFrameBinaryUrl,
@@ -31,6 +32,7 @@ describe.each([
         expect(getProjectThumbnailUrl('p1')).toBe(`${prefix}/api/projects/p1/thumbnail`);
         expect(getThumbnailUrl('p1', 'm1')).toBe(`${prefix}/api/projects/p1/dataset/media/m1/thumbnail`);
         expect(getMediaBinaryUrl('p1', 'm1')).toBe(`${prefix}/api/projects/p1/dataset/media/m1/binary`);
+        expect(getMediaDownloadUrl('p1', 'm1')).toBe(`${prefix}/api/projects/p1/dataset/media/m1/binary?raw=true`);
         expect(getDatasetRevisionThumbnailUrl('p1', 'r1', 'm1')).toBe(
             `${prefix}/api/projects/p1/dataset_revisions/r1/items/m1/thumbnail`
         );
