@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import {
@@ -11,7 +11,6 @@ import {
     Flex,
     Header,
     Heading,
-    PhotoPlaceholder,
     Tag,
     Text,
     View,
@@ -22,6 +21,7 @@ import { useNavigate } from 'react-router';
 
 import { paths } from '../../constants/paths';
 import { useProjects } from '../../hooks/api/project.hook';
+import { ProjectThumbnail } from './project-thumbnail/project-thumbnail.component';
 import { ProjectsList } from './projects-list.component';
 
 import classes from './projects-list.module.scss';
@@ -45,7 +45,7 @@ const SelectedProjectButton = ({ name, id, isActive }: SelectedProjectProps) => 
                 UNSAFE_className={classes.selectedProjectButton}
             >
                 <View margin='size-50'>
-                    <PhotoPlaceholder name={name} indicator={id ?? name} height={'size-400'} width={'size-400'} />
+                    <ProjectThumbnail project={{ name, id: id ?? name }} height={'size-400'} width={'size-400'} />
                 </View>
                 <Flex direction={'column'} minWidth={0}>
                     <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.projectName}>
@@ -103,9 +103,8 @@ export const ProjectsListPanel = () => {
                             padding: 'var(--spectrum-global-dimension-size-200)',
                         }}
                     >
-                        <PhotoPlaceholder
-                            name={selectedProjectName}
-                            indicator={selectedProject?.id ?? selectedProjectName}
+                        <ProjectThumbnail
+                            project={{ name: selectedProjectName, id: selectedProject?.id ?? selectedProjectName }}
                             height={'size-1000'}
                             width={'size-1000'}
                         />
