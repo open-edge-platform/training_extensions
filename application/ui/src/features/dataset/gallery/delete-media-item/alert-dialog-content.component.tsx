@@ -3,6 +3,8 @@
 
 import { AlertDialog, Text } from '@geti/ui';
 
+import { pluralizeItems } from '../../../../shared/util';
+
 type AlertDialogContentProps = {
     itemsIds: string[];
     onPrimaryAction: () => void;
@@ -13,13 +15,13 @@ export const AlertDialogContent = ({ itemsIds, onPrimaryAction }: AlertDialogCon
         <AlertDialog
             maxHeight={'size-6000'}
             title='Delete Items'
-            variant='confirmation'
+            variant='destructive'
             primaryActionLabel='Confirm'
-            secondaryActionLabel='Close'
+            secondaryActionLabel='Cancel'
             onPrimaryAction={onPrimaryAction}
             autoFocusButton='primary'
         >
-            <Text>{`Are you sure you want to delete ${itemsIds.length} item(s)?`}</Text>
+            <Text>{`Are you sure you want to delete ${itemsIds.length} ${pluralizeItems(itemsIds.length)}?`}</Text>
         </AlertDialog>
     );
 };
