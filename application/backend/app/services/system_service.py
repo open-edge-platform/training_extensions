@@ -107,17 +107,12 @@ class SystemService:
             return [DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)]
 
         devices: list[DeviceInfo] = []
-        seen_gpu_indices: set[int] = set()
         for ov_device in available_devices:
             try:
                 if ov_device == "CPU":
                     devices.append(DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None))
-                elif ov_device == "GPU" or ov_device.startswith("GPU."):
-                    # 'GPU' aliases 'GPU.0'; deduplicate if both are reported.
-                    index = 0 if ov_device == "GPU" else int(ov_device.split(".", 1)[1])
-                    if index in seen_gpu_indices:
-                        continue
-                    seen_gpu_indices.add(index)
+                elif ov_device.startswith("GPU."):
+                    index = int(ov_device.split(".", 1)[1])
                     name = core.get_property(ov_device, "FULL_DEVICE_NAME")
                     try:
                         memory = int(core.get_property(ov_device, "GPU_DEVICE_TOTAL_MEM_SIZE"))
