@@ -13,9 +13,6 @@ from app.models import DatasetFormat, TaskType
 from tests.bdd.utils.parsers import parse_sse_events
 
 # Overall budget for waiting on a single job to reach a terminal state.
-# The job status endpoint streams updates over SSE; if the stream is closed
-# prematurely (e.g. due to a transient network/proxy issue) we reconnect
-# until the job is DONE/FAILED or this budget is exhausted.
 _JOB_WAIT_TIMEOUT_SECONDS = 600
 _JOB_RECONNECT_SLEEP_SECONDS = 1
 
