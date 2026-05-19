@@ -7,6 +7,7 @@ import {
     Content,
     Dialog,
     DialogTrigger,
+    dimensionValue,
     Divider,
     Flex,
     Header,
@@ -16,7 +17,6 @@ import {
     View,
 } from '@geti/ui';
 import { AddCircle } from '@geti/ui/icons';
-import { dimensionValue } from '@react-spectrum/utils';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useNavigate } from 'react-router';
 
@@ -47,7 +47,13 @@ const SelectedProjectButton = ({ name, id, isActive }: SelectedProjectProps) => 
                 UNSAFE_className={classes.selectedProjectButton}
             >
                 <View margin='size-50'>
-                    <ProjectThumbnail project={{ name, id: id ?? name }} height={'size-400'} width={'size-400'} />
+                    <ProjectThumbnail
+                        // when selected project changes, we want to reset the project thumbnail
+                        key={id}
+                        project={{ name, id: id ?? name }}
+                        height={'size-400'}
+                        width={'size-400'}
+                    />
                 </View>
                 <Flex direction={'column'} minWidth={0}>
                     <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.projectName}>
@@ -115,6 +121,8 @@ export const ProjectsListPanel = () => {
                         gap={'size-100'}
                     >
                         <ProjectThumbnail
+                            // when selected project changes, we want to reset the project thumbnail
+                            key={selectedProject?.id}
                             project={{ name: selectedProjectName, id: selectedProject?.id ?? selectedProjectName }}
                             height={'size-1000'}
                             width={'size-1000'}
