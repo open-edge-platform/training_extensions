@@ -3,21 +3,13 @@
 
 import { createContext, ReactNode, useContext } from 'react';
 
-import { Badge, Content, ContextualHelp, Divider, Flex, Heading, Radio, Text } from '@geti/ui';
+import { Content, ContextualHelp, Divider, Flex, Heading, Radio, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../../constants/shared-types';
 import { getAccuracyMetric } from '../utils';
 
 import classes from './model-architecture-card.module.scss';
-
-const ActiveModelArchitecture = () => {
-    return (
-        <Badge variant={'info'} UNSAFE_className={classes.activeModelArchitecture}>
-            Active model
-        </Badge>
-    );
-};
 
 const ModelArchitectureDescription = () => {
     const { modelArchitecture, isSelected } = useModelArchitecture();
@@ -134,4 +126,3 @@ ModelArchitectureCard.Parameters = ModelArchitectureParameters;
 ModelArchitectureCard.DetailedParameters = ModelArchitectureDetailedParameters;
 ModelArchitectureCard.Divider = ModelArchitectureDivider;
 ModelArchitectureCard.Description = ModelArchitectureDescription;
-ModelArchitectureCard.Active = ActiveModelArchitecture;

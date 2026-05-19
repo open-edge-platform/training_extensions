@@ -24,6 +24,7 @@ export const HOTKEYS = {
     ssimTool: 'i',
     selectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+a`,
     deselectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+d`,
+    submit: `${CTRL_OR_COMMAND_KEY}+s`,
 } as const;
 
 const COMMON_HOTKEYS = {
@@ -34,6 +35,7 @@ const COMMON_HOTKEYS = {
     fitToScreen: HOTKEYS.fitToScreen,
     selectAllAnnotations: HOTKEYS.selectAllAnnotations,
     deselectAllAnnotations: HOTKEYS.deselectAllAnnotations,
+    submit: HOTKEYS.submit,
 } as const;
 
 const SELECTION_TOOL_HOTKEY = {

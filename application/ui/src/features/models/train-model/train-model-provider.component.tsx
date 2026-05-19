@@ -12,7 +12,6 @@ import {
     TrainingConfiguration,
     TrainingDevice,
 } from '../../../constants/shared-types';
-import { useGetActiveModel } from '../hooks/api/use-get-active-model.hook';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
 import { useGetSuccessfulModels } from '../hooks/api/use-get-models.hook';
 import { useGetTrainingDevices } from './api/use-get-training-devices';
@@ -24,8 +23,6 @@ type ModelRevisionWithValue = Pick<Model, 'id' | 'name' | 'architecture'> & { va
 
 export type TrainModelContextProps = {
     modelArchitectures: ModelArchitectureWithPerformanceCategory[];
-
-    activeModelArchitectureId: string | undefined;
 
     selectedModelArchitectureId: string | null;
     onSelectModelArchitectureId: (id: string | null) => void;
@@ -115,15 +112,8 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     const { data: trainingDevices } = useGetTrainingDevices();
     const { datasetRevisions } = useDatasetRevisions();
     const { modelRevisions: allModelRevisions } = useModelRevisions();
-    const activeModel = useGetActiveModel();
 
-    const activeModelArchitecture = modelArchitectures.find(
-        (modelArchitecture) => modelArchitecture.id === activeModel?.architecture
-    );
-
-    const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(
-        activeModelArchitecture?.id ?? null
-    );
+    const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(null);
 
     const [selectedTrainingDevice, setSelectedTrainingDevice] = useState<string | null>(() => {
         const defaultDevice = getDefaultTrainingDevice(trainingDevices);
@@ -158,8 +148,6 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
         <TrainModelContext
             value={{
                 modelArchitectures,
-
-                activeModelArchitectureId: activeModel?.architecture,
 
                 selectedModelArchitectureId,
                 onSelectModelArchitectureId,

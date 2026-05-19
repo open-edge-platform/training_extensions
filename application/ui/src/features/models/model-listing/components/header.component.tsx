@@ -12,22 +12,12 @@ import type { GroupByMode, SortBy } from '../types';
 import { ExpandableSearch } from './expandable-search/expandable-search.component';
 
 type MoreOptionsProps = {
-    onPinActiveToggle: () => void;
-    pinActive: boolean;
     showFailedModels: boolean;
     onToggleShowFailedModels: () => void;
 };
-const MoreOptions = ({
-    onPinActiveToggle,
-    pinActive,
-    showFailedModels,
-    onToggleShowFailedModels,
-}: MoreOptionsProps) => {
+const MoreOptions = ({ showFailedModels, onToggleShowFailedModels }: MoreOptionsProps) => {
     const handleOptionsAction = (key: Key) => {
         switch (key) {
-            case 'pin-active':
-                onPinActiveToggle();
-                break;
             case 'show-failed':
                 onToggleShowFailedModels();
                 break;
@@ -42,7 +32,6 @@ const MoreOptions = ({
                 <MoreMenu />
             </ActionButton>
             <Menu onAction={handleOptionsAction} aria-label={'Model listing options menu'}>
-                <Item key={'pin-active'}>{pinActive ? 'Unpin active model from top' : 'Pin active model on top'}</Item>
                 <Item key={'show-failed'}>{showFailedModels ? 'Hide failed models' : 'Show failed models'}</Item>
             </Menu>
         </MenuTrigger>
@@ -55,10 +44,8 @@ export const Header = () => {
         sortBy,
         onGroupByChange,
         onSortChange,
-        onPinActiveToggle,
         searchBy,
         onSearchChange,
-        pinActive,
         showFailedModels,
         onToggleShowFailedModels,
     } = useModelListing();
@@ -95,12 +82,7 @@ export const Header = () => {
                 </Picker>
             </Flex>
 
-            <MoreOptions
-                onPinActiveToggle={onPinActiveToggle}
-                pinActive={pinActive}
-                showFailedModels={showFailedModels}
-                onToggleShowFailedModels={onToggleShowFailedModels}
-            />
+            <MoreOptions showFailedModels={showFailedModels} onToggleShowFailedModels={onToggleShowFailedModels} />
 
             <Flex marginStart={'auto'} gap={'size-100'}>
                 <ExpandableSearch value={searchBy} onChange={onSearchChange} />

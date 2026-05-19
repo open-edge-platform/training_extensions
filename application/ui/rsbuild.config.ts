@@ -124,6 +124,7 @@ export default defineConfig({
         headers: {
             'Cross-Origin-Embedder-Policy': 'credentialless',
             'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cache-Control': 'public, max-age=31536000, immutable',
             'Content-Security-Policy':
                 "default-src 'self'; " +
                 "script-src 'self' 'unsafe-eval' blob:; " +

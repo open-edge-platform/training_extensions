@@ -27,6 +27,7 @@ import { usePrefetchVideoFramesAnnotations } from '../video-player/api/use-video
 import {
     PREDICTION_CHUNK_SIZE,
     PREDICTION_FRAME_SKIP,
+    useKeepVideoFramesPredictionsSubscribed,
     usePrefetchVideoFramesPredictions,
 } from '../video-player/api/use-video-frames-predictions';
 import { getVideoFrameRangeIndexes } from '../video-player/api/utils';
@@ -112,11 +113,29 @@ const PrefetchPredictions = () => {
         frameNumber: videoFrame.frame_number,
         chunkSize: PREDICTION_CHUNK_SIZE,
     });
-    usePrefetchVideoFramesPredictions({
+
+    /**
+     * Keeps a long-lived React Query observer attached to the current video-frame
+     * predictions range chunk.
+     *
+     * `<VideoPredictions />` is only mounted while the video is playing. When its
+     * range-predictions request is in flight, `usePlayPauseVideoBySystem` pauses
+     * the video, which unmounts `<VideoPredictions />` and drops the last observer
+     * — causing React Query to abort the in-flight request. The loading flag then
+     * flips back to false, playback auto-resumes, the same chunk re-fetches, and
+     * the cycle repeats (the video stutters and predictions never load).
+     *
+     * `PrefetchPredictions` is mounted in both the playing and paused branches, so
+     * subscribing from there guarantees the observer count never reaches zero
+     * across a pause/play transition. `notifyOnChangeProps: []` ensures this hook
+     * holds the subscription without triggering re-renders.
+     */
+    useKeepVideoFramesPredictionsSubscribed({
         frameNumber: videoFrame.frame_number,
         frameSkip: PREDICTION_FRAME_SKIP,
         chunkSize: PREDICTION_CHUNK_SIZE,
     });
+
     usePrefetchVideoFramesPredictions({
         frameNumber: nextFrameRangeIndexes.endFrameIndex + 1,
         frameSkip: PREDICTION_FRAME_SKIP,
@@ -166,6 +185,7 @@ type AnnotatorCanvasProps = {
     image: ImageData;
     isReadOnly?: boolean;
     mode: AnnotatorMode;
+    isLoadingPredictions?: boolean;
 };
 
 type UseToolLayerPointerPassthroughProps = {
@@ -252,14 +272,21 @@ const useToolLayerPointerPassthrough = ({ canEditSelectedAnnotation }: UseToolLa
     return { toolLayerRef, toolLayerPointerEvents, handlePointerMove } as const;
 };
 
-export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: AnnotatorCanvasProps) => {
+export const AnnotatorCanvas = ({
+    mode,
+    mediaItem,
+    image,
+    isReadOnly = false,
+    isLoadingPredictions = false,
+}: AnnotatorCanvasProps) => {
     const projectId = useProjectIdentifier();
     const isSceneBusy = useIsAnnotatorSceneBusy();
     const { canvasRef } = useAnnotator();
     const { isSingleEditableSelection } = useEditableAnnotationState();
+
     const isFetchingMedia = useIsFetching({ queryKey: loadImageQueryOptions(projectId, mediaItem).queryKey }) > 0;
 
-    const isLoadingMedia = useSpinDelay(isFetchingMedia, { delay: 300, minDuration: 200 });
+    const isLoadingMedia = useSpinDelay(isFetchingMedia, { delay: 400, minDuration: 200 });
     const areToolsDisabled = isSceneBusy || isReadOnly;
     const size = { width: mediaItem.width, height: mediaItem.height };
     const canEditSelectedAnnotation = !areToolsDisabled && isSingleEditableSelection;
@@ -267,7 +294,9 @@ export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: 
         canEditSelectedAnnotation,
     });
 
-    if (isLoadingMedia) {
+    const isPlaceholderImage = image.width === 1 && image.height === 1;
+
+    if (isLoadingMedia && isPlaceholderImage) {
         return <Loading size='M' />;
     }
 
@@ -280,6 +309,7 @@ export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: 
                 className={isReadOnly ? classes.readOnlyCanvas : undefined}
                 ref={canvasRef}
             >
+                {(isLoadingMedia || isLoadingPredictions) && <Loading mode={'overlay'} />}
                 <MediaImage image={image} mediaItem={mediaItem} />
                 <MediaAnnotations mediaItem={mediaItem} mode={mode} />
 

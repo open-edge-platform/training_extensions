@@ -51,11 +51,6 @@ export class ModelsPage {
         await this.page.getByRole('button', { name: 'Model listing options' }).click();
     }
 
-    async togglePinActiveModel() {
-        await this.openModelListingOptionsMenu();
-        await this.page.getByRole('menuitem', { name: /Pin active model on top|Unpin active model from top/ }).click();
-    }
-
     async toggleShowHideFailedModels() {
         await this.openModelListingOptionsMenu();
         await this.page.getByRole('menuitem', { name: /Show failed models|Hide failed models/ }).click();
@@ -104,10 +99,6 @@ export class ModelsPage {
 
     async clickDeleteWeightsAction() {
         await this.page.getByRole('menuitem', { name: 'Delete weights' }).click();
-    }
-
-    async clickSetActiveAction() {
-        await this.page.getByRole('menuitem', { name: 'Set as active' }).click();
     }
 
     async renameModel(newName: string) {

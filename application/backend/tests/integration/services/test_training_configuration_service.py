@@ -141,6 +141,61 @@ class TestTrainingConfigurationService:
 
         TrainingConfigurationService.get_default_by_model_architecture.cache_clear()
 
+    def test_get_default_by_model_architecture_strips_tiling_when_unsupported(
+        self,
+        fxt_training_configuration_service: TrainingConfigurationService,
+    ):
+        """Tiling parameters should be removed from the default config when the architecture doesn't support tiling."""
+        TrainingConfigurationService.get_default_by_model_architecture.cache_clear()
+
+        # D-FINE-M does not support tiling (capabilities.tiling: false in its manifest)
+        result = TrainingConfigurationService.get_default_by_model_architecture(
+            model_architecture_id="object-detection-dfine-m",
+        )
+
+        assert result.algo_level_parameters.dataset_preparation.augmentation.tiling is None
+
+        # Sanity check: a model that supports tiling still exposes the tiling parameters
+        TrainingConfigurationService.get_default_by_model_architecture.cache_clear()
+        yolox_result = TrainingConfigurationService.get_default_by_model_architecture(
+            model_architecture_id="object-detection-yolox-s",
+        )
+        assert yolox_result.algo_level_parameters.dataset_preparation.augmentation.tiling is not None
+
+        TrainingConfigurationService.get_default_by_model_architecture.cache_clear()
+
+    def test_get_by_model_architecture_strips_tiling_when_unsupported(
+        self,
+        fxt_training_configuration: TrainingConfiguration,
+        fxt_training_configuration_service: TrainingConfigurationService,
+        fxt_project: ProjectDB,
+        db_session: Session,
+    ):
+        """Persisted tiling values should be stripped when the architecture doesn't support tiling."""
+        # Persist an algo-level configuration with tiling populated (simulating an older configuration)
+        algo_level_data = fxt_training_configuration.algo_level_parameters.model_dump()
+        algo_level_data["dataset_preparation"]["augmentation"]["tiling"] = {
+            "enable": True,
+            "enable_adaptive_tiling": True,
+            "tile_size": 400,
+            "tile_overlap": 0.2,
+        }
+        algo_level_config = TrainingConfigurationDB(
+            id=str(uuid4()),
+            project_id=fxt_project.id,
+            model_architecture_id="object-detection-dfine-m",
+            configuration_data=algo_level_data,
+        )
+        db_session.add(algo_level_config)
+        db_session.flush()
+
+        result = fxt_training_configuration_service.get_by_model_architecture(
+            project_id=UUID(fxt_project.id),
+            model_architecture_id="object-detection-dfine-m",
+        )
+
+        assert result.algo_level_parameters.dataset_preparation.augmentation.tiling is None
+
     def test_get_by_model_architecture_with_existing_config(
         self,
         fxt_training_configuration: TrainingConfiguration,

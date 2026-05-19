@@ -14,7 +14,6 @@ import { AccuracyIndicator } from '../../model-variants/accuracy-indicator.compo
 import { type GroupByMode } from '../../types';
 import { formatTrainingDateTime } from '../../utils/date-formatting';
 import { hasDeletedWeights, isFailedModel } from '../../utils/utils';
-import { ActiveModelTag } from '../active-model-tag.component';
 import { ParentRevisionModel } from '../parent-revision-model.component';
 import { ArchitectureColumn } from './architecture-column.component';
 import { DatasetColumn } from './dataset-revision-column.component';
@@ -24,7 +23,6 @@ import classes from './model-row.module.scss';
 
 type ModelRowProps = {
     model: Model;
-    activeModelId?: string;
     parentRevisionModel?: Model;
     onExpandModel?: (modelId: string) => void;
     groupBy: GroupByMode;
@@ -51,7 +49,6 @@ const DeletedWeightsModel = () => {
 
 export const ModelRow = ({
     model,
-    activeModelId,
     parentRevisionModel,
     onExpandModel,
     groupBy,
@@ -77,7 +74,6 @@ export const ModelRow = ({
                     </Text>
                     {isFailedModel(model) && <FailedModel />}
                     {hasDeletedWeights(model) && <DeletedWeightsModel />}
-                    {model.id === activeModelId && <ActiveModelTag />}
                 </Flex>
                 <Text UNSAFE_className={classes.secondaryText}>
                     {parentRevisionModel ? (
