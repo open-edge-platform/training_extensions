@@ -28,9 +28,9 @@ import uvicorn
 from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
-from app.cached_static_files import CachedStaticFiles
 from loguru import logger
 
+from app.api.cached_utils import CachedStaticFiles
 from app.api.routers import (
     dataset_ie,
     dataset_revisions,

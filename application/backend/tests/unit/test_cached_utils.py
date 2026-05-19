@@ -8,7 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from starlette.applications import Starlette
 from starlette.routing import Mount
 
-from app.cached_static_files import CachedStaticFiles
+from app.api.cached_utils import CachedStaticFiles
 
 
 @pytest.fixture
@@ -28,12 +28,11 @@ def static_dir(tmp_path):
 @pytest.fixture
 def app(static_dir):
     """Create a Starlette app with CachedStaticFiles mounted."""
-    application = Starlette(
+    return Starlette(
         routes=[
             Mount("/static", CachedStaticFiles(directory=static_dir), name="static"),
         ]
     )
-    return application
 
 
 @pytest.mark.asyncio

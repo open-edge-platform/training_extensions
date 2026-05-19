@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Custom StaticFiles handler that adds Cache-Control headers to static asset responses."""
@@ -20,7 +20,7 @@ class CachedStaticFiles(StaticFiles):
         ((".data", ".mem"), "public, max-age=31536000, immutable"),
         # Images
         ((".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico"), "public, max-age=604800"),
-        # Fonts — rarely change, safe to cache for a month
+        # Fonts — rarely change, safe to cache for 30 days
         ((".woff", ".woff2", ".ttf", ".otf"), "public, max-age=2592000, immutable"),
         # HTML — always revalidate so users get fresh asset references
         ((".html",), "no-cache"),
