@@ -181,9 +181,7 @@ class OVModel:
 
         self._get_hparams_from_adapter(model_adapter)
 
-        # getitune's data pipeline handles all preprocessing (resize, intensity
-        # normalization to float32 [0,1]).  Override ModelAPI's embedded preprocessing
-        # to accept already-preprocessed float32 input and avoid double-normalization.
+        # getitune's data pipeline handles all preprocessing.
         configuration: dict[str, Any] = {
             "input_dtype": "f32",
             "mean_values": [],
