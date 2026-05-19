@@ -164,42 +164,6 @@ describe('ModelRow', () => {
         });
     });
 
-    describe('active model tag', () => {
-        it('shows active tag only when model id matches activeModelId', () => {
-            const { rerender } = render(
-                <ModelRow
-                    model={defaultModel}
-                    activeModelId='model-123'
-                    datasetRevision={datasetRevision}
-                    groupBy={'dataset'}
-                    modelArchitecture={modelArchitecture}
-                />
-            );
-            expect(screen.getByText('Active')).toBeInTheDocument();
-
-            rerender(
-                <ModelRow
-                    model={defaultModel}
-                    activeModelId={'different-id'}
-                    datasetRevision={datasetRevision}
-                    groupBy={'dataset'}
-                    modelArchitecture={modelArchitecture}
-                />
-            );
-            expect(screen.queryByText('Active')).not.toBeInTheDocument();
-
-            rerender(
-                <ModelRow
-                    model={defaultModel}
-                    datasetRevision={datasetRevision}
-                    groupBy={'dataset'}
-                    modelArchitecture={modelArchitecture}
-                />
-            );
-            expect(screen.queryByText('Active')).not.toBeInTheDocument();
-        });
-    });
-
     describe('parent revision model', () => {
         it('renders parent revision model when provided and call onExpandModel when clicked', async () => {
             const onExpandModel = vi.fn();

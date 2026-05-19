@@ -3,8 +3,9 @@
 
 import { Suspense, useState } from 'react';
 
-import { Content, Dialog, DialogContainer, Flex, Grid, Loading, Size, Text, View } from '@geti/ui';
+import { Content, Dialog, DialogContainer, Flex, Grid, Loading, Size, Text, View, ViewModes } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { GridLayoutOptions } from 'react-aria-components';
 
 import { MediaItem } from '../../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
@@ -14,21 +15,22 @@ import { AnnotatorProviders } from '../../../../features/dataset/media-preview/a
 import { useAnnotationsQuery } from '../../../../features/dataset/media-preview/api/use-annotations-query';
 import { ReadOnlyAnnotator } from '../../../../features/dataset/media-preview/read-only-annotator.component';
 import { getInitialAnnotations } from '../../../../features/dataset/media-preview/utils';
+import { type GalleryViewMode } from '../../../../shared/gallery-view-modes';
 import { getDatasetRevisionThumbnailUrl } from '../../../../shared/media-url.utils';
 import { useLoadImageQuery } from '../../../annotator/hooks/use-load-image-query.hook';
 import { getImageData } from '../../../annotator/tools/utils';
 import { datasetRevisionItemToMedia } from './utils';
 
-const layoutOptions = {
-    minSpace: new Size(4, 4),
-    minItemSize: new Size(80, 80),
-    maxColumns: 4,
-    preserveAspectRatio: true,
+const VIEW_MODE_SETTINGS: Record<GalleryViewMode, GridLayoutOptions> = {
+    [ViewModes.LARGE]: { minItemSize: new Size(180, 180), minSpace: new Size(6, 6), preserveAspectRatio: true },
+    [ViewModes.MEDIUM]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
+    [ViewModes.SMALL]: { minItemSize: new Size(80, 80), minSpace: new Size(4, 4), preserveAspectRatio: true },
 };
 
 type SubsetGalleryProps = {
     items: DatasetRevisionItem[];
     datasetRevisionId: string;
+    viewMode: GalleryViewMode;
     fetchNextPage: () => void;
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
@@ -86,6 +88,7 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
 
 export const SubsetGallery = ({
     items,
+    viewMode,
     datasetRevisionId,
     hasNextPage,
     isFetchingNextPage,
@@ -118,7 +121,7 @@ export const SubsetGallery = ({
                     items={items}
                     ariaLabel={'subset media grid'}
                     selectionMode='none'
-                    layoutOptions={layoutOptions}
+                    layoutOptions={VIEW_MODE_SETTINGS[viewMode]}
                     isLoadingMore={isFetchingNextPage}
                     onLoadMore={() => hasNextPage && fetchNextPage()}
                     contentItem={(item) => (

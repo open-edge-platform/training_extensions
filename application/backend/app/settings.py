@@ -76,7 +76,7 @@ class Settings(BaseSettings):
 
     # Inference
     inference_media_limit: int = Field(
-        default=10,
+        default=64,
         alias="INFERENCE_MEDIA_LIMIT",
         description="Maximum number for images or video frames passed for inference",
     )

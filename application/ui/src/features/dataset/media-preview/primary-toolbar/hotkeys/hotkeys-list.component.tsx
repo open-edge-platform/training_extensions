@@ -25,6 +25,8 @@ export const HotkeysList = () => {
 
     return (
         <Grid columns={['2fr', '1fr']} rowGap={'size-100'}>
+            <HotkeyItem hotkeyName={'Submit annotations/predictions'} hotkey={formatHotkeyForDisplay(HOTKEYS.submit)} />
+            <Divider size='S' gridColumn={'1/-1'} />
             {availableTools.map((tool) => (
                 <HotkeyItem key={tool.label} hotkeyName={tool.label} hotkey={formatHotkeyForDisplay(tool.hotkey)} />
             ))}
