@@ -5,7 +5,6 @@ import { Suspense, useMemo, useState } from 'react';
 
 import { Content, Flex, Grid, Heading, Loading, Text, View } from '@geti/ui';
 import { useProjects } from 'hooks/api/project.hook';
-import { isEmpty } from 'lodash-es';
 
 import { isNonEmptyArray } from '../../../shared/util';
 import { EmptyProjectList } from './empty-project-list/empty-project-list.component';
@@ -43,7 +42,7 @@ const ProjectGrid = () => {
                 autoRows={'size-2000'}
                 justifyContent={'center'}
                 UNSAFE_style={{ overflowY: 'auto' }}
-                columns={isEmpty(projects.data) ? ['size-3600'] : ['1fr', '1fr']}
+                columns={['1fr', '1fr']}
             >
                 <NewProjectMenu />
 
