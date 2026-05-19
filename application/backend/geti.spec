@@ -184,8 +184,6 @@ system = platform.system()
 if system == "Windows":
     runtime_hooks += ['pyinstaller/windows/uwp.py', 'pyinstaller/windows/proxy.py']
 
-
-
 a = Analysis(
     ['app/main.py'],
     pathex=['app'],
