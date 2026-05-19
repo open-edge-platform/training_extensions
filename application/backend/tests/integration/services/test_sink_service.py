@@ -1,13 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from uuid import UUID
+from unittest.mock import MagicMock, patch
+from uuid import UUID, uuid4
 
 import pytest
 
 from app.db.schema import PipelineDB, SinkDB
-from app.models import SinkAdapter
-from app.models.sink import FolderConfig
+from app.models import OutputFormat, SinkAdapter, SinkType
+from app.models.sink import FolderConfig, FolderSinkConfig, MqttConfig, MqttSinkConfig, WebhookConfig, WebhookSinkConfig
 from app.services import ResourceInUseError, ResourceType, SinkService
 from app.services.base import ResourceWithIdAlreadyExistsError, ResourceWithNameAlreadyExistsError
 from app.services.event.event_bus import EventType
@@ -265,3 +266,120 @@ class TestSinkServiceIntegration:
         assert exc_info.value.resource_type == ResourceType.SINK
         assert exc_info.value.resource_id == db_sink.id
         assert db_session.query(SinkDB).count() == 1
+
+    def test_test_sink_folder_exists_and_writable(self, fxt_sink_service, tmp_path):
+        """Test test_sink with an existing writable folder."""
+
+        sink = FolderSinkConfig(
+            id=uuid4(),
+            sink_type=SinkType.FOLDER,
+            name="Test Folder",
+            rate_limit=None,
+            output_formats=[OutputFormat.PREDICTIONS],
+            config_data=FolderConfig(folder_path=str(tmp_path)),
+        )
+
+        result = fxt_sink_service.test_sink(sink)
+
+        assert result["reachable"] is True
+        assert "latency_ms" in result
+
+    def test_test_sink_folder_not_found(self, fxt_sink_service):
+        """Test test_sink with a non-existent folder."""
+
+        sink = FolderSinkConfig(
+            id=uuid4(),
+            sink_type=SinkType.FOLDER,
+            name="Missing Folder",
+            rate_limit=None,
+            output_formats=[OutputFormat.PREDICTIONS],
+            config_data=FolderConfig(folder_path="/nonexistent/output/folder"),
+        )
+
+        result = fxt_sink_service.test_sink(sink)
+
+        assert result["reachable"] is False
+        assert "not found" in result["error"]
+
+    def test_test_sink_mqtt_unreachable(self, fxt_sink_service):
+        """Test test_sink with an unreachable MQTT broker."""
+
+        sink = MqttSinkConfig(
+            id=uuid4(),
+            sink_type=SinkType.MQTT,
+            name="Unreachable MQTT",
+            rate_limit=None,
+            output_formats=[OutputFormat.PREDICTIONS],
+            config_data=MqttConfig(broker_host="192.0.2.1", broker_port=1883, topic="test"),
+        )
+
+        with patch(
+            "app.services.sink_service.socket.create_connection",
+            side_effect=OSError("Connection timed out"),
+        ):
+            result = fxt_sink_service.test_sink(sink)
+
+        assert result["reachable"] is False
+        assert "Cannot connect" in result["error"]
+
+    def test_test_sink_webhook_unreachable(self, fxt_sink_service):
+        """Test test_sink with an unreachable webhook URL."""
+        import requests
+
+        sink = WebhookSinkConfig(
+            id=uuid4(),
+            sink_type=SinkType.WEBHOOK,
+            name="Unreachable Webhook",
+            rate_limit=None,
+            output_formats=[OutputFormat.PREDICTIONS],
+            config_data=WebhookConfig(webhook_url="http://192.0.2.1:9999/hook"),
+        )
+
+        with patch(
+            "app.services.sink_service.requests.head",
+            side_effect=requests.ConnectionError("Connection refused"),
+        ):
+            result = fxt_sink_service.test_sink(sink)
+
+        assert result["reachable"] is False
+        assert "Cannot reach webhook" in result["error"]
+
+    def test_test_sink_mqtt_reachable(self, fxt_sink_service):
+        """Test test_sink with a reachable MQTT broker (mocked socket connection)."""
+
+        sink = MqttSinkConfig(
+            id=uuid4(),
+            sink_type=SinkType.MQTT,
+            name="Reachable MQTT",
+            rate_limit=None,
+            output_formats=[OutputFormat.PREDICTIONS],
+            config_data=MqttConfig(broker_host="localhost", broker_port=1883, topic="test"),
+        )
+
+        mock_sock = MagicMock()
+        with patch("app.services.sink_service.socket.create_connection", return_value=mock_sock):
+            result = fxt_sink_service.test_sink(sink)
+
+        assert result["reachable"] is True
+        assert "latency_ms" in result
+        mock_sock.close.assert_called_once()
+
+    def test_test_sink_webhook_reachable(self, fxt_sink_service):
+        """Test test_sink with a reachable webhook URL (mocked HTTP response)."""
+
+        sink = WebhookSinkConfig(
+            id=uuid4(),
+            sink_type=SinkType.WEBHOOK,
+            name="Reachable Webhook",
+            rate_limit=None,
+            output_formats=[OutputFormat.PREDICTIONS],
+            config_data=WebhookConfig(webhook_url="http://example.com/hook"),
+        )
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        with patch("app.services.sink_service.requests.head", return_value=mock_response):
+            result = fxt_sink_service.test_sink(sink)
+
+        assert result["reachable"] is True
+        assert "latency_ms" in result
