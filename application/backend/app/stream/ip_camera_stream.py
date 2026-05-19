@@ -41,7 +41,7 @@ class IPCameraStream(BaseOpenCVStream):
     cannot back-pressure the network reader and cause upstream packet drops.
     """
 
-    MAX_RECONNECT_ATTEMPTS = 10
+    MAX_RECONNECT_ATTEMPTS = 5
     BACKOFF_FACTOR = 0.5
 
     _FIRST_FRAME_TIMEOUT_S = 10.0

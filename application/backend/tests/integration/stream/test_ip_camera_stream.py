@@ -155,4 +155,4 @@ class TestIPCameraStream:
             with pytest.raises(RuntimeError, match="Failed to capture frame from IP camera after multiple retries"):
                 stream._handle_read_failure()
 
-            assert mock_initialize_capture.call_count == 3
+            assert mock_initialize_capture.call_count == 5
