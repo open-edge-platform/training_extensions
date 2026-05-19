@@ -12,14 +12,12 @@ import { DetailedModelArchitecture } from './model-architecture.component';
 import { ModelArchitecturesListLayout } from './model-architectures-list-layout/model-architectures-list-layout.component';
 
 type AllModelArchitecturesProps = {
-    activeModelArchitectureId: string | undefined;
     modelArchitectures: ModelArchitectureType[];
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
 };
 
 export const AllModelArchitectures = ({
-    activeModelArchitectureId,
     modelArchitectures,
     onSelectedModelArchitectureIdChange,
     selectedModelArchitectureId,
@@ -38,7 +36,6 @@ export const AllModelArchitectures = ({
                 {sortedModelArchitectures.map((modelArchitecture) => (
                     <DetailedModelArchitecture
                         key={modelArchitecture.id}
-                        activeModelArchitectureId={activeModelArchitectureId}
                         modelArchitecture={modelArchitecture}
                         selectedModelArchitectureId={selectedModelArchitectureId}
                         onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
