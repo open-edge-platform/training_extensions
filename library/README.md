@@ -5,6 +5,7 @@
 ---
 
 [Key Features](#key-features) •
+[Supported Tasks & Recipes](#supported-tasks--recipes) •
 [Installation](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/installation.html) •
 [Documentation](https://open-edge-platform.github.io/training_extensions/latest/index.html) •
 [License](#license)
@@ -13,9 +14,10 @@
 
 <!-- markdownlint-disable MD042 -->
 
-[![python](https://img.shields.io/badge/python-3.11%2B-green)]()
-[![pytorch](https://img.shields.io/badge/pytorch-2.7%2B-orange)]()
-[![openvino](https://img.shields.io/badge/openvino-2025.2-purple)]()
+[![python](https://img.shields.io/badge/python-3.11%E2%80%933.14-green)]()
+[![pytorch](https://img.shields.io/badge/pytorch-2.10-orange)]()
+[![openvino](https://img.shields.io/badge/openvino-2026.1-purple)]()
+[![numpy](https://img.shields.io/badge/numpy-%E2%89%A52.0-blue)]()
 
 <!-- markdownlint-enable  MD042 -->
 
@@ -33,70 +35,110 @@
 ## Introduction
 
 The Geti™ library (`getitune`) is a low-code transfer learning framework for Computer Vision.
-The API & CLI commands of the framework allows users to train, infer, optimize and deploy models easily and quickly even with low expertise in the deep learning field.
-It offers diverse combinations of model architectures, learning methods, and task types based on [PyTorch](https://pytorch.org) and [OpenVINO™ toolkit](https://software.intel.com/en-us/openvino-toolkit).
+Its API and CLI let you train, evaluate, optimize, and deploy models quickly — even without deep expertise in deep learning.
+It supports diverse combinations of model architectures, learning methods, and task types built on [PyTorch](https://pytorch.org) and the [OpenVINO™ toolkit](https://software.intel.com/en-us/openvino-toolkit).
 
-The library provides a "recipe" for every supported task type, which consolidates necessary information to build a model.
-Model templates are validated on various datasets and serve one-stop shop for obtaining the best models in general.
+Each supported task ships with curated "recipes" — YAML files that bundle the model, data pipeline, and training configuration into a single one-stop entry point. Recipes are validated on standard datasets so you get a strong baseline out of the box.
 
 ### Key Features
 
 The Geti™ library supports the following computer vision tasks:
 
-- **Classification**, including multi-class, multi-label and hierarchical image classification tasks.
-- **Object detection** including rotated bounding box and tiling support
-- **Semantic segmentation** including tiling algorithm support
-- **Instance segmentation** including tiling algorithm support
-- **Anomaly recognition** tasks including anomaly classification, detection and segmentation
+- **Classification** — multi-class, multi-label, and hierarchical image classification.
+- **Object detection** — including tiling for large images.
+- **Rotated object detection** — including tiling.
+- **Instance segmentation** — including tiling.
+- **Semantic segmentation** — including tiling.
+- **Keypoint detection.**
 
-Its features include:
+Additional capabilities:
 
-- Native **Intel GPUs (XPU) support**. The package can be installed with XPU support to utilize Intel GPUs for training and testing.
-- [Datumaro](https://open-edge-platform.github.io/datumaro/stable/index.html) data frontend, with support for the most popular dataset formats for each task. We are constantly working to extend supported formats to give more freedom of datasets format choice.
-- **Distributed training** to accelerate the training process when you have multiple GPUs
-- **Mixed-precision training** to save GPUs memory and use larger batch sizes
-- **Class incremental learning** to add new classes to the existing model
-- **Model deployment** to OpenVINO™ IR and ONNX formats and inference with [OpenVINO™ ModelAPI](https://github.com/open-edge-platform/model_api)
-- **Multiple backend support** to easily adapt models from third-party implementations into the Geti™ repository.
+- **Multi-backend engine**: PyTorch Lightning, Native, and OpenVINO™ — selected automatically by `create_engine` based on the model and data you pass in.
+- **Modern model zoo** across tasks (e.g. DEIM-DFine, DEIMv2, DFine, RF-DETR, RT-DETR, YOLOX, ATSS, SSD for detection; Mask R-CNN, RTMDet-Inst, RF-DETR-Seg for instance segmentation; SegNeXt, Lite-HRNet, DINOv2 for semantic segmentation; RTMPose for keypoint detection).
+- **Native Intel GPU (XPU) support** — install the `[xpu]` extra to train and infer on Intel GPUs.
+- **NVIDIA CUDA support** via the `[cuda]` extra (CUDA 12.8 wheels).
+- [Datumaro](https://open-edge-platform.github.io/datumaro/stable/index.html) **data frontend**, with support for the most popular dataset formats per task.
+- **Distributed training** across multiple GPUs.
+- **Mixed-precision training** to reduce memory and increase batch size.
+- **Class-incremental learning** to extend an existing model with new classes.
+- **Deployment** to OpenVINO™ IR and ONNX formats, with inference via [OpenVINO™ ModelAPI](https://github.com/open-edge-platform/model_api).
+- **Multiple backend support** to adapt third-party model implementations into the Geti™ repository.
+
+---
+
+## Supported Tasks & Recipes
+
+All recipes live under `src/getitune/recipe/<task>/`. Pass any of these YAMLs directly to the API (`model=...`) or CLI (`--config ...`). Recipes whose name ends in `_tile` enable the tiling pipeline for large images.
+
+| Task                                                      | Recipe directory                                                                   | Example recipes                                                                                                                                            |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Classification — multi-class / multi-label / hierarchical | `src/getitune/recipe/classification/{multi_class_cls,multi_label_cls,h_label_cls}` | `dino_v2`, `vit_tiny`, `efficientnet_b0`, `efficientnet_b3`, `efficientnet_v2`, `mobilenet_v3_large`                                                       |
+| Object detection                                          | `src/getitune/recipe/detection`                                                    | `atss_mobilenetv2`, `ssd_mobilenetv2`, `yolox_{tiny,s,l,x}`, `rtdetr_50`, `dfine_x`, `deim_dfine_{l,m,x}`, `deimv2_{s,m,l}`, `rfdetr_{small,medium,large}` |
+| Rotated detection                                         | `src/getitune/recipe/rotated_detection`                                            | `maskrcnn_r50`, `maskrcnn_efficientnetb2b` (with `_tile` variants)                                                                                         |
+| Instance segmentation                                     | `src/getitune/recipe/instance_segmentation`                                        | `maskrcnn_{r50,swint,efficientnetb2b}`, `rtmdet_inst_tiny`, `rfdetr_seg_{small,medium,large,xlarge}`                                                       |
+| Semantic segmentation                                     | `src/getitune/recipe/semantic_segmentation`                                        | `dino_v2`, `litehrnet_{s,18,x}`, `segnext_{t,s,b}` (with `_tile` variants)                                                                                 |
+| Keypoint detection                                        | `src/getitune/recipe/keypoint_detection`                                           | `rtmpose_tiny`                                                                                                                                             |
+
+Each task directory also ships an `openvino_model.yaml` recipe for running and optimizing pre-exported OpenVINO IR models via `OVEngine`.
+
+To browse the full list from the CLI:
+
+```bash
+getitune find          # all recipes
+getitune find --task DETECTION
+```
 
 ---
 
 ## Installation
 
-Please refer to the [installation guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/installation.html).
-If you want to make changes to the library, then a local installation is recommended.
+Requirements: **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, **NumPy ≥ 2.0**.
+
+For the full guide (system prerequisites, GPU drivers, troubleshooting), see the [installation documentation](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/installation.html). If you plan to modify the library, install from source.
 
 <details>
 <summary>Install from PyPI</summary>
-Installing the library with pip or uv is the easiest way to get started with getitune.
+
+`getitune` ships three mutually exclusive extras that select the right PyTorch wheel for your hardware:
+
+| Extra    | PyTorch wheel                                                          | Use when                             |
+| -------- | ---------------------------------------------------------------------- | ------------------------------------ |
+| `[cpu]`  | `torch==2.10.0+cpu` (Linux/Windows) or default `torch==2.10.0` (macOS) | No GPU, or running on Apple silicon. |
+| `[xpu]`  | `torch==2.10.0+xpu` + `triton-xpu`                                     | Intel discrete or integrated GPUs.   |
+| `[cuda]` | `torch==2.10.0+cu128`                                                  | NVIDIA GPUs with CUDA 12.8 drivers.  |
+
+Install with `pip`:
 
 ```bash
-# Without GPU support (CPU only)
-pip install getitune[cpu]
-
-# With Intel GPU support (XPU)
-pip install getitune[xpu]
-
-# With NVIDIA GPU support (CUDA)
-pip install getitune[cuda]
+pip install "getitune[cpu]"   # CPU-only
+pip install "getitune[xpu]"   # Intel GPU (XPU)
+pip install "getitune[cuda]"  # NVIDIA GPU (CUDA 12.8)
 ```
+
+Or with [`uv`](https://docs.astral.sh/uv/) (faster, used by this repo):
+
+```bash
+uv pip install "getitune[cpu]"
+```
+
+> **macOS note**: PyTorch's `+cpu` wheel is only published for Linux and Windows. The `[cpu]` extra resolves this automatically and installs the default `torch==2.10.0` wheel on macOS.
 
 </details>
 
 <details>
 <summary>Install from source</summary>
-To install from source, you need to clone the repository and install the library with pip or uv.
-It is recommended to use a virtual environment to avoid conflicts with other packages.
 
 ```bash
 # Clone the repository
 git clone https://github.com/open-edge-platform/training_extensions.git
-cd training_extensions
+cd training_extensions/library
 
-# Install (optional: pass the '-e' flag for editable mode
-# If you have an Intel GPU, use 'xpu' to enable support.
-# If you have an NVIDIA GPU, use 'cuda' to enable support.
-pip install -e .[cpu]
+# Recommended: use uv to honor the lockfile
+uv sync --extra cpu          # or --extra xpu / --extra cuda
+
+# Or with pip in a virtual environment
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[cpu]"      # add -e for editable mode
 ```
 
 </details>
@@ -105,88 +147,105 @@ pip install -e .[cpu]
 
 ## Quick-Start
 
-The Geti™ library supports both API and CLI-based training. The API is more flexible and allows for more customization, while the CLI training utilizes command line interfaces, and might be easier for those who would like to use `getitune` off-the-shelf.
+`getitune` supports both an API and a CLI. The API is flexible and ideal for customization; the CLI is the fastest way to use the library off-the-shelf.
 
-For the CLI, the commands below provide subcommands, how to use each subcommand, and more:
+The package installs two equivalent CLI entry points — `getitune` (preferred) and `otx` (alias kept for compatibility):
 
 ```bash
-# See available subcommands
-getitune --help
+# Discover available subcommands
+getitune --help               # or: otx --help
 
-# Print help messages from the train subcommand
+# Help for a single subcommand
 getitune train --help
-
-# Print help messages for more details
-getitune train --help -v   # Print required parameters
-getitune train --help -vv  # Print all configurable parameters
+getitune train --help -v      # required parameters only
+getitune train --help -vv     # all configurable parameters
 ```
 
-You can find details with examples in the [CLI Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/cli_commands.html). and [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html).
-
-Below is how to train with auto-configuration, which is provided to users with datasets and tasks:
+See the [CLI Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/cli_commands.html) and the [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html) for full walkthroughs.
 
 <details>
 <summary>API Usage</summary>
 
+`getitune.engine.create_engine` is the single entry point. It inspects your `model` and `data` arguments and dispatches to the right engine — `LightningEngine` for PyTorch training, `OVEngine` for OpenVINO IR models, or any custom `Engine` subclass that declares `is_supported`.
+
 ```python
 from getitune.engine import create_engine
 
-# get all the available recipes for all tasks
-from getitune.backend.lightning.cli.utils import list_models
-model_lists = list_models(print_table=True)
-
-# instantiate native getitune engine with atss model for object detection
-engine = create_engine(data="path/to/dataset/root", model="src/getitune/recipe/detection/atss_mobilenetv2.yaml")
+# Train an ATSS-MobileNetV2 detector
+engine = create_engine(
+    data="path/to/dataset/root",
+    model="src/getitune/recipe/detection/atss_mobilenetv2.yaml",
+)
 engine.train()
 engine.test()
-exported_path = engine.export()
+exported_path = engine.export()  # → OpenVINO IR
 
-# by default all artifacts are stored in "./getitune-workspace" directory.
-# working directory can be specified
-engine = create_engine(data="path/to/dataset/root", model="src/getitune/recipe/detection/atss_mobilenetv2.yaml", work_dir="my_workdir")
+# By default all artifacts go to ./getitune-workspace.
+# Override with the work_dir argument:
+engine = create_engine(
+    data="path/to/dataset/root",
+    model="src/getitune/recipe/detection/atss_mobilenetv2.yaml",
+    work_dir="my_workdir",
+)
 
-
-# openvino backend is used to validate and optimize exported OpenVINO IR models
+# The exported IR can be evaluated and quantized with the OpenVINO engine.
+# create_engine picks OVEngine automatically when given an IR path.
 ov_engine = create_engine(data="path/to/dataset/root", model=exported_path)
 ov_engine.test()
 ov_engine.optimize()
-
 ```
 
-For more examples, see documentation: [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html)
+To enumerate available recipes from Python, use the Lightning backend helper (the `getitune find` CLI command is equivalent):
+
+```python
+from getitune.backend.lightning.cli.utils import list_models
+
+list_models(print_table=True)
+```
+
+For more examples, see the [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html).
 
 </details>
 
 <details>
-<summary> CLI Usage </summary>
+<summary>CLI Usage</summary>
 
 ```bash
-# get all recipes list
+# List all recipes
 getitune find
 
-# getitune train
-getitune train --config src/getitune/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd
+# Train
+getitune train \
+  --config src/getitune/recipe/detection/atss_mobilenetv2.yaml \
+  --data_root data/wgisd
 
-# by default, working directory is "./getitune-workspace". It can be specified with "--work_dir" parameter
-getitune test --config src/getitune/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd --checkpoint getitune-workspace/.latest/train/best_checkpoint.ckpt
-getitune export --config src/getitune/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd --checkpoint getitune-workspace/.latest/train/best_checkpoint.ckpt
+# By default the working directory is ./getitune-workspace.
+# Override it with --work_dir, or re-use a previous run via the .latest symlink.
+getitune test \
+  --config src/getitune/recipe/detection/atss_mobilenetv2.yaml \
+  --data_root data/wgisd \
+  --checkpoint getitune-workspace/.latest/train/best_checkpoint.ckpt
 
-# or using work_dir
-getitune test --work_dir getitune-workspace/.latest/train
+getitune export \
+  --config src/getitune/recipe/detection/atss_mobilenetv2.yaml \
+  --data_root data/wgisd \
+  --checkpoint getitune-workspace/.latest/train/best_checkpoint.ckpt
+
+# Re-use the previous run via work_dir
+getitune test   --work_dir getitune-workspace/.latest/train
 getitune export --work_dir getitune-workspace/.latest/train
 
-# directly from working directory
+# Or run directly from inside the working directory
 cd getitune-workspace
 getitune test
 getitune export
-
 ```
 
-For more examples, see documentation: [CLI Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/cli_commands.html)
+For more examples, see the [CLI Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/cli_commands.html).
 
 </details>
 
-In addition to the examples above, please refer to the documentation for tutorials on using custom models, training parameter overrides, and [tutorial per task types](https://open-edge-platform.github.io/training_extensions/latest/guide/tutorials/base/how_to_train/index.html), etc.
+Beyond the examples above, the documentation also covers using custom models, overriding training parameters, and [per-task tutorials](https://open-edge-platform.github.io/training_extensions/latest/guide/tutorials/base/how_to_train/index.html).
 
 ---
 
