@@ -55,7 +55,7 @@ class IPCameraStream(BaseOpenCVStream):
             # Clear RTSP-specific options that would interfere with HTTP/other streams
             os.environ.pop("OPENCV_FFMPEG_CAPTURE_OPTIONS", None)
         super().__init__(
-            source=config.config_data.get_configured_stream_url(),
+            source=stream_url,
             source_type=SourceType.IP_CAMERA,
             stream_url=config.config_data.stream_url,  # Original stream URL is kept for metadata
         )
@@ -200,31 +200,6 @@ class IPCameraStream(BaseOpenCVStream):
             source_metadata=self._get_source_metadata(),
         )
 
-    def _handle_read_failure(self) -> np.ndarray:
-        """Legacy synchronous reconnect path, kept for BaseOpenCVStream compatibility."""
-        if self.cap is None:
-            raise RuntimeError("Video capture not initialized")
-
-        for attempt in range(self.MAX_RECONNECT_ATTEMPTS):
-            logger.warning(f"Attempt {attempt + 1}: Failed to capture frame from IP camera, retrying...")
-            ret, frame = self.cap.read()
-            if ret:
-                logger.info("Successfully reconnected to IP camera stream.")
-                return frame
-            # Reconnect before next attempt
-            self.release_capture_only()
-            self._initialize_capture()
-            time.sleep(self.BACKOFF_FACTOR * (attempt + 1))
-
-        raise RuntimeError("Failed to capture frame from IP camera after multiple retries")
-
-    def release_capture_only(self) -> None:
-        if self.cap is not None:
-            try:
-                self.cap.release()
-            except Exception:
-                logger.debug("Error releasing VideoCapture", exc_info=True)
-
     def release(self) -> None:
         self._stop_reader.set()
         with self._frame_available:
@@ -242,6 +217,3 @@ class IPCameraStream(BaseOpenCVStream):
 
     def is_real_time(self) -> bool:
         return True
-
-    def __enter__(self) -> "IPCameraStream":
-        return self
