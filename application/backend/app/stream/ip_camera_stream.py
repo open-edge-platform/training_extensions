@@ -1,9 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import contextlib
 import os
 import threading
 import time
+from collections.abc import Iterator
 
 import cv2
 import numpy as np
@@ -18,21 +20,33 @@ from app.stream.stream_data import StreamData
 _RTSP_FFMPEG_OPTIONS = (
     "rtsp_transport;tcp|fflags;nobuffer|flags;low_delay|max_delay;500000|reorder_queue_size;0|stimeout;5000000"
 )
+_OPENCV_FFMPEG_ENV_KEY = "OPENCV_FFMPEG_CAPTURE_OPTIONS"
 
 # Maximum dimension (longest edge) for frames passed to inference.
 # Frames larger than this are downscaled to reduce CPU/memory pressure.
 _MAX_FRAME_DIMENSION = int(os.environ.get("GETI_MAX_FRAME_DIMENSION", "1920"))
 
 
-def _apply_ffmpeg_capture_options() -> None:
-    """Set OpenCV's FFmpeg capture options before constructing VideoCapture."""
-    existing = os.environ.get("OPENCV_FFMPEG_CAPTURE_OPTIONS", "")
-    if existing == _RTSP_FFMPEG_OPTIONS:
-        return
-    if existing and "rtsp_transport" in existing:
-        # Respect operator overrides.
-        return
-    os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = _RTSP_FFMPEG_OPTIONS
+@contextlib.contextmanager
+def _rtsp_capture_env() -> Iterator[None]:
+    """Temporarily set FFmpeg capture options for RTSP, restoring the prior value on exit.
+
+    OPENCV_FFMPEG_CAPTURE_OPTIONS is only consulted by FFmpeg when a VideoCapture
+    is constructed, so we only need it set across that call. Keeping the mutation
+    scoped avoids stomping on the env for other streams (or operator overrides)
+    and prevents one stream's construction from clearing another's settings.
+    """
+    previous = os.environ.get(_OPENCV_FFMPEG_ENV_KEY)
+    # Respect an operator-supplied RTSP override; otherwise install our defaults.
+    if not (previous and "rtsp_transport" in previous):
+        os.environ[_OPENCV_FFMPEG_ENV_KEY] = _RTSP_FFMPEG_OPTIONS
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop(_OPENCV_FFMPEG_ENV_KEY, None)
+        else:
+            os.environ[_OPENCV_FFMPEG_ENV_KEY] = previous
 
 
 class IPCameraStream(BaseOpenCVStream):
@@ -49,16 +63,13 @@ class IPCameraStream(BaseOpenCVStream):
 
     def __init__(self, config: IPCameraSourceConfig) -> None:
         stream_url = config.config_data.get_configured_stream_url()
-        if str(stream_url).lower().startswith("rtsp"):
-            _apply_ffmpeg_capture_options()
-        else:
-            # Clear RTSP-specific options that would interfere with HTTP/other streams
-            os.environ.pop("OPENCV_FFMPEG_CAPTURE_OPTIONS", None)
-        super().__init__(
-            source=stream_url,
-            source_type=SourceType.IP_CAMERA,
-            stream_url=config.config_data.stream_url,  # Original stream URL is kept for metadata
-        )
+        self._is_rtsp = str(stream_url).lower().startswith("rtsp")
+        with self._capture_env():
+            super().__init__(
+                source=stream_url,
+                source_type=SourceType.IP_CAMERA,
+                stream_url=config.config_data.stream_url,  # Original stream URL is kept for metadata
+            )
         logger.info("IP camera stream initialized")
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
@@ -77,6 +88,12 @@ class IPCameraStream(BaseOpenCVStream):
             daemon=True,
         )
         self._reader_thread.start()
+
+    def _capture_env(self) -> contextlib.AbstractContextManager[None]:
+        """Return a context manager that scopes RTSP FFmpeg options for RTSP streams only."""
+        if self._is_rtsp:
+            return _rtsp_capture_env()
+        return contextlib.nullcontext()
 
     def _reader_loop(self) -> None:  # noqa: C901
         """Continuously drain the RTSP socket and publish the latest frame."""
@@ -136,7 +153,8 @@ class IPCameraStream(BaseOpenCVStream):
             except Exception:
                 logger.debug("Error releasing capture during reconnect", exc_info=True)
             try:
-                self._initialize_capture()
+                with self._capture_env():
+                    self._initialize_capture()
                 self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
                 if self.cap.isOpened():
                     logger.info("Successfully reconnected to IP camera stream.")

@@ -85,8 +85,8 @@ class StreamLoader(BaseProcessWorker):
                     )
                 else:
                     self.stop_aware_sleep(0.1)
-            except Exception as exc:
-                logger.error("Error acquiring frame: {}", exc)
+            except Exception:
+                logger.exception("Error acquiring frame")
                 self.stop_aware_sleep(2)
 
     def teardown(self) -> None:

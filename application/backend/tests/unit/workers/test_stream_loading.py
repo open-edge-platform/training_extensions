@@ -132,8 +132,14 @@ class TestStreamLoader:
                 break
 
         assert len(queue_contents) == 2
-        replaced = [el for el in queue_contents if np.array_equal(el.frame_data, sample_frame)]
-        assert len(replaced) >= 1, "Expected at least one stale frame to be replaced with a fresh one"
+        # Both pre-filled sentinels must have been evicted in favour of fresh frames
+        # produced by the loader; otherwise the drop-and-replace policy has regressed.
+        assert all(np.array_equal(el.frame_data, sample_frame) for el in queue_contents), (
+            "Expected every stale sentinel frame to be replaced with a fresh one"
+        )
+        assert not any(np.array_equal(el.frame_data, sentinel) for el in queue_contents), (
+            "No sentinel frames should remain in the queue"
+        )
         assert not process.is_alive(), "Process should terminate cleanly"
 
     def test_queue_empty(self, request, frame_queue, stop_event, source_changed_condition, fake_video_stream):
