@@ -1,0 +1,25 @@
+.createProjectMenuButton {
+    border-top-left-radius: unset !important;
+    border-bottom-left-radius: unset !important;
+    padding: 0 !important;
+
+    & svg {
+        translate: calc(var(--spectrum-global-dimension-size-40) * -1);
+    }
+
+    &::after {
+        border-top-left-radius: unset !important;
+        border-bottom-left-radius: unset !important;
+    }
+}
+
+.createProjectButton {
+    border-top-right-radius: unset !important;
+    border-bottom-right-radius: unset !important;
+    padding: var(--spectrum-global-dimension-size-40) !important;
+
+    &::after {
+        border-top-right-radius: unset !important;
+        border-bottom-right-radius: unset !important;
+    }
+}

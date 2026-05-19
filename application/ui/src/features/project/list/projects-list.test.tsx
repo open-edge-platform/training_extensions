@@ -22,14 +22,14 @@ const renderProjectList = () => {
     );
 };
 
+const projects = [
+    getMockedProject({ id: 'project-1', name: 'Alpha Project', created_at: '2026-01-01T10:00:00Z' }),
+    getMockedProject({ id: 'project-2', name: 'Beta Project', created_at: '2026-06-01T10:00:00Z' }),
+    getMockedProject({ id: 'project-3', name: 'Zeta Project', created_at: '2026-03-01T10:00:00Z' }),
+];
+
 describe('ProjectList', () => {
     describe('with projects', () => {
-        const projects = [
-            getMockedProject({ id: 'project-1', name: 'Alpha Project', created_at: '2026-01-01T10:00:00Z' }),
-            getMockedProject({ id: 'project-2', name: 'Beta Project', created_at: '2026-06-01T10:00:00Z' }),
-            getMockedProject({ id: 'project-3', name: 'Zeta Project', created_at: '2026-03-01T10:00:00Z' }),
-        ];
-
         beforeEach(() => {
             server.use(
                 http.get('/api/projects', () => {
@@ -161,22 +161,17 @@ describe('ProjectList', () => {
         it('shows only the create project button when there are no projects', async () => {
             renderProjectList();
 
-            expect(await screen.findByRole('button', { name: /create project/i })).toBeInTheDocument();
-            expect(screen.queryByRole('link')).not.toBeInTheDocument();
+            expect(await screen.findByLabelText('empty list')).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /Create project menu/i })).toBeInTheDocument();
+
             expect(screen.queryByRole('button', { name: /sort/i })).not.toBeInTheDocument();
         });
     });
 
     describe('create project menu', () => {
-        beforeEach(() => {
-            server.use(
-                http.get('/api/projects', () => {
-                    return HttpResponse.json([]);
-                })
-            );
-        });
-
         it('opens menu with project creation options on button click', async () => {
+            server.use(http.get('/api/projects', () => HttpResponse.json(projects)));
+
             const user = userEvent.setup();
             renderProjectList();
 
