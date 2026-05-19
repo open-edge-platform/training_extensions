@@ -109,29 +109,29 @@ export const ProjectsListPanel = () => {
             <SelectedProjectButton name={selectedProjectName} id={projectId} isActive={hasActivePipeline} />
 
             <Dialog width={'size-4600'} UNSAFE_className={classes.dialog}>
-                <Header>
-                    <Flex
-                        direction={'column'}
-                        justifyContent={'center'}
-                        width={'100%'}
-                        alignItems={'center'}
-                        UNSAFE_style={{
-                            padding: 'var(--spectrum-global-dimension-size-200)',
-                        }}
-                        gap={'size-100'}
-                    >
-                        <ProjectThumbnail
-                            // when selected project changes, we want to reset the project thumbnail
-                            key={selectedProject?.id}
-                            project={{ name: selectedProjectName, id: selectedProject?.id ?? selectedProjectName }}
-                            height={'size-1000'}
-                            width={'size-1000'}
-                        />
-                        <View width={'100%'} position={'relative'}>
-                            <Heading UNSAFE_style={{ textAlign: 'center' }} level={2} marginBottom={0}>
-                                {selectedProjectName}
-                            </Heading>
-                            {selectedProject !== undefined ? (
+                {selectedProject !== undefined && (
+                    <Header>
+                        <Flex
+                            direction={'column'}
+                            justifyContent={'center'}
+                            width={'100%'}
+                            alignItems={'center'}
+                            UNSAFE_style={{
+                                padding: 'var(--spectrum-global-dimension-size-200)',
+                            }}
+                            gap={'size-100'}
+                        >
+                            <ProjectThumbnail
+                                // when selected project changes, we want to reset the project thumbnail
+                                key={selectedProject.id}
+                                project={selectedProject}
+                                height={'size-1000'}
+                                width={'size-1000'}
+                            />
+                            <View width={'100%'} position={'relative'}>
+                                <Heading UNSAFE_style={{ textAlign: 'center' }} level={2} marginBottom={0}>
+                                    {selectedProjectName}
+                                </Heading>
                                 <MenuActions
                                     projectId={selectedProject.id}
                                     projectName={selectedProject.name}
@@ -145,11 +145,11 @@ export const ProjectsListPanel = () => {
                                         transform: 'translateY(-50%)',
                                     }}
                                 />
-                            ) : null}
-                        </View>
-                        {hasActivePipeline ? <Tag text={'Active'} /> : null}
-                    </Flex>
-                </Header>
+                            </View>
+                            {hasActivePipeline ? <Tag text={'Active'} /> : null}
+                        </Flex>
+                    </Header>
+                )}
 
                 {otherProjects.length > 0 && (
                     <Content>

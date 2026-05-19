@@ -5,13 +5,13 @@ import { useState } from 'react';
 
 import { PhotoPlaceholder, View, type DimensionValue } from '@geti/ui';
 
-import type { SchemaProjectView } from '../../../api/openapi-spec';
+import { type Project } from '../../../constants/shared-types';
 import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
 
 import classes from './project-thumbnail.module.scss';
 
 interface ProjectThumbnailProps {
-    project: Pick<SchemaProjectView, 'id' | 'name'>;
+    project: Pick<Project, 'id' | 'name'>;
     height: DimensionValue;
     width: DimensionValue;
 }
