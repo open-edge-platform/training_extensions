@@ -92,7 +92,7 @@ describe('RunningModelRow', () => {
         );
 
         expect(await screen.findByText('My Detection Model')).toBeVisible();
-        expect(screen.getByText('Running...')).toBeVisible();
+        expect(screen.getByText('Running')).toBeVisible();
         expect(screen.getByText(/Started: 19 Jan 2026/i)).toBeVisible();
         expect(screen.getByText('Device: CPU')).toBeVisible();
 
@@ -144,7 +144,6 @@ describe('RunningModelRow', () => {
 
         expect(await screen.findByText('My Detection Model')).toBeVisible();
         expect(screen.getByText('Running')).toBeVisible();
-        expect(screen.getByText('Running...')).toBeVisible();
         expect(screen.getByText(/Started: 19 Jan 2026/i)).toBeVisible();
         expect(screen.getByText('Device: CPU')).toBeVisible();
 
