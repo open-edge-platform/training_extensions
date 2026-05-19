@@ -16,10 +16,12 @@ import {
     View,
 } from '@geti/ui';
 import { AddCircle } from '@geti/ui/icons';
+import { dimensionValue } from '@react-spectrum/utils';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useNavigate } from 'react-router';
 
 import { paths } from '../../constants/paths';
+import { MenuActions } from '../../features/project/list/menu-actions/menu-actions.component';
 import { useProjects } from '../../hooks/api/project.hook';
 import { ProjectThumbnail } from './project-thumbnail/project-thumbnail.component';
 import { ProjectsList } from './projects-list.component';
@@ -81,12 +83,20 @@ const AddProjectButton = () => {
 };
 
 export const ProjectsListPanel = () => {
+    const navigate = useNavigate();
     const projectId = useProjectIdentifier();
     const { data } = useProjects();
 
     const selectedProject = data.find((project) => project.id === projectId);
     const selectedProjectName = selectedProject?.name ?? '';
     const hasActivePipeline = Boolean(selectedProject?.active_pipeline);
+
+    const otherProjects = data.filter((project) => project.id !== projectId);
+    const otherProjectNames = otherProjects.map(({ name }) => name);
+
+    const handleDeleted = () => {
+        navigate(paths.project.index({}));
+    };
 
     return (
         <DialogTrigger type='popover' hideArrow>
@@ -102,26 +112,44 @@ export const ProjectsListPanel = () => {
                         UNSAFE_style={{
                             padding: 'var(--spectrum-global-dimension-size-200)',
                         }}
+                        gap={'size-100'}
                     >
                         <ProjectThumbnail
                             project={{ name: selectedProjectName, id: selectedProject?.id ?? selectedProjectName }}
                             height={'size-1000'}
                             width={'size-1000'}
                         />
-                        <Heading UNSAFE_style={{ textAlign: 'center' }} level={2} marginBottom={0}>
-                            {selectedProjectName}
-                        </Heading>
+                        <View width={'100%'} position={'relative'}>
+                            <Heading UNSAFE_style={{ textAlign: 'center' }} level={2} marginBottom={0}>
+                                {selectedProjectName}
+                            </Heading>
+                            {selectedProject !== undefined ? (
+                                <MenuActions
+                                    projectId={selectedProject.id}
+                                    projectName={selectedProject.name}
+                                    isPipelineRunning={selectedProject.active_pipeline}
+                                    projectNames={otherProjectNames}
+                                    onDeleted={handleDeleted}
+                                    actionButtonStyle={{
+                                        position: 'absolute',
+                                        top: '50%',
+                                        right: dimensionValue('size-100'),
+                                        transform: 'translateY(-50%)',
+                                    }}
+                                />
+                            ) : null}
+                        </View>
                         {hasActivePipeline ? <Tag text={'Active'} /> : null}
                     </Flex>
                 </Header>
 
-                <Divider size={'S'} marginY={'size-200'} />
+                {otherProjects.length > 0 && (
+                    <Content>
+                        <ProjectsList projects={otherProjects} />
+                    </Content>
+                )}
 
-                <Content>
-                    <ProjectsList projects={data} />
-                </Content>
-
-                <Divider size={'S'} marginY={'size-200'} />
+                <Divider size={'S'} marginBottom={'size-200'} marginTop={0} />
 
                 <ButtonGroup UNSAFE_className={classes.panelButtons}>
                     <AddProjectButton />
