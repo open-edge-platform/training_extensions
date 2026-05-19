@@ -41,8 +41,8 @@ class IPCameraStream(BaseOpenCVStream):
     cannot back-pressure the network reader and cause upstream packet drops.
     """
 
-    MAX_RETRIES = 3
-    BACKOFF_FACTOR = 0.1
+    MAX_RECONNECT_ATTEMPTS = 10
+    BACKOFF_FACTOR = 0.5
 
     _FIRST_FRAME_TIMEOUT_S = 10.0
     _NEW_FRAME_TIMEOUT_S = 1.0
@@ -78,37 +78,38 @@ class IPCameraStream(BaseOpenCVStream):
         )
         self._reader_thread.start()
 
-    def _reader_loop(self) -> None:
+    def _reader_loop(self) -> None:  # noqa: C901
         """Continuously drain the RTSP socket and publish the latest frame."""
-        consecutive_failures = 0
+        consecutive_grab_failures = 0
         while not self._stop_reader.is_set():
             try:
                 cap = self.cap
                 if cap is None or not cap.isOpened():
                     if self._stop_reader.is_set():
                         break
-                    self._reconnect()
-                    consecutive_failures = 0
+                    if not self._reconnect():
+                        return
+                    consecutive_grab_failures = 0
                     continue
 
                 if self._stop_reader.is_set():
                     break
 
                 if not cap.grab():
-                    consecutive_failures += 1
-                    if consecutive_failures >= self.MAX_RETRIES:
-                        self._reconnect()
-                        consecutive_failures = 0
+                    consecutive_grab_failures += 1
+                    if consecutive_grab_failures >= 3:
+                        if not self._reconnect():
+                            return
+                        consecutive_grab_failures = 0
                     else:
-                        time.sleep(self.BACKOFF_FACTOR * consecutive_failures)
+                        time.sleep(0.05 * consecutive_grab_failures)
                     continue
 
                 ret, frame = cap.retrieve()
                 if not ret or frame is None:
-                    # Decoder skipped a corrupt packet / waiting for keyframe.
                     continue
 
-                consecutive_failures = 0
+                consecutive_grab_failures = 0
                 self._publish_frame(frame)
             except Exception as exc:
                 if self._stop_reader.is_set():
@@ -118,6 +119,39 @@ class IPCameraStream(BaseOpenCVStream):
                     self._reader_error = exc
                     self._frame_available.notify_all()
                 time.sleep(self.BACKOFF_FACTOR)
+
+    def _reconnect(self) -> bool:
+        """Try to re-open the capture with exponential backoff.
+
+        Returns:
+            True if reconnection succeeded, False if all attempts exhausted (gives up permanently).
+        """
+        for attempt in range(self.MAX_RECONNECT_ATTEMPTS):
+            if self._stop_reader.is_set():
+                return False
+            logger.warning("IP camera reconnect attempt {}/{}", attempt + 1, self.MAX_RECONNECT_ATTEMPTS)
+            try:
+                if self.cap is not None:
+                    self.cap.release()
+            except Exception:
+                logger.debug("Error releasing capture during reconnect", exc_info=True)
+            try:
+                self._initialize_capture()
+                self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+                if self.cap.isOpened():
+                    logger.info("Successfully reconnected to IP camera stream.")
+                    return True
+            except Exception:
+                logger.debug("Reconnect attempt {} failed", attempt + 1, exc_info=True)
+            self._stop_reader.wait(self.BACKOFF_FACTOR * (attempt + 1))
+
+        logger.error("IP camera unreachable after {} attempts, giving up.", self.MAX_RECONNECT_ATTEMPTS)
+        with self._frame_available:
+            self._reader_error = RuntimeError(
+                "IP camera stream permanently unavailable after repeated reconnect failures"
+            )
+            self._frame_available.notify_all()
+        return False
 
     @staticmethod
     def _downscale_if_needed(frame: np.ndarray) -> np.ndarray:
@@ -139,32 +173,6 @@ class IPCameraStream(BaseOpenCVStream):
             self._latest_seq += 1
             self._reader_error = None
             self._frame_available.notify_all()
-
-    def _reconnect(self) -> None:
-        """Re-open the capture with exponential backoff."""
-        for attempt in range(self.MAX_RETRIES):
-            if self._stop_reader.is_set():
-                return
-            logger.warning("IP camera reconnect attempt {}/{}", attempt + 1, self.MAX_RETRIES)
-            try:
-                if self.cap is not None:
-                    self.cap.release()
-            except Exception:
-                logger.debug("Error releasing capture during reconnect", exc_info=True)
-            try:
-                self._initialize_capture()
-                self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-                if self.cap.isOpened():
-                    logger.info("Successfully reconnected to IP camera stream.")
-                    return
-            except Exception:
-                logger.debug("Reconnect attempt failed", exc_info=True)
-            self._stop_reader.wait(self.BACKOFF_FACTOR * (attempt + 1))
-
-        with self._frame_available:
-            self._reader_error = RuntimeError("Failed to capture frame from IP camera after multiple retries")
-            self._frame_available.notify_all()
-        self._stop_reader.wait(1.0)
 
     def get_data(self) -> StreamData:
         """Return the latest decoded frame, blocking briefly if necessary."""
@@ -197,7 +205,7 @@ class IPCameraStream(BaseOpenCVStream):
         if self.cap is None:
             raise RuntimeError("Video capture not initialized")
 
-        for attempt in range(self.MAX_RETRIES):
+        for attempt in range(self.MAX_RECONNECT_ATTEMPTS):
             logger.warning(f"Attempt {attempt + 1}: Failed to capture frame from IP camera, retrying...")
             ret, frame = self.cap.read()
             if ret:
