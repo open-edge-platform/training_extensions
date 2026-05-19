@@ -50,7 +50,6 @@ describe('ModelActions', () => {
 
         await userEvent.click(menuButton);
 
-        expect(screen.getByRole('menuitem', { name: 'Set as active' })).toBeInTheDocument();
         expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeInTheDocument();
         expect(screen.getByRole('menuitem', { name: 'Delete weights' })).toBeInTheDocument();
         expect(screen.getByRole('menuitem', { name: 'Delete model' })).toBeInTheDocument();
@@ -127,7 +126,7 @@ describe('ModelActions', () => {
         expect(await screen.findByText('Training logs downloaded successfully')).toBeInTheDocument();
     });
 
-    it('should disable "Set as active" and "Rename" when model is currently training', async () => {
+    it('should disable "Rename" when model is currently training', async () => {
         const trainingModel = getMockedModel({
             ...mockModel,
             training_info: {
@@ -146,11 +145,9 @@ describe('ModelActions', () => {
         const menuButton = screen.getByRole('button', { name: 'Model actions' });
         await userEvent.click(menuButton);
 
-        const setActiveItem = screen.getByRole('menuitem', { name: 'Set as active' });
         const renameItem = screen.getByRole('menuitem', { name: 'Rename' });
         const deleteItem = screen.getByRole('menuitem', { name: 'Delete model' });
 
-        expect(setActiveItem).toHaveAttribute('aria-disabled', 'true');
         expect(renameItem).toHaveAttribute('aria-disabled', 'true');
         expect(deleteItem).not.toHaveAttribute('aria-disabled', 'true');
     });
@@ -161,7 +158,7 @@ describe('ModelActions', () => {
             files_deleted: true,
         });
 
-        it('disables "Delete weights", "View training logs", and "Set as active"', async () => {
+        it('disables "Delete weights" and "View training logs"', async () => {
             render(<ModelActions model={modelWithDeletedWeights} />);
 
             const menuButton = screen.getByRole('button', { name: 'Model actions' });
@@ -172,7 +169,6 @@ describe('ModelActions', () => {
                 'aria-disabled',
                 'true'
             );
-            expect(screen.getByRole('menuitem', { name: 'Set as active' })).toHaveAttribute('aria-disabled', 'true');
         });
 
         it('keeps "Rename" and "Delete model" enabled', async () => {

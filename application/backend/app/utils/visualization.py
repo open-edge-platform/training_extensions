@@ -9,6 +9,7 @@ from loguru import logger
 from model_api.models import ClassificationResult
 from model_api.models.result import DetectionResult, InstanceSegmentationResult, Label, Result
 from model_api.visualizer import BoundingBox, Flatten, Polygon
+from model_api.visualizer.defaults import SCALE_BASELINE
 from model_api.visualizer.scene import ClassificationScene, DetectionScene, InstanceSegmentationScene
 from PIL import Image
 
@@ -17,56 +18,88 @@ from app.utils.singleton import Singleton
 R = TypeVar("R", bound=Result)
 
 
+def _compute_scale(image: np.ndarray) -> float:
+    """Compute a font/outline scale factor based on the image's longer edge.
+
+    Uses SCALE_BASELINE (720p longer edge = 1280) as the reference: at 1280px the
+    scale is 1.0; at 4K (3840px) the scale is ~3.0. Never shrinks below 1.0.
+    """
+    if image is None or image.size == 0:
+        return 1.0
+    h, w = image.shape[:2]
+    longer_edge = float(max(int(h), int(w)))
+    return max(1.0, longer_edge / float(SCALE_BASELINE))
+
+
 class VisualizerCreator(ABC, Generic[R]):
     """Abstract base class for visualizer creators."""
 
     @abstractmethod
-    def create_visualization(self, original_image: np.ndarray, predictions: R) -> np.ndarray:
+    def create_visualization(
+        self,
+        original_image: np.ndarray,
+        predictions: R,
+    ) -> np.ndarray:
         """Create a visualization of the predictions on the original image."""
 
 
 class ClassificationVisualizerCreator(VisualizerCreator[ClassificationResult]):
     """Creator for classification visualizations."""
 
-    def create_visualization(self, original_image: np.ndarray, predictions: ClassificationResult) -> np.ndarray:
-        """Create a visualization of the classification predictions on the original image."""
+    def create_visualization(
+        self,
+        original_image: np.ndarray,
+        predictions: ClassificationResult,
+    ) -> np.ndarray:
         image_pil = Image.fromarray(original_image)
+        scale = _compute_scale(original_image)
         classification_scene = ClassificationScene(
             image=image_pil,
             result=predictions,
+            scale=scale,
         )
-        rendered_classification_pil = classification_scene.render()
-        return np.array(rendered_classification_pil)
+        rendered = classification_scene.render()
+        return np.array(rendered)
 
 
 class DetectionVisualizerCreator(VisualizerCreator[DetectionResult]):
     """Creator for detection visualizations."""
 
-    def create_visualization(self, original_image: np.ndarray, predictions: DetectionResult) -> np.ndarray:
-        """Create a visualization of the detection predictions on the original image."""
+    def create_visualization(
+        self,
+        original_image: np.ndarray,
+        predictions: DetectionResult,
+    ) -> np.ndarray:
         image_pil = Image.fromarray(original_image)
+        scale = _compute_scale(original_image)
         detection_scene = DetectionScene(
             image=image_pil,
             result=predictions,
             layout=Flatten(BoundingBox, Label),  # pyrefly: ignore[bad-argument-type]
+            scale=scale,
         )
-        rendered_detections_pil = detection_scene.render()
-        return np.array(rendered_detections_pil)
+        rendered = detection_scene.render()
+        return np.array(rendered)
 
 
 class InstanceSegmentationVisualizerCreator(VisualizerCreator[InstanceSegmentationResult]):
     """Creator for instance segmentation visualizations."""
 
-    def create_visualization(self, original_image: np.ndarray, predictions: InstanceSegmentationResult) -> np.ndarray:
-        """Create a visualization of the instance segmentation predictions on the original image."""
+    def create_visualization(
+        self,
+        original_image: np.ndarray,
+        predictions: InstanceSegmentationResult,
+    ) -> np.ndarray:
         image_pil = Image.fromarray(original_image)
+        scale = _compute_scale(original_image)
         segmentation_scene = InstanceSegmentationScene(
             image=image_pil,
             result=predictions,
             layout=Flatten(Polygon, Label),  # pyrefly: ignore[bad-argument-type]
+            scale=scale,
         )
-        rendered_segmentation_pil = segmentation_scene.render()
-        return np.array(rendered_segmentation_pil)
+        rendered = segmentation_scene.render()
+        return np.array(rendered)
 
 
 class VisualizationDispatcher(metaclass=Singleton):
@@ -79,8 +112,11 @@ class VisualizationDispatcher(metaclass=Singleton):
             InstanceSegmentationResult: InstanceSegmentationVisualizerCreator(),
         }
 
-    def create_visualization(self, original_image: np.ndarray, predictions: Result) -> np.ndarray | None:
-        """Create a visualization of the predictions on the original image."""
+    def create_visualization(
+        self,
+        original_image: np.ndarray,
+        predictions: Result,
+    ) -> np.ndarray | None:
         if original_image.size == 0:
             raise ValueError("The image provided through the 'original_image' parameter cannot be empty.")
 
@@ -93,12 +129,19 @@ class VisualizationDispatcher(metaclass=Singleton):
 
 class Visualizer:
     @staticmethod
-    def overlay_predictions(original_image: np.ndarray, predictions: Result) -> np.ndarray:
-        """Overlay predictions on the original image based on the type of predictions."""
+    def overlay_predictions(
+        original_image: np.ndarray,
+        predictions: Result,
+    ) -> np.ndarray:
+        """Overlay predictions on the original image.
+
+        Args:
+            original_image: BGR/RGB numpy image.
+            predictions: Model API prediction result.
+        """
         try:
             visualization = VisualizationDispatcher().create_visualization(original_image, predictions)
             if visualization is None:
-                # If no visualization could be created, return the original image
                 return original_image
         except Exception:
             logger.exception("An error occurred while creating visualization, returning original image.")

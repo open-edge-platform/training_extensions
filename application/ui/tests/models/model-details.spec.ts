@@ -239,10 +239,10 @@ test.describe('Model Details', () => {
             await modelsPage.expandModel('YOLOX Model v1');
             await page.getByRole('tab', { name: 'Model variants' }).click();
 
-            const modelVariantMenu = page.getByLabel(/Model variant actions/i).first();
-            await modelVariantMenu.click();
-
-            await page.getByRole('menuitem', { name: 'Download' }).click();
+            await page
+                .getByLabel(/Download model /i)
+                .first()
+                .click();
 
             await expect.poll(() => modelVariantId).not.toBeUndefined();
         });
