@@ -45,7 +45,7 @@ export const CurrentModelRunning = ({ groupBy, datasetRevisions }: CurrentModelR
             <View backgroundColor={'gray-75'}>
                 <ModelsTableHeader />
 
-                <View overflow={'auto'} maxHeight={'size-2400'}>
+                <View overflow={'auto'}>
                     {activeRunningJobs.map((job) => (
                         <RunningModelRow
                             key={job.job_id}
