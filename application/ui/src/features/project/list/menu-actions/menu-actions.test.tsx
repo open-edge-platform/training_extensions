@@ -61,7 +61,7 @@ describe('MenuActions', () => {
 
         expect(await screen.findByText('Cannot enable pipeline')).toBeVisible();
         expect(
-            await screen.findByText('Make sure you selected a model, source, and sink before enabling the pipeline.')
+            await screen.findByText('Make sure you selected a model and source before enabling the pipeline.')
         ).toBeVisible();
     });
 });

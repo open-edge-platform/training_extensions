@@ -9,8 +9,8 @@ type Pipeline = components['schemas']['PipelineView'];
 export const useIsPipelineConfigured = (pipeline?: Pipeline) => {
     if (!pipeline) return false;
 
-    const { model, source, sink } = pipeline;
-    const isEditable = !isEmpty(model) && !isEmpty(source) && !isEmpty(sink);
+    const { model, source } = pipeline;
+    const isEditable = !isEmpty(model) && !isEmpty(source);
 
     return isEditable;
 };
