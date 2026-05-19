@@ -37,26 +37,33 @@ def wait_for_job_completion(base_url: str, job_id: UUID) -> JobView:
     deadline = time.monotonic() + _JOB_WAIT_TIMEOUT_SECONDS
 
     while time.monotonic() < deadline:
-        with requests.get(
-            f"{base_url}/api/jobs/{job_id}/status",
-            stream=True,
-            headers={"Accept": "text/event-stream"},
-        ) as stream_response:
-            for job_data in parse_sse_events(stream_response):
-                job = JobView.model_validate(job_data)
-                if job.status in terminal_statuses:
-                    break
+        try:
+            with requests.get(
+                f"{base_url}/api/jobs/{job_id}/status",
+                stream=True,
+                headers={"Accept": "text/event-stream"},
+                timeout=(5, 30),
+            ) as stream_response:
+                for job_data in parse_sse_events(stream_response):
+                    job = JobView.model_validate(job_data)
+                    if job.status in terminal_statuses:
+                        break
+        except requests.exceptions.RequestException:
+            pass  # Treat as transient; fall through to poll/reconnect.
 
         if job is not None and job.status in terminal_statuses:
             break
 
         # SSE stream ended before reaching a terminal state. Re-check the job
         # status directly in case the terminal event was missed, then reconnect.
-        poll_response = requests.get(f"{base_url}/api/jobs/{job_id}", timeout=10)
-        if poll_response.status_code == 200:
-            job = JobView.model_validate(poll_response.json())
-            if job.status in terminal_statuses:
-                break
+        try:
+            with requests.get(f"{base_url}/api/jobs/{job_id}", timeout=10) as poll_response:
+                if poll_response.status_code == 200:
+                    job = JobView.model_validate(poll_response.json())
+                    if job.status in terminal_statuses:
+                        break
+        except requests.exceptions.RequestException:
+            pass  # Transient failure; will retry on next iteration.
 
         time.sleep(_JOB_RECONNECT_SLEEP_SECONDS)
 
