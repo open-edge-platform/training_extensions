@@ -245,11 +245,7 @@ engine.train()
 
 The exact same line works for COCO, VOC, or Datumaro-native datasets. Only the directory contents differ.
 
-Zip archives: `data=` also accepts the path to a `.zip` archive of any of the layouts above; Datumaro extracts it on import. Treat this as a convenience, not a primary workflow.
-
-**If auto-detection fails.** Auto-detection requires the dataset to follow one of the recognised structures. If yours does not, the cleanest fix is to convert and export the dataset to the native Datumaro format first (`metadata.json` plus `data.parquet`), then point `data=` at that directory. As an escape hatch you can also call `datumaro.experimental.import_dataset` yourself with `data_format=DataFormat.COCO` (or `YOLO`, `VOC`) plus the relevant path arguments (`images_dir_path`, `annotations_path`, `root_dir`), build a getitune `VisionDataset` from the result, and feed it through `DataModule.from_vision_datasets(...)`. That advanced path is not stable API; consult the source under `getitune/data/` before depending on it.
-
-The task you train with must match the annotations in the dataset: use `TaskType.DETECTION` for COCO/YOLO/VOC detection annotations, `TaskType.SEMANTIC_SEGMENTATION` for VOC or COCO segmentation, and so on. Mismatches will surface as load-time or training-time errors rather than silent miscalibration.
+Zip archives: `data=` also accepts the path to a `.zip` archive of any of the layouts above; Datumaro extracts it on import.
 
 ### 3. Build a `DataModule` explicitly
 
