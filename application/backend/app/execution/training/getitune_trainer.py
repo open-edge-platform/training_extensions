@@ -355,6 +355,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             self._model_service.create_revision(
                 ModelRevisionMetadata(
                     model_id=training_params.model_id,
+                    model_name=training_params.model_name,
                     project_id=project_id,
                     architecture_id=training_params.model_architecture_id,
                     parent_revision_id=training_params.parent_model_revision_id,

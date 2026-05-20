@@ -17,6 +17,7 @@ def fxt_training_params() -> Callable[[UUID, UUID], TrainingJobParams]:
         return TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             model_architecture_id="test_arch",
+            model_architecture_name="Test Arch",
             task=Task(task_type=TaskType.CLASSIFICATION),
             job_id=job_id,
             project_id=project_id,

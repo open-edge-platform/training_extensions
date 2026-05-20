@@ -35,6 +35,7 @@ from app.models.jobs import (
     PrepareDatasetForImportJobParams,
 )
 from app.services import ProjectService, SystemService
+from app.services.model_manifest_service import ModelManifestService
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
@@ -69,6 +70,8 @@ async def submit_job(
             case JobType.TRAIN:
                 device = system_service.get_device_info(job_request.parameters.device)
                 project = project_service.get_project_by_id(job_request.project_id)
+                arch_id = job_request.parameters.model_architecture_id
+                arch_name = ModelManifestService.get_model_manifest_by_id(arch_id).name
                 job = TrainingJob(
                     id=job_id,
                     project_id=project.id,
@@ -76,7 +79,8 @@ async def submit_job(
                     data_dir=data_dir,
                     params=TrainingJobParams(
                         device=device,
-                        model_architecture_id=job_request.parameters.model_architecture_id,
+                        model_architecture_id=arch_id,
+                        model_architecture_name=arch_name,
                         parent_model_revision_id=job_request.parameters.parent_model_revision_id,
                         task=project.task,
                         project_id=project.id,
