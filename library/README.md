@@ -180,7 +180,7 @@ engine = create_engine(
 
 When you pass a path to `data=`, `getitune` calls `datumaro.experimental.import_dataset(data_root)` under the hood. Datumaro auto-detects the dataset format from the directory contents, so you do not need to pass an explicit format anywhere. The path may point to a directory or to a `.zip` archive (Datumaro extracts the archive automatically next to it, or to the `extract_dir` you configure when calling Datumaro directly).
 
-Four formats are currently recognised by the auto-detector (datumaro 2.0.0):
+Four formats are currently recognised by the auto-detector:
 
 - **Datumaro (native)**: a `metadata.json` plus `data.parquet` file at the root. This is the most reliable interchange format and the one to prefer for round-trips.
 - **COCO**: an `annotations/` directory containing COCO JSON files, or any JSON file with `images` and `annotations` keys at the top level.
