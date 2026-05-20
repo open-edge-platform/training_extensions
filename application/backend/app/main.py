@@ -30,7 +30,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from loguru import logger
 
-from app.api.cached_utils import CachedStaticFiles
+from app.api.cache_utils import CachedStaticFiles
 from app.api.routers import (
     dataset_ie,
     dataset_revisions,

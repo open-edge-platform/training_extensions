@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Tests for CachedStaticFiles class."""
@@ -8,7 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from starlette.applications import Starlette
 from starlette.routing import Mount
 
-from app.api.cached_utils import CachedStaticFiles
+from app.api.cache_utils import CachedStaticFiles
 
 
 @pytest.fixture
