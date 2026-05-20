@@ -24,6 +24,7 @@ import { useDisablePipeline } from 'hooks/api/pipeline.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../api/client';
+import { useWebRTCConnection } from '../../stream/web-rtc-connection-provider';
 
 type DisconnectSourceWarningDialogProps = {
     onCancel: () => void;
@@ -78,6 +79,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit, isPipelineRunning }:
     const project_id = useProjectIdentifier();
     const [isDisconnectConfirmationDialogVisible, setIsDisconnectConfirmationDialogVisible] = useState<boolean>(false);
     const disablePipelineMutation = useDisablePipeline();
+    const { stop } = useWebRTCConnection();
 
     const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: {
@@ -173,6 +175,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit, isPipelineRunning }:
                                 });
 
                                 setIsDisconnectConfirmationDialogVisible(false);
+                                void stop();
                             },
                         }
                     );
