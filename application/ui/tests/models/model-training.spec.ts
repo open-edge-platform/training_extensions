@@ -71,7 +71,8 @@ const runningTrainingJob = getMockedJob({
     metadata: {
         project: { id: 'id-1' },
         model: {
-            id: 'model-training-1',
+            id: 'ef3983f1-cef0-4ebe-91db-7330f1dd6e27',
+            name: 'ATSS (ef3983f1)',
             architecture: 'Custom_Object_Detection_Gen3_ATSS',
             parent_revision_id: 'model-rev-1',
             dataset_revision_id: 'dataset-2',
