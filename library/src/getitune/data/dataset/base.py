@@ -58,45 +58,6 @@ def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
     return img
 
 
-def _reconcile_spatial_metadata(item: BaseSample) -> None:
-    """Transpose image spatial dimensions when H and W are swapped.
-
-    Workaround for a Datumaro bug in ``TensorField.from_polars()`` which uses
-    the wrong inverse permutation when reading CHW tensors from parquet,
-    resulting in H and W being exchanged after ``_ensure_chw_format``.
-
-    See: https://github.com/open-edge-platform/datumaro/issues/2130
-    """
-    from torchvision import tv_tensors
-
-    from getitune.data.entity.base import ImageInfo
-
-    if not isinstance(item.image, torch.Tensor) or item.image.ndim < 2:
-        return
-
-    img_h, img_w = item.image.shape[-2:]
-
-    bboxes = getattr(item, "bboxes", None)
-    if not isinstance(bboxes, tv_tensors.BoundingBoxes):
-        return
-
-    expected_h, expected_w = bboxes.canvas_size
-
-    if (img_h, img_w) == (expected_w, expected_h) and (img_h, img_w) != (expected_h, expected_w):
-        item.image = item.image.transpose(-2, -1)
-
-        masks = getattr(item, "masks", None)
-        if isinstance(masks, tv_tensors.Mask) and masks.numel() > 0:
-            item.masks = tv_tensors.Mask(masks.transpose(-2, -1))  # type: ignore[assignment]
-
-        if hasattr(item, "img_info"):
-            item.img_info = ImageInfo(  # type: ignore[call-arg]
-                img_idx=0,
-                img_shape=(expected_h, expected_w),
-                ori_shape=(expected_h, expected_w),
-            )
-
-
 def _collect_optional_attr(items: list[BaseSample], attr_name: str) -> list | None:
     if not items or not all(hasattr(item, attr_name) for item in items):
         return None
@@ -257,7 +218,6 @@ class VisionDataset(TorchDataset):
         # the correct inverse of ``(2, 0, 1)`` is ``(1, 2, 0)``.  As a result,
         # images come back as HWC instead of the original CHW.
         item.image = _ensure_chw_format(item.image)
-        _reconcile_spatial_metadata(item)
         return item
 
     def __getitem__(self, index: int) -> BaseSample:
