@@ -18,7 +18,6 @@ export const useDatasetMediaWithReviewStatus = () => {
     });
 
     const datasetItemsResponse = useGetDatasetItemsById({ annotationStatus: annotationStatus ?? undefined });
-    const hasPendingRequests = mediaItemsResponse.isPending || datasetItemsResponse.isPending;
 
     const fetchNextPage = () => {
         if (mediaItemsResponse.hasNextPage && !mediaItemsResponse.isFetchingNextPage) {
@@ -36,9 +35,8 @@ export const useDatasetMediaWithReviewStatus = () => {
 
     return {
         items: mediaItemsResponse.items,
-        isPending: hasPendingRequests,
-        isFetchingNextPage:
-            hasPendingRequests || mediaItemsResponse.isFetchingNextPage || datasetItemsResponse.isFetchingNextPage,
+        isPending: mediaItemsResponse.isPending,
+        isFetchingNextPage: mediaItemsResponse.isFetchingNextPage || datasetItemsResponse.isFetchingNextPage,
         totalCount: mediaItemsResponse.totalCount,
         fetchNextPage,
         isMediaItemReviewedById,

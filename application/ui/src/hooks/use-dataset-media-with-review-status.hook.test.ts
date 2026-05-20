@@ -84,19 +84,28 @@ const setupHandlers = ({
 };
 
 describe('useDatasetMediaWithReviewStatus', () => {
-    describe('isFetchingNextPage', () => {
-        it('returns true while requests are pending', () => {
-            setupHandlers({ mediaTotal: 1, datasetTotal: 1, initialDelayMs: 100 });
+    describe('isPending', () => {
+        it('reflects only the media-items query, so the review-status query does not block the gallery', async () => {
+            setupHandlers({
+                mediaTotal: 1,
+                datasetTotal: 1,
+                mediaInitialDelayMs: 0,
+                datasetInitialDelayMs: 200,
+            });
 
             const { result } = renderHook(() => useDatasetMediaWithReviewStatus());
 
-            expect(result.current.isFetchingNextPage).toBe(true);
-
-            return waitFor(() => {
-                expect(result.current.isFetchingNextPage).toBe(false);
+            // Media items resolve first; isPending should drop to false even
+            // though the review-status query is still loading.
+            await waitFor(() => {
+                expect(result.current.items.length).toBeGreaterThan(0);
             });
-        });
 
+            expect(result.current.isPending).toBe(false);
+        });
+    });
+
+    describe('isFetchingNextPage', () => {
         it('returns true when media items are fetching next page', async () => {
             setupHandlers({ mediaTotal: 40, datasetTotal: 1, mediaNextPageDelayMs: 100 });
 
@@ -145,33 +154,6 @@ describe('useDatasetMediaWithReviewStatus', () => {
             setupHandlers({ mediaTotal: 1, datasetTotal: 1 });
 
             const { result } = renderHook(() => useDatasetMediaWithReviewStatus());
-
-            await waitFor(() => {
-                expect(result.current.isPending).toBe(false);
-            });
-
-            expect(result.current.isFetchingNextPage).toBe(false);
-        });
-
-        it('stays true while one initial query is still pending after the other resolves', async () => {
-            setupHandlers({
-                mediaTotal: 40,
-                datasetTotal: 40,
-                mediaInitialDelayMs: 0,
-                datasetInitialDelayMs: 200,
-            });
-
-            const { result } = renderHook(() => useDatasetMediaWithReviewStatus());
-
-            expect(result.current.isFetchingNextPage).toBe(true);
-
-            // Wait until the media query has resolved its initial page but the dataset query is still pending.
-            await waitFor(() => {
-                expect(result.current.items.length).toBeGreaterThan(0);
-            });
-
-            expect(result.current.isPending).toBe(true);
-            expect(result.current.isFetchingNextPage).toBe(true);
 
             await waitFor(() => {
                 expect(result.current.isPending).toBe(false);

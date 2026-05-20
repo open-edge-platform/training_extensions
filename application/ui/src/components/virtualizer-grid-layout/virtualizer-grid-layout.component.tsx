@@ -25,6 +25,7 @@ interface VirtualizerGridLayoutProps<T extends GridItem>
     scrollToIndex?: number;
     selectionMode: 'single' | 'multiple' | 'none';
     layoutOptions: GridLayoutOptions;
+    isPending?: boolean;
     isLoadingMore: boolean;
     onLoadMore: () => void;
     contentItem: (item: T) => ReactNode;
@@ -37,6 +38,7 @@ export const VirtualizerGridLayout = <T extends GridItem>({
     items,
     ariaLabel,
     selectedKeys,
+    isPending = false,
     isLoadingMore,
     selectionMode,
     layoutOptions,
@@ -93,6 +95,7 @@ export const VirtualizerGridLayout = <T extends GridItem>({
                     )}
                 </AriaComponentsListBox>
             </Virtualizer>
+            {isPending && <Loading mode='overlay' />}
         </View>
     );
 };
