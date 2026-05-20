@@ -12,9 +12,9 @@ class CachedStaticFiles(StaticFiles):
     """StaticFiles subclass that sets Cache-Control headers based on file extension."""
 
     CACHE_RULES: list[tuple[tuple[str, ...], str]] = [
-        # Fingerprinted JS/CSS bundles — safe to cache forever
+        # Fingerprinted JS/CSS bundles — safe to cache for one year
         ((".js", ".css"), "public, max-age=31536000, immutable"),
-        # WebAssembly + OpenCV — large, binary, never changes between deploys
+        # WebAssembly + OpenCV — large binary assets cached immutably for one year
         ((".wasm",), "public, max-age=31536000, immutable"),
         # OpenCV data files (e.g. haarcascades, trained models)
         ((".data", ".mem"), "public, max-age=31536000, immutable"),
