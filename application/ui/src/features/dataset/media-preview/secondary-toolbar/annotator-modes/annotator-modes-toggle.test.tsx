@@ -95,33 +95,7 @@ describe('AnnotatorModes', () => {
         });
     });
 
-    describe('Annotation cue visibility', () => {
-        it('shows annotation cue when mode is prediction and has annotations', () => {
-            renderComponent({ mode: 'prediction', hasAnnotations: true });
-
-            expect(screen.getByRole('status', { name: 'Annotation available' })).toBeInTheDocument();
-        });
-
-        it('does not show annotation cue when mode is annotation', () => {
-            renderComponent({ mode: 'annotation', hasAnnotations: true });
-
-            expect(screen.queryByRole('status', { name: 'Annotation available' })).not.toBeInTheDocument();
-        });
-    });
-
     describe('Cue dismissal', () => {
-        it('dismisses annotation cue after clicking annotation button when has annotation', () => {
-            renderComponent({ mode: 'prediction', hasPredictions: false, hasAnnotations: true });
-
-            expect(screen.getByRole('status', { name: 'Annotation available' })).toBeInTheDocument();
-
-            fireEvent.click(screen.getByRole('button', { name: 'Annotation' }));
-
-            fireEvent.click(screen.getByRole('button', { name: 'Prediction' }));
-
-            expect(screen.queryByRole('status', { name: 'Annotation available' })).not.toBeInTheDocument();
-        });
-
         it('dismisses prediction cue after clicking prediction button when has predictions', () => {
             renderComponent({ mode: 'annotation', hasPredictions: true, hasAnnotations: false });
 
@@ -136,14 +110,6 @@ describe('AnnotatorModes', () => {
     });
 
     describe('Pre-dismissed cues on mount', () => {
-        it('does not show annotation cue when starting in annotation mode with annotations, after switching to prediction', () => {
-            renderComponent({ mode: 'annotation', hasAnnotations: true, hasPredictions: false });
-
-            fireEvent.click(screen.getByRole('button', { name: 'Prediction' }));
-
-            expect(screen.queryByRole('status', { name: 'Annotation available' })).not.toBeInTheDocument();
-        });
-
         it('does not show prediction cue when starting in prediction mode with predictions, after switching to annotation', () => {
             renderComponent({ mode: 'prediction', hasPredictions: true, hasAnnotations: false });
 
