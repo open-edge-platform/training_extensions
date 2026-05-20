@@ -175,10 +175,12 @@ export const SourceMenu = ({ id, name, isConnected, onEdit, isPipelineRunning }:
                                 });
 
                                 setIsDisconnectConfirmationDialogVisible(false);
-                                void stop();
                             },
                         }
                     );
+                },
+                onSettled: () => {
+                    void stop();
                 },
             }
         );
