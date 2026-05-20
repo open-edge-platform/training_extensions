@@ -71,8 +71,7 @@ build-image accelerator="cpu" tag="latest": install-uv
 [arg("coturn_port", long="coturn-port", help="Coturn server listening port (default: 443)")]
 [arg("stun_server", long="stun", help="STUN server URL to use for WebRTC")]
 [arg("gpu-slots", long="gpu-slots", help="Number of GPU slots available for model tuning (default: 1)")]
-[arg("webrtc-ports", long="webrtc-ports", help="UDP port range to publish for WebRTC (e.g. 50100-50200). Larger ranges drastically slow `docker run` shutdown on Docker Desktop (macOS/Windows) because each port becomes its own NAT rule.")]
-run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-port="7860" container-name="" detach="false" remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="" gpu-slots="1" webrtc-ports=webrtc-ports-default:
+run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-port="7860" container-name="" detach="false" remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="" gpu-slots="1":
     #!/usr/bin/env bash
     set -euo pipefail
     shopt -s nullglob
