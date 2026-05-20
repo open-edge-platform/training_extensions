@@ -134,7 +134,7 @@ uv sync --extra cpu          # or --extra xpu / --extra cuda
 
 # Or with pip in a virtual environment
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[cpu]"      # add -e for editable mode
+pip install -e ".[cpu]"      # remove -e for a non-editable install
 ```
 
 </details>
