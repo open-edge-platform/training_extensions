@@ -59,7 +59,12 @@ export class DatasetPage {
     }
 
     getUploadProgressText(total: number, succeeded: number, failed = 0) {
-        return this.page.getByText(`Uploading ${total} item(s)... (${succeeded} succeeded, ${failed} failed)`);
+        const parts = [succeeded > 0 ? `${succeeded} succeeded` : null, failed > 0 ? `${failed} failed` : null]
+            .filter(Boolean)
+            .join(', ');
+        const text = `Uploading ${total} item(s)...${parts ? ` (${parts})` : ''}`;
+
+        return this.page.getByText(text);
     }
 
     getUploadFinishedText(total: number) {
