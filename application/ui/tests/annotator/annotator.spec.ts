@@ -664,24 +664,17 @@ test.describe('Annotator', () => {
                 await expect(page.getByLabel('Prediction available')).toBeHidden();
             });
 
-            await test.step('navigate to item-2 (in prediction mode): annotation cue visible because there are annotations', async () => {
+            await test.step('navigate to item-2 (in prediction mode): no annotation cue is shown', async () => {
                 await annotatorPage.openPredictionMode();
                 await annotatorPage.selectMediaItem('item-2');
 
-                await expect(page.getByLabel('Annotation available')).toBeVisible();
+                await expect(page.getByLabel('Annotation available')).toBeHidden();
             });
 
-            await test.step('item-2: switching prediction -> annotation dismisses both cues simultaneously', async () => {
+            await test.step('item-2: switching prediction -> annotation hides prediction cue', async () => {
                 await annotatorPage.openAnnotationMode();
 
                 await expect(page.getByLabel('Prediction available')).toBeHidden();
-                await expect(page.getByLabel('Annotation available')).toBeHidden();
-            });
-
-            await test.step('item-2: switching back to prediction mode keeps annotation cue hidden (already dismissed)', async () => {
-                await annotatorPage.openPredictionMode();
-
-                await expect(page.getByLabel('Annotation available')).toBeHidden();
             });
         });
 
