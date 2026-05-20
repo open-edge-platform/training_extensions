@@ -33,6 +33,7 @@ export const mediaPredictionsQueryOptions = ({
             projectId,
             'media-predictions',
             mediaId,
+            device,
             selectedModel?.modelId,
             selectedModel?.modelVariantId,
             range,
