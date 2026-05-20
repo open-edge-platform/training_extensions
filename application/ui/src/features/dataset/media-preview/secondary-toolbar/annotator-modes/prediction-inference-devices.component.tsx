@@ -14,6 +14,7 @@ export const PredictionInferenceDevices = ({ isDisabled }: PredictionInferenceDe
     return (
         <InferenceDevices
             isQuiet
+            ariaLabel={'Inference devices'}
             selectedKey={selectedDevice}
             onSelectionChange={changeSelectedDevice}
             isDisabled={isDisabled}
