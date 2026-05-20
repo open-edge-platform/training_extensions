@@ -12,7 +12,7 @@ application-name := "geti"
 # Runtime variables
 # -------------------------------------------------------------------------------------------------
 docker-run-args := "--env http_proxy --env https_proxy --env no_proxy --env HTTP_PROXY --env HTTPS_PROXY --env NO_PROXY"
-webrtc-ports-default := "50100-50109"
+webrtc-ports := "50100-50109"
 data-volume := application-name + "-data"
 logs-volume := application-name + "-logs"
 
