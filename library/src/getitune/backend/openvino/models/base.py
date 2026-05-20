@@ -181,8 +181,7 @@ class OVModel:
 
         self._get_hparams_from_adapter(model_adapter)
 
-        # intensity_mode="none" skips /255 (data pipeline already does it); mean/std still applied from rt_info.
-        # confidence_threshold=0 sends all predictions to metric unfiltered, matching PyTorch test behavior.
+        # remove intensity scaling and set threshold to 0 to compute mAP properly
         configuration: dict[str, Any] = {
             "input_dtype": "f32",
             "intensity_mode": "none",
