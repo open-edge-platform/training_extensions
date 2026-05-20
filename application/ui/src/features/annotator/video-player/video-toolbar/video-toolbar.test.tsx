@@ -55,6 +55,9 @@ vi.mock('../../selected-media-item-provider.component', () => ({
 vi.mock('../../predictions-setup-provider.component', async (importOriginal) => ({
     ...(await importOriginal()),
     usePredictionSetup: () => ({
+        selectedDevice: 'cpu',
+        changeSelectedDevice: vi.fn(),
+
         selectedModelId: 'model-1',
         selectedModel: { id: 'variant-1', name: 'Test Model [FP32]', modelId: 'model-1' },
         changeSelectedModelId: vi.fn(),
