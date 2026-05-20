@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { screen, within } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedProject } from 'mocks/mock-project';
@@ -53,12 +53,6 @@ describe('ProjectList', () => {
             expect(
                 await screen.findByText(/Create projects to configure new computer vision pipelines/i)
             ).toBeInTheDocument();
-        });
-
-        it('renders the "Create project" button', async () => {
-            renderProjectList();
-
-            expect(await screen.findByRole('button', { name: /create project/i })).toBeInTheDocument();
         });
 
         it('renders a card for each project', async () => {
@@ -158,29 +152,28 @@ describe('ProjectList', () => {
             );
         });
 
-        it('shows only the create project button when there are no projects', async () => {
+        it('shows empty illustration when there are no projects', async () => {
             renderProjectList();
 
             expect(await screen.findByLabelText('empty list')).toBeInTheDocument();
-            expect(screen.getByRole('button', { name: /Create project menu/i })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /create new project/i })).toBeVisible();
+            expect(screen.getByRole('button', { name: /create from dataset/i })).toBeVisible();
 
             expect(screen.queryByRole('button', { name: /sort/i })).not.toBeInTheDocument();
         });
     });
 
-    describe('create project menu', () => {
-        it('opens menu with project creation options on button click', async () => {
+    describe('create project card', () => {
+        it('renders create new project and create from dataset buttons', async () => {
             server.use(http.get('/api/projects', () => HttpResponse.json(projects)));
 
-            const user = userEvent.setup();
             renderProjectList();
 
-            const createButton = await screen.findByRole('button', { name: /create project/i });
-            await user.click(createButton);
+            const createButton = await screen.findByRole('button', { name: /create new project/i });
+            expect(createButton).toBeVisible();
 
-            const menu = await screen.findByRole('menu');
-            expect(within(menu).getByRole('menuitem', { name: 'Create new project' })).toBeInTheDocument();
-            expect(within(menu).getByRole('menuitem', { name: 'Create from dataset' })).toBeInTheDocument();
+            const createFromDatasetButton = await screen.findByRole('button', { name: /Create from dataset/i });
+            expect(createFromDatasetButton).toBeVisible();
         });
     });
 });

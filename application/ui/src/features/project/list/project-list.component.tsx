@@ -9,7 +9,7 @@ import { useProjects } from 'hooks/api/project.hook';
 import { isNonEmptyArray } from '../../../shared/util';
 import { EmptyProjectList } from './empty-project-list/empty-project-list.component';
 import { ImportJobsList } from './import-jobs-list/import-jobs-list.component';
-import { NewProjectMenu } from './new-project-menu.component';
+import { NewProjectCard } from './new-project-card/new-project-card.component';
 import { ProjectCard } from './project-card.component';
 import { SORT_BY_HANDLERS, SortProjects } from './sort-projects/sort-projects.component';
 import { SortBy } from './sort-projects/utils';
@@ -44,7 +44,7 @@ const ProjectGrid = () => {
                 UNSAFE_style={{ overflowY: 'auto' }}
                 columns={['1fr', '1fr']}
             >
-                <NewProjectMenu />
+                <NewProjectCard />
 
                 {sortedProjects.map((item, index) => (
                     <ProjectCard
