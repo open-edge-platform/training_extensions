@@ -52,7 +52,7 @@ The Geti™ library supports the following computer vision tasks:
 
 Additional capabilities:
 
-- **Multi-backend engine**: PyTorch Lightning, Native, and OpenVINO™. Selected automatically by `create_engine` based on the model and data you pass in.
+- **Multi-backend engine**: PyTorch Lightning and OpenVINO™. Selected automatically by `create_engine` based on the model and data you pass in.
 - **Modern model zoo** across tasks (e.g. DEIM-DFine, DEIMv2, DFine, RF-DETR, RT-DETR, YOLOX, ATSS, SSD for detection; Mask R-CNN, RTMDet-Inst, RF-DETR-Seg for instance segmentation; SegNeXt, Lite-HRNet, DINOv2 for semantic segmentation; RTMPose for keypoint detection).
 - **Native Intel GPU (XPU) support**: install the `[xpu]` extra to train and infer on Intel GPUs.
 - **NVIDIA CUDA support** via the `[cuda]` extra (CUDA 12.8 wheels).
