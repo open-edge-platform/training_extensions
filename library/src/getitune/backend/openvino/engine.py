@@ -287,13 +287,7 @@ class OVEngine(Engine):
             dataloader = datamodule.test_dataloader()
             task = progress.add_task("Testing", total=len(dataloader))
             for data_batch in dataloader:
-                preds = model(data_batch)
-                metric_inputs = model.prepare_metric_inputs(preds, data_batch)
-                if isinstance(metric_inputs, list):
-                    for metric_input in metric_inputs:
-                        metric_callable.update(**metric_input)
-                else:
-                    metric_callable.update(**metric_inputs)
+                model.test_step(data_batch, metric_callable)
                 progress.update(task, advance=1)
 
         metrics_result = model.compute_metrics(metric_callable)
@@ -377,7 +371,7 @@ class OVEngine(Engine):
                 dataloader = datamodule.test_dataloader()
                 task = progress.add_task("Predicting", total=len(dataloader))
                 for data_batch in dataloader:
-                    predict_result.append(model(data_batch))
+                    predict_result.append(model.predict_step(data_batch))
                     progress.update(task, advance=1)
 
             elif isinstance(datamodule, list):
@@ -395,7 +389,7 @@ class OVEngine(Engine):
                         for i, img in enumerate(datamodule)
                     ],
                 )
-                predict_result.append(model(customized_inputs))
+                predict_result.append(model.predict_step(customized_inputs))
                 progress.update(task, advance=1)
             else:
                 msg = "The input data should be either a datamodule, valid path to data root or a list of numpy arrays."
