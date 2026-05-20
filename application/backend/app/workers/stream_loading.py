@@ -103,7 +103,12 @@ def _enqueue_frame_with_retry(
     """
     while not stop_event.is_set():
         try:
-            frame_queue.put(payload, timeout=1)
+            # For real-time sources, never block on a full queue: we must be able to
+            # evict stale frames immediately so the latest frame always wins.
+            if is_real_time:
+                frame_queue.put_nowait(payload)
+            else:
+                frame_queue.put(payload, timeout=1)
             break
         except queue.Full:
             if is_real_time:
