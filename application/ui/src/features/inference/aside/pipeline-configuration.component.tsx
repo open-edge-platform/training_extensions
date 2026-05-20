@@ -7,7 +7,7 @@ import { Flex, Heading, Item, Loading, TabList, TabPanels, Tabs, Text, View } fr
 
 import { SinkActions } from '../sinks/sink-actions.component';
 import { SourceActions } from '../sources/source-actions.component';
-import { InferenceDevices } from './inference-devices.component';
+import { StreamInferenceDevices } from './stream-inference-devices.component';
 
 const ConfigurationItem = ({ children }: { children: ReactNode }) => {
     return (
@@ -22,7 +22,7 @@ export const PipelineConfiguration = () => {
         <Flex direction={'column'} gap={'size-100'} minHeight={0}>
             <Heading level={3}>Inference device</Heading>
             <Suspense fallback={<Loading />}>
-                <InferenceDevices />
+                <StreamInferenceDevices />
             </Suspense>
             <Tabs aria-label={'Pipeline configuration tabs'} flex={1} minHeight={0}>
                 <TabList marginBottom={'size-200'}>

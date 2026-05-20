@@ -19,11 +19,13 @@ export const mediaPredictionsQueryOptions = ({
     projectId,
     selectedModel,
     mediaId,
+    device,
     range = null,
 }: {
     projectId: string;
     selectedModel: SelectableModel | undefined;
     mediaId: string;
+    device: string;
     range?: PredictionVideoRangePayload | null;
 }) =>
     queryOptions({
@@ -43,7 +45,7 @@ export const mediaPredictionsQueryOptions = ({
                 params: { path: { project_id: projectId } },
                 body: {
                     ...getModelIdentifierPayload(selectedModel),
-                    device: 'AUTO',
+                    device,
                     save_predictions: false,
                     media: [{ media_id: mediaId, range }],
                 },
@@ -78,20 +80,22 @@ export const useMediaPredictions = ({
     mediaId,
     selectedModel,
     range,
+    device,
 }: {
     mediaId: string;
     selectedModel: SelectableModel | undefined;
     range?: PredictionVideoRangePayload | null;
+    device: string;
 }) => {
     const projectId = useProjectIdentifier();
 
-    return useQuery(mediaPredictionsQueryOptions({ projectId, selectedModel, mediaId, range }));
+    return useQuery(mediaPredictionsQueryOptions({ projectId, selectedModel, mediaId, range, device }));
 };
 
 export const useIsFetchingCurrentRangeFramesPredictions = (mediaId: string) => {
     const projectId = useProjectIdentifier();
 
-    const { selectedModel } = usePredictionSetup();
+    const { selectedModel, selectedDevice } = usePredictionSetup();
     const videoContext = useVideoPlayerContext();
 
     const frameNumber = videoContext?.videoFrame.frame_number ?? 0;
@@ -109,6 +113,7 @@ export const useIsFetchingCurrentRangeFramesPredictions = (mediaId: string) => {
         projectId,
         selectedModel,
         mediaId,
+        device: selectedDevice,
         range: { stride: PREDICTION_FRAME_SKIP, start_frame: startFrameIndex, end_frame: endFrameIndex },
     }).queryKey;
 
@@ -117,7 +122,7 @@ export const useIsFetchingCurrentRangeFramesPredictions = (mediaId: string) => {
 
 export const useIsFetchingCurrentFramePredictions = (mediaId: string) => {
     const projectId = useProjectIdentifier();
-    const { selectedModel } = usePredictionSetup();
+    const { selectedModel, selectedDevice } = usePredictionSetup();
     const { mediaItem } = useSelectedMediaItem();
 
     const singleFrameRange = isVideoFrame(mediaItem)
@@ -128,6 +133,7 @@ export const useIsFetchingCurrentFramePredictions = (mediaId: string) => {
         projectId,
         selectedModel,
         mediaId,
+        device: selectedDevice,
         range: singleFrameRange,
     }).queryKey;
 
