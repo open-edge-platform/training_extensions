@@ -62,6 +62,11 @@ vi.mock('../../predictions-setup-provider.component', async (importOriginal) => 
     }),
 }));
 
+vi.mock('../api/use-video-frames-predictions', () => ({
+    usePrefetchVideoFramesPredictions: vi.fn(),
+    PREDICTION_CHUNK_SIZE: 15,
+}));
+
 const toggleToolbar = async () => {
     await userEvent.click(screen.getByRole('button', { name: /Expand|Collapse toolbar/ }));
 };
