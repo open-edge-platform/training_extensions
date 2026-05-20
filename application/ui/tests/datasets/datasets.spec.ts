@@ -53,14 +53,23 @@ test.describe('Dataset', () => {
         );
     });
 
-    test('list items', async ({ datasetPage }) => {
+    test('list items', async ({ page, datasetPage }) => {
         await datasetPage.goto();
 
         await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
 
+        const waitForBatch = (offset: number) =>
+            page.waitForResponse(
+                (response) => response.url().includes('/dataset/media') && response.url().includes(`offset=${offset}`)
+            );
+
+        for (const offset of [20, 40]) {
+            await Promise.all([waitForBatch(offset), datasetPage.getMediaGrid().press('End')]);
+        }
+
         await datasetPage.selectAll();
 
-        await expect(datasetPage.getSelectedCountTextForAnyAmount()).toBeVisible();
+        await expect(datasetPage.getSelectedCountText(totalElements)).toBeVisible();
     });
 
     test('select multiple images', async ({ datasetPage }) => {

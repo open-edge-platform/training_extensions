@@ -42,10 +42,6 @@ export class DatasetPage {
         return this.page.getByText(`${count} selected`);
     }
 
-    getSelectedCountTextForAnyAmount() {
-        return this.page.getByText(/^\d+ selected$/);
-    }
-
     getImagesCountText(count: number) {
         return this.page.getByText(`${count} media item`);
     }
