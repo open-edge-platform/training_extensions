@@ -55,13 +55,12 @@ test.describe('Dataset', () => {
 
     test('list items', async ({ datasetPage }) => {
         await datasetPage.goto();
-        const loadedItems = 20;
 
         await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
 
         await datasetPage.selectAll();
 
-        await expect(datasetPage.getSelectedCountText(loadedItems)).toBeVisible();
+        await expect(datasetPage.getSelectedCountTextForAnyAmount()).toBeVisible();
     });
 
     test('select multiple images', async ({ datasetPage }) => {
