@@ -5,15 +5,8 @@ import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { getMockedModel } from 'mocks/mock-model';
 import { renderHook } from 'test-utils/render';
 
-import type { Model } from '../../../../constants/shared-types';
 import { isFailedModel } from '../utils/utils';
 import { useGroupedModels } from './use-grouped-models.hook';
-
-const mockActiveModelId = vi.hoisted(() => vi.fn<() => Model | undefined>(() => undefined));
-
-vi.mock('../../hooks/api/use-get-active-model.hook', () => ({
-    useGetActiveModel: mockActiveModelId,
-}));
 
 describe('useGroupedModels', () => {
     beforeEach(() => {
@@ -26,7 +19,6 @@ describe('useGroupedModels', () => {
                 useGroupedModels(undefined, {
                     groupBy: 'dataset',
                     sortBy: 'name',
-                    pinActive: false,
                     searchBy: '',
                     datasetRevisions: [],
                     showFailedModels: true,
@@ -41,7 +33,6 @@ describe('useGroupedModels', () => {
                 useGroupedModels([], {
                     groupBy: 'dataset',
                     sortBy: 'name',
-                    pinActive: false,
                     searchBy: '',
                     datasetRevisions: [],
                     showFailedModels: true,
@@ -85,7 +76,6 @@ describe('useGroupedModels', () => {
                 useGroupedModels(models, {
                     groupBy: 'dataset',
                     sortBy: 'name',
-                    pinActive: false,
                     searchBy: '',
                     datasetRevisions: [
                         getMockedDatasetRevision({ id: 'dataset-1' }),
@@ -113,7 +103,6 @@ describe('useGroupedModels', () => {
                 useGroupedModels(models, {
                     groupBy: 'architecture',
                     sortBy: 'name',
-                    pinActive: false,
                     searchBy: '',
                     datasetRevisions: [],
                     showFailedModels: true,
@@ -130,83 +119,6 @@ describe('useGroupedModels', () => {
         });
     });
 
-    describe('pinning active model', () => {
-        it('should not pin active model when pinActive is false', () => {
-            mockActiveModelId.mockReturnValue(getMockedModel({ id: 'model-3' }));
-
-            const models = [
-                getMockedModel({ id: 'model-1', name: 'Model A', architecture: 'YOLOX' }),
-                getMockedModel({ id: 'model-2', name: 'Model B', architecture: 'YOLOX' }),
-                getMockedModel({ id: 'model-3', name: 'Model C', architecture: 'YOLOX' }),
-            ];
-
-            const { result } = renderHook(() =>
-                useGroupedModels(models, {
-                    groupBy: 'architecture',
-                    sortBy: 'name',
-                    pinActive: false,
-                    searchBy: '',
-                    datasetRevisions: [],
-                    showFailedModels: true,
-                })
-            );
-
-            expect(result.current[0].models[0].id).toBe('model-1');
-            expect(result.current[0].models[1].id).toBe('model-2');
-            expect(result.current[0].models[2].id).toBe('model-3');
-        });
-
-        it('should pin active model to first position when pinActive is true', () => {
-            mockActiveModelId.mockReturnValue(getMockedModel({ id: 'model-3' }));
-
-            const models = [
-                getMockedModel({ id: 'model-1', name: 'Model A', architecture: 'YOLOX' }),
-                getMockedModel({ id: 'model-2', name: 'Model B', architecture: 'YOLOX' }),
-                getMockedModel({ id: 'model-3', name: 'Model C', architecture: 'YOLOX' }),
-            ];
-
-            const { result } = renderHook(() =>
-                useGroupedModels(models, {
-                    groupBy: 'architecture',
-                    sortBy: 'name',
-                    pinActive: true,
-                    searchBy: '',
-                    datasetRevisions: [],
-                    showFailedModels: true,
-                })
-            );
-
-            expect(result.current[0].models[0].id).toBe('model-3');
-            expect(result.current[0].models[1].id).toBe('model-1');
-            expect(result.current[0].models[2].id).toBe('model-2');
-        });
-
-        it('should maintain sorted order for non-active models when pinning active', () => {
-            mockActiveModelId.mockReturnValue(getMockedModel({ id: 'bravo' }));
-
-            const models = [
-                getMockedModel({ id: 'charlie', name: 'Charlie Model', architecture: 'YOLOX' }),
-                getMockedModel({ id: 'alpha', name: 'Alpha Model', architecture: 'YOLOX' }),
-                getMockedModel({ id: 'bravo', name: 'Bravo Model', architecture: 'YOLOX' }),
-            ];
-
-            const { result } = renderHook(() =>
-                useGroupedModels(models, {
-                    groupBy: 'architecture',
-                    sortBy: 'name',
-                    pinActive: true,
-                    searchBy: '',
-                    datasetRevisions: [],
-                    showFailedModels: true,
-                })
-            );
-
-            expect(result.current[0].models[0].id).toBe('bravo');
-            expect(result.current[0].models[1].id).toBe('alpha');
-            expect(result.current[0].models[2].id).toBe('charlie');
-        });
-    });
-
     describe('search filtering', () => {
         it('should return all models when searchBy is empty', () => {
             const models = [
@@ -219,7 +131,6 @@ describe('useGroupedModels', () => {
                 useGroupedModels(models, {
                     groupBy: 'architecture',
                     sortBy: 'name',
-                    pinActive: false,
                     searchBy: '',
                     datasetRevisions: [],
                     showFailedModels: true,
@@ -241,7 +152,6 @@ describe('useGroupedModels', () => {
                 useGroupedModels(models, {
                     groupBy: 'architecture',
                     sortBy: 'name',
-                    pinActive: false,
                     searchBy: 'resnet',
                     datasetRevisions: [],
                     showFailedModels: true,
@@ -263,7 +173,6 @@ describe('useGroupedModels', () => {
                 useGroupedModels(models, {
                     groupBy: 'architecture',
                     sortBy: 'name',
-                    pinActive: false,
                     searchBy: 'nonexistent',
                     datasetRevisions: [],
                     showFailedModels: true,
@@ -284,7 +193,6 @@ describe('useGroupedModels', () => {
                 useGroupedModels(models, {
                     groupBy: 'architecture',
                     sortBy: 'name',
-                    pinActive: false,
                     searchBy: 'YOLOX',
                     datasetRevisions: [],
                     showFailedModels: true,
@@ -307,7 +215,6 @@ describe('useGroupedModels', () => {
                 useGroupedModels(models, {
                     groupBy: 'architecture',
                     sortBy: 'name',
-                    pinActive: false,
                     searchBy: 'ResNet',
                     datasetRevisions: [],
                     showFailedModels: true,
@@ -321,31 +228,6 @@ describe('useGroupedModels', () => {
             expect(result.current[0].models[1].name).toBe('Gamma-ResNet');
         });
 
-        it('should work with pinActive when searching', () => {
-            mockActiveModelId.mockReturnValue(getMockedModel({ id: 'model-3' }));
-
-            const models = [
-                getMockedModel({ id: 'model-1', name: 'ResNet-A', architecture: 'ResNet' }),
-                getMockedModel({ id: 'model-2', name: 'YOLOX-B', architecture: 'YOLOX' }),
-                getMockedModel({ id: 'model-3', name: 'ResNet-C', architecture: 'ResNet' }),
-            ];
-
-            const { result } = renderHook(() =>
-                useGroupedModels(models, {
-                    groupBy: 'architecture',
-                    sortBy: 'name',
-                    pinActive: true,
-                    searchBy: 'ResNet',
-                    datasetRevisions: [],
-                    showFailedModels: true,
-                })
-            );
-
-            expect(result.current).toHaveLength(1);
-            expect(result.current[0].models[0].id).toBe('model-3');
-            expect(result.current[0].models[1].id).toBe('model-1');
-        });
-
         it('should match partial names', () => {
             const models = [
                 getMockedModel({ id: 'model-1', name: 'My-Custom-Model-v1' }),
@@ -357,7 +239,6 @@ describe('useGroupedModels', () => {
                 useGroupedModels(models, {
                     groupBy: 'architecture',
                     sortBy: 'name',
-                    pinActive: false,
                     searchBy: 'Custom',
                     datasetRevisions: [],
                     showFailedModels: true,
@@ -382,7 +263,6 @@ describe('useGroupedModels', () => {
                 useGroupedModels(models, {
                     groupBy: 'architecture',
                     sortBy: 'name',
-                    pinActive: false,
                     searchBy: '',
                     datasetRevisions: [],
                     showFailedModels: false,

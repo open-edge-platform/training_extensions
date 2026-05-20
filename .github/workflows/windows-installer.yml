@@ -2,10 +2,6 @@ name: windows-installer
 on:
   workflow_call:
     inputs:
-      build_version:
-        description: "Specifies the build version to apply to all binaries produced by this workflow"
-        type: string
-        required: true
       device:
         description: "Specifies the device to build the backend for (cpu, xpu, cuda)"
         type: string
@@ -16,6 +12,11 @@ on:
         type: boolean
         required: false
         default: false
+      tag:
+        description: "Optional tag to append to the artifact name (e.g. rc1, beta)"
+        type: string
+        required: false
+        default: ""
     secrets:
       MSIX_SIGN_CERTIFICATE:
         description: "Certificate for signing the MSIX package"
@@ -27,10 +28,6 @@ on:
   # allow to manually trigger this workflow
   workflow_dispatch:
     inputs:
-      build_version:
-        description: "Specifies the build version to apply to all binaries produced by this workflow"
-        type: string
-        required: true
       device:
         description: "Specifies the device to build the backend for (cpu, xpu, cuda)"
         required: true
@@ -44,6 +41,11 @@ on:
         required: false
         type: boolean
         default: false
+      tag:
+        description: "Optional tag to append to the artifact name (e.g. rc1, beta)"
+        required: false
+        type: string
+        default: ""
       checkout_sha:
         description: "Full Commit SHA to checkout for building the application source code"
         required: true
@@ -72,11 +74,28 @@ jobs:
     timeout-minutes: 60
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.checkout_sha || github.sha }}
+          persist-credentials: false
+
+      - name: Get build version from application/VERSION
+        id: get_version
+        run: |
+          $version = (Get-Content "application\VERSION" -Raw).Trim()
+          if (-not $version) {
+            throw "application/VERSION is empty"
+          }
+          Write-Host "Version from application/VERSION: $version"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$version"
+
       - name: Define paths
         env:
           DEBUG_BUILD: ${{ inputs.debug_build }}
           DEVICE: ${{ inputs.device || 'xpu' }}
-          BUILD_VERSION: ${{ inputs.build_version }}
+          BUILD_VERSION: ${{ steps.get_version.outputs.version }}
+          TAG: ${{ inputs.tag }}
         run: |
           Write-Host "DEBUG_BUILD=$env:DEBUG_BUILD"
 
@@ -89,17 +108,17 @@ jobs:
           Write-Host "UI_MSIX_BUNDLE_PATH=$UI_MSIX_BUNDLE_PATH"
           Add-Content -Path $env:GITHUB_ENV -Value "UI_MSIX_BUNDLE_PATH=$UI_MSIX_BUNDLE_PATH"
 
-          $PREFIX = $(IF ($env:DEBUG_BUILD -eq "true") {"-debug"} else {""})
-          $MSIX_FILE_NAME = "geti-" + $env:DEVICE + "-" + $env:BUILD_VERSION + $PREFIX + ".msix"
+          $TAG_SUFFIX = $(IF ($env:TAG) {"-" + $env:TAG} else {""})
+          $DEBUG_SUFFIX = $(IF ($env:DEBUG_BUILD -eq "true") {"-debug"} else {""})
+          $SUFFIX = $TAG_SUFFIX + $DEBUG_SUFFIX
+          $ARTIFACT_NAME = "geti-" + $env:DEVICE + "-" + $env:BUILD_VERSION + $SUFFIX
+          $MSIX_FILE_NAME = $ARTIFACT_NAME + ".msix"
           $MSIX_FILE_PATH = $UI_MSIX_BUNDLE_PATH + "\" + $MSIX_FILE_NAME
+          Write-Host "ARTIFACT_NAME=$ARTIFACT_NAME"
           Write-Host "MSIX_FILE_PATH=$MSIX_FILE_PATH"
+          Add-Content -Path $env:GITHUB_ENV -Value "ARTIFACT_NAME=$ARTIFACT_NAME"
           Add-Content -Path $env:GITHUB_ENV -Value "MSIX_FILE_PATH=$MSIX_FILE_PATH"
 
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.checkout_sha || github.sha }}
-          persist-credentials: false
 
       # Install and setup build tools
 
@@ -217,6 +236,6 @@ jobs:
       - name: Upload MSIX package
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: geti-${{ inputs.device || 'xpu' }}-${{ inputs.build_version }}
+          name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.MSIX_FILE_PATH }}
           retention-days: 20

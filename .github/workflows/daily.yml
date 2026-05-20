@@ -11,6 +11,8 @@ jobs:
   build:
     name: Daily build
     uses: ./.github/workflows/build.yaml
+    with:
+      use-cache: false # Verify image is buildable from scratch without any cached layers
     permissions:
       contents: read
       packages: write # to push Docker images to GHCR

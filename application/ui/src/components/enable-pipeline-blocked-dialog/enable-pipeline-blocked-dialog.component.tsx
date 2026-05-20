@@ -18,7 +18,7 @@ export const EnablePipelineBlockedDialog = ({ isOpen, onClose }: EnablePipelineB
                     variant={'warning'}
                     onPrimaryAction={onClose}
                 >
-                    Make sure you selected a model, source, and sink before enabling the pipeline.
+                    Make sure you selected a model and source before enabling the pipeline.
                 </AlertDialog>
             )}
         </DialogContainer>

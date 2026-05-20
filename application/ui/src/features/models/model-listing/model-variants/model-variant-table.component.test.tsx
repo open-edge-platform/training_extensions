@@ -1,16 +1,12 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedModel } from 'mocks/mock-model';
 import { getMockedVariant } from 'mocks/mock-model-variant';
-import { getMockedPipeline } from 'mocks/mock-pipeline';
-import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
-import { http } from '../../../../api/utils';
-import { server } from '../../../../msw-node-setup';
 import { downloadFile } from '../../../../shared/util';
 import { ModelVariantTable } from './model-variant-table.component';
 
@@ -188,8 +184,7 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        await userEvent.click(screen.getByRole('button', { name: /Model variant actions/ }));
-        await userEvent.click(screen.getByRole('menuitem', { name: 'Download' }));
+        await userEvent.click(screen.getByRole('button', { name: 'Download model ov-1' }));
 
         expect(downloadFile).toHaveBeenCalledWith(
             expect.stringContaining(`/api/projects/project-123/models/${model.id}/variants/ov-1/binary`)
@@ -210,44 +205,13 @@ describe('ModelVariantTable', () => {
         render(<ModelVariantTable model={model} format='pytorch' />);
 
         expect(screen.getByRole('button', { name: 'Download model pt-1' })).toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: /Model variant actions/ })).not.toBeInTheDocument();
     });
 
-    it('sets variant as active via menu for openvino format', async () => {
-        const patchSpy = vi.fn();
-
-        server.use(
-            http.patch('/api/projects/{project_id}/pipeline', async ({ request }) => {
-                const body = await request.json();
-                patchSpy(body);
-                return HttpResponse.json(getMockedPipeline());
-            })
-        );
-
+    it.each(['pytorch', 'onnx'] as const)('%s format renders a direct download button', (format) => {
         const model = getMockedModel({
             variants: [
                 getMockedVariant({
-                    id: 'ov-1',
-                    format: 'openvino',
-                    precision: 'fp16',
-                }),
-            ],
-        });
-
-        render(<ModelVariantTable model={model} format='openvino' />);
-
-        await userEvent.click(screen.getByRole('button', { name: /Model variant actions/ }));
-        await userEvent.click(screen.getByRole('menuitem', { name: 'Set as active' }));
-
-        await waitFor(() => {
-            expect(patchSpy).toHaveBeenCalledWith({ model_id: 'ov-1' });
-        });
-    });
-
-    it.each(['pytorch', 'onnx'] as const)('%s format does not have a model variant actions menu', (format) => {
-        const model = getMockedModel({
-            variants: [
-                getMockedVariant({
+                    id: `${format}-1`,
                     format,
                     precision: 'fp32',
                     quantization_info: null,
@@ -257,7 +221,7 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format={format} />);
 
-        expect(screen.queryByLabelText(/Model variant actions/)).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: `Download model ${format}-1` })).toBeInTheDocument();
     });
 
     describe('ModelVariantPrecisionRenderer', () => {
