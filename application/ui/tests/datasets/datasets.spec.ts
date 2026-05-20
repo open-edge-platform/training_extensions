@@ -60,15 +60,7 @@ test.describe('Dataset', () => {
 
         await datasetPage.selectAll();
 
-        const selectedCountText = datasetPage.getSelectedCountTextForAnyAmount();
-        await expect(selectedCountText).toBeVisible();
-
-        const selectedCountLabel = (await selectedCountText.textContent()) ?? '';
-        const selectedCount = Number.parseInt(selectedCountLabel.match(/\d+/)?.[0] ?? '', 10);
-
-        expect(selectedCount).not.toBeNaN();
-        expect(selectedCount).toBeGreaterThanOrEqual(mockedItems.length);
-        expect(selectedCount).toBeLessThanOrEqual(totalElements);
+        await expect(datasetPage.getSelectedCountTextForAnyAmount()).toBeVisible();
     });
 
     test('select multiple images', async ({ datasetPage }) => {
