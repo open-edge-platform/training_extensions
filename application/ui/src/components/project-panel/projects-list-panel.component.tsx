@@ -18,6 +18,7 @@ import {
 } from '@geti/ui';
 import { AddCircle } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { partition } from 'lodash-es';
 import { useNavigate } from 'react-router';
 
 import { paths } from '../../constants/paths';
@@ -93,11 +94,10 @@ export const ProjectsListPanel = () => {
     const projectId = useProjectIdentifier();
     const { data } = useProjects();
 
-    const selectedProject = data.find((project) => project.id === projectId);
+    const [[selectedProject], otherProjects] = partition(data, (project) => project.id === projectId);
     const selectedProjectName = selectedProject?.name ?? '';
     const hasActivePipeline = Boolean(selectedProject?.active_pipeline);
 
-    const otherProjects = data.filter((project) => project.id !== projectId);
     const otherProjectNames = otherProjects.map(({ name }) => name);
 
     const handleDeleted = () => {

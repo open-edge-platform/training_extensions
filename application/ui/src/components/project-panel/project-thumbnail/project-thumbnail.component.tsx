@@ -10,11 +10,11 @@ import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
 
 import classes from './project-thumbnail.module.scss';
 
-interface ProjectThumbnailProps {
+type ProjectThumbnailProps = {
     project: Pick<Project, 'id' | 'name'>;
     height: DimensionValue;
     width: DimensionValue;
-}
+};
 
 export const ProjectThumbnail = ({ project, height, width }: ProjectThumbnailProps) => {
     const [isError, setIsError] = useState(false);
