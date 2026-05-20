@@ -54,7 +54,7 @@ interface AnnotatorModesProps {
 }
 
 export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredictions }: AnnotatorModesProps) => {
-    const [dismissedCues, setDismissedCues] = useState<Set<AnnotatorMode>>(new Set());
+    const [dismissedCues, setDismissedCues] = useState<Set<Extract<AnnotatorMode, 'prediction'>>>(new Set());
 
     const shouldDisplayPredictionCue =
         mode === 'annotation' && !hasAnnotations && hasPredictions && !dismissedCues.has('prediction');
