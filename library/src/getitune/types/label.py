@@ -67,7 +67,7 @@ class LabelInfo:
 
         return cls(
             label_names=label_names,
-            label_groups=[label_names],
+            label_groups=[list(label_names)],
             label_ids=label_ids,
         )
 

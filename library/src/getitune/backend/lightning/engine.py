@@ -518,7 +518,9 @@ class LightningEngine(Engine):
         r"""Export the trained model to OpenVINO Intermediate Representation (IR) or ONNX formats.
 
         Args:
-            checkpoint (PathLike | None, optional): Checkpoint to export. Defaults to None.
+            checkpoint (PathLike | None, optional): Checkpoint to export. If None, the model
+                is exported with its current in-memory weights (e.g. original pre-trained weights).
+                Defaults to None.
             export_format (ExportFormat, optional): Export format. Defaults to ExportFormat.OPENVINO.
             export_precision (Precision, optional): Export precision. Defaults to Precision.FP32.
             explain (bool): Whether to get "saliency_map" and "feature_vector" or not.
@@ -568,9 +570,6 @@ class LightningEngine(Engine):
         """
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
 
-        if checkpoint is None:
-            msg = "To make export, checkpoint must be specified."
-            raise RuntimeError(msg)
         if export_demo_package and export_format == ExportFormat.ONNX:
             msg = (
                 "ONNX export is not supported in exportable code mode. Exportable code parameter will be disregarded. "
@@ -578,8 +577,9 @@ class LightningEngine(Engine):
             warn(msg, stacklevel=1)
             export_demo_package = False
 
-        ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
-        self.model.load_state_dict(ckpt)
+        if checkpoint is not None:
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            self.model.load_state_dict(ckpt)
         self.model.eval()
 
         self.model.explain_mode = explain
