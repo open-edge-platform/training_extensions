@@ -22,10 +22,6 @@ _RTSP_FFMPEG_OPTIONS = (
 )
 _OPENCV_FFMPEG_ENV_KEY = "OPENCV_FFMPEG_CAPTURE_OPTIONS"
 
-# Maximum dimension (longest edge) for frames passed to inference.
-# Frames larger than this are downscaled to reduce CPU/memory pressure.
-_MAX_FRAME_DIMENSION = int(os.environ.get("GETI_MAX_FRAME_DIMENSION", "1920"))
-
 
 @contextlib.contextmanager
 def _rtsp_capture_env() -> Iterator[None]:
@@ -171,20 +167,7 @@ class IPCameraStream(BaseOpenCVStream):
             self._frame_available.notify_all()
         return False
 
-    @staticmethod
-    def _downscale_if_needed(frame: np.ndarray) -> np.ndarray:
-        """Downscale frame if it exceeds _MAX_FRAME_DIMENSION on either axis."""
-        h, w = frame.shape[:2]
-        longest = max(h, w)
-        if longest <= _MAX_FRAME_DIMENSION:
-            return frame
-        scale = _MAX_FRAME_DIMENSION / longest
-        new_w = int(w * scale)
-        new_h = int(h * scale)
-        return cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
-
     def _publish_frame(self, frame: np.ndarray) -> None:
-        frame = self._downscale_if_needed(frame)
         with self._frame_available:
             self._latest_frame = frame
             self._latest_timestamp = time.time()
