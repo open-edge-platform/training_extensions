@@ -57,22 +57,6 @@ describe('InferenceDevices', () => {
         expect(onSelectionChange).not.toHaveBeenCalled();
     });
 
-    it('renders device names using createDeviceName format (memory and index)', async () => {
-        const devicesWithDetails = [
-            { type: 'cpu' as const, name: 'CPU', memory: null, index: null },
-            { type: 'xpu' as const, name: 'Intel GPU', memory: 8_589_934_592, index: 0 },
-        ];
-        server.use(http.get('/api/system/devices/inference', () => HttpResponse.json(devicesWithDetails)));
-
-        const onSelectionChange = vi.fn();
-        render(<InferenceDevices selectedKey='cpu' onSelectionChange={onSelectionChange} ariaLabel='device picker' />);
-
-        await screen.findByLabelText('device picker');
-        await userEvent.click(screen.getByRole('button', { name: /device picker/i }));
-
-        expect(await screen.findByRole('option', { name: /Intel GPU \(8 GB\) \[0\]/i })).toBeInTheDocument();
-    });
-
     it('generates composite key type-index for devices with index', async () => {
         const devicesWithIndex = [
             { type: 'cpu' as const, name: 'CPU', memory: null, index: null },

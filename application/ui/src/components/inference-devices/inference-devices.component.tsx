@@ -7,7 +7,6 @@ import { Item, Picker } from '@geti/ui';
 
 import { $api } from '../../api/client';
 import { DeviceInfo } from '../../constants/shared-types';
-import { createDeviceName } from '../util';
 
 // Generate device id based on type and index (if available) to ensure uniqueness
 // in case of multiple devices of the same type (e.g., multiple GPUs)
@@ -51,7 +50,7 @@ export const InferenceDevices = ({
             isDisabled={isDisabled}
             aria-label={ariaLabel}
         >
-            {(device) => <Item key={device.id}>{createDeviceName(device)}</Item>}
+            {(device) => <Item key={device.id}>{device.name}</Item>}
         </Picker>
     );
 };

@@ -3,8 +3,8 @@
 
 import { Item, Picker } from '@geti/ui';
 
-import { createDeviceName } from '../../../../components/util';
 import { createTrainingDeviceKey, useTrainModelState } from '../train-model-provider.component';
+import { createDeviceName } from './utils';
 
 export const SelectTrainingDevice = () => {
     const { trainingDevices, onSelectTrainingDevice, selectedTrainingDevice } = useTrainModelState();
