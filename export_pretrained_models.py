@@ -1,17 +1,7 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Export all getitune models with their original pre-trained weights (including head).
-
-This script exports models to OpenVINO IR format using the ORIGINAL pre-trained weights
-(e.g., COCO for detection/instance segmentation, ImageNet for classification).
-The number of classes matches the pre-trained dataset:
-  - Detection: 80 (COCO) or 91 (COCO with background, for RF-DETR)
-  - Instance Segmentation: 80 (COCO) or 91 (RF-DETR)
-  - Classification (multi-class/multi-label): 1000 (ImageNet-1K)
-  - Semantic Segmentation: 2 (binary, backbone-only pre-trained)
-  - Keypoint Detection: 17 (COCO keypoints)
-  - Rotated Detection: 80 (COCO)
 
 Usage:
     # Export all models (from the repository root or library/ directory):
