@@ -133,21 +133,24 @@ class MaskRCNNTV(LightningInstanceSegModel):
             mask_predictor=model.roi_heads.mask_predictor,
         )
 
-        # get number of input features for the classifier
-        in_features = model.roi_heads.box_predictor.cls_score.in_features
-        # replace the pre-trained head with a new one
-        model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+        # Only replace the heads if num_classes differs from the pretrained COCO model (91).
+        # When they match, keep the pretrained heads to preserve the original weights.
+        if num_classes != 91:
+            # get number of input features for the classifier
+            in_features = model.roi_heads.box_predictor.cls_score.in_features
+            # replace the pre-trained head with a new one
+            model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
-        # now get the number of input features for the mask classifier
-        in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
-        hidden_layer = model.roi_heads.mask_predictor.conv5_mask.out_channels
+            # now get the number of input features for the mask classifier
+            in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
+            hidden_layer = model.roi_heads.mask_predictor.conv5_mask.out_channels
 
-        # and replace the mask predictor with a new one
-        model.roi_heads.mask_predictor = MaskRCNNPredictor(
-            in_features_mask,
-            hidden_layer,
-            num_classes,
-        )
+            # and replace the mask predictor with a new one
+            model.roi_heads.mask_predictor = MaskRCNNPredictor(
+                in_features_mask,
+                hidden_layer,
+                num_classes,
+            )
 
         return model
 

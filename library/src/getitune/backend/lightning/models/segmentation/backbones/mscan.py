@@ -366,6 +366,7 @@ class MSCANModule(nn.Module):
         activation: Callable[..., nn.Module] = nn.GELU,
         normalization: Callable[..., nn.Module] = partial(build_norm_layer, nn.BatchNorm2d, requires_grad=True),
         pretrained_weights: str | None = None,
+        pretrained_prefix: str = "",
     ) -> None:
         """Initialize a MSCAN backbone."""
         super().__init__()
@@ -409,7 +410,14 @@ class MSCANModule(nn.Module):
             setattr(self, f"norm{i + 1}", norm)
 
         if pretrained_weights is not None:
-            self.load_pretrained_weights(pretrained_weights)
+            # The mmseg ADE20K checkpoint uses "mlp.dwconv.dwconv" for depth-wise conv
+            # while our implementation uses "mlp.dwconv" directly (nn.Conv2d, not a wrapper).
+            key_mapping = {"mlp.dwconv.dwconv": "mlp.dwconv"} if pretrained_prefix else None
+            self.load_pretrained_weights(
+                pretrained_weights,
+                prefix=pretrained_prefix,
+                key_mapping=key_mapping,
+            )
 
     def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         """Forward function."""
@@ -428,7 +436,12 @@ class MSCANModule(nn.Module):
 
         return outs
 
-    def load_pretrained_weights(self, pretrained: str | None = None, prefix: str = "") -> None:
+    def load_pretrained_weights(
+        self,
+        pretrained: str | None = None,
+        prefix: str = "",
+        key_mapping: dict[str, str] | None = None,
+    ) -> None:
         """Initialize weights."""
         checkpoint = None
         if isinstance(pretrained, str) and Path(pretrained).exists():
@@ -439,7 +452,7 @@ class MSCANModule(nn.Module):
             checkpoint = load_from_http(filename=pretrained, map_location="cpu", model_dir=cache_dir)
             print(f"init weight - {pretrained}")
         if checkpoint is not None:
-            load_checkpoint_to_model(self, checkpoint, prefix=prefix)
+            load_checkpoint_to_model(self, checkpoint, prefix=prefix, key_mapping=key_mapping)
 
 
 class MSCAN:
@@ -449,15 +462,18 @@ class MSCAN:
         "segnext_tiny": {
             "depths": [3, 3, 5, 2],
             "embed_dims": [32, 64, 160, 256],
-            "pretrained_weights": "https://storage.geti.intel.com/weights/mscan_t_20230227-119e8c9f.pth",
+            "pretrained_weights": "https://cloud.tsinghua.edu.cn/f/5da98841b8384ba0988a/?dl=1",
+            "pretrained_prefix": "backbone",
         },
         "segnext_small": {
             "depths": [2, 2, 4, 2],
-            "pretrained_weights": "https://storage.geti.intel.com/weights/mscan_s_20230227-f33ccdf2.pth",
+            "pretrained_weights": "https://cloud.tsinghua.edu.cn/f/b2d1eb94f5944d60b3d2/?dl=1",
+            "pretrained_prefix": "backbone",
         },
         "segnext_base": {
             "depths": [3, 3, 12, 3],
-            "pretrained_weights": "https://storage.geti.intel.com/weights/mscan_b_20230227-3ab7d230.pth",
+            "pretrained_weights": "https://cloud.tsinghua.edu.cn/f/1ea8000916284493810b/?dl=1",
+            "pretrained_prefix": "backbone",
         },
     }
 

@@ -131,13 +131,38 @@ def load_from_http(
         None
 
     """
+    from urllib.parse import urlparse
+
+    # Some URLs (e.g. TsingHua Cloud) don't have a proper filename in the path.
+    # Generate a hash-based filename so torch.utils.model_zoo.load_url can cache it.
+    parsed = urlparse(filename)
+    url_basename = os.path.basename(parsed.path.rstrip("/"))
+    file_name = None
+    if not url_basename or "." not in url_basename:
+        import hashlib
+
+        url_hash = hashlib.sha256(filename.encode()).hexdigest()[:16]
+        file_name = f"checkpoint_{url_hash}.pth"
+
     rank, world_size = get_dist_info()
     if rank == 0:
-        checkpoint = load_url(filename, model_dir=model_dir, map_location=map_location, progress=progress)
+        checkpoint = load_url(
+            filename,
+            model_dir=model_dir,
+            map_location=map_location,
+            progress=progress,
+            file_name=file_name,
+        )
     if world_size > 1:
         torch_dist.barrier()
         if rank > 0:
-            checkpoint = load_url(filename, model_dir=model_dir, map_location=map_location, progress=progress)
+            checkpoint = load_url(
+                filename,
+                model_dir=model_dir,
+                map_location=map_location,
+                progress=progress,
+                file_name=file_name,
+            )
     return checkpoint
 
 

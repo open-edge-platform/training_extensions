@@ -3,7 +3,7 @@ model:
   class_path: getitune.backend.lightning.models.instance_segmentation.maskrcnn_tv.RotatedMaskRCNNModelV2
   init_args:
     model_name: "maskrcnn_resnet_50"
-    label_info: 80
+    label_info: 90
 
     optimizer:
       class_path: torch.optim.SGD

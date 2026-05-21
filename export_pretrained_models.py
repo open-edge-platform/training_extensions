@@ -49,6 +49,14 @@ EXPORTABLE_TASKS = [
     "KEYPOINT_DETECTION",
 ]
 
+# Models to skip: backbone-only pretrained weights (no pretrained head),
+# so exported models would produce random/meaningless predictions.
+SKIP_MODELS = {
+    "litehrnet_s",
+    "litehrnet_18",
+    "litehrnet_x",
+}
+
 
 def get_recipe_paths(task: str) -> list[str]:
     """Get all recipe YAML paths for a given task, excluding OpenVINO and tile variants."""
@@ -233,6 +241,11 @@ def main():
         for recipe_path in recipes:
             model_name = Path(recipe_path).stem
             logger.info(f"  Processing: {model_name}")
+
+            if model_name in SKIP_MODELS:
+                logger.warning(f"    SKIPPED: backbone-only pretrained weights (no pretrained head)")
+                results["skipped"].append(f"{task}/{model_name}")
+                continue
 
             try:
                 # Load and parse recipe config

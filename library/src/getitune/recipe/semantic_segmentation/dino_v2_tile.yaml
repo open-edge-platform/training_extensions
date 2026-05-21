@@ -2,7 +2,7 @@ task: SEMANTIC_SEGMENTATION
 model:
   class_path: getitune.backend.lightning.models.segmentation.dino_v2_seg.DinoV2Seg
   init_args:
-    label_info: 2
+    label_info: 150
     model_name: dinov2-small-seg
 
     optimizer:

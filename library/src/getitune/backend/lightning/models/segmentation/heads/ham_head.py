@@ -86,6 +86,7 @@ class LightHamHeadModule(BaseSegmentationHead):
         input_transform: str | None = "multiple_select",
         align_corners: bool = False,
         pretrained_weights: Path | str | None = None,
+        pretrained_prefix: str = "",
         ham_channels: int = 512,
         ham_kwargs: dict[str, Any] | None = None,
     ) -> None:
@@ -109,6 +110,7 @@ class LightHamHeadModule(BaseSegmentationHead):
         Returns:
             None
         """
+        # Don't load pretrained weights in base class - we need all layers created first
         super().__init__(
             input_transform=input_transform,
             in_channels=in_channels,
@@ -119,7 +121,7 @@ class LightHamHeadModule(BaseSegmentationHead):
             activation=activation,
             in_index=in_index,
             align_corners=align_corners,
-            pretrained_weights=pretrained_weights,
+            pretrained_weights=None,
         )
 
         if not isinstance(self.in_channels, list):
@@ -148,6 +150,10 @@ class LightHamHeadModule(BaseSegmentationHead):
             normalization=build_norm_layer(self.normalization, num_features=self.channels),
             activation=build_activation_layer(self.activation),
         )
+
+        # Load pretrained weights after all layers are created
+        if pretrained_weights is not None:
+            self.load_pretrained_weights(pretrained_weights, prefix=pretrained_prefix)
 
     def forward(self, inputs: list[torch.Tensor]) -> torch.Tensor:
         """Forward function."""
@@ -324,16 +330,22 @@ class LightHamHead:
             "in_channels": [128, 320, 512],
             "channels": 512,
             "ham_channels": 512,
+            "pretrained_weights": "https://cloud.tsinghua.edu.cn/f/1ea8000916284493810b/?dl=1",
+            "pretrained_prefix": "decode_head",
         },
         "segnext_small": {
             "in_channels": [128, 320, 512],
             "channels": 256,
             "ham_channels": 256,
+            "pretrained_weights": "https://cloud.tsinghua.edu.cn/f/b2d1eb94f5944d60b3d2/?dl=1",
+            "pretrained_prefix": "decode_head",
         },
         "segnext_tiny": {
             "in_channels": [64, 160, 256],
             "channels": 256,
             "ham_channels": 256,
+            "pretrained_weights": "https://cloud.tsinghua.edu.cn/f/5da98841b8384ba0988a/?dl=1",
+            "pretrained_prefix": "decode_head",
         },
     }
 

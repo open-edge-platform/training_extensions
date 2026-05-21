@@ -2,7 +2,7 @@ task: SEMANTIC_SEGMENTATION
 model:
   class_path: getitune.backend.lightning.models.segmentation.segnext.SegNext
   init_args:
-    label_info: 2
+    label_info: 150
     model_name: segnext_small
 
     optimizer:
