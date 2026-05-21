@@ -315,7 +315,7 @@ test.describe('Annotator video player', () => {
         );
     });
 
-    test('Prefetches predictions for the next video frame', async ({ page, videoPage, annotatorPage, network }) => {
+    test('Prefetches predictions for the next video frame', async ({ videoPage, annotatorPage, network }) => {
         const fishLabel = getMockedLabel({ id: 'a6efefed-e469-4b1c-b803-c2e21ea0597b', name: 'Fish' });
 
         const mockedProject = getMockedProject({
@@ -373,12 +373,15 @@ test.describe('Annotator video player', () => {
         });
 
         await test.step('Reuses the prefetched cache entry when navigating to the next frame', async () => {
-            const delayPotentiallyStale = 500;
+            const frameAfterNext = nextFrame + mockVideoFrame.frame_stride;
             const requestsBefore = predictRequests.filter((body) => isRequestForFrame(body, nextFrame)).length;
 
             await videoPage.nextFrame();
             await videoPage.expectCurrentFrame(nextFrame, totalFrames);
-            await page.waitForTimeout(delayPotentiallyStale);
+
+            // Wait for a deterministic signal that the navigation has been fully handled:
+            // once we are on `nextFrame`, the player should prefetch the following frame.
+            await expect.poll(() => predictRequests.some((body) => isRequestForFrame(body, frameAfterNext))).toBe(true);
 
             const requestsAfter = predictRequests.filter((body) => isRequestForFrame(body, nextFrame)).length;
             expect(requestsAfter).toBe(requestsBefore);

@@ -73,6 +73,12 @@ type AnnotatorProps = {
     isUserReviewed: boolean;
 };
 
+const NextPredictionPrefetch = ({ nextMediaItem }: { nextMediaItem: Media }) => {
+    useNextPredictionPrefetch(nextMediaItem);
+
+    return null;
+};
+
 const Annotator = ({
     mediaItem,
     image,
@@ -98,8 +104,6 @@ const Annotator = ({
         minDuration: 200,
     });
 
-    useNextPredictionPrefetch(mediaItem, items, isPredictionMode);
-
     usePlayPauseVideoBySystem(isLoadingCurrentRangePredictions);
 
     const selectNextMediaItem = async () => {
@@ -112,6 +116,7 @@ const Annotator = ({
 
     return (
         <>
+            {isPredictionMode && nextMediaItem && <NextPredictionPrefetch nextMediaItem={nextMediaItem} />}
             <View gridArea={'header'}>
                 <SecondaryToolbar
                     mode={mode}
