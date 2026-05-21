@@ -12,7 +12,7 @@ import { useProject } from '../../../../../hooks/api/project.hook';
 import { useImportDatasetToProject } from '../../../../../hooks/storage/use-import-dataset-to-project.hook';
 import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
 import { FormatWarning } from './format-warning/format-warning.component';
-import { IMPORT_DATASET_FORM_ID, mapProjectLabels, PLACEHOLDER_LABEL } from './util';
+import { IMPORT_DATASET_FORM_ID, mapProjectLabels, PLACEHOLDER_LABEL, UNMAPPED_LABEL_VALUE } from './util';
 
 import styles from './label-mapping.module.scss';
 
@@ -65,7 +65,7 @@ const useFormConfig = ({ datasetLabels, stagedDatasetId, selectedProjectId }: us
 export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
     const { data: selectedProject } = useProject();
     const projectLabels = selectedProject?.task?.labels ?? [];
-    const otherLabels = [{ id: '', name: PLACEHOLDER_LABEL, color: '' }, ...projectLabels];
+    const finalLabels = [{ id: '', name: UNMAPPED_LABEL_VALUE, color: '' }, ...projectLabels];
 
     const { data: stagedDataset } = useStagedDataset(stagedDatasetId);
 
@@ -126,18 +126,22 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                         <View>Project labels</View>
 
                         {datasetLabels.map((label, index) => (
-                            <Fragment key={label}>
+                            <Fragment key={`${label}-${index}`}>
                                 <Text>{label}</Text>
                                 <View>→</View>
                                 <View>
                                     <Picker
-                                        items={otherLabels}
+                                        items={finalLabels}
                                         placeholder={PLACEHOLDER_LABEL}
                                         name={`targetLabel-${index}`}
                                         aria-label={`Target label for ${label}`}
-                                        defaultSelectedKey={otherLabels.find(({ name }) => name === label)?.name}
+                                        defaultSelectedKey={finalLabels.find(({ name }) => name === label)?.name}
                                     >
-                                        {(item) => <Item key={item.name}>{item.name}</Item>}
+                                        {(item) => (
+                                            <Item key={item.name}>
+                                                {item.name === UNMAPPED_LABEL_VALUE ? PLACEHOLDER_LABEL : item.name}
+                                            </Item>
+                                        )}
                                     </Picker>
                                 </View>
                             </Fragment>

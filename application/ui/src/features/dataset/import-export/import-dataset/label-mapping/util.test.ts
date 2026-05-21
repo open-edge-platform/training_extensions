@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { mapProjectLabels, PLACEHOLDER_LABEL } from './util';
+import { mapProjectLabels, UNMAPPED_LABEL_VALUE } from './util';
 
 describe('util - label mapping', () => {
     it('returns an empty mapping when datasetLabels is empty', () => {
@@ -68,10 +68,10 @@ describe('util - label mapping', () => {
         expect(mapping).toEqual({ image: null });
     });
 
-    it('treats the placeholder label as no selection', () => {
+    it('treats the unmapped sentinel value as no selection', () => {
         const datasetLabels = ['cat', 'dog'];
         const formData = new FormData();
-        formData.set('targetLabel-0', PLACEHOLDER_LABEL);
+        formData.set('targetLabel-0', UNMAPPED_LABEL_VALUE);
         formData.set('targetLabel-1', 'canine');
 
         const mapping = mapProjectLabels(datasetLabels, formData);
