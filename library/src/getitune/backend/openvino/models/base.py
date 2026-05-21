@@ -181,10 +181,15 @@ class OVModel:
 
         self._get_hparams_from_adapter(model_adapter)
 
-        # remove intensity scaling and set threshold to 0 to compute mAP properly
+        # Data pipeline produces float32 RGB [0,1] tensors:
+        # - input_dtype=f32: declares float input (avoids uint8 reinterpretation)
+        # - intensity_mode=none: skips /255 (already done by data pipeline)
+        # - reverse_input_channels=False: keeps RGB (model trained on RGB in our pipeline)
+        # - confidence_threshold=0: sends all predictions to metric, matching PyTorch test
         configuration: dict[str, Any] = {
             "input_dtype": "f32",
             "intensity_mode": "none",
+            "reverse_input_channels": False,
             "confidence_threshold": 0.0,
         }
         configuration.update(self.model_api_configuration)
