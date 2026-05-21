@@ -71,15 +71,21 @@ class TimmModelMultilabelCls(LightningMultilabelClsModel):
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:
         num_classes = num_classes if num_classes is not None else self.num_classes
-        backbone = TimmBackbone(model_name=self.model_name)
+        backbone = TimmBackbone(model_name=self.model_name, num_classes=num_classes)
+        head = MultiLabelLinearClsHead(
+            num_classes=num_classes,
+            in_channels=backbone.num_features,
+            normalized=True,
+        )
+        # Transfer pretrained classifier weight to the head (bias is not used in AnglularLinear)
+        if backbone.pretrained_classifier_state is not None and "weight" in backbone.pretrained_classifier_state:
+            head.fc.weight.data.copy_(backbone.pretrained_classifier_state["weight"])
+            backbone.pretrained_classifier_state = None  # Free memory
+
         return ImageClassifier(
             backbone=backbone,
             neck=GlobalAveragePooling(dim=2),
-            head=MultiLabelLinearClsHead(
-                num_classes=num_classes,
-                in_channels=backbone.num_features,
-                normalized=True,
-            ),
+            head=head,
             loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
             loss_scale=7.0,
         )

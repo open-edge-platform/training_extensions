@@ -2,7 +2,7 @@ task: MULTI_LABEL_CLS
 model:
   class_path: getitune.backend.lightning.models.classification.multilabel_models.timm_model.TimmModelMultilabelCls
   init_args:
-    label_info: 1000
+    label_info: 21843
     model_name: tf_efficientnetv2_s.in21k
 
     optimizer:

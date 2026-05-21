@@ -71,6 +71,7 @@ def load_checkpoint(
     strict: bool = False,
     prefix: str = "",
     key_mapping: dict[str, str] | None = None,
+    ignore_keys: list[str] | None = None,
 ) -> None:
     """Load state dict from path of checkpoint and dump to model.
 
@@ -86,6 +87,9 @@ def load_checkpoint(
             any key containing "patch_embed.proj" (e.g., "patch_embed.proj.weight") to
             "patch_embed.projection.weight".
             Defaults to None.
+        ignore_keys: List of keys to ignore (remove) from the checkpoint state dict
+            before loading. Useful for filtering out training-only keys that don't
+            exist in the model. Defaults to None.
     """
     if Path(checkpoint).exists():
         load_checkpoint_to_model(
@@ -94,6 +98,7 @@ def load_checkpoint(
             strict=strict,
             prefix=prefix,
             key_mapping=key_mapping,
+            ignore_keys=ignore_keys,
         )
     else:
         load_checkpoint_to_model(
@@ -102,6 +107,7 @@ def load_checkpoint(
             strict=strict,
             prefix=prefix,
             key_mapping=key_mapping,
+            ignore_keys=ignore_keys,
         )
 
 
@@ -286,6 +292,7 @@ def load_checkpoint_to_model(
     strict: bool = False,
     prefix: str = "",
     key_mapping: dict[str, str] | None = None,
+    ignore_keys: list[str] | None = None,
 ) -> None:
     """Loads a checkpoint dictionary into a PyTorch model.
 
@@ -302,6 +309,9 @@ def load_checkpoint_to_model(
             Example: {"patch_embed.proj": "patch_embed.projection"} will remap
             "patch_embed.proj.weight" to "patch_embed.projection.weight".
             Defaults to None.
+        ignore_keys (list[str] | None, optional): List of keys to ignore (remove) from the state dict
+            before loading. Useful for filtering out training-only keys that don't exist in the model.
+            Defaults to None.
 
     Returns:
         None
@@ -315,12 +325,24 @@ def load_checkpoint_to_model(
 
     # strip prefix of state_dict
     metadata = getattr(state_dict, "_metadata", OrderedDict())
-    for p, r in [(r"^module\.", ""), (rf"^{prefix}\.", "")]:
-        state_dict = OrderedDict({re.sub(p, r, k): v for k, v in state_dict.items()})
+    # Strip "module." prefix (common with DDP-trained checkpoints)
+    state_dict = OrderedDict({re.sub(r"^module\.", "", k): v for k, v in state_dict.items()})
+    # When a prefix is provided, filter to keep only keys matching that prefix, then strip it.
+    # This avoids noisy "unexpected key" warnings from unrelated keys in the checkpoint
+    # (e.g., backbone keys when loading only the head).
+    if prefix:
+        prefix_dot = f"{prefix}."
+        state_dict = OrderedDict(
+            {k[len(prefix_dot) :]: v for k, v in state_dict.items() if k.startswith(prefix_dot)},
+        )
 
     # Remap keys if mapping is provided
     if key_mapping is not None:
         state_dict = remap_state_dict_keys(state_dict, key_mapping)
+
+    # Remove ignored keys from state dict
+    if ignore_keys:
+        state_dict = OrderedDict({k: v for k, v in state_dict.items() if k not in ignore_keys})
 
     # Keep metadata in state_dict
     state_dict._metadata = metadata  # noqa: SLF001

@@ -164,7 +164,12 @@ class DEIMDFine(RTDETR):
             input_size=self.data_input_params.input_size[0],
         )
         model.init_weights()
-        load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
+        load_checkpoint(
+            model,
+            self._pretrained_weights[self.model_name],
+            map_location="cpu",
+            ignore_keys=["bbox_head.loss_weights"],
+        )
 
         return model
 

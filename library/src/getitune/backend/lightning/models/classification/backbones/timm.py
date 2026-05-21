@@ -10,6 +10,8 @@ Original papers:
 
 from __future__ import annotations
 
+from collections import OrderedDict
+
 import timm
 import torch
 from torch import nn
@@ -22,12 +24,16 @@ class TimmBackbone(nn.Module):
         model_name (str): The name of the model.
             You can find available models at timm.list_models() or timm.list_pretrained().
         pretrained (bool, optional): Whether to load pretrained weights. Defaults to False.
+        num_classes (int, optional): Number of classes for the classifier. When > 0, timm loads
+            the pretrained classifier matching this number of classes, and saves it for later
+            transfer to the model head. Defaults to 0 (no classifier loaded).
     """
 
     def __init__(
         self,
         model_name: str,
         pretrained: bool = True,
+        num_classes: int = 0,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -37,8 +43,16 @@ class TimmBackbone(nn.Module):
         self.model = timm.create_model(
             self.model_name,
             pretrained=pretrained,
-            num_classes=1000,
+            num_classes=num_classes,
         )
+
+        # Save pretrained classifier weights before discarding the classifier.
+        # These can be transferred to the model's head for pretrained export.
+        self.pretrained_classifier_state: OrderedDict[str, torch.Tensor] | None = None
+        if num_classes > 0 and hasattr(self.model, "classifier") and self.model.classifier is not None:
+            classifier = self.model.classifier
+            if isinstance(classifier, nn.Linear):
+                self.pretrained_classifier_state = OrderedDict(classifier.state_dict())
 
         self.model.classifier = None  # Detach classifier. Only use 'backbone' part in getitune.
         self.num_head_features = self.model.num_features

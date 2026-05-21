@@ -80,14 +80,20 @@ class TimmModelMulticlassCls(LightningMulticlassClsModel):
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:
         num_classes = num_classes if num_classes is not None else self.num_classes
-        backbone = TimmBackbone(model_name=self.model_name)
+        backbone = TimmBackbone(model_name=self.model_name, num_classes=num_classes)
+        head = LinearClsHead(
+            num_classes=num_classes,
+            in_channels=backbone.num_features,
+        )
+        # Transfer pretrained classifier weights to the head
+        if backbone.pretrained_classifier_state is not None:
+            head.fc.load_state_dict(backbone.pretrained_classifier_state)
+            backbone.pretrained_classifier_state = None  # Free memory
+
         return ImageClassifier(
             backbone=backbone,
             neck=GlobalAveragePooling(dim=2),
-            head=LinearClsHead(
-                num_classes=num_classes,
-                in_channels=backbone.num_features,
-            ),
+            head=head,
             loss=nn.CrossEntropyLoss(),
         )
 

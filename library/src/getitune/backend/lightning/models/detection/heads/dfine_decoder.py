@@ -190,6 +190,28 @@ class TransformerDecoder(nn.Module):
             requires_grad=False,
         )
 
+    def _load_from_state_dict(
+        self,
+        state_dict: dict,
+        prefix: str,
+        local_metadata: dict,
+        strict: bool,
+        missing_keys: list[str],
+        unexpected_keys: list[str],
+        error_msgs: list[str],
+    ) -> None:
+        """Override to suppress 'box_distance_weight' missing key warning.
+
+        This parameter is a pre-computed weighting function derived from model config
+        (reg_max, up, reg_scale), not a learned weight from training.
+        """
+        super()._load_from_state_dict(
+            state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
+        )
+        key = prefix + "box_distance_weight"
+        if key in missing_keys:
+            missing_keys.remove(key)
+
     def value_op(
         self,
         memory: Tensor,

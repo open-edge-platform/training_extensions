@@ -420,6 +420,11 @@ class MobileNetV3Backbone:
         if pretrained:
             key = model_name if width_mult == 1.0 else f"{model_name}_{int(width_mult * 100):03d}"
             checkpoint = load_from_http(pretrained_urls[key])
-            print(f"init weight - {pretrained_urls[key]}")
-            load_checkpoint_to_model(model, checkpoint)
+            # Filter out classifier keys — they belong to the classification head,
+            # not the feature extractor backbone.
+            state_dict = checkpoint.get("state_dict", checkpoint)
+            for k in list(state_dict.keys()):
+                if k.startswith("classifier"):
+                    del state_dict[k]
+            load_checkpoint_to_model(model, state_dict)
         return model

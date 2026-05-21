@@ -157,7 +157,12 @@ class SSD(LightningDetectionModel):
             test_cfg=test_cfg,  # TODO (sungchul, kirill): remove
         )
         model.init_weights()
-        load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
+        load_checkpoint(
+            model,
+            self._pretrained_weights[self.model_name],
+            map_location="cpu",
+            ignore_keys=["bbox_head.loss_weights"],
+        )
 
         return model
 

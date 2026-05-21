@@ -214,6 +214,28 @@ class NMF2D(nn.Module):
         self.bases = torch.nn.parameter.Parameter(bases, requires_grad=False)
         self.inv_t = 1
 
+    def _load_from_state_dict(
+        self,
+        state_dict: dict,
+        prefix: str,
+        local_metadata: dict,
+        strict: bool,
+        missing_keys: list[str],
+        unexpected_keys: list[str],
+        error_msgs: list[str],
+    ) -> None:
+        """Override to suppress 'bases' missing key warning.
+
+        The NMF bases are always randomly initialized and never saved in pretrained
+        checkpoints, so reporting them as missing is incorrect and noisy.
+        """
+        super()._load_from_state_dict(
+            state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
+        )
+        bases_key = prefix + "bases"
+        if bases_key in missing_keys:
+            missing_keys.remove(bases_key)
+
     def local_inference(self, x: torch.Tensor, bases: torch.Tensor) -> torch.Tensor:
         """Local inference."""
         # (B * S, D, N)^T @ (B * S, D, R) -> (B * S, N, R)
