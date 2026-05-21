@@ -86,21 +86,6 @@ describe('ModelRow', () => {
             expect(screen.queryByTestId('labels-count')).not.toBeInTheDocument();
         });
 
-        it('renders "Unnamed Model" when model name is null or undefined', () => {
-            const modelWithoutName = getMockedModel({ name: undefined });
-
-            render(
-                <ModelRow
-                    model={modelWithoutName}
-                    datasetRevision={datasetRevision}
-                    groupBy={'dataset'}
-                    modelArchitecture={modelArchitecture}
-                />
-            );
-
-            expect(screen.getByTestId('model-name')).toHaveTextContent('Unnamed Model');
-        });
-
         it('renders "-" when model size is 0 or negative', () => {
             const modelWithZeroSize = getMockedModel({ size: 0 });
 

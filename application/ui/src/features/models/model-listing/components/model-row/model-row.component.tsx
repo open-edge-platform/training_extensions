@@ -70,7 +70,7 @@ export const ModelRow = ({
             <Flex direction={'column'} gap={'size-50'}>
                 <Flex alignItems={'center'} gap={'size-100'} wrap>
                     <Text UNSAFE_className={classes.modelName} data-testid={'model-name'}>
-                        {model.name ?? 'Unnamed Model'}
+                        {model.name}
                     </Text>
                     {isFailedModel(model) && <FailedModel />}
                     {hasDeletedWeights(model) && <DeletedWeightsModel />}
