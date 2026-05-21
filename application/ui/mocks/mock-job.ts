@@ -13,6 +13,7 @@ export const getMockedJob = (job?: Partial<Job>): Job => {
             },
             model: {
                 id: 'ef3983f1-cef0-4ebe-91db-7330f1dd6e27',
+                name: 'ATSS (ef3983f1)',
                 architecture: 'Custom_Object_Detection_Gen3_ATSS',
                 parent_revision_id: null,
                 dataset_revision_id: '6f9f9g61-4fg1-7781-e082-e1113f371e01',
