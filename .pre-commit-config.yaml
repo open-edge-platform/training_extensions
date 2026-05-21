@@ -22,7 +22,7 @@ repos:
     rev: v3.0.3
     hooks:
       - id: prettier
-        exclude: ^application/ui/
+        exclude: ^(application/ui/|\.github/)
 
   # Hadolint - Dockerfile linter
   - repo: https://github.com/AleksaC/hadolint-py
