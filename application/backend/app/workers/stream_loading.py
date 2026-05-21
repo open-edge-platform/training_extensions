@@ -41,7 +41,13 @@ class StreamLoader(BaseProcessWorker):
         with get_db_session() as db:
             source = SourceService(db_session=db).get_active_source()
         self._source = source if source is not None else DisconnectedSourceConfig()
-        logger.info("Active source set to {}. Process: {}", self._source, mp.current_process().name)
+        logger.info(
+            "Active source set to id={} name={!r} type={}. Process: {}",
+            self._source.id,
+            self._source.name,
+            self._source.source_type,
+            mp.current_process().name,
+        )
         self._reset_stream()
 
     def _reload_source_loop(self) -> None:
@@ -69,7 +75,12 @@ class StreamLoader(BaseProcessWorker):
         try:
             self._video_stream = VideoStreamService.get_video_stream(input_config=self._source)
         except Exception:
-            logger.exception("Failed to open video stream for source: {}", self._source)
+            logger.exception(
+                "Failed to open video stream for source: id={} name={!r} type={}",
+                self._source.id,
+                self._source.name,
+                self._source.source_type,
+            )
             self._video_stream = None
 
     def run_loop(self) -> None:

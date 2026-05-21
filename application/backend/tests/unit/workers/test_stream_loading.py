@@ -163,20 +163,17 @@ class TestStreamLoaderErrorHandling:
         )
 
     @patch("app.workers.stream_loading.VideoStreamService.get_video_stream")
-    def test_reset_stream_handles_runtime_error(self, mock_get_stream, mp_ctx, stop_event):
+    def test_reset_stream_handles_runtime_error(self, mock_get_stream, frame_queue, stop_event):
         """_reset_stream should catch RuntimeError and set _video_stream to None."""
         mock_get_stream.side_effect = RuntimeError("Could not open video source: rtsp://bad")
-        frame_queue = mp_ctx.Manager().Queue(maxsize=2)
         loader = self._make_loader(frame_queue, stop_event, None)
-        # Directly invoke _reset_stream (not as subprocess)
         loader._reset_stream()
         assert loader._video_stream is None
 
     @patch("app.workers.stream_loading.VideoStreamService.get_video_stream")
-    def test_reset_stream_releases_existing_stream_on_error(self, mock_get_stream, mp_ctx, stop_event):
+    def test_reset_stream_releases_existing_stream_on_error(self, mock_get_stream, frame_queue, stop_event):
         """_reset_stream should release the old stream even when the new one fails."""
         mock_get_stream.side_effect = RuntimeError("Could not open video source")
-        frame_queue = mp_ctx.Manager().Queue(maxsize=2)
         loader = self._make_loader(frame_queue, stop_event, None)
         old_stream = Mock()
         loader._video_stream = old_stream
@@ -186,17 +183,15 @@ class TestStreamLoaderErrorHandling:
 
     @patch("app.workers.stream_loading.VideoStreamService.get_video_stream")
     @patch("app.workers.stream_loading.get_db_session")
-    def test_reload_source_loop_survives_error(self, mock_db, mock_get_stream, mp_ctx, stop_event):
+    def test_reload_source_loop_survives_error(self, mock_db, mock_get_stream, mp_ctx, frame_queue, stop_event):
         """_reload_source_loop should not crash when _load_source raises."""
         mock_db.return_value.__enter__ = Mock(return_value=Mock())
         mock_db.return_value.__exit__ = Mock(return_value=False)
         mock_get_stream.side_effect = RuntimeError("unreachable")
 
         condition = mp_ctx.Condition()
-        frame_queue = mp_ctx.Manager().Queue(maxsize=2)
         loader = self._make_loader(frame_queue, stop_event, condition)
 
-        # Patch SourceService to return a source
         with patch("app.workers.stream_loading.SourceService") as mock_source_service:
             mock_source_service.return_value.get_active_source.return_value = VideoFileSourceConfig(
                 source_type=SourceType.VIDEO_FILE,
@@ -208,32 +203,42 @@ class TestStreamLoaderErrorHandling:
             thread = Thread(target=loader._reload_source_loop, daemon=True)
             thread.start()
 
-            # Notify the condition to trigger a reload
-            with condition:
-                condition.notify_all()
+            # Wait until get_video_stream is called (proves _load_source ran)
+            deadline = time.monotonic() + 5
+            while not mock_get_stream.called and time.monotonic() < deadline:
+                with condition:
+                    condition.notify_all()
+                time.sleep(0.05)
 
-            time.sleep(0.5)
+            # Verify _load_source was actually invoked
+            assert mock_get_stream.called, "_load_source should have been called"
+            mock_source_service.return_value.get_active_source.assert_called()
 
-            # Thread should still be alive (not crashed)
+            # Thread should still be alive (exception was caught, loop continues)
             assert thread.is_alive()
-            # video_stream should be None due to error
-            assert loader._video_stream is None
 
     @patch("app.workers.stream_loading.VideoStreamService.get_video_stream")
-    def test_setup_survives_unreachable_source(self, mock_get_stream, mp_ctx, stop_event):
+    @patch("app.workers.stream_loading.get_db_session")
+    def test_setup_survives_unreachable_source(self, mock_db, mock_get_stream, frame_queue, stop_event):
         """StreamLoader.setup() should not raise when video source is unreachable."""
         mock_get_stream.side_effect = RuntimeError("Could not open video source: rtsp://bad")
-        frame_queue = mp_ctx.Manager().Queue(maxsize=2)
+        mock_db.return_value.__enter__ = Mock(return_value=Mock())
+        mock_db.return_value.__exit__ = Mock(return_value=False)
+
         loader = self._make_loader(frame_queue, stop_event, None)
-        loader._source = VideoFileSourceConfig(
-            source_type=SourceType.VIDEO_FILE,
-            id=uuid4(),
-            name="Test",
-            config_data=VideoFileConfig(video_path="fake.mp4"),
-        )
-        # _reset_stream is called during setup; it should not raise
-        loader._reset_stream()
+
+        with patch("app.workers.stream_loading.SourceService") as mock_source_service:
+            mock_source_service.return_value.get_active_source.return_value = VideoFileSourceConfig(
+                source_type=SourceType.VIDEO_FILE,
+                id=uuid4(),
+                name="Test",
+                config_data=VideoFileConfig(video_path="fake.mp4"),
+            )
+            # setup() calls _load_source() which calls _reset_stream(); should not raise
+            loader.setup()
+
+        assert mock_get_stream.called
         assert loader._video_stream is None
         # run_loop should handle None stream gracefully
         stop_event.set()
-        loader.run_loop()  # should return immediately without error
+        loader.run_loop()
