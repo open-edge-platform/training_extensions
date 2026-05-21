@@ -1283,6 +1283,70 @@ test.describe('Annotator', () => {
             });
         });
 
+        test('changing device selection uses the new device for predictions', async ({
+            page,
+            annotatorPage,
+            network,
+        }) => {
+            let capturedDevice: string | undefined;
+
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([newerModel]);
+                }),
+                http.get('/api/system/devices/inference', async () => {
+                    return HttpResponse.json([
+                        { type: 'cpu', name: 'CPU' },
+                        { type: 'xpu', name: 'XPU' },
+                    ]);
+                }),
+                http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
+                    return response(200).json({
+                        project_id: mockedDetectionProject.id,
+                        status: 'idle',
+                        source: null,
+                        sink: null,
+                        device: 'cpu',
+                    });
+                }),
+                http.post('/api/projects/{project_id}/dataset/media/media:predict', async ({ request }) => {
+                    const body = await request.json();
+                    capturedDevice = body.device;
+
+                    return HttpResponse.json({ predictions: [{ media: { id: 'item-1' }, prediction: [] }] });
+                })
+            );
+
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
+
+            await test.step('open prediction mode and wait for initial predict request', async () => {
+                const predictResponsePromise = page.waitForResponse((res) => res.url().includes('media:predict'));
+
+                await annotatorPage.openPredictionMode();
+
+                await predictResponsePromise;
+            });
+
+            await test.step('initial predict request used cpu device', async () => {
+                expect(capturedDevice).toBe('cpu');
+            });
+
+            await test.step('change device selection to XPU', async () => {
+                const predictResponsePromise = page.waitForResponse((res) => res.url().includes('media:predict'));
+
+                await page.getByRole('button', { name: /Inference devices/ }).click();
+                await page.getByRole('option', { name: /XPU/i }).click();
+
+                await expect(page.getByRole('button', { name: /XPU/i })).toBeVisible();
+
+                await predictResponsePromise;
+            });
+
+            await test.step('new predict request used xpu device', async () => {
+                expect(capturedDevice).toBe('xpu');
+            });
+        });
+
         test('last used model is used by default', async ({ page, annotatorPage, network }) => {
             network.use(
                 http.get('/api/projects/{project_id}/models', async () => {

@@ -1,8 +1,9 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useMemo } from 'react';
+import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 
+import { usePipeline } from 'hooks/api/pipeline.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { orderBy } from 'lodash-es';
 import { useLocalStorage } from 'usehooks-ts';
@@ -17,6 +18,9 @@ type PredictionsSetupContextProps = {
     selectedModelId: string | null;
     selectedModel: SelectableModel | undefined;
     changeSelectedModelId: (modelId: string | null) => void;
+
+    selectedDevice: string;
+    changeSelectedDevice: (device: string) => void;
 };
 
 const PredictionSetupContext = createContext<PredictionsSetupContextProps | null>(null);
@@ -49,9 +53,20 @@ export const PredictionsSetupProvider = ({ children }: { children: ReactNode }) 
 
     const selectedModel = selectableModels.find((model) => model.modelVariantId === selectedModelId);
 
+    const { data: pipeline } = usePipeline();
+
+    const [selectedDevice, setSelectedDevice] = useState<string>(pipeline.device);
+
     return (
         <PredictionSetupContext
-            value={{ selectedModelId, selectedModel, changeSelectedModelId: setSelectedModelId, selectableModels }}
+            value={{
+                selectedModelId,
+                selectedModel,
+                changeSelectedModelId: setSelectedModelId,
+                selectableModels,
+                selectedDevice,
+                changeSelectedDevice: setSelectedDevice,
+            }}
         >
             {children}
         </PredictionSetupContext>
