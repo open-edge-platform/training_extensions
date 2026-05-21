@@ -55,6 +55,7 @@ class FCNHeadModule(BaseSegmentationHead):
         align_corners: bool = False,
         dropout_ratio: float = -1,
         activation: Callable[..., nn.Module] | None = nn.ReLU,
+        use_bn: bool = False,
         pretrained_weights: Path | str | None = None,
         pretrained_prefix: str = "",
     ) -> None:
@@ -101,11 +102,17 @@ class FCNHeadModule(BaseSegmentationHead):
             channels=channels,
             num_classes=num_classes,
             activation=activation,
-            pretrained_weights=pretrained_weights,
+            pretrained_weights=None if use_bn else pretrained_weights,
             pretrained_prefix=pretrained_prefix,
         )
 
         self.aggregator = aggregator
+
+        # Standalone BN before conv_seg (matches MMSeg BNHead used in DINOv2 linear head)
+        if use_bn:
+            self.bn = nn.SyncBatchNorm(self.in_channels)
+        else:
+            self.bn = None
 
         if num_convs == 0 and (self.in_channels != self.channels):
             msg = "in_channels and channels should be equal when num_convs is 0"
@@ -155,6 +162,11 @@ class FCNHeadModule(BaseSegmentationHead):
             self.convs[-1].with_activation = False
             delattr(self.convs[-1], "activation")  # why we delete last activation?
 
+        # Deferred pretrained weight loading for use_bn=True:
+        # self.bn must exist before loading weights that contain bn.* keys
+        if use_bn and pretrained_weights is not None:
+            self.load_pretrained_weights(pretrained_weights, prefix=pretrained_prefix)
+
     def _forward_feature(self, inputs: Tensor) -> Tensor:
         """Forward function for feature maps.
 
@@ -166,6 +178,8 @@ class FCNHeadModule(BaseSegmentationHead):
                 H, W) which is feature map for last layer of decoder head.
         """
         x = self._transform_inputs(inputs)
+        if self.bn is not None:
+            x = self.bn(x)
         feats = self.convs(x)
         if self.concat_input:
             feats = self.conv_cat(torch.cat([x, feats], dim=1))
@@ -219,15 +233,14 @@ class FCNHead:
             "aggregator_use_concat": False,
         },
         "dinov2-small-seg": {
-            "in_channels": [384, 384, 384, 384],
-            "in_index": [0, 1, 2, 3],
-            "input_transform": "resize_concat",
-            "channels": 1536,
+            "in_channels": 384,
+            "in_index": -1,
+            "input_transform": None,
+            "channels": 384,
+            "num_convs": 0,
+            "use_bn": True,
+            "activation": None,
             "pretrained_weights": "https://storage.geti.intel.com/weights/dinov2_vits14_ade20k_linear_head.pth",
-            # The ADE20K linear-head checkpoint from the DINOv2 repo stores the
-            # head weights under the ``decode_head.`` prefix (mmseg layout).
-            # Strip it so that ``conv_seg.weight`` / ``conv_seg.bias`` resolve
-            # correctly against this head's state_dict.
             "pretrained_prefix": "decode_head",
         },
     }

@@ -44,3 +44,7 @@ callbacks:
 
 overrides:
   gradient_clip_val: 35.0
+  data:
+    input_size:
+      - 256
+      - 192

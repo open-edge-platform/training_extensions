@@ -9,7 +9,8 @@ RFDETRInst (instance segmentation) models.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar
+from pathlib import Path
+from typing import Any, ClassVar
 
 import torch
 from rfdetr.main import populate_args
@@ -20,14 +21,11 @@ from torchvision.ops import box_convert
 
 from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
 from getitune.backend.lightning.models.detection.utils import limit_batch_objects
-from getitune.backend.lightning.models.utils.utils import load_checkpoint
+from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 class RFDETRMixin:
@@ -66,11 +64,29 @@ class RFDETRMixin:
         )
         lwdetr_model = detector.model.model
 
-        load_checkpoint(
-            lwdetr_model,  # pyrefly: ignore[bad-argument-type]
-            self._pretrained_weights[self.model_name],  # type: ignore[attr-defined]
-            map_location="cpu",
-        )
+        # Load pretrained checkpoint with query embedding truncation.
+        # rfdetr checkpoints may have more query embeddings than the model expects
+        # (e.g., checkpoint trained with num_queries=300 but model uses num_queries=200).
+        # The rfdetr package truncates these during loading; we replicate that logic here.
+        checkpoint_path = self._pretrained_weights[self.model_name]  # type: ignore[attr-defined]
+        if Path(checkpoint_path).exists():
+            checkpoint = torch.load(checkpoint_path, map_location="cpu")
+        else:
+            checkpoint = load_from_http(checkpoint_path, map_location="cpu")
+
+        # Extract the actual state dict (handles "ema", "state_dict", "model" wrappers)
+        state_dict = checkpoint["ema"]["module"] if "ema" in checkpoint else checkpoint.get("state_dict", checkpoint)
+        state_dict = state_dict.get("model", state_dict)
+
+        # Truncate query embeddings to match model's expected size
+        num_desired_queries = lwdetr_model.refpoint_embed.weight.shape[0]
+        query_param_names = ("refpoint_embed.weight", "query_feat.weight")
+        for name in list(state_dict.keys()):
+            if any(name.endswith(qp) for qp in query_param_names):
+                if state_dict[name].shape[0] > num_desired_queries:
+                    state_dict[name] = state_dict[name][:num_desired_queries]
+
+        load_checkpoint_to_model(lwdetr_model, state_dict, strict=False)  # pyrefly: ignore[bad-argument-type]
 
         # Reinitialize detection head for our num_classes
         detector.model.reinitialize_detection_head(num_classes)
