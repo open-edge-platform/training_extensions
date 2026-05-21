@@ -33,12 +33,13 @@ vi.mock('../../../../hooks/use-get-dataset-media-items.hook', () => ({
     useGetDatasetMediaItems: vi.fn(() => mockDatasetMediaItems),
 }));
 
+const MOCKED_PROJECT_ID = '123';
+
 vi.mock('../../../../hooks/use-project-identifier.hook', () => ({
-    useProjectIdentifier: vi.fn(() => '123'),
+    useProjectIdentifier: vi.fn(() => MOCKED_PROJECT_ID),
 }));
 
 const SEARCH = '?annotationStatusFilter=with_annotations';
-const PROJECT_ID = '123';
 
 describe('useSelectDatasetItem', () => {
     beforeEach(() => {
@@ -48,7 +49,7 @@ describe('useSelectDatasetItem', () => {
 
     describe('onSelectedMediaItemChange', () => {
         it('navigates to dataset index with preserved search when item is null', () => {
-            const route = `${paths.project.dataset.index({ projectId: PROJECT_ID })}${SEARCH}`;
+            const route = `${paths.project.dataset.index({ projectId: MOCKED_PROJECT_ID })}${SEARCH}`;
             const { result } = renderHook(() => useSelectDatasetItem(), {
                 route,
                 path: paths.project.dataset.index.pattern,
@@ -59,14 +60,14 @@ describe('useSelectDatasetItem', () => {
             });
 
             expect(mockNavigate).toHaveBeenCalledWith({
-                pathname: paths.project.dataset.index({ projectId: PROJECT_ID }),
+                pathname: paths.project.dataset.index({ projectId: MOCKED_PROJECT_ID }),
                 search: SEARCH,
             });
         });
 
         it('navigates to frame 0 with preserved search for a video item', () => {
             const video = getMockedVideo({ id: 'video-42' });
-            const route = `${paths.project.dataset.index({ projectId: PROJECT_ID })}${SEARCH}`;
+            const route = `${paths.project.dataset.index({ projectId: MOCKED_PROJECT_ID })}${SEARCH}`;
             const { result } = renderHook(() => useSelectDatasetItem(), {
                 route,
                 path: paths.project.dataset.index.pattern,
@@ -80,7 +81,7 @@ describe('useSelectDatasetItem', () => {
                 pathname: paths.project.dataset.item.frame({
                     datasetItemId: video.id,
                     frameNumber: '0',
-                    projectId: PROJECT_ID,
+                    projectId: MOCKED_PROJECT_ID,
                 }),
                 search: SEARCH,
             });
@@ -88,7 +89,7 @@ describe('useSelectDatasetItem', () => {
 
         it('navigates to the correct frame number with preserved search for a video frame item', () => {
             const videoFrame = getMockedVideoFrame({ id: 'vf-7', frame_number: 42 });
-            const route = `${paths.project.dataset.index({ projectId: PROJECT_ID })}${SEARCH}`;
+            const route = `${paths.project.dataset.index({ projectId: MOCKED_PROJECT_ID })}${SEARCH}`;
             const { result } = renderHook(() => useSelectDatasetItem(), {
                 route,
                 path: paths.project.dataset.index.pattern,
@@ -102,7 +103,7 @@ describe('useSelectDatasetItem', () => {
                 pathname: paths.project.dataset.item.frame({
                     datasetItemId: videoFrame.id,
                     frameNumber: videoFrame.frame_number.toString(),
-                    projectId: PROJECT_ID,
+                    projectId: MOCKED_PROJECT_ID,
                 }),
                 search: SEARCH,
             });
@@ -110,7 +111,7 @@ describe('useSelectDatasetItem', () => {
 
         it('navigates to item index with preserved search for an image item', () => {
             const image = getMockedMediaImage({ id: 'img-99' });
-            const route = `${paths.project.dataset.index({ projectId: PROJECT_ID })}${SEARCH}`;
+            const route = `${paths.project.dataset.index({ projectId: MOCKED_PROJECT_ID })}${SEARCH}`;
             const { result } = renderHook(() => useSelectDatasetItem(), {
                 route,
                 path: paths.project.dataset.index.pattern,
@@ -123,7 +124,7 @@ describe('useSelectDatasetItem', () => {
             expect(mockNavigate).toHaveBeenCalledWith({
                 pathname: paths.project.dataset.item.index({
                     datasetItemId: image.id,
-                    projectId: PROJECT_ID,
+                    projectId: MOCKED_PROJECT_ID,
                 }),
                 search: SEARCH,
             });
@@ -131,7 +132,7 @@ describe('useSelectDatasetItem', () => {
 
         it('preserves an empty search string when there are no query params', () => {
             const image = getMockedMediaImage({ id: 'img-1' });
-            const route = paths.project.dataset.index({ projectId: PROJECT_ID });
+            const route = paths.project.dataset.index({ projectId: MOCKED_PROJECT_ID });
 
             const { result } = renderHook(() => useSelectDatasetItem(), {
                 route,
@@ -145,7 +146,7 @@ describe('useSelectDatasetItem', () => {
             expect(mockNavigate).toHaveBeenCalledWith({
                 pathname: paths.project.dataset.item.index({
                     datasetItemId: image.id,
-                    projectId: PROJECT_ID,
+                    projectId: MOCKED_PROJECT_ID,
                 }),
                 search: '',
             });
@@ -157,7 +158,7 @@ describe('useSelectDatasetItem', () => {
             const image = getMockedMediaImage({ id: 'img-selected' });
             vi.mocked(useGetDatasetMediaItems).mockReturnValue({ ...mockDatasetMediaItems, items: [image] });
 
-            const route = `${paths.project.dataset.item.index({ projectId: PROJECT_ID, datasetItemId: image.id })}${SEARCH}`;
+            const route = `${paths.project.dataset.item.index({ projectId: MOCKED_PROJECT_ID, datasetItemId: image.id })}${SEARCH}`;
             const { result } = renderHook(() => useSelectDatasetItem(), {
                 route,
                 path: paths.project.dataset.item.index.pattern,
@@ -170,7 +171,7 @@ describe('useSelectDatasetItem', () => {
             const image = getMockedMediaImage({ id: 'img-other' });
             vi.mocked(useGetDatasetMediaItems).mockReturnValue({ ...mockDatasetMediaItems, items: [image] });
 
-            const route = `${paths.project.dataset.item.index({ projectId: PROJECT_ID, datasetItemId: `${image.id}-23` })}${SEARCH}`;
+            const route = `${paths.project.dataset.item.index({ projectId: MOCKED_PROJECT_ID, datasetItemId: `${image.id}-23` })}${SEARCH}`;
             const { result } = renderHook(() => useSelectDatasetItem(), {
                 route,
                 path: paths.project.dataset.item.index.pattern,
@@ -182,7 +183,7 @@ describe('useSelectDatasetItem', () => {
         it('returns null when there are no items', () => {
             vi.mocked(useGetDatasetMediaItems).mockReturnValue({ ...mockDatasetMediaItems, items: [] });
 
-            const route = `${paths.project.dataset.item.index({ projectId: PROJECT_ID, datasetItemId: `img-selected` })}${SEARCH}`;
+            const route = `${paths.project.dataset.item.index({ projectId: MOCKED_PROJECT_ID, datasetItemId: `img-selected` })}${SEARCH}`;
             const { result } = renderHook(() => useSelectDatasetItem(), {
                 route,
                 path: paths.project.dataset.item.index.pattern,
