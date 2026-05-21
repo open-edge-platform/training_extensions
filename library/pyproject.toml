@@ -42,7 +42,7 @@ dependencies = [
     "openvino~=2026.1.0",
     "openvino-model-api==0.4.2",
     "onnx==1.21.0",
-    "onnxconverter-common==1.16.0",
+    "onnxruntime>=1.20",
     "onnxscript==0.6.2",
     "nncf~=3.0",
     "numpy>=2.0",
