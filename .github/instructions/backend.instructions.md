@@ -9,7 +9,7 @@ applyTo: "application/backend/**"
 - Routers under `app/` (`APIRouter` per resource). Keep handlers thin; business
   logic in service modules.
 - Pydantic v2 models for request/response — never return raw ORM models.
-- Settings via `pydantic-settings`. No `os.environ.get(...)`.
+- Settings via `pydantic-settings` for app config.
 - Use `loguru` `logger` — not `print`, not stdlib `logging`.
 - Long-running work goes in background tasks, not inline in a request.
 
@@ -53,5 +53,4 @@ applyTo: "application/backend/**"
 ## Do not
 
 - Do not bypass the settings layer.
-- Do not commit anything under `data/`, `logs/`, or `dist/`.
 - Never `pip install` — use `uv` via `just` recipes.
