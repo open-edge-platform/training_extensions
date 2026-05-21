@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import { useStreamJobStatus } from 'hooks/api/jobs/jobs.hook';
 import { isTrainJob } from 'hooks/api/util';
+import { capitalize } from 'lodash-es';
 
 import { DatasetRevision, Job, ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 import { useGetModel } from '../../hooks/api/use-get-model.hook';
@@ -30,11 +31,11 @@ type RunningModelRowProps = {
     modelArchitectures: ModelArchitectureWithPerformanceCategory[];
 };
 
-const RunningStatusTag = () => (
-    <Tag prefix={<Loading size={'S'} mode={'inline'} />} className={classes.runningStatusTag} text={'Running'} />
+const StatusTag = ({ status }: { status: string }) => (
+    <Tag prefix={<Loading size={'S'} mode={'inline'} />} className={classes.runningStatusTag} text={status} />
 );
 
-const StatusTag = ({ status }: { status: string }) => (
+const StatusTagMessage = ({ status }: { status: string }) => (
     <Tag className={classes.statusTag} withDot={false} text={status} />
 );
 
@@ -121,6 +122,9 @@ export const RunningModelRow = ({
 
     const statusMessage = job.message || (job.status === 'PENDING' ? 'Pending...' : 'Running...');
 
+    const showStatusTagMessage =
+        job.status.toLocaleLowerCase() !== statusMessage.replace('...', '').toLocaleLowerCase();
+
     return (
         <BottomProgressBar progress={job.progress}>
             <Grid
@@ -136,8 +140,8 @@ export const RunningModelRow = ({
                     </Flex>
 
                     <Flex alignItems={'start'}>
-                        <RunningStatusTag />
-                        <StatusTag status={statusMessage} />
+                        <StatusTag status={capitalize(job.status)} />
+                        {showStatusTagMessage && <StatusTagMessage status={statusMessage} />}
                     </Flex>
 
                     <Text UNSAFE_className={classes.metaText}>{`Started: ${formattedStartedAt}`}</Text>
