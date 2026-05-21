@@ -52,7 +52,10 @@ class StreamLoader(BaseProcessWorker):
                 notified = self._source_changed_condition.wait(timeout=3)
                 if not notified:  # awakened because of timeout
                     continue
-                self._load_source()
+                try:
+                    self._load_source()
+                except Exception:
+                    logger.exception("Error reloading source")
 
     def setup(self) -> None:
         super().setup()
@@ -62,7 +65,12 @@ class StreamLoader(BaseProcessWorker):
     def _reset_stream(self) -> None:
         if self._video_stream is not None:
             self._video_stream.release()
-        self._video_stream = VideoStreamService.get_video_stream(input_config=self._source)
+            self._video_stream = None
+        try:
+            self._video_stream = VideoStreamService.get_video_stream(input_config=self._source)
+        except Exception:
+            logger.exception("Failed to open video stream for source: {}", self._source)
+            self._video_stream = None
 
     def run_loop(self) -> None:
         while not self.should_stop():
