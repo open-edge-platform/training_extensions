@@ -4,7 +4,7 @@
 import { ReactNode } from 'react';
 
 import { ViewModes } from '@geti/ui';
-import { screen, waitForElementToBeRemoved } from '@testing-library/react';
+import { screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
@@ -94,7 +94,7 @@ describe('Gallery drag-and-drop upload', () => {
             new File([''], 'clip.mp4', { type: 'video/mp4' }),
         ]);
 
-        await vi.waitFor(() => expect(uploadMediaMock).toHaveBeenCalledTimes(1));
+        await waitFor(() => expect(uploadMediaMock).toHaveBeenCalledTimes(1));
         expect(uploadMediaMock.mock.calls[0][0].map((f: File) => f.name)).toEqual(['photo.png', 'clip.mp4']);
         expect(screen.queryByLabelText('toast')).not.toBeInTheDocument();
     });
