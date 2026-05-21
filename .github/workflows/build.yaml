@@ -7,6 +7,11 @@ on:
       - release/**
   pull_request:
   workflow_call:
+    inputs:
+      use-cache:
+        description: "Enable Docker build cache (set to false for cache-free verification builds)"
+        type: boolean
+        default: true
   workflow_dispatch:
 
 permissions: {} # No permissions by default on workflow level
@@ -102,6 +107,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: ${{ github.event_name != 'pull_request' }}
+          use-cache: ${{ github.event_name != 'workflow_call' || inputs.use-cache }}
           # Fork PRs cannot write packages to the upstream org, so disable
           # cache export to avoid 403 errors from GHCR.
           cache-write: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request' }}

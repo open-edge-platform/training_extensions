@@ -13,7 +13,7 @@ permissions: {} # No permissions by default on workflow level
 jobs:
   analysis:
     name: Scorecards analysis
-    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     permissions:
       # Needed to upload the results to code-scanning dashboard
       security-events: write
