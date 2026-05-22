@@ -39,37 +39,16 @@ jobs:
       contents: read
       pull-requests: write # required by nested job
 
-  get-version:
-    name: Get application version
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      version: ${{ steps.version.outputs.value }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          sparse-checkout: application/VERSION
-          sparse-checkout-cone-mode: false
-          fetch-depth: 1
-          persist-credentials: false
-      - name: Read application version
-        id: version
-        run: |
-          echo "value=$(cat application/VERSION | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
-
   windows-installer:
     name: Daily Windows installer build (${{ matrix.device }})
-    needs: get-version
     strategy:
       fail-fast: false
       matrix:
         device: [cpu, xpu, cuda]
     uses: ./.github/workflows/windows-installer.yml
     with:
-      build_version: ${{ needs.get-version.outputs.version }}
       device: ${{ matrix.device }}
+      tag: "daily"
     secrets:
       MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
       MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
