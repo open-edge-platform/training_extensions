@@ -9,7 +9,6 @@ import { UploadDetailsDialog } from '../gallery/upload-details-dialog/upload-det
 import { Action, computeSummary, INITIAL_STATE, MediaUploadState, reducer } from './media-upload-reducer';
 
 const UPLOAD_TOAST_ID = 'upload-progress-notification';
-const UPLOAD_TOAST_STYLE = { width: 'min(600px, 90vw)' };
 const UPLOAD_TOAST_FONT_SIZE = 'var(--spectrum-global-dimension-font-size-75)';
 
 type MediaUploadContextValue = {
@@ -48,7 +47,6 @@ const showInProgressToast = (total: number, succeeded: number, failed: number, o
         actionButtons: [<ShowDetailsButton key={'show-details'} onPress={openDialog} />],
         hasCloseButton: true,
         duration: Infinity,
-        style: UPLOAD_TOAST_STYLE,
     });
 };
 
@@ -70,7 +68,6 @@ const showFinalToast = (succeeded: number, failed: number, openDialog: () => voi
         actionButtons: [<ShowDetailsButton key={'show-details'} onPress={openDialog} />],
         hasCloseButton: true,
         duration: Infinity,
-        style: UPLOAD_TOAST_STYLE,
     });
 };
 
