@@ -246,6 +246,37 @@ class OVInstanceSegmentationModel(OVModel):
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}
         return super()._compute_metrics(metric, **compute_kwargs)
 
+    def predict_step(self, data_batch: SampleBatch) -> PredictionBatch:
+        """Run instance segmentation inference and filter by confidence threshold."""
+        predictions = self(data_batch)
+        threshold = self.hparams.get("best_confidence_threshold", None)
+        if not threshold:
+            return predictions
+
+        if predictions.scores is None or predictions.bboxes is None or predictions.labels is None:
+            return predictions
+
+        filtered_scores: list[torch.Tensor] = []
+        filtered_bboxes: list[tv_tensors.BoundingBoxes] = []
+        filtered_labels: list[torch.Tensor] = []
+        filtered_masks: list = []
+        for i, (score, bbox, label) in enumerate(zip(predictions.scores, predictions.bboxes, predictions.labels)):
+            keep = score > threshold
+            filtered_scores.append(score[keep])
+            filtered_bboxes.append(
+                tv_tensors.BoundingBoxes(data=bbox[keep], format="XYXY", canvas_size=bbox.canvas_size),
+            )
+            filtered_labels.append(label[keep])
+            if predictions.masks is not None and i < len(predictions.masks):
+                filtered_masks.append(predictions.masks[i][keep])
+
+        predictions.scores = filtered_scores
+        predictions.bboxes = filtered_bboxes
+        predictions.labels = filtered_labels
+        if filtered_masks:
+            predictions.masks = filtered_masks
+        return predictions
+
     def _create_label_info_from_model(self) -> LabelInfo:
         """Create label information from the OpenVINO IR or ONNX model metadata.
 

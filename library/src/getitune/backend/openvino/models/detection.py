@@ -271,3 +271,29 @@ class OVDetectionModel(OVModel):
         best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}
         return super()._compute_metrics(metric, **compute_kwargs)
+
+    def predict_step(self, data_batch: SampleBatch) -> PredictionBatch:
+        """Run detection inference and filter by confidence threshold."""
+        predictions = self(data_batch)
+        threshold = self.hparams.get("best_confidence_threshold", None)
+        if not threshold:
+            return predictions
+
+        if predictions.scores is None or predictions.bboxes is None or predictions.labels is None:
+            return predictions
+
+        filtered_scores: list[torch.Tensor] = []
+        filtered_bboxes: list[tv_tensors.BoundingBoxes] = []
+        filtered_labels: list[torch.Tensor] = []
+        for score, bbox, label in zip(predictions.scores, predictions.bboxes, predictions.labels):
+            keep = score > threshold
+            filtered_scores.append(score[keep])
+            filtered_bboxes.append(
+                tv_tensors.BoundingBoxes(data=bbox[keep], format="XYXY", canvas_size=bbox.canvas_size),
+            )
+            filtered_labels.append(label[keep])
+
+        predictions.scores = filtered_scores
+        predictions.bboxes = filtered_bboxes
+        predictions.labels = filtered_labels
+        return predictions
