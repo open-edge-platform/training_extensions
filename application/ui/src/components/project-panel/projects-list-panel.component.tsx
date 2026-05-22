@@ -152,12 +152,14 @@ export const ProjectsListPanel = () => {
                 )}
 
                 {otherProjects.length > 0 && (
-                    <Content>
-                        <ProjectsList projects={otherProjects} />
-                    </Content>
-                )}
+                    <>
+                        <Divider size={'S'} marginBottom={'size-100'} marginTop={0} />
 
-                <Divider size={'S'} marginBottom={'size-200'} marginTop={0} />
+                        <Content>
+                            <ProjectsList projects={otherProjects} />
+                        </Content>
+                    </>
+                )}
 
                 <ButtonGroup UNSAFE_className={classes.panelButtons}>
                     <AddProjectButton />

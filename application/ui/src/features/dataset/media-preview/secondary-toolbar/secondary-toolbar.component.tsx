@@ -18,6 +18,7 @@ import { isClassificationTask, isMultiLabelClassificationTask } from '../../../p
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
+import { PredictionInferenceDevices } from './annotator-modes/prediction-inference-devices.component';
 import { PredictionModelSelector } from './annotator-modes/prediction-model-selector.component';
 import { PredictionButtons } from './annotator-modes/predictions-buttons.component';
 import { getNextItem } from './util';
@@ -145,8 +146,8 @@ export const SecondaryToolbar = ({
             UNSAFE_className={classes.secondaryToolbarContainer}
         >
             <Toolbar.Container>
-                <Toolbar.Section>
-                    <Flex alignItems={'center'} gap={'size-200'}>
+                <Flex alignItems={'center'} gap={'size-50'}>
+                    <Toolbar.Section>
                         <AnnotatorModes
                             // We want to reset annotation and/or prediction cue when media item changes
                             key={isVideoFrame(mediaItem) ? `${mediaItem.id}-${mediaItem.frame_number}` : mediaItem.id}
@@ -155,9 +156,19 @@ export const SecondaryToolbar = ({
                             hasAnnotations={!isEmpty(initialAnnotations)}
                             hasPredictions={!isEmpty(initialPredictions)}
                         />
-                        {isPredictionMode && <PredictionModelSelector isDisabled={isLoadingPredictions || isPlaying} />}
-                    </Flex>
-                </Toolbar.Section>
+                    </Toolbar.Section>
+
+                    {isPredictionMode && (
+                        <Flex gap={'size-50'}>
+                            <Toolbar.Section>
+                                <PredictionModelSelector isDisabled={isLoadingPredictions || isPlaying} />
+                            </Toolbar.Section>
+                            <Toolbar.Section>
+                                <PredictionInferenceDevices isDisabled={isLoadingPredictions || isPlaying} />
+                            </Toolbar.Section>
+                        </Flex>
+                    )}
+                </Flex>
             </Toolbar.Container>
             {isAnnotationMode && (
                 <Toolbar.Container>
