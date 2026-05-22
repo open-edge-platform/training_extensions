@@ -54,18 +54,22 @@ test.describe('Dataset', () => {
     });
 
     test('list items', async ({ page, datasetPage }) => {
-        await datasetPage.goto();
-
-        await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
-
         const waitForBatch = (offset: number) =>
             page.waitForResponse(
                 (response) => response.url().includes('/dataset/media') && response.url().includes(`offset=${offset}`)
             );
 
-        for (const offset of [20, 40]) {
-            await Promise.all([waitForBatch(offset), datasetPage.getMediaGrid().press('End')]);
-        }
+        const batch20 = waitForBatch(20);
+        const batch40 = waitForBatch(40);
+
+        await datasetPage.goto();
+
+        await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
+
+        await datasetPage.getMediaGrid().press('End');
+        await batch20;
+        await datasetPage.getMediaGrid().press('End');
+        await batch40;
 
         await datasetPage.selectAll();
 

@@ -42,6 +42,7 @@ const VIEW_MODE_SETTINGS: Record<GalleryViewMode, GridLayoutOptions> = {
 type GalleryListProps = {
     items: Media[];
     viewMode: GalleryViewMode;
+    isPending: boolean;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
     isMediaItemReviewedById: (mediaItemId: string) => boolean;
@@ -51,6 +52,7 @@ type GalleryListProps = {
 const GalleryList = ({
     items,
     viewMode,
+    isPending,
     isFetchingNextPage,
     fetchNextPage,
     onSelectedMediaItemChange,
@@ -68,6 +70,7 @@ const GalleryList = ({
             selectionMode='multiple'
             selectedKeys={selectedKeys}
             layoutOptions={VIEW_MODE_SETTINGS[viewMode]}
+            isPending={isPending}
             isLoadingMore={isFetchingNextPage}
             onLoadMore={fetchNextPage}
             onSelectionChange={setSelectedKeys}
@@ -144,6 +147,7 @@ export const Gallery = ({
             <GalleryList
                 items={items}
                 viewMode={viewMode}
+                isPending={isPending}
                 fetchNextPage={fetchNextPage}
                 isMediaItemReviewedById={isMediaItemReviewedById}
                 onSelectedMediaItemChange={onSelectedMediaItemChange}
