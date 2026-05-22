@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { toast } from '@geti/ui';
+import { Flex, Loading, toast } from '@geti/ui';
 
 type UploadProgress = {
     total: number;
@@ -27,7 +27,7 @@ const INITIAL_UPLOAD_PROGRESS: UploadProgress = {
     isUploading: false,
 };
 
-const summarizeSettledResults = <T>(results: PromiseSettledResult<T>[]): UploadOutcome => {
+const summarizeSettledResults = <T,>(results: PromiseSettledResult<T>[]): UploadOutcome => {
     const succeeded = results.filter((result) => result.status === 'fulfilled').length;
     const failed = results.filter((result) => result.status === 'rejected').length;
 
@@ -35,6 +35,13 @@ const summarizeSettledResults = <T>(results: PromiseSettledResult<T>[]): UploadO
 };
 
 const UPLOAD_TOAST_ID = 'upload-progress-notification';
+
+const InProgressMessage = ({ text }: { text: string }) => (
+    <Flex alignItems={'center'} gap={'size-100'}>
+        <Loading mode={'inline'} size={'S'} />
+        <span>{text}</span>
+    </Flex>
+);
 
 export const useUploadProgress = () => {
     const [uploadProgress, setUploadProgress] = useState<UploadProgress>(INITIAL_UPLOAD_PROGRESS);
@@ -47,6 +54,13 @@ export const useUploadProgress = () => {
             failed: 0,
             isUploading: true,
         }));
+
+        toast({
+            id: UPLOAD_TOAST_ID,
+            type: 'neutral',
+            message: <InProgressMessage text={`Uploading ${total} item(s)...`} />,
+            duration: Infinity,
+        });
     };
 
     const updateUploadProgress = ({ settledResults }: UploadProgressUpdate): void => {
@@ -58,12 +72,19 @@ export const useUploadProgress = () => {
             const nextSucceeded = previousProgress.succeeded + succeeded;
             const nextFailed = previousProgress.failed + failed;
 
-            const msg = `Uploading ${total} item(s)... (${nextSucceeded} succeeded, ${nextFailed} failed)`;
+            const parts = [
+                nextSucceeded > 0 ? `${nextSucceeded} succeeded` : null,
+                nextFailed > 0 ? `${nextFailed} failed` : null,
+            ]
+                .filter(Boolean)
+                .join(', ');
+            const msg = `Uploading ${total} item(s)...${parts ? ` (${parts})` : ''}`;
 
             toast({
                 id: UPLOAD_TOAST_ID,
-                type: 'info',
-                message: msg,
+                type: 'neutral',
+                message: <InProgressMessage text={msg} />,
+                duration: Infinity,
             });
 
             return {

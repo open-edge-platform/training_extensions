@@ -72,6 +72,7 @@ const runningTrainingJob = getMockedJob({
         project: { id: 'id-1' },
         model: {
             id: 'model-training-1',
+            name: 'ATSS (ef3983f1)',
             architecture: 'Custom_Object_Detection_Gen3_ATSS',
             parent_revision_id: 'model-rev-1',
             dataset_revision_id: 'dataset-2',

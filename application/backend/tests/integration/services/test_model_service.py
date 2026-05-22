@@ -529,6 +529,7 @@ class TestModelServiceIntegration:
         fxt_model_service.create_revision(
             ModelRevisionMetadata(
                 model_id=model_id,
+                model_name=f"ATSS-MobileNet-V2 ({str(model_id).split('-')[0]})",
                 project_id=fxt_project_id,
                 architecture_id=architecture_id,
                 parent_revision_id=fxt_model_id,

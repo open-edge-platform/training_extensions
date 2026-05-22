@@ -21,6 +21,7 @@ import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
+import { useNextPredictionPrefetch } from './use-next-prediction-prefetch.hook';
 import { useNextMediaPrefetch, usePlayPauseVideoBySystem } from './utils';
 
 const DATASET_SUBSETS: DatasetSubset[] = ['unassigned', 'training', 'validation', 'testing'];
@@ -72,6 +73,12 @@ type AnnotatorProps = {
     isUserReviewed: boolean;
 };
 
+const NextPredictionPrefetch = ({ nextMediaItem }: { nextMediaItem: Media }) => {
+    useNextPredictionPrefetch(nextMediaItem);
+
+    return null;
+};
+
 const Annotator = ({
     mediaItem,
     image,
@@ -109,6 +116,7 @@ const Annotator = ({
 
     return (
         <>
+            {isPredictionMode && nextMediaItem && <NextPredictionPrefetch nextMediaItem={nextMediaItem} />}
             <View gridArea={'header'}>
                 <SecondaryToolbar
                     mode={mode}

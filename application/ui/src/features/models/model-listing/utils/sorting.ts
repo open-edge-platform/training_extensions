@@ -11,7 +11,7 @@ import type { SortBy } from '../types';
 export const sortModels = (models: Model[], sortBy: SortBy, datasetRevisions: DatasetRevision[]): Model[] => {
     switch (sortBy) {
         case 'name':
-            return orderBy(models, (model) => model.name?.toLowerCase() ?? '', 'asc');
+            return orderBy(models, (model) => model.name.toLowerCase(), 'asc');
         case 'architecture':
             return orderBy(models, (model) => model.architecture?.toLowerCase() ?? '', 'asc');
         case 'trained':

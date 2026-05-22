@@ -102,7 +102,16 @@ export default defineConfig({
     performance: {
         preload: {
             type: 'initial',
-            include: [/roboto-flex-v30-latin-regular.*\.woff2$/],
+            include: [
+                /roboto-flex-v30-latin-regular.*\.woff2$/,
+                // The branded loading spinner is the LCP element on the initial
+                // route (it's rendered by the root <Suspense> fallback while the
+                // route chunk loads). Without a preload, the browser can't
+                // discover its URL until ~2 MB of JS parses and React mounts,
+                // pushing LCP to ~4 s. Preloading shrinks resourceLoadDelay
+                // dramatically and lets the spinner paint near FCP.
+                /intel-loading\..*\.webp$/,
+            ],
         },
     },
     tools: {
@@ -113,6 +122,7 @@ export default defineConfig({
             // explicitly and dedupe to keep the platform suffixes first.
             const existing = config.resolve?.extensions ?? [];
             const extensions = Array.from(new Set([...platformExtensions, ...existing, ...styleExtensions]));
+
             return {
                 ...config,
                 resolve: { ...config.resolve, extensions },

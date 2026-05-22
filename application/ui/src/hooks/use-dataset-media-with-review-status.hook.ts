@@ -18,7 +18,6 @@ export const useDatasetMediaWithReviewStatus = () => {
     });
 
     const datasetItemsResponse = useGetDatasetItemsById({ annotationStatus: annotationStatus ?? undefined });
-    const hasPendingRequests = mediaItemsResponse.isPending || datasetItemsResponse.isPending;
 
     const fetchNextPage = () => {
         if (mediaItemsResponse.hasNextPage && !mediaItemsResponse.isFetchingNextPage) {
@@ -36,9 +35,14 @@ export const useDatasetMediaWithReviewStatus = () => {
 
     return {
         items: mediaItemsResponse.items,
-        isPending: hasPendingRequests,
-        isFetchingNextPage:
-            hasPendingRequests || mediaItemsResponse.isFetchingNextPage || datasetItemsResponse.isFetchingNextPage,
+        // Wait for both the media-items and review-status queries to settle
+        // before declaring "ready". Otherwise the gallery flashes thumbnails
+        // first and pops in the annotation-status badges a moment later, which
+        // is a worse UX than a single brief loader.
+        isPending: mediaItemsResponse.isPending || datasetItemsResponse.isPending,
+        // Only true for actual next-page fetches on either query — never for
+        // initial loads — so pagination doesn't trigger the full overlay.
+        isFetchingNextPage: mediaItemsResponse.isFetchingNextPage || datasetItemsResponse.isFetchingNextPage,
         totalCount: mediaItemsResponse.totalCount,
         fetchNextPage,
         isMediaItemReviewedById,

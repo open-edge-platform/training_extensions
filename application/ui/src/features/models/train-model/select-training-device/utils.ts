@@ -41,3 +41,22 @@ export const getDefaultTrainingDevice = (trainingDevices: TrainingDevice[]): Tra
         return best;
     });
 };
+
+const formatDeviceMemory = (bytes: number): string => {
+    return `${Math.ceil(bytes / 1024 ** 3)} GB`;
+};
+
+export const createDeviceName = (device: TrainingDevice): string => {
+    let name = device.name;
+
+    if (device.memory != null) {
+        const memory = formatDeviceMemory(device.memory);
+        name += ` (${memory})`;
+    }
+
+    if (device.index != null) {
+        name += ` [${device.index}]`;
+    }
+
+    return name;
+};
