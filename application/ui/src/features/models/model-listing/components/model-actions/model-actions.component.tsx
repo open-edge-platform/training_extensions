@@ -85,7 +85,7 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
         );
     };
 
-    const modelName = model.name ?? 'Unnamed Model';
+    const modelName = model.name;
 
     return (
         <>
@@ -104,7 +104,7 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
             <DialogContainer onDismiss={() => setIsDialogOpen(null)}>
                 {isDialogOpen === DIALOG_TYPES.RENAME && (
                     <RenameModelDialog
-                        currentName={model.name ?? ''}
+                        currentName={model.name}
                         onRename={handleRename}
                         isPending={renameModelMutation.isPending}
                         onClose={() => setIsDialogOpen(null)}

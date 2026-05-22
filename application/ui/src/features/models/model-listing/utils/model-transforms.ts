@@ -8,7 +8,7 @@ import { sortModels } from './sorting';
 import { isFailedModel, isTrainingModel } from './utils';
 
 export const filterBySearch = (models: Model[], query: string): Model[] =>
-    query ? models.filter((model) => model.name?.toLowerCase().includes(query.toLowerCase())) : models;
+    query ? models.filter((model) => model.name.toLowerCase().includes(query.toLowerCase())) : models;
 
 export const filterOutFailedModels = (models: Model[]): Model[] => {
     return models.filter((model) => !isFailedModel(model));
