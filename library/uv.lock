@@ -1366,7 +1366,7 @@ requires-dist = [
     { name = "onnxruntime", specifier = "==1.26.0" },
     { name = "onnxscript", specifier = "==0.6.2" },
     { name = "openvino", specifier = "~=2026.1.0" },
-    { name = "openvino-model-api", specifier = "==0.4.2" },
+    { name = "openvino-model-api", specifier = "==0.4.3" },
     { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = "==0.12.0" },
     { name = "pytorchcv", specifier = "==0.0.74" },
     { name = "pyyaml", specifier = "==6.0.3" },
@@ -3431,7 +3431,7 @@ wheels = [
 
 [[package]]
 name = "openvino-model-api"
-version = "0.4.2"
+version = "0.4.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
@@ -3439,9 +3439,9 @@ dependencies = [
     { name = "openvino" },
     { name = "pillow" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/39/6f/f9b5c544663795936414577ebf069e3c4537390aff5aa7f4cca63f227b0c/openvino_model_api-0.4.2.tar.gz", hash = "sha256:f7fbed2c72fe2280a9c8d325f8b61a3f66f748fa1db3910366597aacaa6306a4", size = 524414, upload-time = "2026-05-06T11:48:13.149Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5b/df/9669ebcff8a0ba1f27ea8534dbd3e77715a9445c23db6db21146c395c687/openvino_model_api-0.4.3.tar.gz", hash = "sha256:5540b0d19938345654ba29522dfda0ba5e0e729fd2847ee804b3c03199116429", size = 540339, upload-time = "2026-05-22T06:45:33.523Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b9/9b/8a958503efe154bc676eec32b7d2cc7fe8253271512427a0bc4c86190d76/openvino_model_api-0.4.2-py3-none-any.whl", hash = "sha256:28d5c959cbb05f3c9f2e54a4fbe600e1609268e55ca37efd277a386ecf3fa0bf", size = 138956, upload-time = "2026-05-06T11:48:11.223Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/45/bdd422b252735bad28b30166b3ee996778c0bbb9386b05e6db641fe3a8e3/openvino_model_api-0.4.3-py3-none-any.whl", hash = "sha256:9a5e0a9311bc4385873fad0fece57384c31356f997fc37802af5120c02d4ca60", size = 135480, upload-time = "2026-05-22T06:45:31.627Z" },
 ]
 
 [[package]]
