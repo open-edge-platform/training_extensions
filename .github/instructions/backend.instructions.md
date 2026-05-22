@@ -17,12 +17,12 @@ applyTo: "application/backend/**"
 
 - Schema changes **require an Alembic migration**.
 - Use the async session factory — do not create engines per request.
+- Avoid schema changes in the database or file storage unless required; if the
+  same feature can be implemented without breaking changes and without
+  compromising maintainability, prefer that approach.
 
 ## API contract
 
-- After changing routes/models/status codes:
-  1. `just gen-api-spec --output-path=openapi.json`
-  2. In `application/ui/`: `npm run update-spec`
 - Keep paths, methods, and field names stable. Breaking changes require
   coordination with the UI before merging.
 

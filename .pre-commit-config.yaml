@@ -22,8 +22,7 @@ repos:
     rev: v3.0.3
     hooks:
       - id: prettier
-        exclude: ^(application/ui/|\.github/)
-
+        exclude: ^(application/ui/|\.github/instructions/|\.github/copilot-instructions\.md)
   # Hadolint - Dockerfile linter
   - repo: https://github.com/AleksaC/hadolint-py
     rev: v2.14.0

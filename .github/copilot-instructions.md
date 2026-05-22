@@ -8,14 +8,22 @@ Monorepo with three components — different languages, toolchains, and conventi
 | `application/backend/` | Geti™ app server (`geti` package).                         | Python 3.13, FastAPI, SQLAlchemy 2 (async), Pydantic v2, Alembic |
 | `application/ui/`      | Geti™ web/desktop UI.                                      | Node 24.2+, React, TypeScript, rsbuild, Tauri                    |
 
+The application can be built and deployed in three ways:
+
+1. As a single Docker container.
+2. As a desktop app for Windows (MSIX).
+3. With server and UI as standalone processes, for development only.
+
 The library is consumed by the backend (`getitune[cpu|xpu|cuda]` extras).
 
 ## General rules
 
 - Do not mix code or conventions between the three sub-projects.
-- Use **absolute imports** within each Python package.
+- Prefer **absolute imports** within each Python package. Relative imports are
+  acceptable when they help avoid circular dependencies.
 - Prefer editing existing files over creating new ones; match surrounding style.
-- Code must pass pre-commit checks (see `.pre-commit-config.yaml`).
+- Code must pass pre-commit checks (see `.pre-commit-config.yaml`). Run them
+  locally with `prek`.
 - Conventional Commits: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `ci:`.
 - **New source files require a copyright + SPDX header** (current year, `#` for Python/YAML/shell, `//` for TS/JS/Rust):
 
@@ -32,6 +40,7 @@ The library is consumed by the backend (`getitune[cpu|xpu|cuda]` extras).
 - Type-hint every public function, method, and module-level variable.
 - Modern typing: `list[int]`, `X | None` — not `List`, `Optional`.
 - Prefer `pathlib.Path` over `os.path`.
+- Write code that is portable across the main platforms (Linux, Windows, macOS).
 - No bare `print`.
 - Google-style docstrings (`Args`, `Returns`, `Raises`).
 - Logging: `library/` uses stdlib `logging`; `application/backend/` uses
@@ -41,4 +50,5 @@ The library is consumed by the backend (`getitune[cpu|xpu|cuda]` extras).
 ## Things to avoid
 
 - Do not change Python version pins (they ensure CI reproducibility).
-- Prefer stdlib or already-declared dependencies.
+- Do not add new third-party dependencies when stdlib or already-declared
+  dependencies can solve the problem.
