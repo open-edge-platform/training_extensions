@@ -40,7 +40,7 @@ dependencies = [
     "pytorchcv==0.0.74",
     "timm==1.0.3",
     "openvino~=2026.1.0",
-    "openvino-model-api==0.4.2",
+    "openvino-model-api==0.4.3",
     "onnx==1.21.0",
     "onnxconverter-common==1.16.0",
     "onnxscript==0.6.2",
@@ -154,6 +154,9 @@ exclude-dependencies = [
 override-dependencies = [
     # Bypass the unnecessarily strict version requirement of 'opencv-python-headless' set by 'roboflow'
     "opencv-python-headless~=4.11",
+    # Allow pyarrow >=24 to satisfy both datumaro (>=24) and mlflow (<24 in 3.11.1).
+    # mlflow works fine with pyarrow 24 at runtime; the upper bound is overly conservative.
+    "pyarrow>=24.0,<25.dev0",
 ]
 
 [tool.uv.sources]
