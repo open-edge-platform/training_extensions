@@ -31,13 +31,18 @@ const ModelListingContent = () => {
             >
                 <CurrentModelRunning groupBy={groupBy} datasetRevisions={datasetRevisions} />
 
-                {isEmpty(runningJobs) && (
-                    <Flex direction={'column'} alignItems={'center'} gap={'size-100'} marginTop={'size-600'}>
-                        <NoTrainedModels />
-                        <Heading level={2}>No models yet. Train your first model to get started.</Heading>
-                        <TrainModel />
-                    </Flex>
-                )}
+                <Flex
+                    direction={'column'}
+                    alignItems={'center'}
+                    justifyContent={'center'}
+                    gap={'size-100'}
+                    marginTop={'size-600'}
+                    flex={1}
+                >
+                    <NoTrainedModels />
+                    <Heading level={2}>No models yet. Train your first model to get started.</Heading>
+                    <TrainModel />
+                </Flex>
             </Flex>
         );
     }
