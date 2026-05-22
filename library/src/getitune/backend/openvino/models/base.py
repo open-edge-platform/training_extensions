@@ -180,12 +180,12 @@ class OVModel:
         )
 
         self._get_hparams_from_adapter(model_adapter)
-        
+
         configuration: dict[str, Any] = {
-            "input_dtype": "f32", # our images are scaled to float 
-            "intensity_mode": "none", # already done by getitune data pipeline
-            "reverse_input_channels": False, # keeps RGB (model trained on RGB in our pipeline)
-            "confidence_threshold": 0.0, # sends all predictions to metric, matching PyTorch test
+            "input_dtype": "f32",  # our images are scaled to float
+            "intensity_mode": "none",  # already done by getitune data pipeline
+            "reverse_input_channels": False,  # keeps RGB (model trained on RGB in our pipeline)
+            "confidence_threshold": 0.0,  # sends all predictions to metric, matching PyTorch test
         }
         configuration.update(self.model_api_configuration)
 
