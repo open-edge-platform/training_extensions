@@ -865,8 +865,8 @@ wheels = [
 
 [[package]]
 name = "datumaro"
-version = "2.0.0"
-source = { git = "https://github.com/open-edge-platform/datumaro.git?rev=develop#375e1288ebfaf4bb2cc3e9e6b4e1798230d0780c" }
+version = "1.13.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "cachetools" },
@@ -886,6 +886,24 @@ dependencies = [
     { name = "shapely" },
     { name = "tqdm" },
     { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/91/f1/787a6f44e08f1aef01d8b5f5c3572c4602bbcbaf2ba1fe9e6e401eff194f/datumaro-1.13.0.tar.gz", hash = "sha256:dabd677b7613eb739fea73b59a490916f2fc6f41901f611231030fabf3ff68bc", size = 621718, upload-time = "2026-05-22T11:17:56.975Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e7/3d/360a56760d3657e768433bc1fd2e7a0b1fe915c08f2067c6827467f6cfc0/datumaro-1.13.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:3c53993780930ee69bc6c9205d3fdec475179377c3450bf4e848b91d639fa4c4", size = 1064839, upload-time = "2026-05-22T11:17:28.496Z" },
+    { url = "https://files.pythonhosted.org/packages/48/54/35d032d26180428ccebd0b30140e509aa545ad52947c1452d048cf4a8848/datumaro-1.13.0-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:eff5d24adaa258a0e5c43e38ac6542a83a52767d2414620ebc1f2bb729c41d78", size = 1084472, upload-time = "2026-05-22T11:17:30.057Z" },
+    { url = "https://files.pythonhosted.org/packages/72/ff/c878dcd43c9eb81703fd15f118250587ecff7839be803e7c608c01afe4c4/datumaro-1.13.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:cfbcd72fea15530134715a14a78ef9f0b8a3aa4e6448a8c30cb753880879fc88", size = 1122749, upload-time = "2026-05-22T11:17:31.899Z" },
+    { url = "https://files.pythonhosted.org/packages/be/97/2d0bc05f7602c0a1170bcb4bfdc129124d22323ef6dc2523f5fc07d940f8/datumaro-1.13.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:20320be7c5070296a7de032d3ee7b8399e846db505f558920b5b79b4bcb20254", size = 1194583, upload-time = "2026-05-22T11:17:33.771Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/c6/eb87cf66770e5c4e0137a5a3fba02445c805f980731024ce885961712583/datumaro-1.13.0-cp311-cp311-win_amd64.whl", hash = "sha256:2a8e3a97334a7e95e3b32a5af6b99471f10a53f1fbcd8cff33fb15a201e57906", size = 968661, upload-time = "2026-05-22T11:17:35.876Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/d4/929fabb26501e4bc5fc6dfca43a2698beeb0054d619f6b5ce50b8d0efd96/datumaro-1.13.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:e9b1c689dafeb873d65143a9345800b725b798bbe791c5bf4bd947faa96b1964", size = 1061070, upload-time = "2026-05-22T11:17:38.118Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/be/de54d0302909bd55a5c7f58fad00629c31fed9da071cf6d029daf0a39ed1/datumaro-1.13.0-cp312-cp312-macosx_11_0_x86_64.whl", hash = "sha256:ad5d567311fb0c40fd0174670acafeb7494bd14e1c36bb12a661a7c7f2c00ad3", size = 1082583, upload-time = "2026-05-22T11:17:39.738Z" },
+    { url = "https://files.pythonhosted.org/packages/1b/93/6aa2b7e8bdca3b6903b30c8970c9a6cb472535123d76a21c0f6b7f9f2d39/datumaro-1.13.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:29ee6c0e6ab2f94267c21e865536aa2dcf0f78b5ac5309b972302cfe57866e53", size = 1120867, upload-time = "2026-05-22T11:17:41.406Z" },
+    { url = "https://files.pythonhosted.org/packages/5a/0a/ef4ecf2e07ec26796f8a65dbf7247ac80fb5467f2b6acbb9327a758e9b13/datumaro-1.13.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:599de5f8030033a8180ef041ce3d8e07e07a668438baf5228b9c32d70e117cab", size = 1192448, upload-time = "2026-05-22T11:17:43.376Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/d2/2b034bd715e0b34f5d4af36ea5260bc92207837083a7608406f63b4d1ea7/datumaro-1.13.0-cp312-cp312-win_amd64.whl", hash = "sha256:dad9362b6af0a93120bf225c6738c9fc543e1641e0dcf93f3520fb2a4aa500f4", size = 967486, upload-time = "2026-05-22T11:17:45.223Z" },
+    { url = "https://files.pythonhosted.org/packages/c5/9e/d4f7ce87a57a89089cb57592dd101833d363d50efe27dbc8adb8770349f5/datumaro-1.13.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:7ae2ce41014357ddf42dfe3f80e3498c828b766eb7e7671657f8c259d06d31ef", size = 1060913, upload-time = "2026-05-22T11:17:47.151Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/16/be5f6f316390a277197e4e9e035e098c472e42ff243272ef339bf347ddaf/datumaro-1.13.0-cp313-cp313-macosx_11_0_x86_64.whl", hash = "sha256:60c8640c42aa3faf4a3335138cc581e928996901821641c4a9c25301672f95a8", size = 1082597, upload-time = "2026-05-22T11:17:49.072Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/92/397b036ef8b62f44b8d0397e1c066ad8d93367a215ea05dcd70147bd2c8d/datumaro-1.13.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:7904a88817bc4b7abd545da0fe0f9ced530be9f9b5c4687bb7f398b2182b9482", size = 1120310, upload-time = "2026-05-22T11:17:50.649Z" },
+    { url = "https://files.pythonhosted.org/packages/64/f0/a521dab4bfd8cf30e425eece78e3b569debb9ca1dd8811be61d4602eadbf/datumaro-1.13.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:a35a9426975c9eeaea46d0f7c93f9a1803c096f140ba253a845daf7044192dd1", size = 1192276, upload-time = "2026-05-22T11:17:53.129Z" },
+    { url = "https://files.pythonhosted.org/packages/0a/5b/73d4c2193e72d2811d86b9c5c1f112177648c11740a984d14d14e56f9706/datumaro-1.13.0-cp313-cp313-win_amd64.whl", hash = "sha256:80eea7d905fa8e73eb15bb7a85d8a90cbd869a458e380967d952caeacc7b6423", size = 967240, upload-time = "2026-05-22T11:17:55.336Z" },
 ]
 
 [package.optional-dependencies]
@@ -1347,7 +1365,7 @@ lint = [
 requires-dist = [
     { name = "build", marker = "extra == 'ci-publish'", specifier = "==1.2.2.post1" },
     { name = "certifi", specifier = ">=2026" },
-    { name = "datumaro", extras = ["experimental"], git = "https://github.com/open-edge-platform/datumaro.git?rev=develop" },
+    { name = "datumaro", extras = ["experimental"], specifier = "==1.13" },
     { name = "docstring-parser", specifier = "==0.16" },
     { name = "einops", specifier = "==0.8.1" },
     { name = "ftfy", specifier = "==6.3.1" },
