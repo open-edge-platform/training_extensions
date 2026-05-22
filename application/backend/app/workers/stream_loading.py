@@ -117,13 +117,28 @@ class StreamLoader(BaseProcessWorker):
 def _enqueue_frame_with_retry(
     frame_queue: mp.Queue, payload: StreamData, is_real_time: bool, stop_event: EventClass
 ) -> None:
-    """Enqueue frame with retry logic for non-real-time streams"""
+    """Enqueue a frame; for real-time sources drop the stalest queued frame
+    instead of blocking the producer, so the network reader is never back-pressured.
+    """
     while not stop_event.is_set():
         try:
-            frame_queue.put(payload, timeout=1)
+            # For real-time sources, never block on a full queue: we must be able to
+            # evict stale frames immediately so the latest frame always wins.
+            if is_real_time:
+                frame_queue.put_nowait(payload)
+            else:
+                frame_queue.put(payload, timeout=1)
             break
         except queue.Full:
             if is_real_time:
-                logger.debug("Frame queue is full, skipping frame")
+                # Drop-and-replace: discard the oldest queued frame in favour of the newest.
+                try:
+                    frame_queue.get_nowait()
+                except queue.Empty:
+                    pass
+                try:
+                    frame_queue.put_nowait(payload)
+                except queue.Full:
+                    logger.debug("Frame queue is full, skipping frame")
                 break
             logger.debug("Frame queue is full, retrying...")

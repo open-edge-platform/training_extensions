@@ -111,9 +111,10 @@ class TestStreamLoader:
     def test_queue_full(
         self, request, frame_queue, stop_event, source_changed_condition, fake_video_stream, sample_frame
     ):
-        """Test that stream frames are not acquired when queue is full."""
-        data1 = StreamData(frame_data=sample_frame.copy(), timestamp=time.time(), source_metadata={})
-        data2 = StreamData(frame_data=sample_frame.copy(), timestamp=time.time(), source_metadata={})
+        """Test that for real-time sources the loader drops stale frames and replaces with fresh ones."""
+        sentinel = np.zeros_like(sample_frame)
+        data1 = StreamData(frame_data=sentinel.copy(), timestamp=time.time(), source_metadata={"src": "pre1"})
+        data2 = StreamData(frame_data=sentinel.copy(), timestamp=time.time(), source_metadata={"src": "pre2"})
         frame_queue.put(data1)
         frame_queue.put(data2)
 
@@ -132,7 +133,14 @@ class TestStreamLoader:
                 break
 
         assert len(queue_contents) == 2
-        assert all(np.array_equal(el1.frame_data, el2.frame_data) for el1, el2 in zip(queue_contents, [data1, data2]))
+        # Both pre-filled sentinels must have been evicted in favour of fresh frames
+        # produced by the loader; otherwise the drop-and-replace policy has regressed.
+        assert all(np.array_equal(el.frame_data, sample_frame) for el in queue_contents), (
+            "Expected every stale sentinel frame to be replaced with a fresh one"
+        )
+        assert not any(np.array_equal(el.frame_data, sentinel) for el in queue_contents), (
+            "No sentinel frames should remain in the queue"
+        )
         assert not process.is_alive(), "Process should terminate cleanly"
 
     def test_queue_empty(self, request, frame_queue, stop_event, source_changed_condition, fake_video_stream):
