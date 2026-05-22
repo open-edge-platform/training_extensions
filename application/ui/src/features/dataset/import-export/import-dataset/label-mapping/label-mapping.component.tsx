@@ -14,7 +14,7 @@ import { useImportDatasetDialogState } from '../../../providers/export-import-da
 import { FormatWarning } from './format-warning/format-warning.component';
 import { IMPORT_DATASET_FORM_ID, mapProjectLabels, PLACEHOLDER_LABEL, UNMAPPED_LABEL_VALUE } from './util';
 
-import styles from './label-mapping.module.scss';
+import classes from './label-mapping.module.scss';
 
 type LabelMappingProps = {
     stagedDatasetId: string;
@@ -108,7 +108,7 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
 
             <Flex direction={'column'}>
                 <Heading marginTop={'size-200'}>Label mapping - optional</Heading>
-                <Text UNSAFE_className={styles.emptyLabelsWarning}>
+                <Text UNSAFE_className={classes.emptyLabelsWarning}>
                     Any unmapped items will be imported as unlabeled
                 </Text>
             </Flex>
