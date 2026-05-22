@@ -1365,7 +1365,7 @@ lint = [
 requires-dist = [
     { name = "build", marker = "extra == 'ci-publish'", specifier = "==1.2.2.post1" },
     { name = "certifi", specifier = ">=2026" },
-    { name = "datumaro", extras = ["experimental"], specifier = "==1.13" },
+    { name = "datumaro", extras = ["experimental"], specifier = "~=1.13.0" },
     { name = "docstring-parser", specifier = "==0.16" },
     { name = "einops", specifier = "==0.8.1" },
     { name = "ftfy", specifier = "==6.3.1" },
