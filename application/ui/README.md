@@ -25,13 +25,11 @@ npm install
 
 The `preinstall` script clones `@geti/config`, `@geti/ui`, and `@geti/smart-tools` from the `open-edge-platform/geti` repository at a pinned commit using [`tiged`](https://github.com/tiged/tiged) (the maintained fork of Degit). These are workspace packages installed into `packages/` and are **gitignored** — never commit that directory.
 
-After installing, generate the API types:
+If the backend is running on `localhost:7860`, use `npm run update-spec` to download a fresh OpenAPI spec and regenerate types.
 
 ```bash
-npm run build:api      # Generate TypeScript types from src/api/openapi-spec.json
+npm run update-spec      # Download openapi spec and generate TypeScript types from src/api/openapi-spec.json
 ```
-
-If the backend is running on `localhost:7860`, use `npm run update-spec` to download a fresh OpenAPI spec and regenerate types.
 
 ### Development
 
@@ -169,7 +167,7 @@ The application is built on four main pillars:
 
 ### Feature Structure
 
-Each feature follows a consistent pattern:
+Recommended structure for new features:
 
 ```
 feature-name/
