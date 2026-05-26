@@ -15,10 +15,6 @@ import { PolygonStateProvider } from './polygon-tool/polygon-state-provider.comp
  * The composition shape is stable per project (task type does not change
  * mid-session), so the React subtree remains stable and the toolbar and
  * canvas are never unnecessarily remounted.
- *
- * Gating is done via useAvailableTools — the same source of truth that drives
- * the toolbar — so each provider is only mounted when its tool is available for
- * the current task type.
  */
 export const ToolManagerProvider = ({ children }: PropsWithChildren) => {
     const availableTools = useAvailableTools();
