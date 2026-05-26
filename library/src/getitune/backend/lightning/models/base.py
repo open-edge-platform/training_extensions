@@ -68,13 +68,18 @@ class DataInputParams:
 
     Attributes:
         input_size: Spatial dimensions (H, W) expected by the model.
-        mean: Per-channel mean for normalization.
-        std: Per-channel standard deviation for normalization.
+        mean: Per-channel mean for normalization (in 0-255 range for ModelAPI compatibility).
+        std: Per-channel std for normalization (in 0-255 range for ModelAPI compatibility).
         intensity_config: Optional intensity mapping configuration for
             high-bit-depth inputs (uint16, thermal, medical, etc.).
             When present, the exporter embeds these parameters into the
             exported model's ``rt_info`` / ONNX metadata so that ModelAPI
             can reconstruct the correct preprocessing at inference time.
+
+    Note:
+        Mean and std should be in 0-255 range to work with ModelAPI standalone
+        inference (uint8 input). The training pipeline should scale [0,1] images
+        to [0,255] before applying normalization.
     """
 
     input_size: tuple[int, int]

@@ -730,6 +730,39 @@ def fxt_training_configuration_view_json() -> dict:
                                         "allowed_values": None,
                                         "depends_on": None,
                                     },
+                                    {
+                                        "type": "parameter",
+                                        "key": "scale",
+                                        "name": "Scale",
+                                        "description": (
+                                            "Scale factor for random perspective crop applied after mosaic assembly. "
+                                            "The random scale is sampled from [1-scale, 1+scale]. "
+                                            "Higher values produce more zoom variation."
+                                        ),
+                                        "value": 0.5,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "translate",
+                                        "name": "Translate",
+                                        "description": (
+                                            "Translation fraction for random perspective crop. "
+                                            "The crop center shifts by up to \u00b1translate * image_size pixels."
+                                        ),
+                                        "value": 0.1,
+                                        "default_value": 0.1,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 0.5,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
                                 ],
                             },
                             {

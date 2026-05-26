@@ -5,20 +5,56 @@
 
 from __future__ import annotations
 
-import copy
 import typing
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import torch
 import torchvision.transforms.v2 as tvt_v2
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
+from getitune.data.augmentation.cache import _CachedSample, _clone_for_cache
 from getitune.data.augmentation.kernels import (
     _resize_image_info,
     _resized_crop_image_info,
 )
 from getitune.data.entity.sample import BaseSample
+
+if TYPE_CHECKING:
+    from getitune.data.entity.sample import DetectionSample, InstanceSegmentationSample
+
+
+class ScaleTo255(tvt_v2.Transform):
+    """Scale image intensity from [0,1] to [0,255] range.
+
+    This transform multiplies float images by 255 to convert from the standard
+    torchvision [0,1] range to [0,255] range expected by some models (e.g., YOLOX).
+
+    Should be applied before Normalize when mean/std are specified in 0-255 range.
+
+    Note:
+        Only affects floating-point images. Integer images pass through unchanged.
+    """
+
+    @typing.no_type_check
+    def forward(self, *inputs: BaseSample) -> BaseSample:
+        """Scale image to [0,255] range."""
+        sample = inputs[0] if len(inputs) == 1 else inputs
+
+        if isinstance(sample, BaseSample):
+            if sample.image.is_floating_point():
+                sample.image = sample.image * 255.0
+            return sample
+
+        if isinstance(sample, torch.Tensor):
+            if sample.is_floating_point():
+                return sample * 255.0
+            return sample
+
+        return sample
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
 
 
 class Resize(tvt_v2.Transform):
@@ -34,7 +70,8 @@ class Resize(tvt_v2.Transform):
             Defaults to True.
         keep_aspect_ratio (bool): If True, preserve the aspect ratio of the original image
             by resizing to fit within the target size and padding to reach exact target dimensions.
-            Defaults to False.
+            Padding is applied to bottom-right only (matching YOLOX/DFine post-processing
+            which assumes no left/top offset). Defaults to False.
         pad_value (int or tuple): Padding value for image. Defaults to 0.
         interpolation: Interpolation mode for images. Defaults to InterpolationMode.BILINEAR.
         antialias: Whether to apply antialiasing. Defaults to True.
@@ -78,11 +115,10 @@ class Resize(tvt_v2.Transform):
         new_w = round(orig_w * scale)
         new_h = round(orig_h * scale)
 
-        # Compute padding to reach target size
+        # Compute padding to reach target size (bottom-right only)
         pad_w = target_w - new_w
         pad_h = target_h - new_h
 
-        # Pad only bottom-right
         pad_left = 0
         pad_right = pad_w
         pad_top = 0
@@ -112,6 +148,10 @@ class Resize(tvt_v2.Transform):
         # Get original dimensions
         orig_h, orig_w = sample.image.shape[-2:]
 
+        # Early exit: image already at target size — nothing to do
+        if (orig_h, orig_w) == self.size:
+            return sample
+
         # Compute resize and padding parameters
         new_h, new_w, pad_left, pad_top, pad_right, pad_bottom = self._compute_resize_params(orig_h, orig_w)
 
@@ -122,8 +162,7 @@ class Resize(tvt_v2.Transform):
             interpolation=self.interpolation,
             antialias=self.antialias,
         )
-        if sample.image.is_floating_point():
-            sample.image = sample.image.clamp(0, 1)
+        sample.image = sample.image.clamp(0, 1)
         # Apply padding if needed
         if pad_left > 0 or pad_top > 0 or pad_right > 0 or pad_bottom > 0:
             # Normalise pad value to match the image's value range.
@@ -233,25 +272,33 @@ class Resize(tvt_v2.Transform):
 
 
 class CachedMosaic(tvt_v2.Transform):
-    """Cached Mosaic augmentation for detection / instance segmentation.
+    """Cached Mosaic augmentation with built-in random perspective crop.
 
-    Combines four images into a 2x mosaic canvas.  The output is
-    the raw 2x canvas.
+    Combines four images into a 2x mosaic canvas, then applies a center-based
+    random affine crop (matching upstream Ultralytics ``RandomPerspective``) to
+    produce an ``img_scale``-sized output.
 
-    When mosaic is **skipped** (probability gate or cold cache) the sample
-    is returned unchanged (pass-through).
+    When mosaic is **skipped** (probability gate or cold cache) the sample is
+    letterbox-resized to ``img_scale`` and the same random affine is applied
+    (matching upstream's non-mosaic path).
 
-    Each tile is resized with keep-ratio (FIT mode, ``min(scale)``) before
-    pasting.
+    The output size is **always** ``img_scale`` regardless of whether mosaic
+    fires.
 
     Args:
-        img_scale: Per-tile target size ``(H, W)``.  The canvas is 2x this.
+        img_scale: Target output size ``(H, W)``.  Also the per-tile target for
+            mosaic assembly.
         center_ratio_range: Range for the random mosaic centre.
-        bbox_clip_border: Clip bboxes to the 2x canvas boundary.
-        pad_val: Fill value for the canvas (0-255 scale, auto-normalised).
+        bbox_clip_border: Clip bboxes to the output boundary.
+        pad_val: Fill value for canvas and border (0-255 scale, auto-normalised).
         p: Probability of applying mosaic.
         max_cached_images: Maximum cache size (>= 4).
         random_pop: Random eviction vs FIFO.
+        scale: Scale factor for random perspective crop.  The random scale ``s``
+            is sampled from ``[1 - scale, 1 + scale]``.  Defaults to 0.5.
+        translate: Translate fraction for random perspective crop.  The crop
+            centre shifts by up to ``± translate * img_scale`` pixels.
+            Defaults to 0.1.
     """
 
     def __init__(
@@ -263,6 +310,8 @@ class CachedMosaic(tvt_v2.Transform):
         p: float = 1.0,
         max_cached_images: int = 40,
         random_pop: bool = True,
+        scale: float = 0.5,
+        translate: float = 0.1,
     ) -> None:
         super().__init__()
 
@@ -283,7 +332,9 @@ class CachedMosaic(tvt_v2.Transform):
         self.prob = p
         self.max_cached_images = max_cached_images
         self.random_pop = random_pop
-        self.results_cache: list[BaseSample] = []
+        self.scale = scale
+        self.translate = translate
+        self.results_cache: list[_CachedSample] = []
 
     def _resize_keep_ratio(self, img: torch.Tensor, target_h: int, target_w: int) -> tuple[torch.Tensor, float]:
         """Resize CHW image keeping aspect ratio (FIT mode). Returns (resized, scale)."""
@@ -355,27 +406,20 @@ class CachedMosaic(tvt_v2.Transform):
         """Get 3 random indexes from cache."""
         return [int(torch.randint(0, len(cache), (1,)).item()) for _ in range(3)]
 
-    @typing.no_type_check
-    def forward(self, *_inputs: BaseSample) -> BaseSample:
-        """Apply CachedMosaic. Output is the raw 2x canvas."""
-        assert len(_inputs) == 1, "Only single sample input is supported"  # noqa: S101
-        inputs = _inputs[0]
+    def _build_mosaic(
+        self,
+        inputs: DetectionSample | InstanceSegmentationSample,
+        mix_results: list[_CachedSample],
+        with_mask: bool,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor | None]:
+        """Assemble the 4-image mosaic on a 2x canvas.
 
-        # Cache management
-        self.results_cache.append(copy.deepcopy(inputs))
-        if len(self.results_cache) > self.max_cached_images:
-            idx = int(torch.randint(0, len(self.results_cache), (1,)).item()) if self.random_pop else 0
-            self.results_cache.pop(idx)
-
-        if len(self.results_cache) < 4:
-            return inputs
-
-        if torch.rand(1).item() > self.prob:
-            return inputs
-
-        indices = self.get_indexes(self.results_cache)
-        mix_results = [copy.deepcopy(self.results_cache[i]) for i in indices]
-
+        Returns:
+            mosaic_img: (C, 2*H, 2*W) canvas.
+            mosaic_bboxes: (N, 4) XYXY in 2x canvas coords.
+            mosaic_labels: (N,) class labels.
+            mosaic_masks: (N, 2*H, 2*W) or None.
+        """
         target_h, target_w = self.img_scale
         mosaic_h, mosaic_w = target_h * 2, target_w * 2
 
@@ -389,7 +433,6 @@ class CachedMosaic(tvt_v2.Transform):
         all_bboxes: list[torch.Tensor] = []
         all_labels: list[torch.Tensor] = []
         all_masks: list[torch.Tensor] = []
-        with_mask = hasattr(inputs, "masks") and inputs.masks is not None
 
         loc_strs = ("top_left", "top_right", "bottom_left", "bottom_right")
         samples = [inputs, *mix_results]
@@ -419,10 +462,10 @@ class CachedMosaic(tvt_v2.Transform):
             if bboxes_i.numel() > 0:
                 bboxes_i = bboxes_i + bboxes_i.new_tensor([pad_w, pad_h, pad_w, pad_h])
             all_bboxes.append(bboxes_i)
-            all_labels.append(sample.label)
+            all_labels.append(cast("torch.Tensor", sample.label))
 
             if with_mask:
-                masks_i = sample.masks
+                masks_i = getattr(sample, "masks", None)
                 if masks_i is not None and len(masks_i) > 0:
                     s = min(target_h / orig_h, target_w / orig_w)
                     new_mh, new_mw = round(orig_h * s), round(orig_w * s)
@@ -451,20 +494,248 @@ class CachedMosaic(tvt_v2.Transform):
             valid = (w > 0) & (h > 0)
             mosaic_bboxes = mosaic_bboxes[valid]
             mosaic_labels = mosaic_labels[valid]
+            if with_mask and all_masks:
+                all_masks_cat = torch.cat(all_masks, dim=0)
+                all_masks_cat = all_masks_cat[valid]
+            else:
+                all_masks_cat = None
+        elif with_mask and all_masks:
+            all_masks_cat = torch.cat(all_masks, dim=0)
         else:
-            valid = torch.ones(0, dtype=torch.bool)
+            all_masks_cat = None
 
-        inputs.image = mosaic_img.clamp(0, 1)
-        inputs.bboxes = tv_tensors.BoundingBoxes(mosaic_bboxes, format="XYXY", canvas_size=(mosaic_h, mosaic_w))
-        inputs.label = mosaic_labels
+        mosaic_masks = all_masks_cat if (with_mask and all_masks) else None
+        return mosaic_img.clamp(0, 1), mosaic_bboxes, mosaic_labels, mosaic_masks
 
-        if with_mask and len(all_masks) > 0:
-            mosaic_masks = torch.cat(all_masks, dim=0)
-            if valid.numel() > 0:
-                mosaic_masks = mosaic_masks[valid]
-            inputs.masks = tv_tensors.Mask(mosaic_masks)
+    def _letterbox_resize(
+        self,
+        image: torch.Tensor,
+        bboxes: torch.Tensor,
+        masks: torch.Tensor | None,
+        target_h: int,
+        target_w: int,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]:
+        """Resize image with keep-ratio and center padding (matching upstream LetterBox).
 
-        inputs.img_info = _resized_crop_image_info(inputs.img_info, (mosaic_h, mosaic_w))
+        Returns:
+            image: (C, target_h, target_w) letterboxed.
+            bboxes: (N, 4) XYXY in letterboxed coords.
+            masks: (N, target_h, target_w) or None.
+        """
+        _, orig_h, orig_w = image.shape
+        scale = min(target_h / orig_h, target_w / orig_w)
+        new_h = round(orig_h * scale)
+        new_w = round(orig_w * scale)
+
+        fill_val = self._fill_val_normalised()
+
+        resized = F.resize(image, size=[new_h, new_w], interpolation=F.InterpolationMode.BILINEAR, antialias=True)
+
+        pad_w = target_w - new_w
+        pad_h = target_h - new_h
+        pad_left = pad_w // 2
+        pad_top = pad_h // 2
+
+        canvas = torch.full((3, target_h, target_w), fill_val, dtype=image.dtype, device=image.device)
+        canvas[:, pad_top : pad_top + new_h, pad_left : pad_left + new_w] = resized
+
+        if bboxes.numel() > 0:
+            bboxes = bboxes.float() * scale
+            bboxes = bboxes + bboxes.new_tensor([pad_left, pad_top, pad_left, pad_top])
+
+        if masks is not None and masks.numel() > 0:
+            masks = F.resize(masks, [new_h, new_w], interpolation=F.InterpolationMode.NEAREST, antialias=False)
+            mask_canvas = torch.zeros((masks.shape[0], target_h, target_w), dtype=masks.dtype, device=masks.device)
+            mask_canvas[:, pad_top : pad_top + new_h, pad_left : pad_left + new_w] = masks
+            masks = mask_canvas
+
+        return canvas, bboxes, masks
+
+    def _random_perspective_crop(
+        self,
+        image: torch.Tensor,
+        bboxes: torch.Tensor,
+        labels: torch.Tensor,
+        masks: torch.Tensor | None,
+        out_h: int,
+        out_w: int,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor | None]:
+        """Apply center-based random affine crop matching upstream RandomPerspective.
+
+        For mosaic input (2x canvas): crops a variable-size window from the center
+        and resizes to (out_h, out_w).  For pass-through input (1x): applies
+        random zoom/pan within the same canvas size.
+
+        Args:
+            image: (C, in_h, in_w) input image.
+            bboxes: (N, 4) XYXY in input pixel coords.
+            labels: (N,) class labels.
+            masks: (N, in_h, in_w) or None.
+            out_h: Output height.
+            out_w: Output width.
+
+        Returns:
+            Tuple of (output_image, filtered_bboxes, filtered_labels, filtered_masks).
+        """
+        _, in_h, in_w = image.shape
+        fill_val = self._fill_val_normalised()
+
+        # Sample random scale and translation (matching Ultralytics RandomPerspective)
+        s = torch.empty(1).uniform_(1 - self.scale, 1 + self.scale).item()
+        tx_frac = torch.empty(1).uniform_(0.5 - self.translate, 0.5 + self.translate).item()
+        ty_frac = torch.empty(1).uniform_(0.5 - self.translate, 0.5 + self.translate).item()
+
+        # Compute crop window size in input coords
+        crop_w = round(out_w / s)
+        crop_h = round(out_h / s)
+
+        # Compute crop origin (center-biased)
+        x_start = round(-tx_frac * out_w / s + in_w / 2)
+        y_start = round(-ty_frac * out_h / s + in_h / 2)
+        x_end = x_start + crop_w
+        y_end = y_start + crop_h
+
+        # Extract crop from input (with fill for out-of-bounds regions)
+        crop = torch.full((3, crop_h, crop_w), fill_val, dtype=image.dtype, device=image.device)
+
+        src_x1 = max(x_start, 0)
+        src_y1 = max(y_start, 0)
+        src_x2 = min(x_end, in_w)
+        src_y2 = min(y_end, in_h)
+
+        dst_x1 = src_x1 - x_start
+        dst_y1 = src_y1 - y_start
+        dst_x2 = dst_x1 + (src_x2 - src_x1)
+        dst_y2 = dst_y1 + (src_y2 - src_y1)
+
+        if src_x2 > src_x1 and src_y2 > src_y1:
+            crop[:, dst_y1:dst_y2, dst_x1:dst_x2] = image[:, src_y1:src_y2, src_x1:src_x2]
+
+        # Resize crop to output size
+        if crop_h != out_h or crop_w != out_w:
+            output = F.resize(crop, [out_h, out_w], interpolation=F.InterpolationMode.BILINEAR, antialias=True)
+        else:
+            output = crop
+
+        # Effective scale factors from input crop to output
+        effective_sx = out_w / crop_w
+        effective_sy = out_h / crop_h
+
+        # Transform bounding boxes
+        if bboxes.numel() > 0:
+            new_bboxes = bboxes.float().clone()
+            new_bboxes[:, 0] = (bboxes[:, 0].float() - x_start) * effective_sx
+            new_bboxes[:, 1] = (bboxes[:, 1].float() - y_start) * effective_sy
+            new_bboxes[:, 2] = (bboxes[:, 2].float() - x_start) * effective_sx
+            new_bboxes[:, 3] = (bboxes[:, 3].float() - y_start) * effective_sy
+
+            # Clip to output bounds
+            new_bboxes[:, 0::2] = new_bboxes[:, 0::2].clamp(0, out_w)
+            new_bboxes[:, 1::2] = new_bboxes[:, 1::2].clamp(0, out_h)
+
+            # Filter degenerate boxes (matching Ultralytics box_candidates)
+            new_w = new_bboxes[:, 2] - new_bboxes[:, 0]
+            new_h = new_bboxes[:, 3] - new_bboxes[:, 1]
+
+            orig_w_box = bboxes[:, 2].float() - bboxes[:, 0].float()
+            orig_h_box = bboxes[:, 3].float() - bboxes[:, 1].float()
+            scaled_orig_w = orig_w_box * s
+            scaled_orig_h = orig_h_box * s
+
+            eps = 1e-16
+            area_ratio = (new_w * new_h) / (scaled_orig_w * scaled_orig_h + eps)
+            ar = torch.maximum(new_w / (new_h + eps), new_h / (new_w + eps))
+            valid = (new_w > 2) & (new_h > 2) & (area_ratio > 0.1) & (ar < 100)
+
+            new_bboxes = new_bboxes[valid]
+            labels = labels[valid]
+
+            # Transform masks
+            if masks is not None and masks.numel() > 0:
+                mask_crop = torch.zeros(
+                    (masks.shape[0], crop_h, crop_w),
+                    dtype=masks.dtype,
+                    device=masks.device,
+                )
+                if src_x2 > src_x1 and src_y2 > src_y1:
+                    mask_crop[:, dst_y1:dst_y2, dst_x1:dst_x2] = masks[:, src_y1:src_y2, src_x1:src_x2]
+                if crop_h != out_h or crop_w != out_w:
+                    mask_crop = F.resize(
+                        mask_crop,
+                        [out_h, out_w],
+                        interpolation=F.InterpolationMode.NEAREST,
+                        antialias=False,
+                    )
+                masks = mask_crop[valid]
+        else:
+            new_bboxes = bboxes
+
+        return output, new_bboxes, labels, masks
+
+    @typing.no_type_check
+    def forward(self, *_inputs: BaseSample) -> BaseSample:
+        """Apply CachedMosaic with random perspective crop. Output is always img_scale."""
+        assert len(_inputs) == 1, "Only single sample input is supported"  # noqa: S101
+        inputs = _inputs[0]
+
+        # Cache management (lightweight clone instead of deepcopy)
+        self.results_cache.append(_clone_for_cache(inputs))
+        if len(self.results_cache) > self.max_cached_images:
+            idx = int(torch.randint(0, len(self.results_cache), (1,)).item()) if self.random_pop else 0
+            self.results_cache.pop(idx)
+
+        target_h, target_w = self.img_scale
+        with_mask = hasattr(inputs, "masks") and inputs.masks is not None
+        apply_mosaic = len(self.results_cache) >= 4 and torch.rand(1).item() <= self.prob
+
+        if apply_mosaic:
+            indices = self.get_indexes(self.results_cache)
+            mix_results = [self.results_cache[i] for i in indices]
+            mosaic_img, mosaic_bboxes, mosaic_labels, mosaic_masks = self._build_mosaic(
+                inputs,
+                mix_results,
+                with_mask,
+            )
+            out_img, out_bboxes, out_labels, out_masks = self._random_perspective_crop(
+                mosaic_img,
+                mosaic_bboxes,
+                mosaic_labels,
+                mosaic_masks,
+                target_h,
+                target_w,
+            )
+        else:
+            # Non-mosaic path: letterbox resize + same random perspective
+            img_lb, bboxes_lb, masks_lb = self._letterbox_resize(
+                inputs.image,
+                inputs.bboxes,
+                inputs.masks if with_mask else None,
+                target_h,
+                target_w,
+            )
+            out_img, out_bboxes, out_labels, out_masks = self._random_perspective_crop(
+                img_lb,
+                bboxes_lb,
+                inputs.label,
+                masks_lb,
+                target_h,
+                target_w,
+            )
+
+        inputs.image = out_img.clamp(0, 1)
+        inputs.bboxes = tv_tensors.BoundingBoxes(out_bboxes, format="XYXY", canvas_size=(target_h, target_w))
+        inputs.label = out_labels
+        if with_mask:
+            inputs.masks = tv_tensors.Mask(
+                out_masks
+                if out_masks is not None
+                else torch.zeros(
+                    (0, target_h, target_w),
+                    dtype=torch.uint8,
+                    device=inputs.image.device,
+                ),
+            )
+        inputs.img_info = _resized_crop_image_info(inputs.img_info, (target_h, target_w))
         return inputs
 
     def __repr__(self) -> str:
@@ -475,7 +746,9 @@ class CachedMosaic(tvt_v2.Transform):
             f"pad_val={self.pad_val}, "
             f"prob={self.prob}, "
             f"max_cached_images={self.max_cached_images}, "
-            f"random_pop={self.random_pop})"
+            f"random_pop={self.random_pop}, "
+            f"scale={self.scale}, "
+            f"translate={self.translate})"
         )
 
 
@@ -543,7 +816,7 @@ class CachedMixUp(tvt_v2.Transform):
         self.random_pop = random_pop
         self.prob = p
 
-        self.results_cache: list[BaseSample] = []
+        self.results_cache: list[_CachedSample] = []
 
     def _get_cached_index(self) -> int:
         """Return index of a cached sample with non-empty bboxes."""
@@ -600,8 +873,8 @@ class CachedMixUp(tvt_v2.Transform):
         assert len(_inputs) == 1, "Multiple inputs not supported"  # noqa: S101
         inputs = _inputs[0]
 
-        # Cache management
-        self.results_cache.append(copy.deepcopy(inputs))
+        # Cache management (lightweight clone instead of deepcopy)
+        self.results_cache.append(_clone_for_cache(inputs))
         if len(self.results_cache) > self.max_cached_images:
             pop_idx = int(torch.randint(0, len(self.results_cache), (1,)).item()) if self.random_pop else 0
             self.results_cache.pop(pop_idx)
@@ -615,7 +888,7 @@ class CachedMixUp(tvt_v2.Transform):
 
         # Get cached sample
         cache_idx = self._get_cached_index()
-        cached = copy.deepcopy(self.results_cache[cache_idx])
+        cached = self.results_cache[cache_idx]
 
         if cached.bboxes.shape[0] == 0:
             return inputs

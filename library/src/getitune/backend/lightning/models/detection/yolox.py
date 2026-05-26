@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import dataclasses
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 from torch.export import Dim
@@ -22,7 +21,7 @@ from getitune.backend.lightning.models.detection.losses import YOLOXCriterion
 from getitune.backend.lightning.models.detection.necks import YOLOXPAFPN
 from getitune.backend.lightning.models.detection.utils.assigners import SimOTAAssigner
 from getitune.backend.lightning.models.utils.utils import load_checkpoint
-from getitune.config.data import TileConfig
+from getitune.config.data import IntensityConfig, TileConfig
 from getitune.data.entity.sample import SampleBatch
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from getitune.types.export import ExportFormat
@@ -98,19 +97,18 @@ class YOLOX(LightningDetectionModel):
             tile_config=tile_config,
         )
 
-        # Raw uint8 models expect [0, 255] inputs; intensity scaling must not be exported.
-        if model_name in _RAW_UINT8_MODELS:
-            if (
-                self.data_input_params.intensity_config is not None
-                and self.data_input_params.intensity_config.storage_dtype in ("uint16", "int16")
-            ):
-                msg = (
-                    f"YOLOX ({model_name}) does not support high-bit-depth inputs "
-                    f"(got storage_dtype='{self.data_input_params.intensity_config.storage_dtype}'). "
-                    "Use yolox_tiny or a model with normalization for 16-bit images."
-                )
-                raise ValueError(msg)
-            self.data_input_params = dataclasses.replace(self.data_input_params, intensity_config=None)
+        # Raw uint8 models expect [0, 255] inputs; reject 16-bit data.
+        if (
+            model_name in _RAW_UINT8_MODELS
+            and self.data_input_params.intensity_config is not None
+            and self.data_input_params.intensity_config.storage_dtype in ("uint16", "int16")
+        ):
+            msg = (
+                f"YOLOX ({model_name}) does not support high-bit-depth inputs "
+                f"(got storage_dtype='{self.data_input_params.intensity_config.storage_dtype}'). "
+                "Use yolox_tiny or a model with normalization for 16-bit images."
+            )
+            raise ValueError(msg)
 
     def _create_model(self, num_classes: int | None = None) -> SingleStageDetector:
         num_classes = num_classes if num_classes is not None else self.num_classes
@@ -206,12 +204,42 @@ class YOLOX(LightningDetectionModel):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        _inv_255 = (1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0)
+        # YOLOX s/l/x: std=1/255 encodes the x*255 rescaling so that ModelAPI
+        # applies (x - 0) / (1/255) = x * 255 during inference, producing the
+        # [0, 255] float range the pretrained weights expect.
+        _zero_mean = (0.0, 0.0, 0.0)
+        _scale_to_255_std = (1 / 255, 1 / 255, 1 / 255)
+        # ImageNet normalization in 0-1 range (standard convention for models with intensity scaling)
+        _imagenet_mean = (0.485, 0.456, 0.406)
+        _imagenet_std = (0.229, 0.224, 0.225)
+
         return {
-            "yolox_tiny": DataInputParams(input_size=(640, 640), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            "yolox_s": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=_inv_255),
-            "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=_inv_255),
-            "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=_inv_255),
+            # YOLOX-tiny uses ImageNet normalization (0-1 range, same as DEIM/ViT/EfficientNet)
+            "yolox_tiny": DataInputParams(
+                input_size=(640, 640),
+                mean=_imagenet_mean,
+                std=_imagenet_std,
+            ),
+            # YOLOX s/l/x: intensity_config enables scale_to_unit export metadata;
+            # combined with std=1/255 this gives u8->/255->[0,1]->x*255->[0,255] at inference.
+            "yolox_s": DataInputParams(
+                input_size=(640, 640),
+                mean=_zero_mean,
+                std=_scale_to_255_std,
+                intensity_config=IntensityConfig(),
+            ),
+            "yolox_l": DataInputParams(
+                input_size=(640, 640),
+                mean=_zero_mean,
+                std=_scale_to_255_std,
+                intensity_config=IntensityConfig(),
+            ),
+            "yolox_x": DataInputParams(
+                input_size=(640, 640),
+                mean=_zero_mean,
+                std=_scale_to_255_std,
+                intensity_config=IntensityConfig(),
+            ),
         }
 
     def _customize_inputs(self, entity: SampleBatch) -> dict[str, Any]:
