@@ -7,7 +7,7 @@ import { isFunction } from 'lodash-es';
 
 import { $api } from '../../../api/client';
 import { MediaDTO } from '../../../constants/shared-types';
-import { getQueryKey } from '../../../query-client/query-client';
+import { getErrorMessage, getQueryKey } from '../../../query-client/query-client';
 import { useUploadProgress } from '../hooks/use-display-upload-progress';
 
 export const MEDIA_UPLOAD_CONCURRENCY = 10;
@@ -45,13 +45,24 @@ const getFulfilledValues = <T>(results: PromiseSettledResult<T>[]): T[] =>
 export const useMediaUpload = () => {
     const projectId = useProjectIdentifier();
     const queryClient = useQueryClient();
-    const { uploadProgress, startUploadProgress, updateUploadProgress, finishUploadProgress } = useUploadProgress();
+    const {
+        uploadProgress,
+        startUploadProgress,
+        setItemUploading,
+        setItemUploaded,
+        setItemFailed,
+        finishUploadProgress,
+    } = useUploadProgress();
 
-    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
+    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media', {
+        meta: { error: { notify: () => false } },
+    });
     type UploadMutationRequest = Parameters<typeof addItemMutation.mutateAsync>[0];
 
-    const buildUploadTask = (file: File): UploadTask<MediaDTO> => {
-        return () => {
+    const buildUploadTask = (file: File, itemId: string): UploadTask<MediaDTO> => {
+        return async () => {
+            setItemUploading(itemId);
+
             const formData = new FormData();
             formData.append('file', file);
 
@@ -60,7 +71,15 @@ export const useMediaUpload = () => {
                 body: formData as unknown as UploadMutationRequest['body'],
             };
 
-            return addItemMutation.mutateAsync(request);
+            try {
+                const result = await addItemMutation.mutateAsync(request);
+                setItemUploaded(itemId);
+
+                return result;
+            } catch (error) {
+                setItemFailed(itemId, getErrorMessage(error));
+                throw error;
+            }
         };
     };
 
@@ -89,16 +108,14 @@ export const useMediaUpload = () => {
             return [];
         }
 
-        startUploadProgress(files.length);
+        const itemIds = startUploadProgress(files);
 
         try {
-            const onBatchCompleted = async (batchResults: PromiseSettledResult<MediaDTO>[]) => {
-                updateUploadProgress({ settledResults: batchResults });
-
+            const onBatchCompleted = async () => {
                 await invalidateMediaQuery();
             };
 
-            const uploadTasks = files.map((file) => buildUploadTask(file));
+            const uploadTasks = files.map((file, index) => buildUploadTask(file, itemIds[index]));
             const allResults = await executeInBatches(uploadTasks, MEDIA_UPLOAD_CONCURRENCY, onBatchCompleted);
 
             finishUploadProgress();

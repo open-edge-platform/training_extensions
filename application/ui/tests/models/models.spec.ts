@@ -177,35 +177,6 @@ test.describe('Models', () => {
         expect(v1Index).toBeLessThan(v2Index);
     });
 
-    test('can toggle pin active model', async ({ modelsPage, network }) => {
-        // Set model-1 as the active model
-        network.use(
-            http.get('/api/projects/{project_id}/pipeline', () => {
-                return HttpResponse.json({
-                    project_id: 'id-1',
-                    status: 'idle',
-                    source: null,
-                    sink: null,
-                    model: {
-                        id: 'model-1',
-                        name: 'YOLOX Model v1',
-                        architecture: 'Object_Detection_YOLOX_X',
-                        files_deleted: false,
-                        variants: [],
-                    },
-                    device: 'cpu',
-                });
-            })
-        );
-
-        await modelsPage.goto();
-
-        await modelsPage.togglePinActiveModel();
-
-        const modelNames = await modelsPage.getModelNamesInOrder();
-        expect(modelNames[0]).toContain('YOLOX Model v1');
-    });
-
     test('can toggle to show and hide failed models', async ({ modelsPage, network }) => {
         const failedModel = getMockedModel({
             id: 'model-3',
@@ -297,42 +268,6 @@ test.describe('Models', () => {
         // But variants are no longer available
         await modelsPage.expandModel('YOLOX Model v1');
         await expect(modelsPage.getModelDisclosure('model-1').getByText('No available model variants.')).toBeVisible();
-    });
-
-    test('can set a model as active', async ({ modelsPage, network }) => {
-        let activatedModelId: string | null = null;
-
-        network.use(
-            http.patch('/api/projects/{project_id}/pipeline', async ({ request }) => {
-                const body = (await request.json()) as { model_id: string };
-                activatedModelId = body.model_id;
-                const foundModel = mockedModels.find((model) => model.id === body.model_id);
-
-                return HttpResponse.json({
-                    project_id: 'id-1',
-                    status: 'idle',
-                    source: null,
-                    sink: null,
-                    model: foundModel
-                        ? {
-                              id: foundModel.id,
-                              name: foundModel.name,
-                              architecture: foundModel.architecture,
-                              files_deleted: false,
-                              variants: [],
-                          }
-                        : null,
-                    device: 'cpu',
-                });
-            })
-        );
-
-        await modelsPage.goto();
-
-        await modelsPage.openModelMenu();
-        await modelsPage.clickSetActiveAction();
-
-        expect(activatedModelId).toBe('model-1');
     });
 
     test('can rename a dataset revision', async ({ modelsPage, network }) => {

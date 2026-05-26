@@ -93,7 +93,7 @@ test.describe('Project', () => {
         // Go back to project list and confirm the project was created
         await projectPage.gotoList();
 
-        await expect(page.getByText('New Project')).toBeVisible();
+        await expect(page.getByText('New Project', { exact: true })).toBeVisible();
     });
 
     test('disables create button for single-label classification based if there are no at least two labels', async ({

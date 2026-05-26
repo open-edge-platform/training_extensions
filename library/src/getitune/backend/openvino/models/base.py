@@ -226,7 +226,15 @@ class OVModel:
 
         self._get_hparams_from_adapter(model_adapter)
 
-        return Model.create_model(model_adapter, model_type=self.model_type, configuration=self.model_api_configuration)
+        configuration: dict[str, Any] = {
+            "input_dtype": "f32",  # our images are scaled to float
+            "intensity_mode": "none",  # already done by getitune data pipeline
+            "reverse_input_channels": False,  # keeps RGB (model trained on RGB in our pipeline)
+            "confidence_threshold": 0.0,  # sends all predictions to metric, matching PyTorch test
+        }
+        configuration.update(self.model_api_configuration)
+
+        return Model.create_model(model_adapter, model_type=self.model_type, configuration=configuration)
 
     def _customize_inputs(self, entity: SampleBatch) -> dict[str, Any]:
         """Customize the input data for the model.
@@ -647,6 +655,26 @@ class OVModel:
         img_shape = (224, 224)
         infos = [ImageInfo(img_idx=i, img_shape=img_shape, ori_shape=img_shape) for i in range(batch_size)]
         return SampleBatch(images=images, imgs_info=infos)
+
+    def test_step(self, data_batch: SampleBatch, metric: Metric | MetricCollection) -> None:
+        """Run inference on a batch and update the metric.
+
+        Override in subclasses for task-specific inference logic.
+        """
+        preds = self(data_batch)
+        metric_inputs = self.prepare_metric_inputs(preds, data_batch)
+        if isinstance(metric_inputs, list):
+            for metric_input in metric_inputs:
+                metric.update(**metric_input)
+        else:
+            metric.update(**metric_inputs)
+
+    def predict_step(self, data_batch: SampleBatch) -> PredictionBatch:
+        """Run inference on a batch and return predictions.
+
+        Override in subclasses to apply task-specific post-filtering (e.g. confidence threshold).
+        """
+        return self(data_batch)
 
     def __call__(self, *args, **kwds):
         """Call the model for inference.

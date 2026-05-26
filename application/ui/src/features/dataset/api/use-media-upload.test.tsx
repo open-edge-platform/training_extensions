@@ -9,7 +9,17 @@ import { v4 as uuid } from 'uuid';
 
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
+import { MediaUploadProvider, useMediaUploadContext } from '../providers/media-upload-provider.component';
 import { MEDIA_UPLOAD_CONCURRENCY, useMediaUpload } from './use-media-upload';
+
+const useMediaUploadProgress = () => {
+    const upload = useMediaUpload();
+    const { state } = useMediaUploadContext();
+
+    return { upload, state };
+};
+
+const renderUpload = () => renderHook(() => useMediaUploadProgress(), { wrapper: MediaUploadProvider });
 
 describe('useMediaUpload', () => {
     it('uploads all selected files', async () => {
@@ -27,7 +37,7 @@ describe('useMediaUpload', () => {
             })
         );
 
-        const { result } = renderHook(() => useMediaUpload());
+        const { result } = renderUpload();
 
         const files = [
             new File(['file-1'], 'image-1.jpg', { type: 'image/jpeg' }),
@@ -35,11 +45,11 @@ describe('useMediaUpload', () => {
         ];
 
         act(() => {
-            result.current.uploadMedia(files);
+            result.current.upload.uploadMedia(files);
         });
 
         await waitFor(() => {
-            expect(result.current.uploadProgress.isUploading).toBe(false);
+            expect(result.current.upload.uploadProgress.isUploading).toBe(false);
         });
         expect(uploadedFileNames).toEqual(['image-1.jpg', 'image-2.jpg']);
     });
@@ -63,7 +73,7 @@ describe('useMediaUpload', () => {
             })
         );
 
-        const { result } = renderHook(() => useMediaUpload());
+        const { result } = renderUpload();
 
         const mockFiles = Array.from(
             { length: 12 },
@@ -71,15 +81,15 @@ describe('useMediaUpload', () => {
         );
 
         act(() => {
-            result.current.uploadMedia(mockFiles);
+            result.current.upload.uploadMedia(mockFiles);
         });
 
         await waitFor(() => {
-            expect(result.current.uploadProgress.isUploading).toBe(false);
+            expect(result.current.upload.uploadProgress.isUploading).toBe(false);
         });
 
         expect(maxRunningUploads).toBeLessThanOrEqual(MEDIA_UPLOAD_CONCURRENCY);
-        expect(result.current.uploadProgress.completed).toBe(12);
+        expect(result.current.upload.uploadProgress.completed).toBe(12);
     });
 
     it('tracks upload progress counters', async () => {
@@ -99,7 +109,7 @@ describe('useMediaUpload', () => {
             })
         );
 
-        const { result } = renderHook(() => useMediaUpload());
+        const { result } = renderUpload();
 
         const files = [
             new File(['ok-file'], 'ok.jpg', { type: 'image/jpeg' }),
@@ -107,20 +117,57 @@ describe('useMediaUpload', () => {
         ];
 
         act(() => {
-            result.current.uploadMedia(files);
+            result.current.upload.uploadMedia(files);
         });
 
         await waitFor(() => {
-            expect(result.current.uploadProgress.isUploading).toBe(false);
+            expect(result.current.upload.uploadProgress.isUploading).toBe(false);
         });
 
-        expect(result.current.uploadProgress).toEqual({
+        expect(result.current.upload.uploadProgress).toEqual({
             total: 2,
             completed: 2,
             succeeded: 1,
             failed: 1,
             isUploading: false,
         });
-        expect(result.current.uploadProgress.isUploading).toBe(false);
+    });
+
+    it('tracks per-file status and error messages', async () => {
+        server.use(
+            http.post('/api/projects/{project_id}/dataset/media', async ({ request }) => {
+                const formData = await request.formData();
+                const file = formData.get('file') as File;
+
+                if (file.name === 'broken.jpg') {
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-expect-error
+                    return HttpResponse.json({ detail: 'Upload failed' }, { status: 400 });
+                }
+
+                return HttpResponse.json(getMockedMediaImage({ id: uuid() }), { status: 201 });
+            })
+        );
+
+        const { result } = renderUpload();
+
+        const files = [
+            new File(['ok-file'], 'ok.jpg', { type: 'image/jpeg' }),
+            new File(['broken-file'], 'broken.jpg', { type: 'image/jpeg' }),
+        ];
+
+        act(() => {
+            result.current.upload.uploadMedia(files);
+        });
+
+        await waitFor(() => {
+            expect(result.current.upload.uploadProgress.isUploading).toBe(false);
+        });
+
+        const items = result.current.state.items;
+        expect(items).toHaveLength(2);
+        expect(items[0]).toMatchObject({ name: 'ok.jpg', status: 'uploaded' });
+        expect(items[1]).toMatchObject({ name: 'broken.jpg', status: 'failed' });
+        expect(items[1].errorMessage).toBeTruthy();
     });
 });

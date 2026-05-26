@@ -71,6 +71,7 @@ class ModelMetadata(BaseModel):
     """Metadata about a model."""
 
     id: UUID = Field(..., description="Model identifier")
+    name: str = Field(..., description="Model name")
     architecture: str = Field(..., description="Model architecture identifier")
     parent_revision_id: UUID | None = Field(
         None, description="Parent model revision ID for fine-tuning, null if trained from scratch"
@@ -97,6 +98,7 @@ class TrainingMetadata(BaseModel):
                 "project": ProjectMetadata(id=data.project_id),
                 "model": ModelMetadata(
                     id=data.params.model_id,
+                    name=data.params.model_name,
                     architecture=data.params.model_architecture_id,
                     parent_revision_id=data.params.parent_model_revision_id,
                     dataset_revision_id=data.params.dataset_revision_id,

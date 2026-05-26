@@ -199,6 +199,20 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
+
+def _is_excluded(name, excluded_patterns):
+    normalized = name.replace('\\', '/')
+    return any(pattern in normalized for pattern in excluded_patterns)
+
+# Filter out redundant triton backends (nvidia, amd) not needed for XPU distribution
+_excluded_triton_backends = ('triton/backends/nvidia', 'triton/backends/amd')
+a.binaries = [b for b in a.binaries if not _is_excluded(b[0], _excluded_triton_backends)]
+a.datas = [d for d in a.datas if not _is_excluded(d[0], _excluded_triton_backends)]
+
+# Remove non-redistributable DLLs from MSIX distribution
+_excluded_dlls = ('torch/lib/cusolverMg64_11.dll', 'torch/lib/nvperf_host.dll')
+a.binaries = [b for b in a.binaries if not _is_excluded(b[0], _excluded_dlls)]
+
 pyz = PYZ(a.pure)
 
 exe = EXE(

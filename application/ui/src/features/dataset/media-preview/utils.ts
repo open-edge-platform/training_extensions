@@ -99,7 +99,7 @@ export const useAnnotatorMode = () => {
     return [mode, setMode] as const;
 };
 
-export const usePlayPauseVideoBySystem = (isLoadingPredictions: boolean) => {
+export const usePlayPauseVideoBySystem = (isLoadingRangePredictions: boolean) => {
     const isPausedBySystem = useRef<boolean>(false);
     const context = useVideoPlayerContext();
 
@@ -115,12 +115,12 @@ export const usePlayPauseVideoBySystem = (isLoadingPredictions: boolean) => {
     }, [context?.videoControls.pause]);
 
     useEffect(() => {
-        if (isLoadingPredictions && context?.videoControls.isPlaying) {
+        if (isLoadingRangePredictions && context?.videoControls.isPlaying) {
             isPausedBySystem.current = true;
             pauseRef.current?.();
-        } else if (!isLoadingPredictions && isPausedBySystem.current) {
+        } else if (!isLoadingRangePredictions && isPausedBySystem.current) {
             isPausedBySystem.current = false;
             playRef.current?.();
         }
-    }, [isLoadingPredictions, context?.videoControls.isPlaying]);
+    }, [isLoadingRangePredictions, context?.videoControls.isPlaying]);
 };

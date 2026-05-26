@@ -17,11 +17,11 @@ export class BoundingBoxToolPage {
         await clickAndMove(this.page, startPoint, endPoint);
     }
 
-    async getTool() {
+    getTool() {
         return this.page.getByRole('button', { name: 'bounding-box tool' });
     }
 
     async selectTool() {
-        await (await this.getTool()).click();
+        await this.getTool().click();
     }
 }

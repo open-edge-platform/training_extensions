@@ -25,8 +25,15 @@ export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps
         deleteEntry: () => removeLsExportId(job.job_id),
     });
 
+    const hasInvalidStagedDataset = isNil(job.metadata.dataset_id);
+    const message = hasInvalidStagedDataset ? job.message : 'Dataset is ready for download';
+
     const handleClose = () => {
-        removeStagedDatasetMutation.mutate();
+        if (hasInvalidStagedDataset) {
+            removeLsExportId(job.job_id);
+        } else {
+            removeStagedDatasetMutation.mutate();
+        }
     };
 
     const handleDownload = () => {
@@ -58,9 +65,9 @@ export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps
                         onPress={handleDownload}
                         isPending={stageDatasetResponse.isFetching}
                         isDisabled={
+                            hasInvalidStagedDataset ||
                             stageDatasetResponse.isFetching ||
-                            removeStagedDatasetMutation.isPending ||
-                            isNil(job.metadata.dataset_id)
+                            removeStagedDatasetMutation.isPending
                         }
                     >
                         Download
@@ -70,7 +77,7 @@ export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps
 
             <Divider size={'S'} marginY={'size-150'} />
 
-            <Text>Dataset is ready for download</Text>
+            <Text>{message}</Text>
         </View>
     );
 };

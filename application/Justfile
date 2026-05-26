@@ -12,7 +12,7 @@ application-name := "geti"
 # Runtime variables
 # -------------------------------------------------------------------------------------------------
 docker-run-args := "--env http_proxy --env https_proxy --env no_proxy --env HTTP_PROXY --env HTTPS_PROXY --env NO_PROXY"
-webrtc-ports := "50000-51000"
+webrtc-ports := "50100-50109"
 data-volume := application-name + "-data"
 logs-volume := application-name + "-logs"
 
@@ -56,7 +56,6 @@ build-image accelerator="cpu" tag="latest": install-uv
 # Run Geti as a Docker container for a specific training backend
 [arg("accelerator", long="accelerator", short="a", pattern="cpu|xpu|cuda")]
 [arg("tag", long="tag", short="t")]
-[arg("host", long="host", short="h", help="Host address to bind the server to")]
 [arg("port", long="port", short="p", help="Host port to publish (forwarded to the container's internal port)")]
 [arg("container-port", long="container-port", help="Container-internal port the server listens on")]
 [arg("container-name", long="name", short="n", help="Custom name for the container (defaults to geti-<accelerator>)")]
@@ -71,7 +70,7 @@ build-image accelerator="cpu" tag="latest": install-uv
 [arg("coturn_port", long="coturn-port", help="Coturn server listening port (default: 443)")]
 [arg("stun_server", long="stun", help="STUN server URL to use for WebRTC")]
 [arg("gpu-slots", long="gpu-slots", help="Number of GPU slots available for model tuning (default: 1)")]
-run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-port="7860" container-name="" detach="false" remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="" gpu-slots="1":
+run-image accelerator="cpu" tag="latest" port="7860" container-port="7860" container-name="" detach="false" remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="" gpu-slots="1":
     #!/usr/bin/env bash
     set -euo pipefail
     shopt -s nullglob
@@ -214,7 +213,7 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-po
         $GPU_FLAG \
         --publish {{ webrtc-ports }}:{{ webrtc-ports }}/udp \
         --publish {{ port }}:{{ container-port }} \
-        --env HOST={{ host }} \
+        --env HOST=0.0.0.0 \
         --env PORT={{ container-port }} \
         --env GPU_SLOTS={{ gpu-slots }} \
         --env WEBRTC_ADVERTISE_IP="${HOST_IP}" \

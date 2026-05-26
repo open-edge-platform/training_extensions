@@ -29,6 +29,13 @@ jobs:
         with:
           node-version-file: application/ui/.nvmrc
 
+      # `npm audit fix` resolves new versions, so it must honor the
+      # `min-release-age` setting in application/ui/.npmrc, which requires
+      # npm >= 11.14.0. The npm shipped with the pinned Node version may be
+      # older, so install a compatible npm globally first.
+      - name: Ensure npm supports min-release-age
+        run: npm i -g npm@11.14.0
+
       - name: Install dependencies
         working-directory: application/ui
         run: npm ci

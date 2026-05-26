@@ -29,7 +29,6 @@ from app.repositories import (
 from app.services.dataset_revision_service import DatasetRevisionService
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
-from .model_manifest_service import ModelManifestService
 from .parent_process_guard import parent_process_only
 
 
@@ -105,6 +104,7 @@ KEY_MAPPING = {
 @dataclass(frozen=True)
 class ModelRevisionMetadata:
     model_id: UUID
+    model_name: str
     project_id: UUID
     architecture_id: str
     parent_revision_id: UUID | None
@@ -356,13 +356,12 @@ class ModelService(BaseSessionManagedService):
         project_id = str(metadata.project_id)
         label_repo = LabelRepository(project_id=project_id, db=self.db_session)
         labels_schema_rev = {"labels": [{"name": label.name, "id": label.id} for label in label_repo.list_all()]}
-        arch_name = ModelManifestService.get_model_manifest_by_id(metadata.architecture_id).name
 
         model_revision_repo = ModelRevisionRepository(project_id=project_id, db=self.db_session)
         model_revision_repo.save(
             ModelRevisionDB(
                 id=str(metadata.model_id),
-                name=f"{arch_name} ({str(metadata.model_id).split('-')[0]})",
+                name=metadata.model_name,
                 project_id=str(metadata.project_id),
                 architecture=metadata.architecture_id,
                 parent_revision=str(metadata.parent_revision_id) if metadata.parent_revision_id else None,

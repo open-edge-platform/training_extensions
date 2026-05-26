@@ -181,7 +181,7 @@ class DEIMDFine(RTDETR):
                 "input_names": ["images"],
                 "output_names": ["bboxes", "labels", "scores"],
                 "dynamic_axes": {"images": {0: "batch"}},
-                "dynamo": False,
+                "dynamo": True,
                 "opset_version": 18,
             },
             output_names=["bboxes", "labels", "scores"],

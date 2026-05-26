@@ -86,21 +86,6 @@ describe('ModelRow', () => {
             expect(screen.queryByTestId('labels-count')).not.toBeInTheDocument();
         });
 
-        it('renders "Unnamed Model" when model name is null or undefined', () => {
-            const modelWithoutName = getMockedModel({ name: undefined });
-
-            render(
-                <ModelRow
-                    model={modelWithoutName}
-                    datasetRevision={datasetRevision}
-                    groupBy={'dataset'}
-                    modelArchitecture={modelArchitecture}
-                />
-            );
-
-            expect(screen.getByTestId('model-name')).toHaveTextContent('Unnamed Model');
-        });
-
         it('renders "-" when model size is 0 or negative', () => {
             const modelWithZeroSize = getMockedModel({ size: 0 });
 
@@ -161,42 +146,6 @@ describe('ModelRow', () => {
             );
 
             expect(screen.queryByText('Deleted weights')).not.toBeInTheDocument();
-        });
-    });
-
-    describe('active model tag', () => {
-        it('shows active tag only when model id matches activeModelId', () => {
-            const { rerender } = render(
-                <ModelRow
-                    model={defaultModel}
-                    activeModelId='model-123'
-                    datasetRevision={datasetRevision}
-                    groupBy={'dataset'}
-                    modelArchitecture={modelArchitecture}
-                />
-            );
-            expect(screen.getByText('Active')).toBeInTheDocument();
-
-            rerender(
-                <ModelRow
-                    model={defaultModel}
-                    activeModelId={'different-id'}
-                    datasetRevision={datasetRevision}
-                    groupBy={'dataset'}
-                    modelArchitecture={modelArchitecture}
-                />
-            );
-            expect(screen.queryByText('Active')).not.toBeInTheDocument();
-
-            rerender(
-                <ModelRow
-                    model={defaultModel}
-                    datasetRevision={datasetRevision}
-                    groupBy={'dataset'}
-                    modelArchitecture={modelArchitecture}
-                />
-            );
-            expect(screen.queryByText('Active')).not.toBeInTheDocument();
         });
     });
 

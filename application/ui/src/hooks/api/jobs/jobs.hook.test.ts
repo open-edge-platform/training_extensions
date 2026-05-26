@@ -18,7 +18,8 @@ const createMockJobForProject = (overrides: Partial<ReturnType<typeof getMockedJ
         metadata: {
             project: { id: PROJECT_ID },
             model: {
-                id: 'model-1',
+                id: 'ef3983f1-cef0-4ebe-91db-7330f1dd6e27',
+                name: 'SSD (ef3983f1)',
                 architecture: 'SSD',
                 dataset_revision_id: 'ds-rev-1',
             },
@@ -61,7 +62,12 @@ describe('useGetCurrentRunningJobs', () => {
         const otherProjectJob = getMockedJob({
             metadata: {
                 project: { id: 'other-project' },
-                model: { id: 'model-1', architecture: 'SSD', dataset_revision_id: 'ds-rev-1' },
+                model: {
+                    id: 'ef3983f1-cef0-4ebe-91db-7330f1dd6e27',
+                    name: 'SSD (ef3983f1)',
+                    architecture: 'SSD',
+                    dataset_revision_id: 'ds-rev-1',
+                },
                 device: {
                     type: 'cpu',
                     name: 'CPU',

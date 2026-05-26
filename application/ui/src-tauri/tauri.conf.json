@@ -1,7 +1,7 @@
 {
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "Geti",
-    "version": "0.1.0",
+    "version": "3.0.0",
     "identifier": "com.intel.geti",
     "build": {
         "frontendDist": "../dist",
@@ -19,7 +19,8 @@
                 "minHeight": 600,
                 "resizable": true,
                 "fullscreen": false,
-                "dragDropEnabled": false
+                "dragDropEnabled": false,
+                "additionalBrowserArgs": "--enable-unsafe-webgpu --enable-features=Vulkan"
             }
         ],
         "security": {

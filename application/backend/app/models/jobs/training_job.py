@@ -6,7 +6,7 @@ from typing import Literal
 from uuid import UUID, uuid4
 
 from loguru import logger
-from pydantic import Field
+from pydantic import Field, computed_field
 
 from app.core.jobs.models import JobParams, JobType, ProjectJob
 from app.models.project import Task
@@ -17,11 +17,18 @@ class TrainingJobParams(JobParams):
     job_id: UUID
     project_id: UUID
     model_architecture_id: str
+    model_architecture_name: str
     parent_model_revision_id: UUID | None = None
     task: Task
     model_id: UUID = Field(default_factory=uuid4)
     dataset_revision_id: UUID | None = None
     device: DeviceInfo
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def model_name(self) -> str:
+        """User-friendly model name derived from architecture name and model ID."""
+        return f"{self.model_architecture_name} ({str(self.model_id).split('-')[0]})"
 
 
 class TrainingJob(ProjectJob[TrainingJobParams]):

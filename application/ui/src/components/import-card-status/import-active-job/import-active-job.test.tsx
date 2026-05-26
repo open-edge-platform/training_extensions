@@ -55,7 +55,7 @@ describe('ImportActiveJob', () => {
     it('does not show progress for pending jobs and falls back to status text when message is missing', async () => {
         renderApp(getMockedPrepareImportDatasetJob({ status: 'PENDING', progress: 42, message: null }));
 
-        expect(await screen.findByText('pending')).toBeVisible();
+        expect(await screen.findByText(/pending/i)).toBeVisible();
         expect(screen.queryByText(/%/)).not.toBeInTheDocument();
     });
 

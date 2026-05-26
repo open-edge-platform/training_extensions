@@ -7,38 +7,46 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { fetchClient } from '../../../api/client';
 import { PredictionDTO, PredictionVideoRangePayload } from '../../../constants/shared-types';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
+import { isVideoFrame } from '../../../shared/media-item-utils';
 import { getModelIdentifierPayload, SelectableModel } from '../../models/utils';
-
-const MEDIA_PREDICTIONS_QUERY_KEY_PREFIX = (projectId: string, mediaId: string) => {
-    return [projectId, 'media-predictions', mediaId];
-};
+import { usePredictionSetup } from '../predictions-setup-provider.component';
+import { useSelectedMediaItem } from '../selected-media-item-provider.component';
+import { PREDICTION_CHUNK_SIZE, PREDICTION_FRAME_SKIP } from '../video-player/api/use-video-frames-predictions';
+import { getVideoFrameRangeIndexes } from '../video-player/api/utils';
+import { useVideoPlayerContext } from '../video-player/video-player-provider.component';
 
 export const mediaPredictionsQueryOptions = ({
     projectId,
     selectedModel,
     mediaId,
+    device,
     range = null,
 }: {
     projectId: string;
     selectedModel: SelectableModel | undefined;
     mediaId: string;
+    device: string;
     range?: PredictionVideoRangePayload | null;
 }) =>
     queryOptions({
         queryKey: [
-            ...MEDIA_PREDICTIONS_QUERY_KEY_PREFIX(projectId, mediaId),
+            projectId,
+            'media-predictions',
+            mediaId,
+            device,
             selectedModel?.modelId,
             selectedModel?.modelVariantId,
             range,
         ],
-        queryFn: async () => {
+        queryFn: async ({ signal }) => {
             if (selectedModel === undefined) return [];
 
             const response = await fetchClient.POST('/api/projects/{project_id}/dataset/media/media:predict', {
+                signal,
                 params: { path: { project_id: projectId } },
                 body: {
                     ...getModelIdentifierPayload(selectedModel),
-                    device: 'AUTO',
+                    device,
                     save_predictions: false,
                     media: [{ media_id: mediaId, range }],
                 },
@@ -65,6 +73,7 @@ export const mediaPredictionsQueryOptions = ({
                 return predictionItem;
             });
         },
+        staleTime: 1000 * 60 * 5,
         enabled: selectedModel !== undefined,
     });
 
@@ -72,22 +81,73 @@ export const useMediaPredictions = ({
     mediaId,
     selectedModel,
     range,
+    device,
 }: {
     mediaId: string;
     selectedModel: SelectableModel | undefined;
     range?: PredictionVideoRangePayload | null;
+    device: string;
 }) => {
     const projectId = useProjectIdentifier();
 
-    return useQuery(mediaPredictionsQueryOptions({ projectId, selectedModel, mediaId, range }));
+    return useQuery(mediaPredictionsQueryOptions({ projectId, selectedModel, mediaId, range, device }));
 };
 
-export const useIsFetchingAnyPredictions = (mediaId: string) => {
+export const useIsFetchingCurrentRangeFramesPredictions = (mediaId: string) => {
     const projectId = useProjectIdentifier();
 
-    const queryKey = MEDIA_PREDICTIONS_QUERY_KEY_PREFIX(projectId, mediaId);
+    const { selectedModel, selectedDevice } = usePredictionSetup();
+    const videoContext = useVideoPlayerContext();
 
-    const numberOfFetchingPredictions = useIsFetching({ queryKey });
+    const frameNumber = videoContext?.videoFrame.frame_number ?? 0;
+    const frameCount = videoContext?.videoFrame.frame_count ?? 1;
 
-    return numberOfFetchingPredictions > 0;
+    // Exact query key for the range chunk covering the current frame (video only)
+    const { startFrameIndex, endFrameIndex } = getVideoFrameRangeIndexes({
+        frames: frameCount - 1,
+        frameSkip: PREDICTION_FRAME_SKIP,
+        frameNumber,
+        chunkSize: PREDICTION_CHUNK_SIZE,
+    });
+
+    const rangeQueryKey = mediaPredictionsQueryOptions({
+        projectId,
+        selectedModel,
+        mediaId,
+        device: selectedDevice,
+        range: { stride: PREDICTION_FRAME_SKIP, start_frame: startFrameIndex, end_frame: endFrameIndex },
+    }).queryKey;
+
+    return useIsFetching({ queryKey: rangeQueryKey, exact: true }) > 0;
+};
+
+export const useIsFetchingCurrentFramePredictions = (mediaId: string) => {
+    const projectId = useProjectIdentifier();
+    const { selectedModel, selectedDevice } = usePredictionSetup();
+    const { mediaItem } = useSelectedMediaItem();
+
+    const singleFrameRange = isVideoFrame(mediaItem)
+        ? { start_frame: mediaItem.frame_number, end_frame: mediaItem.frame_number, stride: mediaItem.frame_stride }
+        : null;
+
+    const singleFrameQueryKey = mediaPredictionsQueryOptions({
+        projectId,
+        selectedModel,
+        mediaId,
+        device: selectedDevice,
+        range: singleFrameRange,
+    }).queryKey;
+
+    return useIsFetching({ queryKey: singleFrameQueryKey, exact: true }) > 0;
+};
+
+export const useIsFetchingPredictions = (mediaId: string) => {
+    const videoContext = useVideoPlayerContext();
+
+    const isPlaying = videoContext?.videoControls.isPlaying === true;
+
+    const isFetchingRange = useIsFetchingCurrentRangeFramesPredictions(mediaId);
+    const isFetchingSingleFrame = useIsFetchingCurrentFramePredictions(mediaId);
+
+    return isPlaying ? isFetchingRange : isFetchingSingleFrame;
 };

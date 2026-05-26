@@ -3,36 +3,70 @@
 
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 
+import { usePipeline } from 'hooks/api/pipeline.hook';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { orderBy } from 'lodash-es';
+import { useLocalStorage } from 'usehooks-ts';
+
+import { Model } from '../../constants/shared-types';
 import { useGetActiveModel } from '../models/hooks/api/use-get-active-model.hook';
 import { useGetSuccessfulModels } from '../models/hooks/api/use-get-models.hook';
 import { getAllModelsWithOpenVINOVariants, SelectableModel } from '../models/utils';
 
 type PredictionsSetupContextProps = {
     selectableModels: SelectableModel[];
-    selectedModelId: string | undefined;
+    selectedModelId: string | null;
     selectedModel: SelectableModel | undefined;
-    changeSelectedModelId: (modelId: string | undefined) => void;
+    changeSelectedModelId: (modelId: string | null) => void;
+
+    selectedDevice: string;
+    changeSelectedDevice: (device: string) => void;
 };
 
 const PredictionSetupContext = createContext<PredictionsSetupContextProps | null>(null);
 
-export const PredictionsSetupProvider = ({ children }: { children: ReactNode }) => {
-    const { data: models } = useGetSuccessfulModels();
+const getLatestModel = (models: Model[]): string | null => {
+    const sortedModels = orderBy(models, (model) => model.training_info.end_time, 'desc');
+
+    return getAllModelsWithOpenVINOVariants(sortedModels).at(0)?.modelVariantId ?? null;
+};
+
+const useSelectedModelId = (models: Model[]) => {
+    const projectId = useProjectIdentifier();
     const activeModel = useGetActiveModel();
 
     const selectableModels = useMemo(() => getAllModelsWithOpenVINOVariants(models), [models]);
 
     const defaultSelectedId =
-        selectableModels.find((model) => model.modelId === activeModel?.model_variant_id)?.modelVariantId ??
-        selectableModels.at(0)?.modelVariantId;
+        selectableModels.find((model) => model.modelVariantId === activeModel?.model_variant_id)?.modelVariantId ??
+        getLatestModel(models);
 
-    const [selectedModelId, setSelectedModelId] = useState<string | undefined>(defaultSelectedId);
+    return useLocalStorage<string | null>(`${projectId}-model-variant-id`, defaultSelectedId);
+};
+
+export const PredictionsSetupProvider = ({ children }: { children: ReactNode }) => {
+    const { data: models } = useGetSuccessfulModels();
+
+    const selectableModels = useMemo(() => getAllModelsWithOpenVINOVariants(models), [models]);
+
+    const [selectedModelId, setSelectedModelId] = useSelectedModelId(models);
 
     const selectedModel = selectableModels.find((model) => model.modelVariantId === selectedModelId);
 
+    const { data: pipeline } = usePipeline();
+
+    const [selectedDevice, setSelectedDevice] = useState<string>(pipeline.device);
+
     return (
         <PredictionSetupContext
-            value={{ selectedModelId, selectedModel, changeSelectedModelId: setSelectedModelId, selectableModels }}
+            value={{
+                selectedModelId,
+                selectedModel,
+                changeSelectedModelId: setSelectedModelId,
+                selectableModels,
+                selectedDevice,
+                changeSelectedDevice: setSelectedDevice,
+            }}
         >
             {children}
         </PredictionSetupContext>

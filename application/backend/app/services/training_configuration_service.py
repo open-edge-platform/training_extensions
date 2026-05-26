@@ -7,6 +7,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from app.models.model_manifest import ModelManifest
 from app.models.training_configuration import AlgoLevelParameters, TaskLevelParameters, TrainingConfiguration
 from app.repositories import ModelRevisionRepository
 from app.repositories.training_configuration_repo import TrainingConfigurationRepository
@@ -45,6 +46,10 @@ class TrainingConfigurationService(BaseSessionManagedService):
         This is the configuration that will be used to train new model revisions of the specified architecture if no
         custom configuration has been set. The algo-level part of the configuration is based on the model manifest.
 
+        Configurable parameters corresponding to features that are not supported by the model architecture (e.g.
+        tiling for an architecture whose ``capabilities.tiling`` is False) are stripped from the configuration so
+        that they are not exposed to the user.
+
         Args:
             model_architecture_id: Identifier for the model architecture.
 
@@ -53,10 +58,26 @@ class TrainingConfigurationService(BaseSessionManagedService):
         """
         model_manifest = ModelManifestService.get_model_manifest_by_id(model_manifest_id=model_architecture_id)
 
-        return TrainingConfiguration(
+        training_config = TrainingConfiguration(
             task_level_parameters=TaskLevelParameters(),
             algo_level_parameters=model_manifest.hyperparameters,
         )
+        TrainingConfigurationService._strip_unsupported_parameters(training_config, model_manifest)
+        return training_config
+
+    @staticmethod
+    def _strip_unsupported_parameters(
+        training_configuration: TrainingConfiguration, model_manifest: ModelManifest
+    ) -> None:
+        """
+        Remove configurable parameters that correspond to capabilities not supported by the model architecture.
+
+        Parameters are removed by setting them to ``None`` on the configuration. Downstream serialization (e.g. the
+        ``TrainingConfigurationView``) skips ``None`` values, ensuring the unsupported parameters are not exposed
+        through the API.
+        """
+        if not model_manifest.capabilities.tiling:
+            training_configuration.algo_level_parameters.dataset_preparation.augmentation.tiling = None
 
     def get_by_model_architecture(self, project_id: UUID, model_architecture_id: str) -> TrainingConfiguration:
         """
@@ -96,10 +117,14 @@ class TrainingConfigurationService(BaseSessionManagedService):
         else:
             algo_level_parameters = AlgoLevelParameters.model_validate(algo_level_config_db.configuration_data)
 
-        return TrainingConfiguration(
+        training_configuration = TrainingConfiguration(
             task_level_parameters=task_level_parameters,
             algo_level_parameters=algo_level_parameters,
         )
+        # Strip unsupported parameters in case they were persisted (e.g. from a previous manifest version)
+        model_manifest = ModelManifestService.get_model_manifest_by_id(model_manifest_id=model_architecture_id)
+        self._strip_unsupported_parameters(training_configuration, model_manifest)
+        return training_configuration
 
     def update(
         self, project_id: UUID, model_architecture_id: str, training_configuration: TrainingConfiguration

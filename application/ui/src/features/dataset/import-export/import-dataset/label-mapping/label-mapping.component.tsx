@@ -12,7 +12,9 @@ import { useProject } from '../../../../../hooks/api/project.hook';
 import { useImportDatasetToProject } from '../../../../../hooks/storage/use-import-dataset-to-project.hook';
 import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
 import { FormatWarning } from './format-warning/format-warning.component';
-import { IMPORT_DATASET_FORM_ID, mapProjectLabels } from './util';
+import { IMPORT_DATASET_FORM_ID, mapProjectLabels, PLACEHOLDER_LABEL, UNMAPPED_LABEL_VALUE } from './util';
+
+import classes from './label-mapping.module.scss';
 
 type LabelMappingProps = {
     stagedDatasetId: string;
@@ -63,6 +65,7 @@ const useFormConfig = ({ datasetLabels, stagedDatasetId, selectedProjectId }: us
 export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
     const { data: selectedProject } = useProject();
     const projectLabels = selectedProject?.task?.labels ?? [];
+    const finalLabels = [{ id: '', name: UNMAPPED_LABEL_VALUE, color: '' }, ...projectLabels];
 
     const { data: stagedDataset } = useStagedDataset(stagedDatasetId);
 
@@ -103,7 +106,13 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                 <FormatWarning annotationType={stagedDataset?.metadata?.annotation_type} />
             </View>
 
-            <Heading marginTop={'size-200'}>Label mapping</Heading>
+            <Flex direction={'column'}>
+                <Heading marginTop={'size-200'}>Label mapping - optional</Heading>
+                <Text UNSAFE_className={classes.emptyLabelsWarning}>
+                    Any unmapped items will be imported as unlabeled
+                </Text>
+            </Flex>
+
             <View backgroundColor={'gray-75'} padding={'size-200'} borderRadius={'regular'}>
                 <Form id={IMPORT_DATASET_FORM_ID} validationBehavior='native' action={submitAction}>
                     <Grid
@@ -117,17 +126,22 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                         <View>Project labels</View>
 
                         {datasetLabels.map((label, index) => (
-                            <Fragment key={label}>
+                            <Fragment key={`${label}-${index}`}>
                                 <Text>{label}</Text>
                                 <View>→</View>
                                 <View>
                                     <Picker
-                                        items={projectLabels}
+                                        items={finalLabels}
+                                        placeholder={PLACEHOLDER_LABEL}
                                         name={`targetLabel-${index}`}
                                         aria-label={`Target label for ${label}`}
-                                        defaultSelectedKey={projectLabels.find(({ name }) => name === label)?.name}
+                                        defaultSelectedKey={finalLabels.find(({ name }) => name === label)?.name}
                                     >
-                                        {(item) => <Item key={item.name}>{item.name}</Item>}
+                                        {(item) => (
+                                            <Item key={item.name}>
+                                                {item.name === UNMAPPED_LABEL_VALUE ? PLACEHOLDER_LABEL : item.name}
+                                            </Item>
+                                        )}
                                     </Picker>
                                 </View>
                             </Fragment>

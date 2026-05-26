@@ -54,9 +54,8 @@ interface AnnotatorModesProps {
 }
 
 export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredictions }: AnnotatorModesProps) => {
-    const [dismissedCues, setDismissedCues] = useState<Set<AnnotatorMode>>(new Set());
+    const [dismissedCues, setDismissedCues] = useState<Set<Extract<AnnotatorMode, 'prediction'>>>(new Set());
 
-    const shouldDisplayAnnotationCue = mode === 'prediction' && hasAnnotations && !dismissedCues.has('annotation');
     const shouldDisplayPredictionCue =
         mode === 'annotation' && !hasAnnotations && hasPredictions && !dismissedCues.has('prediction');
 
@@ -69,13 +68,13 @@ export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredicti
             const nextDismissedCues = new Set(prevDismissedCues);
 
             // user is leaving the current mode — if it had content they've seen it
-            const currentHasContent = mode === 'annotation' ? hasAnnotations : hasPredictions;
+            const currentHasContent = mode === 'prediction' && hasPredictions;
             if (currentHasContent) {
                 nextDismissedCues.add(mode);
             }
 
             // user is switching to the next mode — if it has content they're about to see it
-            const nextHasContent = nextMode === 'annotation' ? hasAnnotations : hasPredictions;
+            const nextHasContent = nextMode === 'prediction' && hasPredictions;
             if (nextHasContent) {
                 nextDismissedCues.add(nextMode);
             }
@@ -95,14 +94,9 @@ export const AnnotatorModes = ({ mode, onModeChange, hasAnnotations, hasPredicti
                 alignItems={'center'}
                 data-testid={'annotator-modes-id'}
             >
-                <ToggleButtonWithCue
-                    isActive={mode === 'annotation'}
-                    onClick={() => handleModeChange('annotation')}
-                    showCue={shouldDisplayAnnotationCue}
-                    cueLabel={'Annotation available'}
-                >
+                <ToggleButton isActive={mode === 'annotation'} onClick={() => handleModeChange('annotation')}>
                     Annotation
-                </ToggleButtonWithCue>
+                </ToggleButton>
                 <ToggleButtonWithCue
                     isActive={mode === 'prediction'}
                     onClick={() => handleModeChange('prediction')}
