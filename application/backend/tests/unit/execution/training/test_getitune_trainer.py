@@ -532,7 +532,10 @@ class TestGetiTuneTrainerCreateTrainingDataset:
         mock_val_transforms = [Mock()]
         mock_test_transforms = [Mock()]
 
-        with patch("app.execution.training.getitune_trainer.TransformLibFactory.generate") as mock_generate:
+        with (
+            patch("app.execution.training.getitune_trainer.TransformLibFactory.generate") as mock_generate,
+            patch("app.execution.training.getitune_trainer.detect_storage_dtype", return_value="uint8"),
+        ):
             mock_generate.side_effect = [mock_train_transforms, mock_val_transforms, mock_test_transforms]
 
             # Mock the get_getitune_dataset_class_by_task_type function to return a proper mock class

@@ -3,9 +3,6 @@
 #
 """Test Factory classes for dataset and transforms."""
 
-from unittest.mock import MagicMock, PropertyMock
-
-import polars as pl
 import pytest
 from datumaro.experimental import Dataset
 
@@ -65,64 +62,3 @@ class TestDatasetFactory:
             ),
             dataset_cls,
         )
-
-
-class TestDetectStorageDtype:
-    """Tests for DatasetFactory._detect_storage_dtype."""
-
-    def test_schema_uint16(self):
-        """Schema-declared UInt16 dtype → 'uint16'."""
-        mock_subset = MagicMock(spec=Dataset)
-        # Make iteration raise StopIteration (empty dataset)
-        mock_subset.__iter__ = MagicMock(return_value=iter([]))
-        mock_field = MagicMock()
-        mock_field.dtype = pl.UInt16
-        mock_img_attr = MagicMock()
-        mock_img_attr.field = mock_field
-        mock_schema = MagicMock()
-        mock_schema.attributes = {"image": mock_img_attr}
-        type(mock_subset).schema = PropertyMock(return_value=mock_schema)
-
-        assert DatasetFactory._detect_storage_dtype(mock_subset) == "uint16"
-
-    def test_schema_float32(self):
-        """Schema-declared Float32 dtype → 'float32'."""
-        mock_subset = MagicMock(spec=Dataset)
-        mock_subset.__iter__ = MagicMock(return_value=iter([]))
-        mock_field = MagicMock()
-        mock_field.dtype = pl.Float32
-        mock_img_attr = MagicMock()
-        mock_img_attr.field = mock_field
-        mock_schema = MagicMock()
-        mock_schema.attributes = {"image": mock_img_attr}
-        type(mock_subset).schema = PropertyMock(return_value=mock_schema)
-
-        assert DatasetFactory._detect_storage_dtype(mock_subset) == "float32"
-
-    def test_schema_unknown_defaults_uint8(self):
-        """Unknown/missing schema dtype → default 'uint8'."""
-        mock_subset = MagicMock(spec=Dataset)
-        mock_subset.__iter__ = MagicMock(return_value=iter([]))
-        mock_schema = MagicMock()
-        mock_schema.attributes = {}
-        type(mock_subset).schema = PropertyMock(return_value=mock_schema)
-
-        assert DatasetFactory._detect_storage_dtype(mock_subset) == "uint8"
-
-    def test_file_based_detection(self, tmp_path):
-        """File-header probing detects uint8 from a real PNG."""
-        import numpy as np
-        from PIL import Image as PILImage
-
-        # Create a small uint8 PNG
-        img_path = tmp_path / "test.png"
-        PILImage.fromarray(np.zeros((4, 4, 3), dtype=np.uint8)).save(img_path)
-
-        mock_media = MagicMock()
-        mock_media.path = str(img_path)
-        mock_item = MagicMock()
-        mock_item.media = mock_media
-        mock_subset = MagicMock(spec=Dataset)
-        mock_subset.__iter__ = MagicMock(return_value=iter([mock_item]))
-
-        assert DatasetFactory._detect_storage_dtype(mock_subset) == "uint8"

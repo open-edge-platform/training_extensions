@@ -19,6 +19,7 @@ from torch.utils.data import DataLoader, RandomSampler
 from getitune.config.data import SubsetConfig, TileConfig
 from getitune.data.augmentation import CPUAugmentationPipeline
 from getitune.data.dataset.tile import TileDatasetFactory
+from getitune.data.entity.utils import detect_storage_dtype
 from getitune.data.factory import DatasetFactory
 from getitune.data.utils import get_adaptive_num_workers, instantiate_sampler
 from getitune.types.device import DeviceType
@@ -140,6 +141,7 @@ class DataModule(LightningDataModule):
         Args:
             dataset: A ``datumaro.experimental.Dataset`` loaded via ``import_dataset``.
         """
+        storage_dtype: str | None = None
         config_mapping = {
             self.train_subset.subset_name: self.train_subset,
             self.val_subset.subset_name: self.val_subset,
@@ -172,10 +174,21 @@ class DataModule(LightningDataModule):
                 logger.warning(f"Subset '{name}' is empty in the dataset. Skip it")
                 continue
 
+            if storage_dtype is None:
+                storage_dtype = detect_storage_dtype(dm_subset)
+
+            if subset_cfg.intensity.storage_dtype != storage_dtype:
+                logger.warning(
+                    f"Overriding intensity storage_dtype '{subset_cfg.intensity.storage_dtype}' "
+                    f"with auto-detected '{storage_dtype}'",
+                )
+                subset_cfg.intensity.storage_dtype = storage_dtype
+
             subset_dataset = DatasetFactory.create(
                 task=self.task,
                 dm_subset=dm_subset,
                 cfg_subset=subset_cfg,
+                storage_dtype=storage_dtype,
                 ignore_index=self.ignore_index,
             )
 
@@ -186,7 +199,6 @@ class DataModule(LightningDataModule):
                 )
             self.subsets[name] = subset_dataset
             label_infos += [self.subsets[name].label_info]
-            logger.info(f"Add name: {name}, self.subsets: {self.subsets}")
 
         if self._is_meta_info_valid(label_infos) is False:
             msg = "All data meta infos of subsets should be the same."
@@ -323,7 +335,7 @@ class DataModule(LightningDataModule):
             instance.input_mean = None
             instance.input_std = None
 
-        # Propagate intensity config from train subset (mirrors __init__).
+        # Propagate intensity config from train subset.
         instance.input_intensity_config = getattr(instance.train_subset, "intensity", None)
 
         # Save hyperparameters
