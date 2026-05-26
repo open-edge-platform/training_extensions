@@ -89,7 +89,7 @@ export const usePolygonState = (): PolygonState => {
     const context = useContext(PolygonStateContext);
 
     if (context === null) {
-        throw new Error('usePolygonDrawingState must be used within a PolygonStateProvider');
+        throw new Error('usePolygonState must be used within a PolygonStateProvider');
     }
 
     return context;
