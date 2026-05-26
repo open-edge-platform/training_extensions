@@ -90,11 +90,11 @@ export default defineConfig({
     },
     html: {
         template: './public/index.html',
-        title: 'Geti',
+        title: 'Geti™',
         favicon: './src/assets/icons/favicon.ico',
         meta: {
             description:
-                'Geti provides a "recipe" for every supported task type, which consolidates ' +
+                'Geti™ provides a "recipe" for every supported task type, which consolidates ' +
                 'necessary information to build a model. Model templates are validated on ' +
                 'various datasets and serve as a one-stop shop for obtaining the best models in general.',
         },
