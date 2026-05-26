@@ -38,7 +38,6 @@ def _convert_classification_prediction(
     predicted_confidences: list[float] = []
     if prediction.top_labels is None:
         raise RuntimeError("The prediction is malformed because it does not contain labels")
-    name_map, unmangled_map = _build_label_maps(labels)
     for predicted_label in prediction.top_labels:
         label_name = predicted_label.name
         label = _find_label(labels, label_name)
@@ -55,7 +54,6 @@ def _convert_classification_prediction(
 
 
 def _convert_detection_prediction(labels: Sequence[Label], prediction: DetectionResult) -> list[DatasetItemAnnotation]:
-    name_map, unmangled_map = _build_label_maps(labels)
     result = []
     prediction_scores_list = prediction.scores.tolist()
     for idx, box in enumerate(prediction.bboxes):
@@ -80,7 +78,6 @@ def _convert_segmentation_prediction(
     frame_data: np.ndarray,
     prediction: InstanceSegmentationResult,
 ) -> list[DatasetItemAnnotation]:
-    name_map, unmangled_map = _build_label_maps(labels)
     height, width, _ = frame_data.shape
     result = []
     prediction_scores_list = prediction.scores.tolist()
