@@ -1,0 +1,34 @@
+// Copyright (C) 2025-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { PropsWithChildren } from 'react';
+
+import { useAvailableTools } from './annotator-tools/use-available-tools';
+import { PolygonStateProvider } from './polygon-tool/polygon-state-provider.component';
+
+/**
+ * Composes per-tool state providers that need to sit above both the primary
+ * toolbar and the annotator canvas (so the toolbar's undo/redo buttons can
+ * reach tool-local undo stacks while a tool is active).
+ *
+ * Adding state for a new tool: nest an additional provider here.
+ * The composition shape is stable per project (task type does not change
+ * mid-session), so the React subtree remains stable and the toolbar and
+ * canvas are never unnecessarily remounted.
+ *
+ * Gating is done via useAvailableTools — the same source of truth that drives
+ * the toolbar — so each provider is only mounted when its tool is available for
+ * the current task type.
+ */
+export const ToolManagerProvider = ({ children }: PropsWithChildren) => {
+    const availableTools = useAvailableTools();
+    const hasPolygonDrawingTools = availableTools.some(
+        (tool) => tool.type === 'polygon' || tool.type === 'magnetic-lasso'
+    );
+
+    if (hasPolygonDrawingTools) {
+        return <PolygonStateProvider>{children}</PolygonStateProvider>;
+    }
+
+    return <>{children}</>;
+};
