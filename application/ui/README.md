@@ -1,6 +1,6 @@
 # Geti UI
 
-Modern React 19 application for AI model training and inference, built with Rsbuild and TypeScript.
+Modern React application for AI model training and inference, built with Rsbuild and TypeScript.
 
 The Geti™ applications aim to provide a user experience and design language consistent with the main [Geti application](https://github.com/open-edge-platform/geti). To achieve this, we reuse many architectural decisions from Geti™, including the shared `@geti/ui`, `@geti/config`, and `@geti/smart-tools` packages.
 
@@ -25,12 +25,6 @@ npm install
 
 The `preinstall` script clones `@geti/config`, `@geti/ui`, and `@geti/smart-tools` from the `open-edge-platform/geti` repository at a pinned commit using [`tiged`](https://github.com/tiged/tiged) (the maintained fork of Degit). These are workspace packages installed into `packages/` and are **gitignored** — never commit that directory.
 
-If the backend is running on `localhost:7860`, use `npm run update-spec` to download a fresh OpenAPI spec and regenerate types.
-
-```bash
-npm run update-spec      # Download openapi spec and generate TypeScript types from src/api/openapi-spec.json
-```
-
 ### Development
 
 ```bash
@@ -39,6 +33,11 @@ npm run server       # Start FastAPI backend at http://localhost:7860 (separate 
 ```
 
 The dev server proxies API requests to `PUBLIC_API_BASE_URL` (defaults to `http://localhost:7860`). The `PUBLIC_` prefix is required for Rsbuild client exposure.
+While the backend is running on `localhost:7860`, use `npm run update-spec` to download a fresh OpenAPI spec and regenerate types.
+
+```bash
+npm run update-spec      # Download openapi spec and generate TypeScript types from src/api/openapi-spec.json
+```
 
 ### Build
 
