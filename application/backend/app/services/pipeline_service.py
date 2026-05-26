@@ -32,14 +32,11 @@ class OtherProjectActiveError(Exception):
     def __init__(
         self,
         requested_project_name: str,
-        requested_project_id: str,
         active_project_name: str,
-        active_project_id: str,
     ):
         super().__init__(
-            f"Attempted to enable a pipeline in project '{requested_project_name}' (ID: {requested_project_id}), "
-            f"while a pipeline is still enabled in another project '{active_project_name}' (ID: {active_project_id}). "
-            f"Please first disable pipeline in project '{active_project_name}' (ID: {active_project_id})."
+            f"Cannot enable the pipeline in project '{requested_project_name}' because a pipeline is already "
+            f"running in project '{active_project_name}'. Disable that pipeline first, then try again."
         )
 
 
@@ -149,9 +146,7 @@ class PipelineService(BaseSessionManagedService):
                 active_project = project_repo.get_by_id(active_pipeline_db.project_id)
                 raise OtherProjectActiveError(
                     requested_project_name=to_update_project.name if to_update_project is not None else "",
-                    requested_project_id=to_update_db.project_id,
                     active_project_name=active_project.name if active_project is not None else "",
-                    active_project_id=active_pipeline_db.project_id,
                 )
             # Validate folder sink accessibility when activating the pipeline
             if to_update_db.sink_id:
