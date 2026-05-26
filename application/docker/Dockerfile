@@ -186,10 +186,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 ENV PATH="/application/backend/.venv/bin:${PATH}"
 
 # Create directories and set ownership for the non-root user.
-RUN mkdir -p /application/backend/app ${STATIC_FILES_DIR} /home/${USER_NAME} && \
+RUN mkdir -p /application/backend/app ${STATIC_FILES_DIR} /home/${USER_NAME} /home/media && \
     chown -R ${UID}:${UID} \
     /application \
-    /home/${USER_NAME}
+    /home/${USER_NAME} \
+    /home/media
 
 WORKDIR /application/backend
 
