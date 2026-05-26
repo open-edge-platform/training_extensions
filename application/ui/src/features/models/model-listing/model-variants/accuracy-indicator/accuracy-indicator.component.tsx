@@ -4,16 +4,11 @@
 import { Flex } from '@geti/ui';
 import { Pie, PieChart, Sector } from 'recharts';
 
+import { getColor } from './util';
+
 interface AccuracyIndicatorProps {
     accuracy: number;
 }
-
-export const getColor = (accuracy: number): string => {
-    if (accuracy >= 75) return 'var(--moss-tint-1)';
-    if (accuracy >= 40 && accuracy <= 74) return 'var(--brand-daisy)';
-
-    return 'var(--coral-shade-1)';
-};
 
 export const AccuracyIndicator = ({ accuracy }: AccuracyIndicatorProps) => {
     const graphData = [

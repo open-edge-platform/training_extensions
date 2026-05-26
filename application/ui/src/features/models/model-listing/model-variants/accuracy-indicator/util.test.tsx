@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { getColor } from './accuracy-indicator.component';
+import { getColor } from './util';
 
 describe('getColor', () => {
     it.each([
