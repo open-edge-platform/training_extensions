@@ -436,6 +436,48 @@ class TestJobControlPlaneIntegration:
         finally:
             await job_controller.stop()
 
+    @pytest.mark.asyncio
+    async def test_cancelled_pending_job_not_executed_after_capacity_released(self, fxt_runnable_factory, fxt_job):
+        """Test that a pending job cancelled while waiting for capacity is not executed."""
+        job_queue = JobQueue()
+        runner_factory = ThreadRunnerFactory(fxt_runnable_factory)
+
+        # Only 1 GPU slot so the second job must wait
+        job_controller = JobController(job_queue, runner_factory, max_parallel_jobs=1)
+
+        # First job: slow enough to give us time to cancel the second one
+        fxt_runnable_factory.return_value = MockRunnable(behavior=RunnableBehaviour.SLOW, execution_time=0.05)
+
+        job1 = fxt_job(job_type=JobType.TRAIN)
+        job2 = fxt_job(job_type=JobType.TRAIN)
+
+        await job_queue.submit(job1)
+        await job_queue.submit(job2)
+
+        await job_controller.start()
+
+        try:
+            # Wait for job1 to start running (occupying the capacity slot)
+            await self._wait_for_job_status(job1, JobStatus.RUNNING, timeout=2.0)
+
+            # Cancel job2 while it is pending (waiting for capacity)
+            result_job, result = job_queue.cancel(job2.id)
+            assert result == CancellationResult.PENDING_CANCELLED
+            assert job2.status == JobStatus.CANCELLED
+
+            # Wait for job1 to finish, freeing capacity
+            await self._wait_for_job_status(job1, JobStatus.DONE, timeout=5.0)
+
+            # Give the controller time to potentially (incorrectly) start job2
+            await asyncio.sleep(0.2)
+
+            # job2 must remain cancelled and never transition to RUNNING or DONE
+            assert job2.status == JobStatus.CANCELLED
+            assert job2.started_at is None
+
+        finally:
+            await job_controller.stop()
+
     @staticmethod
     async def _wait_for_job_status(job: Job, expected_status: JobStatus, timeout: float) -> None:
         """Helper method to wait for job to reach expected status."""
