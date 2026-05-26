@@ -428,3 +428,62 @@ class TestDataModule:
         pipeline = CPUAugmentationPipeline(augmentations=transforms_source)
         result = (pipeline.mean, pipeline.std)
         assert result == expected
+
+    def test_from_vision_datasets_detects_storage_dtype(self, mocker, fxt_mock_subset_configs, tmp_path) -> None:
+        """Test that from_vision_datasets auto-detects storage_dtype from image files.
+
+        This covers the fix for #6440 where 16-bit images exported with input_dtype='u8'.
+        """
+        import numpy as np
+        import polars as pl
+        from PIL import Image
+
+        from getitune.config.data import IntensityConfig
+
+        # Create a 16-bit PNG file
+        img_16bit = np.ones((32, 32), dtype=np.uint16) * 1000
+        img_path = tmp_path / "test_16bit.png"
+        Image.fromarray(img_16bit, mode="I;16").save(img_path)
+
+        # Create a mock dm_subset with a DataFrame containing the image path
+        mock_df = pl.DataFrame({"media": [str(img_path)]})
+        mock_dm_subset = MagicMock()
+        mock_dm_subset.df = mock_df
+
+        # Create mock dataset with the dm_subset
+        shared_label_info = MagicMock()
+        mock_train = MagicMock()
+        mock_train.label_info = shared_label_info
+        mock_train.task_type = TaskType.MULTI_CLASS_CLS
+        mock_train.dm_subset = mock_dm_subset
+
+        mock_val = MagicMock()
+        mock_val.label_info = shared_label_info
+        mock_val.task_type = TaskType.MULTI_CLASS_CLS
+
+        # Create SubsetConfig with default intensity (storage_dtype="uint8")
+        train_subset = SubsetConfig(
+            batch_size=4,
+            subset_name="train",
+            input_size=(224, 224),
+            intensity=IntensityConfig(),  # defaults to storage_dtype="uint8"
+        )
+        assert train_subset.intensity.storage_dtype == "uint8"
+
+        mocker.patch.object(
+            DataModule,
+            "get_default_subset_configs",
+            return_value=fxt_mock_subset_configs,
+        )
+
+        # Create module from datasets
+        module = DataModule.from_vision_datasets(
+            train_dataset=mock_train,
+            val_dataset=mock_val,
+            train_subset=train_subset,
+        )
+
+        # Assert storage_dtype was auto-detected and updated to uint16
+        assert train_subset.intensity.storage_dtype == "uint16"
+        assert module.input_intensity_config is not None
+        assert module.input_intensity_config.storage_dtype == "uint16"
