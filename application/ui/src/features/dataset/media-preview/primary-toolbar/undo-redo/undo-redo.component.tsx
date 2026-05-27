@@ -11,15 +11,12 @@ import { useUndoRedo } from './undo-redo-provider.component';
 export const UndoRedo = ({ isDisabled }: { isDisabled?: boolean }) => {
     const { undo, canUndo, redo, canRedo } = useUndoRedo();
 
-    useHotkeys(HOTKEYS.undo, undo, [undo]);
-    useHotkeys(
-        HOTKEYS.redo,
-        (event) => {
-            event.preventDefault();
-            redo();
-        },
-        [redo]
-    );
+    useHotkeys(HOTKEYS.undo, undo, { enabled: canUndo, preventDefault: true }, [undo, canUndo]);
+
+    useHotkeys(`${HOTKEYS.redo}, ${HOTKEYS.redoAlt}`, redo, { enabled: canRedo, preventDefault: true }, [
+        redo,
+        canRedo,
+    ]);
 
     return (
         <Flex alignItems='center' direction={'column'} justifyContent={'center'} data-testid='undo-redo-tools'>
