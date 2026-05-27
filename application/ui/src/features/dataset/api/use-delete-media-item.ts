@@ -10,13 +10,14 @@ import { isFunction } from 'lodash-es';
 import { $api } from '../../../api/client';
 import { getQueryKey } from '../../../query-client/query-client';
 
-const useDeleteMediaItemMutation = () => {
-    return $api.useMutation('delete', `/api/projects/{project_id}/dataset/media/{media_id}`, {
-        onError: (error, { params: { path } }) => {
-            const { media_id: itemId } = path;
+const useDeleteMediaItemsMutation = () => {
+    return $api.useMutation('delete', `/api/projects/{project_id}/dataset/media`, {
+        meta: { error: { notify: () => false } },
+        onError: (error, path) => {
+            const { media_ids } = path.body ?? {};
 
             toast({
-                id: String(itemId),
+                id: media_ids.join(','),
                 type: 'error',
                 message: `Failed to delete, ${error?.detail}`,
             });
@@ -24,29 +25,28 @@ const useDeleteMediaItemMutation = () => {
     });
 };
 
-const isFulfilled = (response: PromiseSettledResult<{ itemId: string }>) => response.status === 'fulfilled';
-
 export const useDeleteMediaItem = () => {
     const queryClient = useQueryClient();
     const projectId = useProjectIdentifier();
-    const deleteMutation = useDeleteMediaItemMutation();
+    const deleteItemsMutation = useDeleteMediaItemsMutation();
 
     const alertDialogState = useOverlayTriggerState({});
 
-    const handleDeleteItems = async (ids: string[], onDeleted?: (ids: string[]) => void) => {
+    const handleDeleteItems = async (media_ids: string[], onDeleted?: (ids: string[]) => void) => {
         alertDialogState.close();
 
         toast({ id: 'deleting-notification', type: 'info', message: `Deleting items...` });
 
-        const deleteItemPromises = ids.map(async (media_id) => {
-            await deleteMutation.mutateAsync({ params: { path: { project_id: projectId, media_id } } });
+        deleteItemsMutation.mutate(
+            {
+                body: { media_ids },
+                params: { path: { project_id: projectId } },
+            },
+            { onSuccess: () => handleSuccess(media_ids, onDeleted) }
+        );
+    };
 
-            return { itemId: media_id };
-        });
-
-        const responses = await Promise.allSettled(deleteItemPromises);
-        const deletedIds = responses.filter(isFulfilled).map(({ value }) => value.itemId);
-
+    const handleSuccess = (deletedIds: string[], onDeleted?: (ids: string[]) => void) => {
         queryClient.invalidateQueries({
             queryKey: getQueryKey([
                 'get',
@@ -74,7 +74,7 @@ export const useDeleteMediaItem = () => {
 
     return {
         deleteMedia: handleDeleteItems,
-        isPending: deleteMutation.isPending,
+        isPending: deleteItemsMutation.isPending,
         isDeleteDialogOpen: alertDialogState.isOpen,
         openDeleteDialog: alertDialogState.open,
         closeDeleteDialog: alertDialogState.close,
