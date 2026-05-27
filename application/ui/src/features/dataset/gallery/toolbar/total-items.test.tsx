@@ -35,10 +35,11 @@ describe('TotalItems', () => {
         return render(<TotalItems totalSelectedElements={totalSelectedElements} />);
     };
 
-    it('shows selected count when items are selected', async () => {
+    it('shows selected count and total when items are selected', async () => {
         await renderTotalItems(3, 10);
 
-        expect(screen.getByText('3 selected')).toBeVisible();
+        expect(await screen.findByText('3 selected')).toBeVisible();
+        expect(await screen.findByText('10 media items')).toBeVisible();
     });
 
     it('shows total media count with plural when no items are selected', async () => {
@@ -53,9 +54,9 @@ describe('TotalItems', () => {
         expect(await screen.findByText('1 media item')).toBeVisible();
     });
 
-    it('shows 0 media items when there are no items', async () => {
+    it('renders nothing when there are no items', async () => {
         await renderTotalItems(0, 0);
 
-        expect(await screen.findByText('0 media items')).toBeVisible();
+        expect(screen.queryByText(/media item/)).not.toBeInTheDocument();
     });
 });
