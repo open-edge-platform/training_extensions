@@ -312,6 +312,9 @@ class CachedMosaic(tvt_v2.Transform):
         translate: Translate fraction for random perspective crop.  The crop
             centre shifts by up to ``± translate * img_scale`` pixels.
             Defaults to 0.1.
+        area_thr: Minimum visible-area ratio for keeping a bbox after the
+            perspective crop.  Use 0.01 for instance segmentation.
+            Defaults to 0.1.
     """
 
     def __init__(
@@ -325,6 +328,7 @@ class CachedMosaic(tvt_v2.Transform):
         random_pop: bool = True,
         scale: float = 0.5,
         translate: float = 0.1,
+        area_thr: float = 0.1,
     ) -> None:
         super().__init__()
 
@@ -347,6 +351,7 @@ class CachedMosaic(tvt_v2.Transform):
         self.random_pop = random_pop
         self.scale = scale
         self.translate = translate
+        self.area_thr = area_thr
         self.results_cache: list[_CachedSample] = []
 
     def _resize_keep_ratio(self, img: torch.Tensor, target_h: int, target_w: int) -> tuple[torch.Tensor, float]:
@@ -649,7 +654,7 @@ class CachedMosaic(tvt_v2.Transform):
             eps = 1e-16
             area_ratio = (new_w * new_h) / (scaled_orig_w * scaled_orig_h + eps)
             ar = torch.maximum(new_w / (new_h + eps), new_h / (new_w + eps))
-            valid = (new_w > 2) & (new_h > 2) & (area_ratio > 0.1) & (ar < 100)
+            valid = (new_w > 2) & (new_h > 2) & (area_ratio > self.area_thr) & (ar < 100)
 
             new_bboxes = new_bboxes[valid]
             labels = labels[valid]
@@ -749,7 +754,8 @@ class CachedMosaic(tvt_v2.Transform):
             f"max_cached_images={self.max_cached_images}, "
             f"random_pop={self.random_pop}, "
             f"scale={self.scale}, "
-            f"translate={self.translate})"
+            f"translate={self.translate}, "
+            f"area_thr={self.area_thr})"
         )
 
 

@@ -145,10 +145,12 @@ class DataModule(LightningDataModule):
         Args:
             dataset: A ``datumaro.experimental.Dataset`` loaded via ``import_dataset``.
         """
+        # Use explicit subset names to avoid collision when subset_name defaults
+        # to "train" for all SubsetConfigs (the default value).
         config_mapping = {
-            self.train_subset.subset_name: self.train_subset,
-            self.val_subset.subset_name: self.val_subset,
-            self.test_subset.subset_name: self.test_subset,
+            "train": self.train_subset,
+            "val": self.val_subset,
+            "test": self.test_subset,
         }
 
         if self.auto_num_workers:

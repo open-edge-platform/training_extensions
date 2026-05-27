@@ -768,13 +768,23 @@ class UltralyticsEngine(Engine):
         for i, cls_idx in enumerate(ap_class_index):
             class_name = names.get(cls_idx, str(cls_idx))
             try:
-                p, r, ap50, ap = results.class_result(i)  # pyrefly: ignore[missing-attribute]
+                result = results.class_result(i)  # pyrefly: ignore[missing-attribute]
             except (IndexError, AttributeError, TypeError):
                 continue
-            metrics[f"val/precision/{class_name}"] = float(p)
-            metrics[f"val/recall/{class_name}"] = float(r)
-            metrics[f"val/map_50/{class_name}"] = float(ap50)
-            metrics[f"val/map/{class_name}"] = float(ap)
+            # Detection returns 4 values (p, r, ap50, ap)
+            # Segmentation returns 8 values (box p, r, ap50, ap, mask p, r, ap50, ap)
+            if len(result) >= 4:
+                p, r, ap50, ap = result[:4]
+                metrics[f"val/precision/{class_name}"] = float(p)
+                metrics[f"val/recall/{class_name}"] = float(r)
+                metrics[f"val/map_50/{class_name}"] = float(ap50)
+                metrics[f"val/map/{class_name}"] = float(ap)
+            if len(result) >= 8:
+                mp, mr, map50, map_ = result[4:8]
+                metrics[f"val/mask_precision/{class_name}"] = float(mp)
+                metrics[f"val/mask_recall/{class_name}"] = float(mr)
+                metrics[f"val/mask_map_50/{class_name}"] = float(map50)
+                metrics[f"val/mask_map/{class_name}"] = float(map_)
 
     @staticmethod
     def _format_torchmetrics_results(results: dict[str, Any]) -> dict[str, float]:

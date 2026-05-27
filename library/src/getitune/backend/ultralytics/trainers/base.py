@@ -88,7 +88,7 @@ class GetiTuneDataBridgeMixin:
 
         dataset = self.build_dataset(dataset_path, mode, batch_size)
         shuffle = mode == "train"
-        nw = self.args.workers  # type: ignore[attr-defined]
+        nw = self._effective_num_workers(len(dataset), mode)
         return InfiniteDataLoader(
             dataset,
             batch_size=batch_size,
@@ -102,6 +102,69 @@ class GetiTuneDataBridgeMixin:
             persistent_workers=nw > 0,
             worker_init_fn=seed_worker,
         )
+
+    def _effective_num_workers(self, dataset_size: int, mode: str) -> int:
+        """Determine optimal worker count based on total training iterations.
+
+        With spawn multiprocessing context (required for Datumaro compatibility),
+        worker spawn overhead is significant (~15-20s). However, workers provide
+        ~1.5x throughput improvement once warmed up. This method balances spawn
+        overhead against throughput gains based on expected training duration.
+
+        Decision is based on total iterations (epochs * batches):
+        - <300 iterations: workers=0 (spawn overhead dominates)
+        - 300-1000 iterations: workers=2 (moderate benefit)
+        - >1000 iterations: use configured workers (spawn overhead amortized)
+
+        For validation, always use workers=0 since validation is typically
+        short and spawn overhead would dominate.
+
+        Args:
+            dataset_size: Number of samples in the dataset.
+            mode: "train" or "val".
+
+        Returns:
+            Optimal number of workers.
+        """
+        configured_workers: int = self.args.workers  # type: ignore[attr-defined]
+
+        # Validation: always use workers=0 (short duration, spawn overhead dominates)
+        if mode != "train":
+            if configured_workers > 0:
+                logger.info("Validation mode: using workers=0 to avoid spawn overhead")
+            return 0
+
+        # Estimate total training iterations
+        batch_size: int = self.args.batch  # type: ignore[attr-defined]
+        epochs: int = self.args.epochs  # type: ignore[attr-defined]
+        batches_per_epoch = (dataset_size + batch_size - 1) // batch_size
+        total_iterations = epochs * batches_per_epoch
+
+        # Decision thresholds based on empirical benchmarks:
+        # - Spawn overhead: ~19s for 4 workers
+        # - Throughput: workers=0 ~5.7 it/s, workers=4 ~8.8 it/s
+        # - Break-even: ~300 iterations (19s / (1/5.7 - 1/8.8))
+        if total_iterations < 300:
+            if configured_workers > 0:
+                logger.info(f"Short training ({total_iterations} iterations): using workers=0 to avoid spawn overhead")
+            return 0
+
+        if total_iterations < 1000:
+            effective = min(configured_workers, 2)
+            if effective != configured_workers:
+                logger.info(
+                    f"Medium training ({total_iterations} iterations): using workers={effective} "
+                    f"instead of {configured_workers}"
+                )
+            return effective
+
+        # Long training: use configured workers (spawn overhead amortized)
+        if configured_workers > 0:
+            logger.info(
+                f"Long training ({total_iterations} iterations): using workers={configured_workers} "
+                f"(spawn overhead will be amortized)"
+            )
+        return configured_workers
 
     def _setup_train(self) -> None:
         """Run parent setup, then fix warmup for small datasets.

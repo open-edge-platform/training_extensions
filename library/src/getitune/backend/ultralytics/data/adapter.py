@@ -20,7 +20,18 @@ from .geometry import build_ratio_pad, xyxy_abs_to_xywh_norm
 class UltralyticsDatasetAdapter(TorchDataset):
     """Wrap a getitune ``VisionDataset`` as Ultralytics samples."""
 
-    def __init__(self, vision_dataset: VisionDataset, *, include_masks: bool = False) -> None:
+    def __init__(
+        self,
+        vision_dataset: VisionDataset,
+        *,
+        include_masks: bool = False,
+    ) -> None:
+        """Initialize the adapter.
+
+        Args:
+            vision_dataset: The getitune VisionDataset to wrap.
+            include_masks: Whether to include instance masks in the output.
+        """
         self._dataset = vision_dataset
         self._include_masks = include_masks
 
@@ -94,20 +105,18 @@ class UltralyticsDatasetAdapter(TorchDataset):
                     mask_tensor = torch.as_tensor(mask_tensor)
                 if mask_tensor.ndim == 2:
                     mask_tensor = mask_tensor.unsqueeze(0)
+
                 # Resize masks to tensor dimensions if they differ (val/test
                 # subsets may deliver masks at original image resolution while
                 # the image tensor is already resized + padded).
+                # Use nearest-neighbor interpolation to preserve binary mask
+                # values without artifacts from bilinear smoothing.
                 if mask_tensor.shape[1:] != (tensor_h, tensor_w):
-                    mask_tensor = (
-                        torch.nn.functional.interpolate(
-                            mask_tensor.unsqueeze(0).float(),
-                            size=(tensor_h, tensor_w),
-                            mode="bilinear",
-                            align_corners=False,
-                        )[0]
-                        .gt_(0.5)
-                        .float()
-                    )
+                    mask_tensor = torch.nn.functional.interpolate(
+                        mask_tensor.unsqueeze(0).float(),
+                        size=(tensor_h, tensor_w),
+                        mode="nearest",
+                    )[0]
                 result["masks"] = mask_tensor.float()
 
                 # Generate per-pixel semantic class labels at the same spatial
