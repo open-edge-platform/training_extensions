@@ -31,6 +31,7 @@ export const HOTKEYS = {
 const COMMON_HOTKEYS = {
     undo: HOTKEYS.undo,
     redo: HOTKEYS.redo,
+    redoAlt: HOTKEYS.redoAlt,
     toggleAnnotationsVisibility: HOTKEYS.toggleAnnotationsVisibility,
     deleteAnnotation: HOTKEYS.deleteAnnotation,
     fitToScreen: HOTKEYS.fitToScreen,
