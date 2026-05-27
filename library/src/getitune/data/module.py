@@ -10,7 +10,6 @@ import multiprocessing
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import polars as pl
 from datumaro.experimental.export_import import import_dataset
 from datumaro.experimental.fields import Subset
 from lightning import LightningDataModule
@@ -142,6 +141,7 @@ class DataModule(LightningDataModule):
         Args:
             dataset: A ``datumaro.experimental.Dataset`` loaded via ``import_dataset``.
         """
+        storage_dtype: str | None = None
         config_mapping = {
             self.train_subset.subset_name: self.train_subset,
             self.val_subset.subset_name: self.val_subset,
@@ -174,10 +174,21 @@ class DataModule(LightningDataModule):
                 logger.warning(f"Subset '{name}' is empty in the dataset. Skip it")
                 continue
 
+            if storage_dtype is None:
+                storage_dtype = detect_image_dtype(dm_subset.df["media"][0])
+
+            if subset_cfg.intensity.storage_dtype != storage_dtype:
+                logger.warning(
+                    f"Overriding intensity storage_dtype '{subset_cfg.intensity.storage_dtype}' "
+                    f"with auto-detected '{storage_dtype}'",
+                )
+                subset_cfg.intensity.storage_dtype = storage_dtype
+
             subset_dataset = DatasetFactory.create(
                 task=self.task,
                 dm_subset=dm_subset,
                 cfg_subset=subset_cfg,
+                storage_dtype=storage_dtype,
                 ignore_index=self.ignore_index,
             )
 
@@ -188,7 +199,6 @@ class DataModule(LightningDataModule):
                 )
             self.subsets[name] = subset_dataset
             label_infos += [self.subsets[name].label_info]
-            logger.info(f"Add name: {name}, self.subsets: {self.subsets}")
 
         if self._is_meta_info_valid(label_infos) is False:
             msg = "All data meta infos of subsets should be the same."
@@ -326,7 +336,9 @@ class DataModule(LightningDataModule):
             instance.input_std = None
 
         # Auto-detect storage dtype from the training dataset's image files.
-        instance._detect_and_update_storage_dtype(train_dataset)  # noqa: SLF001
+        detected = detect_image_dtype(train_dataset.dm_subset.df["media"][0])
+        if instance.train_subset.intensity.storage_dtype != detected:
+            instance.train_subset.intensity.storage_dtype = detected
 
         # Propagate intensity config from train subset (mirrors __init__).
         instance.input_intensity_config = getattr(instance.train_subset, "intensity", None)
@@ -402,40 +414,6 @@ class DataModule(LightningDataModule):
     def _is_meta_info_valid(self, label_infos: list[LabelInfo]) -> bool:
         """Check whether there are mismatches in the metainfo for the all subsets."""
         return bool(all(label_info == label_infos[0] for label_info in label_infos))
-
-    def _detect_and_update_storage_dtype(self, train_dataset: VisionDataset) -> None:
-        """Auto-detect storage dtype from the training dataset and update the intensity config.
-
-        Args:
-            train_dataset: The training VisionDataset with a ``dm_subset`` attribute.
-        """
-        intensity = getattr(self.train_subset, "intensity", None)
-        if intensity is None:
-            return
-
-        dm_subset = getattr(train_dataset, "dm_subset", None)
-        if dm_subset is None:
-            return
-
-        # Get an image path from the underlying DataFrame directly.
-        # This avoids iterating the dataset (which may fail if the schema
-        # was converted with the wrong storage dtype).
-        try:
-            frame = dm_subset.df
-            if "media" not in frame.columns or frame["media"].dtype != pl.String:
-                return
-            first_path = frame["media"][0]
-            if first_path is None:
-                return
-            detected = detect_image_dtype(first_path)
-        except (AttributeError, IndexError, OSError, TypeError, ValueError):
-            return
-
-        if intensity.storage_dtype != detected:
-            logger.info(
-                f"Auto-detected image storage dtype '{detected}' (intensity config had '{intensity.storage_dtype}')",
-            )
-            intensity.storage_dtype = detected
 
     def _get_dataset(self, subset: str) -> VisionDataset:
         if (dataset := self.subsets.get(subset)) is None:
