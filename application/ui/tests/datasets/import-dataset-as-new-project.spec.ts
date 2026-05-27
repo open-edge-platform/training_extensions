@@ -21,8 +21,7 @@ import {
 } from './utils';
 
 const openCreateFromDatasetDialog = async (page: Page) => {
-    await page.getByRole('button', { name: 'Create project' }).click();
-    await page.getByText('Create from dataset').click();
+    await page.getByRole('button', { name: 'Create from dataset' }).click();
 };
 
 const uploadAndWaitForPreparation = async (importDatasetPage: ImportDatasetPage) => {

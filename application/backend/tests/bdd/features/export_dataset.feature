@@ -24,13 +24,10 @@ Feature: Export Dataset
     Examples:
       | export format | archive name     | filters                                                    | image count | frame count |
       | YOLO          | dataset-yolo.zip | { }                                                        | 34          | 0           |
-      | YOLO          | dataset-yolo.zip | { "subsets": ["training", "testing"] }                     | 27          | 0           |
       | YOLO          | dataset-yolo.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 14          | 0           |
       | GETI          | dataset-geti.zip | { }                                                        | 30          | 4           |
-      | GETI          | dataset-geti.zip | { "subsets": ["training", "testing"] }                     | 24          | 3           |
       | GETI          | dataset-geti.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 10          | 4           |
       | COCO          | dataset-coco.zip | { }                                                        | 34          | 0           |
-      | COCO          | dataset-coco.zip | { "subsets": ["training", "testing"] }                     | 27          | 0           |
       | COCO          | dataset-coco.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 14          | 0           |
 
   @export @classification
@@ -52,10 +49,8 @@ Feature: Export Dataset
     Examples:
       | export format | archive name     | filters                                             | image count | frame count |
       | GETI          | dataset-geti.zip | { }                                                 | 30          | 10          |
-      | GETI          | dataset-geti.zip | { "subsets": ["training", "testing"] }              | 20          | 8           |
       | GETI          | dataset-geti.zip | { "labels": ["cat"], "include_unannotated": false } | 15          | 5           |
       | VOC           | dataset-voc.zip  | { }                                                 | 40          | 0           |
-      | VOC           | dataset-voc.zip  | { "subsets": ["training", "testing"] }              | 28          | 0           |
       | VOC           | dataset-voc.zip  | { "labels": ["cat"], "include_unannotated": false } | 20          | 0           |
 
   @export @segmentation
@@ -77,8 +72,6 @@ Feature: Export Dataset
     Examples:
       | export format | archive name     | filters                       | image count | frame count |
       | GETI          | dataset-geti.zip | { }                           | 30           | 6          |
-      | GETI          | dataset-geti.zip | { "subsets": ["validation"] } | 10           | 2          |
       | GETI          | dataset-geti.zip | { "labels": ["person"] }      | 30           | 6          |
       | COCO          | dataset-coco.zip | { }                           | 36           | 0          |
-      | COCO          | dataset-coco.zip | { "subsets": ["validation"] } | 12           | 0          |
       | COCO          | dataset-coco.zip | { "labels": ["person"] }      | 36           | 0          |

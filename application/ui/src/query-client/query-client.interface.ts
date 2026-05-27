@@ -179,6 +179,6 @@ export type Meta = {
     awaits?: QueryKey<paths>[];
     error?: {
         message?: string;
-        notify?: boolean;
+        notify?: (error: unknown) => boolean;
     };
 };

@@ -11,9 +11,9 @@ type PredictionModelSelectorProps = {
 };
 
 export const PredictionModelSelector = ({ isDisabled }: PredictionModelSelectorProps) => {
-    const { models, selectedModelId, changeSelectedModelId } = usePredictionSetup();
+    const { selectableModels, selectedModelId, changeSelectedModelId } = usePredictionSetup();
 
-    if (isEmpty(models)) {
+    if (isEmpty(selectableModels)) {
         return null;
     }
 
@@ -21,12 +21,12 @@ export const PredictionModelSelector = ({ isDisabled }: PredictionModelSelectorP
         <Picker
             isQuiet
             aria-label={'Select prediction model'}
-            items={models}
+            items={selectableModels}
             selectedKey={selectedModelId}
             isDisabled={isDisabled}
             onSelectionChange={(key) => key !== null && changeSelectedModelId(String(key))}
         >
-            {(item) => <Item key={item.id}>{item.name}</Item>}
+            {(item) => <Item key={item.modelVariantId}>{item.name}</Item>}
         </Picker>
     );
 };

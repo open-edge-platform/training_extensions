@@ -18,21 +18,29 @@ import type {
 } from '../../webworkers/segment-anything.worker.interface';
 import { executeWithTimeout } from '../execute-with-timeout';
 import { convertToolShapeToGetiShape } from '../utils';
+import {
+    SAM_DECODER_TIMEOUT_MS,
+    SAM_ENCODER_TIMEOUT_MS,
+    SAM_ENCODING_GC_TIME_MS,
+    SAM_WORKER_BUILD_TIMEOUT_MS,
+    SAM_WORKER_INIT_TIMEOUT_MS,
+} from './sam-timeouts';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
 type SegmentAnythingRemoteInstance = Remote<SegmentAnythingWorkerInstance>;
-const SAM_DECODER_TIMEOUT_MS = 20000;
-const SAM_ENCODER_TIMEOUT_MS = 30000;
-const SAM_WORKER_BUILD_TIMEOUT_MS = 10000;
-const SAM_WORKER_INIT_TIMEOUT_MS = SAM_ENCODER_TIMEOUT_MS;
-// How long an unobserved encoding (a large Float32 tensor per image) is kept in
-// the query cache before being garbage-collected. Short on purpose: encodings
-// are heavy and are cheap-ish to recompute, so we favor memory over perf.
-const SAM_ENCODING_GC_TIME_MS = 60_000;
 
 // A single shared worker hosts BOTH the encoder and decoder ONNX sessions.
 // Spawning two workers used to double the OpenCV + ONNX Runtime WASM footprint
 // for no functional gain (encoder/decoder always run sequentially anyway).
+//
+// `gcTime: Infinity` is critical: the default 5-min gc would evict the worker
+// entry whenever SAM is unmounted (switching tools/projects), causing the
+// next mount to spawn a brand-new worker that re-downloads the ORT wasm +
+// JSEP `.mjs` glue + the multi-MB SAM `.onnx` models. It would also leak the
+// previous worker, since tanstack doesn't fire the abort signal on gc — only
+// on cancellation of an in-flight query. Keeping the entry alive for the
+// lifetime of the page reuses the same worker (and its resident sessions)
+// across every mount.
 const segmentAnythingWorkerQueryOptions = (enabled = true) =>
     queryOptions<{ worker: Worker; instance: SegmentAnythingRemoteInstance }>({
         queryKey: ['workers', 'SEGMENT_ANYTHING'],
@@ -42,7 +50,17 @@ const segmentAnythingWorkerQueryOptions = (enabled = true) =>
             });
             // Terminate the worker if the query is cancelled (e.g. annotator unmounts)
             // before build/init resolve, so we don't leak the in-flight worker.
-            signal.addEventListener('abort', worker.terminate, { once: true });
+            //
+            // CRITICAL: pass an arrow function, NOT `worker.terminate` directly.
+            // addEventListener invokes the listener with `this = signal`, and
+            // `Worker.prototype.terminate` requires `this` to be a Worker — it
+            // throws "Illegal invocation" silently and the worker is never
+            // killed. With React StrictMode double-mounting effects (or any
+            // transient cancellation), every cycle leaked a fresh worker, each
+            // of which independently re-fetched opencv (~1MB), the ort bundle,
+            // ort wasm, and the SAM `.onnx` models. That was the dominant
+            // source of the "ort/opencv fetched 6 times" symptom.
+            signal.addEventListener('abort', () => worker.terminate(), { once: true });
 
             try {
                 const samWorker = wrap<SegmentAnythingWorkerApi>(worker);
@@ -71,6 +89,7 @@ const segmentAnythingWorkerQueryOptions = (enabled = true) =>
             }
         },
         staleTime: Infinity,
+        gcTime: Infinity,
         enabled,
     });
 
@@ -80,7 +99,7 @@ const getSegmentAnythingEncodingQueryKey = (mediaItem: Media) => {
         : ['segment-anything-model', 'encoding', mediaItem.id];
 };
 
-export const segmentAnythingEncodingQueryOptions = (
+const segmentAnythingEncodingQueryOptions = (
     mediaItem: Media,
     model: SegmentAnythingRemoteInstance | undefined,
     image: ImageData,
@@ -157,10 +176,9 @@ const useDecodingFn = (model: SegmentAnythingRemoteInstance | undefined, encodin
             model.processDecoder(encoding, {
                 points,
                 boxes: [],
-                ouputConfig: {
+                outputConfig: {
                     type: decoderOutput,
                 },
-                image: undefined,
             }),
             'SAM decoder',
             SAM_DECODER_TIMEOUT_MS

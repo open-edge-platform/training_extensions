@@ -38,6 +38,7 @@ export const useDeleteStagedDataset = ({
     const params = { params: { path: { staged_dataset_id: stagedDatasetId } } };
 
     const deleteMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}', {
+        meta: { error: { notify: (error: unknown) => !isInvalidStagedFile(error) } },
         onSuccess: () => {
             deleteEntry?.();
             onSuccess?.();

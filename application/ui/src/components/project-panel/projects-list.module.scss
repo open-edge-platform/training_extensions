@@ -1,6 +1,8 @@
 @use '../../shared/styles/line-clamp' as lineClamp;
 
 .panelButtons {
+    margin-top: var(--spectrum-global-dimension-size-100);
+    border-top: var(--spectrum-alias-border-size-thick) solid var(--spectrum-global-color-gray-300);
     padding: var(--spectrum-global-dimension-size-125);
 }
 

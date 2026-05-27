@@ -298,11 +298,11 @@ cache to OS-conventional per-user directories (resolved via Tauri's
 **outside** the install prefix, so reinstalls and upgrades preserve them
 — same convention as Chrome and VSCode.
 
-| Platform | Data                                              | Logs                              | Cache (matplotlib)                           |
-| -------- | ------------------------------------------------- | --------------------------------- | -------------------------------------------- |
-| macOS    | `~/Library/Application Support/com.intel.geti`    | `~/Library/Logs/com.intel.geti`   | `~/Library/Caches/com.intel.geti/matplotlib` |
-| Windows  | `%APPDATA%\com.intel.geti`                        | `%APPDATA%\com.intel.geti\logs`   | `%LOCALAPPDATA%\com.intel.geti\matplotlib`   |
-| Linux    | `~/.local/share/com.intel.geti`                   | `~/.local/state/com.intel.geti`   | `~/.cache/com.intel.geti/matplotlib`         |
+| Platform | Data                                           | Logs                            | Cache (matplotlib)                           |
+| -------- | ---------------------------------------------- | ------------------------------- | -------------------------------------------- |
+| macOS    | `~/Library/Application Support/com.intel.geti` | `~/Library/Logs/com.intel.geti` | `~/Library/Caches/com.intel.geti/matplotlib` |
+| Windows  | `%APPDATA%\com.intel.geti`                     | `%APPDATA%\com.intel.geti\logs` | `%LOCALAPPDATA%\com.intel.geti\matplotlib`   |
+| Linux    | `~/.local/share/com.intel.geti`                | `~/.local/state/com.intel.geti` | `~/.cache/com.intel.geti/matplotlib`         |
 
 Set `DATA_DIR`, `LOG_DIR`, or `MPLCONFIGDIR` in the environment to override
 any of them (the Rust shell only fills in what's missing).

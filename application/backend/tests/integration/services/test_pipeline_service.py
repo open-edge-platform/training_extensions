@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 from collections.abc import Callable
 from enum import StrEnum
 from unittest.mock import MagicMock
@@ -17,6 +16,7 @@ from app.services import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventType
 from app.services.pipeline_service import (
     DeviceInt8NotSupportedError,
+    FolderSinkNotAccessibleError,
     IncompatibleModelVariantError,
     OtherProjectActiveError,
 )
@@ -144,13 +144,14 @@ class TestPipelineServiceIntegration:
     ):
         """Test that updating a pipeline to running raises error if another project's pipeline is already running."""
         # Create an active pipeline in one project
-        _, active_pipeline = fxt_project_with_pipeline(is_running=True, project_index=0)
+        active_project_db, active_pipeline = fxt_project_with_pipeline(is_running=True, project_index=0)
         # Create a second project/pipeline (not running)
         _, other_pipeline = fxt_project_with_pipeline(is_running=False, project_index=1)
         # Try to activate the second pipeline while the first is still running
         with pytest.raises(OtherProjectActiveError) as excinfo:
             fxt_pipeline_service.update_pipeline(other_pipeline.project_id, {"status": PipelineStatus.RUNNING})
         assert str(active_pipeline.project_id) in str(excinfo.value)
+        assert active_project_db.name in str(excinfo.value)
 
     @pytest.mark.parametrize("pipeline_attr", [PipelineField.SINK_ID, PipelineField.SOURCE_ID])
     def test_reconfigure_running_pipeline(
@@ -230,6 +231,22 @@ class TestPipelineServiceIntegration:
         db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
         assert str(updated.model_id) == target_model.id
         assert db_updated.model_variant_id == target_variant.id
+
+    def test_switch_variant_only_derives_model_id(
+        self,
+        fxt_project_with_pipeline,
+        fxt_pipeline_service,
+    ):
+        """
+        Providing only `model_variant_id` (no `model_id`) should raise an error
+        """
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        with pytest.raises(ValueError, match="It is not possible to provide only a model variant ID"):
+            _ = fxt_pipeline_service.update_pipeline(
+                db_pipeline.project_id,
+                {"model_variant_id": str(uuid4())},
+            )
 
     def test_switch_model_defaults_to_fp16_openvino_variant(
         self,
@@ -337,7 +354,7 @@ class TestPipelineServiceIntegration:
                 db_pipeline.project_id,
                 {"model_id": target_model.id, "model_variant_id": non_existent_variant_id},
             )
-        assert exc_info.value.resource_type == ResourceType.MODEL
+        assert exc_info.value.resource_type == ResourceType.MODEL_VARIANT
         assert exc_info.value.resource_id == non_existent_variant_id
 
     def test_switch_model_int8_variant_raises_on_unsupported_device(
@@ -488,6 +505,31 @@ class TestPipelineServiceIntegration:
         db_session.flush()
 
         with pytest.raises(ValueError, match="Pipeline cannot be in 'running' state"):
+            fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": PipelineStatus.RUNNING})
+
+        assert not db_session.get(PipelineDB, db_pipeline.project_id).is_running
+
+    def test_enable_pipeline_with_inaccessible_folder_sink(
+        self,
+        fxt_project_with_pipeline,
+        fxt_pipeline_service,
+        db_session,
+        tmp_path,
+    ):
+        """
+        Test that enabling a pipeline with a folder sink that cannot be created raises FolderSinkNotAccessibleError.
+        """
+        _, db_pipeline = fxt_project_with_pipeline(is_running=False)
+
+        # Create a file, then try to use it as a parent directory - always fails regardless of privileges
+        blocking_file = tmp_path / "not_a_directory"
+        blocking_file.write_bytes(b"")
+        inaccessible_path = str(blocking_file / "subdir")
+
+        db_pipeline.sink.config_data = {"folder_path": inaccessible_path}
+        db_session.flush()
+
+        with pytest.raises(FolderSinkNotAccessibleError):
             fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": PipelineStatus.RUNNING})
 
         assert not db_session.get(PipelineDB, db_pipeline.project_id).is_running

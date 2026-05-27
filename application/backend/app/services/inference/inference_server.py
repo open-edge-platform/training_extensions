@@ -7,7 +7,7 @@ from uuid import UUID
 from loguru import logger
 
 from app.db import get_db_session
-from app.models import BatchInferenceInput, BatchInferenceMedia, BatchInferencePrediction, BatchInferenceResult, Label
+from app.models import BatchInferenceInput, DatasetItemAnnotation, Label
 from app.models.inference import InferenceModel, InferenceState, InferenceStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.system import DeviceInfo
@@ -44,24 +44,38 @@ class InferenceServer:
         self._loading_model: bool = False
         self._lock = threading.Lock()
 
-    def set_inference_model(self, project_id: UUID, model_id: UUID, device: DeviceInfo, ttl: int) -> bool:
+    def set_inference_model(
+        self,
+        project_id: UUID,
+        model_id: UUID,
+        device: DeviceInfo,
+        ttl: int,
+        model_variant_id: UUID | None = None,
+    ) -> bool:
         """
         Load the specified model for inference.
-        If the same model is already loaded on the same device, it does nothing.
+        If the same model variant is already loaded on the same device, it does nothing.
 
         Args:
             project_id: Project identifier.
             model_id: Model identifier.
             device: Device to use for inference.
             ttl: Model time-to-live (TTL).
+            model_variant_id: Optional model variant identifier. If provided, the specified variant
+                will be loaded. If None, the default OpenVINO FP16 variant is selected.
 
         Returns:
             True, if the model has been loaded, False if model has not been changed.
         """
         self._lock.acquire()
         try:
-            if self._loaded_model and self._loaded_model.model_id == model_id and self._loaded_model.device == device:
-                return False  # same model and device, no need to reload
+            if (
+                self._loaded_model
+                and self._loaded_model.model_id == model_id
+                and self._loaded_model.device == device
+                and (model_variant_id is None or self._loaded_model.variant_id == model_variant_id)
+            ):
+                return False  # same model variant and device, no need to reload
             self._loading_model = True
 
             with get_db_session() as db:
@@ -69,25 +83,38 @@ class InferenceServer:
 
                 model_service = ModelService(data_dir=self._data_dir, db_session=db)
 
-                format = ModelFormat.OPENVINO
-                precision = ModelPrecision.FP16
-                logger.info("Loading model {} with format {} on device {}", model_id, format, device)
-                model_variants = model_service.get_model_variants(project_id=project_id, model_id=model_id)
-                model_variant = next(
-                    (mv for mv in model_variants if mv.format == format and mv.precision == precision), None
+                logger.info(
+                    "Loading model {} (variant {}) on device {}",
+                    model_id,
+                    model_variant_id if model_variant_id else "default",
+                    device,
                 )
-                if not model_variant:
-                    raise ResourceNotFoundError(
-                        resource_type=ResourceType.MODEL,
-                        resource_id=f"{model_id} with format {format.value} and precision {precision}",
+                model_variants = model_service.get_model_variants(project_id=project_id, model_id=model_id)
+                if model_variant_id is not None:
+                    model_variant = next((mv for mv in model_variants if mv.id == model_variant_id), None)
+                    if not model_variant:
+                        raise ResourceNotFoundError(
+                            resource_type=ResourceType.MODEL,
+                            resource_id=f"{model_id} variant {model_variant_id}",
+                        )
+                else:
+                    format = ModelFormat.OPENVINO
+                    precision = ModelPrecision.FP16
+                    model_variant = next(
+                        (mv for mv in model_variants if mv.format == format and mv.precision == precision), None
                     )
+                    if not model_variant:
+                        raise ResourceNotFoundError(
+                            resource_type=ResourceType.MODEL,
+                            resource_id=f"{model_id} with format {format.value} and precision {precision}",
+                        )
                 files_exist, paths = model_service.get_model_binary_files(
                     project_id=project_id, model_id=model_id, model_variant_id=model_variant.id
                 )
                 if not files_exist:
                     raise ResourceNotFoundError(
                         resource_type=ResourceType.MODEL,
-                        resource_id=f"{model_id} with format {format.value}",
+                        resource_id=f"{model_id} variant {model_variant.id}",
                     )
                 model_xml_path, _ = paths
 
@@ -123,7 +150,9 @@ class InferenceServer:
             ),
         )
 
-    def infer_batch(self, labels: list[Label], inputs: list[BatchInferenceInput]) -> BatchInferenceResult:
+    def infer_batch(
+        self, labels: list[Label], inputs: list[BatchInferenceInput]
+    ) -> dict[tuple[UUID, int | None], list[DatasetItemAnnotation]]:
         """
         Perform batch inference on the provided inputs using the currently loaded model.
         It processes each input, runs inference, and converts the raw predictions into a structured
@@ -134,7 +163,7 @@ class InferenceServer:
             inputs: List of inputs
 
         Returns:
-            Prediction results for inputs
+            Dictionary mapping (media_id, frame_index) tuples to lists of DatasetItemAnnotation predictions.
         """
         if self._loaded_model is None:
             raise RuntimeError("No model loaded for inference")
@@ -150,17 +179,12 @@ class InferenceServer:
         finally:
             self._lock.release()
 
-        result = BatchInferenceResult(predictions=[])
-        for idx, input in enumerate(inputs):
-            result.predictions.append(
-                BatchInferencePrediction(
-                    media=BatchInferenceMedia(id=input.media_id, frame_index=input.frame_index),
-                    prediction=convert_prediction(
-                        labels=labels, frame_data=input_data[idx], prediction=inference_result[idx]
-                    ),
-                )
+        return {
+            (input.media_id, input.frame_index): convert_prediction(
+                labels=labels, frame_data=input_data[idx], prediction=inference_result[idx]
             )
-        return result
+            for idx, input in enumerate(inputs)
+        }
 
     def stop(self) -> None:
         """

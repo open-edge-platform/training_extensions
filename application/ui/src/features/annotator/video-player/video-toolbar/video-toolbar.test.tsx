@@ -5,7 +5,6 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedVideoFrame } from 'mocks/mock-media';
-import { getMockedModel } from 'mocks/mock-model';
 import { render } from 'test-utils/render';
 
 import { VideoToolbar } from './video-toolbar.component';
@@ -18,39 +17,57 @@ const mockVideoFrame = getMockedVideoFrame({
     duration: 10,
 });
 
+const MOCKED_VIDEO_PLAYER_CONTEXT = {
+    videoFrame: mockVideoFrame,
+    step: 1,
+    changeStep: vi.fn(),
+    isMuted: false,
+    toggleMute: vi.fn(),
+    playbackRate: 1,
+    changePlaybackRate: vi.fn(),
+    videoControls: {
+        isPlaying: false,
+        play: vi.fn(),
+        pause: vi.fn(),
+        goto: vi.fn(),
+        previousFrame: vi.fn(),
+        nextFrame: vi.fn(),
+        canSelectPreviousFrame: true,
+        canSelectNextFrame: true,
+    },
+};
+
 vi.mock('../video-player-provider.component', () => ({
-    useVideoPlayer: () => ({
-        videoFrame: mockVideoFrame,
-        step: 1,
-        changeStep: vi.fn(),
-        isMuted: false,
-        toggleMute: vi.fn(),
-        playbackRate: 1,
-        changePlaybackRate: vi.fn(),
-        videoControls: {
-            isPlaying: false,
-            play: vi.fn(),
-            pause: vi.fn(),
-            goto: vi.fn(),
-            previousFrame: vi.fn(),
-            nextFrame: vi.fn(),
-            canSelectPreviousFrame: true,
-            canSelectNextFrame: true,
-        },
-    }),
+    useVideoPlayer: () => MOCKED_VIDEO_PLAYER_CONTEXT,
+    useVideoPlayerContext: () => MOCKED_VIDEO_PLAYER_CONTEXT,
 }));
 
 vi.mock('../../../../hooks/use-project-labels.hook', () => ({
     useProjectLabels: () => [getMockedLabel({ id: 'label-1', name: 'Cat' })],
 }));
 
+vi.mock('../../selected-media-item-provider.component', () => ({
+    useSelectedMediaItem: () => ({
+        mediaItem: getMockedVideoFrame(),
+    }),
+}));
+
 vi.mock('../../predictions-setup-provider.component', async (importOriginal) => ({
     ...(await importOriginal()),
     usePredictionSetup: () => ({
+        selectedDevice: 'cpu',
+        changeSelectedDevice: vi.fn(),
+
         selectedModelId: 'model-1',
+        selectedModel: { id: 'variant-1', name: 'Test Model [FP32]', modelId: 'model-1' },
         changeSelectedModelId: vi.fn(),
-        models: [getMockedModel({ id: 'model-1', name: 'Test Model' })],
+        selectableModels: [{ id: 'variant-1', name: 'Test Model [FP32]', modelId: 'model-1' }],
     }),
+}));
+
+vi.mock('../api/use-video-frames-predictions', async (importOriginal) => ({
+    ...(await importOriginal()),
+    usePrefetchVideoFramesPredictions: vi.fn(),
 }));
 
 const toggleToolbar = async () => {

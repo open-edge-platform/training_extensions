@@ -2,7 +2,7 @@
 
 Modern React application for AI model training and inference, built with Rsbuild and TypeScript.
 
-The Geti Edge applications aim to provide a user experience and design language consistent with the main [Geti application](https://github.com/open-edge-platform/geti). To achieve this, we reuse many architectural decisions from Geti.
+The Geti™ applications aim to provide a user experience and design language consistent with the main [Geti application](https://github.com/open-edge-platform/geti). To achieve this, we reuse many architectural decisions from Geti™, including the shared `@geti/ui`, `@geti/config`, and `@geti/smart-tools` packages.
 
 ## Goals
 
@@ -14,8 +14,8 @@ The Geti Edge applications aim to provide a user experience and design language 
 
 ### Prerequisites
 
-- Node.js >= v24.2.0
-- npm >= v11.3.0
+- Node.js >= v24.2.0 (see `.nvmrc` — `nvm use`)
+- npm >= v11.14.0
 
 ### Installation
 
@@ -23,17 +23,26 @@ The Geti Edge applications aim to provide a user experience and design language 
 npm install
 ```
 
+The `preinstall` script clones `@geti/config`, `@geti/ui`, and `@geti/smart-tools` from the `open-edge-platform/geti` repository at a pinned commit using [`tiged`](https://github.com/tiged/tiged) (the maintained fork of Degit). These are workspace packages installed into `packages/` and are **gitignored** — never commit that directory.
+
 ### Development
 
 ```bash
-npm run dev          # Start dev server at localhost:3000
-npm run server       # Start backend at localhost:7860 (separate terminal)
+npm start            # Start dev server at http://localhost:3000
+npm run server       # Start FastAPI backend at http://localhost:7860 (separate terminal, requires `uv`)
+```
+
+The dev server proxies API requests to `PUBLIC_API_BASE_URL` (defaults to `http://localhost:7860`). The `PUBLIC_` prefix is required for Rsbuild client exposure.
+While the backend is running on `localhost:7860`, use `npm run update-spec` to download a fresh OpenAPI spec and regenerate types.
+
+```bash
+npm run update-spec      # Download openapi spec and generate TypeScript types from src/api/openapi-spec.json
 ```
 
 ### Build
 
 ```bash
-npm run build        # Production build
+npm run build        # Production build to dist/
 npm run preview      # Preview production build
 ```
 
@@ -41,67 +50,79 @@ npm run preview      # Preview production build
 
 ```
 .
-├── packages/
-│   ├── config           # Shared configuration (`@geti/config`)
-│   ├── smart-tools      # AI algorithms and tools (`@geti/smart-tools`)
-│   └── ui               # Shared UI library (`@geti/ui`)
+├── packages/                # Cloned via tiged (gitignored)
+│   ├── config               # Shared ESLint/TS/Jest configs (@geti/config)
+│   ├── smart-tools          # AI algorithms — RITM, SAM, OpenCV, ONNX Runtime (@geti/smart-tools)
+│   └── ui                   # Shared React Spectrum-based UI library (@geti/ui)
 ├── src/
-│   ├── api/             # OpenAPI client and query hooks
-│   ├── assets/          # Images, illustrations, icons
-│   ├── components/      # Reusable UI components
-│   ├── features/        # Application-specific feature modules
-│   │   ├── annotator/   # Annotation tools, canvas, providers
-│   │   ├── dataset/     # Data collection, gallery, media preview
-│   │   ├── inference/   # Live inference, WebRTC streaming
-│   │   └── project/     # Project creation, configuration
-│   ├── hooks/           # Common hooks not necessarily related to a feature
-│   ├── routes/          # Route elements and loaders
-│   ├── constants/       # App-wide constants (paths, config)
-│   ├── providers.tsx    # Global providers (QueryClient, Theme, Router, etc.)
-│   └── router.tsx       # Application entrypoint (routing setup)
-├── src-tauri/           # Tauri configuration
-└── tests/               # Component and E2E tests
+│   ├── api/                 # OpenAPI client (openapi-fetch + openapi-react-query)
+│   ├── assets/              # Images, illustrations, icons
+│   ├── components/          # Reusable UI components
+│   ├── constants/           # Route paths (static-path), shared domain types
+│   ├── features/            # Domain modules (see below)
+│   │   ├── annotator/       # Annotation tools, canvas, providers
+│   │   ├── dataset/         # Data collection, gallery, media preview
+│   │   ├── inference/       # Live inference, WebRTC streaming
+│   │   └── project/         # Project creation, configuration
+│   ├── hooks/               # Cross-feature hooks, including hooks/api/
+│   ├── platform/            # Cross-platform abstractions (web vs Tauri via *.tauri.ts)
+│   ├── query-client/        # QueryClient config and typed query-key system
+│   ├── routes/              # Route-level components and loaders
+│   ├── shared/              # Cross-feature types, providers, annotation utilities
+│   ├── test-utils/          # Custom render/renderHook wrapped with providers
+│   ├── index.tsx            # Application entrypoint
+│   ├── layout.tsx           # Top-level layout
+│   ├── providers.tsx        # Global providers (QueryClient, Theme, Router, etc.)
+│   └── router.tsx           # Routing setup
+├── src-tauri/               # Tauri desktop wrapper (Rust)
+├── mocks/                   # MSW handlers and mock entity factories
+└── tests/                   # Playwright component and E2E tests
 ```
 
 ### Key Directories
 
-**`api/`** - OpenAPI client and tanstack/query hooks, auto-generated TypeScript types from OpenAPI spec  
-**`components/`** - Locally reusable UI primitives; promote mature components to `@geti/ui` (use `.component.tsx` suffix)  
-**`features/`** - Domain-driven modules with their own components, hooks, and providers  
-**`routes/`** & **`router.tsx`** - Routing setup; keep route files minimal—extract complex routes into feature modules  
-**`providers.tsx`** - Global application providers (e.g., `QueryClientProvider`, `ThemeProvider`, `RouterProvider`)  
-**`packages/`** - Shared libraries from Geti ecosystem
-
-> **Note:**  
-> Currently, `@geti/ui`, `@geti/config`, and `@geti/smart-tools` are installed via [Degit](https://github.com/Rich-Harris/degit) to avoid npm publishing. These will be published to npm as the Geti Edge ecosystem matures.
+- **`api/`** — Type-safe API client. `$api` provides `useQuery`, `useSuspenseQuery`, `useMutation`, etc., all typed from `src/api/openapi-spec.d.ts` (auto-generated, gitignored — never edit).
+- **`components/`** — Locally reusable UI primitives (use `*.component.tsx` suffix); promote mature components upstream to `@geti/ui`.
+- **`features/`** — Domain-driven modules. Each owns its own components, hooks, providers, and API hooks.
+- **`hooks/api/`** — Custom reusable API hooks composed on top of `$api`.
+- **`platform/`** — Web/Tauri-specific implementations. Files ending in `.tauri.ts` are swapped in for the desktop build.
+- **`query-client/`** — TanStack Query configuration. Query keys are typed tuples `[method, path, params?]`. Global mutation handlers auto-show error toasts and auto-invalidate via `meta.invalidateQueries`.
+- **`routes/`** / **`router.tsx`** — Routing setup; keep route files minimal — extract complex routes into feature modules.
+- **`packages/`** - Shared libraries from Geti ecosystem
 
 ## 🔧 Common Tasks
 
 ### Update API Types
 
 ```bash
-npm run update-spec  # Fetch OpenAPI spec & generate types
+npm run build:api          # Regenerate types from existing spec
+npm run update-spec        # Download fresh spec from backend, then regenerate
 ```
 
 ### Testing
 
 ```bash
-npm run test:unit           # Unit tests (Vitest)
-npm run test:unit:watch     # Watch mode
-npm run test:e2e            # E2E tests (Playwright)
-npm run test:component      # Component tests (Playwright)
+npm run test:unit          # Unit tests (Vitest + jsdom)
+npm run test:unit:watch    # Watch mode
+npm run test:unit:coverage # Coverage report (v8)
+npm run test:component     # Component tests (Playwright + MSW)
+npm run test:e2e           # E2E tests (Playwright against real backend)
 ```
+
+Run a single unit test: `npm run test:unit -- src/path/to/file.test.tsx`
+Run a single Playwright spec: `npm run test:component -- tests/path/to/file.spec.ts`
 
 ### Code Quality
 
 ```bash
-npm run lint          # Check for issues
-npm run lint:fix      # Auto-fix issues
-npm run format        # Format with Prettier
-npm run cyclic-deps-check  # Detect circular dependencies
+npm run format             # Prettier (120 chars, 4-space indent, single quotes)
+npm run lint               # ESLint with zero-warnings policy
+npm run lint:fix           # Auto-fix
+npm run cyclic-deps-check  # Detect circular dependencies (madge)
+npm run type-check         # tsc --noEmit
 ```
 
-## 🏗️ Architecture Patterns
+## 🏗️ Architecture
 
 ### Core Pillars
 
@@ -145,15 +166,16 @@ The application is built on four main pillars:
 
 ### Feature Structure
 
-Each feature follows a consistent pattern:
+Recommended structure for new features:
 
 ```
 feature-name/
-├── components/       # Feature-specific components
-├── hooks/           # Feature-specific hooks
-├── providers/       # Context providers
-├── types.ts         # TypeScript interfaces
-└── utils.ts         # Helper functions
+├── feature-name.component.tsx
+├── feature-name.module.scss
+├── feature-name.test.tsx
+├── feature-name-provider.component.tsx
+├── api/                      # Feature-specific API hooks
+└── hooks/                    # Feature-specific hooks composing API + state
 ```
 
 ### State Management
@@ -164,40 +186,48 @@ feature-name/
 
 ### Code Conventions
 
-- Functional components with TypeScript
-- Custom hooks prefixed with `use*`
-- Providers suffixed with `*Provider`
-- Components use `.component.tsx` extension
+- **File naming**: `*.component.tsx`, `*.hook.ts(x)`, `*-provider.component.tsx`, `*.module.scss`. Kebab-case throughout.
+- **Copyright header required** on every source file (enforced by ESLint):
+    ```
+    // Copyright (C) 2025-2026 Intel Corporation
+    // SPDX-License-Identifier: Apache-2.0
+    ```
+- Prefer **`type`** over `interface` (unless declaration merging is needed).
+- **No direct** `@adobe/react-spectrum`, `@react-spectrum/*`, `@react-types/*`, `@spectrum-icons` imports — go through `@geti/ui`.
+- Import sorting handled automatically by `@ianvs/prettier-plugin-sort-imports` — do not reorder manually.
+- Path aliases: `test-utils/*`, `hooks/*`, `mocks/*` (see `tsconfig.json`).
 
 ## 🤝 Contributing
 
-1. **Branch naming**: `your-username/fix-issue-1`
-2. **Commit format**: Follow conventional commits
-3. **Before PR**:
-    ```bash
-    npm run lint:fix
-    npm run format
-    npm run test:unit
-    npm run test:component
-    npm run build
-    ```
-4. **Keep changes focused** - one fix per PR
+Before opening a PR, run in this order (matches CI):
+
+```bash
+npm run format
+npm run lint
+npm run cyclic-deps-check
+npm run type-check
+npm run test:unit
+npm run test:component
+npm run build
+```
+
+Keep changes focused — one fix per PR.
 
 ### Adding a New Feature
 
-1. Create folder in `src/features/`
-2. Add components, hooks, providers as needed
-3. Update routes in `router.tsx`
-4. Add tests
+1. Create a folder in `src/features/`
+2. Add components, hooks, providers, and any feature-specific API hooks
+3. Register routes in `src/router.tsx`
+4. Add unit tests (`*.test.tsx`) and/or component tests (`tests/`)
 
 ## 🔗 API Integration
 
-The app uses `openapi-fetch` with auto-generated types and custom hooks for common endpoints.
+The app uses `openapi-fetch` with auto-generated types and custom hooks for commonly used endpoints.
 
-### Direct API Usage (for one-off calls)
+### Direct API Usage (one-off calls)
 
 ```tsx
-import { $api } from '@/api/client';
+import { $api } from '../api/client';
 
 // Query
 const { data } = $api.useQuery('get', '/api/sources');
@@ -211,18 +241,15 @@ mutation.mutate({
 });
 ```
 
-### Custom Hooks (recommended for reusable endpoints)
+### Custom Hooks (preferred for reusable endpoints)
 
-For commonly used endpoints, we provide custom hooks that prevent memory leaks and improve type completion:
+Custom hooks in `src/hooks/api/` provide better ergonomics, type completion, and automatic cache invalidation:
 
 ```tsx
-import { usePatchPipeline, usePipeline } from '@/hooks/api/pipeline.hook';
-import { useCreateProject, useProjects } from '@/hooks/api/project.hook';
+import { useCreateProject, useProjects } from '../hooks/api/project.hook';
 
-// Query with full type inference
 const { data: projects } = useProjects();
 
-// Mutation with automatic cache invalidation
 const createProject = useCreateProject();
 createProject.mutate({
     body: {
@@ -234,19 +261,16 @@ createProject.mutate({
 });
 ```
 
-**Available hooks:**
-
-- `src/hooks/api/project.hook.ts` - Project CRUD operations
-- `src/hooks/api/pipeline.hook.ts` - Pipeline management
-
-## 🖥️ Desktop App (WIP)
+## 🖥️ Desktop App
 
 ```bash
-npm run start:desktop
+npm run start:desktop      # tauri dev
+npm run build:tauri        # Tauri-targeted production build
 ```
 
-Built with [Tauri](https://tauri.app) for native desktop experience.
+Built with [Tauri](https://tauri.app). Web vs desktop code is split via the `src/platform/` abstraction — files suffixed `.tauri.ts` are substituted in the desktop bundle (e.g. `download-file.tauri.ts`, `storage-cleanup.tauri.ts`).
+More details in this [document](./src-tauri/README.md).
 
 ---
 
-For backend setup, see `../backend/readme.md`
+For backend setup, see `../backend/readme.md`.

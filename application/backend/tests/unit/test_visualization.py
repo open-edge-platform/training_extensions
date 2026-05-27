@@ -13,6 +13,7 @@ from app.utils.visualization import (
     DetectionVisualizerCreator,
     InstanceSegmentationVisualizerCreator,
     VisualizationDispatcher,
+    _compute_scale,
 )
 
 bboxes = np.array([[10, 20, 50, 60], [30, 40, 70, 80], [15, 25, 55, 65]], dtype=np.int32)
@@ -49,7 +50,6 @@ class TestDetectionVisualizerCreator(unittest.TestCase):
 
 
 class TestInstanceSegmentationVisualizerCreator(unittest.TestCase):
-    @pytest.mark.skip(reason="Disabled due to model api bug https://github.com/open-edge-platform/model_api/issues/328")
     def test_creates_visualization(self):
         creator = InstanceSegmentationVisualizerCreator()
         original_image = np.zeros((100, 100, 3), dtype=np.uint8)
@@ -68,3 +68,18 @@ class TestClassificationVisualizerCreator(unittest.TestCase):
         result = creator.create_visualization(original_image, predictions)
         self.assertIsInstance(result, np.ndarray)
         self.assertFalse(np.array_equal(result, original_image))
+
+
+class TestVisualizationHelpers(unittest.TestCase):
+    def test_compute_scale_handles_none_or_empty(self):
+        assert _compute_scale(None) == 1.0  # type: ignore[arg-type]
+        assert _compute_scale(np.array([])) == 1.0
+
+    def test_compute_scale_never_below_one(self):
+        small = np.zeros((100, 200, 3), dtype=np.uint8)
+        assert _compute_scale(small) == 1.0
+
+    def test_compute_scale_scales_with_longer_edge(self):
+        # 4K longer edge → ~3.0
+        img = np.zeros((2160, 3840, 3), dtype=np.uint8)
+        assert _compute_scale(img) == pytest.approx(3.0, rel=1e-3)

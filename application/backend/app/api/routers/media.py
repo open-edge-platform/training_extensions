@@ -1,7 +1,9 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 import os
 from datetime import datetime
+from io import BytesIO
 from typing import Annotated
 from uuid import UUID
 
@@ -18,7 +20,7 @@ from app.api.dependencies import (
     get_project,
     get_system_service,
 )
-from app.api.io_utils import write_file_to_response, write_image_to_response
+from app.api.io_utils import write_bytes_to_response, write_file_to_response, write_image_to_response
 from app.api.schemas.media import (
     AnnotatedVideoFrame,
     BulkDeleteMedia,
@@ -28,7 +30,7 @@ from app.api.schemas.media import (
     MediaWithPagination,
     SetMediaAnnotations,
 )
-from app.api.validators import MediaID
+from app.api.validators import MediaID, normalize_datetime_to_utc
 from app.core.models import Pagination
 from app.models import BatchInferenceResult, DatasetItemAnnotationStatus, DatasetItemSubset, Media, Project, Video
 from app.models.media import ImageFormat, MediaListPredictionRequest, MediaType, NotAnnotatedVideoFrame, VideoFormat
@@ -38,6 +40,7 @@ from app.services.dataset_service import AnnotationValidationError, SubsetAlread
 from app.services.inference import InferenceBusyError
 from app.services.media_prediction_service import BinaryNotFoundError, VideoRangeError
 from app.services.media_service import ImageMetadata, InvalidImageError, MediaFilters
+from app.utils.images import needs_display_normalization, normalize_image_to_png_bytes
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/media", tags=["Media"])
 
@@ -221,6 +224,9 @@ def list_media(  # noqa: PLR0913
     subset: Annotated[DatasetItemSubset | None, Query()] = None,
 ) -> MediaWithPagination:
     """List the available media and their metadata. This endpoint supports pagination."""
+    start_date = normalize_datetime_to_utc(start_date)
+    end_date = normalize_datetime_to_utc(end_date)
+
     if start_date is not None and end_date is not None and start_date > end_date:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Start date must be before end date."
@@ -328,6 +334,7 @@ def get_media_binary(
     project: Annotated[Project, Depends(get_project)],
     media: Annotated[Media | NotAnnotatedVideoFrame, Depends(_get_request_media)],
     media_service: Annotated[MediaService, Depends(get_media_service)],
+    raw: Annotated[bool, Query(description="Return the original file without normalization")] = False,
 ) -> StreamingResponse | FileResponse:
     """Get media binary content"""
     if isinstance(media, NotAnnotatedVideoFrame):
@@ -337,6 +344,17 @@ def get_media_binary(
         )
 
     binary_path = media_service.get_media_binary_path_by_id(project_id=project.id, media_id=media.id)
+
+    # Normalize high bit depth images on the fly for display; cheap mode-check first
+    if (
+        not raw
+        and media.type == MediaType.IMAGE
+        and isinstance(media.format, ImageFormat)
+        and needs_display_normalization(binary_path)
+    ):
+        png_bytes = normalize_image_to_png_bytes(binary_path)
+        return write_bytes_to_response(bytes=BytesIO(png_bytes), filename=f"{media.name}.png", media_type="image/png")
+
     filename = f"{media.name}.{media.format.value.lower()}"
 
     return write_file_to_response(path=binary_path, filename=filename)

@@ -57,6 +57,7 @@ describe('RunningModelRow', () => {
                 project: { id: '123' },
                 model: {
                     id: mockModel.id,
+                    name: mockModel.name,
                     architecture: modelArchitecture.id,
                     parent_revision_id: null,
                     dataset_revision_id: 'dataset-123',
@@ -92,7 +93,7 @@ describe('RunningModelRow', () => {
         );
 
         expect(await screen.findByText('My Detection Model')).toBeVisible();
-        expect(screen.getByText('Running...')).toBeVisible();
+        expect(screen.getByText('Running')).toBeVisible();
         expect(screen.getByText(/Started: 19 Jan 2026/i)).toBeVisible();
         expect(screen.getByText('Device: CPU')).toBeVisible();
 
@@ -107,7 +108,8 @@ describe('RunningModelRow', () => {
             metadata: {
                 project: { id: '123' },
                 model: {
-                    id: 'model-123',
+                    id: 'ef3983f1-cef0-4ebe-91db-7330f1dd6e27',
+                    name: 'ATSS (ef3983f1)',
                     architecture: 'Custom_Object_Detection_Gen3_ATSS',
                     parent_revision_id: null,
                     dataset_revision_id: 'dataset-123',
@@ -144,7 +146,6 @@ describe('RunningModelRow', () => {
 
         expect(await screen.findByText('My Detection Model')).toBeVisible();
         expect(screen.getByText('Running')).toBeVisible();
-        expect(screen.getByText('Running...')).toBeVisible();
         expect(screen.getByText(/Started: 19 Jan 2026/i)).toBeVisible();
         expect(screen.getByText('Device: CPU')).toBeVisible();
 
@@ -169,7 +170,8 @@ describe('RunningModelRow', () => {
             metadata: {
                 project: { id: '123' },
                 model: {
-                    id: 'model-123',
+                    id: 'ef3983f1-cef0-4ebe-91db-7330f1dd6e27',
+                    name: 'ATSS (ef3983f1)',
                     architecture: 'Custom_Object_Detection_Gen3_ATSS',
                     parent_revision_id: null,
                     dataset_revision_id: 'dataset-123',
@@ -203,7 +205,8 @@ describe('RunningModelRow', () => {
             metadata: {
                 project: { id: '123' },
                 model: {
-                    id: 'model-123',
+                    id: 'ef3983f1-cef0-4ebe-91db-7330f1dd6e27',
+                    name: 'ATSS (ef3983f1)',
                     architecture: 'Custom_Object_Detection_Gen3_ATSS',
                     parent_revision_id: null,
                     dataset_revision_id: 'dataset-123',
@@ -235,7 +238,8 @@ describe('RunningModelRow', () => {
             metadata: {
                 project: { id: '123' },
                 model: {
-                    id: 'model-123',
+                    id: 'ef3983f1-cef0-4ebe-91db-7330f1dd6e27',
+                    name: 'ATSS (ef3983f1)',
                     architecture: 'Custom_Object_Detection_Gen3_ATSS',
                     parent_revision_id: null,
                     dataset_revision_id: 'dataset-123',

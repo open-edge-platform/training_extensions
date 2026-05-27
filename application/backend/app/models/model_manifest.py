@@ -106,6 +106,9 @@ class ModelManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: str = Field(title="Model architecture ID", description="Unique identifier for the model architecture")
     name: str = Field(title="Model architecture name", description="Friendly name of the model architecture")
+    license: str = Field(
+        default="Apache 2.0", title="License", description="License under which the model architecture is released"
+    )
     pretrained_weights: PretrainedWeights = Field(
         title="Pretrained Weights", description="URL and SHA sum of the pretrained weights"
     )

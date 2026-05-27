@@ -3,27 +3,8 @@
 
 import { Item, Picker } from '@geti/ui';
 
-import type { TrainingDevice } from '../../../../constants/shared-types';
 import { createTrainingDeviceKey, useTrainModelState } from '../train-model-provider.component';
-
-const formatTrainingDeviceMemory = (bytes: number): string => {
-    return `${Math.ceil(bytes / 1024 ** 3)} GB`;
-};
-
-const createTrainingDeviceName = (trainingDevice: TrainingDevice): string => {
-    let name = trainingDevice.name;
-
-    if (trainingDevice.memory != null) {
-        const memory = formatTrainingDeviceMemory(trainingDevice.memory);
-        name += ` (${memory})`;
-    }
-
-    if (trainingDevice.index != null) {
-        name += ` [${trainingDevice.index}]`;
-    }
-
-    return name;
-};
+import { createDeviceName } from './utils';
 
 export const SelectTrainingDevice = () => {
     const { trainingDevices, onSelectTrainingDevice, selectedTrainingDevice } = useTrainModelState();
@@ -36,7 +17,7 @@ export const SelectTrainingDevice = () => {
             selectedKey={selectedTrainingDevice}
             onSelectionChange={(key) => key !== null && onSelectTrainingDevice(key.toString())}
         >
-            {(item) => <Item key={createTrainingDeviceKey(item)}>{createTrainingDeviceName(item)}</Item>}
+            {(item) => <Item key={createTrainingDeviceKey(item)}>{createDeviceName(item)}</Item>}
         </Picker>
     );
 };

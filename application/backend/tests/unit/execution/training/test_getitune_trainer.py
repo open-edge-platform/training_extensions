@@ -32,7 +32,13 @@ from app.datumaro_converter.domain.samples.training import (
 )
 from app.execution.base import ExecutionErr
 from app.execution.common.geti_config_converter import GetiConfigConverter
-from app.execution.training.getitune_trainer import DatasetInfo, ExportedModels, GetiTuneTrainer, TrainingDependencies
+from app.execution.training.getitune_trainer import (
+    DatasetInfo,
+    ExportedModels,
+    GetiTuneTrainer,
+    ModelVariantDescriptor,
+    TrainingDependencies,
+)
 from app.models import (
     DatasetItemAnnotationStatus,
     DatasetItemSubset,
@@ -130,6 +136,7 @@ class TestGetiTuneTrainerPrepareWeights:
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             model_architecture_id="object-detection-yolox-s",
+            model_architecture_name="Test Model",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
             job_id=uuid4(),
@@ -163,6 +170,7 @@ class TestGetiTuneTrainerPrepareWeights:
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
             model_architecture_id="object-detection-yolox-s",
+            model_architecture_name="Test Model",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
             job_id=uuid4(),
@@ -209,6 +217,7 @@ class TestGetiTuneTrainerPrepareWeights:
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
             model_architecture_id="object-detection-yolox-s",
+            model_architecture_name="Test Model",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
             job_id=uuid4(),
@@ -239,6 +248,7 @@ class TestGetiTuneTrainerPrepareWeights:
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
             model_architecture_id="object-detection-yolox-s",
+            model_architecture_name="Test Model",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
             job_id=uuid4(),
@@ -281,6 +291,7 @@ class TestGetiTuneTrainerPrepareTrainingConfiguration:
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
             model_architecture_id="object-detection-yolox-s",
+            model_architecture_name="Test Model",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
             job_id=uuid4(),
@@ -650,6 +661,7 @@ class TestGetiTuneTrainerPrepareModel:
             model_id=model_id,
             project_id=project_id,
             model_architecture_id=model_architecture_id,
+            model_architecture_name="Test Model",
             task=Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
             parent_model_revision_id=None,
             job_id=uuid4(),
@@ -665,6 +677,7 @@ class TestGetiTuneTrainerPrepareModel:
         fxt_model_service.create_revision.assert_called_once_with(
             ModelRevisionMetadata(
                 model_id=model_id,
+                model_name=training_params.model_name,
                 project_id=project_id,
                 architecture_id=model_architecture_id,
                 parent_revision_id=None,
@@ -859,6 +872,7 @@ class TestGetiTuneTrainerExecuteCancellation:
             project_id=project_id,
             model_id=model_id,
             model_architecture_id="object-detection-yolox-s",
+            model_architecture_name="Test Model",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
             job_id=uuid4(),
@@ -907,6 +921,7 @@ class TestGetiTuneTrainerExecuteCancellation:
             project_id=project_id,
             model_id=model_id,
             model_architecture_id="object-detection-yolox-s",
+            model_architecture_name="Test Model",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
             job_id=uuid4(),
@@ -955,6 +970,7 @@ class TestGetiTuneTrainerExecuteCancellation:
             project_id=project_id,
             model_id=model_id,
             model_architecture_id="object-detection-yolox-s",
+            model_architecture_name="Test Model",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
             job_id=uuid4(),
@@ -1009,56 +1025,132 @@ class TestGetiTuneTrainerEvaluateModel:
         tmp_path: Path,
         fxt_model_service: Mock,
     ):
-        """Test successful model evaluation on the testing set."""
+        """Test successful evaluation of all three model variants (PyTorch, OV, ONNX)."""
         # Arrange
         getitune_trainer = fxt_getitune_trainer()
         project_id = uuid4()
         model_id = uuid4()
-        model_variant_id = uuid4()
+        pytorch_variant_id = uuid4()
+        openvino_variant_id = uuid4()
+        onnx_variant_id = uuid4()
         dataset_revision_id = uuid4()
-        mock_getitune_engine = Mock()
-        mock_getitune_engine.test.return_value = {
+
+        pytorch_metrics = {
             "test/accuracy": torch.tensor(0.85),
             "test/precision": torch.tensor(0.82),
             "test/recall": torch.tensor(0.88),
         }
+        ov_metrics = {
+            "test/accuracy": torch.tensor(0.84),
+            "test/precision": torch.tensor(0.81),
+            "test/recall": torch.tensor(0.87),
+        }
+        onnx_metrics = {
+            "test/accuracy": torch.tensor(0.83),
+            "test/precision": torch.tensor(0.80),
+            "test/recall": torch.tensor(0.86),
+        }
+
+        mock_getitune_engine = Mock()
+        mock_getitune_engine.test.return_value = pytorch_metrics
+        mock_getitune_engine.work_dir = tmp_path / "getitune-workspace"
+        mock_getitune_engine.datamodule = Mock()
+
         model_checkpoint_path = tmp_path / "best_checkpoint.ckpt"
         model_checkpoint_path.touch()
+        ov_export_path = tmp_path / "exported_model"
+        onnx_export_path = tmp_path / "exported_model"
+        ov_xml_path = ov_export_path.with_suffix(".xml")
+        onnx_path = onnx_export_path.with_suffix(".onnx")
+
+        model_variants = [
+            ModelVariantDescriptor(
+                id=pytorch_variant_id,
+                path=model_checkpoint_path,
+                format=ModelFormat.PYTORCH,
+            ),
+            ModelVariantDescriptor(
+                id=openvino_variant_id,
+                path=ov_xml_path,
+                format=ModelFormat.OPENVINO,
+            ),
+            ModelVariantDescriptor(
+                id=onnx_variant_id,
+                path=onnx_path,
+                format=ModelFormat.ONNX,
+            ),
+        ]
 
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             model_id=model_id,
             project_id=project_id,
             model_architecture_id="object-detection-yolox-s",
+            model_architecture_name="Test Model",
             task=Task(task_type=task_type, exclusive_labels=exclusive_labels),
             job_id=uuid4(),
         )
 
+        mock_ov_engine = Mock()
+        mock_ov_engine.test.return_value = ov_metrics
+        mock_onnx_engine = Mock()
+        mock_onnx_engine.test.return_value = onnx_metrics
+
         # Act
-        getitune_trainer.evaluate_model(
-            getitune_engine=mock_getitune_engine,
-            model_checkpoint_path=model_checkpoint_path,
-            task=training_params.task,
-            model_revision_id=model_id,
-            model_variant_id=model_variant_id,
-            dataset_revision_id=dataset_revision_id,
+        with patch(
+            "app.execution.training.getitune_trainer.OVEngine",
+            side_effect=[mock_ov_engine, mock_onnx_engine],
+        ) as mock_ov_engine_cls:
+            getitune_trainer.evaluate_model(
+                getitune_engine=mock_getitune_engine,
+                task=training_params.task,
+                model_revision_id=model_id,
+                model_variants=model_variants,
+                dataset_revision_id=dataset_revision_id,
+            )
+
+        # Assert: PyTorch evaluation via the LightningEngine
+        mock_getitune_engine.test.assert_called_once_with(metric=metric_callable)
+
+        # Assert: OVEngine instantiated twice (OV + ONNX) and tested with the right checkpoints
+        assert mock_ov_engine_cls.call_count == 2
+        mock_ov_engine_cls.assert_has_calls(
+            calls=[
+                call(
+                    model=ov_xml_path,
+                    data=mock_getitune_engine.datamodule,
+                    work_dir=mock_getitune_engine.work_dir / "ov_eval",
+                ),
+                call(
+                    model=onnx_path,
+                    data=mock_getitune_engine.datamodule,
+                    work_dir=mock_getitune_engine.work_dir / "onnx_eval",
+                ),
+            ]
         )
+        mock_ov_engine.test.assert_called_once_with(metric=metric_callable)
+        mock_onnx_engine.test.assert_called_once_with(metric=metric_callable)
 
-        # Assert
-        mock_getitune_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path, metric=metric_callable)
-        fxt_model_service.set_db_session.assert_called_once()
-        actual_call = fxt_model_service.save_evaluation_result.call_args[0][0]
+        # Assert: each variant's metrics are persisted with the matching variant id
+        save_calls = fxt_model_service.save_evaluation_result.call_args_list
+        assert len(save_calls) == 3
 
-        assert actual_call.model_variant_id == model_variant_id
-        assert actual_call.dataset_revision_id == dataset_revision_id
-        assert actual_call.subset == DatasetItemSubset.TESTING
-        assert actual_call.metrics == pytest.approx(
-            {
-                "accuracy": 0.85,
-                "precision": 0.82,
-                "recall": 0.88,
-            },
-            rel=1e-6,
+        results_by_variant = {c.args[0].model_variant_id: c.args[0] for c in save_calls}
+        assert set(results_by_variant) == {pytorch_variant_id, openvino_variant_id, onnx_variant_id}
+
+        for result in results_by_variant.values():
+            assert result.model_revision_id == model_id
+            assert result.dataset_revision_id == dataset_revision_id
+            assert result.subset == DatasetItemSubset.TESTING
+
+        assert results_by_variant[pytorch_variant_id].metrics == pytest.approx(
+            {"accuracy": 0.85, "precision": 0.82, "recall": 0.88}, rel=1e-6
+        )
+        assert results_by_variant[openvino_variant_id].metrics == pytest.approx(
+            {"accuracy": 0.84, "precision": 0.81, "recall": 0.87}, rel=1e-6
+        )
+        assert results_by_variant[onnx_variant_id].metrics == pytest.approx(
+            {"accuracy": 0.83, "precision": 0.80, "recall": 0.86}, rel=1e-6
         )
 
 
@@ -1203,8 +1295,9 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         assert (model_dir / "metrics" / "metrics.csv").exists()
         assert (model_dir / "metrics" / "metrics.csv").read_text() == "epoch,loss\n1,0.5\n"
 
-        # Check getitune work directory was cleaned up
-        assert not getitune_work_dir.exists()
+        # The getitune work directory is no longer cleaned up here; it is removed
+        # by ``TrainingJob.on_complete`` after the job finishes.
+        assert getitune_work_dir.exists()
 
 
 # ---------------------------------------------------------------------------

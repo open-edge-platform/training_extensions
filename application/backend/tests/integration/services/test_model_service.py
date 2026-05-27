@@ -529,6 +529,7 @@ class TestModelServiceIntegration:
         fxt_model_service.create_revision(
             ModelRevisionMetadata(
                 model_id=model_id,
+                model_name=f"ATSS-MobileNet-V2 ({str(model_id).split('-')[0]})",
                 project_id=fxt_project_id,
                 architecture_id=architecture_id,
                 parent_revision_id=fxt_model_id,
@@ -566,8 +567,8 @@ class TestModelServiceIntegration:
         db_session.refresh(model_db)
         assert model_db is not None
         assert model_db.training_status == TrainingStatus.IN_PROGRESS
-        assert model_db.training_started_at == started_at.replace(tzinfo=None)
-        assert model_db.training_finished_at == finished_at.replace(tzinfo=None)
+        assert model_db.training_started_at == started_at
+        assert model_db.training_finished_at == finished_at
 
         # Test that not providing start and/or finish time won't affect currently set times
         fxt_model_service.update_revision_status(
@@ -580,8 +581,8 @@ class TestModelServiceIntegration:
         db_session.refresh(model_db)
         assert model_db is not None
         assert model_db.training_status == TrainingStatus.SUCCESSFUL
-        assert model_db.training_started_at == started_at.replace(tzinfo=None)
-        assert model_db.training_finished_at == finished_at.replace(tzinfo=None)
+        assert model_db.training_started_at == started_at
+        assert model_db.training_finished_at == finished_at
 
     def test_save_evaluation_result(
         self, fxt_model_id: UUID, fxt_project_id: UUID, fxt_model_service: ModelService, db_session: Session

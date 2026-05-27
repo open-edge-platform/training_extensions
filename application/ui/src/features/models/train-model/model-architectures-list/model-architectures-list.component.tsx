@@ -8,19 +8,15 @@ import { Button, Flex } from '@geti/ui';
 import { useTrainModelState } from '../train-model-provider.component';
 import { AllModelArchitectures } from './all-model-architectures.component';
 import { RecommendedModelArchitectures } from './recommended-model-architectures.component';
-import { getRecommendedModelArchitecturesWithActiveArchitecture } from './utils';
+import { getRecommendedArchitectures } from './utils';
 
 const SHOW_MORE_THRESHOLD = 4;
 
 export const ModelArchitecturesList = () => {
     const [showMore, setShowMore] = useState<boolean>(false);
-    const { activeModelArchitectureId, modelArchitectures, selectedModelArchitectureId, onSelectModelArchitectureId } =
-        useTrainModelState();
+    const { modelArchitectures, selectedModelArchitectureId, onSelectModelArchitectureId } = useTrainModelState();
 
-    const recommendedArchitectures = getRecommendedModelArchitecturesWithActiveArchitecture(
-        modelArchitectures,
-        activeModelArchitectureId
-    );
+    const recommendedArchitectures = getRecommendedArchitectures(modelArchitectures);
     const collapsedArchitectures = recommendedArchitectures.slice(0, SHOW_MORE_THRESHOLD);
     const canToggleArchitecturesList = modelArchitectures.length > SHOW_MORE_THRESHOLD;
 
@@ -28,14 +24,12 @@ export const ModelArchitecturesList = () => {
         <Flex direction={'column'} minHeight={0} gap={'size-300'}>
             {showMore ? (
                 <AllModelArchitectures
-                    activeModelArchitectureId={activeModelArchitectureId}
                     modelArchitectures={modelArchitectures}
                     selectedModelArchitectureId={selectedModelArchitectureId}
                     onSelectedModelArchitectureIdChange={onSelectModelArchitectureId}
                 />
             ) : (
                 <RecommendedModelArchitectures
-                    activeModelArchitectureId={activeModelArchitectureId}
                     modelArchitectures={collapsedArchitectures}
                     selectedModelArchitectureId={selectedModelArchitectureId}
                     onSelectedModelArchitectureIdChange={onSelectModelArchitectureId}

@@ -10,8 +10,8 @@ import { usePredictionSetup } from '../../predictions-setup-provider.component';
 import { useVideoPlayer } from '../video-player-provider.component';
 import { getVideoFrameRangeIndexes } from './utils';
 
-export const PREDICTION_CHUNK_SIZE = 10;
-export const PREDICTION_FRAME_SKIP = 5;
+export const PREDICTION_CHUNK_SIZE = 15;
+export const PREDICTION_FRAME_SKIP = 1;
 
 const useVideoFramesPredictionsQueryOptions = ({
     frameNumber,
@@ -26,7 +26,7 @@ const useVideoFramesPredictionsQueryOptions = ({
 }) => {
     const projectId = useProjectIdentifier();
     const { videoFrame } = useVideoPlayer();
-    const { selectedModelId } = usePredictionSetup();
+    const { selectedModel, selectedDevice } = usePredictionSetup();
 
     const { startFrameIndex, endFrameIndex } = getVideoFrameRangeIndexes({
         frames: videoFrame.frame_count - 1,
@@ -37,7 +37,8 @@ const useVideoFramesPredictionsQueryOptions = ({
 
     return mediaPredictionsQueryOptions({
         projectId,
-        modelId: selectedModelId,
+        selectedModel,
+        device: selectedDevice,
         mediaId: videoFrame.id,
         range: { stride: rangeStride ?? frameSkip, start_frame: startFrameIndex, end_frame: endFrameIndex },
     });
@@ -62,6 +63,27 @@ export const usePrefetchVideoFramesPredictions = ({
     });
 
     return usePrefetchQuery(queryOptions);
+};
+
+export const useKeepVideoFramesPredictionsSubscribed = ({
+    frameNumber,
+    frameSkip,
+    rangeStride,
+    chunkSize,
+}: {
+    frameNumber: number;
+    frameSkip: number;
+    rangeStride?: number;
+    chunkSize?: number;
+}) => {
+    const queryOptions = useVideoFramesPredictionsQueryOptions({ frameSkip, frameNumber, chunkSize, rangeStride });
+
+    useQuery({
+        ...queryOptions,
+        notifyOnChangeProps: [],
+        staleTime: Infinity,
+        refetchOnMount: false,
+    });
 };
 
 export const useVideoFramesPredictions = <T>({

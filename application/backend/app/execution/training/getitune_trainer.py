@@ -16,6 +16,7 @@ from datumaro.experimental.fields import Subset
 from getitune import TaskType
 from getitune.backend.lightning.engine import LightningEngine
 from getitune.backend.lightning.models.base import DataInputParams, LightningModel
+from getitune.backend.openvino.engine import OVEngine
 from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.data.dataset.base import VisionDataset
 from getitune.data.factory import TransformLibFactory
@@ -100,6 +101,21 @@ class DatasetInfo:
 class ExportedModels:
     openvino_model_path: Path
     onnx_model_path: Path
+
+
+@dataclass(frozen=True)
+class ModelVariantDescriptor:
+    """Describes a single trained/exported model variant to be evaluated and stored.
+
+    Attributes:
+        id: The UUID of the variant record in the database.
+        path: Path to the variant's main file (.ckpt for PyTorch, .xml for OpenVINO IR, .onnx for ONNX).
+        format: The format of the variant.
+    """
+
+    id: UUID
+    path: Path
+    format: ModelFormat
 
 
 class GetiTuneTrainer(Execution[TrainingJobParams]):
@@ -339,6 +355,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             self._model_service.create_revision(
                 ModelRevisionMetadata(
                     model_id=training_params.model_id,
+                    model_name=training_params.model_name,
                     project_id=project_id,
                     architecture_id=training_params.model_architecture_id,
                     parent_revision_id=training_params.parent_model_revision_id,
@@ -437,15 +454,61 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
     def evaluate_model(
         self,
         getitune_engine: LightningEngine,
-        model_checkpoint_path: Path,
         task: Task,
+        model_revision_id: UUID,
+        model_variants: list[ModelVariantDescriptor],
+        dataset_revision_id: UUID,
+    ) -> None:
+        """Evaluate the trained model variants on the testing set.
+
+        Each variant is evaluated using its own dedicated engine so that the recorded
+        metrics reflect the runtime that will actually serve it. Results are persisted
+        against the corresponding model variant id.
+
+        - PyTorch (.ckpt) variants are evaluated with the LightningEngine used for training.
+        - OpenVINO (.xml) and ONNX (.onnx) variants are evaluated with OVEngine, which
+          natively supports both checkpoint types.
+        """
+        metric_callable = get_metric_by_task(task)
+        ov_work_dir_base = Path(getitune_engine.work_dir)
+        datamodule = getitune_engine.datamodule
+
+        for variant in model_variants:
+            logger.info("Evaluating the {} model...", variant.format.value)
+            match variant.format:
+                case ModelFormat.PYTORCH:
+                    engine = getitune_engine
+                case ModelFormat.OPENVINO:
+                    engine = OVEngine(
+                        model=variant.path,
+                        data=datamodule,
+                        work_dir=ov_work_dir_base / "ov_eval",
+                    )
+                case ModelFormat.ONNX:
+                    engine = OVEngine(
+                        model=variant.path,
+                        data=datamodule,
+                        work_dir=ov_work_dir_base / "onnx_eval",
+                    )
+                case _:
+                    raise ExecutionErr(f"Unsupported model variant format for evaluation: {variant.format}")
+
+            metrics = engine.test(metric=metric_callable)
+            self._save_evaluation_result(
+                metrics=metrics,
+                model_revision_id=model_revision_id,
+                model_variant_id=variant.id,
+                dataset_revision_id=dataset_revision_id,
+            )
+
+    def _save_evaluation_result(
+        self,
+        metrics: dict,
         model_revision_id: UUID,
         model_variant_id: UUID,
         dataset_revision_id: UUID,
     ) -> None:
-        """Evaluate the trained model on the testing set"""
-        logger.info("Evaluating the model on the testing set...")
-        metrics = getitune_engine.test(checkpoint=model_checkpoint_path, metric=get_metric_by_task(task))
+        """Persist a single EvaluationResult tagged with the given model variant id."""
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
             self._model_service.save_evaluation_result(
@@ -487,13 +550,16 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         exported_model_paths: ExportedModels,
         created_variants: dict[ModelFormat, UUID],
     ) -> None:
-        """Copy training artifacts into variant directories and clean up the workspace.
+        """Copy training artifacts into variant directories.
 
         Each variant's files are stored under model_dir/variants/<variant_id>/model.*
 
+        The getitune workspace itself is removed by ``TrainingJob.on_complete`` after
+        the job terminates, so this step does not clean it up.
+
         Args:
             model_dir: The base model directory.
-            getitune_work_dir: The getitune workspace directory to clean up.
+            getitune_work_dir: The getitune workspace directory containing the source artifacts.
             trained_model_path: Path to the trained checkpoint inside the workspace.
             exported_model_paths: Paths to exported model files inside the workspace.
             created_variants: Mapping of ModelFormat to variant UUID (from create_model_variants).
@@ -535,10 +601,6 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         if metrics_source_path.exists():
             shutil.move(metrics_source_path, metrics_dest_path)
             logger.info("Stored training metrics at {}", metrics_dest_path)
-
-        # Cleanup the getitune work directory
-        shutil.rmtree(getitune_work_dir)
-        logger.info("Cleaned up getitune work directory at {}", getitune_work_dir)
 
     def create_model_variants(self, model_revision_id: UUID) -> dict[ModelFormat, UUID]:
         """Create variant records in the database for all exported formats.
@@ -616,13 +678,31 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             # Create variant DB records first (no file I/O yet)
             created_variants = self.create_model_variants(model_revision_id=params.model_id)
 
+            # Build descriptors mapping each variant id to its source file path inside the workspace
+            model_variants = [
+                ModelVariantDescriptor(
+                    id=created_variants[ModelFormat.PYTORCH],
+                    path=trained_model_path,
+                    format=ModelFormat.PYTORCH,
+                ),
+                ModelVariantDescriptor(
+                    id=created_variants[ModelFormat.OPENVINO],
+                    path=exported_model_paths.openvino_model_path.with_suffix(".xml"),
+                    format=ModelFormat.OPENVINO,
+                ),
+                ModelVariantDescriptor(
+                    id=created_variants[ModelFormat.ONNX],
+                    path=exported_model_paths.onnx_model_path.with_suffix(".onnx"),
+                    format=ModelFormat.ONNX,
+                ),
+            ]
+
             # Evaluate while the workspace and checkpoint still exist
             self.evaluate_model(
                 getitune_engine=getitune_engine,
-                model_checkpoint_path=trained_model_path,
                 task=task,
                 model_revision_id=params.model_id,
-                model_variant_id=created_variants[ModelFormat.PYTORCH],
+                model_variants=model_variants,
                 dataset_revision_id=dataset_info.revision_id,
             )
 

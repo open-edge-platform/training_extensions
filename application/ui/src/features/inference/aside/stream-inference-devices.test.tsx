@@ -9,7 +9,7 @@ import { render } from 'test-utils/render';
 
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
-import { InferenceDevices } from './inference-devices.component';
+import { StreamInferenceDevices } from './stream-inference-devices.component';
 
 const mockPipeline = getMockedPipeline({
     device: 'cpu',
@@ -20,7 +20,7 @@ const mockDevices = [
     { type: 'xpu' as const, name: 'GPU' },
 ];
 
-describe('InferenceDevices', () => {
+describe('StreamInferenceDevices', () => {
     const renderApp = (status = 200, devicesResponse = mockDevices, pipelineResponse = mockPipeline) => {
         const pipelinePatchSpy = vi.fn();
 
@@ -40,7 +40,7 @@ describe('InferenceDevices', () => {
             })
         );
 
-        render(<InferenceDevices />);
+        render(<StreamInferenceDevices />);
 
         return pipelinePatchSpy;
     };

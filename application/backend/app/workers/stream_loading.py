@@ -41,7 +41,13 @@ class StreamLoader(BaseProcessWorker):
         with get_db_session() as db:
             source = SourceService(db_session=db).get_active_source()
         self._source = source if source is not None else DisconnectedSourceConfig()
-        logger.info("Active source set to {}. Process: {}", self._source, mp.current_process().name)
+        logger.info(
+            "Active source set to id={} name={!r} type={}. Process: {}",
+            self._source.id,
+            self._source.name,
+            self._source.source_type,
+            mp.current_process().name,
+        )
         self._reset_stream()
 
     def _reload_source_loop(self) -> None:
@@ -52,7 +58,10 @@ class StreamLoader(BaseProcessWorker):
                 notified = self._source_changed_condition.wait(timeout=3)
                 if not notified:  # awakened because of timeout
                     continue
-                self._load_source()
+                try:
+                    self._load_source()
+                except Exception:
+                    logger.exception("Error reloading source")
 
     def setup(self) -> None:
         super().setup()
@@ -62,7 +71,17 @@ class StreamLoader(BaseProcessWorker):
     def _reset_stream(self) -> None:
         if self._video_stream is not None:
             self._video_stream.release()
-        self._video_stream = VideoStreamService.get_video_stream(input_config=self._source)
+            self._video_stream = None
+        try:
+            self._video_stream = VideoStreamService.get_video_stream(input_config=self._source)
+        except Exception:
+            logger.exception(
+                "Failed to open video stream for source: id={} name={!r} type={}",
+                self._source.id,
+                self._source.name,
+                self._source.source_type,
+            )
+            self._video_stream = None
 
     def run_loop(self) -> None:
         while not self.should_stop():
@@ -98,13 +117,28 @@ class StreamLoader(BaseProcessWorker):
 def _enqueue_frame_with_retry(
     frame_queue: mp.Queue, payload: StreamData, is_real_time: bool, stop_event: EventClass
 ) -> None:
-    """Enqueue frame with retry logic for non-real-time streams"""
+    """Enqueue a frame; for real-time sources drop the stalest queued frame
+    instead of blocking the producer, so the network reader is never back-pressured.
+    """
     while not stop_event.is_set():
         try:
-            frame_queue.put(payload, timeout=1)
+            # For real-time sources, never block on a full queue: we must be able to
+            # evict stale frames immediately so the latest frame always wins.
+            if is_real_time:
+                frame_queue.put_nowait(payload)
+            else:
+                frame_queue.put(payload, timeout=1)
             break
         except queue.Full:
             if is_real_time:
-                logger.debug("Frame queue is full, skipping frame")
+                # Drop-and-replace: discard the oldest queued frame in favour of the newest.
+                try:
+                    frame_queue.get_nowait()
+                except queue.Empty:
+                    pass
+                try:
+                    frame_queue.put_nowait(payload)
+                except queue.Full:
+                    logger.debug("Frame queue is full, skipping frame")
                 break
             logger.debug("Frame queue is full, retrying...")

@@ -1,11 +1,11 @@
 {
     "name": "@geti/app-ui",
-    "version": "1.0.0",
+    "version": "3.0.0",
     "private": true,
     "type": "module",
     "engines": {
         "node": ">=v24.2.0",
-        "npm": ">=11.3.0"
+        "npm": ">=11.14.0"
     },
     "scripts": {
         "build": "rsbuild build",
@@ -13,7 +13,7 @@
         "build:api": "npx openapi-typescript ./src/api/openapi-spec.json -o ./src/api/openapi-spec.d.ts  --root-types && prettier --write src/api/openapi-spec.d.ts",
         "build:api:download": "curl -o ./src/api/openapi-spec.json http://localhost:7860/api/openapi.json && prettier --write src/api/openapi-spec.json",
         "update-spec": "npm run build:api:download && npm run build:api",
-        "clone-geti-ui-packages": "npx tiged --force --mode=git https://github.com/open-edge-platform/geti.git/web_ui/packages/config#cd71c9547ce3f640b5803e4e785fd9fbc3cf310e packages/config && npx tiged --force --mode=git https://github.com/open-edge-platform/geti.git/web_ui/packages/ui#cd71c9547ce3f640b5803e4e785fd9fbc3cf310e packages/ui && npx tiged --force --mode=git https://github.com/open-edge-platform/geti.git/web_ui/packages/smart-tools#cd71c9547ce3f640b5803e4e785fd9fbc3cf310e packages/smart-tools",
+        "clone-geti-ui-packages": "npx tiged --force --mode=git https://github.com/open-edge-platform/geti.git/web_ui/packages/config#79fdecc8f581672dcf50ac22e3eff792c87ff4d7 packages/config && npx tiged --force --mode=git https://github.com/open-edge-platform/geti.git/web_ui/packages/ui#79fdecc8f581672dcf50ac22e3eff792c87ff4d7 packages/ui && npx tiged --force --mode=git https://github.com/open-edge-platform/geti.git/web_ui/packages/smart-tools#79fdecc8f581672dcf50ac22e3eff792c87ff4d7 packages/smart-tools",
         "cyclic-deps-check": "npx madge --circular src/**/*.ts*",
         "start": "rsbuild dev",
         "start:tauri": "cross-env BUILD_TARGET=tauri rsbuild dev",
@@ -38,7 +38,7 @@
         "@geti/smart-tools": "*",
         "@geti/ui": "*",
         "@tanstack/react-query": "~5.80.10",
-        "@tauri-apps/api": "^2.10.1",
+        "@tauri-apps/api": "~2.11.0",
         "@tauri-apps/plugin-opener": "~2.5.3",
         "@use-gesture/react": "~10.3.1",
         "clsx": "~2.1.1",
@@ -58,6 +58,7 @@
         "react-router": "~6.30.1",
         "react-router-dom": "~6.30.1",
         "recharts": "~3.7.0",
+        "spin-delay": "^2.0.1",
         "static-path": "~0.0.4",
         "utif": "^3.1.0",
         "uuid": "~11.1.0",

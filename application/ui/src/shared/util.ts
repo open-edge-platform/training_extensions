@@ -6,6 +6,8 @@ import prettyBytes from 'pretty-bytes';
 
 import { downloadFile as platformDownloadFile } from '../platform/download-file';
 
+const pluralRules = new Intl.PluralRules('en');
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type GetElementType<T extends any[]> = T extends (infer U)[] ? U : never;
 
@@ -20,3 +22,5 @@ export const downloadFile = (url: string, name?: string): void => {
 };
 
 export const formatBytes = (bytes: number): string => prettyBytes(bytes);
+
+export const pluralizeItems = (count: number) => (pluralRules.select(count) === 'one' ? 'item' : 'items');

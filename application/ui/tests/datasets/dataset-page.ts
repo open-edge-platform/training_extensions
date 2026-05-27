@@ -6,8 +6,8 @@ import { type Page } from '@playwright/test';
 export class DatasetPage {
     constructor(private readonly page: Page) {}
 
-    async goto(projectId = 'id-1') {
-        await this.page.goto(`projects/${projectId}/dataset`);
+    goto(projectId = 'id-1') {
+        return this.page.goto(`projects/${projectId}/dataset`);
     }
 
     getMediaGrid() {
@@ -22,20 +22,20 @@ export class DatasetPage {
         return this.page.getByRole('img', { name, exact: true });
     }
 
-    async clickMediaItem(name: string) {
-        await this.getMediaItemByName(name).click();
+    clickMediaItem(name: string) {
+        return this.getMediaItemByName(name).click();
     }
 
-    async dblClickMediaItem(name: string) {
-        await this.getMediaItemByName(name).dblclick();
+    dblClickMediaItem(name: string) {
+        return this.getMediaItemByName(name).dblclick();
     }
 
     getSelectAllCheckbox() {
         return this.page.getByLabel('select all');
     }
 
-    async selectAll() {
-        await this.getSelectAllCheckbox().click();
+    selectAll() {
+        return this.getSelectAllCheckbox().click();
     }
 
     getSelectedCountText(count: number) {
@@ -54,24 +54,56 @@ export class DatasetPage {
         return this.page.getByRole('button', { name: 'Upload media' });
     }
 
-    async uploadFiles(files: { name: string; mimeType: string; buffer: Buffer }[]) {
-        await this.getUploadInput().setInputFiles(files);
+    uploadFiles(files: { name: string; mimeType: string; buffer: Buffer }[]) {
+        return this.getUploadInput().setInputFiles(files);
     }
 
-    getUploadProgressText(total: number, succeeded: number, failed = 0) {
-        return this.page.getByText(`Uploading ${total} item(s)... (${succeeded} succeeded, ${failed} failed)`);
+    getUploadProgressText(total: number) {
+        return this.page.getByText(`Uploading ${total} item(s)...`);
+    }
+
+    getUploadProgressDetailText(succeeded: number, failed = 0) {
+        const parts = [succeeded > 0 ? `${succeeded} succeeded` : null, failed > 0 ? `${failed} failed` : null]
+            .filter(Boolean)
+            .join(', ');
+        return this.page.getByText(`(${parts})`);
     }
 
     getUploadFinishedText(total: number) {
         return this.page.getByText(`Uploaded ${total} item(s)`);
     }
 
+    getShowDetailsButton() {
+        return this.page.getByRole('button', { name: 'Show details' });
+    }
+
+    clickShowDetails() {
+        // Sonner stacks/re-renders toasts during upload progress updates, which can briefly cause
+        // the toast container to intercept clicks on the button. Forcing the click bypasses that race.
+        // eslint-disable-next-line playwright/no-force-option
+        return this.getShowDetailsButton().click({ force: true });
+    }
+
+    getUploadDetailsDialog() {
+        return this.page
+            .getByRole('dialog')
+            .filter({ has: this.page.getByRole('heading', { name: 'Upload details' }) });
+    }
+
+    getUploadDetailsRows() {
+        return this.getUploadDetailsDialog().getByRole('row');
+    }
+
+    closeUploadDetailsDialog() {
+        return this.getUploadDetailsDialog().getByRole('button', { name: 'Close' }).click();
+    }
+
     getAssignLabelButton() {
         return this.page.getByRole('button', { name: 'Assign label' });
     }
 
-    async clickAssignLabel() {
-        await this.getAssignLabelButton().click();
+    clickAssignLabel() {
+        return this.getAssignLabelButton().click();
     }
 
     getLabelAssignmentDialog() {
@@ -86,23 +118,23 @@ export class DatasetPage {
         return this.page.getByRole('checkbox', { name: `Select ${labelName}` });
     }
 
-    async selectLabel(labelName: string) {
-        await this.getLabelCheckbox(labelName).click();
+    selectLabel(labelName: string) {
+        return this.getLabelCheckbox(labelName).click();
     }
 
     getContinueButton() {
         return this.page.getByRole('button', { name: 'Continue' });
     }
 
-    async clickContinue() {
-        await this.getContinueButton().click();
+    clickContinue() {
+        return this.getContinueButton().click();
     }
 
     getBulkDialogAssignButton() {
         return this.getLabelAssignmentDialog().getByRole('button', { name: 'Assign' });
     }
 
-    async clickDialogAssign() {
-        await this.getBulkDialogAssignButton().click();
+    clickDialogAssign() {
+        return this.getBulkDialogAssignButton().click();
     }
 }

@@ -111,7 +111,7 @@ def fxt_db_sources() -> list[SourceDB]:
 
 
 @pytest.fixture
-def fxt_db_sinks() -> list[SinkDB]:
+def fxt_db_sinks(tmp_path) -> list[SinkDB]:
     """Fixture to create multiple sink configurations in the database."""
     return [
         SinkDB(
@@ -124,7 +124,7 @@ def fxt_db_sinks() -> list[SinkDB]:
                 OutputFormat.IMAGE_WITH_PREDICTIONS,
                 OutputFormat.PREDICTIONS,
             ],
-            config_data={"folder_path": "/test/path"},
+            config_data={"folder_path": str(tmp_path / "test" / "path")},
         ),
         SinkDB(
             id=str(uuid4()),

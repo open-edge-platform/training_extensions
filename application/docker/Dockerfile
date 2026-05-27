@@ -3,7 +3,7 @@
 ##############
 # Backend base
 ##############
-FROM python:3.13-slim@sha256:a0779d7c12fc20be6ec6b4ddc901a4fd7657b8a6bc9def9d3fde89ed5efe0a3d AS backend-base
+FROM python:3.13-slim@sha256:d49c1ff87eb98eac346fc250f52925f726eb913c43a92854246dd03c9692ad67 AS backend-base
 
 # uv / uvx
 COPY --from=docker.io/astral/uv:0.10.4@sha256:4cac394b6b72846f8a85a7a0e577c6d61d4e17fe2ccee65d9451a8b3c9efb4ac /uv /uvx /bin/
@@ -144,7 +144,7 @@ RUN npm run build
 #########################
 # Base for CPU, GPU and XPU runtime images
 #########################
-FROM python:3.13-slim@sha256:a0779d7c12fc20be6ec6b4ddc901a4fd7657b8a6bc9def9d3fde89ed5efe0a3d AS runtime-base
+FROM python:3.13-slim@sha256:d49c1ff87eb98eac346fc250f52925f726eb913c43a92854246dd03c9692ad67 AS runtime-base
 
 LABEL org.opencontainers.image.source="https://github.com/open-edge-platform/training_extensions"
 LABEL org.opencontainers.image.description="Geti – train, optimize and deploy deep-learning models"
@@ -178,7 +178,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && apt-get install -y --no-install-recommends \
         git=1:2.47.3-0* \
         libgl1=1.7.0-1+b2 \
-        libglib2.0-0t64=2.84.4-3~deb13u2 \
+        libglib2.0-0t64=2.84.4-3~deb13u3 \
         libglx-mesa0=25.0.7-2 \
         libv4l-0t64=1.30.1-1
 
@@ -198,6 +198,38 @@ USER ${USER_NAME}
 CMD ["python", "app/main.py"]
 
 ######################
+# Cleanup non-redistributable CUDA components per NVIDIA EULA
+######################
+
+FROM cuda-base AS cuda-clean
+
+RUN set -eu; \
+    CLEANUP_ROOT="$("/application/backend/.venv/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    [ -n "$CLEANUP_ROOT" ] && [ -d "$CLEANUP_ROOT" ]; \
+    echo "Removing non-redistributable CUDA components per NVIDIA EULA from ${CLEANUP_ROOT}..." && \
+    # Remove headers and include directories (non-redistributable)
+    find "$CLEANUP_ROOT" -type d \( \
+    -name "include" -o \
+    -name "headers" \
+    \) -path "*cuda*" -exec rm -rf {} + 2>/dev/null || true && \
+    # Remove NVIDIA package includes specifically
+    find "$CLEANUP_ROOT" -type d -path "*/nvidia/*/include" -exec rm -rf {} + 2>/dev/null || true && \
+    # Remove static libraries (typically non-redistributable)
+    find "$CLEANUP_ROOT" -name "*.a" \( -path "*cuda*" -o -path "*nvidia*" \) -delete 2>/dev/null || true && \
+    # Remove non-redistributable headers and binaries from triton nvidia backend
+    find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia/include" -exec rm -rf {} + 2>/dev/null || true && \
+    find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia/bin" -exec rm -rf {} + 2>/dev/null || true && \
+    # Remove specific non-redistributable CUPTI components
+    find "$CLEANUP_ROOT" -type f \( \
+    -name "libcheckpoint.so*" -o \
+    -name "libnvperf_host.so*" -o \
+    -name "libnvperf_target.so*" -o \
+    -name "libpcsamplingutil.so*" \
+    \) -path "*cupti*" -delete 2>/dev/null || true && \
+    # Remove cuSolver MG libraries (enterprise feature)
+    find "$CLEANUP_ROOT" -name "libcusolverMg.so*" -delete 2>/dev/null || true
+
+######################
 # Server (CPU version)
 ######################
 FROM runtime-base AS geti-cpu
@@ -213,7 +245,7 @@ COPY --link --from=web-ui /home/application/ui/dist/ ${STATIC_FILES_DIR}
 ######################
 FROM runtime-base AS geti-cuda
 
-COPY --from=cuda-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
+COPY --from=cuda-clean --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
 # App code + UI assets last – source-only changes only invalidate this layer
 COPY --link application/backend/app /application/backend/app

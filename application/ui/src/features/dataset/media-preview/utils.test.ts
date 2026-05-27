@@ -134,7 +134,7 @@ describe('usePlayPauseVideoBySystem', () => {
         expect(context.videoControls.pause).not.toHaveBeenCalled();
     });
 
-    it('calls pause when isLoadingPredictions becomes true and video is playing', () => {
+    it('calls pause when range predictions are loading and video is playing', () => {
         const context = createVideoPlayerContext(true);
         mockUseVideoPlayerContext.mockReturnValue(context as never);
 
@@ -144,7 +144,7 @@ describe('usePlayPauseVideoBySystem', () => {
         expect(context.videoControls.play).not.toHaveBeenCalled();
     });
 
-    it('calls play when isLoadingPredictions becomes false after system paused the video', () => {
+    it('calls play when range predictions stop loading after system paused the video', () => {
         const context = createVideoPlayerContext(true);
         mockUseVideoPlayerContext.mockReturnValue(context as never);
 
@@ -161,7 +161,7 @@ describe('usePlayPauseVideoBySystem', () => {
         expect(context.videoControls.play).toHaveBeenCalledTimes(1);
     });
 
-    it('does not call play when isLoadingPredictions becomes false but video was paused by user', () => {
+    it('does not call play when range predictions stop loading but video was paused by user', () => {
         const context = createVideoPlayerContext(false);
         mockUseVideoPlayerContext.mockReturnValue(context as never);
 
@@ -178,7 +178,7 @@ describe('usePlayPauseVideoBySystem', () => {
         expect(context.videoControls.play).not.toHaveBeenCalled();
     });
 
-    it('does not call pause when video is not playing and isLoadingPredictions becomes true', () => {
+    it('does not call pause when video is not playing and range predictions are loading', () => {
         const context = createVideoPlayerContext(false);
         mockUseVideoPlayerContext.mockReturnValue(context as never);
 

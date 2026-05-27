@@ -3,21 +3,13 @@
 
 import { createContext, ReactNode, useContext } from 'react';
 
-import { Badge, Content, ContextualHelp, Divider, Flex, Heading, Radio, Text } from '@geti/ui';
+import { Content, ContextualHelp, Divider, Flex, Heading, Radio, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../../constants/shared-types';
 import { getAccuracyMetric } from '../utils';
 
 import classes from './model-architecture-card.module.scss';
-
-const ActiveModelArchitecture = () => {
-    return (
-        <Badge variant={'info'} UNSAFE_className={classes.activeModelArchitecture}>
-            Active model
-        </Badge>
-    );
-};
 
 const ModelArchitectureDescription = () => {
     const { modelArchitecture, isSelected } = useModelArchitecture();
@@ -42,7 +34,7 @@ const ModelArchitectureParameters = () => {
     return (
         <ul className={classes.modelArchitectureParameters}>
             <li>Number of parameters: {modelArchitecture.stats.trainable_parameters} million</li>
-            <li>License: Apache 2.0</li>
+            <li>License: {modelArchitecture.license}</li>
         </ul>
     );
 };
@@ -60,7 +52,7 @@ const ModelArchitectureDetailedParameters = () => {
                     {accuracyMetric.label}: {accuracyMetric.value}%
                 </li>
             )}
-            <li>License: Apache 2.0</li>
+            <li>License: {modelArchitecture.license}</li>
         </ul>
     );
 };
@@ -134,4 +126,3 @@ ModelArchitectureCard.Parameters = ModelArchitectureParameters;
 ModelArchitectureCard.DetailedParameters = ModelArchitectureDetailedParameters;
 ModelArchitectureCard.Divider = ModelArchitectureDivider;
 ModelArchitectureCard.Description = ModelArchitectureDescription;
-ModelArchitectureCard.Active = ActiveModelArchitecture;

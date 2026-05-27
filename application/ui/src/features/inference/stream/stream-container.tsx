@@ -17,7 +17,7 @@ export const StreamContainer = () => {
     const { start, stop, status, webRTCConnectionRef } = useWebRTCConnection();
     const { data: pipeline } = usePipeline();
 
-    const isPipelineRunning = pipeline?.status === 'running';
+    const isPipelineRunning = pipeline.status === 'running';
     const isStopped = status === 'idle' || status === 'failed';
     const isConnecting = status === 'connecting';
     const isConnected = status === 'connected';

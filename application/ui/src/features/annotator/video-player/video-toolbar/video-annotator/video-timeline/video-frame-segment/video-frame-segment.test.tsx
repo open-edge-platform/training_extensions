@@ -45,9 +45,13 @@ vi.mock('../../../../video-player-provider.component', () => ({
 
 vi.mock('../../../../../../../features/annotator/predictions-setup-provider.component', () => ({
     usePredictionSetup: () => ({
+        selectedDevice: 'cpu',
+        changeSelectedDevice: vi.fn(),
+
         selectedModelId: MODEL_ID,
+        selectedModel: { id: MODEL_ID, name: 'Model 1 [FP32]', modelId: 'model-base-1' },
         changeSelectedModelId: vi.fn(),
-        models: [{ id: MODEL_ID, name: 'Model 1' }],
+        selectableModels: [{ id: MODEL_ID, name: 'Model 1 [FP32]', modelId: 'model-base-1' }],
     }),
 }));
 

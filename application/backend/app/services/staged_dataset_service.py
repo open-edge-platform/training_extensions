@@ -72,7 +72,7 @@ def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
 
     counts = _Counts()
     for item in dataset:
-        ann_type, count = _count_annotations(item)
+        ann_type, annotation_count = _count_annotations(item)
         if ann_type != AnnotationType.UNKNOWN:
             counts.annotation_type = ann_type
         target_media_attrs = ("media", "image", "image_path")
@@ -81,13 +81,15 @@ def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
         match media:
             case LazyImage() | str():
                 counts.num_images += 1
-                counts.num_annotations += count
-                counts.num_annotated_images += count > 0
+                counts.num_annotations += annotation_count
+                counts.num_annotated_images += annotation_count > 0
             case LazyVideoFrame():
-                counts.num_frames += 1
-                counts.video_paths.add(str(item.media.video_path))
-                counts.num_annotations += count
-                counts.num_annotated_frames += count > 0
+                video_path = str(media.video_path)
+                if video_path not in counts.video_paths:
+                    counts.num_frames += media.video_info.total_frames
+                counts.video_paths.add(video_path)
+                counts.num_annotations += annotation_count
+                counts.num_annotated_frames += annotation_count > 0
             case _:
                 raise ValueError(f"Unsupported media type: {type(media)}")
 

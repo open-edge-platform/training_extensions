@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.api.dependencies import get_dataset_service, get_project
 from app.api.schemas.dataset import DatasetStatisticsView
 from app.api.schemas.dataset_item import DatasetItemsWithPagination, DatasetItemView
-from app.api.validators import DatasetItemID, ProjectID
+from app.api.validators import DatasetItemID, ProjectID, normalize_datetime_to_utc
 from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
 from app.services import DatasetService
@@ -39,6 +39,9 @@ def list_dataset_items(  # noqa: PLR0913
     subset: Annotated[DatasetItemSubset | None, Query()] = None,
 ) -> DatasetItemsWithPagination:
     """List the available dataset items and their metadata. This endpoint supports pagination."""
+    start_date = normalize_datetime_to_utc(start_date)
+    end_date = normalize_datetime_to_utc(end_date)
+
     if start_date is not None and end_date is not None and start_date > end_date:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Start date must be before end date."

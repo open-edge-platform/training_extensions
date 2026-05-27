@@ -11,7 +11,7 @@ import type { SortBy } from '../types';
 export const sortModels = (models: Model[], sortBy: SortBy, datasetRevisions: DatasetRevision[]): Model[] => {
     switch (sortBy) {
         case 'name':
-            return orderBy(models, (model) => model.name?.toLowerCase() ?? '', 'asc');
+            return orderBy(models, (model) => model.name.toLowerCase(), 'asc');
         case 'architecture':
             return orderBy(models, (model) => model.architecture?.toLowerCase() ?? '', 'asc');
         case 'trained':
@@ -27,7 +27,7 @@ export const sortModels = (models: Model[], sortBy: SortBy, datasetRevisions: Da
         case 'size':
             return orderBy(models, (model) => model.size ?? 0, 'asc');
         case 'score':
-            return orderBy(models, (model) => getTestingMetric(model)?.value ?? 0, 'asc');
+            return orderBy(models, (model) => getTestingMetric(model)?.value ?? 0, 'desc');
         case 'dataset':
             const datasetRevisionsMap = new Map(
                 datasetRevisions.map((datasetRevision) => [datasetRevision.id, datasetRevision.name])

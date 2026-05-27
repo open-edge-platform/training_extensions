@@ -15,7 +15,7 @@ type UseGetDatasetItemsOptions = {
 };
 
 export const useGetDatasetItems = ({ subset, annotationStatus }: UseGetDatasetItemsOptions = {}) => {
-    const projectId = useProjectIdentifier();
+    const project_id = useProjectIdentifier();
 
     const query: {
         offset: number;
@@ -41,7 +41,7 @@ export const useGetDatasetItems = ({ subset, annotationStatus }: UseGetDatasetIt
         {
             params: {
                 query,
-                path: { project_id: projectId },
+                path: { project_id },
             },
         },
         {
@@ -61,6 +61,7 @@ export const useGetDatasetItems = ({ subset, annotationStatus }: UseGetDatasetIt
     const items = useMemo(() => {
         return data?.pages.flatMap((page) => page.items) ?? [];
     }, [data?.pages]);
+
     const totalCount = data?.pages[0]?.pagination?.total ?? 0;
 
     return { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount };

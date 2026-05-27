@@ -6,14 +6,12 @@ import { ModelArchitecture } from './model-architecture.component';
 import { ModelArchitecturesListLayout } from './model-architectures-list-layout/model-architectures-list-layout.component';
 
 type RecommendedModelArchitecturesProps = {
-    activeModelArchitectureId: string | undefined;
     modelArchitectures: ModelArchitectureType[];
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
 };
 
 export const RecommendedModelArchitectures = ({
-    activeModelArchitectureId,
     modelArchitectures,
     onSelectedModelArchitectureIdChange,
     selectedModelArchitectureId,
@@ -27,7 +25,6 @@ export const RecommendedModelArchitectures = ({
             {modelArchitectures.map((modelArchitecture) => (
                 <ModelArchitecture
                     key={modelArchitecture.id}
-                    activeModelArchitectureId={activeModelArchitectureId}
                     modelArchitecture={modelArchitecture}
                     selectedModelArchitectureId={selectedModelArchitectureId}
                     onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}

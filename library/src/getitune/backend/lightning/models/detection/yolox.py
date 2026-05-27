@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 from torch.export import Dim
 
@@ -31,7 +31,6 @@ from getitune.types.precision import Precision
 if TYPE_CHECKING:
     from pathlib import Path
 
-    import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
@@ -98,6 +97,20 @@ class YOLOX(LightningDetectionModel):
             torch_compile=torch_compile,
             tile_config=tile_config,
         )
+
+        # Raw uint8 models expect [0, 255] inputs; intensity scaling must not be exported.
+        if model_name in _RAW_UINT8_MODELS:
+            if (
+                self.data_input_params.intensity_config is not None
+                and self.data_input_params.intensity_config.storage_dtype in ("uint16", "int16")
+            ):
+                msg = (
+                    f"YOLOX ({model_name}) does not support high-bit-depth inputs "
+                    f"(got storage_dtype='{self.data_input_params.intensity_config.storage_dtype}'). "
+                    "Use yolox_tiny or a model with normalization for 16-bit images."
+                )
+                raise ValueError(msg)
+            self.data_input_params = dataclasses.replace(self.data_input_params, intensity_config=None)
 
     def _create_model(self, num_classes: int | None = None) -> SingleStageDetector:
         num_classes = num_classes if num_classes is not None else self.num_classes
@@ -193,32 +206,24 @@ class YOLOX(LightningDetectionModel):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        _inv_255 = (1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0)
         return {
             "yolox_tiny": DataInputParams(input_size=(640, 640), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            "yolox_s": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
-            "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
-            "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
+            "yolox_s": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=_inv_255),
+            "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=_inv_255),
+            "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=_inv_255),
         }
 
     def _customize_inputs(self, entity: SampleBatch) -> dict[str, Any]:
-        if self.model_name in _RAW_UINT8_MODELS:
-            if entity.imgs_info is not None:
-                for info in entity.imgs_info:
-                    if info is not None and getattr(info, "bit_depth", 8) > 8:
-                        msg = (
-                            f"YOLOX ({self.model_name}) does not support images with bit_depth > 8. "
-                            f"Got bit_depth={info.bit_depth}. "
-                            "Pretrained weights require [0, 255] uint8-range inputs. "
-                            "Use yolox_tiny or a model with normalization for 16-bit images."
-                        )
-                        raise RuntimeError(msg)
-
-            inputs = super()._customize_inputs(entity)
-            # The CPU pipeline always scales images to [0, 1] float.
-            # YOLOX-S/L/X pretrained weights expect [0, 255] float, so rescale here.
-            # We create a new entity so the original (with [0, 1] images) remains intact
-            images_255 = cast("torch.Tensor", entity.images).mul(255.0)
-            inputs["entity"] = dataclasses.replace(inputs["entity"], images=images_255)
-            return inputs
+        if self.model_name in _RAW_UINT8_MODELS and entity.imgs_info is not None:
+            for info in entity.imgs_info:
+                if info is not None and getattr(info, "bit_depth", 8) > 8:
+                    msg = (
+                        f"YOLOX ({self.model_name}) does not support images with bit_depth > 8. "
+                        f"Got bit_depth={info.bit_depth}. "
+                        "Pretrained weights require [0, 255] uint8-range inputs. "
+                        "Use yolox_tiny or a model with normalization for 16-bit images."
+                    )
+                    raise RuntimeError(msg)
 
         return super()._customize_inputs(entity)

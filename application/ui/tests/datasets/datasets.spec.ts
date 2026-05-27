@@ -53,15 +53,27 @@ test.describe('Dataset', () => {
         );
     });
 
-    test('list items', async ({ datasetPage }) => {
+    test('list items', async ({ page, datasetPage }) => {
+        const waitForBatch = (offset: number) =>
+            page.waitForResponse(
+                (response) => response.url().includes('/dataset/media') && response.url().includes(`offset=${offset}`)
+            );
+
+        const batch20 = waitForBatch(20);
+        const batch40 = waitForBatch(40);
+
         await datasetPage.goto();
-        const loadedItems = 40;
 
         await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
 
+        await datasetPage.getMediaGrid().press('End');
+        await batch20;
+        await datasetPage.getMediaGrid().press('End');
+        await batch40;
+
         await datasetPage.selectAll();
 
-        await expect(datasetPage.getSelectedCountText(loadedItems)).toBeVisible();
+        await expect(datasetPage.getSelectedCountText(totalElements)).toBeVisible();
     });
 
     test('select multiple images', async ({ datasetPage }) => {
@@ -133,9 +145,43 @@ test.describe('Dataset', () => {
 
         await expect(datasetPage.getUploadButton()).toBeDisabled();
 
-        await expect(datasetPage.getUploadProgressText(totalFiles, firstBatchCount)).toBeVisible();
+        await expect(datasetPage.getUploadProgressText(totalFiles)).toBeVisible();
 
         await expect(datasetPage.getUploadFinishedText(totalFiles)).toBeVisible();
+    });
+
+    test('shows per-file upload details dialog with status', async ({ network, datasetPage }) => {
+        const filesToUpload = [
+            { name: 'image-one.png', mimeType: 'image/png', buffer: sampleImageBuffer },
+            { name: 'image-two.png', mimeType: 'image/png', buffer: sampleImageBuffer },
+        ];
+
+        network.use(
+            http.post('/api/projects/{project_id}/dataset/media', async () => {
+                return HttpResponse.json(getMockedMediaImage({ id: uuid() }), { status: 201 });
+            })
+        );
+
+        await datasetPage.goto();
+
+        await datasetPage.uploadFiles(filesToUpload);
+
+        // Wait for the final toast so the toast element is stable (in-progress toast re-renders on each update).
+        await expect(datasetPage.getUploadFinishedText(2)).toBeVisible();
+
+        await datasetPage.clickShowDetails();
+
+        const dialog = datasetPage.getUploadDetailsDialog();
+        await expect(dialog).toBeVisible();
+
+        // One header row + two body rows.
+        await expect(datasetPage.getUploadDetailsRows()).toHaveCount(3);
+
+        await expect(dialog.getByRole('row', { name: /image-one\.png/ })).toContainText('Uploaded');
+        await expect(dialog.getByRole('row', { name: /image-two\.png/ })).toContainText('Uploaded');
+
+        await datasetPage.closeUploadDetailsDialog();
+        await expect(dialog).toBeHidden();
     });
 
     test.describe('Bulk labelling while uploading media items', () => {

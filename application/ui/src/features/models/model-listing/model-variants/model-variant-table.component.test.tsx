@@ -191,6 +191,39 @@ describe('ModelVariantTable', () => {
         );
     });
 
+    it('shows direct download button for non-openvino format', () => {
+        const model = getMockedModel({
+            variants: [
+                getMockedVariant({
+                    id: 'pt-1',
+                    format: 'pytorch',
+                    precision: 'fp32',
+                }),
+            ],
+        });
+
+        render(<ModelVariantTable model={model} format='pytorch' />);
+
+        expect(screen.getByRole('button', { name: 'Download model pt-1' })).toBeInTheDocument();
+    });
+
+    it.each(['pytorch', 'onnx'] as const)('%s format renders a direct download button', (format) => {
+        const model = getMockedModel({
+            variants: [
+                getMockedVariant({
+                    id: `${format}-1`,
+                    format,
+                    precision: 'fp32',
+                    quantization_info: null,
+                }),
+            ],
+        });
+
+        render(<ModelVariantTable model={model} format={format} />);
+
+        expect(screen.getByRole('button', { name: `Download model ${format}-1` })).toBeInTheDocument();
+    });
+
     describe('ModelVariantPrecisionRenderer', () => {
         it('renders only uppercased precision text when variant has no quantization_info', () => {
             const model = getMockedModel({

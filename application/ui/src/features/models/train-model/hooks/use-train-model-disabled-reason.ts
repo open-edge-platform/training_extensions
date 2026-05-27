@@ -3,11 +3,12 @@
 
 import { useGetDatasetItems } from 'hooks/use-get-dataset-items.hook';
 
+import { pluralizeItems } from '../../../../shared/util';
+
 const MIN_NUMBER_OF_ANNOTATED_ITEMS = 3;
 const listFormatter = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' });
 const pluralRules = new Intl.PluralRules('en');
 
-const pluralizeItems = (count: number) => (pluralRules.select(count) === 'one' ? 'item' : 'items');
 const conjugateToBe = (count: number) => (pluralRules.select(count) === 'one' ? 'is' : 'are');
 
 export const useTrainModelDisabledReason = () => {

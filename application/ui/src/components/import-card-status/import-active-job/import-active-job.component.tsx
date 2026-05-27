@@ -4,6 +4,7 @@
 import { Loading } from '@geti/ui';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { getJobProgress, isJobRunning } from 'hooks/api/util';
+import capitalize from 'lodash-es/capitalize';
 
 import { Job } from '../../../constants/shared-types';
 import { CancelJobConfirmation } from '../../../features/dataset/import-export/cancel-job-confirmation/cancel-job-confirmation.component';
@@ -36,7 +37,7 @@ export const ImportActiveJob = ({ job, size, fileName, stagedDatasetId, deleteEn
                 actionButtons={<CancelJobConfirmation jobId={job.job_id} onRemove={handleRemove} />}
                 message={`${fileName} file is being processed for import`}
                 bottomIcon={<Loading mode='inline' size='S' />}
-                bottomLeftMessage={job?.message ?? job.status.toLocaleLowerCase()}
+                bottomIconMessage={job?.message ?? capitalize(job.status.toLocaleLowerCase())}
                 bottomRightMessage={isRunning ? `${progress}%` : undefined}
             />
         </BottomProgressBar>
