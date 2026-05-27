@@ -68,6 +68,16 @@ class LightningKeypointDetectionModel(LightningModel):
             torch_compile=torch_compile,
         )
 
+    def _reset_prediction_layer(self, num_classes: int) -> None:
+        """No-op for keypoint detection models.
+
+        The prediction layer output size corresponds to the number of keypoints,
+        not the number of label categories. It should not be reset when LabelInfo changes.
+
+        Args:
+            num_classes: Number of classes (ignored for keypoint detection).
+        """
+
     def _customize_inputs(self, entity: SampleBatch) -> dict[str, Any]:
         """Convert TorchDataBatch into Topdown model's input."""
         inputs: dict[str, Any] = {}

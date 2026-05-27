@@ -186,6 +186,30 @@ class OVEngine(Engine):
 
         return task_map[task_name]
 
+    def _validate_label_info(self, model: OVModel, datamodule: DataModule, pipeline: str) -> None:
+        """Validate that model and datamodule label info are compatible.
+
+        For keypoint detection, label_info encodes the number of keypoints (set in the
+        recipe), not the dataset's object categories, so a mismatch is expected.
+
+        Args:
+            model: The OpenVINO model.
+            datamodule: The data module.
+            pipeline: Name of the pipeline (e.g. "test" or "predict") for the error message.
+
+        Raises:
+            ValueError: If label info differs and the task is not keypoint detection.
+        """
+        if model.label_info != datamodule.label_info and model.task != TaskType.KEYPOINT_DETECTION:
+            msg = (
+                f"To launch a {pipeline} pipeline, the label information should be same "
+                "between the training and testing datasets. "
+                "Please check whether you use the same dataset: "
+                f"model.label_info={model.label_info}, "
+                f"datamodule.label_info={self.datamodule.label_info}"
+            )
+            raise ValueError(msg)
+
     def _derive_task_from_model(self, model_path: PathLike) -> TaskType:
         """Derive the task type from a model file (.xml or .onnx).
 
@@ -273,18 +297,7 @@ class OVEngine(Engine):
             msg = "Please provide a `metric` when creating a OVModel or pass it in OVEngine.test()."
             raise RuntimeError(msg)
 
-        if model.label_info != datamodule.label_info and model.task != TaskType.KEYPOINT_DETECTION:
-            # For keypoint detection, label_info encodes the number of keypoints
-            # (set in the recipe), not the dataset's object categories — mismatch
-            # is expected and not an error.
-            msg = (
-                "To launch a test pipeline, the label information should be same "
-                "between the training and testing datasets. "
-                "Please check whether you use the same dataset: "
-                f"model.label_info={model.label_info}, "
-                f"datamodule.label_info={self.datamodule.label_info}"
-            )
-            raise ValueError(msg)
+        self._validate_label_info(model, datamodule, "test")
         metric_callable = metric(datamodule.label_info)
         with Progress() as progress:
             dataloader = datamodule.test_dataloader()
@@ -355,18 +368,7 @@ class OVEngine(Engine):
         predict_result = []
         with Progress() as progress:
             if isinstance(datamodule, DataModule):
-                if model.label_info != datamodule.label_info and model.task != TaskType.KEYPOINT_DETECTION:
-                    # For keypoint detection, label_info encodes the number of keypoints
-                    # (set in the recipe), not the dataset's object categories — mismatch
-                    # is expected and not an error.
-                    msg = (
-                        "To launch a predict pipeline, the label information should be same "
-                        "between the training and testing datasets. "
-                        "Please check whether you use the same dataset: "
-                        f"model.label_info={model.label_info}, "
-                        f"datamodule.label_info={self.datamodule.label_info}"
-                    )
-                    raise ValueError(msg)
+                self._validate_label_info(model, datamodule, "predict")
                 datamodule = self._auto_configurator.update_ov_subset_pipeline(
                     datamodule=datamodule,
                     subset="test",
