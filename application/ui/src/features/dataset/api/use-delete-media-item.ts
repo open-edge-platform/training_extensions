@@ -10,23 +10,8 @@ import { isFunction } from 'lodash-es';
 import { $api } from '../../../api/client';
 import { getQueryKey } from '../../../query-client/query-client';
 
-const useDeleteMediaItemMutation = (projectId: string) => {
+const useDeleteMediaItemMutation = () => {
     return $api.useMutation('delete', `/api/projects/{project_id}/dataset/media/{media_id}`, {
-        meta: {
-            invalidateQueries: [
-                [
-                    'get',
-                    '/api/projects/{project_id}/dataset/media',
-                    {
-                        params: {
-                            path: {
-                                project_id: projectId,
-                            },
-                        },
-                    },
-                ],
-            ],
-        },
         onError: (error, { params: { path } }) => {
             const { media_id: itemId } = path;
 
@@ -44,7 +29,7 @@ const isFulfilled = (response: PromiseSettledResult<{ itemId: string }>) => resp
 export const useDeleteMediaItem = () => {
     const queryClient = useQueryClient();
     const projectId = useProjectIdentifier();
-    const deleteMutation = useDeleteMediaItemMutation(projectId);
+    const deleteMutation = useDeleteMediaItemMutation();
 
     const alertDialogState = useOverlayTriggerState({});
 
@@ -66,6 +51,13 @@ export const useDeleteMediaItem = () => {
             queryKey: getQueryKey([
                 'get',
                 '/api/projects/{project_id}/dataset/statistics',
+                { params: { path: { project_id: projectId } } },
+            ]),
+        });
+        queryClient.invalidateQueries({
+            queryKey: getQueryKey([
+                'get',
+                '/api/projects/{project_id}/dataset/media',
                 { params: { path: { project_id: projectId } } },
             ]),
         });
