@@ -36,6 +36,7 @@ export const PolygonTool = () => {
 
     const ref = useRef<SVGRectElement>({} as SVGRectElement);
     const isPointerDown = useRef<boolean>(false);
+    const pendingHistoryCommit = useRef<boolean>(false);
     const [mode, setMode] = useState<PolygonMode>(PolygonMode.Polygon);
     const [isPendingPolygonOptimization, startTransition] = useTransition();
 
@@ -95,8 +96,9 @@ export const PolygonTool = () => {
                     return;
                 }
 
-                setSegments(removeEmptySegments(lassoSegment, [point]));
+                setSegments(removeEmptySegments(lassoSegment, [point]), true);
                 setLassoSegment([]);
+                pendingHistoryCommit.current = true;
             })(event);
         },
         (event) => {
@@ -114,7 +116,7 @@ export const PolygonTool = () => {
         setPointFromEvent((point: Point): void => {
             // finish the drawing while releasing the button inside the area of starting point
             if ((mode === PolygonMode.Lasso || isCloseMode(mode)) && polygon) {
-                setSegments(removeEmptySegments(lassoSegment));
+                setSegments(removeEmptySegments(lassoSegment), true);
                 setLassoSegment([]);
             }
 
@@ -129,6 +131,10 @@ export const PolygonTool = () => {
                 });
 
                 resetTool();
+                pendingHistoryCommit.current = false;
+            } else if (pendingHistoryCommit.current) {
+                setSegments((prev) => prev);
+                pendingHistoryCommit.current = false;
             }
 
             setMode(PolygonMode.Polygon);

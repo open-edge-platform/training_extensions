@@ -15,6 +15,7 @@ import {
     useIsFetchingPredictions,
 } from '../../annotator/api/use-media-predictions';
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
+import { ToolManagerProvider } from '../../annotator/tools/tool-manager-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
@@ -195,17 +196,19 @@ export const AnnotatorContainer = ({
             videoFrame={isVideoFrame(mediaItem) ? mediaItem : undefined}
             changeSelectedMediaItem={onSelectedMediaItem}
         >
-            <Annotator
-                mode={mode}
-                subset={subset}
-                items={items}
-                image={image}
-                onClose={onClose}
-                mediaItem={mediaItem}
-                isUserReviewed={isUserReviewed}
-                onChangeAnnotatorMode={changeAnnotatorMode}
-                onSelectedMediaItem={onSelectedMediaItem}
-            />
+            <ToolManagerProvider>
+                <Annotator
+                    mode={mode}
+                    subset={subset}
+                    items={items}
+                    image={image}
+                    onClose={onClose}
+                    mediaItem={mediaItem}
+                    isUserReviewed={isUserReviewed}
+                    onChangeAnnotatorMode={changeAnnotatorMode}
+                    onSelectedMediaItem={onSelectedMediaItem}
+                />
+            </ToolManagerProvider>
         </VideoPlayerProvider>
     );
 };
