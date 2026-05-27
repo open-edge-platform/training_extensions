@@ -13,7 +13,7 @@ import { http } from '../../../../api/utils';
 import type { Media } from '../../../../constants/shared-types';
 import { server } from '../../../../msw-node-setup';
 import { isImage } from '../../../../shared/media-item-utils';
-import { SelectedDataProvider } from '../../providers/selected-data-provider.component';
+import { useSelectedData } from '../../providers/selected-data-provider.component';
 import { Toolbar } from './toolbar.component';
 
 const uploadMediaMock = vi.fn();
@@ -40,15 +40,22 @@ vi.mock('../hooks/use-select-dataset-item.hook', () => ({
 }));
 
 vi.mock('../../../models/train-model/train-model.component', () => ({
-    TrainModel: () => <div>Train model</div>,
+    TrainModel: () => <button>Train model</button>,
 }));
 
 vi.mock('../../import-export/import-export.component', () => ({
-    ImportExport: () => <div>ImportExport</div>,
+    ImportExport: () => <button>Export/Import</button>,
 }));
 
 vi.mock('hooks/use-project-identifier.hook', () => ({
     useProjectIdentifier: () => 'project-123',
+}));
+vi.mock('../../providers/selected-data-provider.component', () => ({
+    useSelectedData: vi.fn(() => ({
+        selectedKeys: new Set(),
+        setSelectedKeys: vi.fn(),
+        toggleSelectedKeys: vi.fn(),
+    })),
 }));
 
 describe('Toolbar', () => {
@@ -87,11 +94,7 @@ describe('Toolbar', () => {
             })
         );
 
-        const result = render(
-            <SelectedDataProvider>
-                <Toolbar items={items} viewMode={ViewModes.LARGE} setViewMode={vi.fn()} />
-            </SelectedDataProvider>
-        );
+        const result = render(<Toolbar items={items} viewMode={ViewModes.LARGE} setViewMode={vi.fn()} />);
 
         await waitForElementToBeRemoved(screen.getByRole('progressbar'));
 
@@ -151,5 +154,39 @@ describe('Toolbar', () => {
             expect(screen.getByText('Number of media')).toBeVisible();
             expect(screen.getByText('Annotated images')).toBeVisible();
         });
+    });
+
+    it('hides "Export/Import", "Train model", "Annotate" buttons when at least one media is selected', async () => {
+        const firstItem = getMockedMediaImage({ id: 'first-item' });
+
+        vi.mocked(useSelectedData).mockReturnValue({
+            selectedKeys: new Set(firstItem.id),
+            setSelectedKeys: vi.fn(),
+            toggleSelectedKeys: vi.fn(),
+        });
+
+        await renderToolbar([firstItem]);
+
+        expect(screen.getByRole('button', { name: 'Upload media' })).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Annotate' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Train model' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Export/Import' })).not.toBeInTheDocument();
+    });
+
+    it('shows "Export/Import", "Train model", "Annotate" buttons when no media is selected', async () => {
+        const firstItem = getMockedMediaImage({ id: 'first-item' });
+
+        vi.mocked(useSelectedData).mockReturnValue({
+            selectedKeys: new Set(),
+            setSelectedKeys: vi.fn(),
+            toggleSelectedKeys: vi.fn(),
+        });
+
+        await renderToolbar([firstItem]);
+
+        expect(screen.getByRole('button', { name: 'Upload media' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Annotate' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Train model' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Export/Import' })).toBeInTheDocument();
     });
 });
