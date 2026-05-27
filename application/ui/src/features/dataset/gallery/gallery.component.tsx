@@ -59,7 +59,7 @@ const GalleryList = ({
     isMediaItemReviewedById,
 }: GalleryListProps) => {
     const projectId = useProjectIdentifier();
-    const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
+    const { selectedKeys, toggleSelectedKeys } = useSelectedData();
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
 
@@ -73,7 +73,6 @@ const GalleryList = ({
             isPending={isPending}
             isLoadingMore={isFetchingNextPage}
             onLoadMore={fetchNextPage}
-            onSelectionChange={setSelectedKeys}
             contentItem={(item) => {
                 const mediaUrl = getThumbnailUrl(projectId, item.id);
                 const downloadUrl = getMediaDownloadUrl(projectId, item.id);
