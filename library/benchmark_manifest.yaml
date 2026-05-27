@@ -20,9 +20,9 @@ experiments:
       - name: dino_v2
         priority: core
         recipe: classification/multi_class_cls/dino_v2.yaml
-      - name: deit_tiny
+      - name: vit_tiny
         priority: extended
-        recipe: classification/multi_class_cls/deit_tiny.yaml
+        recipe: classification/multi_class_cls/vit_tiny.yaml
       - name: efficientnet_b3
         priority: extended
         recipe: classification/multi_class_cls/efficientnet_b3.yaml
