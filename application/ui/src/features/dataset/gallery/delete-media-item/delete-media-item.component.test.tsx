@@ -13,9 +13,11 @@ describe('DeleteMediaItem', () => {
     it('deletes a single media item and shows a success toast', async () => {
         const itemId = '123';
         const mockedOnDeleted = vitest.fn();
+        let requestBody: { media_ids?: string[] } | undefined;
 
         server.use(
-            http.delete('/api/projects/{project_id}/dataset/media', async () => {
+            http.delete('/api/projects/{project_id}/dataset/media', async ({ request }) => {
+                requestBody = (await request.json()) as { media_ids: string[] };
                 return new HttpResponse(null, { status: 204 });
             })
         );
@@ -28,15 +30,18 @@ describe('DeleteMediaItem', () => {
         fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
 
         expect(await screen.findByText(`1 item(s) deleted successfully`)).toBeVisible();
+        expect(requestBody).toEqual({ media_ids: [itemId] });
         expect(mockedOnDeleted).toHaveBeenCalledWith([itemId]);
     });
 
     it('deletes multiple media items and shows a success toast', async () => {
         const itemsIds = ['123', '456', '789'];
         const mockedOnDeleted = vitest.fn();
+        let requestBody: { media_ids?: string[] } | undefined;
 
         server.use(
-            http.delete('/api/projects/{project_id}/dataset/media', async () => {
+            http.delete('/api/projects/{project_id}/dataset/media', async ({ request }) => {
+                requestBody = (await request.json()) as { media_ids: string[] };
                 return new HttpResponse(null, { status: 204 });
             })
         );
@@ -49,6 +54,7 @@ describe('DeleteMediaItem', () => {
         fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
 
         expect(await screen.findByText(`3 item(s) deleted successfully`)).toBeVisible();
+        expect(requestBody).toEqual({ media_ids: itemsIds });
         expect(mockedOnDeleted).toHaveBeenCalledWith(itemsIds);
     });
 

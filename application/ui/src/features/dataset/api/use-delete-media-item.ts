@@ -10,14 +10,14 @@ import { isFunction } from 'lodash-es';
 import { $api } from '../../../api/client';
 import { getQueryKey } from '../../../query-client/query-client';
 
+const toastId = 'deleting-notification';
+
 const useDeleteMediaItemsMutation = () => {
     return $api.useMutation('delete', `/api/projects/{project_id}/dataset/media`, {
         meta: { error: { notify: () => false } },
-        onError: (error, path) => {
-            const { media_ids } = path.body ?? {};
-
+        onError: (error) => {
             toast({
-                id: media_ids.join(','),
+                id: toastId,
                 type: 'error',
                 message: `Failed to delete, ${error?.detail}`,
             });
@@ -35,7 +35,7 @@ export const useDeleteMediaItem = () => {
     const handleDeleteItems = async (media_ids: string[], onDeleted?: (ids: string[]) => void) => {
         alertDialogState.close();
 
-        toast({ id: 'deleting-notification', type: 'info', message: `Deleting items...` });
+        toast({ id: toastId, type: 'info', message: `Deleting items...` });
 
         deleteItemsMutation.mutate(
             {
@@ -65,7 +65,7 @@ export const useDeleteMediaItem = () => {
         isFunction(onDeleted) && onDeleted(deletedIds);
 
         toast({
-            id: 'deleting-notification',
+            id: toastId,
             type: 'success',
             message: `${deletedIds.length} item(s) deleted successfully`,
             duration: 3000,
