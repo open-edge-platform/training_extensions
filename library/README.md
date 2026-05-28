@@ -163,8 +163,6 @@ exported_path = engine.export()  # writes OpenVINO IR
 
 Getitune provides inference via PyTorch and OpenVINO backends:
 
-## Python API
-
 ```python
 from getitune.engine import create_engine
 
