@@ -138,13 +138,7 @@ export const SecondaryToolbar = ({
     );
 
     return (
-        <Flex
-            width={'100%'}
-            height={'100%'}
-            alignItems={'center'}
-            justifyContent={'space-between'}
-            UNSAFE_className={classes.secondaryToolbarContainer}
-        >
+        <Flex width={'100%'} height={'100%'} alignItems={'center'} justifyContent={'space-between'}>
             <Toolbar.Container>
                 <Flex alignItems={'center'} gap={'size-50'}>
                     <Toolbar.Section>

@@ -28,13 +28,21 @@ export const NewProjectCard = () => {
     return (
         <>
             <View UNSAFE_className={classes.card}>
-                <ActionButton onPress={handleCreateProject}>
+                <ActionButton onPress={handleCreateProject} UNSAFE_className={classes.buttonText}>
                     <AddCircle />
-                    <Text>Create new project</Text>
+                    <Text>
+                        Create
+                        <br />
+                        new project
+                    </Text>
                 </ActionButton>
-                <ActionButton onPress={handleCreateFromDataset}>
+                <ActionButton onPress={handleCreateFromDataset} UNSAFE_className={classes.buttonText}>
                     <AddCircle />
-                    <Text>Create from dataset</Text>
+                    <Text>
+                        Create
+                        <br />
+                        project from dataset
+                    </Text>
                 </ActionButton>
             </View>
             <ImportDatasetAsNewProject dialogState={datasetImportDialogState} />
