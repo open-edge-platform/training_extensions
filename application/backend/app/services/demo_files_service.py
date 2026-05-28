@@ -4,13 +4,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 from loguru import logger
 
-from app.models.media import MediaType
+from app.models.media import MediaType, Video
 from app.models.model_revision import ModelFormat
 
 if TYPE_CHECKING:
@@ -74,26 +75,31 @@ class DemoFilesService:
         return files
 
     def _pick_sample_image(self, project_id: UUID) -> bytes | None:
-        """Pick a sample image from the project's dataset and return its bytes.
+        """Pick a sample image from the project's dataset and return its JPEG bytes.
 
-        Videos are excluded; if no image is available, returns None.
+        Resolution order:
+          1. The first available plain image in the project.
+          2. If no images exist but at least one video does, the **middle frame**
+             of the first video is decoded and encoded as JPEG.
+          3. Otherwise, returns None.
         """
         try:
             from app.services.media_service import MediaFilters  # local import to avoid cycle at module load
         except Exception:  # pragma: no cover - defensive
             return None
 
+        # 1) Try a real image first.
         try:
-            media_list = self._media_service.list_media(
+            image_media = self._media_service.list_media(
                 project_id=project_id,
                 filters=MediaFilters(limit=1, offset=0),
                 exclude_types=[MediaType.VIDEO, MediaType.VIDEO_FRAME],
             )
         except Exception:
             logger.exception("Failed to list media to pick a sample image for project {}", project_id)
-            return None
+            image_media = []
 
-        for media in media_list:
+        for media in image_media:
             try:
                 path: Path = self._media_service.get_media_binary_path(project_id=project_id, media=media)
                 if path.exists():
@@ -101,7 +107,56 @@ class DemoFilesService:
             except Exception:
                 logger.exception("Failed to read sample image {} for project {}", media.id, project_id)
                 continue
+
+        # 2) Fall back to extracting the middle frame of the first available video.
+        try:
+            video_media = self._media_service.list_media(
+                project_id=project_id,
+                filters=MediaFilters(limit=1, offset=0),
+                exclude_types=[MediaType.IMAGE, MediaType.VIDEO_FRAME],
+            )
+        except Exception:
+            logger.exception("Failed to list videos to extract a sample frame for project {}", project_id)
+            return None
+
+        for media in video_media:
+            if not isinstance(media, Video) or media.frame_count <= 0:
+                continue
+            try:
+                frame_index = media.frame_count // 2
+                video_frame = self._media_service.get_frame_binary(
+                    project_id=project_id, video=media, frame_index=frame_index
+                )
+                logger.info(
+                    "No image found in project {}; extracting frame {} from video {} as sample image.",
+                    project_id,
+                    frame_index,
+                    media.id,
+                )
+                return video_frame.tobytes()
+            except Exception:
+                logger.exception("Failed to extract a sample frame from video {} (project {})", media.id, project_id)
+                continue
+
         return None
+
+    def _encode_video_frame_as_jpeg(self, video_path: Path, frame_index: int) -> bytes | None:
+        """Decode a single video frame and return it encoded as JPEG bytes."""
+        try:
+            from PIL import Image as PILImage  # local import to keep module import cheap
+        except Exception:  # pragma: no cover - defensive
+            return None
+
+        video_service = self._media_service._get_video_service()
+        frame_rgb = video_service.extract_video_frame(video_path=video_path, frame_index=frame_index)
+        if frame_rgb is None:
+            return None
+        image = PILImage.fromarray(frame_rgb)
+        if image.mode != "RGB":
+            image = image.convert("RGB")
+        buffer = BytesIO()
+        image.save(buffer, format="JPEG", quality=92)
+        return buffer.getvalue()
 
 
 # ---------------------------------------------------------------------------

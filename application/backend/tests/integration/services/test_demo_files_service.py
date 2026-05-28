@@ -1,17 +1,20 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Callable
 from pathlib import Path
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
+import cv2
+import numpy as np
 import pytest
 from PIL import Image as PILImage
 from sqlalchemy.orm import Session
 
 from app.db.schema import MediaDB, PipelineDB
 from app.models import Pipeline, Project
-from app.models.media import ImageFormat, Media
+from app.models.media import ImageFormat, Media, VideoFormat
 from app.models.model_revision import ModelFormat
 from app.services import MediaService
 from app.services.demo_files_service import DemoFile, DemoFilesService
@@ -79,11 +82,32 @@ def fxt_project_with_image(
 
 
 @pytest.fixture
-def fxt_project_with_video_only(
+def fxt_video_data() -> Callable[[Path, int, int, int], None]:
+    """Write a small synthetic AVI video to disk with a known per-frame intensity ramp.
+
+    Each frame is filled with a single gray level equal to ``frame_index`` (clamped to 0..255),
+    which lets tests assert that the *middle* frame was the one decoded.
+    """
+
+    def _generate(path: Path, frame_count: int = 25, width: int = 64, height: int = 48) -> None:
+        fourcc = cv2.VideoWriter.fourcc(*"MJPG")
+        writer = cv2.VideoWriter(str(path), fourcc, 25.0, (width, height), isColor=True)
+        assert writer.isOpened()
+        for i in range(frame_count):
+            gray = min(i, 255)
+            frame = np.full((height, width, 3), gray, dtype=np.uint8)
+            writer.write(frame)
+        writer.release()
+
+    return _generate
+
+
+@pytest.fixture
+def fxt_project_with_video_db_row_only(
     fxt_project_with_pipeline: tuple[Project, Pipeline],
     db_session: Session,
 ) -> Project:
-    """Create a project that contains only a video (no plain images)."""
+    """Project that has a VIDEO row in the DB but **no** video binary on disk."""
     project, _ = fxt_project_with_pipeline
     db_video = MediaDB(
         type="video",
@@ -99,6 +123,31 @@ def fxt_project_with_video_only(
     db_session.add(db_video)
     db_session.flush()
     return project
+
+
+@pytest.fixture
+def fxt_project_with_real_video(
+    fxt_project_with_pipeline: tuple[Project, Pipeline],
+    fxt_media_service: MediaService,
+    fxt_video_data: Callable[..., None],
+    tmp_path: Path,
+) -> tuple[Project, Media, int]:
+    """Create a project containing a single real video (no images) stored on disk.
+
+    Returns the project, the created video media and the total frame count of the video.
+    """
+    project, _ = fxt_project_with_pipeline
+    frame_count = 25
+    src = tmp_path / "sample.avi"
+    fxt_video_data(src, frame_count=frame_count)
+    with open(src, "rb") as data:
+        created = fxt_media_service.create_video(
+            project_id=project.id,
+            name="sample_video",
+            video_format=VideoFormat.AVI,
+            data=data,
+        )
+    return project, created, frame_count
 
 
 class TestDemoFilesServiceIntegration:
@@ -204,13 +253,14 @@ class TestDemoFilesServiceIntegration:
         expected_path: Path = fxt_media_service.get_media_binary_path(project_id=project.id, media=media)
         assert sample.data == expected_path.read_bytes()
 
-    def test_videos_are_excluded_from_sample_image(
+    def test_video_without_binary_falls_back_gracefully(
         self,
         fxt_demo_files_service: DemoFilesService,
-        fxt_project_with_video_only: Project,
+        fxt_project_with_video_db_row_only: Project,
     ) -> None:
-        """A project containing only videos must not produce an image.jpg entry."""
-        project = fxt_project_with_video_only
+        """A project whose only video has no binary on disk must not produce image.jpg
+        (and must not raise)."""
+        project = fxt_project_with_video_db_row_only
 
         files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=ModelFormat.OPENVINO)
 
@@ -218,6 +268,65 @@ class TestDemoFilesServiceIntegration:
         assert "image.jpg" not in names
         # The rest of the bundle is still produced.
         assert names == ["demo.py", "demo_async.py", "pyproject.toml", "README.md"]
+
+    def test_video_middle_frame_used_when_no_image_available(
+        self,
+        fxt_demo_files_service: DemoFilesService,
+        fxt_project_with_real_video: tuple[Project, Media, int],
+    ) -> None:
+        """When the project has no images but does have a video, the middle frame
+        of the first video is used as image.jpg.
+
+        The service calls ``MediaService.get_frame_binary`` (which returns a
+        ``PIL.Image.Image``) and stores its raw pixel buffer via ``.tobytes()``,
+        so the bundled bytes are a flat ``H*W*3`` RGB buffer.
+        """
+        project, _video, frame_count = fxt_project_with_real_video
+        width, height = 64, 48  # matches fxt_video_data defaults
+
+        files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=ModelFormat.OPENVINO)
+
+        names = [f.name for f in files]
+        assert names == ["image.jpg", "demo.py", "demo_async.py", "pyproject.toml", "README.md"]
+
+        sample = next(f for f in files if f.name == "image.jpg")
+        # Raw RGB pixel buffer: H * W * 3 bytes.
+        assert len(sample.data) == width * height * 3
+
+        # Synthetic video frames are uniform gray with intensity == frame_index, so the
+        # middle frame should have mean intensity close to frame_count // 2.
+        arr = np.frombuffer(sample.data, dtype=np.uint8).reshape(height, width, 3)
+        expected = frame_count // 2
+        mean = float(arr.mean())
+        assert abs(mean - expected) < 5, f"Expected mean ~{expected}, got {mean:.2f}"
+
+    def test_image_preferred_over_video_for_sample(
+        self,
+        fxt_demo_files_service: DemoFilesService,
+        fxt_project_with_image: tuple[Project, MediaDB],
+        fxt_media_service: MediaService,
+        fxt_video_data: Callable[..., None],
+        tmp_path: Path,
+    ) -> None:
+        """If both images and videos exist, the image must be picked (no video decoding)."""
+        project, media = fxt_project_with_image
+
+        # Add a video as well.
+        src = tmp_path / "extra.avi"
+        fxt_video_data(src, frame_count=10)
+        with open(src, "rb") as data:
+            fxt_media_service.create_video(
+                project_id=project.id,
+                name="extra_video",
+                video_format=VideoFormat.AVI,
+                data=data,
+            )
+
+        files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=ModelFormat.OPENVINO)
+
+        sample = next(f for f in files if f.name == "image.jpg")
+        expected_path: Path = fxt_media_service.get_media_binary_path(project_id=project.id, media=media)
+        assert sample.data == expected_path.read_bytes()
 
     def test_missing_binary_file_is_skipped(
         self,
