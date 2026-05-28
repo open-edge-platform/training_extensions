@@ -76,15 +76,18 @@ def _detect_dtype_from_file(path: Path) -> str:
     with path.open("rb") as f:
         sig = f.read(8)
 
+    # PNG: bit_depth is at byte offset 24 in the IHDR chunk
     if sig[:4] == _PNG_SIGNATURE:
         with path.open("rb") as f:
-            f.seek(24)
+            f.seek(24)  # signature(8) + length(4) + "IHDR"(4) + width(4) + height(4)
             bit_depth = struct.unpack("B", f.read(1))[0]
         return "uint16" if bit_depth == 16 else "uint8"
 
+    # JPEG is always 8-bit
     if sig[:2] == _JPEG_SIGNATURE:
         return "uint8"
 
+    # TIFF: check BitsPerSample tag via PIL
     if sig[:2] in (_TIFF_LE, _TIFF_BE):
         from PIL import Image
 
@@ -94,7 +97,7 @@ def _detect_dtype_from_file(path: Path) -> str:
             if img.mode in _PIL_FLOAT_MODES:
                 return "float32"
             tag_v2 = getattr(img, "tag_v2", None)
-            if tag_v2 and 258 in tag_v2:
+            if tag_v2 and 258 in tag_v2:  # 258 = BitsPerSample
                 bits = tag_v2[258]
                 if isinstance(bits, tuple):
                     bits = bits[0]
@@ -102,6 +105,7 @@ def _detect_dtype_from_file(path: Path) -> str:
                     return "uint16"
         return "uint8"
 
+    # Fallback: use PIL mode
     from PIL import Image
 
     with Image.open(path) as img:
