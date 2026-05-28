@@ -46,5 +46,9 @@ applyTo: "application/ui/**"
 
 - Do not introduce another data-fetching library.
 - Do not hand-edit generated API types.
-- Do not edit vendored `packages/` — they will be overwritten.
+- Do not edit vendored `packages` — they will be overwritten.
 - Do not add CSS-in-JS outside what `@geti/ui` already uses.
+
+## Further reading
+
+- See `application/ui/README.md` for detailed architecture, API integration examples, and contributing guidelines.
