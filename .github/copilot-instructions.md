@@ -18,6 +18,11 @@ The library is consumed by the backend (`getitune[cpu|xpu|cuda]` extras).
 
 ## General rules
 
+- Assume the virtual environment is already activated — do not prepend `uv run`
+  or activate a venv in every command.
+- Assume the working directory is already the component root you are working on
+  (e.g. `application/backend/`). Do not `cd` into it at the start of every
+  command.
 - Do not mix code or conventions between the three sub-projects.
 - Prefer **absolute imports** within each Python package. Relative imports are
   acceptable when they help avoid circular dependencies.
@@ -46,6 +51,13 @@ The library is consumed by the backend (`getitune[cpu|xpu|cuda]` extras).
 - Logging: `library/` uses stdlib `logging`; `application/backend/` uses
   `loguru`. Do not mix them.
 - Tests use `pytest`; new features require unit tests.
+- **Test placement**: unit tests live next to the code they test in
+  `tests/unit/` (mirroring the source tree); integration tests go in
+  `tests/integration/`. Do not duplicate fixtures across directories — reuse
+  existing `conftest.py` fixtures at the appropriate scope.
+- **Running tests**: after writing or modifying tests, run the specific new test
+  file (e.g. `pytest tests/unit/path/to/test_foo.py`). Running the full suite
+  is optional and not required for validation.
 
 ## Things to avoid
 
