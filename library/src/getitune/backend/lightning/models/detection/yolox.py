@@ -206,12 +206,25 @@ class YOLOX(LightningDetectionModel):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        _inv_255 = (1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0)
+        # All values in 0-255 range for ModelAPI compatibility with uint8 input.
+        # Training pipeline must scale [0,1] images to [0,255] before normalization.
+        _zero_mean = (0.0, 0.0, 0.0)
+        _identity_scale = (1.0, 1.0, 1.0)
+        # ImageNet normalization scaled to 0-255 range
+        _imagenet_mean_255 = (123.675, 116.28, 103.53)  # (0.485, 0.456, 0.406) * 255
+        _imagenet_std_255 = (58.395, 57.12, 57.375)  # (0.229, 0.224, 0.225) * 255
+
         return {
-            "yolox_tiny": DataInputParams(input_size=(640, 640), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            "yolox_s": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=_inv_255),
-            "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=_inv_255),
-            "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=_inv_255),
+            # YOLOX-tiny uses ImageNet normalization (0-255 range)
+            "yolox_tiny": DataInputParams(
+                input_size=(640, 640),
+                mean=_imagenet_mean_255,
+                std=_imagenet_std_255,
+            ),
+            # YOLOX s/l/x expect [0,255] float input; identity normalization
+            "yolox_s": DataInputParams(input_size=(640, 640), mean=_zero_mean, std=_identity_scale),
+            "yolox_l": DataInputParams(input_size=(640, 640), mean=_zero_mean, std=_identity_scale),
+            "yolox_x": DataInputParams(input_size=(640, 640), mean=_zero_mean, std=_identity_scale),
         }
 
     def _customize_inputs(self, entity: SampleBatch) -> dict[str, Any]:

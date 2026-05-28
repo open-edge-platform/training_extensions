@@ -255,6 +255,7 @@ class TransformsUpdater:
         "mosaic": {
             "class_paths": ["getitune.data.augmentation.transforms.CachedMosaic"],
             "stage": "cpu",
+            "scalar_params": {"translate", "scale"},
         },
         "random_erasing": {
             "class_paths": ["kornia.augmentation.RandomErasing"],
@@ -325,7 +326,11 @@ class TransformsUpdater:
             existing_idx = cls._find_augmentation(aug_list, registry_entry["class_paths"])
 
             if enable:
-                init_args = cls._remap_params(params, registry_entry.get("param_rename"))
+                init_args = cls._remap_params(
+                    params,
+                    registry_entry.get("param_rename"),
+                    registry_entry.get("scalar_params"),
+                )
 
                 if existing_idx is not None:
                     # Update existing augmentation parameters
@@ -352,18 +357,28 @@ class TransformsUpdater:
                     aug_list.pop(existing_idx)
 
     @classmethod
-    def _remap_params(cls, params: dict, per_aug_rename: dict[str, str] | None = None) -> dict:
+    def _remap_params(
+        cls,
+        params: dict,
+        per_aug_rename: dict[str, str] | None = None,
+        scalar_params: set[str] | None = None,
+    ) -> dict:
         """Rename Geti parameter names to kornia/torchvision names and adjust values.
 
         1. Rename keys via PARAM_RENAME (probability->p, max_translate_ratio->translate, etc.)
            plus any per-augmentation overrides supplied via per_aug_rename.
         2. Adjust values where kornia expects a different format than a single scalar.
+           Keys listed in ``scalar_params`` are exempt from list conversion (e.g.
+           CachedMosaic expects scalar ``translate`` and ``scale``, not lists).
 
         Args:
             params: Raw Geti parameter dict for the augmentation.
             per_aug_rename: Optional extra rename map applied after PARAM_RENAME.  Use this
                 when a kornia class uses a different argument name than the global default
                 (e.g. RandomGaussianNoise uses ``std`` while the manifest stores ``sigma``).
+            scalar_params: Set of parameter names that must remain scalar (not converted
+                to lists).  Used for transforms like CachedMosaic whose ``translate``
+                and ``scale`` args are plain floats.
         """
         # Step 1: rename keys (global renames + per-augmentation overrides)
         rename_map = {**cls.PARAM_RENAME, **(per_aug_rename or {})}
@@ -374,7 +389,9 @@ class TransformsUpdater:
             init_args[rename_map.get(key, key)] = value
 
         # Step 2: adjust values to match kornia expected formats
-        if "translate" in init_args and not isinstance(init_args["translate"], list):
+        # Skip list conversion for params marked as scalar
+        _skip = scalar_params or set()
+        if "translate" in init_args and "translate" not in _skip and not isinstance(init_args["translate"], list):
             v = init_args["translate"]
             init_args["translate"] = [v, v]
         if "shear" in init_args and not isinstance(init_args["shear"], list):

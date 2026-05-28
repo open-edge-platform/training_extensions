@@ -59,6 +59,39 @@ def _clone_for_cache(sample: BaseSample) -> _CachedSample:
     )
 
 
+class ScaleTo255(tvt_v2.Transform):
+    """Scale image intensity from [0,1] to [0,255] range.
+
+    This transform multiplies float images by 255 to convert from the standard
+    torchvision [0,1] range to [0,255] range expected by some models (e.g., YOLOX).
+
+    Should be applied before Normalize when mean/std are specified in 0-255 range.
+
+    Note:
+        Only affects floating-point images. Integer images pass through unchanged.
+    """
+
+    @typing.no_type_check
+    def forward(self, *inputs: BaseSample) -> BaseSample:
+        """Scale image to [0,255] range."""
+        sample = inputs[0] if len(inputs) == 1 else inputs
+
+        if isinstance(sample, BaseSample):
+            if sample.image.is_floating_point():
+                sample.image = sample.image * 255.0
+            return sample
+
+        if isinstance(sample, torch.Tensor):
+            if sample.is_floating_point():
+                return sample * 255.0
+            return sample
+
+        return sample
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+
 class Resize(tvt_v2.Transform):
     """Resize transform based on torchvision.transforms.v2.
 
@@ -163,6 +196,10 @@ class Resize(tvt_v2.Transform):
 
         # Get original dimensions
         orig_h, orig_w = sample.image.shape[-2:]
+
+        # Early exit: image already at target size — nothing to do
+        if (orig_h, orig_w) == self.size:
+            return sample
 
         # Compute resize and padding parameters
         new_h, new_w, pad_left, pad_top, pad_right, pad_bottom = self._compute_resize_params(orig_h, orig_w)

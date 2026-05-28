@@ -70,16 +70,8 @@ overrides:
             img_scale: $(input_size)
             max_cached_images: 20
             random_pop: false
-        - class_path: torchvision.transforms.v2.RandomResizedCrop
-          init_args:
-            size: $(input_size)
-            scale:
-              - 0.5
-              - 2.0
-            ratio:
-              - 0.5
-              - 2.0
-            antialias: true
+            scale: 0.5
+            translate: 0.1
         - class_path: getitune.data.augmentation.transforms.CachedMixUp
           init_args:
             img_scale: $(input_size)
@@ -87,6 +79,11 @@ overrides:
             max_cached_images: 10
             random_pop: false
             p: 0.5
+        - class_path: getitune.data.augmentation.transforms.Resize
+          init_args:
+            size: $(input_size)
+            keep_aspect_ratio: true
+            pad_value: 114
       augmentations_gpu:
         - class_path: kornia.augmentation.RandomHorizontalFlip
           init_args:
@@ -100,14 +97,8 @@ overrides:
             p: 0.5
         - class_path: kornia.augmentation.Normalize
           init_args:
-            mean:
-              - 0.485
-              - 0.456
-              - 0.406
-            std:
-              - 0.229
-              - 0.224
-              - 0.225
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
 
     val_subset:
       num_workers: 4
@@ -121,14 +112,8 @@ overrides:
       augmentations_gpu:
         - class_path: kornia.augmentation.Normalize
           init_args:
-            mean:
-              - 0.485
-              - 0.456
-              - 0.406
-            std:
-              - 0.229
-              - 0.224
-              - 0.225
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
 
     test_subset:
       num_workers: 4
@@ -142,11 +127,5 @@ overrides:
       augmentations_gpu:
         - class_path: kornia.augmentation.Normalize
           init_args:
-            mean:
-              - 0.485
-              - 0.456
-              - 0.406
-            std:
-              - 0.229
-              - 0.224
-              - 0.225
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
