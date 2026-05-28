@@ -2,12 +2,14 @@
 
 # Geti Library - getitune
 
+**A low-code transfer learning framework for training, evaluating, optimizing, and deploying computer vision models**
+
 ---
 
 [Key Features](#key-features) •
 [Supported Tasks & Models](#supported-tasks--models) •
-[Installation](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/installation.html) •
-[Documentation](https://open-edge-platform.github.io/training_extensions/latest/index.html) •
+[Installation](#installation) •
+[Docs](https://open-edge-platform.github.io/training_extensions/latest/index.html) •
 [License](#license)
 
 [![PyPI](https://img.shields.io/pypi/v/getitune)](https://pypi.org/project/getitune)
@@ -86,14 +88,20 @@ Each task directory also ships an `openvino_model.yaml` recipe for running and o
 
 Requirements: **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, **NumPy ≥ 2.0**.
 
-> **`getitune` is not yet published to PyPI.** Commands such as `pip install getitune[cpu]` will fail until the first release lands. Until then, use the "Install from source" path below. The PyPI block is kept for reference and will work once the package is published.
+> **Note:** `getitune` is not yet published to PyPI. Until the first release lands, install from source.
 
-For the full guide (system prerequisites, GPU drivers, troubleshooting), see the [installation documentation](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/installation.html). If you plan to modify the library, install from source.
+## Quick Install
+
+```bash
+# With uv (recommended)
+uv pip install "getitune[cpu]"
+
+# Or with pip
+pip install "getitune[cpu]"
+```
 
 <details>
-<summary>Install from PyPI (not available yet)</summary>
-
-> The commands in this block are forward-looking. They will only work once `getitune` is published to PyPI. Until then, use the "Install from source" block.
+<summary><strong> Advanced Installation: Specify Hardware Backend</strong></summary>
 
 `getitune` ships three mutually exclusive extras that select the right PyTorch wheel for your hardware:
 
@@ -103,18 +111,10 @@ For the full guide (system prerequisites, GPU drivers, troubleshooting), see the
 | `[xpu]`  | `torch==2.10.0+xpu` + `triton-xpu`                                     | Intel discrete or integrated GPUs.   |
 | `[cuda]` | `torch==2.10.0+cu128`                                                  | NVIDIA GPUs with CUDA 12.8 drivers.  |
 
-Install with `pip`:
-
 ```bash
 pip install "getitune[cpu]"   # CPU-only
 pip install "getitune[xpu]"   # Intel GPU (XPU)
 pip install "getitune[cuda]"  # NVIDIA GPU (CUDA 12.8)
-```
-
-Or with [`uv`](https://docs.astral.sh/uv/) (faster, used by this repo):
-
-```bash
-uv pip install "getitune[cpu]"
 ```
 
 > **macOS note**: PyTorch's `+cpu` wheel is only published for Linux and Windows. The `[cpu]` extra resolves this automatically and installs the default `torch==2.10.0` wheel on macOS.
@@ -122,10 +122,9 @@ uv pip install "getitune[cpu]"
 </details>
 
 <details>
-<summary>Install from source</summary>
+<summary><strong> Advanced Installation: Install from Source</strong></summary>
 
 ```bash
-# Clone the repository
 git clone https://github.com/open-edge-platform/training_extensions.git
 cd training_extensions/library
 
@@ -141,115 +140,76 @@ pip install -e ".[cpu]"      # remove -e for a non-editable install
 
 ---
 
-## Quick-Start
+# Training
 
-`getitune` is designed to be used primarily through its Python API. A CLI also exists (entry points `getitune` and `otx`), but it is a thin wrapper around the same API and is not the main focus of this README; for CLI details see the upstream [CLI Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/cli_commands.html).
-
-The sections below cover the most common API patterns: recipe-driven training, loading COCO and YOLO datasets, building a `DataModule` explicitly, instantiating model classes directly, and using the OpenVINO engine for inference and optimization.
-
-<details>
-<summary>API Usage</summary>
-
-### 1. Quickest path: pass a recipe and a dataset directory
-
-`create_engine` is the single entry point. Give it a recipe YAML and a dataset root and you get back an `Engine` with `train`, `test`, `predict`, and `export` methods.
+Getitune supports an API-based training approach:
 
 ```python
 from getitune.engine import create_engine
 
+# Initialize and train using the bundled test dataset
 engine = create_engine(
-    data="/path/to/dataset",
-    model="src/getitune/recipe/detection/atss_mobilenetv2.yaml",
+    data="tests/assets/classification_cifar10",
+    model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
 )
 engine.train()
 engine.test()
 exported_path = engine.export()  # writes OpenVINO IR
 ```
 
-By default, artifacts go to `./getitune-workspace/`. Override with `work_dir="..."`:
+---
+
+# Inference
+
+Getitune provides inference via PyTorch and OpenVINO backends:
+
+## Python API
 
 ```python
-engine = create_engine(
-    data="/path/to/dataset",
-    model="src/getitune/recipe/detection/atss_mobilenetv2.yaml",
-    work_dir="runs/atss_baseline",
-)
+from getitune.engine import create_engine
+
+# PyTorch inference
+engine = create_engine(data="/path/to/dataset", model="path/to/recipe.yaml")
+predictions = engine.predict()
+
+# OpenVINO inference and optimization
+ov_engine = create_engine(data="/path/to/dataset", model="path/to/exported_model.xml")
+ov_engine.test()
+ov_engine.optimize()  # post-training quantization via NNCF
 ```
 
-### 2. Loading datasets
+> **Note:** For advanced inference options including OpenVINO optimization, check the [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html).
 
-When you pass a path to `data=`, `getitune` calls `datumaro.experimental.import_dataset(data_root)` under the hood. Datumaro auto-detects the dataset format from the directory contents, so you do not need to pass an explicit format anywhere. The path may point to a directory or to a `.zip` archive (Datumaro extracts the archive automatically next to it, or to the `extract_dir` you configure when calling Datumaro directly).
+---
 
-Four formats are currently recognised by the auto-detector:
+# Dataset Support
 
-- **Datumaro (native)**: a `metadata.json` plus `data.parquet` file at the root. This is the most reliable interchange format and the one to prefer for round-trips.
-- **COCO**: an `annotations/` directory containing COCO JSON files, or any JSON file with `images` and `annotations` keys at the top level.
-- **YOLO**: a `data.yaml` file (Ultralytics layout), `obj.names` plus `obj.data` (traditional layout), or matching `images/` and `labels/` directories.
-- **Pascal VOC**: `JPEGImages/`, `Annotations/`, and `ImageSets/` directories side by side at the root.
+When you pass a path to `data=`, getitune uses [Datumaro](https://github.com/open-edge-platform/datumaro/tree/develop/src/datumaro/experimental) to auto-detect the dataset format. Supported formats:
 
-Reference layouts:
+| Format                | Detection method                                        |
+| --------------------- | ------------------------------------------------------- |
+| **COCO**              | `annotations/` directory with COCO JSON files           |
+| **YOLO**              | `data.yaml` file (Ultralytics layout)                   |
+| **Pascal VOC**        | `JPEGImages/`, `Annotations/`, `ImageSets/` directories |
+| **Datumaro (native)** | `metadata.json` + `data.parquet` at root                |
 
-COCO detection:
-
-```text
-coco_dataset/
-|-- annotations/
-|   |-- instances_train.json
-|   `-- instances_val.json
-`-- images/
-    |-- train/*.jpg
-    `-- val/*.jpg
-```
-
-YOLO (Ultralytics) detection:
-
-```text
-yolo_dataset/
-|-- data.yaml
-|-- images/
-|   |-- train/*.jpg
-|   `-- val/*.jpg
-`-- labels/
-    |-- train/*.txt
-    `-- val/*.txt
-```
-
-Pascal VOC:
-
-```text
-voc_dataset/
-|-- Annotations/*.xml
-|-- ImageSets/
-|   `-- Main/{train,val}.txt
-`-- JPEGImages/*.jpg
-```
-
-Datumaro native (round-trip friendly):
-
-```text
-datumaro_dataset/
-|-- metadata.json
-|-- data.parquet
-`-- images/*.jpg
-```
-
-Once the directory layout matches one of these structures, the call into `create_engine` does not change:
+Zip archives are also accepted, Datumaro extracts them on import.
 
 ```python
+# Works the same regardless of format, just point to the dataset root
 engine = create_engine(
-    data="/path/to/yolo_dataset",
+    data="/path/to/coco_or_yolo_or_voc_dataset",
     model="src/getitune/recipe/detection/yolox_s.yaml",
 )
 engine.train()
 ```
 
-The exact same line works for COCO, VOC, or Datumaro-native datasets. Only the directory contents differ.
+---
 
-Zip archives: `data=` also accepts the path to a `.zip` archive of any of the layouts above; Datumaro extracts it on import.
+# Advanced Usage
 
-### 3. Build a `DataModule` explicitly
-
-When you want finer control (custom input size, tiling, subset configs, worker counts), construct a `DataModule` yourself and pass the instance to `create_engine`. The `data=` argument accepts either a path or a `DataModule` (the `DATA` type alias is `DataModule | PathLike`).
+<details>
+<summary><strong>Build a DataModule explicitly</strong></summary>
 
 ```python
 from getitune.data.module import DataModule
@@ -268,57 +228,26 @@ engine = create_engine(
 engine.train()
 ```
 
-If `train_subset` / `val_subset` / `test_subset` are not provided, `DataModule` falls back to sensible defaults via `DataModule.get_default_subset_configs(input_size)`.
+</details>
 
-### 4. Instantiate a model class directly
-
-Recipes are the easiest path, but you can also import a model class from `getitune.models` and hand the instance to `create_engine`. This is useful when you want to construct the model programmatically or assemble it inside another framework.
-
-Detection example (`ATSS`):
+<details>
+<summary><strong>Instantiate a model class directly</strong></summary>
 
 ```python
 from getitune.models import ATSS
 
 model = ATSS(label_info=datamodule.label_info)
-
 engine = create_engine(data=datamodule, model=model)
 engine.train()
 ```
 
-Keypoint detection example (`RTMPose`):
+Available model classes:
 
-```python
-from getitune.models import RTMPose
-
-model = RTMPose(label_info=datamodule.label_info)
-
-engine = create_engine(data=datamodule, model=model)
-engine.train()
-```
-
-The exact constructor arguments differ per model class (some accept `label_info`, others additionally take `num_classes`, backbone configuration, or task-specific options). The recipe YAML for the same model is the easiest reference for what to pass; you can also inspect the class signature directly.
-
-Other commonly used direct-instantiation classes re-exported from `getitune.models` include:
-
-- Detection: `ATSS`, `SSD`, `YOLOX`, `RTDETR`, `DFine`, `DEIMDFine`, `DEIMV2`
-- Instance segmentation: `MaskRCNN`, `MaskRCNNTV`, `RTMDetInst`
-- Semantic segmentation: `DinoV2Seg`, `LiteHRNet`, `SegNext`
-- Classification: `EfficientNet`, `MobileNetV3`, `VisionTransformer`, `TimmModel`, `TVModel`
-- Keypoint: `RTMPose`
-
-### 5. OpenVINO inference and optimization
-
-When you pass an OpenVINO IR path as `model=`, `create_engine` automatically dispatches to `OVEngine`, which supports evaluation, inference, and post-training quantization via NNCF.
-
-```python
-ov_engine = create_engine(data="/path/to/dataset", model=exported_path)
-ov_engine.test()
-ov_engine.optimize()
-```
-
-You can also instantiate OpenVINO model wrappers directly, for example `from getitune.models import OVDetectionModel`, when you need full control over the IR loading pipeline.
-
-For more examples, see the [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html).
+- **Detection:** `ATSS`, `SSD`, `YOLOX`, `RTDETR`, `DFine`, `DEIMDFine`, `DEIMV2`
+- **Instance segmentation:** `MaskRCNN`, `MaskRCNNTV`, `RTMDetInst`
+- **Semantic segmentation:** `DinoV2Seg`, `LiteHRNet`, `SegNext`
+- **Classification:** `EfficientNet`, `MobileNetV3`, `VisionTransformer`, `TimmModel`, `TVModel`
+- **Keypoint:** `RTMPose`
 
 </details>
 
