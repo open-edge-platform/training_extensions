@@ -44,7 +44,7 @@ Each supported task ships with curated "recipes": YAML files that bundle the mod
 
 ### Key Features
 
-- **Multi-task support**: classification, object detection, rotated detection, instance segmentation, semantic segmentation, and keypoint detection — see the [full model list below](#supported-tasks--models).
+- **Multi-task support**: classification, object detection, rotated detection, instance segmentation, semantic segmentation, and keypoint detection, see the [full model list below](#supported-tasks--models).
 - **Tiling** for large images across detection and segmentation tasks.
 - **Multiple backends**: train with PyTorch Lightning, export and run inference with ONNX and OpenVINO™.
 - **Hardware acceleration**: Intel GPU (XPU) and NVIDIA CUDA support.
