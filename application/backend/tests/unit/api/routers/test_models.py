@@ -309,12 +309,12 @@ class TestModelEndpoints:
             if model_format in (ModelFormat.OPENVINO, ModelFormat.ONNX):
                 assert "demo.py" in namelist
                 assert "demo_async.py" in namelist
-                assert "requirements.txt" in namelist
+                assert "pyproject.toml" in namelist
                 assert "README.md" in namelist
             else:
                 assert "demo.py" not in namelist
                 assert "demo_async.py" not in namelist
-                assert "requirements.txt" not in namelist
+                assert "pyproject.toml" not in namelist
                 assert "README.md" not in namelist
 
         fxt_model_service.get_model_binary_files.assert_called_once_with(

@@ -69,7 +69,7 @@ class DemoFilesService:
         files.append(
             DemoFile(name="demo_async.py", data=_DEMO_ASYNC.format(model_filename=model_filename).encode("utf-8"))
         )
-        files.append(DemoFile(name="requirements.txt", data=_REQUIREMENTS.encode("utf-8")))
+        files.append(DemoFile(name="pyproject.toml", data=_PY_PROJECT.encode("utf-8")))
         files.append(DemoFile(name="README.md", data=_README.format(model_filename=model_filename).encode("utf-8")))
         return files
 
@@ -254,13 +254,19 @@ if __name__ == "__main__":
 '''
 
 
-_REQUIREMENTS = """\
-# Runtime dependencies to run the demo scripts.
-openvino>=2024.0
-openvino-model-api>=0.2.0
-opencv-python-headless>=4.9
-numpy>=1.26
-pillow>=10.0
+_PY_PROJECT = """\
+[project]
+name = "Geti-demo"
+description = "A minimal demo showcasing how to run inference with a model exported from Geti using OpenVINO Model API."
+requires-python = ">=3.13,<3.14"
+
+dependencies = [
+    "openvino~=2026.1.0",
+    "openvino-model-api[onnx]==0.4.3",
+    "opencv-python-headless~=4.13.0",
+    "numpy>=2.0",
+    "pillow~=12.0",
+]
 """
 
 

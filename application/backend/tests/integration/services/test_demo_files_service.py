@@ -125,7 +125,7 @@ class TestDemoFilesServiceIntegration:
 
         names = [f.name for f in files]
         assert "image.jpg" not in names
-        assert names == ["demo.py", "demo_async.py", "requirements.txt", "README.md"]
+        assert names == ["demo.py", "demo_async.py", "pyproject.toml", "README.md"]
 
     def test_openvino_bundle_contents(
         self,
@@ -137,13 +137,7 @@ class TestDemoFilesServiceIntegration:
         files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=ModelFormat.OPENVINO)
 
         names = [f.name for f in files]
-        assert names == [
-            "image.jpg",
-            "demo.py",
-            "demo_async.py",
-            "requirements.txt",
-            "README.md",
-        ]
+        assert names == ["image.jpg", "demo.py", "demo_async.py", "pyproject.toml", "README.md"]
         # Every entry must be a DemoFile with a non-empty bytes payload.
         for f in files:
             assert isinstance(f, DemoFile)
@@ -165,7 +159,7 @@ class TestDemoFilesServiceIntegration:
         assert "AsyncPipeline" in demo_async
 
         # Requirements list the runtime deps used by the demos.
-        reqs = by_name["requirements.txt"].decode("utf-8")
+        reqs = by_name["pyproject.toml"].decode("utf-8")
         for pkg in ("openvino", "openvino-model-api", "opencv-python-headless", "numpy", "pillow"):
             assert pkg in reqs
 
@@ -186,7 +180,7 @@ class TestDemoFilesServiceIntegration:
         files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=ModelFormat.ONNX)
 
         by_name = {f.name: f.data for f in files}
-        assert set(by_name) == {"image.jpg", "demo.py", "demo_async.py", "requirements.txt", "README.md"}
+        assert set(by_name) == {"image.jpg", "demo.py", "demo_async.py", "pyproject.toml", "README.md"}
 
         for script_name in ("demo.py", "demo_async.py"):
             script = by_name[script_name].decode("utf-8")
@@ -223,7 +217,7 @@ class TestDemoFilesServiceIntegration:
         names = [f.name for f in files]
         assert "image.jpg" not in names
         # The rest of the bundle is still produced.
-        assert names == ["demo.py", "demo_async.py", "requirements.txt", "README.md"]
+        assert names == ["demo.py", "demo_async.py", "pyproject.toml", "README.md"]
 
     def test_missing_binary_file_is_skipped(
         self,
@@ -258,4 +252,4 @@ class TestDemoFilesServiceIntegration:
 
         names = [f.name for f in files]
         assert "image.jpg" not in names
-        assert names == ["demo.py", "demo_async.py", "requirements.txt", "README.md"]
+        assert names == ["demo.py", "demo_async.py", "pyproject.toml", "README.md"]
