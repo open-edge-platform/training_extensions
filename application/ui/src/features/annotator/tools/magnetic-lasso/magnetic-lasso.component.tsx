@@ -43,6 +43,7 @@ export const MagneticLasso = () => {
     const isPointerDown = useRef<boolean>(false);
     const isFreeDrawing = useRef<boolean>(false);
     const buildMapPoint = useRef<Point | null>(null);
+    const pendingHistoryCommit = useRef<boolean>(false);
 
     const {
         worker,
@@ -154,10 +155,11 @@ export const MagneticLasso = () => {
 
     const setBuildMapAndSegment = (point: Point) => {
         setLassoSegment([]);
-        setSegments(addFirstPointOrNewOne(point));
+        setSegments(addFirstPointOrNewOne(point), true);
 
         isLoading.current = true;
         buildMapPoint.current = point;
+        pendingHistoryCommit.current = true;
         worker?.buildMap(point);
     };
 
@@ -216,6 +218,10 @@ export const MagneticLasso = () => {
 
             isLoading.current = false;
             worker?.cleanPoints();
+            pendingHistoryCommit.current = false;
+        } else if (pendingHistoryCommit.current) {
+            setSegments((prev) => prev);
+            pendingHistoryCommit.current = false;
         }
 
         setMode(PolygonMode.MagneticLasso);

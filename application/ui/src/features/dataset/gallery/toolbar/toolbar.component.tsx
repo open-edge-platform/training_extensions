@@ -73,23 +73,27 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
             .filter((itemId) => isString(itemId));
     }, [selectedMediaItems, items]);
 
+    const noMediaSelected = selectedMediaItems?.size === 0;
+
     return (
         <Flex direction={'column'} gridArea={'toolbar'} gap={'size-200'} marginBottom={'size-200'}>
             <Flex alignItems={'center'} justifyContent={'space-between'}>
                 <Heading level={1}>Dataset</Heading>
                 <ButtonGroup UNSAFE_style={{ gap: dimensionValue('size-125') }}>
-                    <ImportExport />
+                    {noMediaSelected && <ImportExport />}
 
                     <MediaUpload />
 
                     <AssignLabel selectedImagesIds={selectedImagesIds} />
 
-                    <TrainModel />
+                    {noMediaSelected && <TrainModel />}
 
-                    <AnnotateButton
-                        isDisabled={items.at(0) === undefined}
-                        onClick={items.at(0) === undefined ? undefined : () => onSelectedMediaItemChange(items[0])}
-                    />
+                    {noMediaSelected && (
+                        <AnnotateButton
+                            isDisabled={items.at(0) === undefined}
+                            onClick={items.at(0) === undefined ? undefined : () => onSelectedMediaItemChange(items[0])}
+                        />
+                    )}
                 </ButtonGroup>
             </Flex>
 
@@ -97,7 +101,7 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
 
             <Flex direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
                 <Flex
-                    gap={'size-200'}
+                    gap={'size-50'}
                     height={'size-400'}
                     direction={'row'}
                     alignItems={'center'}
@@ -112,43 +116,33 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
                     <Divider orientation={'vertical'} size={'S'} />
 
                     {hasSelectedElements && (
-                        <>
-                            <DeleteMediaItem
-                                itemsIds={Array.from(selectedKeys) as string[]}
-                                onDeleted={toggleSelectedKeys}
-                            />
-
-                            {/*
-                                TODO: In the future we will have a single endpoint to accept/decline
-                                    multiple media items at once instead of sending multiple requests in a loop.
-                                    Once we have that, we can reenable these buttons.
-                            */}
-                            {/* <Button variant={'accent'} onPress={handleAccept}>
-                                Accept
-                            </Button>
-                            <Button variant={'secondary'} onPress={handleReject}>
-                                Decline
-                            </Button> */}
-                        </>
+                        <DeleteMediaItem
+                            itemsIds={Array.from(selectedKeys) as string[]}
+                            onDeleted={toggleSelectedKeys}
+                        />
                     )}
                 </Flex>
 
                 <Flex gap={'size-200'} alignItems={'center'}>
                     <TotalItems totalSelectedElements={totalSelectedElements} />
 
-                    <FilterByStatus />
+                    {noMediaSelected && (
+                        <>
+                            <FilterByStatus />
 
-                    <MediaFilterLabels />
+                            <MediaFilterLabels />
 
-                    <DateFilter />
+                            <DateFilter />
 
-                    <DatasetStatistics />
+                            <DatasetStatistics />
 
-                    <MediaViewModes
-                        viewMode={viewMode}
-                        setViewMode={setViewMode}
-                        items={[ViewModes.LARGE, ViewModes.MEDIUM, ViewModes.SMALL]}
-                    />
+                            <MediaViewModes
+                                viewMode={viewMode}
+                                setViewMode={setViewMode}
+                                items={[ViewModes.LARGE, ViewModes.MEDIUM, ViewModes.SMALL]}
+                            />
+                        </>
+                    )}
                 </Flex>
             </Flex>
 

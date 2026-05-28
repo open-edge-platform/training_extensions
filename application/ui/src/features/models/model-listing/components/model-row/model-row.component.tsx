@@ -10,7 +10,7 @@ import type {
 } from '../../../../../constants/shared-types';
 import { formatBytes } from '../../../../../shared/util';
 import { GRID_COLUMNS } from '../../constants';
-import { AccuracyIndicator } from '../../model-variants/accuracy-indicator.component';
+import { AccuracyIndicator } from '../../model-variants/accuracy-indicator/accuracy-indicator.component';
 import { type GroupByMode } from '../../types';
 import { formatTrainingDateTime } from '../../utils/date-formatting';
 import { hasDeletedWeights, isFailedModel } from '../../utils/utils';
