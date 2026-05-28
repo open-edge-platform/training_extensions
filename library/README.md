@@ -44,27 +44,15 @@ Each supported task ships with curated "recipes": YAML files that bundle the mod
 
 ### Key Features
 
-The Geti™ library supports the following computer vision tasks:
-
-- **Classification**: multi-class, multi-label, and hierarchical image classification.
-- **Object detection**.
-- **Rotated object detection**.
-- **Instance segmentation**.
-- **Semantic segmentation**.
-- **Keypoint detection.**
-
-Additional capabilities:
-
-- **Tiling** for large images (object detection, rotated detection, instance segmentation, semantic segmentation).
-- **Multiple backends**: train models with PyTorch Lightning, export and run inference with ONNX and OpenVINO™.
-- **Wide model selection** across all tasks — see the [full list below](#supported-tasks--models).
+- **Multi-task support**: classification, object detection, rotated detection, instance segmentation, semantic segmentation, and keypoint detection — see the [full model list below](#supported-tasks--models).
+- **Tiling** for large images across detection and segmentation tasks.
+- **Multiple backends**: train with PyTorch Lightning, export and run inference with ONNX and OpenVINO™.
 - **Hardware acceleration**: Intel GPU (XPU) and NVIDIA CUDA support.
-- [Datumaro](https://open-edge-platform.github.io/datumaro/stable/index.html) **data frontend**, with support for the most popular dataset formats per task.
+- [Datumaro](https://github.com/open-edge-platform/datumaro/tree/develop/src/datumaro/experimental) **data frontend** with automatic format detection (COCO, YOLO, VOC, native).
 - **Distributed training** across multiple GPUs.
 - **Mixed-precision training** to reduce memory and increase batch size.
 - **Class-incremental learning** to extend an existing model with new classes.
 - **Deployment** to OpenVINO™ IR and ONNX formats, with inference via [OpenVINO™ ModelAPI](https://github.com/open-edge-platform/model_api).
-- **Multiple backend support** to adapt third-party model implementations into the Geti™ repository.
 
 ---
 
