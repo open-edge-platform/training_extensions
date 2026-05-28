@@ -77,8 +77,7 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
 
     return (
         <Flex direction={'column'} gridArea={'toolbar'} gap={'size-200'} marginBottom={'size-200'}>
-            <Flex alignItems={'center'} justifyContent={'space-between'}>
-                <Heading level={1}>Dataset</Heading>
+            <Flex alignItems={'center'} justifyContent={'end'}>
                 <ButtonGroup UNSAFE_style={{ gap: dimensionValue('size-125') }}>
                     {noMediaSelected && <ImportExport />}
 
