@@ -132,8 +132,12 @@ IMAGE_PATH = HERE / "image.jpg"
 OUTPUT_PATH = HERE / "result.jpg"
 
 
-def overlay_predictions(image_bgr: np.ndarray, result) -> np.ndarray:
-    """Render predictions on top of the input image using model_api visualizers."""
+def save_overlay(image_bgr: np.ndarray, result, output_path: Path) -> None:
+    """Render predictions on top of the input image and write the result to disk.
+
+    Uses model_api's Visualizer when available, otherwise falls back to a plain
+    copy of the input image (and prints the raw prediction to stdout).
+    """
     # model_api visualizers consume PIL/RGB images.
     image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
     image_pil = Image.fromarray(image_rgb)
@@ -142,13 +146,29 @@ def overlay_predictions(image_bgr: np.ndarray, result) -> np.ndarray:
         from model_api.visualizer import Visualizer
 
         visualizer = Visualizer()
-        rendered = visualizer.show(image=image_pil, result=result)
-        return cv2.cvtColor(np.array(rendered), cv2.COLOR_RGB2BGR)
-    except Exception:
-        # Fallback: print the result and return the original image untouched.
-        print("Visualization not available, printing raw result instead:")
+        # `render` returns a PIL image of the annotated frame, without opening
+        # any viewer. We then save it ourselves to OUTPUT_PATH.
+        if hasattr(visualizer, "render"):
+            rendered = visualizer.render(image=image_pil, result=result)
+        else:
+            # Older model_api releases only expose `show`, which returns the
+            # rendered PIL image too (and may also pop a viewer window).
+            rendered = visualizer.show(image=image_pil, result=result)
+
+        if rendered is None:
+            raise RuntimeError("Visualizer returned no image")
+
+        if isinstance(rendered, Image.Image):
+            rendered.convert("RGB").save(str(output_path), format="JPEG", quality=95)
+        else:
+            # numpy array fallback (RGB) -> write via cv2 in BGR.
+            rendered_bgr = cv2.cvtColor(np.asarray(rendered), cv2.COLOR_RGB2BGR)
+            cv2.imwrite(str(output_path), rendered_bgr)
+    except Exception as exc:
+        print(f"Visualization not available ({{exc}}); saving the input image unchanged.")
+        print("Raw prediction:")
         print(result)
-        return image_bgr
+        cv2.imwrite(str(output_path), image_bgr)
 
 
 def main() -> None:
@@ -170,8 +190,7 @@ def main() -> None:
     print("Predictions:")
     print(result)
 
-    output = overlay_predictions(image_bgr, result)
-    cv2.imwrite(str(OUTPUT_PATH), output)
+    save_overlay(image_bgr, result, OUTPUT_PATH)
     print(f"Saved annotated result to {{OUTPUT_PATH}}")
 
 
@@ -206,7 +225,8 @@ IMAGE_PATH = HERE / "image.jpg"
 OUTPUT_PATH = HERE / "result_async.jpg"
 
 
-def overlay_predictions(image_bgr: np.ndarray, result) -> np.ndarray:
+def save_overlay(image_bgr: np.ndarray, result, output_path: Path) -> None:
+    """Render predictions on top of the input image and write the result to disk."""
     image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
     image_pil = Image.fromarray(image_rgb)
 
@@ -214,12 +234,24 @@ def overlay_predictions(image_bgr: np.ndarray, result) -> np.ndarray:
         from model_api.visualizer import Visualizer
 
         visualizer = Visualizer()
-        rendered = visualizer.show(image=image_pil, result=result)
-        return cv2.cvtColor(np.array(rendered), cv2.COLOR_RGB2BGR)
-    except Exception:
-        print("Visualization not available, printing raw result instead:")
+        if hasattr(visualizer, "render"):
+            rendered = visualizer.render(image=image_pil, result=result)
+        else:
+            rendered = visualizer.show(image=image_pil, result=result)
+
+        if rendered is None:
+            raise RuntimeError("Visualizer returned no image")
+
+        if isinstance(rendered, Image.Image):
+            rendered.convert("RGB").save(str(output_path), format="JPEG", quality=95)
+        else:
+            rendered_bgr = cv2.cvtColor(np.asarray(rendered), cv2.COLOR_RGB2BGR)
+            cv2.imwrite(str(output_path), rendered_bgr)
+    except Exception as exc:
+        print(f"Visualization not available ({{exc}}); saving the input image unchanged.")
+        print("Raw prediction:")
         print(result)
-        return image_bgr
+        cv2.imwrite(str(output_path), image_bgr)
 
 
 def main() -> None:
@@ -244,8 +276,7 @@ def main() -> None:
     print("Predictions:")
     print(result)
 
-    output = overlay_predictions(image_bgr, result)
-    cv2.imwrite(str(OUTPUT_PATH), output)
+    save_overlay(image_bgr, result, OUTPUT_PATH)
     print(f"Saved annotated result to {{OUTPUT_PATH}}")
 
 
