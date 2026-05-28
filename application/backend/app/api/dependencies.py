@@ -32,6 +32,7 @@ from app.services import (
     SystemService,
 )
 from app.services.data_collect import DataCollector
+from app.services.demo_files_service import DemoFilesService
 from app.services.event.event_bus import EventBus
 from app.services.inference import InferenceServer
 from app.services.license_service import LicenseService
@@ -245,6 +246,13 @@ def get_dataset_revision_service(
 ) -> DatasetRevisionService:
     """Provides a DatasetRevisionService instance."""
     return DatasetRevisionService(data_dir=data_dir, db_session=db)
+
+
+def get_demo_files_service(
+    media_service: Annotated[MediaService, Depends(get_media_service)],
+) -> DemoFilesService:
+    """Provides a DemoFileService instance."""
+    return DemoFilesService(media_service=media_service)
 
 
 def get_project(

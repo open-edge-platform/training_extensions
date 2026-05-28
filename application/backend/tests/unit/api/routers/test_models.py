@@ -7,12 +7,12 @@ from uuid import uuid4
 import pytest
 from fastapi import status
 
-from app.api.dependencies import get_model_service, get_training_configuration_service
+from app.api.dependencies import get_media_service, get_model_service, get_training_configuration_service
 from app.api.schemas import TrainingConfigurationView
 from app.main import app
 from app.models import DatasetItemSubset, EvaluationResult, ModelRevision, ModelVariant, TrainingInfo, TrainingStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
-from app.services import ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
+from app.services import MediaService, ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.training_configuration_service import TrainingConfigurationService
 
 
@@ -92,6 +92,14 @@ def fxt_model_service() -> MagicMock:
     model_service = MagicMock(spec=ModelService)
     app.dependency_overrides[get_model_service] = lambda: model_service
     return model_service
+
+
+@pytest.fixture(autouse=True)
+def fxt_media_service() -> MagicMock:
+    media_service = MagicMock(spec=MediaService)
+    media_service.list_media.return_value = []
+    app.dependency_overrides[get_media_service] = lambda: media_service
+    return media_service
 
 
 @pytest.fixture
@@ -284,17 +292,30 @@ class TestModelEndpoints:
         # Verify zip file contents
         zip_data = BytesIO(response.content)
         with zipfile.ZipFile(zip_data, "r") as zip_file:
+            namelist = zip_file.namelist()
             if model_format == ModelFormat.OPENVINO:
-                assert "model.xml" in zip_file.namelist()
-                assert "model.bin" in zip_file.namelist()
+                assert "model.xml" in namelist
+                assert "model.bin" in namelist
                 assert zip_file.read("model.xml").decode() == xml_content  # pyrefly: ignore[unbound-name]
                 assert zip_file.read("model.bin") == bin_content
             elif model_format == ModelFormat.ONNX:
-                assert "model.onnx" in zip_file.namelist()
+                assert "model.onnx" in namelist
                 assert zip_file.read("model.onnx") == bin_content
             elif model_format == ModelFormat.PYTORCH:
-                assert "model.ckpt" in zip_file.namelist()
+                assert "model.ckpt" in namelist
                 assert zip_file.read("model.ckpt") == bin_content
+
+            # Auxiliary deployment files are bundled only for the deployable formats.
+            if model_format in (ModelFormat.OPENVINO, ModelFormat.ONNX):
+                assert "demo.py" in namelist
+                assert "demo_async.py" in namelist
+                assert "requirements.txt" in namelist
+                assert "README.md" in namelist
+            else:
+                assert "demo.py" not in namelist
+                assert "demo_async.py" not in namelist
+                assert "requirements.txt" not in namelist
+                assert "README.md" not in namelist
 
         fxt_model_service.get_model_binary_files.assert_called_once_with(
             project_id=fxt_get_project.id,
