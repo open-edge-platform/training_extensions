@@ -59,8 +59,18 @@ def detect_storage_dtype(dataset: Dataset) -> str:
         ValueError: If no image field is found in the dataset schema.
     """
     for name, attr in dataset.schema.attributes.items():
-        if isinstance(attr.field, (ImagePathField, MediaPathField)):
+        if isinstance(attr.field, ImagePathField):
             return _detect_dtype_from_file(Path(dataset.df[name][0]))
+        if isinstance(attr.field, MediaPathField):
+            # MediaPathField stores both images and video frames.
+            # Filter to image-only rows (frame_index is null) before probing.
+            frame_idx_col = f"{name}_frame_index"
+            media_df = dataset.df
+            if frame_idx_col in media_df.columns:
+                image_rows = media_df.filter(pl.col(frame_idx_col).is_null())
+                if len(image_rows) > 0:
+                    return _detect_dtype_from_file(Path(image_rows[name][0]))
+            return _detect_dtype_from_file(Path(media_df[name][0]))
         if isinstance(attr.field, ImageField):
             return str(attr.field.dtype).lower()
 
