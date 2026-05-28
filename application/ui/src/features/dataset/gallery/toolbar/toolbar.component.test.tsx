@@ -144,7 +144,7 @@ describe('Toolbar', () => {
         const item2 = getMockedMediaImage({ id: '2' });
 
         vi.mocked(useSelectedData).mockReturnValue({
-            selectedKeys: new Set(['1', '2']),
+            selectedKeys: new Set([item1.id, item2.id]),
             setSelectedKeys: vi.fn(),
             toggleSelectedKeys: vi.fn(),
         });
@@ -172,7 +172,7 @@ describe('Toolbar', () => {
         const firstItem = getMockedMediaImage({ id: 'first-item' });
 
         vi.mocked(useSelectedData).mockReturnValue({
-            selectedKeys: new Set(firstItem.id),
+            selectedKeys: new Set([firstItem.id]),
             setSelectedKeys: vi.fn(),
             toggleSelectedKeys: vi.fn(),
         });

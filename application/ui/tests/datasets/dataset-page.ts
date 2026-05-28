@@ -14,16 +14,17 @@ export class DatasetPage {
         return this.page.getByRole('listbox', { name: 'data-collection-grid' });
     }
 
-    getMediaGridOptions() {
-        return this.getMediaGrid().getByRole('option');
+    async selectMediaItem(mediaId: string) {
+        await this.getMediaGrid()
+            .getByRole('checkbox', {
+                name: `Select media item ${mediaId}`,
+                exact: true,
+            })
+            .click();
     }
 
     getMediaItemByName(name: string) {
         return this.page.getByRole('img', { name, exact: true });
-    }
-
-    clickMediaItem(name: string) {
-        return this.getMediaItemByName(name).click();
     }
 
     dblClickMediaItem(name: string) {

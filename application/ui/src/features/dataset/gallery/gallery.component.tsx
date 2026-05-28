@@ -97,7 +97,7 @@ const GalleryList = ({
                                 UNSAFE_style={{ margin: dimensionValue('size-150') }}
                             >
                                 <Checkbox
-                                    aria-label={`Select media item ${item.name}`}
+                                    aria-label={`Select media item ${item.id}`}
                                     onChange={() => toggleSelectedKeys([String(item.id)])}
                                     isSelected={isSetSelectedKeys && selectedKeys.has(String(item.id))}
                                 />
