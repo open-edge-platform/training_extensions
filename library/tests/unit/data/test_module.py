@@ -75,7 +75,7 @@ class TestDataModule:
 
     @pytest.fixture
     def mock_detect_image_dtype(self, mocker) -> MagicMock:
-        return mocker.patch("getitune.data.module.detect_image_dtype", return_value="uint8")
+        return mocker.patch("getitune.data.module.detect_storage_dtype", return_value="uint8")
 
     @pytest.fixture
     def mock_dataset_factory(self, mocker) -> MagicMock:
@@ -248,7 +248,9 @@ class TestDataModule:
 
         return _create_mock_dataset
 
-    def test_from_vision_datasets_basic(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype) -> None:
+    def test_from_vision_datasets_basic(
+        self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype
+    ) -> None:
         """Test from_vision_datasets with minimal configuration."""
         # Create mock datasets with shared label_info
         shared_label_info = MagicMock()
@@ -281,7 +283,9 @@ class TestDataModule:
         assert module.task == TaskType.MULTI_CLASS_CLS
         assert module.input_size == (224, 224)
 
-    def test_from_vision_datasets_with_custom_configs(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype) -> None:
+    def test_from_vision_datasets_with_custom_configs(
+        self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype
+    ) -> None:
         """Test from_vision_datasets with custom subset configurations."""
         # Create mock datasets
         shared_label_info = MagicMock()
@@ -335,7 +339,9 @@ class TestDataModule:
         # input_size should come from train_config, not inferred from image data
         assert module.input_size == (640, 640)
 
-    def test_from_vision_datasets_without_test(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype) -> None:
+    def test_from_vision_datasets_without_test(
+        self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype
+    ) -> None:
         """Test from_vision_datasets when test_dataset is None (uses val as test)."""
         # Create mock datasets
         shared_label_info = MagicMock()
@@ -446,47 +452,27 @@ class TestDataModule:
         result = (pipeline.mean, pipeline.std)
         assert result == expected
 
-    def test_from_vision_datasets_detects_storage_dtype(self, mocker, fxt_mock_subset_configs, tmp_path) -> None:
-        """Test that from_vision_datasets auto-detects storage_dtype from image files.
-
-        This covers the fix for #6440 where 16-bit images exported with input_dtype='u8'.
-        """
-        import numpy as np
-        import polars as pl
-        from PIL import Image
-
+    def test_from_vision_datasets_respects_storage_dtype(self, mocker, fxt_mock_subset_configs, tmp_path) -> None:
+        """Test that from_vision_datasets preserves caller-provided storage_dtype."""
         from getitune.config.data import IntensityConfig
 
-        # Create a 16-bit PNG file
-        img_16bit = np.ones((32, 32), dtype=np.uint16) * 1000
-        img_path = tmp_path / "test_16bit.png"
-        Image.fromarray(img_16bit, mode="I;16").save(img_path)
-
-        # Create a mock dm_subset with a DataFrame containing the image path
-        mock_df = pl.DataFrame({"media": [str(img_path)]})
-        mock_dm_subset = MagicMock()
-        mock_dm_subset.df = mock_df
-        mock_dm_subset.__len__ = lambda _: 1
-
-        # Create mock dataset with the dm_subset
+        # Create mock datasets
         shared_label_info = MagicMock()
         mock_train = MagicMock()
         mock_train.label_info = shared_label_info
         mock_train.task_type = TaskType.MULTI_CLASS_CLS
-        mock_train.dm_subset = mock_dm_subset
 
         mock_val = MagicMock()
         mock_val.label_info = shared_label_info
         mock_val.task_type = TaskType.MULTI_CLASS_CLS
 
-        # Create SubsetConfig with default intensity (storage_dtype="uint8")
+        # Create SubsetConfig with storage_dtype pre-set by caller (as if detect_storage_dtype was called)
         train_subset = SubsetConfig(
             batch_size=4,
             subset_name="train",
             input_size=(224, 224),
-            intensity=IntensityConfig(),  # defaults to storage_dtype="uint8"
+            intensity=IntensityConfig(storage_dtype="uint16"),
         )
-        assert train_subset.intensity.storage_dtype == "uint8"
 
         mocker.patch.object(
             DataModule,
@@ -494,14 +480,14 @@ class TestDataModule:
             return_value=fxt_mock_subset_configs,
         )
 
-        # Create module from datasets
+        # Create module from datasets — it should preserve the caller's storage_dtype
         module = DataModule.from_vision_datasets(
             train_dataset=mock_train,
             val_dataset=mock_val,
             train_subset=train_subset,
         )
 
-        # Assert storage_dtype was auto-detected and updated to uint16
+        # Assert storage_dtype was preserved (not overwritten to uint8)
         assert train_subset.intensity.storage_dtype == "uint16"
         assert module.input_intensity_config is not None
         assert module.input_intensity_config.storage_dtype == "uint16"

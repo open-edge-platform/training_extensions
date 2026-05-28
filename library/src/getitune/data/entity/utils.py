@@ -15,9 +15,13 @@ import torch
 import torch.utils._pytree as pytree
 from datumaro.experimental.dataset import Sample  # noqa: TC002
 from datumaro.experimental.fields import image_field
+from datumaro.experimental.fields.images import ImageField, ImagePathField
+from datumaro.experimental.fields.videos import MediaPathField
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
+    from datumaro.experimental.dataset import Dataset
 
     from getitune.data.entity.base import ImageInfo
 
@@ -40,40 +44,47 @@ _TIFF_LE = b"II"
 _TIFF_BE = b"MM"
 
 
-def detect_image_dtype(image_path: str | Path) -> str:
-    """Detect the storage dtype of an image from its file header.
+def detect_storage_dtype(dataset: Dataset) -> str:
+    """Detect image storage dtype by inspecting the dataset schema fields.
 
-    Reads **only file metadata** — no pixel data is ever decoded:
-
-    * **PNG**: parses the IHDR chunk (25 bytes) for ``bit_depth``.
-    * **TIFF**: checks the ``BitsPerSample`` tag via PIL header.
-    * **JPEG**: always ``"uint8"`` (JPEG is 8-bit by design).
-    * **Other**: falls back to ``PIL.Image.open().mode`` (header only).
+    Must be called on a raw dataset (before ``convert_to_schema``).
 
     Args:
-        image_path: Path to a single image file.
+        dataset: A ``datumaro.experimental.Dataset`` instance.
 
     Returns:
-        One of ``"uint8"``, ``"uint16"``, or ``"float32"``.
-    """
-    path = Path(image_path)
+        One of ``"uint8"``, ``"uint16"``, ``"int16"``, or ``"float32"``.
 
-    # Read the first 8 bytes to identify the format.
+    Raises:
+        ValueError: If no image field is found in the dataset schema.
+    """
+    for name, attr in dataset.schema.attributes.items():
+        if isinstance(attr.field, (ImagePathField, MediaPathField)):
+            return _detect_dtype_from_file(Path(dataset.df[name][0]))
+        if isinstance(attr.field, ImageField):
+            return str(attr.field.dtype).lower()
+
+    msg = (
+        f"Cannot detect image storage dtype: no image field "
+        f"found in dataset schema. Available fields: {list(dataset.schema.attributes.keys())}"
+    )
+    raise ValueError(msg)
+
+
+def _detect_dtype_from_file(path: Path) -> str:
+    """Detect image storage dtype from a file header without decoding pixels."""
     with path.open("rb") as f:
         sig = f.read(8)
 
-    # PNG: IHDR bit_depth is at byte offset 24
     if sig[:4] == _PNG_SIGNATURE:
         with path.open("rb") as f:
-            f.seek(24)  # signature(8) + length(4) + "IHDR"(4) + width(4) + height(4)
+            f.seek(24)
             bit_depth = struct.unpack("B", f.read(1))[0]
         return "uint16" if bit_depth == 16 else "uint8"
 
-    # JPEG: always 8-bit
     if sig[:2] == _JPEG_SIGNATURE:
         return "uint8"
 
-    # TIFF: check BitsPerSample tag via PIL
     if sig[:2] in (_TIFF_LE, _TIFF_BE):
         from PIL import Image
 
@@ -83,7 +94,7 @@ def detect_image_dtype(image_path: str | Path) -> str:
             if img.mode in _PIL_FLOAT_MODES:
                 return "float32"
             tag_v2 = getattr(img, "tag_v2", None)
-            if tag_v2 and 258 in tag_v2:  # 258 = BitsPerSample
+            if tag_v2 and 258 in tag_v2:
                 bits = tag_v2[258]
                 if isinstance(bits, tuple):
                     bits = bits[0]
@@ -91,7 +102,6 @@ def detect_image_dtype(image_path: str | Path) -> str:
                     return "uint16"
         return "uint8"
 
-    # Fallback: PIL mode (reliable for grayscale 16-bit)
     from PIL import Image
 
     with Image.open(path) as img:

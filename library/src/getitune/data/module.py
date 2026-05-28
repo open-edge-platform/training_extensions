@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader, RandomSampler
 from getitune.config.data import SubsetConfig, TileConfig
 from getitune.data.augmentation import CPUAugmentationPipeline
 from getitune.data.dataset.tile import TileDatasetFactory
-from getitune.data.entity.utils import detect_image_dtype
+from getitune.data.entity.utils import detect_storage_dtype
 from getitune.data.factory import DatasetFactory
 from getitune.data.utils import get_adaptive_num_workers, instantiate_sampler
 from getitune.types.device import DeviceType
@@ -175,7 +175,7 @@ class DataModule(LightningDataModule):
                 continue
 
             if storage_dtype is None:
-                storage_dtype = detect_image_dtype(dm_subset.df["media"][0])
+                storage_dtype = detect_storage_dtype(dm_subset)
 
             if subset_cfg.intensity.storage_dtype != storage_dtype:
                 logger.warning(
@@ -335,12 +335,7 @@ class DataModule(LightningDataModule):
             instance.input_mean = None
             instance.input_std = None
 
-        # Auto-detect storage dtype from the training dataset's image files.
-        detected = detect_image_dtype(train_dataset.dm_subset.df["media"][0])
-        if instance.train_subset.intensity.storage_dtype != detected:
-            instance.train_subset.intensity.storage_dtype = detected
-
-        # Propagate intensity config from train subset (mirrors __init__).
+        # Propagate intensity config from train subset.
         instance.input_intensity_config = getattr(instance.train_subset, "intensity", None)
 
         # Save hyperparameters
