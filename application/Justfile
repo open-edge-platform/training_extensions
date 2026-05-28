@@ -13,6 +13,9 @@ application-name := "geti"
 # -------------------------------------------------------------------------------------------------
 docker-run-args := "--env http_proxy --env https_proxy --env no_proxy --env HTTP_PROXY --env HTTPS_PROXY --env NO_PROXY"
 webrtc-ports := "50100-50109"
+coturn-port := "443"
+coturn-image := "quay.io/coturn/coturn"
+host-ip := `uv run python -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()"`
 data-volume := application-name + "-data"
 logs-volume := application-name + "-logs"
 
@@ -283,3 +286,25 @@ tauri-build:
 [windows]
 tauri-build:
     cd ui && npx tauri build
+
+# run coturn server
+run-coturn:
+    @echo "Running coturn server on port {{ coturn-port }} with external IP {{ host-ip }}..."
+    @docker run --rm --detach \
+        --network=host \
+        --name coturn-server \
+        {{ coturn-image }} \
+        -n \
+        --listening-port={{ coturn-port }} \
+        --external-ip={{ host-ip }} \
+        --user=user:password \
+        --realm=my-realm \
+        --no-udp \
+        --log-file=stdout \
+        --verbose
+
+# stop coturn server
+stop-coturn:
+    @echo "Stopping coturn server..."
+    @docker stop coturn-server || true
+

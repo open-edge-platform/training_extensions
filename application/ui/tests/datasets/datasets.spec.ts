@@ -83,10 +83,8 @@ test.describe('Dataset', () => {
 
         await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
 
-        const options = datasetPage.getMediaGridOptions();
-
         for (let i = 0; i < selectedElements; i++) {
-            await options.nth(i).click();
+            await datasetPage.selectMediaItem(mockedItems[i].id);
         }
 
         await expect(datasetPage.getSelectedCountText(selectedElements)).toBeVisible();
@@ -457,8 +455,8 @@ test.describe('Dataset', () => {
 
             await expect(datasetPage.getAssignLabelButton()).toBeHidden();
 
-            await datasetPage.clickMediaItem('media-1');
-            await datasetPage.clickMediaItem('media-2');
+            await datasetPage.selectMediaItem(mockedMedia[0].id);
+            await datasetPage.selectMediaItem(mockedMedia[1].id);
 
             await datasetPage.clickAssignLabel();
 
@@ -513,9 +511,9 @@ test.describe('Dataset', () => {
 
             await datasetPage.goto();
 
-            await datasetPage.clickMediaItem('media-1');
-            await datasetPage.clickMediaItem('media-2');
-            await datasetPage.clickMediaItem('media-3');
+            await datasetPage.selectMediaItem(mockedMedia[0].id);
+            await datasetPage.selectMediaItem(mockedMedia[1].id);
+            await datasetPage.selectMediaItem(mockedMedia[2].id);
 
             await datasetPage.clickAssignLabel();
 
@@ -568,9 +566,9 @@ test.describe('Dataset', () => {
 
             await datasetPage.goto();
 
-            await datasetPage.clickMediaItem('media-1');
-            await datasetPage.clickMediaItem('media-2');
-            await datasetPage.clickMediaItem('media-3');
+            await datasetPage.selectMediaItem(mockedMedia[0].id);
+            await datasetPage.selectMediaItem(mockedMedia[1].id);
+            await datasetPage.selectMediaItem(mockedMedia[2].id);
 
             await datasetPage.clickAssignLabel();
 
