@@ -174,12 +174,10 @@ class DataModule(LightningDataModule):
                 logger.warning(f"Subset '{name}' is empty in the dataset. Skip it")
                 continue
 
-            if storage_dtype is None and "media" in dm_subset.df.columns:
-                # "media" column in the datumaro DataFrame stores image file paths.
-                first_image_path = dm_subset.df["media"][0]
-                storage_dtype = detect_image_dtype(first_image_path)
+            if storage_dtype is None:
+                storage_dtype = detect_image_dtype(dm_subset.df["media"][0])
 
-            if storage_dtype is not None and subset_cfg.intensity.storage_dtype != storage_dtype:
+            if subset_cfg.intensity.storage_dtype != storage_dtype:
                 logger.warning(
                     f"Overriding intensity storage_dtype '{subset_cfg.intensity.storage_dtype}' "
                     f"with auto-detected '{storage_dtype}'",
@@ -190,7 +188,7 @@ class DataModule(LightningDataModule):
                 task=self.task,
                 dm_subset=dm_subset,
                 cfg_subset=subset_cfg,
-                storage_dtype=subset_cfg.intensity.storage_dtype,
+                storage_dtype=storage_dtype,
                 ignore_index=self.ignore_index,
             )
 
@@ -338,17 +336,9 @@ class DataModule(LightningDataModule):
             instance.input_std = None
 
         # Auto-detect storage dtype from the training dataset's image files.
-        # "media" column in the datumaro DataFrame stores image file paths;
-        # inline-pixel datasets (e.g., CIFAR) use an "image" column instead.
-        if "media" in train_dataset.dm_subset.df.columns:
-            first_image_path = train_dataset.dm_subset.df["media"][0]
-            detected = detect_image_dtype(first_image_path)
-            if instance.train_subset.intensity.storage_dtype != detected:
-                logger.warning(
-                    f"Overriding intensity storage_dtype '{instance.train_subset.intensity.storage_dtype}' "
-                    f"with auto-detected '{detected}'",
-                )
-                instance.train_subset.intensity.storage_dtype = detected
+        detected = detect_image_dtype(train_dataset.dm_subset.df["media"][0])
+        if instance.train_subset.intensity.storage_dtype != detected:
+            instance.train_subset.intensity.storage_dtype = detected
 
         # Propagate intensity config from train subset (mirrors __init__).
         instance.input_intensity_config = getattr(instance.train_subset, "intensity", None)

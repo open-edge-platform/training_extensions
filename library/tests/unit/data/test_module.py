@@ -248,9 +248,7 @@ class TestDataModule:
 
         return _create_mock_dataset
 
-    def test_from_vision_datasets_basic(
-        self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype
-    ) -> None:
+    def test_from_vision_datasets_basic(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype) -> None:
         """Test from_vision_datasets with minimal configuration."""
         # Create mock datasets with shared label_info
         shared_label_info = MagicMock()
@@ -283,9 +281,7 @@ class TestDataModule:
         assert module.task == TaskType.MULTI_CLASS_CLS
         assert module.input_size == (224, 224)
 
-    def test_from_vision_datasets_with_custom_configs(
-        self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype
-    ) -> None:
+    def test_from_vision_datasets_with_custom_configs(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype) -> None:
         """Test from_vision_datasets with custom subset configurations."""
         # Create mock datasets
         shared_label_info = MagicMock()
@@ -339,9 +335,7 @@ class TestDataModule:
         # input_size should come from train_config, not inferred from image data
         assert module.input_size == (640, 640)
 
-    def test_from_vision_datasets_without_test(
-        self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype
-    ) -> None:
+    def test_from_vision_datasets_without_test(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype) -> None:
         """Test from_vision_datasets when test_dataset is None (uses val as test)."""
         # Create mock datasets
         shared_label_info = MagicMock()
