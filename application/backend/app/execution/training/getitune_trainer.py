@@ -15,6 +15,7 @@ from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
 from getitune import TaskType
 from getitune.backend.lightning.models.base import DataInputParams, LightningModel
+from getitune.backend.openvino.engine import OVEngine
 from getitune.backend.ultralytics.models.base import UltralyticsModel
 from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.data.dataset.base import VisionDataset
@@ -471,7 +472,6 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
     def evaluate_model(
         self,
         getitune_engine: Engine,
-        model_checkpoint_path: Path,
         task: Task,
         model_revision_id: UUID,
         model_variants: list[ModelVariantDescriptor],

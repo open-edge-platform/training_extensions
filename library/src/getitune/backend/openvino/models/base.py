@@ -181,16 +181,20 @@ class OVModel:
     @property
     def model_type(self) -> str:
         """ModelAPI wrapper name, using IR metadata when available."""
-        if self._model_adapter is not None and self._model_adapter.model.has_rt_info(["model_info", "model_type"]):
-            rt_model_type = self._model_adapter.model.get_rt_info(["model_info", "model_type"]).value
-            if rt_model_type:
-                resolved = str(rt_model_type)
-                if resolved != self._model_type:
-                    logger.info(
-                        "Overriding default model_type '%s' with '%s' from IR metadata.",
-                        self._model_type,
-                        resolved,
-                    )
+        if self._model_adapter is not None:
+            resolved: str | None = None
+            if self._is_onnx:
+                metadata = self._model_adapter.onnx_metadata.get("model_info", {})
+                if "model_type" in metadata:
+                    resolved = metadata["model_type"]
+            elif self._model_adapter.model.has_rt_info(["model_info", "model_type"]):
+                resolved = str(self._model_adapter.model.get_rt_info(["model_info", "model_type"]).value)
+            if resolved and resolved != self._model_type:
+                logger.info(
+                    "Overriding default model_type '%s' with '%s' from IR metadata.",
+                    self._model_type,
+                    resolved,
+                )
                 return resolved
         return self._model_type
 

@@ -1235,21 +1235,29 @@ class TestGetiTuneTrainerEvaluateModel:
         dataset_revision_id = uuid4()
         mock_getitune_engine = Mock()
         mock_getitune_engine.test = Mock(return_value={"metrics/mAP50-95(B)": torch.tensor(0.42)})
+        mock_getitune_engine.work_dir = tmp_path / "getitune-workspace"
         model_checkpoint_path = tmp_path / "best.pt"
         model_checkpoint_path.touch()
+
+        model_variants = [
+            ModelVariantDescriptor(
+                id=model_variant_id,
+                path=model_checkpoint_path,
+                format=ModelFormat.PYTORCH,
+            ),
+        ]
 
         # Act
         getitune_trainer.evaluate_model(
             getitune_engine=mock_getitune_engine,
-            model_checkpoint_path=model_checkpoint_path,
             task=Task(task_type=TaskType.DETECTION),
             model_revision_id=model_id,
-            model_variant_id=model_variant_id,
+            model_variants=model_variants,
             dataset_revision_id=dataset_revision_id,
         )
 
         # Assert — metric is always passed uniformly; Ultralytics engines ignore it.
-        mock_getitune_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path, metric=MeanAPCallable)
+        mock_getitune_engine.test.assert_called_once_with(metric=MeanAPCallable)
         fxt_model_service.save_evaluation_result.assert_called_once()
 
 
