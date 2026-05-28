@@ -454,8 +454,6 @@ class TestDataModule:
 
     def test_from_vision_datasets_respects_storage_dtype(self, mocker, fxt_mock_subset_configs, tmp_path) -> None:
         """Test that from_vision_datasets preserves caller-provided storage_dtype."""
-        from getitune.config.data import IntensityConfig
-
         # Create mock datasets
         shared_label_info = MagicMock()
         mock_train = MagicMock()
