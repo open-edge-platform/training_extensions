@@ -9,6 +9,7 @@
 [Key Features](#key-features) •
 [Supported Tasks & Models](#supported-tasks--models) •
 [Installation](#installation) •
+[Quick Start](#quick-start) •
 [Docs](https://open-edge-platform.github.io/training_extensions/latest/index.html) •
 [License](#license)
 
@@ -140,7 +141,9 @@ pip install -e ".[cpu]"      # remove -e for a non-editable install
 
 ---
 
-# Training
+## Quick Start
+
+### Training
 
 Getitune supports an API-based training approach:
 
@@ -159,7 +162,7 @@ exported_path = engine.export()  # writes OpenVINO IR
 
 ---
 
-# Inference
+### Inference
 
 Getitune provides inference via PyTorch and OpenVINO backends:
 
@@ -180,7 +183,7 @@ ov_engine.optimize()  # post-training quantization via NNCF
 
 ---
 
-# Dataset Support
+### Dataset Support
 
 When you pass a path to `data=`, getitune uses [Datumaro](https://github.com/open-edge-platform/datumaro/tree/develop/src/datumaro/experimental) to auto-detect the dataset format. Supported formats:
 
@@ -204,7 +207,7 @@ engine.train()
 
 ---
 
-# Advanced Usage
+### Advanced Usage
 
 <details>
 <summary><strong>Build a DataModule explicitly</strong></summary>
