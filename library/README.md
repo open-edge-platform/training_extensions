@@ -198,6 +198,114 @@ engine.train()
 ### Advanced Usage
 
 <details>
+<summary><strong>Override training hyperparameters</strong></summary>
+
+You can override engine-level training parameters directly:
+
+```python
+engine.train(
+    max_epochs=50,
+    seed=42,
+    deterministic=True,
+    precision="16-mixed",          # mixed-precision training
+    gradient_clip_val=1.0,
+    check_val_every_n_epoch=5,
+)
+```
+
+For model-level hyperparameters like learning rate and optimizer, you can pass them when instantiating a model class directly:
+
+```python
+from torch.optim import AdamW
+from getitune.models import EfficientNet
+
+model = EfficientNet(
+    label_info=datamodule.label_info,
+    model_name="efficientnet_b0",
+    optimizer=lambda params: AdamW(params, lr=0.001, weight_decay=0.01),
+)
+
+engine = create_engine(data=datamodule, model=model)
+engine.train(max_epochs=100)
+```
+
+Alternatively, you can set these in a custom recipe YAML (copy and modify an existing one):
+
+```yaml
+# my_recipe.yaml — custom learning rate and optimizer
+task: MULTI_CLASS_CLS
+model:
+  class_path: getitune.backend.lightning.models.classification.multiclass_models.efficientnet.EfficientNetMulticlassCls
+  init_args:
+    label_info: 1000
+    model_name: efficientnet_b0
+
+    optimizer:
+      class_path: torch.optim.AdamW
+      init_args:
+        lr: 0.001
+        weight_decay: 0.01
+
+    scheduler:
+      class_path: getitune.backend.lightning.schedulers.LinearWarmupSchedulerCallable
+      init_args:
+        num_warmup_steps: 5
+        main_scheduler_callable:
+          class_path: lightning.pytorch.cli.ReduceLROnPlateau
+          init_args:
+            mode: max
+            factor: 0.5
+            patience: 3
+            monitor: val/accuracy
+
+data: src/getitune/recipe/_base_/data/classification.yaml
+
+overrides:
+  max_epochs: 100
+```
+
+For augmentations, override the data config. Augmentations run on CPU (`augmentations_cpu`) and GPU (`augmentations_gpu`) separately:
+
+```yaml
+# my_data.yaml — stronger augmentations
+task: MULTI_CLASS_CLS
+input_size: [224, 224]
+train_subset:
+  subset_name: train
+  batch_size: 32
+  num_workers: 8
+  augmentations_cpu:
+    - class_path: torchvision.transforms.v2.RandomResizedCrop
+      init_args:
+        size: [224, 224]
+        scale: [0.08, 1.0]
+  augmentations_gpu:
+    - class_path: kornia.augmentation.RandomHorizontalFlip
+      init_args:
+        p: 0.5
+    - class_path: kornia.augmentation.ColorJiggle
+      init_args:
+        brightness: 0.4
+        contrast: 0.4
+        saturation: 0.4
+        hue: 0.1
+        p: 0.8
+    - class_path: kornia.augmentation.RandomGaussianBlur
+      init_args:
+        kernel_size: [3, 3]
+        sigma: [0.1, 2.0]
+        p: 0.3
+    - class_path: kornia.augmentation.Normalize
+      init_args:
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+```
+
+Then reference your custom data config from your recipe with `data: my_data.yaml`, or build a `DataModule` explicitly (see below).
+
+</details>
+
+<details>
 <summary><strong>Build a DataModule explicitly</strong></summary>
 
 ```python
