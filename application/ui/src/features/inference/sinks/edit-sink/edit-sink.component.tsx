@@ -18,6 +18,7 @@ interface EditSinkProps<T> {
     onBackToList: () => void;
     componentFields: (state: Awaited<T>) => ReactNode;
     bodyFormatter: (formData: FormData) => T;
+    isConnected: boolean;
 }
 
 export const EditSink = <T extends SinkConfig>({
@@ -26,6 +27,7 @@ export const EditSink = <T extends SinkConfig>({
     onBackToList,
     bodyFormatter,
     componentFields,
+    isConnected,
 }: EditSinkProps<T>) => {
     const connectToPipeline = useRef(false);
     const connectToPipelineMutation = useConnectSinkToPipeline();
@@ -66,14 +68,16 @@ export const EditSink = <T extends SinkConfig>({
                     Save
                 </Button>
 
-                <Button
-                    type='submit'
-                    isDisabled={isPending}
-                    UNSAFE_style={{ maxWidth: 'fit-content' }}
-                    onPress={() => (connectToPipeline.current = true)}
-                >
-                    Save & Connect
-                </Button>
+                {!isConnected && (
+                    <Button
+                        type='submit'
+                        isDisabled={isPending}
+                        UNSAFE_style={{ maxWidth: 'fit-content' }}
+                        onPress={() => (connectToPipeline.current = true)}
+                    >
+                        Save & Connect
+                    </Button>
+                )}
             </ButtonGroup>
         </Form>
     );

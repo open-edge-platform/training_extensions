@@ -18,6 +18,7 @@ interface EditSourceProps<T> {
     onBackToList: () => void;
     componentFields: (state: Awaited<T>) => ReactNode;
     bodyFormatter: (formData: FormData) => T;
+    isConnected: boolean;
 }
 
 export const EditSource = <T extends SourceConfigPayload>({
@@ -26,6 +27,7 @@ export const EditSource = <T extends SourceConfigPayload>({
     onBackToList,
     bodyFormatter,
     componentFields,
+    isConnected,
 }: EditSourceProps<T>) => {
     const connectToPipeline = useRef(false);
     const connectToPipelineMutation = useConnectSourceToPipeline();
@@ -66,14 +68,16 @@ export const EditSource = <T extends SourceConfigPayload>({
                     Save
                 </Button>
 
-                <Button
-                    type='submit'
-                    isDisabled={isPending}
-                    UNSAFE_style={{ maxWidth: 'fit-content' }}
-                    onPress={() => (connectToPipeline.current = true)}
-                >
-                    Save & Connect
-                </Button>
+                {!isConnected && (
+                    <Button
+                        type='submit'
+                        isDisabled={isPending}
+                        UNSAFE_style={{ maxWidth: 'fit-content' }}
+                        onPress={() => (connectToPipeline.current = true)}
+                    >
+                        Save & Connect
+                    </Button>
+                )}
             </ButtonGroup>
         </Form>
     );

@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 
 import { ActionButton, Flex, Loading, Text } from '@geti/ui';
 import { Back } from '@geti/ui/icons';
+import { usePipeline } from 'hooks/api/pipeline.hook';
 import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../api/client';
@@ -19,6 +20,9 @@ export const SourceActions = () => {
     const { data: sources = [], isLoading } = $api.useSuspenseQuery('get', '/api/sources');
     const filteredSources = sources.filter((source) => source.source_type !== 'disconnected');
     const existingNames = useMemo(() => filteredSources.map((source) => source.name), [filteredSources]);
+
+    const pipeline = usePipeline();
+    const connectedSourceId = pipeline.data.source?.id;
 
     const handleShowList = () => {
         setView('list');
@@ -38,7 +42,14 @@ export const SourceActions = () => {
     }
 
     if (view === 'edit' && !isEmpty(currentSource)) {
-        return <EditSourceForm config={currentSource} onSaved={handleShowList} onBackToList={handleShowList} />;
+        return (
+            <EditSourceForm
+                config={currentSource}
+                onSaved={handleShowList}
+                onBackToList={handleShowList}
+                connectedSourceId={connectedSourceId}
+            />
+        );
     }
 
     if (view === 'list') {
@@ -47,7 +58,7 @@ export const SourceActions = () => {
 
     return (
         <SourceOptions onSaved={handleShowList} hasHeader={filteredSources.length > 0} existingNames={existingNames}>
-            <Flex gap={'size-100'} marginBottom={'size-100'} alignItems={'center'} justifyContent={'space-between'}>
+            <Flex gap={'size-100'} marginBottom={'size-100'} alignItems={'center'}>
                 <ActionButton isQuiet onPress={handleShowList}>
                     <Back />
                 </ActionButton>
