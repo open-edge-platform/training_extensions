@@ -115,7 +115,7 @@ _DEMO = '''\
 Synchronous inference demo for a model exported from Geti.
 
 Loads a sample image, runs inference with OpenVINO Model API, then saves an
-output image with the overlayed predictions to result.jpg.
+output image with the overlaid predictions to result.jpg.
 """
 from __future__ import annotations
 
@@ -207,7 +207,7 @@ Asynchronous inference demo for a model exported from Geti.
 
 Uses OpenVINO Model API's AsyncPipeline to submit the sample image
 asynchronously and retrieve the prediction once it is ready. The resulting
-image with the overlayed predictions is saved to result_async.jpg.
+image with the overlaid predictions is saved to result_async.jpg.
 """
 from __future__ import annotations
 
@@ -306,18 +306,21 @@ ready-to-run inference demos.
 | File | Description |
 | ---- | ----------- |
 | `{model_filename}` (+ `model.bin` for OpenVINO IR) | The exported model weights. |
-| `image.jpg` | A sample image taken from the dataset used to train the model. |
+| `image.jpg` (optional) | Sample input image from the project's dataset (may be omitted if no image is available). |
 | `demo.py` | Minimal **synchronous** inference example. |
 | `demo_async.py` | Minimal **asynchronous** inference example. |
 | `requirements.txt` | Python dependencies required by the demos. |
 | `README.md` | This file. |
 
+ If `image.jpg` is missing, copy any image into this directory and name it `image.jpg` 
+ (or edit the demos to point to a different file).
+ 
 ## Setup
 
 The recommended way to set up a clean environment is with
 [`uv`](https://docs.astral.sh/uv/) - a fast Python package manager.
 
-### Option 1 - one-shot with `uvx` (no environment to manage)
+### Option 1 - one-shot with `uv` (no environment to manage)
 
 If you just want to run the demos without creating a project, you can use
 `uv run` with inline dependencies:
@@ -367,7 +370,7 @@ python demo_async.py
 
 Both scripts load `image.jpg`, run inference on it with OpenVINO Model API and
 save an output image with the predicted bounding boxes / labels / masks
-overlayed on top.
+overlaid on top.
 
 ## Notes
 

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import MediaDB, PipelineDB
 from app.models import Pipeline, Project
-from app.models.media import ImageFormat
+from app.models.media import ImageFormat, Media
 from app.models.model_revision import ModelFormat
 from app.services import MediaService
 from app.services.demo_files_service import DemoFile, DemoFilesService
@@ -63,7 +63,7 @@ def fxt_project_with_pipeline(
 def fxt_project_with_image(
     fxt_project_with_pipeline: tuple[Project, Pipeline],
     fxt_media_service: MediaService,
-) -> tuple[Project, MediaDB]:
+) -> tuple[Project, Media]:
     """Create a project containing a single real image stored on disk."""
     project, _ = fxt_project_with_pipeline
     image = PILImage.new("RGB", (64, 48), color=(123, 45, 67))
@@ -75,7 +75,7 @@ def fxt_project_with_image(
             data=image,
         )
     )
-    return project, created  # type: ignore[return-value]
+    return project, created
 
 
 @pytest.fixture
