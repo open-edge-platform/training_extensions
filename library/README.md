@@ -348,8 +348,6 @@ Available model classes:
 
 </details>
 
-Beyond the examples above, the documentation covers using custom models, overriding training parameters, and [per-task tutorials](https://open-edge-platform.github.io/training_extensions/latest/guide/tutorials/base/how_to_train/index.html).
-
 ---
 
 ## License
