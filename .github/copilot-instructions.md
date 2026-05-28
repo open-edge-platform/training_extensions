@@ -23,6 +23,9 @@ The library is consumed by the backend (`getitune[cpu|xpu|cuda]` extras).
 - Assume the working directory is already the component root you are working on
   (e.g. `application/backend/`). Do not `cd` into it at the start of every
   command.
+- When the user is on Windows with WSL2, generate plain Linux commands — do not
+  wrap them in `wsl -d … -- bash -c "…"` or use Windows paths like
+  `/mnt/wsl.localhost/`. The terminal is already inside WSL.
 - Do not mix code or conventions between the three sub-projects.
 - Prefer **absolute imports** within each Python package. Relative imports are
   acceptable when they help avoid circular dependencies.
