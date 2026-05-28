@@ -23,8 +23,8 @@ const Header = () => {
             <Grid
                 height='100%'
                 gap={'size-200'}
-                marginStart={'size-200'}
-                columns={['auto', '2fr', 'size-2400']}
+                marginX={'size-200'}
+                columns={['auto', '2fr', 'fit-content(var(--spectrum-global-dimension-size-3000))']}
                 rows={'1fr'}
                 alignItems={'center'}
             >
