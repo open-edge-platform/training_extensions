@@ -26,7 +26,10 @@ class VideoStreamService:
             case SourceType.IP_CAMERA:
                 video_stream = IPCameraStream(config=input_config)
             case SourceType.VIDEO_FILE:
-                video_stream = VideoFileStream(input_config.config_data.video_path)
+                video_stream = VideoFileStream(
+                    video_path=input_config.config_data.video_path,
+                    loop=input_config.config_data.loop,
+                )
             case SourceType.IMAGES_FOLDER:
                 video_stream = ImagesFolderStream(
                     folder_path=input_config.config_data.images_folder_path,
