@@ -5,7 +5,7 @@
 ---
 
 [Key Features](#key-features) •
-[Supported Tasks & Recipes](#supported-tasks--recipes) •
+[Supported Tasks & Models](#supported-tasks--models) •
 [Installation](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/installation.html) •
 [Documentation](https://open-edge-platform.github.io/training_extensions/latest/index.html) •
 [License](#license)
@@ -44,18 +44,18 @@ Each supported task ships with curated "recipes": YAML files that bundle the mod
 The Geti™ library supports the following computer vision tasks:
 
 - **Classification**: multi-class, multi-label, and hierarchical image classification.
-- **Object detection**: including tiling for large images.
-- **Rotated object detection**: including tiling.
-- **Instance segmentation**: including tiling.
-- **Semantic segmentation**: including tiling.
+- **Object detection**.
+- **Rotated object detection**.
+- **Instance segmentation**.
+- **Semantic segmentation**.
 - **Keypoint detection.**
 
 Additional capabilities:
 
-- **Multi-backend engine**: PyTorch Lightning and OpenVINO™. Selected automatically by `create_engine` based on the model and data you pass in.
-- **Modern model zoo** across tasks (e.g. DEIM-DFine, DEIMv2, DFine, RF-DETR, RT-DETR, YOLOX, ATSS, SSD for detection; Mask R-CNN, RTMDet-Inst, RF-DETR-Seg for instance segmentation; SegNeXt, Lite-HRNet, DINOv2 for semantic segmentation; RTMPose for keypoint detection).
-- **Native Intel GPU (XPU) support**: install the `[xpu]` extra to train and infer on Intel GPUs.
-- **NVIDIA CUDA support** via the `[cuda]` extra (CUDA 12.8 wheels).
+- **Tiling** for large images (object detection, rotated detection, instance segmentation, semantic segmentation).
+- **Multiple backends**: train models with PyTorch Lightning, export and run inference with ONNX and OpenVINO™.
+- **Wide model selection** across all tasks — see the [full list below](#supported-tasks--models).
+- **Hardware acceleration**: Intel GPU (XPU) and NVIDIA CUDA support.
 - [Datumaro](https://open-edge-platform.github.io/datumaro/stable/index.html) **data frontend**, with support for the most popular dataset formats per task.
 - **Distributed training** across multiple GPUs.
 - **Mixed-precision training** to reduce memory and increase batch size.
@@ -65,18 +65,18 @@ Additional capabilities:
 
 ---
 
-## Supported Tasks & Recipes
+## Supported Tasks & Models
 
 All recipes live under `src/getitune/recipe/<task>/`. Pass any of these YAMLs directly to the API as `model=...`. Recipes whose name ends in `_tile` enable the tiling pipeline for large images.
 
-| Task                                                      | Recipe directory                                                                                                                                                                                                                                              | Example recipes                                                                                                                                            |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Classification (multi-class / multi-label / hierarchical) | [`src/getitune/recipe/classification/multi_class_cls`](src/getitune/recipe/classification/multi_class_cls/), [`src/getitune/recipe/classification/multi_label_cls`](src/getitune/recipe/classification/multi_label_cls/), [`src/getitune/recipe/classification/h_label_cls`](src/getitune/recipe/classification/h_label_cls/) | `dino_v2`, `vit_tiny`, `efficientnet_b0`, `efficientnet_b3`, `efficientnet_v2`, `mobilenet_v3_large`                                                       |
-| Object detection                                          | [`src/getitune/recipe/detection`](src/getitune/recipe/detection/)                                                                                                                                                                                             | `atss_mobilenetv2`, `ssd_mobilenetv2`, `yolox_{tiny,s,l,x}`, `rtdetr_50`, `dfine_x`, `deim_dfine_{l,m,x}`, `deimv2_{s,m,l}`, `rfdetr_{small,medium,large}` |
-| Rotated detection                                         | [`src/getitune/recipe/rotated_detection`](src/getitune/recipe/rotated_detection/)                                                                                                                                                                             | `maskrcnn_r50`, `maskrcnn_efficientnetb2b` (with `_tile` variants)                                                                                         |
-| Instance segmentation                                     | [`src/getitune/recipe/instance_segmentation`](src/getitune/recipe/instance_segmentation/)                                                                                                                                                                     | `maskrcnn_{r50,swint,efficientnetb2b}`, `rtmdet_inst_tiny`, `rfdetr_seg_{small,medium,large,xlarge}`                                                       |
-| Semantic segmentation                                     | [`src/getitune/recipe/semantic_segmentation`](src/getitune/recipe/semantic_segmentation/)                                                                                                                                                                     | `dino_v2`, `litehrnet_{s,18,x}`, `segnext_{t,s,b}` (with `_tile` variants)                                                                                 |
-| Keypoint detection                                        | [`src/getitune/recipe/keypoint_detection`](src/getitune/recipe/keypoint_detection/)                                                                                                                                                                           | `rtmpose_tiny`                                                                                                                                             |
+| Task                                                      | Recipe directory                                                                                                                                                                                               | Example recipes                                                                                                                                            |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Classification (multi-class / multi-label / hierarchical) | [multi_class_cls](src/getitune/recipe/classification/multi_class_cls/), [multi_label_cls](src/getitune/recipe/classification/multi_label_cls/), [h_label_cls](src/getitune/recipe/classification/h_label_cls/) | `dino_v2`, `vit_tiny`, `efficientnet_b0`, `efficientnet_b3`, `efficientnet_v2`, `mobilenet_v3_large`                                                       |
+| Object detection                                          | [detection](src/getitune/recipe/detection/)                                                                                                                                                                    | `atss_mobilenetv2`, `ssd_mobilenetv2`, `yolox_{tiny,s,l,x}`, `rtdetr_50`, `dfine_x`, `deim_dfine_{l,m,x}`, `deimv2_{s,m,l}`, `rfdetr_{small,medium,large}` |
+| Rotated detection                                         | [rotated_detection](src/getitune/recipe/rotated_detection/)                                                                                                                                                    | `maskrcnn_r50`, `maskrcnn_efficientnetb2b` (with `_tile` variants)                                                                                         |
+| Instance segmentation                                     | [instance_segmentation](src/getitune/recipe/instance_segmentation/)                                                                                                                                            | `maskrcnn_{r50,swint,efficientnetb2b}`, `rtmdet_inst_tiny`, `rfdetr_seg_{small,medium,large,xlarge}`                                                       |
+| Semantic segmentation                                     | [semantic_segmentation](src/getitune/recipe/semantic_segmentation/)                                                                                                                                            | `dino_v2`, `litehrnet_{s,18,x}`, `segnext_{t,s,b}` (with `_tile` variants)                                                                                 |
+| Keypoint detection                                        | [keypoint_detection](src/getitune/recipe/keypoint_detection/)                                                                                                                                                  | `rtmpose_tiny`                                                                                                                                             |
 
 Each task directory also ships an `openvino_model.yaml` recipe for running and optimizing pre-exported OpenVINO IR models via `OVEngine`.
 
