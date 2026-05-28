@@ -37,33 +37,29 @@ interface SelectedProjectProps {
 
 const SelectedProjectButton = ({ name, id, isActive }: SelectedProjectProps) => {
     return (
-        <Flex alignItems={'center'} gap={'size-100'}>
-            <Divider alignSelf={'center'} height={'size-400'} orientation={'vertical'} size={'S'} />
-
-            <ActionButton
-                aria-label={`Selected project ${name}`}
-                isQuiet
-                height={'max-content'}
-                staticColor={'white'}
-                UNSAFE_className={classes.selectedProjectButton}
-            >
-                <View margin='size-50'>
-                    <ProjectThumbnail
-                        // when selected project changes, we want to reset the project thumbnail
-                        key={id}
-                        project={{ name, id: id ?? name }}
-                        height={'size-400'}
-                        width={'size-400'}
-                    />
+        <ActionButton
+            aria-label={`Selected project ${name}`}
+            isQuiet
+            height={'max-content'}
+            staticColor={'white'}
+            UNSAFE_className={classes.selectedProjectButton}
+        >
+            <View margin='size-50'>
+                <ProjectThumbnail
+                    // when selected project changes, we want to reset the project thumbnail
+                    key={id}
+                    project={{ name, id: id ?? name }}
+                    height={'size-400'}
+                    width={'size-400'}
+                />
+            </View>
+            <Flex direction={'column'} minWidth={0}>
+                <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.projectName}>
+                    <span title={name}>{name}</span>
                 </View>
-                <Flex direction={'column'} minWidth={0}>
-                    <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.projectName}>
-                        <span title={name}>{name}</span>
-                    </View>
-                    {isActive ? <Tag className={classes.statusTag} text={'Active'} /> : null}
-                </Flex>
-            </ActionButton>
-        </Flex>
+                {isActive ? <Tag className={classes.statusTag} text={'Active'} /> : null}
+            </Flex>
+        </ActionButton>
     );
 };
 
