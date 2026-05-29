@@ -743,7 +743,9 @@ class TestMediaEndpoints:
         fxt_media_service.get_video_frame_by_video_id_and_index.assert_called_once_with(
             project=fxt_get_project, video_id=video_id, frame_index=10
         )
-        fxt_media_service.get_frame_binary.assert_called_once_with(project=fxt_get_project, video=media, frame_index=10)
+        fxt_media_service.get_frame_binary.assert_called_once_with(
+            project_id=fxt_get_project.id, video=media, frame_index=10
+        )
         fxt_media_service.get_media_binary_path_by_id.assert_not_called()
 
     def test_get_video_frame_binary_on_the_fly_index_exceeds(self, fxt_get_project, fxt_media_service, fxt_client):
@@ -1131,7 +1133,9 @@ class TestMediaEndpoints:
         fxt_media_service.get_video_frame_by_video_id_and_index.assert_called_once_with(
             project=fxt_get_project, video_id=media.id, frame_index=10
         )
-        fxt_media_service.get_frame_binary.assert_called_once_with(project=fxt_get_project, video=media, frame_index=10)
+        fxt_media_service.get_frame_binary.assert_called_once_with(
+            project_id=fxt_get_project.id, video=media, frame_index=10
+        )
         fxt_media_service.save_video_frame.assert_called_once_with(
             project=fxt_get_project, video=media, frame_index=10, frame_image=frame_binary
         )
