@@ -317,7 +317,7 @@ requires-python = ">=3.13,<3.14"
 
 dependencies = [
     "openvino~=2026.1.0",
-    "openvino-model-api[onnx]==0.4.3",
+    "openvino-model-api[onnx]~=0.4.3",
     "opencv-python-headless~=4.13.0",
     "numpy>=2.0",
     "pillow~=12.0",
@@ -350,45 +350,34 @@ ready-to-run inference demos.
 The recommended way to set up a clean environment is with
 [`uv`](https://docs.astral.sh/uv/) - a fast Python package manager.
 
-### Option 1 - one-shot with `uv` (no environment to manage)
+### Option 1 - one-shot with `uv`
 
-If you just want to run the demos without creating a project, you can use
-`uv run` with inline dependencies:
+This will create and activate your venv, then run the script immediately.
 
 ```bash
 # From the directory where this README lives
-uv run --with-requirements requirements.txt demo.py
-uv run --with-requirements requirements.txt demo_async.py
+uv run demo.py
+uv run demo_async.py
 ```
 
-`uv` will transparently create a temporary virtual environment, install the
-dependencies and execute the script.
+`uv run` will transparently create a virtual environment, install the
+dependencies, and execute the script. You will not remain in the virtual 
+environment after the script executes.
 
-### Option 2 - create a persistent virtual environment
+### Option 2 - create a persistent virtual environment, then activate it
 
 ```bash
 # Create and activate a virtual environment (Python 3.10+)
-uv venv
+uv sync
 # Linux / macOS
 source .venv/bin/activate
 # Windows
 .venv\\Scripts\\activate
-
-# Install the runtime dependencies
-uv pip install -r requirements.txt
-```
-
-### Option 3 - plain pip
-
-```bash
-python -m venv .venv
-source .venv/bin/activate   # or .venv\\Scripts\\activate on Windows
-pip install -r requirements.txt
 ```
 
 ## Running the demos
 
-Once the environment is ready, simply run:
+Once the environment is ready and activated, simply run:
 
 ```bash
 # Synchronous inference - writes the annotated result to result.jpg
