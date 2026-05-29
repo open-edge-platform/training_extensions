@@ -325,6 +325,7 @@ class UltralyticsEngine(Engine):
             base_name=self._EXPORTED_MODEL_BASE_NAME,
             export_format=export_format,
             precision=export_precision,
+            export_args=self._export_args,
         )
 
     @staticmethod
@@ -443,7 +444,7 @@ class UltralyticsEngine(Engine):
                 source=imgs,  # pyrefly: ignore[bad-argument-type]
                 device=device,
                 imgsz=imgsz,
-                conf=0.001,
+                conf=0.0,
                 save=False,
                 verbose=False,
             )

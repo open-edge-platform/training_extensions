@@ -112,22 +112,36 @@ class UltralyticsDatasetAdapter(TorchDataset):
                 # Use nearest-neighbor interpolation to preserve binary mask
                 # values without artifacts from bilinear smoothing.
                 if mask_tensor.shape[1:] != (tensor_h, tensor_w):
+                    pad_left, pad_top, pad_right, pad_bottom = padding
+                    content_h = tensor_h - pad_top - pad_bottom
+                    content_w = tensor_w - pad_left - pad_right
+
+                    # Resize to the content area (matches letterbox image geometry)
                     mask_tensor = torch.nn.functional.interpolate(
                         mask_tensor.unsqueeze(0).float(),
-                        size=(tensor_h, tensor_w),
+                        size=(content_h, content_w),
                         mode="nearest",
                     )[0]
-                result["masks"] = mask_tensor.float()
+
+                    # Pad to match letterbox (zeros in padded regions = no mask)
+                    if pad_left > 0 or pad_top > 0 or pad_right > 0 or pad_bottom > 0:
+                        mask_tensor = torch.nn.functional.pad(
+                            mask_tensor,
+                            (pad_left, pad_right, pad_top, pad_bottom),
+                            mode="constant",
+                            value=0,
+                        )
+                result["masks"] = mask_tensor.to(torch.uint8)
 
                 # Generate per-pixel semantic class labels at the same spatial
                 # resolution as masks (required by YOLO26-seg's auxiliary sem
                 # loss which indexes sem_masks using instance mask shapes).
                 cls_tensor = torch.as_tensor(cls, dtype=torch.float32).squeeze(-1)  # (N,)
                 # Per-pixel class = max(class_id * mask_presence); background stays 0.
-                sem_masks = (mask_tensor * cls_tensor[:, None, None]).max(0).values  # (H, W)
+                sem_masks = (mask_tensor.float() * cls_tensor[:, None, None]).max(0).values  # (H, W)
                 result["sem_masks"] = sem_masks
             else:
-                result["masks"] = torch.zeros((0, tensor_h, tensor_w), dtype=torch.float32)
+                result["masks"] = torch.zeros((0, tensor_h, tensor_w), dtype=torch.uint8)
                 result["sem_masks"] = torch.zeros((tensor_h, tensor_w), dtype=torch.float32)
 
         return result

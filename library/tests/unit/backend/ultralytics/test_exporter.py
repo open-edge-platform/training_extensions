@@ -625,3 +625,184 @@ class TestYOLO11SegWrapper:
         params = model._export_parameters
         assert params.model_type == "YOLO11-seg"
         assert params.task_type == "instance_segmentation"
+
+
+class TestMetadataYaml:
+    """Tests for Ultralytics metadata.yaml generation."""
+
+    def test_openvino_export_generates_metadata_yaml(self, tmp_path: Path) -> None:
+        """to_openvino() should produce metadata.yaml alongside the model."""
+        exporter = _make_exporter()
+
+        raw_dir = tmp_path / "output" / "raw_export"
+        raw_dir.mkdir(parents=True)
+        raw_xml = raw_dir / "model.xml"
+        raw_xml.touch()
+
+        mock_yolo = MagicMock()
+        mock_yolo.export.return_value = str(raw_dir)
+        mock_yolo.model.stride = [8, 16, 32]
+
+        mock_ov_model = MagicMock()
+        mock_ov_model.inputs = [MagicMock()]
+        mock_ov_model.outputs = [MagicMock()]
+        mock_core = MagicMock()
+        mock_core.read_model.return_value = mock_ov_model
+
+        output_dir = tmp_path / "output"
+        with (
+            patch("openvino.Core", return_value=mock_core),
+            patch("openvino.save_model"),
+            patch.object(exporter, "_postprocess_openvino_model", return_value=mock_ov_model),
+        ):
+            exporter.to_openvino(mock_yolo, output_dir, "exported_model", Precision.FP32)
+
+        metadata_path = output_dir / "metadata.yaml"
+        assert metadata_path.exists()
+
+        import yaml
+
+        with metadata_path.open() as f:
+            metadata = yaml.safe_load(f)
+
+        assert metadata["task"] == "detect"
+        assert metadata["stride"] == 32
+        assert metadata["imgsz"] == [640, 640]
+        assert metadata["names"] == {0: "cat", 1: "dog"}
+        assert metadata["end2end"] is False
+        assert metadata["channels"] == 3
+        assert metadata["batch"] == 1
+        assert metadata["author"] == "Ultralytics"
+        assert metadata["args"]["half"] is False
+        assert metadata["args"]["int8"] is False
+
+    def test_onnx_export_generates_metadata_yaml(self, tmp_path: Path) -> None:
+        """to_onnx() should produce metadata.yaml alongside the model."""
+        exporter = _make_exporter()
+
+        raw_onnx = tmp_path / "raw_model.onnx"
+        raw_onnx.touch()
+
+        mock_yolo = MagicMock()
+        mock_yolo.export.return_value = str(raw_onnx)
+        mock_yolo.model.stride = [8, 16, 32]
+
+        mock_onnx_model = MagicMock()
+
+        output_dir = tmp_path / "output"
+        with (
+            patch("onnx.load", return_value=mock_onnx_model),
+            patch("onnx.save"),
+            patch.object(exporter, "_postprocess_onnx_model", return_value=mock_onnx_model),
+        ):
+            exporter.to_onnx(mock_yolo, output_dir, "model", Precision.FP32)
+
+        metadata_path = output_dir / "metadata.yaml"
+        assert metadata_path.exists()
+
+        import yaml
+
+        with metadata_path.open() as f:
+            metadata = yaml.safe_load(f)
+
+        assert metadata["task"] == "detect"
+        assert metadata["names"] == {0: "cat", 1: "dog"}
+
+    def test_fp16_export_sets_half_true(self, tmp_path: Path) -> None:
+        """FP16 export should set args.half=true in metadata."""
+        exporter = _make_exporter()
+
+        raw_dir = tmp_path / "output" / "raw_export"
+        raw_dir.mkdir(parents=True)
+        raw_xml = raw_dir / "model.xml"
+        raw_xml.touch()
+
+        mock_yolo = MagicMock()
+        mock_yolo.export.return_value = str(raw_dir)
+        mock_yolo.model.stride = [8, 16, 32]
+
+        mock_ov_model = MagicMock()
+        mock_ov_model.inputs = [MagicMock()]
+        mock_ov_model.outputs = [MagicMock()]
+        mock_core = MagicMock()
+        mock_core.read_model.return_value = mock_ov_model
+
+        output_dir = tmp_path / "output"
+        with (
+            patch("openvino.Core", return_value=mock_core),
+            patch("openvino.save_model"),
+            patch.object(exporter, "_postprocess_openvino_model", return_value=mock_ov_model),
+        ):
+            exporter.to_openvino(mock_yolo, output_dir, "model", Precision.FP16)
+
+        import yaml
+
+        with (output_dir / "metadata.yaml").open() as f:
+            metadata = yaml.safe_load(f)
+
+        assert metadata["args"]["half"] is True
+
+    def test_instance_segmentation_task_mapping(self, tmp_path: Path) -> None:
+        """Instance segmentation task_type should map to 'segment' in metadata."""
+        seg_params = TaskLevelExportParameters(
+            model_type="YOLO11-seg",
+            model_name="yolo26n-seg",
+            task_type="instance_segmentation",
+            label_info=_label_info(),
+            optimization_config={},
+            confidence_threshold=0.25,
+            iou_threshold=0.5,
+        )
+        exporter = _make_exporter(task_level_export_parameters=seg_params)
+
+        raw_onnx = tmp_path / "raw_model.onnx"
+        raw_onnx.touch()
+
+        mock_yolo = MagicMock()
+        mock_yolo.export.return_value = str(raw_onnx)
+        mock_yolo.model.stride = [8, 16, 32]
+
+        mock_onnx_model = MagicMock()
+
+        output_dir = tmp_path / "output"
+        with (
+            patch("onnx.load", return_value=mock_onnx_model),
+            patch("onnx.save"),
+            patch.object(exporter, "_postprocess_onnx_model", return_value=mock_onnx_model),
+        ):
+            exporter.to_onnx(mock_yolo, output_dir, "model", Precision.FP32)
+
+        import yaml
+
+        with (output_dir / "metadata.yaml").open() as f:
+            metadata = yaml.safe_load(f)
+
+        assert metadata["task"] == "segment"
+
+    def test_stride_from_model(self, tmp_path: Path) -> None:
+        """Stride should be read dynamically from model.model.stride."""
+        exporter = _make_exporter()
+
+        raw_onnx = tmp_path / "raw_model.onnx"
+        raw_onnx.touch()
+
+        mock_yolo = MagicMock()
+        mock_yolo.export.return_value = str(raw_onnx)
+        mock_yolo.model.stride = [4, 8, 16, 32, 64]
+
+        mock_onnx_model = MagicMock()
+
+        output_dir = tmp_path / "output"
+        with (
+            patch("onnx.load", return_value=mock_onnx_model),
+            patch("onnx.save"),
+            patch.object(exporter, "_postprocess_onnx_model", return_value=mock_onnx_model),
+        ):
+            exporter.to_onnx(mock_yolo, output_dir, "model", Precision.FP32)
+
+        import yaml
+
+        with (output_dir / "metadata.yaml").open() as f:
+            metadata = yaml.safe_load(f)
+
+        assert metadata["stride"] == 64

@@ -83,6 +83,7 @@ class UltralyticsModel:
 
         self._yolo: YOLO | None = None
         self._intensity_config: IntensityConfig | None = None
+        self._export_args: dict[str, Any] = {}
         self._explicit_data_input_params = self._configure_preprocessing_params(data_input_params)
 
     @staticmethod
@@ -188,6 +189,7 @@ class UltralyticsModel:
         base_name: str,
         export_format: ExportFormat,
         precision: Precision = Precision.FP32,
+        export_args: dict[str, Any] | None = None,
     ) -> Path:
         """Export this model to the specified output directory.
 
@@ -196,10 +198,14 @@ class UltralyticsModel:
             base_name: Base name for the exported model file.
             export_format: Format of the output model.
             precision: Precision of the output model.
+            export_args: Optional export arguments (confidence_threshold,
+                iou_threshold) from the recipe to embed in model metadata.
 
         Returns:
             Path to the exported model file.
         """
+        if export_args:
+            self._export_args = export_args
         exporter = self._exporter
         if export_format == ExportFormat.OPENVINO:
             return exporter.to_openvino(self.yolo, output_dir, base_name, precision)
@@ -275,18 +281,15 @@ class UltralyticsModel:
         Subclasses override to set model_type, task_type, and thresholds.
         """
         label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
-        iou = self.extra_overrides.get("iou", 0.5)
-        # confidence_threshold is intentionally omitted so that model_api uses
-        # its class default (0.25 for YOLO11).  The Ultralytics validation conf
-        # (typically 0.001 for full mAP computation) is a training concern and
-        # should NOT be baked into the exported IR used for deployment inference.
+        iou = self._export_args.get("iou_threshold", self.extra_overrides.get("iou", 0.5))
+        conf = self._export_args.get("confidence_threshold")
         return TaskLevelExportParameters(
             model_type="YOLO11",
             model_name=self.model_name,
             task_type="detection",
             label_info=label_info,
             optimization_config={},
-            confidence_threshold=None,
+            confidence_threshold=float(conf) if conf is not None else None,
             iou_threshold=float(iou),
             nms_execute=True,
         )

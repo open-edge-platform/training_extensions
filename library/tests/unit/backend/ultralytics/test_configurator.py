@@ -319,7 +319,7 @@ class TestRealRecipes:
         assert cfg.config["model"]["class_path"] == _DETECTION_CLASS_PATH
         assert cfg.config["model"]["init_args"]["pretrained"] in (True, False)
         assert cfg.config["model"]["init_args"]["model_name"].endswith(".yaml")
-        assert cfg.config["training"]["close_mosaic"] == 10
+        assert cfg.config["training"]["close_mosaic"] == 0
 
     @pytest.mark.parametrize("variant", ["yolo26_n", "yolo26_s", "yolo26_m"])
     def test_yolo26_recipe_has_data_config(self, variant: str) -> None:

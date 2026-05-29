@@ -108,16 +108,20 @@ def build_ratio_pad(
     """Derive ``ratio_pad`` from getitune ``ImageInfo`` fields.
 
     Ultralytics validators need ``ratio_pad = ((rh, rw), (pad_x, pad_y))``
-    where ``rh = new_h / ori_h``, ``rw = new_w / ori_w``,
+    where ``rh = content_h / ori_h``, ``rw = content_w / ori_w``,
     ``pad_x`` is horizontal (left) padding and ``pad_y`` is vertical (top) padding.
 
-    This matches Ultralytics' ``scale_boxes`` which unpacks as::
+    The ratios must reflect the *content area* scale (before padding), not the
+    final padded dimensions.  This matches Ultralytics' ``scale_boxes`` which
+    uses ``gain = ratio_pad[0][0]`` to undo the resize, and subtracts padding
+    separately::
 
+        gain = ratio_pad[0][0]
         pad_x, pad_y = ratio_pad[1]
 
     Args:
         ori_shape: ``(H, W)`` of the original image before any transforms.
-        img_shape: ``(H, W)`` after resize (before padding).
+        img_shape: ``(H, W)`` after resize and padding (may include padding).
         padding: ``(left, top, right, bottom)`` padding applied after resize.
 
     Returns:
@@ -126,9 +130,13 @@ def build_ratio_pad(
     ori_h, ori_w = ori_shape
     new_h, new_w = img_shape
 
-    # Avoid division-by-zero for degenerate images.
-    rh = new_h / ori_h if ori_h > 0 else 1.0
-    rw = new_w / ori_w if ori_w > 0 else 1.0
+    # Subtract padding to get the content area dimensions.
+    pad_left, pad_top, pad_right, pad_bottom = padding
+    content_h = new_h - pad_top - pad_bottom
+    content_w = new_w - pad_left - pad_right
 
-    pad_left, pad_top = padding[0], padding[1]
+    # Avoid division-by-zero for degenerate images.
+    rh = content_h / ori_h if ori_h > 0 else 1.0
+    rw = content_w / ori_w if ori_w > 0 else 1.0
+
     return (rh, rw), (pad_left, pad_top)

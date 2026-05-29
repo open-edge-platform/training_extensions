@@ -465,7 +465,7 @@ class TestGetiTuneQuantizerEvaluateQuantizedModel:
 class TestGetiTuneQuantizerStoreArtifacts:
     """Tests for ``GetiTuneQuantizer.store_artifacts``."""
 
-    def test_store_artifacts_copies_files_and_cleans_up(
+    def test_store_artifacts_copies_files(
         self,
         tmp_path: Path,
         fxt_getitune_quantizer: Callable[[], GetiTuneQuantizer],
@@ -475,6 +475,7 @@ class TestGetiTuneQuantizerStoreArtifacts:
         quantizer = fxt_getitune_quantizer()
 
         variant_id = uuid4()
+        source_variant_id = uuid4()
 
         # Create quantized model files in a fake getitune work dir
         getitune_work_dir = tmp_path / "getitune-workspace"
@@ -484,10 +485,23 @@ class TestGetiTuneQuantizerStoreArtifacts:
         quantized_xml.write_text("<quantized/>")
         quantized_bin.write_bytes(b"\x00\x01\x02")
 
+        # Create source FP16 variant dir (no metadata.yaml)
+        source_variant_dir = (
+            tmp_path
+            / "projects"
+            / str(fxt_quantization_params.project_id)
+            / "models"
+            / str(fxt_quantization_params.model_id)
+            / "variants"
+            / str(source_variant_id)
+        )
+        source_variant_dir.mkdir(parents=True, exist_ok=True)
+
         quantizer.store_artifacts(
             params=fxt_quantization_params,
             quantized_model_path=quantized_xml,
             model_variant_id=variant_id,
+            source_variant_id=source_variant_id,
         )
 
         # Verify copies
@@ -515,6 +529,7 @@ class TestGetiTuneQuantizerStoreArtifacts:
         """When the .bin file does not exist, only the .xml is copied."""
         quantizer = fxt_getitune_quantizer()
         variant_id = uuid4()
+        source_variant_id = uuid4()
 
         getitune_work_dir = tmp_path / "getitune-workspace"
         getitune_work_dir.mkdir()
@@ -522,10 +537,23 @@ class TestGetiTuneQuantizerStoreArtifacts:
         quantized_xml.write_text("<quantized/>")
         # No .bin created
 
+        # Create source FP16 variant dir (no metadata.yaml)
+        source_variant_dir = (
+            tmp_path
+            / "projects"
+            / str(fxt_quantization_params.project_id)
+            / "models"
+            / str(fxt_quantization_params.model_id)
+            / "variants"
+            / str(source_variant_id)
+        )
+        source_variant_dir.mkdir(parents=True, exist_ok=True)
+
         quantizer.store_artifacts(
             params=fxt_quantization_params,
             quantized_model_path=quantized_xml,
             model_variant_id=variant_id,
+            source_variant_id=source_variant_id,
         )
 
         variant_dir = (
@@ -539,6 +567,135 @@ class TestGetiTuneQuantizerStoreArtifacts:
         )
         assert (variant_dir / "model.xml").exists()
         assert not (variant_dir / "model.bin").exists()
+
+    def test_store_artifacts_copies_metadata_yaml_for_int8(
+        self,
+        tmp_path: Path,
+        fxt_getitune_quantizer: Callable[[], GetiTuneQuantizer],
+        fxt_quantization_params: QuantizationJobParams,
+    ):
+        """metadata.yaml from the FP16 source variant is copied with int8=True, half=False."""
+        import yaml
+
+        quantizer = fxt_getitune_quantizer()
+        variant_id = uuid4()
+        source_variant_id = uuid4()
+
+        # Create quantized model files
+        getitune_work_dir = tmp_path / "getitune-workspace"
+        getitune_work_dir.mkdir()
+        quantized_xml = getitune_work_dir / "optimized_model.xml"
+        quantized_xml.write_text("<quantized/>")
+
+        # Create source FP16 variant dir WITH metadata.yaml
+        source_variant_dir = (
+            tmp_path
+            / "projects"
+            / str(fxt_quantization_params.project_id)
+            / "models"
+            / str(fxt_quantization_params.model_id)
+            / "variants"
+            / str(source_variant_id)
+        )
+        source_variant_dir.mkdir(parents=True, exist_ok=True)
+        source_metadata = {
+            "description": "Ultralytics YOLO11n model",
+            "author": "Ultralytics",
+            "stride": 32,
+            "task": "detect",
+            "imgsz": [640, 640],
+            "names": {0: "person", 1: "car"},
+            "args": {
+                "batch": 1,
+                "half": True,
+                "int8": False,
+                "dynamic": False,
+                "nms": False,
+            },
+        }
+        with open(source_variant_dir / "metadata.yaml", "w") as f:
+            yaml.dump(source_metadata, f)
+
+        quantizer.store_artifacts(
+            params=fxt_quantization_params,
+            quantized_model_path=quantized_xml,
+            model_variant_id=variant_id,
+            source_variant_id=source_variant_id,
+        )
+
+        # Verify metadata.yaml was copied and updated
+        variant_dir = (
+            tmp_path
+            / "projects"
+            / str(fxt_quantization_params.project_id)
+            / "models"
+            / str(fxt_quantization_params.model_id)
+            / "variants"
+            / str(variant_id)
+        )
+        dest_metadata_path = variant_dir / "metadata.yaml"
+        assert dest_metadata_path.exists()
+
+        with open(dest_metadata_path) as f:
+            dest_metadata = yaml.safe_load(f)
+
+        # INT8-specific fields updated
+        assert dest_metadata["args"]["int8"] is True
+        assert dest_metadata["args"]["half"] is False
+        # Other fields preserved
+        assert dest_metadata["stride"] == 32
+        assert dest_metadata["task"] == "detect"
+        assert dest_metadata["author"] == "Ultralytics"
+        assert dest_metadata["names"] == {0: "person", 1: "car"}
+
+    def test_store_artifacts_no_metadata_yaml_no_error(
+        self,
+        tmp_path: Path,
+        fxt_getitune_quantizer: Callable[[], GetiTuneQuantizer],
+        fxt_quantization_params: QuantizationJobParams,
+    ):
+        """When source FP16 variant has no metadata.yaml, store_artifacts completes without error."""
+        quantizer = fxt_getitune_quantizer()
+        variant_id = uuid4()
+        source_variant_id = uuid4()
+
+        # Create quantized model files
+        getitune_work_dir = tmp_path / "getitune-workspace"
+        getitune_work_dir.mkdir()
+        quantized_xml = getitune_work_dir / "optimized_model.xml"
+        quantized_xml.write_text("<quantized/>")
+
+        # Create source FP16 variant dir WITHOUT metadata.yaml
+        source_variant_dir = (
+            tmp_path
+            / "projects"
+            / str(fxt_quantization_params.project_id)
+            / "models"
+            / str(fxt_quantization_params.model_id)
+            / "variants"
+            / str(source_variant_id)
+        )
+        source_variant_dir.mkdir(parents=True, exist_ok=True)
+
+        quantizer.store_artifacts(
+            params=fxt_quantization_params,
+            quantized_model_path=quantized_xml,
+            model_variant_id=variant_id,
+            source_variant_id=source_variant_id,
+        )
+
+        # Verify no metadata.yaml in INT8 variant
+        variant_dir = (
+            tmp_path
+            / "projects"
+            / str(fxt_quantization_params.project_id)
+            / "models"
+            / str(fxt_quantization_params.model_id)
+            / "variants"
+            / str(variant_id)
+        )
+        assert (variant_dir / "model.xml").exists()
+        assert not (variant_dir / "metadata.yaml").exists()
 
 
 class TestGetiTuneQuantizerExecute:
@@ -587,6 +744,18 @@ class TestGetiTuneQuantizerExecute:
         )
         xml_path.parent.mkdir(parents=True, exist_ok=True)
         xml_path.write_text("<model/>")
+
+        # Add metadata.yaml to FP16 variant to test INT8 copy
+        import yaml
+
+        fp16_metadata = {
+            "description": "Ultralytics YOLO11n model",
+            "stride": 32,
+            "task": "detect",
+            "args": {"half": True, "int8": False, "batch": 1},
+        }
+        with open(xml_path.parent / "metadata.yaml", "w") as f:
+            yaml.dump(fp16_metadata, f)
 
         # Project / task
         project = Mock(spec=Project)
@@ -655,6 +824,15 @@ class TestGetiTuneQuantizerExecute:
         )
         assert (variant_dir / "model.xml").read_text() == "<q/>"
         assert (variant_dir / "model.bin").read_bytes() == b"\x00"
+
+        # Verify metadata.yaml was copied from FP16 variant and updated for INT8
+        int8_metadata_path = variant_dir / "metadata.yaml"
+        assert int8_metadata_path.exists()
+        with open(int8_metadata_path) as f:
+            int8_metadata = yaml.safe_load(f)
+        assert int8_metadata["args"]["int8"] is True
+        assert int8_metadata["args"]["half"] is False
+        assert int8_metadata["stride"] == 32
 
         # The getitune workspace is no longer cleaned up by execute(); cleanup is
         # performed by ``QuantizationJob.on_complete`` after the job finishes.

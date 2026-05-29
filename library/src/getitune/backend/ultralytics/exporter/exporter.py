@@ -22,11 +22,13 @@ from __future__ import annotations
 
 import logging
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 import onnx
 import openvino
+import yaml
 
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.types.export import TaskLevelExportParameters
@@ -43,6 +45,11 @@ class _YOLOExportable(Protocol):
 
     def export(self, **kwargs: object) -> str | Path:
         """Export the model and return the produced artifact path."""
+
+    @property
+    def model(self) -> Any:  # noqa: ANN401
+        """The underlying model with stride attribute."""
+        ...
 
 
 class UltralyticsModelExporter(ModelExporter):
@@ -140,6 +147,7 @@ class UltralyticsModelExporter(ModelExporter):
         )
 
         self._cleanup_raw_export(raw_path, save_path.parent)
+        self._write_metadata_yaml(model, output_dir, precision)
 
         return save_path
 
@@ -193,7 +201,75 @@ class UltralyticsModelExporter(ModelExporter):
         if raw_path.resolve() != save_path.resolve():
             raw_path.unlink(missing_ok=True)
 
+        self._write_metadata_yaml(model, output_dir, precision)
+
         return save_path
+
+    def _write_metadata_yaml(self, model: _YOLOExportable, output_dir: Path, precision: Precision) -> None:
+        """Write Ultralytics-compatible ``metadata.yaml`` alongside the exported model.
+
+        This file enables Ultralytics CLI usage with the exported model::
+
+            yolo predict model=./output_dir/ source=image.jpg
+            yolo val model=./output_dir/ data=dataset.yaml
+
+        The format matches what ``ultralytics.engine.exporter.Exporter`` produces,
+        so the CLI treats our export identically to a native Ultralytics export.
+
+        Args:
+            model: The Ultralytics YOLO model (provides stride).
+            output_dir: Directory where the exported model files live.
+            precision: Export precision (affects ``half`` field in args).
+        """
+        import ultralytics
+
+        params = self.task_level_export_parameters
+        label_names = params.label_info.label_names if params.label_info else []
+        names = dict(enumerate(label_names))
+
+        # Map internal task_type to Ultralytics task identifier.
+        task_map = {"detection": "detect", "instance_segmentation": "segment"}
+        task = task_map.get(params.task_type, params.task_type)
+
+        # Get stride from the model dynamically.
+        stride = 32
+        try:
+            model_stride = model.model.stride
+            stride = int(max(model_stride)) if hasattr(model_stride, "__iter__") else int(model_stride)
+        except (AttributeError, TypeError, ValueError):
+            pass
+
+        imgsz = list(self.data_input_params.input_size)
+
+        metadata: dict[str, Any] = {
+            "description": f"Ultralytics {params.model_name} model",
+            "author": "Ultralytics",
+            "date": datetime.now(tz=timezone.utc).isoformat(),
+            "version": ultralytics.__version__,
+            "license": "AGPL-3.0 License (https://ultralytics.com/license)",
+            "docs": "https://docs.ultralytics.com",
+            "stride": stride,
+            "task": task,
+            "batch": 1,
+            "imgsz": imgsz,
+            "names": names,
+            "channels": 3,
+            "end2end": False,
+            "args": {
+                "data": None,
+                "batch": 1,
+                "fraction": 1.0,
+                "half": precision == Precision.FP16,
+                "int8": False,
+                "dynamic": False,
+                "nms": False,
+            },
+        }
+
+        yaml_path = output_dir / "metadata.yaml"
+        with open(yaml_path, "w") as f:  # noqa: PTH123
+            yaml.dump(metadata, f, default_flow_style=False, sort_keys=False)
+        logger.info(f"Wrote Ultralytics metadata: {yaml_path}")
 
     @staticmethod
     def _find_xml_in_export(export_path: Path) -> Path:

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID
 
+import yaml
 from datumaro.experimental.fields import Subset
 from getitune.backend.openvino.engine import OVEngine
 from getitune.config.data import SamplerConfig, SubsetConfig
@@ -253,6 +254,7 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         params: QuantizationJobParams,
         quantized_model_path: Path,
         model_variant_id: UUID,
+        source_variant_id: UUID,
     ) -> None:
         """Store quantized model files.
 
@@ -268,6 +270,21 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         bin_path = quantized_model_path.with_suffix(".bin")
         if bin_path.exists():
             shutil.copyfile(bin_path, variant_dir / "model.bin")
+
+        # Copy metadata.yaml from the source FP16 variant and update for INT8
+        source_variant_dir = model_dir / "variants" / str(source_variant_id)
+        source_metadata_path = source_variant_dir / "metadata.yaml"
+        if source_metadata_path.exists():
+            with open(source_metadata_path) as f:
+                metadata = yaml.safe_load(f)
+            if isinstance(metadata.get("args"), dict):
+                metadata["args"]["int8"] = True
+                metadata["args"]["half"] = False
+            dest_metadata_path = variant_dir / "metadata.yaml"
+            with open(dest_metadata_path, "w") as f:
+                yaml.dump(metadata, f, default_flow_style=False, sort_keys=False)
+            logger.info("Wrote INT8 metadata.yaml to {}", dest_metadata_path)
+
         logger.info("Stored quantized model variant at {}", variant_dir)
 
     def execute(self, params: QuantizationJobParams) -> None:
@@ -313,10 +330,14 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
             dataset_revision_id=model.training_info.dataset_revision_id,
         )
 
+        openvino_fp16_variant = self._get_openvino_fp16_variant(model)
+        if openvino_fp16_variant is None:
+            raise FileNotFoundError(f"Model {params.model_id} does not have an OpenVINO FP16 variant")
         self.store_artifacts(
             params=params,
             quantized_model_path=quantized_model_path,
             model_variant_id=variant.id,
+            source_variant_id=openvino_fp16_variant.id,
         )
 
     def _base_model_path(self, project_id: UUID, model_id: UUID) -> Path:

@@ -234,6 +234,7 @@ class TestExport:
             base_name="exported_model",
             export_format=ExportFormat.OPENVINO,
             precision=Precision.FP32,
+            export_args=engine._export_args,
         )
         assert result == tmp_path / "exported_model.xml"
 
