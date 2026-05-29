@@ -1,13 +1,13 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import { PointerEvent, RefObject, useEffect, useMemo, useRef } from 'react';
 
 import { clampPointBetweenImage, getIntersectionPoint } from '@geti/smart-tools/utils';
 import { differenceWith, isEmpty, isEqual, isNil } from 'lodash-es';
 
 import { Point, Polygon } from '../../../../shared/types';
-import useUndoRedoState from '../../../dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
+import { usePolygonState } from '../polygon-tool/polygon-state-provider.component';
 import { deleteSegments, ERASER_FIELD_DEFAULT_RADIUS } from '../polygon-tool/utils';
 import { convertToolShapeToGetiShape, getRelativePoint } from '../utils';
 import { useIntelligentScissorsWorker } from './use-intelligent-scissors-worker.hook';
@@ -24,9 +24,8 @@ export const usePolygonConfig = ({
     const isMounted = useRef(true);
     const { worker } = useIntelligentScissorsWorker();
 
-    const [pointerLine, setPointerLine] = useState<Point[]>([]);
-    const [lassoSegment, setLassoSegment] = useState<Point[]>([]);
-    const [segments, setSegments, undoRedoActions] = useUndoRedoState<Point[][]>([]);
+    const { segments, setSegments, pointerLine, setPointerLine, lassoSegment, setLassoSegment, undoRedoActions } =
+        usePolygonState();
 
     useEffect(() => {
         isMounted.current = true;
