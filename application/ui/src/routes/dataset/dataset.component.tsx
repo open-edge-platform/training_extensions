@@ -9,6 +9,7 @@ import { Gallery } from '../../features/dataset/gallery/gallery.component';
 import { Toolbar } from '../../features/dataset/gallery/toolbar/toolbar.component';
 import { ExportJobsList } from '../../features/dataset/import-export/export-jobs-list/export-jobs-list.component';
 import { ImportJobsList } from '../../features/dataset/import-export/import-jobs-list/import-jobs-list.component';
+import { MediaUploadProvider } from '../../features/dataset/providers/media-upload-provider.component';
 import { GalleryViewMode } from '../../shared/gallery-view-modes';
 
 export const Dataset = () => {
@@ -25,32 +26,34 @@ export const Dataset = () => {
         datasetFilters.endDate !== null;
 
     return (
-        <Grid
-            height='100%'
-            gridArea='content'
-            rows={['auto', 'auto', 'minmax(0, 1fr)']}
-            UNSAFE_style={{ padding: dimensionValue('size-350') }}
-        >
-            <View gridRow='1 / 2'>
-                <ExportJobsList predicate={({ datasetId }) => datasetId === null} />
-                <ImportJobsList />
-            </View>
+        <MediaUploadProvider>
+            <Grid
+                height='100%'
+                gridArea='content'
+                rows={['auto', 'auto', 'minmax(0, 1fr)']}
+                UNSAFE_style={{ padding: dimensionValue('size-300') }}
+            >
+                <View gridRow='1 / 2'>
+                    <ExportJobsList predicate={({ datasetId }) => datasetId === null} />
+                    <ImportJobsList />
+                </View>
 
-            <View gridRow='2 / 3'>
-                <Toolbar items={items} viewMode={viewMode} setViewMode={setViewMode} />
-            </View>
+                <View gridRow='2 / 3'>
+                    <Toolbar items={items} viewMode={viewMode} setViewMode={setViewMode} />
+                </View>
 
-            <View gridRow='3 / 4'>
-                <Gallery
-                    items={items}
-                    viewMode={viewMode as GalleryViewMode}
-                    isPending={isPending}
-                    fetchNextPage={fetchNextPage}
-                    isMediaItemReviewedById={isMediaItemReviewedById}
-                    hasActiveFilter={hasActiveFilter}
-                    isFetchingNextPage={isFetchingNextPage}
-                />
-            </View>
-        </Grid>
+                <View gridRow='3 / 4'>
+                    <Gallery
+                        items={items}
+                        viewMode={viewMode as GalleryViewMode}
+                        isPending={isPending}
+                        fetchNextPage={fetchNextPage}
+                        isMediaItemReviewedById={isMediaItemReviewedById}
+                        hasActiveFilter={hasActiveFilter}
+                        isFetchingNextPage={isFetchingNextPage}
+                    />
+                </View>
+            </Grid>
+        </MediaUploadProvider>
     );
 };

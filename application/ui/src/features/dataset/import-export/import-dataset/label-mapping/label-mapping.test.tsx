@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { getMockedJob } from 'mocks/mock-job';
 import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedProject } from 'mocks/mock-project';
@@ -12,6 +12,7 @@ import { http } from '../../../../../api/utils';
 import { server } from '../../../../../msw-node-setup';
 import { ImportDatasetDialogStateProvider } from '../../../providers/export-import-dataset-dialog-provider.component';
 import { LabelMapping } from './label-mapping.component';
+import { PLACEHOLDER_LABEL } from './util';
 
 const projectLabels = [
     getMockedLabel({ name: 'label-1' }),
@@ -83,5 +84,13 @@ describe('LabelMapping', () => {
         expect(await screen.findByLabelText(`Target label for ${firstLabel.name}`)).toBeVisible();
         expect(await screen.findByLabelText(`Target label for ${thirdLabel.name}`)).toBeVisible();
         expect(screen.queryByLabelText(`Target label for ${secondLabel.name}`)).not.toBeInTheDocument();
+    });
+
+    it('shows the placeholder label for dataset labels without a matching project label', async () => {
+        renderApp('staged-dataset-123', ['unknown-label']);
+
+        const picker = await screen.findByLabelText('Target label for unknown-label');
+
+        expect(within(picker).getByText(PLACEHOLDER_LABEL)).toBeVisible();
     });
 });

@@ -266,6 +266,9 @@ class TestSinkServiceIntegration:
         assert exc_info.value.resource_type == ResourceType.SINK
         assert exc_info.value.resource_id == db_sink.id
         assert db_session.query(SinkDB).count() == 1
+        # Verify the error message includes the project name and state
+        assert "Test Detection Project" in str(exc_info.value)
+        assert "running" in str(exc_info.value)
 
     def test_test_sink_folder_exists_and_writable(self, fxt_sink_service, tmp_path):
         """Test test_sink with an existing writable folder."""

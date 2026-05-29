@@ -7,7 +7,7 @@ import threading
 
 from loguru import logger
 
-from app.core.jobs.models import Cancelled, Done, Failed, Job, JobType, Progress, Started
+from app.core.jobs.models import Cancelled, Done, Failed, Job, JobStatus, JobType, Progress, Started
 from app.core.run import Runner, RunnerFactory
 
 from .capacity import Capacity
@@ -104,6 +104,11 @@ class JobController:
         needs_capacity_permit = job.job_type == JobType.TRAIN
         permit_ctx = self._capacity.permit() if needs_capacity_permit else contextlib.nullcontext()
         async with permit_ctx:
+            # Check if the job was canceled while waiting for a capacity permit
+            if job.status == JobStatus.CANCELLED:
+                logger.info("Job {} was canceled while waiting for capacity, skipping execution", job.id)
+                return
+
             job_run = self._runner_factory.for_job(job)
             event_q: asyncio.Queue = asyncio.Queue()
 

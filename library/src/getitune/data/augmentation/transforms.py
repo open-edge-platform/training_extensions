@@ -79,10 +79,10 @@ class Resize(tvt_v2.Transform):
         new_h = round(orig_h * scale)
 
         # Compute padding to reach target size
-        # Use bottom-right padding only (matching develop branch behavior)
-        # This is important because model post-processing assumes no left/top offset
         pad_w = target_w - new_w
         pad_h = target_h - new_h
+
+        # Pad only bottom-right
         pad_left = 0
         pad_right = pad_w
         pad_top = 0
@@ -122,7 +122,8 @@ class Resize(tvt_v2.Transform):
             interpolation=self.interpolation,
             antialias=self.antialias,
         )
-        sample.image = sample.image.clamp(0, 1)
+        if sample.image.is_floating_point():
+            sample.image = sample.image.clamp(0, 1)
         # Apply padding if needed
         if pad_left > 0 or pad_top > 0 or pad_right > 0 or pad_bottom > 0:
             # Normalise pad value to match the image's value range.

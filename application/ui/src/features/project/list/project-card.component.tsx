@@ -110,9 +110,7 @@ export const ProjectCard = ({ item, prioritizeImage = false, projectNames }: Pro
                         </Flex>
 
                         <Flex marginTop={'size-100'} gap={'size-100'} direction={'column'}>
-                            <Text UNSAFE_className={classes.projectCreationDate}>
-                                • Created: {formatCreationDate(item.created_at)}
-                            </Text>
+                            <Text>• Created: {formatCreationDate(item.created_at)}</Text>
                             <Text UNSAFE_className={classes.labelList}>
                                 • Labels: {(item.task.labels ?? []).map((label) => label.name).join(', ')}
                             </Text>

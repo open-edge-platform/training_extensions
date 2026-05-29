@@ -10,7 +10,20 @@ import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
 import { SourceMenu, SourceMenuProps } from './source-menu.component';
 
+const mockStopStream = vi.fn();
+
+vi.mock('../../stream/web-rtc-connection-provider', async (importOriginal) => ({
+    ...(await importOriginal()),
+    useWebRTCConnection: () => ({
+        stop: mockStopStream,
+    }),
+}));
+
 describe('SourceMenu', () => {
+    beforeEach(() => {
+        mockStopStream.mockReset();
+    });
+
     const renderApp = ({
         id = 'id-test',
         name = 'name test',
@@ -176,7 +189,7 @@ describe('SourceMenu', () => {
             expect(pipelinePatchSpy).toHaveBeenCalledWith({ source_id: null });
         });
 
-        it('successfully disconnects source when pipeline is running', async () => {
+        it('successfully disconnects source when pipeline is running and stops stream', async () => {
             const pipelinePatchSpy = vi.fn();
             const disablePipeline = vi.fn();
 
@@ -217,6 +230,8 @@ describe('SourceMenu', () => {
             expect(disablePipeline.mock.invocationCallOrder[0]).toBeLessThan(
                 pipelinePatchSpy.mock.invocationCallOrder[0]
             );
+
+            expect(mockStopStream).toHaveBeenCalled();
         });
 
         it('shows disconnect when is connected', async () => {

@@ -31,7 +31,7 @@ export const getAccuracyMetric = (
     return undefined;
 };
 
-const getRecommendedArchitectures = (modelArchitectures: ModelArchitectureWithPerformanceCategory[]) => {
+export const getRecommendedArchitectures = (modelArchitectures: ModelArchitectureWithPerformanceCategory[]) => {
     const recommended = modelArchitectures.filter(
         (modelArchitecture) => modelArchitecture.performanceCategory !== undefined
     );
@@ -42,29 +42,4 @@ const getRecommendedArchitectures = (modelArchitectures: ModelArchitectureWithPe
 
     // For now just return top 3 recommended architectures, but in the future we can add more logic here
     return modelArchitectures.slice(0, 3);
-};
-
-export const getRecommendedModelArchitecturesWithActiveArchitecture = (
-    modelArchitectures: ModelArchitectureWithPerformanceCategory[],
-    activeModelArchitectureId: string | undefined
-) => {
-    const recommended = getRecommendedArchitectures(modelArchitectures);
-
-    const foundActiveArchitectureInRecommended = recommended.find(
-        (modelArchitecture) => modelArchitecture.id === activeModelArchitectureId
-    );
-
-    if (foundActiveArchitectureInRecommended !== undefined) {
-        return recommended;
-    }
-
-    const activeModelArchitecture = modelArchitectures.find(
-        (modelArchitecture) => modelArchitecture.id === activeModelArchitectureId
-    );
-
-    if (activeModelArchitecture === undefined) {
-        return recommended;
-    }
-
-    return [activeModelArchitecture, ...recommended];
 };

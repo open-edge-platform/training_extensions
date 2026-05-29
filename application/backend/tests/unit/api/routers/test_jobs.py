@@ -1,10 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
+import re
 from collections.abc import Callable
 from pathlib import Path
 from typing import cast
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -59,7 +60,8 @@ def fxt_job() -> Callable[[UUID | None, JobStatus, float], Job]:
                 device=DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
                 job_id=job_id_,
                 project_id=project_id_,
-                model_architecture_id="TestArch",
+                model_architecture_id="test_arch",
+                model_architecture_name="TestArch",
                 task=Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
             ),
         )
@@ -77,30 +79,36 @@ class TestJobEndpoints:
         project.task.task_type = TaskType.CLASSIFICATION
         project.task.exclusive_labels = True
         fxt_project_service.get_project_by_id.return_value = project
-        job_request = JobRequestAdapter.validate_python(
-            {
-                "project_id": project.id,
-                "job_type": JobType.TRAIN,
-                "parameters": {
-                    "device": "cpu",
-                    "model_architecture_id": "image-classification-vit-tiny",
-                    "parent_model_revision_id": uuid4(),
-                    "parent_model_variant_id": uuid4(),
-                },
-            }
-        )
 
-        response = fxt_client.post("/api/jobs", json=job_request.model_dump(mode="json"))
+        mock_manifest = Mock()
+        mock_manifest.name = "ViT Tiny"
 
-        assert response.status_code == status.HTTP_202_ACCEPTED
-        response_json = response.json()
-        assert response_json["job_id"]
-        assert response_json["metadata"]["device"]["name"] == "CPU"
-        job_request = cast(TrainingRequest, job_request)
-        fxt_project_service.get_project_by_id.assert_called_once_with(job_request.project_id)
-        fxt_jobs_queue.submit.assert_called_once()
-        assert fxt_jobs_queue.submit.call_args[0][0].params.model_architecture_id == "image-classification-vit-tiny"
-        assert fxt_jobs_queue.submit.call_args[0][0].params.task.task_type == TaskType.CLASSIFICATION
+        with patch("app.api.routers.jobs.ModelManifestService.get_model_manifest_by_id", return_value=mock_manifest):
+            job_request = JobRequestAdapter.validate_python(
+                {
+                    "project_id": project.id,
+                    "job_type": JobType.TRAIN,
+                    "parameters": {
+                        "device": "cpu",
+                        "model_architecture_id": "image-classification-vit-tiny",
+                        "parent_model_revision_id": uuid4(),
+                        "parent_model_variant_id": uuid4(),
+                    },
+                }
+            )
+
+            response = fxt_client.post("/api/jobs", json=job_request.model_dump(mode="json"))
+
+            assert response.status_code == status.HTTP_202_ACCEPTED
+            response_json = response.json()
+            assert response_json["job_id"]
+            assert response_json["metadata"]["device"]["name"] == "CPU"
+            assert re.match(r"^ViT Tiny \([0-9a-f]{8}\)$", response_json["metadata"]["model"]["name"])
+            job_request = cast(TrainingRequest, job_request)
+            fxt_project_service.get_project_by_id.assert_called_once_with(job_request.project_id)
+            fxt_jobs_queue.submit.assert_called_once()
+            assert fxt_jobs_queue.submit.call_args[0][0].params.model_architecture_id == "image-classification-vit-tiny"
+            assert fxt_jobs_queue.submit.call_args[0][0].params.task.task_type == TaskType.CLASSIFICATION
 
     def test_submit_quantize_job(self, tmp_path, fxt_client, fxt_jobs_queue, fxt_project_service):
         app.dependency_overrides[get_job_dir] = lambda: tmp_path / "logs" / "jobs"

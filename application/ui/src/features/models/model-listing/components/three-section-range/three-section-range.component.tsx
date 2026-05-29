@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Text, useNumberFormatter, View } from '@geti/ui';
+import { Flex, Text } from '@geti/ui';
 
 import classes from './three-section-range.module.scss';
 
@@ -12,39 +12,64 @@ type ThreeSectionRangeProps = {
     testingValue: number;
 };
 
+// Distribute rounded percentages so that they always sum to 100%
+const computeRoundedPercentages = (values: number[]): number[] => {
+    const total = values.reduce((sum, value) => sum + value, 0);
+
+    if (total <= 0) {
+        return values.map(() => 0);
+    }
+
+    const exactPercentages = values.map((value) => (value * 100) / total);
+    const flooredPercentages = exactPercentages.map((percentage) => Math.floor(percentage));
+    let remainder = 100 - flooredPercentages.reduce((sum, value) => sum + value, 0);
+
+    const indicesByRemainder = exactPercentages
+        .map((percentage, index) => ({ index, fractional: percentage - Math.floor(percentage) }))
+        .sort((a, b) => b.fractional - a.fractional);
+
+    const result = [...flooredPercentages];
+    for (const { index } of indicesByRemainder) {
+        if (remainder <= 0) break;
+        result[index] += 1;
+        remainder -= 1;
+    }
+
+    return result;
+};
+
 export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingValue }: ThreeSectionRangeProps) => {
-    const formatter = useNumberFormatter({ style: 'percent', maximumFractionDigits: 0 });
-    const total = trainingValue + validationValue + testingValue;
-    const gridColumns = [
-        trainingValue > 0 ? `${trainingValue}fr` : '1fr',
-        validationValue > 0 ? `${validationValue}fr` : '1fr',
-        testingValue > 0 ? `${testingValue}fr` : '1fr',
+    const [trainingPercentage, validationPercentage, testingPercentage] = computeRoundedPercentages([
+        trainingValue,
+        validationValue,
+        testingValue,
+    ]);
+
+    const labelledPercentages = [
+        { label: 'Training', percentage: trainingPercentage, color: 'var(--training-subset)' },
+        { label: 'Validation', percentage: validationPercentage, color: 'var(--validation-subset)' },
+        { label: 'Test', percentage: testingPercentage, color: 'var(--test-subset)' },
     ];
 
     return (
-        <Flex alignItems={'center'} width={'100%'} data-testid={id}>
-            <Text UNSAFE_className={classes.label}>TRAINING SUBSETS</Text>
-
-            <Grid
-                columns={gridColumns}
-                width='100%'
-                height={'size-100'}
-                marginStart={'size-200'}
-                marginEnd={'size-50'}
-                UNSAFE_className={classes.rangeGrid}
-            >
-                {trainingValue > 0 && <View height='100%' UNSAFE_style={{ backgroundColor: 'var(--moss-tint-1)' }} />}
-                {validationValue > 0 && (
-                    <View height='100%' UNSAFE_style={{ backgroundColor: 'var(--brand-daisy-tint)' }} />
-                )}
-                {testingValue > 0 && <View height='100%' UNSAFE_style={{ backgroundColor: 'var(--geode-tint)' }} />}
-            </Grid>
-
-            <Text UNSAFE_className={classes.label}>
-                {[trainingValue, validationValue, testingValue]
-                    .map((value) => formatter.format(value / total))
-                    .join(' / ')}
-            </Text>
+        <Flex alignItems={'center'} data-testid={id}>
+            <Flex gap={'size-150'} alignItems={'center'} UNSAFE_className={classes.label}>
+                {labelledPercentages.map(({ label, percentage, color }) => (
+                    <Flex key={label} gap={'size-75'} alignItems={'center'}>
+                        <span
+                            style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                backgroundColor: color,
+                                display: 'inline-block',
+                                flexShrink: 0,
+                            }}
+                        />
+                        <Text UNSAFE_className={classes.label}>{`${label} ${percentage}%`}</Text>
+                    </Flex>
+                ))}
+            </Flex>
         </Flex>
     );
 };

@@ -3,6 +3,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
+from typing import Self
 
 from app.stream.stream_data import StreamData
 
@@ -24,7 +25,7 @@ class VideoStream(ABC):
             bool: True if the video stream is real-time, False otherwise
         """
 
-    def __enter__(self) -> "VideoStream":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN001

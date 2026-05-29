@@ -22,7 +22,7 @@ dependencies = [
     "aiofiles==25.1.0",
     "pydantic-settings~=2.12.0",
     "aiortc~=1.14.0",
-    "datumaro[experimental] @ git+https://github.com/open-edge-platform/datumaro.git@develop",
+    "datumaro[experimental]~=1.13.0",
     "scikit-learn~=1.7.2",
     "faster-coco-eval~=1.7.0",
     "scikit-multilearn~=0.2.0",
@@ -92,6 +92,8 @@ exclude-dependencies = [
 override-dependencies = [
     # Bypass the unnecessarily strict version requirement of 'opencv-python-headless' set by 'roboflow'
     "opencv-python-headless~=4.11",
+    # roboflow hard-pins idna==3.7; allow newer versions
+    "idna>=3.15",
 ]
 
 [tool.hatch.version]

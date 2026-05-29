@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import {
@@ -7,21 +7,24 @@ import {
     Content,
     Dialog,
     DialogTrigger,
+    dimensionValue,
     Divider,
     Flex,
     Header,
     Heading,
-    PhotoPlaceholder,
     Tag,
     Text,
     View,
 } from '@geti/ui';
-import { AddCircle } from '@geti/ui/icons';
+import { Edit } from '@geti/ui/icons';
+import { useProjects } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { partition } from 'lodash-es';
 import { useNavigate } from 'react-router';
 
 import { paths } from '../../constants/paths';
-import { useProjects } from '../../hooks/api/project.hook';
+import { MenuActions } from '../../features/project/list/menu-actions/menu-actions.component';
+import { ProjectThumbnail } from './project-thumbnail/project-thumbnail.component';
 import { ProjectsList } from './projects-list.component';
 
 import classes from './projects-list.module.scss';
@@ -34,98 +37,126 @@ interface SelectedProjectProps {
 
 const SelectedProjectButton = ({ name, id, isActive }: SelectedProjectProps) => {
     return (
-        <Flex alignItems={'center'} gap={'size-100'}>
-            <Divider alignSelf={'center'} height={'size-400'} orientation={'vertical'} size={'S'} />
-
-            <ActionButton
-                aria-label={`Selected project ${name}`}
-                isQuiet
-                height={'max-content'}
-                staticColor={'white'}
-                UNSAFE_className={classes.selectedProjectButton}
-            >
-                <View margin='size-50'>
-                    <PhotoPlaceholder name={name} indicator={id ?? name} height={'size-400'} width={'size-400'} />
+        <ActionButton
+            aria-label={`Selected project ${name}`}
+            isQuiet
+            height={'max-content'}
+            staticColor={'white'}
+            UNSAFE_className={classes.selectedProjectButton}
+        >
+            <View margin='size-50'>
+                <ProjectThumbnail
+                    // when selected project changes, we want to reset the project thumbnail
+                    key={id}
+                    project={{ name, id: id ?? name }}
+                    height={'size-400'}
+                    width={'size-400'}
+                />
+            </View>
+            <Flex direction={'column'} minWidth={0}>
+                <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.projectName}>
+                    <span title={name}>{name}</span>
                 </View>
-                <Flex direction={'column'} minWidth={0}>
-                    <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.projectName}>
-                        <span title={name}>{name}</span>
-                    </View>
-                    {isActive ? <Tag className={classes.statusTag} text={'Active'} /> : null}
-                </Flex>
-            </ActionButton>
-        </Flex>
+                {isActive ? <Tag className={classes.statusTag} text={'Active'} /> : null}
+            </Flex>
+        </ActionButton>
     );
 };
 
-const AddProjectButton = () => {
+const ManageProjects = () => {
     const navigate = useNavigate();
 
-    const addProject = () => {
-        navigate(paths.project.new({}));
+    const navigateToProjectsList = () => {
+        navigate(paths.project.index({}));
     };
 
     return (
         <ActionButton
             isQuiet
             width={'100%'}
-            marginStart={'size-100'}
-            marginEnd={'size-350'}
-            UNSAFE_className={classes.addProjectButton}
-            onPress={addProject}
+            UNSAFE_className={classes.manageProjectsButton}
+            onPress={navigateToProjectsList}
         >
-            <AddCircle />
-            <Text marginX='size-50'>Create project</Text>
+            <Edit />
+            <Text>Manage projects</Text>
         </ActionButton>
     );
 };
 
 export const ProjectsListPanel = () => {
+    const navigate = useNavigate();
     const projectId = useProjectIdentifier();
     const { data } = useProjects();
 
-    const selectedProject = data.find((project) => project.id === projectId);
+    const [[selectedProject], otherProjects] = partition(data, (project) => project.id === projectId);
     const selectedProjectName = selectedProject?.name ?? '';
     const hasActivePipeline = Boolean(selectedProject?.active_pipeline);
+
+    const otherProjectNames = otherProjects.map(({ name }) => name);
+
+    const handleDeleted = () => {
+        navigate(paths.project.index({}));
+    };
 
     return (
         <DialogTrigger type='popover' hideArrow>
             <SelectedProjectButton name={selectedProjectName} id={projectId} isActive={hasActivePipeline} />
 
             <Dialog width={'size-4600'} UNSAFE_className={classes.dialog}>
-                <Header>
-                    <Flex
-                        direction={'column'}
-                        justifyContent={'center'}
-                        width={'100%'}
-                        alignItems={'center'}
-                        UNSAFE_style={{
-                            padding: 'var(--spectrum-global-dimension-size-200)',
-                        }}
-                    >
-                        <PhotoPlaceholder
-                            name={selectedProjectName}
-                            indicator={selectedProject?.id ?? selectedProjectName}
-                            height={'size-1000'}
-                            width={'size-1000'}
-                        />
-                        <Heading UNSAFE_style={{ textAlign: 'center' }} level={2} marginBottom={0}>
-                            {selectedProjectName}
-                        </Heading>
-                        {hasActivePipeline ? <Tag text={'Active'} /> : null}
-                    </Flex>
-                </Header>
+                {selectedProject !== undefined && (
+                    <Header>
+                        <Flex
+                            direction={'column'}
+                            justifyContent={'center'}
+                            width={'100%'}
+                            alignItems={'center'}
+                            UNSAFE_style={{
+                                padding: 'var(--spectrum-global-dimension-size-200)',
+                            }}
+                            gap={'size-100'}
+                        >
+                            <ProjectThumbnail
+                                // when selected project changes, we want to reset the project thumbnail
+                                key={selectedProject.id}
+                                project={selectedProject}
+                                height={'size-1000'}
+                                width={'size-1000'}
+                            />
+                            <View width={'100%'} position={'relative'}>
+                                <Heading UNSAFE_style={{ textAlign: 'center' }} level={2} marginBottom={0}>
+                                    {selectedProjectName}
+                                </Heading>
+                                <MenuActions
+                                    projectId={selectedProject.id}
+                                    projectName={selectedProject.name}
+                                    isPipelineRunning={selectedProject.active_pipeline}
+                                    projectNames={otherProjectNames}
+                                    onDeleted={handleDeleted}
+                                    actionButtonStyle={{
+                                        position: 'absolute',
+                                        top: '50%',
+                                        right: dimensionValue('size-100'),
+                                        transform: 'translateY(-50%)',
+                                    }}
+                                />
+                            </View>
+                            {hasActivePipeline ? <Tag text={'Active'} /> : null}
+                        </Flex>
+                    </Header>
+                )}
 
-                <Divider size={'S'} marginY={'size-200'} />
+                {otherProjects.length > 0 && (
+                    <>
+                        <Divider size={'S'} marginBottom={'size-100'} marginTop={0} />
 
-                <Content>
-                    <ProjectsList projects={data} />
-                </Content>
+                        <Content>
+                            <ProjectsList projects={otherProjects} />
+                        </Content>
+                    </>
+                )}
 
-                <Divider size={'S'} marginY={'size-200'} />
-
-                <ButtonGroup UNSAFE_className={classes.panelButtons}>
-                    <AddProjectButton />
+                <ButtonGroup UNSAFE_className={classes.buttonsGroup}>
+                    <ManageProjects />
                 </ButtonGroup>
             </Dialog>
         </DialogTrigger>

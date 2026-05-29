@@ -25,6 +25,7 @@ interface VirtualizerGridLayoutProps<T extends GridItem>
     scrollToIndex?: number;
     selectionMode: 'single' | 'multiple' | 'none';
     layoutOptions: GridLayoutOptions;
+    isPending?: boolean;
     isLoadingMore: boolean;
     onLoadMore: () => void;
     contentItem: (item: T) => ReactNode;
@@ -37,6 +38,7 @@ export const VirtualizerGridLayout = <T extends GridItem>({
     items,
     ariaLabel,
     selectedKeys,
+    isPending = false,
     isLoadingMore,
     selectionMode,
     layoutOptions,
@@ -48,7 +50,11 @@ export const VirtualizerGridLayout = <T extends GridItem>({
 }: VirtualizerGridLayoutProps<T>) => {
     const ref = useRef<HTMLDivElement | null>(null);
 
-    useLoadMore({ isLoading: isLoadingMore, onLoadMore }, ref);
+    // Treat `isPending` as "loading" for the purposes of auto-pagination, so we
+    // don't kick off a next-page fetch while the initial load is still in
+    // flight. Without this guard the gallery shows the full overlay AND the
+    // inline tile loader at the same time on first render.
+    useLoadMore({ isLoading: isLoadingMore || isPending, onLoadMore }, ref);
 
     useGetTargetPosition({
         ref,
@@ -86,13 +92,14 @@ export const VirtualizerGridLayout = <T extends GridItem>({
                             </ListBoxItem>
                         );
                     })}
-                    {isLoadingMore && (
+                    {isLoadingMore && !isPending && (
                         <ListBoxItem id={'loader'} textValue={'loading'}>
                             <Loading mode='overlay' />
                         </ListBoxItem>
                     )}
                 </AriaComponentsListBox>
             </Virtualizer>
+            {isPending && <Loading mode='overlay' />}
         </View>
     );
 };

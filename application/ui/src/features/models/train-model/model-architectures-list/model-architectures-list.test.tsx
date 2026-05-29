@@ -19,7 +19,6 @@ const mockModelArchitectures = [
 
 vi.mock('../train-model-provider.component', () => ({
     useTrainModelState: () => ({
-        activeModelArchitectureId: undefined,
         modelArchitectures: mockModelArchitectures,
         selectedModelArchitectureId: null,
         onSelectModelArchitectureId: mockOnSelectModelArchitectureId,

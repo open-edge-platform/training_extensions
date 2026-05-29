@@ -8,7 +8,6 @@ import { MoreMenu } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Model } from '../../../../../constants/shared-types';
-import { usePatchPipeline } from '../../../../../hooks/api/pipeline.hook';
 import { useDeleteModel } from '../../../hooks/api/use-delete-model.hook';
 import { useRenameModel } from '../../../hooks/api/use-rename-model.hook';
 import { TrainingLogsDialog } from '../../../training-logs/training-logs-dialog.component';
@@ -16,7 +15,6 @@ import { hasDeletedWeights, isFailedModel, isTrainingModel } from '../../utils/u
 import { RenameModelDialog } from '../model-row/rename-model-dialog.component';
 
 const MODEL_ACTIONS = {
-    ACTIVATE: 'activate',
     RENAME: 'rename',
     DELETE_MODEL: 'delete_model',
     DELETE_WEIGHTS: 'delete_weights',
@@ -37,25 +35,18 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
     const projectId = useProjectIdentifier();
     const deleteModelMutation = useDeleteModel();
     const renameModelMutation = useRenameModel();
-    const patchPipelineMutation = usePatchPipeline();
 
     const [isDialogOpen, setIsDialogOpen] = useState<DIALOG_TYPES | null>(null);
 
-    const disableRenameAndActive = isFailedModel(model) || isTrainingModel(model);
+    const disableRename = isFailedModel(model) || isTrainingModel(model);
     const disabledKeys = [];
 
-    if (disableRenameAndActive) disabledKeys.push(MODEL_ACTIONS.ACTIVATE, MODEL_ACTIONS.RENAME);
+    if (disableRename) disabledKeys.push(MODEL_ACTIONS.RENAME);
     if (isTrainingModel(model)) disabledKeys.push(MODEL_ACTIONS.VIEW_LOGS);
-    if (hasDeletedWeights(model))
-        disabledKeys.push(MODEL_ACTIONS.DELETE_WEIGHTS, MODEL_ACTIONS.VIEW_LOGS, MODEL_ACTIONS.ACTIVATE);
+    if (hasDeletedWeights(model)) disabledKeys.push(MODEL_ACTIONS.DELETE_WEIGHTS, MODEL_ACTIONS.VIEW_LOGS);
 
     const handleAction = (key: Key) => {
-        if (key === MODEL_ACTIONS.ACTIVATE) {
-            patchPipelineMutation.mutate({
-                params: { path: { project_id: projectId } },
-                body: { model_id: model.id },
-            });
-        } else if (key === MODEL_ACTIONS.DELETE_MODEL) {
+        if (key === MODEL_ACTIONS.DELETE_MODEL) {
             setIsDialogOpen(DIALOG_TYPES.DELETE_MODEL);
         } else if (key === MODEL_ACTIONS.DELETE_WEIGHTS) {
             setIsDialogOpen(DIALOG_TYPES.DELETE_WEIGHTS);
@@ -94,7 +85,7 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
         );
     };
 
-    const modelName = model.name ?? 'Unnamed Model';
+    const modelName = model.name;
 
     return (
         <>
@@ -103,7 +94,6 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
                     <MoreMenu />
                 </ActionButton>
                 <Menu onAction={handleAction} aria-label={'Model actions menu'} disabledKeys={disabledKeys}>
-                    <Item key={MODEL_ACTIONS.ACTIVATE}>Set as active</Item>
                     <Item key={MODEL_ACTIONS.RENAME}>Rename</Item>
                     <Item key={MODEL_ACTIONS.DELETE_WEIGHTS}>Delete weights</Item>
                     <Item key={MODEL_ACTIONS.DELETE_MODEL}>Delete model</Item>
@@ -114,7 +104,7 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
             <DialogContainer onDismiss={() => setIsDialogOpen(null)}>
                 {isDialogOpen === DIALOG_TYPES.RENAME && (
                     <RenameModelDialog
-                        currentName={model.name ?? ''}
+                        currentName={model.name}
                         onRename={handleRename}
                         isPending={renameModelMutation.isPending}
                         onClose={() => setIsDialogOpen(null)}

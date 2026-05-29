@@ -262,6 +262,9 @@ class TestSourceUpdateServiceIntegration:
         assert exc_info.value.resource_type == ResourceType.SOURCE
         assert exc_info.value.resource_id == db_source.id
         assert db_session.query(SourceDB).count() == 1
+        # Verify the error message includes the project name and state
+        assert "Test Detection Project" in str(exc_info.value)
+        assert "running" in str(exc_info.value)
 
     def test_test_source_video_file_exists(self, fxt_source_update_service, tmp_path):
         """Test test_source with a valid video file path (file exists but may not be a valid video)."""
