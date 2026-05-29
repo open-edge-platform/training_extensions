@@ -46,9 +46,9 @@ export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingV
     ]);
 
     const labelledPercentages = [
-        { label: 'Training', percentage: trainingPercentage, color: 'var(--moss-tint-1)' },
-        { label: 'Validation', percentage: validationPercentage, color: 'var(--brand-daisy-tint)' },
-        { label: 'Test', percentage: testingPercentage, color: 'var(--geode-tint)' },
+        { label: 'Training', percentage: trainingPercentage, color: 'var(--training-subset)' },
+        { label: 'Validation', percentage: validationPercentage, color: 'var(--validation-subset)' },
+        { label: 'Test', percentage: testingPercentage, color: 'var(--test-subset)' },
     ];
 
     return (
