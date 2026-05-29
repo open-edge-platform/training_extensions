@@ -201,7 +201,7 @@ def overlay_predictions(image_bgr: np.ndarray, result) -> np.ndarray:
         rendered = visualizer.render(image=image_pil, result=result)
         return cv2.cvtColor(np.array(rendered), cv2.COLOR_RGB2BGR)
     except Exception as exc:
-        print(f"Visualization failed ({exc!r}), printing raw result instead:")
+        print(f"Visualization failed ({{exc}}), printing raw result instead:")
         print(result)
         return image_bgr
 
@@ -273,7 +273,7 @@ def overlay_predictions(image_bgr: np.ndarray, result) -> np.ndarray:
         rendered = visualizer.render(image=image_pil, result=result)
         return cv2.cvtColor(np.array(rendered), cv2.COLOR_RGB2BGR)
     except Exception as exc:
-        print(f"Visualization failed ({exc!r}), printing raw result instead:")
+        print(f"Visualization failed ({{exc}}), printing raw result instead:")
         print(result)
         return image_bgr
 
