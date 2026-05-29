@@ -15,7 +15,6 @@ import {
     Heading,
     Radio,
     RadioGroup,
-    Link as SpectrumLink,
     View,
 } from '@geti/ui';
 import { LinkOut } from '@geti/ui/icons';
@@ -23,6 +22,7 @@ import { OverlayTriggerState } from '@react-stately/overlays';
 import { useProject } from 'hooks/api/project.hook';
 
 import { useExportDatasetJobAction } from '../../hooks/use-export-dataset-job-action.hook';
+import { Link } from '../../platform/components/link.component';
 import { MultiSelectList } from '../multi-select-list/multi-select-list.component';
 import { getFormatOptions } from '../util';
 
@@ -96,12 +96,10 @@ export const ExportDatasetConfig = ({
 
                             {/* TODO: pending link url
                             https://github.com/open-edge-platform/training_extensions/issues/5512 */}
-                            <SpectrumLink UNSAFE_className={classes.link}>
-                                <a href={'/'} target={'_blank'} rel={'noopener noreferrer'}>
-                                    Learn more about export formats
-                                    <LinkOut size='XS' />
-                                </a>
-                            </SpectrumLink>
+                            <Link href='/' target='_blank' UNSAFE_className={classes.link}>
+                                Learn more about export formats
+                                <LinkOut size='XS' />
+                            </Link>
                         </View>
                     </Content>
 

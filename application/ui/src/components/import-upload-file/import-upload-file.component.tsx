@@ -1,22 +1,12 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Button,
-    Content,
-    DropZone,
-    FileTrigger,
-    Flex,
-    Heading,
-    IllustratedMessage,
-    Link as SpectrumLink,
-    Text,
-    toast,
-} from '@geti/ui';
+import { Button, Content, DropZone, FileTrigger, Flex, Heading, IllustratedMessage, Text, toast } from '@geti/ui';
 import { LinkOut } from '@geti/ui/icons';
 
 import { $api } from '../../api/client';
 import { ReactComponent as EmptyDataset } from '../../assets/drop-files.svg';
+import { Link } from '../../platform/components/link.component';
 import { getFilesFromDropEvent } from '../../shared/drop-zone.utils';
 import { formatToFileArray, isSupportedDatasetZip } from './util';
 
@@ -110,12 +100,10 @@ export const ImportUploadFile = ({ formatOptions, onFileUploaded }: ImportUpload
 
                             <Text UNSAFE_className={classes.formatOptions}>({formatOptions}).zip</Text>
 
-                            <SpectrumLink UNSAFE_className={classes.link}>
-                                <a href={'/'} target={'_blank'} rel={'noopener noreferrer'}>
-                                    Learn more about the different formats
-                                    <LinkOut size='XS' />
-                                </a>
-                            </SpectrumLink>
+                            <Link href='/' target='_blank' UNSAFE_className={classes.link}>
+                                Learn more about the different formats
+                                <LinkOut size='XS' />
+                            </Link>
                         </Flex>
                     )}
                 </Content>
