@@ -3,6 +3,7 @@
 
 import {
     ActionButton,
+    Badge,
     ButtonGroup,
     Content,
     Dialog,
@@ -19,7 +20,7 @@ import {
 import { Edit } from '@geti/ui/icons';
 import { useProjects } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { partition } from 'lodash-es';
+import { capitalize, partition } from 'lodash-es';
 import { useNavigate } from 'react-router';
 
 import { paths } from '../../constants/paths';
@@ -94,6 +95,8 @@ export const ProjectsListPanel = () => {
 
     const otherProjectNames = otherProjects.map(({ name }) => name);
 
+    const taskType = capitalize(selectedProject?.task.task_type);
+
     const handleDeleted = () => {
         navigate(paths.project.index({}));
     };
@@ -123,9 +126,16 @@ export const ProjectsListPanel = () => {
                                 width={'size-1000'}
                             />
                             <View width={'100%'} position={'relative'}>
-                                <Heading UNSAFE_style={{ textAlign: 'center' }} level={2} marginBottom={0}>
-                                    {selectedProjectName}
-                                </Heading>
+                                <Flex direction={'column'} alignItems={'center'} gap={'size-50'}>
+                                    <Heading UNSAFE_style={{ textAlign: 'center' }} level={2} marginBottom={0}>
+                                        {selectedProjectName}
+                                    </Heading>
+
+                                    <Badge variant={'neutral'} UNSAFE_className={classes.tag}>
+                                        <Text>{taskType}</Text>
+                                    </Badge>
+                                </Flex>
+
                                 <MenuActions
                                     projectId={selectedProject.id}
                                     projectName={selectedProject.name}
