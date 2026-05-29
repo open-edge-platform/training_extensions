@@ -62,8 +62,12 @@ class UltralyticsInstSegModel(UltralyticsModel):
         performs NMS during post-processing.
         """
         label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
-        conf = self._export_args.get("confidence_threshold", self.extra_overrides.get("conf", 0.25))
-        iou = self._export_args.get("iou_threshold", self.extra_overrides.get("iou", 0.5))
+        conf = self._export_args.get("confidence_threshold")
+        if conf is None:
+            conf = self.extra_overrides.get("conf", 0.25)
+        iou = self._export_args.get("iou_threshold")
+        if iou is None:
+            iou = self.extra_overrides.get("iou", 0.5)
         return TaskLevelExportParameters(
             model_type="YOLO11-seg",
             model_name=self.model_name,
@@ -82,8 +86,8 @@ class UltralyticsInstSegModel(UltralyticsModel):
         "metrics/mAP50-95(M)": "val/mask_map",
         "metrics/precision(B)": "val/precision",
         "metrics/recall(B)": "val/recall",
-        "train/box_loss": "train/box_loss",
-        "train/cls_loss": "train/cls_loss",
-        "train/dfl_loss": "train/dfl_loss",
-        "train/seg_loss": "train/seg_loss",
+        "train/box_loss": "train/loss_bbox",
+        "train/cls_loss": "train/loss_cls",
+        "train/dfl_loss": "train/loss_dfl",
+        "train/seg_loss": "train/loss_mask",
     }

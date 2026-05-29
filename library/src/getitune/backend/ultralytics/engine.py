@@ -5,8 +5,10 @@
 
 from __future__ import annotations
 
+import csv
 import logging
 import os
+import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Sequence
 
@@ -182,6 +184,7 @@ class UltralyticsEngine(Engine):
 
         results = yolo.train(**train_args)
         self._record_last_train_checkpoint(self._resolve_trainer_checkpoint(yolo))
+        self._remap_results_csv()
         return self._translate_metrics(results)
 
     def test(self, checkpoint: PathLike | None = None, metric: object | None = None, **kwargs) -> METRICS:
@@ -349,13 +352,13 @@ class UltralyticsEngine(Engine):
 
         Resolution order:
         1. Recorded checkpoint from the most recent ``train()`` call.
-        2. ``best.pt`` from the default training run directory.
+        2. Canonical ``best_checkpoint.pt`` in the work directory.
         3. ``None`` if no checkpoint is available.
         """
         if self._last_train_checkpoint is not None and self._last_train_checkpoint.exists():
             return self._last_train_checkpoint
-        default_best = self._work_dir / "train" / "weights" / "best.pt"
-        return default_best if default_best.exists() else None
+        canonical = self._work_dir / "best_checkpoint.pt"
+        return canonical if canonical.exists() else None
 
     @property
     def datamodule(self) -> DATA:
@@ -624,7 +627,11 @@ class UltralyticsEngine(Engine):
         return None
 
     def _record_last_train_checkpoint(self, checkpoint: Path | None) -> None:
-        """Persist the latest training checkpoint for later export resolution."""
+        """Persist the latest training checkpoint at a canonical location.
+
+        Creates a copy at ``<work_dir>/best_checkpoint.pt`` to provide a
+        backend-agnostic checkpoint path (matching Lightning's convention).
+        """
         checkpoint_file = self._work_dir / self._LAST_TRAIN_CHECKPOINT_FILE
         if checkpoint is None:
             self._last_train_checkpoint = None
@@ -632,9 +639,44 @@ class UltralyticsEngine(Engine):
                 checkpoint_file.unlink()
             return
 
-        resolved_checkpoint = checkpoint.resolve()
-        self._last_train_checkpoint = resolved_checkpoint
-        checkpoint_file.write_text(str(resolved_checkpoint), encoding="utf-8")
+        # Copy to a canonical path so the public API never exposes
+        # Ultralytics-internal directory structure (train/weights/best.pt).
+        canonical_path = self._work_dir / "best_checkpoint.pt"
+        shutil.copyfile(checkpoint, canonical_path)
+
+        self._last_train_checkpoint = canonical_path.resolve()
+        checkpoint_file.write_text(str(self._last_train_checkpoint), encoding="utf-8")
+
+    def _remap_results_csv(self) -> None:
+        """Rename columns in the Ultralytics ``results.csv`` to standard metric names.
+
+        Ultralytics writes its native metric names (e.g. ``train/box_loss``,
+        ``metrics/mAP50(B)``) as CSV column headers.  This method renames them
+        in-place using the model's ``metric_keys`` mapping so that downstream
+        consumers (like the application backend) receive backend-agnostic names.
+        """
+        results_csv = self._work_dir / "train" / "results.csv"
+        if not results_csv.exists():
+            return
+
+        with results_csv.open(encoding="utf-8") as f:
+            reader = csv.reader(f)
+            rows = list(reader)
+
+        if not rows:
+            return
+
+        # Remap header row using the model's metric_keys.
+        header = rows[0]
+        mapping = self._model.metric_keys
+        new_header = [mapping.get(col.strip(), col.strip()) for col in header]
+        rows[0] = new_header
+
+        with results_csv.open("w", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerows(rows)
+
+        logger.info(f"Remapped results.csv columns to standard metric names: {results_csv}")
 
     @staticmethod
     def _create_datamodule(data_root: Path, model: UltralyticsModel) -> DataModule:

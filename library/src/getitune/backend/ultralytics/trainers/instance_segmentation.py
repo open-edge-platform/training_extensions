@@ -9,7 +9,7 @@ from copy import copy
 from typing import Any
 
 import torch
-import torch.nn.functional as F
+import torch.nn.functional as f
 from ultralytics.models.yolo.segment import SegmentationTrainer as _UltralyticsSegmentationTrainer
 from ultralytics.models.yolo.segment import SegmentationValidator as _UltralyticsSegmentationValidator
 
@@ -64,7 +64,7 @@ class SegmentationTrainer(GetiTuneDataBridgeMixin, XPUAwareTrainerMixin, _Ultral
 
             if mask_h != target_h or mask_w != target_w:
                 # Nearest-neighbor preserves integer index values.
-                masks = F.interpolate(
+                masks = f.interpolate(
                     masks.unsqueeze(1).float(),
                     size=(target_h, target_w),
                     mode="nearest",
@@ -73,7 +73,7 @@ class SegmentationTrainer(GetiTuneDataBridgeMixin, XPUAwareTrainerMixin, _Ultral
 
                 # Downsample semantic masks to the same spatial resolution.
                 if "sem_masks" in batch:
-                    batch["sem_masks"] = F.interpolate(
+                    batch["sem_masks"] = f.interpolate(
                         batch["sem_masks"].unsqueeze(1).float(),
                         size=(target_h, target_w),
                         mode="nearest",

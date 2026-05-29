@@ -60,7 +60,10 @@ def collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
 
             n_inst = masks.shape[0]
             if n_inst == 0:
-                h, w = masks.shape[1], masks.shape[2] if masks.ndim == 3 else (1, 1)
+                if masks.ndim == 3:
+                    h, w = masks.shape[1], masks.shape[2]
+                else:
+                    h, w = 1, 1
                 overlap_maps.append(torch.zeros((h, w), dtype=torch.uint8))
                 sem_maps.append(torch.zeros((h, w), dtype=torch.float32))
                 continue

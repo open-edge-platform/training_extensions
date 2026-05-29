@@ -81,23 +81,12 @@ KEY_MAPPING = {
     "val/mar_small": MetricDisplayInfo(display_name="Validation mAR small", frequency="epoch"),
     "validation/data_time": MetricDisplayInfo(display_name="Validation data time", frequency="epoch"),
     "validation/iter_time": MetricDisplayInfo(display_name="Validation iteration time", frequency="epoch"),
-    # Ultralytics epoch-based training losses
-    "train/box_loss": MetricDisplayInfo(display_name="Training box loss", frequency="epoch"),
-    "train/cls_loss": MetricDisplayInfo(display_name="Training cls loss", frequency="epoch"),
-    "train/dfl_loss": MetricDisplayInfo(display_name="Training dfl loss", frequency="epoch"),
-    "train/seg_loss": MetricDisplayInfo(display_name="Training seg loss", frequency="epoch"),
-    # Ultralytics epoch-based validation metrics (detection / bounding box)
-    "metrics/precision(B)": MetricDisplayInfo(display_name="Validation precision", frequency="epoch"),
-    "metrics/recall(B)": MetricDisplayInfo(display_name="Validation recall", frequency="epoch"),
-    "metrics/mAP50(B)": MetricDisplayInfo(display_name="Validation mAP@50", frequency="epoch"),
-    "metrics/mAP50-95(B)": MetricDisplayInfo(display_name="Validation mAP", frequency="epoch"),
-    # Ultralytics epoch-based validation metrics (instance segmentation / mask)
-    "metrics/precision(M)": MetricDisplayInfo(display_name="Validation mask precision", frequency="epoch"),
-    "metrics/recall(M)": MetricDisplayInfo(display_name="Validation mask recall", frequency="epoch"),
-    "metrics/mAP50(M)": MetricDisplayInfo(display_name="Validation mask mAP@50", frequency="epoch"),
-    "metrics/mAP50-95(M)": MetricDisplayInfo(display_name="Validation mask mAP", frequency="epoch"),
-    # Ultralytics learning rate (main parameter group only)
-    "lr/pg0": MetricDisplayInfo(display_name="Learning rate", frequency="epoch"),
+    # Additional standard training losses
+    "train/loss_dfl": MetricDisplayInfo(display_name="Training loss DFL", frequency="epoch"),
+    "val/precision": MetricDisplayInfo(display_name="Validation precision", frequency="epoch"),
+    "val/recall": MetricDisplayInfo(display_name="Validation recall", frequency="epoch"),
+    "val/mask_map_50": MetricDisplayInfo(display_name="Validation mask mAP@50", frequency="epoch"),
+    "val/mask_map": MetricDisplayInfo(display_name="Validation mask mAP", frequency="epoch"),
 }
 
 

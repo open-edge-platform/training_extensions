@@ -58,7 +58,8 @@ class UltralyticsDetectionModel(UltralyticsModel):
         "metrics/mAP50-95(B)": "val/map",
         "metrics/precision(B)": "val/precision",
         "metrics/recall(B)": "val/recall",
-        "train/box_loss": "train/box_loss",
-        "train/cls_loss": "train/cls_loss",
-        "train/dfl_loss": "train/dfl_loss",
+        "train/box_loss": "train/loss_bbox",
+        "train/cls_loss": "train/loss_cls",
+        "train/dfl_loss": "train/loss_dfl",
+        "lr/pg0": "lr",
     }

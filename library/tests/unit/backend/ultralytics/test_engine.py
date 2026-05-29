@@ -175,7 +175,7 @@ class TestExportCheckpointResolution:
         mock_load.assert_called_once_with(best_pt)
 
     def test_prefers_recorded_train_checkpoint(self, mocker, tmp_path) -> None:
-        """Recorded checkpoints from train() should win over hardcoded train/best.pt."""
+        """Recorded checkpoints from train() should win over hardcoded fallback."""
         engine, _ = _make_engine(tmp_path, mocker)
 
         recorded_ckpt = tmp_path / "custom_run" / "weights" / "best.pt"
@@ -183,9 +183,9 @@ class TestExportCheckpointResolution:
         recorded_ckpt.touch()
         engine._record_last_train_checkpoint(recorded_ckpt)
 
-        fallback_best = tmp_path / "train" / "weights" / "best.pt"
-        fallback_best.parent.mkdir(parents=True)
-        fallback_best.touch()
+        # The canonical copy should be at best_checkpoint.pt
+        canonical = tmp_path / "best_checkpoint.pt"
+        assert canonical.exists()
 
         with (
             patch.object(engine._model, "load_checkpoint") as mock_load,
@@ -193,7 +193,7 @@ class TestExportCheckpointResolution:
         ):
             engine.export()
 
-        mock_load.assert_called_once_with(recorded_ckpt.resolve())
+        mock_load.assert_called_once_with(canonical.resolve())
 
     def test_no_checkpoint_no_best_pt_does_not_load(self, mocker, tmp_path) -> None:
         """Without checkpoint or best.pt, load_checkpoint should not be called."""
@@ -269,7 +269,7 @@ class TestExport:
         mock_export.assert_called_once()
 
     def test_train_records_actual_trainer_checkpoint(self, mocker, tmp_path) -> None:
-        """train() should persist the checkpoint chosen by the underlying trainer."""
+        """train() should persist the checkpoint at a canonical location."""
         engine, yolo = _make_engine(tmp_path, mocker)
 
         best_ckpt = tmp_path / "custom_train" / "weights" / "best.pt"
@@ -282,9 +282,10 @@ class TestExport:
 
         result = engine.train(name="custom_train")
 
+        canonical = tmp_path / "best_checkpoint.pt"
         assert result == {"ultralytics/fitness": 0.1}
-        assert engine._last_train_checkpoint == best_ckpt.resolve()
-        assert (tmp_path / ".last_train_checkpoint").read_text(encoding="utf-8").strip() == str(best_ckpt.resolve())
+        assert engine._last_train_checkpoint == canonical.resolve()
+        assert (tmp_path / ".last_train_checkpoint").read_text(encoding="utf-8").strip() == str(canonical.resolve())
 
     def test_test_with_datamodule_loads_explicit_checkpoint(self, mocker, tmp_path) -> None:
         """test(checkpoint=...) should validate the requested checkpoint."""
@@ -377,7 +378,7 @@ class TestExtractProgressCallback:
 
     def test_extracts_progress_from_callback(self) -> None:
         """Should extract fn, min_p, max_p from a callback with matching attrs."""
-        cb = SimpleNamespace(_on_progress_update=lambda p: None, _min_p=10.0, _max_p=80.0)
+        cb = SimpleNamespace(_on_progress_update=lambda _p: None, _min_p=10.0, _max_p=80.0)
         fn, min_p, max_p = UltralyticsEngine._extract_progress_callback([cb])
         assert fn is cb._on_progress_update
         assert min_p == 10.0
@@ -474,13 +475,17 @@ class TestTorchmetricsEval:
         batch = SampleBatch(
             images=torch.rand(1, 3, 64, 64),
             bboxes=[
-                tv_tensors.BoundingBoxes(torch.tensor([[10.0, 20.0, 30.0, 40.0]]), format="XYXY", canvas_size=(64, 64))
+                tv_tensors.BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
+                    torch.tensor([[10.0, 20.0, 30.0, 40.0]]), format="XYXY", canvas_size=(64, 64)
+                )
             ],
             labels=[torch.tensor([0])],
-            imgs_info=[ImageInfo(img_idx=0, img_shape=(64, 64), ori_shape=(64, 64))],
+            imgs_info=[
+                ImageInfo(img_idx=0, img_shape=(64, 64), ori_shape=(64, 64))  # pyrefly: ignore[no-matching-overload]
+            ],
         )
-        engine._datamodule.test_dataloader = MagicMock(return_value=[batch])
-        engine._datamodule.label_info = _label_info()
+        engine._datamodule.test_dataloader = MagicMock(return_value=[batch])  # pyrefly: ignore[missing-attribute]
+        engine._datamodule.label_info = _label_info()  # pyrefly: ignore[missing-attribute]
 
         mock_metric = MagicMock()
         mock_metric.to = MagicMock(return_value=mock_metric)
@@ -692,14 +697,18 @@ class TestInstSegTorchmetrics:
         batch = SampleBatch(
             images=torch.rand(1, 3, 64, 64),
             bboxes=[
-                tv_tensors.BoundingBoxes(torch.tensor([[10.0, 10.0, 30.0, 30.0]]), format="XYXY", canvas_size=(64, 64))
+                tv_tensors.BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
+                    torch.tensor([[10.0, 10.0, 30.0, 30.0]]), format="XYXY", canvas_size=(64, 64)
+                )
             ],
             labels=[torch.tensor([0])],
             masks=[tv_tensors.Mask(target_mask)],
-            imgs_info=[ImageInfo(img_idx=0, img_shape=(64, 64), ori_shape=(64, 64))],
+            imgs_info=[
+                ImageInfo(img_idx=0, img_shape=(64, 64), ori_shape=(64, 64))  # pyrefly: ignore[no-matching-overload]
+            ],
         )
-        engine._datamodule.test_dataloader = MagicMock(return_value=[batch])
-        engine._datamodule.label_info = _label_info()
+        engine._datamodule.test_dataloader = MagicMock(return_value=[batch])  # pyrefly: ignore[missing-attribute]
+        engine._datamodule.label_info = _label_info()  # pyrefly: ignore[missing-attribute]
 
         mock_metric = MagicMock()
         mock_metric.to = MagicMock(return_value=mock_metric)
@@ -751,14 +760,18 @@ class TestInstSegTorchmetrics:
         batch = SampleBatch(
             images=torch.rand(1, 3, 64, 64),
             bboxes=[
-                tv_tensors.BoundingBoxes(torch.tensor([[10.0, 20.0, 30.0, 40.0]]), format="XYXY", canvas_size=(64, 64))
+                tv_tensors.BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
+                    torch.tensor([[10.0, 20.0, 30.0, 40.0]]), format="XYXY", canvas_size=(64, 64)
+                )
             ],
             labels=[torch.tensor([0])],
             masks=None,
-            imgs_info=[ImageInfo(img_idx=0, img_shape=(64, 64), ori_shape=(64, 64))],
+            imgs_info=[
+                ImageInfo(img_idx=0, img_shape=(64, 64), ori_shape=(64, 64))  # pyrefly: ignore[no-matching-overload]
+            ],
         )
-        engine._datamodule.test_dataloader = MagicMock(return_value=[batch])
-        engine._datamodule.label_info = _label_info()
+        engine._datamodule.test_dataloader = MagicMock(return_value=[batch])  # pyrefly: ignore[missing-attribute]
+        engine._datamodule.label_info = _label_info()  # pyrefly: ignore[missing-attribute]
 
         mock_metric = MagicMock()
         mock_metric.to = MagicMock(return_value=mock_metric)

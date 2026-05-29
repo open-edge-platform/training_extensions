@@ -281,7 +281,9 @@ class UltralyticsModel:
         Subclasses override to set model_type, task_type, and thresholds.
         """
         label_info = self.label_info or LabelInfo(label_names=[], label_ids=[], label_groups=[])
-        iou = self._export_args.get("iou_threshold", self.extra_overrides.get("iou", 0.5))
+        iou = self._export_args.get("iou_threshold")
+        if iou is None:
+            iou = self.extra_overrides.get("iou", 0.5)
         conf = self._export_args.get("confidence_threshold")
         return TaskLevelExportParameters(
             model_type="YOLO11",
