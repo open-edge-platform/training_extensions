@@ -3,17 +3,7 @@
 
 import { Dispatch, SetStateAction, useMemo } from 'react';
 
-import {
-    Button,
-    ButtonGroup,
-    Checkbox,
-    dimensionValue,
-    Divider,
-    Flex,
-    Heading,
-    MediaViewModes,
-    ViewModes,
-} from '@geti/ui';
+import { Button, ButtonGroup, Checkbox, dimensionValue, Divider, Flex, MediaViewModes, ViewModes } from '@geti/ui';
 import { isString } from 'lodash-es';
 
 import type { Media } from '../../../../constants/shared-types';

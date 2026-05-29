@@ -1,17 +1,17 @@
 @use '../../shared/styles/line-clamp' as lineClamp;
 
-.panelButtons {
-    margin-top: var(--spectrum-global-dimension-size-100);
+.buttonsGroup {
     border-top: var(--spectrum-alias-border-size-thick) solid var(--spectrum-global-color-gray-300);
-    padding: var(--spectrum-global-dimension-size-125);
+    padding: 0;
 }
 
-.addProjectButton {
+.manageProjectsButton {
     color: var(--spectrum-global-color-gray-900);
+    padding: var(--spectrum-global-dimension-size-275) var(--spectrum-global-dimension-size-350);
 
     & span[class*='spectrum-ActionButton-label'] {
         text-align: start;
-        margin-left: var(--spectrum-global-dimension-size-100) !important;
+        margin-left: var(--spectrum-global-dimension-size-150) !important;
     }
 }
 

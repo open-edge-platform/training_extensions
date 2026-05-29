@@ -22,8 +22,9 @@ const Header = () => {
         <View backgroundColor={'gray-200'} gridArea={'header'}>
             <Grid
                 height='100%'
-                gap={'size-200'}
-                marginX={'size-200'}
+                gap={'size-300'}
+                marginStart={'size-300'}
+                marginEnd={'size-200'}
                 columns={['auto', '2fr', 'fit-content(var(--spectrum-global-dimension-size-3000))']}
                 rows={'1fr'}
                 alignItems={'center'}
