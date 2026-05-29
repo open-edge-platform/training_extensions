@@ -197,11 +197,11 @@ def overlay_predictions(image_bgr: np.ndarray, result) -> np.ndarray:
         from model_api.visualizer import Visualizer
 
         visualizer = Visualizer()
-        rendered = visualizer.show(image=image_pil, result=result)
+        visualizer.show(image=image_pil, result=result)
+        rendered = visualizer.render(image=image_pil, result=result)
         return cv2.cvtColor(np.array(rendered), cv2.COLOR_RGB2BGR)
-    except Exception:
-        # Fallback: print the result and return the original image untouched.
-        print("Visualization not available, printing raw result instead:")
+    except Exception as exc:
+        print(f"Visualization failed ({exc!r}), printing raw result instead:")
         print(result)
         return image_bgr
 
@@ -269,10 +269,11 @@ def overlay_predictions(image_bgr: np.ndarray, result) -> np.ndarray:
         from model_api.visualizer import Visualizer
 
         visualizer = Visualizer()
-        rendered = visualizer.show(image=image_pil, result=result)
+        visualizer.show(image=image_pil, result=result)
+        rendered = visualizer.render(image=image_pil, result=result)
         return cv2.cvtColor(np.array(rendered), cv2.COLOR_RGB2BGR)
-    except Exception:
-        print("Visualization not available, printing raw result instead:")
+    except Exception as exc:
+        print(f"Visualization failed ({exc!r}), printing raw result instead:")
         print(result)
         return image_bgr
 
@@ -312,6 +313,7 @@ if __name__ == "__main__":
 _PY_PROJECT = """\
 [project]
 name = "Geti-demo"
+version = "1.0.0"
 description = "A minimal demo showcasing how to run inference with a model exported from Geti using OpenVINO Model API."
 requires-python = ">=3.13,<3.14"
 
