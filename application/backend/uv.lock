@@ -44,7 +44,7 @@ conflicts = [[
 
 [manifest]
 overrides = [
-    { name = "idna", specifier = ">=3.7" },
+    { name = "idna", specifier = ">=3.15" },
     { name = "opencv-python-headless", specifier = "~=4.11" },
 ]
 excludes = ["opencv-python"]

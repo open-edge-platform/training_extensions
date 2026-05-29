@@ -93,7 +93,7 @@ override-dependencies = [
     # Bypass the unnecessarily strict version requirement of 'opencv-python-headless' set by 'roboflow'
     "opencv-python-headless~=4.11",
     # roboflow hard-pins idna==3.7; allow newer versions
-    "idna>=3.7",
+    "idna>=3.15",
 ]
 
 [tool.hatch.version]
