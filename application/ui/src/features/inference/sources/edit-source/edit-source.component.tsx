@@ -45,7 +45,7 @@ export const EditSource = <T extends SourceConfigPayload>({
 
     return (
         <Form validationBehavior={'native'} action={submitAction}>
-            <Flex gap={'size-100'} alignItems={'center'} marginTop={'0px'} justifyContent={'space-between'}>
+            <Flex gap={'size-100'} alignItems={'center'} marginTop={'0px'}>
                 <ActionButton isQuiet onPress={onBackToList}>
                     <Back />
                 </ActionButton>
