@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import typing
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import torch
 import torchvision.transforms.v2 as tvt_v2
@@ -18,6 +18,9 @@ from getitune.data.augmentation.kernels import (
     _resized_crop_image_info,
 )
 from getitune.data.entity.sample import BaseSample
+
+if TYPE_CHECKING:
+    from getitune.data.entity.sample import DetectionSample, InstanceSegmentationSample
 
 
 class _CachedSample:
@@ -44,17 +47,18 @@ class _CachedSample:
         self.masks = masks
 
 
-def _clone_for_cache(sample: BaseSample) -> _CachedSample:
+def _clone_for_cache(sample: DetectionSample | InstanceSegmentationSample) -> _CachedSample:
     """Create a lightweight cache entry with cloned tensor data.
 
     Cost: ~3ms for a 3x640x640 float32 image (memcpy only),
     vs. ~260ms for ``copy.deepcopy`` on a full BaseSample.
     """
     masks = getattr(sample, "masks", None)
+    label = cast("torch.Tensor", sample.label)
     return _CachedSample(
         image=sample.image.clone(),
         bboxes=sample.bboxes.clone(),
-        label=sample.label.clone(),
+        label=label.clone(),
         masks=masks.clone() if masks is not None else None,
     )
 
@@ -457,7 +461,7 @@ class CachedMosaic(tvt_v2.Transform):
 
     def _build_mosaic(
         self,
-        inputs: BaseSample,
+        inputs: DetectionSample | InstanceSegmentationSample,
         mix_results: list[_CachedSample],
         with_mask: bool,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor | None]:
@@ -511,10 +515,10 @@ class CachedMosaic(tvt_v2.Transform):
             if bboxes_i.numel() > 0:
                 bboxes_i = bboxes_i + bboxes_i.new_tensor([pad_w, pad_h, pad_w, pad_h])
             all_bboxes.append(bboxes_i)
-            all_labels.append(sample.label)
+            all_labels.append(cast("torch.Tensor", sample.label))
 
             if with_mask:
-                masks_i = sample.masks
+                masks_i = getattr(sample, "masks", None)
                 if masks_i is not None and len(masks_i) > 0:
                     s = min(target_h / orig_h, target_w / orig_w)
                     new_mh, new_mw = round(orig_h * s), round(orig_w * s)
@@ -652,11 +656,12 @@ class CachedMosaic(tvt_v2.Transform):
         src_x2 = min(x_end, in_w)
         src_y2 = min(y_end, in_h)
 
+        dst_x1 = src_x1 - x_start
+        dst_y1 = src_y1 - y_start
+        dst_x2 = dst_x1 + (src_x2 - src_x1)
+        dst_y2 = dst_y1 + (src_y2 - src_y1)
+
         if src_x2 > src_x1 and src_y2 > src_y1:
-            dst_x1 = src_x1 - x_start
-            dst_y1 = src_y1 - y_start
-            dst_x2 = dst_x1 + (src_x2 - src_x1)
-            dst_y2 = dst_y1 + (src_y2 - src_y1)
             crop[:, dst_y1:dst_y2, dst_x1:dst_x2] = image[:, src_y1:src_y2, src_x1:src_x2]
 
         # Resize crop to output size
