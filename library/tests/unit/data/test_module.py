@@ -13,6 +13,7 @@ from omegaconf import DictConfig, OmegaConf
 from torchvision.transforms.v2 import Normalize
 
 from getitune.config.data import (
+    IntensityConfig,
     SubsetConfig,
     TileConfig,
 )
@@ -36,6 +37,7 @@ class TestDataModule:
         train_subset.input_size = None
         train_subset.subset_name = "train"
         train_subset.transforms = []
+        train_subset.intensity = IntensityConfig()
         val_subset = MagicMock(spec=SubsetConfig)
         val_subset.sampler = DictConfig(
             {"class_path": "torch.utils.data.RandomSampler", "init_args": {"num_samples": 3}},
@@ -44,6 +46,7 @@ class TestDataModule:
         val_subset.batch_size = 3
         val_subset.input_size = None
         val_subset.subset_name = "val"
+        val_subset.intensity = IntensityConfig()
         test_subset = MagicMock(spec=SubsetConfig)
         test_subset.sampler = DictConfig(
             {"class_path": "torch.utils.data.RandomSampler", "init_args": {"num_samples": 3}},
@@ -52,6 +55,7 @@ class TestDataModule:
         test_subset.batch_size = 1
         test_subset.input_size = None
         test_subset.subset_name = "test"
+        test_subset.intensity = IntensityConfig()
         tile_config = MagicMock(spec=TileConfig)
         tile_config.enable_tiler = False
 
@@ -68,6 +72,10 @@ class TestDataModule:
     @pytest.fixture
     def mock_dm_dataset(self, mocker) -> MagicMock:
         return mocker.patch("getitune.data.module.import_dataset")
+
+    @pytest.fixture
+    def mock_detect_image_dtype(self, mocker) -> MagicMock:
+        return mocker.patch("getitune.data.module.detect_storage_dtype", return_value="uint8")
 
     @pytest.fixture
     def mock_dataset_factory(self, mocker) -> MagicMock:
@@ -88,6 +96,7 @@ class TestDataModule:
         self,
         mock_dm_dataset,
         mock_dataset_factory,
+        mock_detect_image_dtype,
         task,
         fxt_config,
     ) -> None:
@@ -118,6 +127,7 @@ class TestDataModule:
         self,
         mock_dm_dataset,
         mock_dataset_factory,
+        mock_detect_image_dtype,
         fxt_config,
     ) -> None:
         mock_subset = MagicMock()
@@ -158,14 +168,17 @@ class TestDataModule:
         cfg.train_subset.input_size = None
         cfg.train_subset.augmentations_cpu = []
         cfg.train_subset.augmentations_gpu = []
+        cfg.train_subset.intensity = {"storage_dtype": "uint8"}
         cfg.val_subset.subset_name = "val"
         cfg.val_subset.num_workers = 0
         cfg.val_subset.input_size = None
         cfg.val_subset.augmentations_cpu = []
+        cfg.val_subset.intensity = {"storage_dtype": "uint8"}
         cfg.test_subset.subset_name = "test"
         cfg.test_subset.num_workers = 0
         cfg.test_subset.input_size = None
         cfg.test_subset.augmentations_cpu = []
+        cfg.test_subset.intensity = {"storage_dtype": "uint8"}
         cfg.tile_config = {}
         cfg.tile_config.enable_tiler = False
         cfg.auto_num_workers = False
@@ -176,6 +189,7 @@ class TestDataModule:
         self,
         mock_dm_dataset,
         mock_dataset_factory,
+        mock_detect_image_dtype,
         fxt_real_tv_cls_config,
         tmpdir,
     ) -> None:
@@ -202,6 +216,7 @@ class TestDataModule:
         mock_config.sampler = DictConfig({"class_path": "torch.utils.data.RandomSampler"})
         mock_config.transforms = []
         mock_config.input_size = (224, 224)
+        mock_config.intensity = IntensityConfig()
 
         return {
             "train_subset": deepcopy(mock_config),
@@ -233,7 +248,9 @@ class TestDataModule:
 
         return _create_mock_dataset
 
-    def test_from_vision_datasets_basic(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
+    def test_from_vision_datasets_basic(
+        self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype
+    ) -> None:
         """Test from_vision_datasets with minimal configuration."""
         # Create mock datasets with shared label_info
         shared_label_info = MagicMock()
@@ -266,7 +283,9 @@ class TestDataModule:
         assert module.task == TaskType.MULTI_CLASS_CLS
         assert module.input_size == (224, 224)
 
-    def test_from_vision_datasets_with_custom_configs(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
+    def test_from_vision_datasets_with_custom_configs(
+        self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype
+    ) -> None:
         """Test from_vision_datasets with custom subset configurations."""
         # Create mock datasets
         shared_label_info = MagicMock()
@@ -288,6 +307,7 @@ class TestDataModule:
         train_config.sampler = DictConfig({"class_path": "torch.utils.data.RandomSampler"})
         train_config.transforms = []
         train_config.input_size = (640, 640)
+        train_config.intensity = IntensityConfig()
 
         val_config = MagicMock(spec=SubsetConfig)
         val_config.batch_size = 8
@@ -295,6 +315,7 @@ class TestDataModule:
         val_config.sampler = DictConfig({"class_path": "torch.utils.data.RandomSampler"})
         val_config.transforms = []
         val_config.input_size = (640, 640)
+        val_config.intensity = IntensityConfig()
 
         mocker.patch.object(
             DataModule,
@@ -318,7 +339,9 @@ class TestDataModule:
         # input_size should come from train_config, not inferred from image data
         assert module.input_size == (640, 640)
 
-    def test_from_vision_datasets_without_test(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
+    def test_from_vision_datasets_without_test(
+        self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype
+    ) -> None:
         """Test from_vision_datasets when test_dataset is None (uses val as test)."""
         # Create mock datasets
         shared_label_info = MagicMock()
@@ -372,7 +395,7 @@ class TestDataModule:
             )
 
     def test_from_vision_datasets_with_auto_num_workers(
-        self, mocker, fxt_mock_subset_configs, fxt_mock_dataset
+        self, mocker, fxt_mock_subset_configs, fxt_mock_dataset, mock_detect_image_dtype
     ) -> None:
         """Test from_vision_datasets with auto_num_workers enabled."""
         # Create mock datasets
@@ -428,3 +451,41 @@ class TestDataModule:
         pipeline = CPUAugmentationPipeline(augmentations=transforms_source)
         result = (pipeline.mean, pipeline.std)
         assert result == expected
+
+    def test_from_vision_datasets_respects_storage_dtype(self, mocker, fxt_mock_subset_configs, tmp_path) -> None:
+        """Test that from_vision_datasets preserves caller-provided storage_dtype."""
+        # Create mock datasets
+        shared_label_info = MagicMock()
+        mock_train = MagicMock()
+        mock_train.label_info = shared_label_info
+        mock_train.task_type = TaskType.MULTI_CLASS_CLS
+
+        mock_val = MagicMock()
+        mock_val.label_info = shared_label_info
+        mock_val.task_type = TaskType.MULTI_CLASS_CLS
+
+        # Create SubsetConfig with storage_dtype pre-set by caller (as if detect_storage_dtype was called)
+        train_subset = SubsetConfig(
+            batch_size=4,
+            subset_name="train",
+            input_size=(224, 224),
+            intensity=IntensityConfig(storage_dtype="uint16"),
+        )
+
+        mocker.patch.object(
+            DataModule,
+            "get_default_subset_configs",
+            return_value=fxt_mock_subset_configs,
+        )
+
+        # Create module from datasets — it should preserve the caller's storage_dtype
+        module = DataModule.from_vision_datasets(
+            train_dataset=mock_train,
+            val_dataset=mock_val,
+            train_subset=train_subset,
+        )
+
+        # Assert storage_dtype was preserved (not overwritten to uint8)
+        assert train_subset.intensity.storage_dtype == "uint16"
+        assert module.input_intensity_config is not None
+        assert module.input_intensity_config.storage_dtype == "uint16"
