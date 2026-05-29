@@ -97,20 +97,23 @@ class TestYOLOX:
         assert labels.shape == dets.shape[:2]
 
     @pytest.mark.parametrize(
-        ("model_name", "expect_cleared"),
+        ("model_name", "expect_intensity"),
         [("yolox_s", True), ("yolox_l", True), ("yolox_x", True), ("yolox_tiny", False)],
     )
-    def test_intensity_config_cleared_for_raw_uint8_models(self, model_name, expect_cleared):
+    def test_intensity_config_for_raw_uint8_models(self, model_name, expect_intensity):
+        """YOLOX s/l/x have intensity_config set (for scale_to_unit export metadata);
+        yolox_tiny inherits from default (no intensity_config in its DataInputParams).
+        """
         from getitune.config.data import IntensityConfig
 
-        intensity_cfg = IntensityConfig(mode="scale_to_unit", max_value=255.0)
-        params = DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0), intensity_config=intensity_cfg)
-        model = YOLOX(model_name=model_name, label_info=3, data_input_params=params)
-        if expect_cleared:
-            assert model.data_input_params.intensity_config is None
-        else:
+        # Use default params (no explicit data_input_params)
+        model = YOLOX(model_name=model_name, label_info=3)
+        if expect_intensity:
             assert model.data_input_params.intensity_config is not None
             assert model.data_input_params.intensity_config.mode == "scale_to_unit"
+        else:
+            # yolox_tiny default DataInputParams doesn't set intensity_config
+            assert model.data_input_params.intensity_config is None
 
     @pytest.mark.parametrize("model_name", ["yolox_s", "yolox_l", "yolox_x"])
     @pytest.mark.parametrize("storage_dtype", ["uint16", "int16"])
