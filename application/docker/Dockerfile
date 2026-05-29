@@ -229,6 +229,16 @@ RUN set -eu; \
     # Remove cuSolver MG libraries (enterprise feature)
     find "$CLEANUP_ROOT" -name "libcusolverMg.so*" -delete 2>/dev/null || true
 
+FROM xpu-base AS xpu-clean
+
+RUN set -eu; \
+    CLEANUP_ROOT="$("/application/backend/.venv/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    [ -n "$CLEANUP_ROOT" ] && [ -d "$CLEANUP_ROOT" ]; \
+    TARGET_DIR="${CLEANUP_ROOT}/triton/backends/nvidia"; \
+    echo "Removing triton nvidia backend from ${CLEANUP_ROOT}..." && \
+    # Remove triton nvidia backend
+    find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia" -prune -exec rm -rf {} + 2>/dev/null || true
+
 ######################
 # Server (CPU version)
 ######################
@@ -275,7 +285,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 USER ${USER_NAME}
 
-COPY --from=xpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
+COPY --from=xpu-clean --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
 # App code + UI assets last – source-only changes only invalidate this layer
 COPY --link application/backend/app /application/backend/app
