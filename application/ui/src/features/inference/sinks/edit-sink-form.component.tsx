@@ -12,11 +12,12 @@ import { Webhook } from './webhook/webhook.component';
 
 interface EditSinkFormProps {
     config: SinkConfig;
+    connectedSinkId: string | undefined;
     onSaved: () => void;
     onBackToList: () => void;
 }
 
-export const EditSinkForm = ({ config, onSaved, onBackToList }: EditSinkFormProps) => {
+export const EditSinkForm = ({ config, connectedSinkId, onSaved, onBackToList }: EditSinkFormProps) => {
     if (config.sink_type === 'folder') {
         return (
             <EditSink
@@ -25,6 +26,7 @@ export const EditSinkForm = ({ config, onSaved, onBackToList }: EditSinkFormProp
                 onBackToList={onBackToList}
                 componentFields={(state) => <LocalFolder defaultState={state} />}
                 bodyFormatter={localFolderBodyFormatter}
+                isConnected={connectedSinkId === config.id}
             />
         );
     }
@@ -37,6 +39,7 @@ export const EditSinkForm = ({ config, onSaved, onBackToList }: EditSinkFormProp
                 onBackToList={onBackToList}
                 componentFields={(state) => <Webhook defaultState={state} />}
                 bodyFormatter={webhookBodyFormatter}
+                isConnected={connectedSinkId === config.id}
             />
         );
     }
@@ -49,6 +52,7 @@ export const EditSinkForm = ({ config, onSaved, onBackToList }: EditSinkFormProp
                 onBackToList={onBackToList}
                 componentFields={(state) => <Mqtt defaultState={state} />}
                 bodyFormatter={mqttBodyFormatter}
+                isConnected={connectedSinkId === config.id}
             />
         );
     }

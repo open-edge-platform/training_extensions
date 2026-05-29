@@ -3,17 +3,7 @@
 
 import { Dispatch, SetStateAction, useMemo } from 'react';
 
-import {
-    Button,
-    ButtonGroup,
-    Checkbox,
-    dimensionValue,
-    Divider,
-    Flex,
-    Heading,
-    MediaViewModes,
-    ViewModes,
-} from '@geti/ui';
+import { Button, ButtonGroup, Checkbox, dimensionValue, Divider, Flex, MediaViewModes, ViewModes } from '@geti/ui';
 import { isString } from 'lodash-es';
 
 import type { Media } from '../../../../constants/shared-types';
@@ -77,8 +67,7 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
 
     return (
         <Flex direction={'column'} gridArea={'toolbar'} gap={'size-200'} marginBottom={'size-200'}>
-            <Flex alignItems={'center'} justifyContent={'space-between'}>
-                <Heading level={1}>Dataset</Heading>
+            <Flex alignItems={'center'} justifyContent={'end'}>
                 <ButtonGroup UNSAFE_style={{ gap: dimensionValue('size-125') }}>
                     {noMediaSelected && <ImportExport />}
 

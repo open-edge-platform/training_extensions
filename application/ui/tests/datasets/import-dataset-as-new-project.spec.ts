@@ -21,7 +21,7 @@ import {
 } from './utils';
 
 const openCreateFromDatasetDialog = async (page: Page) => {
-    await page.getByRole('button', { name: 'Create from dataset' }).click();
+    await page.getByRole('button', { name: 'Create project from dataset' }).click();
 };
 
 const uploadAndWaitForPreparation = async (importDatasetPage: ImportDatasetPage) => {
@@ -93,7 +93,7 @@ test.describe('Import dataset as new project', () => {
 
         await page.goto('/projects');
 
-        await test.step('Open create from dataset dialog', async () => {
+        await test.step('Open create project from dataset dialog', async () => {
             await openCreateFromDatasetDialog(page);
         });
 
@@ -156,7 +156,7 @@ test.describe('Import dataset as new project', () => {
 
         await page.goto('/projects');
 
-        await test.step('Open create from dataset dialog', async () => {
+        await test.step('Open create project from dataset dialog', async () => {
             await openCreateFromDatasetDialog(page);
         });
 
@@ -200,7 +200,7 @@ test.describe('Import dataset as new project', () => {
 
         await page.goto('/projects');
 
-        await test.step('Open create from dataset dialog', async () => {
+        await test.step('Open create project from dataset dialog', async () => {
             await openCreateFromDatasetDialog(page);
         });
 
@@ -242,7 +242,7 @@ test.describe('Import dataset as new project', () => {
 
         await page.goto('/projects');
 
-        await test.step('Open create from dataset dialog', async () => {
+        await test.step('Open create project from dataset dialog', async () => {
             await openCreateFromDatasetDialog(page);
         });
 
@@ -294,7 +294,7 @@ test.describe('Import dataset as new project', () => {
 
         await page.goto('/projects');
 
-        await test.step('Open create from dataset dialog', async () => {
+        await test.step('Open create project from dataset dialog', async () => {
             await openCreateFromDatasetDialog(page);
         });
 

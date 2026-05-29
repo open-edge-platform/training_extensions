@@ -16,7 +16,7 @@ type DatasetGroupHeaderProps = {
 
 export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
     const hasDatasetRevisionData = dataset.imageCount > 0 && !dataset.filesDeleted;
-    const gridColumns = hasDatasetRevisionData ? ['auto', '1fr', 'auto', '1fr'] : ['auto', '1fr', 'auto'];
+    const gridColumns = hasDatasetRevisionData ? ['auto', '1fr', 'auto', 'max-content'] : ['auto', '1fr', 'auto'];
     const formatter = useNumberFormatter();
 
     return (
