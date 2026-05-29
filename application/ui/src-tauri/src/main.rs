@@ -40,6 +40,13 @@ fn kill_process_tree(child: &mut Child) {
     let _ = child.wait();
 }
 
+fn shutdown_backend(child_handle: &Arc<Mutex<Option<Child>>>) {
+    if let Some(mut child) = child_handle.lock().unwrap().take() {
+        kill_process_tree(&mut child);
+        log::info!("⛔ Backend terminated");
+    }
+}
+
 fn main() {
     // Shared handle so we can kill the backend on exit.
     let child_handle = Arc::new(Mutex::new(None));
@@ -72,10 +79,7 @@ fn main() {
                     // Kill the backend *before* exiting so worker processes
                     // cannot outlive the UI — even if RunEvent::Exit is
                     // short-circuited by exit(0).
-                    if let Some(mut child) = child_handle.lock().unwrap().take() {
-                        kill_process_tree(&mut child);
-                        log::info!("⛔ Backend terminated");
-                    }
+                    shutdown_backend(&child_handle);
 
                     let handle = window.app_handle().clone();
                     if let Err(e) = window.destroy() {
@@ -95,10 +99,7 @@ fn main() {
     let exit_handle = child_handle.clone();
     app.run(move |_app_handle, event| {
         if let RunEvent::Exit = event {
-            if let Some(mut child) = exit_handle.lock().unwrap().take() {
-                kill_process_tree(&mut child);
-                log::info!("⛔ Backend terminated");
-            }
+            shutdown_backend(&exit_handle);
         }
     });
 }
