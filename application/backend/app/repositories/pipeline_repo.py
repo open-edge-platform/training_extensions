@@ -38,3 +38,13 @@ class PipelineRepository:
         """Get the active pipeline from database."""
         stmt = select(PipelineDB).where(PipelineDB.is_running)
         return self.db.execute(stmt).scalar_one_or_none()
+
+    def get_by_source_id(self, source_id: str) -> list[PipelineDB]:
+        """Get all pipelines using the given source."""
+        stmt = select(PipelineDB).where(PipelineDB.source_id == source_id)
+        return list(self.db.execute(stmt).scalars().all())
+
+    def get_by_sink_id(self, sink_id: str) -> list[PipelineDB]:
+        """Get all pipelines using the given sink."""
+        stmt = select(PipelineDB).where(PipelineDB.sink_id == sink_id)
+        return list(self.db.execute(stmt).scalars().all())

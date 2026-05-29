@@ -164,7 +164,7 @@ describe('ProjectList', () => {
     });
 
     describe('create project card', () => {
-        it('renders create new project and create from dataset buttons', async () => {
+        it('renders create new project and create project from dataset buttons', async () => {
             server.use(http.get('/api/projects', () => HttpResponse.json(projects)));
 
             renderProjectList();
@@ -172,7 +172,7 @@ describe('ProjectList', () => {
             const createButton = await screen.findByRole('button', { name: /create new project/i });
             expect(createButton).toBeVisible();
 
-            const createFromDatasetButton = await screen.findByRole('button', { name: /Create from dataset/i });
+            const createFromDatasetButton = await screen.findByRole('button', { name: /Create project from dataset/i });
             expect(createFromDatasetButton).toBeVisible();
         });
     });

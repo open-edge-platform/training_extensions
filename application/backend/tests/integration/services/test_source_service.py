@@ -252,3 +252,6 @@ class TestSourceUpdateServiceIntegration:
         assert exc_info.value.resource_type == ResourceType.SOURCE
         assert exc_info.value.resource_id == db_source.id
         assert db_session.query(SourceDB).count() == 1
+        # Verify the error message includes the project name and state
+        assert "Test Detection Project" in str(exc_info.value)
+        assert "running" in str(exc_info.value)

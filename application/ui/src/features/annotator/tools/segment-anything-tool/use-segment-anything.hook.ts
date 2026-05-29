@@ -132,7 +132,13 @@ const useEncodingQuery = (
     image: ImageData | undefined,
     isImageReady: boolean
 ) => {
-    const isEnabled = model !== undefined && mediaItem !== undefined && image !== undefined && isImageReady;
+    const isEnabled =
+        model !== undefined &&
+        mediaItem !== undefined &&
+        image !== undefined &&
+        isImageReady &&
+        image.width > 0 &&
+        image.height > 0;
 
     return useQuery(
         mediaItem !== undefined && image !== undefined

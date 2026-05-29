@@ -21,8 +21,6 @@ import {
     VALIDATION_SUBSET_KEY,
 } from './utils';
 
-import classes from './training-subsets.module.scss';
-
 type TrainingSubsetsProps = {
     defaultSubsetParameters: SubsetSplitParameters;
     subsetsParameters: SubsetSplitParameters;
@@ -188,7 +186,7 @@ export const TrainingSubsets = ({
                     {trainingSubsetRatio}/{validationSubsetRatio}/{testSubsetRatio}%
                 </Accordion.Tag>
             </Accordion.Title>
-            <Accordion.Content UNSAFE_className={classes.trainingSubsets}>
+            <Accordion.Content>
                 <Accordion.Description>
                     Specify the distribution of annotated samples that have NOT already been assigned to a subset. Note
                     that samples used in previous training rounds already have a subset and this will remain unchanged,

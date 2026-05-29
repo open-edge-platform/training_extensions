@@ -338,7 +338,9 @@ def get_media_binary(
 ) -> StreamingResponse | FileResponse:
     """Get media binary content"""
     if isinstance(media, NotAnnotatedVideoFrame):
-        frame_binary = media_service.get_frame_binary(project=project, video=media.video, frame_index=media.frame_index)
+        frame_binary = media_service.get_frame_binary(
+            project_id=project.id, video=media.video, frame_index=media.frame_index
+        )
         return write_image_to_response(
             image=frame_binary, filename=f"{media.video.name}_frame_{media.frame_index}.jpeg"
         )
@@ -455,7 +457,9 @@ def set_media_annotations(
     if isinstance(media, Video) and not frame_index:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided.")
     if isinstance(media, NotAnnotatedVideoFrame):
-        frame_binary = media_service.get_frame_binary(project=project, video=media.video, frame_index=media.frame_index)
+        frame_binary = media_service.get_frame_binary(
+            project_id=project.id, video=media.video, frame_index=media.frame_index
+        )
         video_frame = media_service.save_video_frame(
             project=project, video=media.video, frame_index=media.frame_index, frame_image=frame_binary
         )

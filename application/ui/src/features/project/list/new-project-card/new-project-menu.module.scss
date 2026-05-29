@@ -16,3 +16,7 @@
         gap: var(--spectrum-global-dimension-size-200);
     }
 }
+
+.buttonText span[class*='spectrum-ActionButton-label'] {
+    padding-inline-end: 0;
+}

@@ -31,7 +31,7 @@ export const Dataset = () => {
                 height='100%'
                 gridArea='content'
                 rows={['auto', 'auto', 'minmax(0, 1fr)']}
-                UNSAFE_style={{ padding: dimensionValue('size-350') }}
+                UNSAFE_style={{ padding: dimensionValue('size-300') }}
             >
                 <View gridRow='1 / 2'>
                     <ExportJobsList predicate={({ datasetId }) => datasetId === null} />

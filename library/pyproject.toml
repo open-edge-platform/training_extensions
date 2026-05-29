@@ -39,7 +39,7 @@ dependencies = [
     "torchmetrics==1.8.2",
     "pytorchcv==0.0.74",
     "timm==1.0.3",
-    "openvino~=2026.1.0",
+    "openvino~=2026.2.0",
     "openvino-model-api==0.4.3",
     "onnx==1.21.0",
     "onnxruntime==1.26.0",
@@ -157,6 +157,8 @@ override-dependencies = [
     "opencv-python-headless~=4.11",
     # mlflow caps pyarrow<24 but datumaro 2.0.0 requires pyarrow>=24; pyarrow 24.x works fine with mlflow
     "pyarrow>=24.0,<25",
+    # roboflow hard-pins idna==3.7; allow newer versions
+    "idna>=3.15",
 ]
 
 [tool.uv.sources]

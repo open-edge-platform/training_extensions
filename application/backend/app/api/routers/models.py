@@ -13,7 +13,12 @@ from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
 from starlette.responses import FileResponse
 
-from app.api.dependencies import get_model_service, get_project, get_training_configuration_service
+from app.api.dependencies import (
+    get_demo_files_service,
+    get_model_service,
+    get_project,
+    get_training_configuration_service,
+)
 from app.api.schemas import ModelView, ProjectView, TrainingConfigurationView, TrainingMetricsView
 from app.api.validators import DatasetRevisionID, ModelID, ModelVariantID
 from app.services import (
@@ -23,6 +28,7 @@ from app.services import (
     ResourceType,
     TrainingConfigurationService,
 )
+from app.services.demo_files_service import DemoFilesService
 
 router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
 
@@ -86,10 +92,16 @@ def get_model(
 def download_model_binary(
     project: Annotated[ProjectView, Depends(get_project)],
     model_service: Annotated[ModelService, Depends(get_model_service)],
+    demo_files_service: Annotated[DemoFilesService, Depends(get_demo_files_service)],
     model_id: ModelID,
     model_variant_id: ModelVariantID,
 ) -> StreamingResponse:
-    """Download trained model weights of a desired model variant as a zip archive"""
+    """Download trained model weights of a desired model variant as a zip archive.
+
+    For deployable formats (OpenVINO and ONNX), the archive also includes: a sample
+    image taken from the project's dataset, ready-to-run sync/async inference
+    demo scripts, a requirements.txt, and a README.md.
+    """
     files_exist, paths = model_service.get_model_binary_files(
         project_id=project.id,
         model_id=model_id,
@@ -104,11 +116,15 @@ def download_model_binary(
     model_variant = model_service.get_variant(variant_id=model_variant_id)
     filename = f"model-{str(model_id).split('-')[0]}-{model_variant.format}-{model_variant.precision}.zip"
 
+    demo_files = demo_files_service.build_demo_files(project_id=project.id, model_format=model_variant.format)
+
     # Create an in-memory zip file
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zip_file:
         for path in paths:
             zip_file.write(path, arcname=os.path.split(path)[1])
+        for demo_file in demo_files:
+            zip_file.writestr(demo_file.name, demo_file.data)
 
     zip_buffer.seek(0)
 

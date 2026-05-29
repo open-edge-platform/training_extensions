@@ -28,7 +28,7 @@ describe('EditIpCamera', () => {
         auth_required: true,
     };
 
-    const renderApp = (mockOnSaved = vi.fn()) => {
+    const renderApp = (mockOnSaved = vi.fn(), isConnected = false) => {
         render(
             <EditSource
                 config={getIpCameraInitialConfig()}
@@ -36,6 +36,7 @@ describe('EditIpCamera', () => {
                 onBackToList={vi.fn()}
                 componentFields={(state: IPCameraSourceConfig) => <IpCamera defaultState={state} />}
                 bodyFormatter={ipCameraBodyFormatter}
+                isConnected={isConnected}
             />
         );
     };
@@ -90,5 +91,23 @@ describe('EditIpCamera', () => {
             expect(mockSourceMutation).toHaveBeenCalled();
             expect(mockConnectToPipeline).not.toHaveBeenCalled();
         });
+    });
+
+    it('hides "Save & Connect" button when already connected', () => {
+        vi.mocked(useConnectSourceToPipeline).mockReturnValue(vi.fn());
+        vi.mocked(useSourceMutation).mockReturnValue(vi.fn());
+
+        renderApp(vi.fn(), true);
+
+        expect(screen.queryByRole('button', { name: /Save & Connect/i })).not.toBeInTheDocument();
+    });
+
+    it('shows "Save & Connect" button when not connected', () => {
+        vi.mocked(useConnectSourceToPipeline).mockReturnValue(vi.fn());
+        vi.mocked(useSourceMutation).mockReturnValue(vi.fn());
+
+        renderApp(vi.fn(), false);
+
+        expect(screen.getByRole('button', { name: /Save & Connect/i })).toBeInTheDocument();
     });
 });
