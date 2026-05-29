@@ -112,6 +112,18 @@ const segmentAnythingEncodingQueryOptions = (
                 throw new Error('Model not yet initialized');
             }
 
+            if (!image || image.width <= 0 || image.height <= 0) {
+                console.error('[SAM] Invalid image dimensions for encoder:', {
+                    width: image?.width,
+                    height: image?.height,
+                    mediaItem,
+                });
+
+                throw new Error(
+                    `Invalid image dimensions for SAM encoder: width=${image?.width}, height=${image?.height}`
+                );
+            }
+
             return executeWithTimeout(model.processEncoder(image), 'SAM encoder', SAM_ENCODER_TIMEOUT_MS);
         },
         staleTime: Infinity,
