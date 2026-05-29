@@ -9,7 +9,8 @@ import torch
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from torchvision import tv_tensors
 
-from getitune.data.augmentation.transforms import CachedMixUp, CachedMosaic, RandomIoUCrop, ScaleTo255, _clone_for_cache
+from getitune.data.augmentation.cache import _clone_for_cache
+from getitune.data.augmentation.transforms import CachedMixUp, CachedMosaic, RandomIoUCrop, ScaleTo255
 from getitune.data.entity.sample import DetectionSample, InstanceSegmentationSample
 
 
@@ -374,7 +375,7 @@ class TestCloneForCache:
         sample = DetectionSample(
             image=tv_tensors.Image(torch.rand(3, 64, 64)),
             dm_image_info=DmImageInfo(height=64, width=64),
-            bboxes=tv_tensors.BoundingBoxes(
+            bboxes=tv_tensors.BoundingBoxes(  # type: ignore[no-matching-overload]
                 torch.tensor([[5, 5, 25, 25], [30, 30, 55, 55]], dtype=torch.float32),
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=(64, 64),
@@ -385,6 +386,7 @@ class TestCloneForCache:
 
         assert torch.equal(cached.image, sample.image)
         assert torch.equal(cached.bboxes, sample.bboxes)
+        assert sample.label is not None
         assert torch.equal(cached.label, sample.label)
         assert cached.masks is None
         # Verify it's a clone (not the same tensor)
@@ -397,8 +399,10 @@ class TestCloneForCache:
 
         assert torch.equal(cached.image, sample.image)
         assert torch.equal(cached.bboxes, sample.bboxes)
+        assert sample.label is not None
         assert torch.equal(cached.label, sample.label)
         assert cached.masks is not None
+        assert sample.masks is not None
         assert torch.equal(cached.masks, sample.masks)
         # Verify cloned (not the same tensor)
         assert cached.image.data_ptr() != sample.image.data_ptr()

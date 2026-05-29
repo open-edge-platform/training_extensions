@@ -13,6 +13,7 @@ import torchvision.transforms.v2 as tvt_v2
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
+from getitune.data.augmentation.cache import _CachedSample, _clone_for_cache
 from getitune.data.augmentation.kernels import (
     _resize_image_info,
     _resized_crop_image_info,
@@ -21,46 +22,6 @@ from getitune.data.entity.sample import BaseSample
 
 if TYPE_CHECKING:
     from getitune.data.entity.sample import DetectionSample, InstanceSegmentationSample
-
-
-class _CachedSample:
-    """Lightweight cache entry storing only cloned tensor data for mosaic/mixup.
-
-    Avoids the extreme cost of ``copy.deepcopy`` on full ``BaseSample``
-    objects (which walk the entire Datumaro/PyTorch object graph).  Only
-    the tensor data read during mosaic/mixup assembly is stored, cloned
-    via fast ``Tensor.clone()`` (pure memcpy).
-    """
-
-    __slots__ = ("bboxes", "image", "label", "masks")
-
-    def __init__(
-        self,
-        image: torch.Tensor,
-        bboxes: torch.Tensor,
-        label: torch.Tensor,
-        masks: torch.Tensor | None = None,
-    ) -> None:
-        self.image = image
-        self.bboxes = bboxes
-        self.label = label
-        self.masks = masks
-
-
-def _clone_for_cache(sample: DetectionSample | InstanceSegmentationSample) -> _CachedSample:
-    """Create a lightweight cache entry with cloned tensor data.
-
-    Cost: ~3ms for a 3x640x640 float32 image (memcpy only),
-    vs. ~260ms for ``copy.deepcopy`` on a full BaseSample.
-    """
-    masks = getattr(sample, "masks", None)
-    label = cast("torch.Tensor", sample.label)
-    return _CachedSample(
-        image=sample.image.clone(),
-        bboxes=sample.bboxes.clone(),
-        label=label.clone(),
-        masks=masks.clone() if masks is not None else None,
-    )
 
 
 class ScaleTo255(tvt_v2.Transform):
@@ -109,11 +70,8 @@ class Resize(tvt_v2.Transform):
             Defaults to True.
         keep_aspect_ratio (bool): If True, preserve the aspect ratio of the original image
             by resizing to fit within the target size and padding to reach exact target dimensions.
-            Defaults to False.
-        center_padding (bool): If True and ``keep_aspect_ratio`` is True, distribute padding
-            equally on both sides (centered letterbox, matching Ultralytics LetterBox).
-            If False, padding is applied to bottom-right only (matching DFine/YOLOX
-            post-processing which assumes no left/top offset). Defaults to False.
+            Padding is applied to bottom-right only (matching YOLOX/DFine post-processing
+            which assumes no left/top offset). Defaults to False.
         pad_value (int or tuple): Padding value for image. Defaults to 0.
         interpolation: Interpolation mode for images. Defaults to InterpolationMode.BILINEAR.
         antialias: Whether to apply antialiasing. Defaults to True.
@@ -124,7 +82,6 @@ class Resize(tvt_v2.Transform):
         size: int | tuple[int, int],
         resize_targets: bool = True,
         keep_aspect_ratio: bool = False,
-        center_padding: bool = False,
         pad_value: int | tuple[int, int, int] = 0,
         interpolation: F.InterpolationMode = F.InterpolationMode.BILINEAR,
         antialias: bool = True,
@@ -133,7 +90,6 @@ class Resize(tvt_v2.Transform):
         self.size = (size, size) if isinstance(size, int) else tuple(size)
         self.resize_targets = resize_targets
         self.keep_aspect_ratio = keep_aspect_ratio
-        self.center_padding = center_padding
         self.pad_value = pad_value
         self.interpolation = interpolation
         self.antialias = antialias
@@ -159,23 +115,14 @@ class Resize(tvt_v2.Transform):
         new_w = round(orig_w * scale)
         new_h = round(orig_h * scale)
 
-        # Compute padding to reach target size
+        # Compute padding to reach target size (bottom-right only)
         pad_w = target_w - new_w
         pad_h = target_h - new_h
 
-        if self.center_padding:
-            # Centered padding (matching Ultralytics LetterBox): equal on both sides.
-            pad_left = pad_w // 2
-            pad_right = pad_w - pad_left
-            pad_top = pad_h // 2
-            pad_bottom = pad_h - pad_top
-        else:
-            # Bottom-right padding only (matching DFine/YOLOX post-processing
-            # which assumes no left/top offset).
-            pad_left = 0
-            pad_right = pad_w
-            pad_top = 0
-            pad_bottom = pad_h
+        pad_left = 0
+        pad_right = pad_w
+        pad_top = 0
+        pad_bottom = pad_h
 
         return new_h, new_w, pad_left, pad_top, pad_right, pad_bottom
 

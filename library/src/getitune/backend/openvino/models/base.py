@@ -144,20 +144,6 @@ class OVModel:
         return resize_type in _aspect_ratio_resize_types
 
     @property
-    def center_padding(self) -> bool:
-        """Return True when the model uses letterbox preprocessing with centered padding.
-
-        ``fit_to_window_letterbox`` distributes padding equally on both sides,
-        while ``fit_to_window`` pads only at the bottom-right.  When this
-        property is True, the evaluation pipeline must also use centered
-        padding (``center_padding=True`` on the Resize transform) to match
-        the training preprocessing.
-        """
-        base = self.model.model if isinstance(self.model, Tiler) else self.model
-        resize_type = getattr(getattr(base, "params", None), "resize_type", None)
-        return resize_type == "fit_to_window_letterbox"
-
-    @property
     def pad_value(self) -> int:
         """Return the padding value embedded in the exported model metadata.
 
