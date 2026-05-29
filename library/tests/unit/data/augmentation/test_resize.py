@@ -412,3 +412,69 @@ class TestResize:
         expected_scale = min(128 / orig_w, 128 / orig_h)
         assert abs(result.img_info.scale_factor[0] - expected_scale) < 0.01
         assert abs(result.img_info.scale_factor[1] - expected_scale) < 0.01
+
+    # ==================== Early Exit Tests ====================
+
+    def test_early_exit_same_size(self, square_image_entity: InstanceSegmentationSample) -> None:
+        """Test that Resize returns input unchanged when image is already at target size."""
+        entity = deepcopy(square_image_entity)
+        # Image is 100x100, resize target is 100x100 -> early exit
+        resize = Resize(size=(100, 100), resize_targets=True, keep_aspect_ratio=True)
+        result = resize(entity)
+        # Should return the exact same object (no copy)
+        assert result is entity
+        assert result.image.shape[-2:] == (100, 100)
+
+    # ==================== Center Padding Tests ====================
+
+    def test_center_padding_wide_image(self, wide_image_entity: InstanceSegmentationSample) -> None:
+        """Test center_padding=True distributes padding equally on both sides."""
+        resize = Resize(size=(128, 128), resize_targets=True, keep_aspect_ratio=True, center_padding=True)
+        entity = deepcopy(wide_image_entity)
+        orig_h, orig_w = entity.image.shape[-2:]  # 100, 200
+
+        result = resize(entity)
+
+        assert result.image.shape[-2:] == (128, 128)
+        # Wide image (200w x 100h) -> scale=0.64, resized to 128x64
+        # Center padding: pad_top=32, pad_bottom=32
+        assert result.img_info.pad_offset[0] == 0  # pad_left
+        pad_top = result.img_info.pad_offset[1]
+        pad_bottom = result.img_info.pad_offset[3]
+        assert pad_top > 0
+        assert pad_bottom > 0
+        assert abs(pad_top - pad_bottom) <= 1  # Equal or differ by 1 (rounding)
+
+    def test_center_padding_tall_image(self, tall_image_entity: InstanceSegmentationSample) -> None:
+        """Test center_padding=True for tall image distributes horizontal padding equally."""
+        resize = Resize(size=(128, 128), resize_targets=True, keep_aspect_ratio=True, center_padding=True)
+        entity = deepcopy(tall_image_entity)
+
+        result = resize(entity)
+
+        assert result.image.shape[-2:] == (128, 128)
+        # Tall image (100w x 200h) -> scale=0.64, resized to 64x128
+        # Center padding: pad_left=32, pad_right=32
+        pad_left = result.img_info.pad_offset[0]
+        pad_right = result.img_info.pad_offset[2]
+        assert pad_left > 0
+        assert pad_right > 0
+        assert abs(pad_left - pad_right) <= 1
+
+    def test_center_padding_bboxes_offset(self, wide_image_entity: InstanceSegmentationSample) -> None:
+        """Test that center_padding offsets bboxes by pad_left/pad_top."""
+        resize = Resize(size=(128, 128), resize_targets=True, keep_aspect_ratio=True, center_padding=True)
+        entity = deepcopy(wide_image_entity)
+        orig_bboxes = entity.bboxes.clone()
+        orig_h, orig_w = entity.image.shape[-2:]
+
+        result = resize(entity)
+
+        # Bboxes should be scaled + offset by (pad_left, pad_top)
+        scale = min(128 / orig_w, 128 / orig_h)
+        pad_left = result.img_info.pad_offset[0]
+        pad_top = result.img_info.pad_offset[1]
+        expected_x1 = orig_bboxes[:, 0] * scale + pad_left
+        expected_y1 = orig_bboxes[:, 1] * scale + pad_top
+        assert torch.allclose(result.bboxes[:, 0].float(), expected_x1.float(), atol=1.0)
+        assert torch.allclose(result.bboxes[:, 1].float(), expected_y1.float(), atol=1.0)
