@@ -234,9 +234,10 @@ FROM xpu-base AS xpu-clean
 RUN set -eu; \
     CLEANUP_ROOT="$("/application/backend/.venv/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
     [ -n "$CLEANUP_ROOT" ] && [ -d "$CLEANUP_ROOT" ]; \
-    echo "Removing non-redistributable headers and binaries from triton nvidia backend from ${CLEANUP_ROOT}..." && \
-    # Remove non-redistributable headers and binaries from triton nvidia backend
-    find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia" -exec rm -rf {} + 2>/dev/null || true
+    TARGET_DIR="${CLEANUP_ROOT}/triton/backends/nvidia"; \
+    echo "Removing triton nvidia backend from ${CLEANUP_ROOT}..." && \
+    # Remove triton nvidia backend
+    find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia" -prune -exec rm -rf {} + 2>/dev/null || true
 
 ######################
 # Server (CPU version)
