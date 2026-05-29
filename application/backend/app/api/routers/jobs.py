@@ -319,5 +319,6 @@ async def __gen_log_stream(job_id: UUID, log_path: Path, job_queue: JobQueue) ->
                 await asyncio.sleep(0.3)
     except asyncio.CancelledError:
         raise
-    except Exception as e:
-        yield ServerSentEvent(data=f"Error reading log file: {e}")
+    except Exception:
+        logger.exception("Error reading log file for job")
+        yield ServerSentEvent(data="Error reading log file")

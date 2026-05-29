@@ -27,9 +27,12 @@ async def create_webrtc_offer(offer: Offer, webrtc_manager: Annotated[WebRTCMana
     """Create a WebRTC offer"""
     try:
         return await webrtc_manager.handle_offer(offer)
-    except Exception as e:
+    except Exception:
         logger.exception("Error processing WebRTC offer")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process WebRTC offer",
+        )
 
 
 @router.post(

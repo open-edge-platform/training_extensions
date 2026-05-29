@@ -46,7 +46,7 @@ class TestWebRTCEndpoints:
         fxt_webrtc_manager.handle_offer.side_effect = Exception("fail")
         resp = fxt_client.post("/api/webrtc/offer", json=fxt_offer.model_dump(mode="json"))
         assert resp.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-        assert "fail" in resp.json()["detail"]
+        assert resp.json()["detail"] == "Failed to process WebRTC offer"
         fxt_webrtc_manager.handle_offer.assert_called_once()
 
     def test_create_webrtc_offer_invalid_payload(self, fxt_client):
