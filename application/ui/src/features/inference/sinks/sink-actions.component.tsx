@@ -17,7 +17,7 @@ import { SinkConfig } from './utils';
 export const SinkActions = () => {
     const [view, setView] = useState<'list' | 'options' | 'edit'>('list');
     const [currentSink, setCurrentSink] = useState<SinkConfig | null>(null);
-    const { data: sinks = [], isLoading } = useSinksQuery();
+    const { data: sinks = [], isPending } = useSinksQuery();
     const filteredSinks = sinks.filter((sink) => sink.sink_type !== 'disconnected');
 
     const pipeline = usePipeline();
@@ -36,7 +36,7 @@ export const SinkActions = () => {
         setCurrentSink(sink);
     };
 
-    if (isLoading) {
+    if (isPending) {
         return <Loading mode={'inline'} size='M' />;
     }
 
