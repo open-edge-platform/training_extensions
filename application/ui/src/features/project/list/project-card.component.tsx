@@ -9,21 +9,15 @@ import { NavLink } from 'react-router-dom';
 
 import placeholderThumbnailIconUrl from '../../../assets/icons/image-icon.svg?url';
 import { paths } from '../../../constants/paths';
-import { Project, TaskType } from '../../../constants/shared-types';
+import { Project } from '../../../constants/shared-types';
 import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
 import { isMultiLabelClassificationTask } from '../task-type-guards';
 import { MenuActions } from './menu-actions/menu-actions.component';
-import { formatCreationDate } from './util';
+import { formatCreationDate, MAP_PROJECT_TYPE_TO_TITLE } from './util';
 
 import classes from './project-list.module.scss';
 
 const cardPadding = 'size-200';
-
-const MAP_PROJECT_TYPE_TO_TITLE: Record<TaskType, string> = {
-    detection: 'Object detection',
-    classification: 'Classification',
-    instance_segmentation: 'Instance segmentation',
-};
 
 type ProjectTypeBadgeProps = {
     type: string;

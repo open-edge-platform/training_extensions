@@ -20,21 +20,22 @@ import {
 import { Edit } from '@geti/ui/icons';
 import { useProjects } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { capitalize, partition } from 'lodash-es';
+import { partition } from 'lodash-es';
 import { useNavigate } from 'react-router';
 
 import { paths } from '../../constants/paths';
 import { MenuActions } from '../../features/project/list/menu-actions/menu-actions.component';
+import { MAP_PROJECT_TYPE_TO_TITLE } from '../../features/project/list/util';
 import { ProjectThumbnail } from './project-thumbnail/project-thumbnail.component';
 import { ProjectsList } from './projects-list.component';
 
 import classes from './projects-list.module.scss';
 
-interface SelectedProjectProps {
+type SelectedProjectProps = {
     name: string;
     id: string | undefined;
     isActive: boolean;
-}
+};
 
 const SelectedProjectButton = ({ name, id, isActive }: SelectedProjectProps) => {
     return (
@@ -95,7 +96,7 @@ export const ProjectsListPanel = () => {
 
     const otherProjectNames = otherProjects.map(({ name }) => name);
 
-    const taskType = capitalize(selectedProject?.task.task_type);
+    const taskType = MAP_PROJECT_TYPE_TO_TITLE[selectedProject.task.task_type];
 
     const handleDeleted = () => {
         navigate(paths.project.index({}));
@@ -131,7 +132,7 @@ export const ProjectsListPanel = () => {
                                         {selectedProjectName}
                                     </Heading>
 
-                                    <Badge variant={'neutral'} UNSAFE_className={classes.tag}>
+                                    <Badge variant={'neutral'}>
                                         <Text>{taskType}</Text>
                                     </Badge>
                                 </Flex>
