@@ -32,6 +32,8 @@ class VideoFileStream(BaseOpenCVStream):
         if not self.loop:
             # Mark the stream as exhausted; subsequent get_data() calls will return None.
             self._exhausted = True
+            self.release()
+            self.cap = None  # type: ignore[assignment]
             raise EOFError("End of video file reached")
 
         # Reset video to beginning when it ends
@@ -41,7 +43,7 @@ class VideoFileStream(BaseOpenCVStream):
             raise RuntimeError("Failed to capture frame from video file")
         return frame
 
-    def get_data(self) -> StreamData | None:  # pyrefly: ignore [bad-override]
+    def get_data(self) -> StreamData | None:
         """Get the latest frame from the video, or None if the video has ended (non-looping)."""
         if self._exhausted:
             return None
