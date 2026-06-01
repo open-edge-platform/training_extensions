@@ -49,6 +49,12 @@ test.describe('Toast Rendering', () => {
 
     test('shows toast from inference page context', async ({ page, network }) => {
         network.use(
+            http.get('/api/sources', () => {
+                return HttpResponse.json([]);
+            }),
+            http.get('/api/sinks', () => {
+                return HttpResponse.json([]);
+            }),
             http.get('/api/projects/{project_id}/pipeline', () => {
                 return HttpResponse.json({
                     project_id: 'id-1',
