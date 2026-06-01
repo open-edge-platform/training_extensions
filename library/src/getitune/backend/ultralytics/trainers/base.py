@@ -283,10 +283,14 @@ class GetiTuneDataBridgeMixin:
         """Perform optimizer step with configurable gradient clipping.
 
         Ultralytics hardcodes ``max_norm=10.0``.  This override reads
-        ``max_grad_norm`` from training args so users can control clipping
-        via the backend UI.  A value of ``0.0`` disables clipping entirely.
+        ``_max_grad_norm`` from the trainer class attribute (set by the
+        engine when popping ``max_grad_norm`` from train args) so users can
+        control clipping via the backend UI.  A value of ``0.0`` disables
+        clipping entirely.
         """
-        max_norm = getattr(self.args, "max_grad_norm", 10.0)  # type: ignore[attr-defined]
+        max_norm = getattr(self, "_max_grad_norm", None)
+        if max_norm is None:
+            max_norm = getattr(self.args, "max_grad_norm", 10.0)  # type: ignore[attr-defined]
         self.scaler.unscale_(self.optimizer)  # type: ignore[attr-defined]
         if max_norm and max_norm > 0:
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=max_norm)  # type: ignore[attr-defined]

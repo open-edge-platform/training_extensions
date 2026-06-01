@@ -162,10 +162,14 @@ class UltralyticsEngine(Engine):
         if self._data_root is not None and "data" not in merged:
             merged["data"] = str(self._data_root)
 
+        # Pop before yolo.train() — Ultralytics rejects unknown keys.
+        max_grad_norm = merged.pop("max_grad_norm", None)
+
         trainer_cls = self._make_bound_trainer(
             progress_fn=progress_fn,
             progress_min=progress_min,
             progress_max=progress_max,
+            max_grad_norm=max_grad_norm,
         )
         train_args = {
             "trainer": trainer_cls,
@@ -706,6 +710,7 @@ class UltralyticsEngine(Engine):
         progress_fn: Callable[[float], None] | None = None,
         progress_min: float = 0.0,
         progress_max: float = 100.0,
+        max_grad_norm: float | None = None,
     ) -> type:
         """Return a trainer subclass with the DataModule bound as a class attr."""
         base_cls = self._model.trainer_cls
@@ -713,16 +718,18 @@ class UltralyticsEngine(Engine):
             msg = f"{type(self._model).__name__} does not define a trainer_cls"
             raise TypeError(msg)
 
-        if self._datamodule is None:
+        if self._datamodule is None and max_grad_norm is None:
             return base_cls
 
         attrs: dict[str, Any] = {
             "_datamodule": self._datamodule,
-            "_use_getitune_data": True,
+            "_use_getitune_data": self._datamodule is not None,
             "_progress_fn": progress_fn,
             "_progress_min": progress_min,
             "_progress_max": progress_max,
         }
+        if max_grad_norm is not None:
+            attrs["_max_grad_norm"] = max_grad_norm
         return type(base_cls.__name__, (base_cls,), attrs)
 
     @staticmethod

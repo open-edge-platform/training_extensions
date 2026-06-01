@@ -425,7 +425,10 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         }
 
         model_parser = ArgumentParser()
-        model_parser.add_argument("--model", type=LightningModel | UltralyticsModel)
+        # Avoid Union so jsonargparse doesn't swallow runtime errors as type mismatches.
+        class_path = model_cfg.get("class_path", "")
+        model_type = UltralyticsModel if "ultralytics" in class_path else LightningModel
+        model_parser.add_argument("--model", type=model_type)
         getitune_model = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
 
         # Ultralytics models handle their own weight loading (pretrained or
