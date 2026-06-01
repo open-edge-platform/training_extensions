@@ -765,7 +765,7 @@ class BenchmarkTracker:
 
         client = mlflow.tracking.MlflowClient(self.config.tracking_uri)
 
-        # Find all otx-benchmark experiments
+        # Find all benchmark experiments
         experiments = client.search_experiments()
         benchmark_exps = [e for e in experiments if e.name.startswith("getitune-benchmark/")]
 

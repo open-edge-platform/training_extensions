@@ -6,7 +6,7 @@
 # any runtime filters.
 version: 1
 defaults:
-  num_seeds: 3
+  num_seeds: 2
   eval_upto: optimize
   deterministic: false # Setting to true is extremely slow for certain models
   rotation:

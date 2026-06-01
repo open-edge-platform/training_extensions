@@ -197,15 +197,15 @@ def _build_parser() -> argparse.ArgumentParser:
     cln.add_argument(
         "--max-age-days",
         type=int,
-        default=90,
-        help="Delete runs older than this many days (default: 90).",
+        default=365,
+        help="Delete runs older than this many days (default: 365).",
     )
     cln.add_argument(
         "--protect-branch",
         type=str,
         nargs="*",
-        default=["develop", "main"],
-        help="Branches whose runs are never deleted (default: develop main).",
+        default=["develop"],
+        help="Branches whose runs are never deleted (default: develop).",
     )
     cln.add_argument(
         "--dry-run",

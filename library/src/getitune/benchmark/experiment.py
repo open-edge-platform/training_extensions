@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Experiment executor - thin wrapper around OTX/OV engines with timing."""
+"""Experiment executor - thin wrapper around Getitune/OV engines with timing."""
 
 from __future__ import annotations
 
