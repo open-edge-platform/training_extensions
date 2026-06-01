@@ -17,7 +17,7 @@ import {
 
 import { ReactComponent as DropFiles } from '../../../assets/drop-files.svg';
 import { getFilesFromDropEvent } from '../../../shared/drop-zone.utils';
-import { isSupportedMediaFile } from './utils';
+import { isSupportedMediaFile, VALID_IMAGE_EXT, VALID_VIDEO_EXT } from './utils';
 
 import classes from './drop-zone.component.module.scss';
 
@@ -38,7 +38,11 @@ export const DatasetDropZone = ({ children, onFilesDropped }: DatasetDropZonePro
         const supported = files.filter(isSupportedMediaFile);
 
         if (supported.length < files.length) {
-            toast({ type: 'neutral', message: 'Some files were skipped because their format is not supported.' });
+            toast({
+                type: 'neutral',
+                // eslint-disable-next-line max-len
+                message: `Some files were skipped. Please use supported image (${VALID_IMAGE_EXT.join(', ')}) or video (${VALID_VIDEO_EXT.join(', ')}) formats.`,
+            });
         }
 
         if (supported.length > 0) {

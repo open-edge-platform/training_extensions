@@ -13,6 +13,7 @@ import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
 import { SelectedDataProvider } from '../providers/selected-data-provider.component';
 import { Gallery } from './gallery.component';
+import { VALID_IMAGE_EXT, VALID_VIDEO_EXT } from './utils';
 
 const uploadMediaMock = vi.fn();
 
@@ -108,7 +109,12 @@ describe('Gallery drag-and-drop upload', () => {
         ]);
 
         const toast = await screen.findByLabelText('toast');
-        expect(toast).toHaveTextContent(/format is not supported/i);
+        expect(toast).toHaveTextContent(
+            new RegExp(
+                `Some files were skipped. Please use supported image \\(${VALID_IMAGE_EXT.join(', ')}\\) or video \\(${VALID_VIDEO_EXT.join(', ')}\\) formats.`,
+                'i'
+            )
+        );
         expect(uploadMediaMock).toHaveBeenCalledTimes(1);
         expect(uploadMediaMock.mock.calls[0][0].map((f: File) => f.name)).toEqual(['photo.png']);
     });
