@@ -75,11 +75,10 @@ overrides:
         - class_path: kornia.augmentation.RandomHorizontalFlip
           init_args:
             p: 0.5
-        - class_path: getitune.data.augmentation.transforms.ScaleTo255
         - class_path: kornia.augmentation.Normalize
           init_args:
-            mean: [123.675, 116.28, 103.53]
-            std: [58.395, 57.12, 57.375]
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
       sampler:
         class_path: getitune.data.samplers.balanced_sampler.BalancedSampler
 
@@ -93,11 +92,10 @@ overrides:
             pad_value: 114
             resize_targets: false
       augmentations_gpu:
-        - class_path: getitune.data.augmentation.transforms.ScaleTo255
         - class_path: kornia.augmentation.Normalize
           init_args:
-            mean: [123.675, 116.28, 103.53]
-            std: [58.395, 57.12, 57.375]
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
     test_subset:
       batch_size: 8
       augmentations_cpu:
@@ -108,8 +106,7 @@ overrides:
             pad_value: 114
             resize_targets: false
       augmentations_gpu:
-        - class_path: getitune.data.augmentation.transforms.ScaleTo255
         - class_path: kornia.augmentation.Normalize
           init_args:
-            mean: [123.675, 116.28, 103.53]
-            std: [58.395, 57.12, 57.375]
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
