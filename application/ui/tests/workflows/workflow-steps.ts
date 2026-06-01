@@ -67,7 +67,7 @@ const selectPickerOptionIfVisible = async (page: Page, label: string): Promise<v
 
 export const stepCreateProject = async (page: Page, input: CreateProjectInput): Promise<CreatedProject> => {
     const projectPage = new ProjectPage(page);
-    const projectName = `${input.withPrefix}-${input.task}`;
+    const projectName = input.projectName ?? `${input.withPrefix ?? 'project'}-${input.task}`;
 
     await projectPage.gotoCreate();
     await projectPage.fillProjectForm({

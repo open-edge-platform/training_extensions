@@ -4,7 +4,8 @@
 import { Page } from '@playwright/test';
 
 export type CreateProjectInput = {
-    withPrefix: string;
+    projectName?: string;
+    withPrefix?: string;
     task: 'classification' | 'detection' | 'instance_segmentation';
     labels: string[];
 };

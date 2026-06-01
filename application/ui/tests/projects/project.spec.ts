@@ -34,7 +34,7 @@ test.describe('Project', () => {
 
     test('creates a project', async ({ page, network }) => {
         const projectPage = new ProjectPage(page);
-        const projectName = `project-spec-${Date.now()}`;
+        const projectName = 'New Project';
 
         network.use(
             http.post('/api/projects', async ({ request, response }) => {
@@ -81,7 +81,7 @@ test.describe('Project', () => {
         );
 
         await stepCreateProject(page, {
-            withPrefix: projectName,
+            projectName,
             task: 'instance_segmentation',
             labels: ['Person', 'Animal'],
         });
