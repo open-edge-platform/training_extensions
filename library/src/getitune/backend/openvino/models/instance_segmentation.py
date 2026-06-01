@@ -12,7 +12,7 @@ from model_api.tilers import InstanceSegmentationTiler
 from torchvision import tv_tensors
 
 from getitune.backend.openvino.models.base import OVModel
-from getitune.backend.openvino.models.utils import rescale_bboxes_to_original
+from getitune.backend.openvino.models.utils import rescale_bboxes_to_original, rescale_masks_to_original
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.data.utils.structures.mask.mask_util import encode_rle
 from getitune.metrics import MetricInput
@@ -155,7 +155,18 @@ class OVInstanceSegmentationModel(OVModel):
                 ),
             )
             scores.append(torch.tensor(output.scores.reshape(-1)))
-            masks.append(torch.tensor(output.masks))
+
+            # Rescale masks from model input coords to original image coords.
+            raw_masks = torch.tensor(output.masks)
+            rescaled_masks = rescale_masks_to_original(
+                raw_masks,
+                img_shape=(img_h, img_w),
+                ori_shape=(ori_h, ori_w),
+                padding=img_info.padding,
+                scale_factor=img_info.scale_factor,
+            )
+            masks.append(rescaled_masks)
+
             labels.append(torch.tensor(output.labels.reshape(-1) - 1, dtype=torch.long))
 
         if outputs and outputs[0].saliency_map:
