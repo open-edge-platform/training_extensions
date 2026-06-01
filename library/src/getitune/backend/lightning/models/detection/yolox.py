@@ -21,7 +21,7 @@ from getitune.backend.lightning.models.detection.losses import YOLOXCriterion
 from getitune.backend.lightning.models.detection.necks import YOLOXPAFPN
 from getitune.backend.lightning.models.detection.utils.assigners import SimOTAAssigner
 from getitune.backend.lightning.models.utils.utils import load_checkpoint
-from getitune.config.data import IntensityConfig, TileConfig
+from getitune.config.data import TileConfig
 from getitune.data.entity.sample import SampleBatch
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from getitune.types.export import ExportFormat
@@ -220,25 +220,22 @@ class YOLOX(LightningDetectionModel):
                 mean=_imagenet_mean,
                 std=_imagenet_std,
             ),
-            # YOLOX s/l/x: intensity_config enables scale_to_unit export metadata;
-            # combined with std=1/255 this gives u8->/255->[0,1]->x*255->[0,255] at inference.
+            # YOLOX s/l/x: std=1/255 combined with intensity scale_to_unit (propagated
+            # from SubsetConfig at runtime) gives u8->/255->[0,1]->x*255->[0,255] at inference.
             "yolox_s": DataInputParams(
                 input_size=(640, 640),
                 mean=_zero_mean,
                 std=_scale_to_255_std,
-                intensity_config=IntensityConfig(),
             ),
             "yolox_l": DataInputParams(
                 input_size=(640, 640),
                 mean=_zero_mean,
                 std=_scale_to_255_std,
-                intensity_config=IntensityConfig(),
             ),
             "yolox_x": DataInputParams(
                 input_size=(640, 640),
                 mean=_zero_mean,
                 std=_scale_to_255_std,
-                intensity_config=IntensityConfig(),
             ),
         }
 
