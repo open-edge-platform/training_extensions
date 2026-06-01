@@ -1,9 +1,6 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-// Copyright (C) 2025 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-
 import { Suspense } from 'react';
 
 import { Flex, Grid, Item, Loading, TabList, Tabs, View } from '@geti/ui';
