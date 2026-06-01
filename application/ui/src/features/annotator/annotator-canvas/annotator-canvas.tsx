@@ -272,9 +272,9 @@ const useToolLayerPointerPassthrough = ({
 
     // When tools are disabled (prediction/read-only mode, or scene busy) we keep `ToolManager` mounted so
     // worker-backed tools (notably Segment Anything) don't unmount and discard their in-flight encoder
-    // promises — coming back used to stack new encoder RPCs behind the still-running ones and trip the 30 s
-    // SAM timeout. Pointer-events: none routes clicks/hover straight through to the annotations layer below,
-    // matching the previous behavior of unmounting the tool layer entirely.
+    // promises — coming back used to stack new encoder RPCs behind the still-running ones and trip the
+    // SAM encoder timeout. Pointer-events: none routes clicks/hover straight through to the annotations
+    // layer below, matching the previous behavior of unmounting the tool layer entirely.
     const toolLayerPointerEvents =
         areToolsDisabled || isSelectionToolActive || (canEditSelectedAnnotation && isToolLayerPointerPassthrough)
             ? 'none'
