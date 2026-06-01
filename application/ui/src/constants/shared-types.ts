@@ -61,6 +61,7 @@ export type DatasetRevision = components['schemas']['DatasetRevisionView'];
 export type DatasetRevisionItem = components['schemas']['DatasetRevisionItemView'];
 
 export type Project = components['schemas']['ProjectView'];
+export type ProjectCreate = components['schemas']['ProjectCreate'];
 
 export type TaskType = components['schemas']['TaskType'];
 export type Task = components['schemas']['TaskView'];
