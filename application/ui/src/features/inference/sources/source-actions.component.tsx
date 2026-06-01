@@ -8,8 +8,8 @@ import { Back } from '@geti/ui/icons';
 import { usePipeline } from 'hooks/api/pipeline.hook';
 import { isEmpty, orderBy } from 'lodash-es';
 
-import { $api } from '../../../api/client';
 import type { SourceConfig } from '../../../constants/shared-types';
+import { useSourcesQuery } from './api/use-sources';
 import { EditSourceForm } from './edit-source-form.component';
 import { SourcesList } from './source-list/source-list.component';
 import { SourceOptions } from './source-options';
@@ -17,7 +17,7 @@ import { SourceOptions } from './source-options';
 export const SourceActions = () => {
     const [view, setView] = useState<'list' | 'options' | 'edit'>('list');
     const [currentSource, setCurrentSource] = useState<SourceConfig | null>(null);
-    const { data: sources = [], isLoading } = $api.useSuspenseQuery('get', '/api/sources');
+    const { data: sources = [], isPending } = useSourcesQuery();
     const filteredSources = sources.filter((source) => source.source_type !== 'disconnected');
     const existingNames = useMemo(() => filteredSources.map((source) => source.name), [filteredSources]);
 
@@ -37,7 +37,7 @@ export const SourceActions = () => {
         setCurrentSource(source);
     };
 
-    if (isLoading) {
+    if (isPending) {
         return <Loading mode={'inline'} size='M' />;
     }
 

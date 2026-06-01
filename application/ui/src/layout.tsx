@@ -1,16 +1,24 @@
+// Copyright (C) 2025-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { Suspense } from 'react';
 
 import { Flex, Grid, Item, Loading, TabList, Tabs, View } from '@geti/ui';
+import { usePrefetchQuery } from '@tanstack/react-query';
+import { usePrefetchPipeline } from 'hooks/api/pipeline.hook';
 import { useProject } from 'hooks/api/project.hook';
 import { Outlet, useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 
+import { $api } from './api/client';
 import getiLogo from './assets/icons/geti-logo.webp';
 import { ProjectsListPanel } from './components/project-panel/projects-list-panel.component';
 import { paths } from './constants/paths';
+import { usePrefetchSinksQuery } from './features/inference/sinks/api/use-sinks-query';
+import { usePrefetchSourcesQuery } from './features/inference/sources/api/use-sources';
 import { useProjectIdentifier } from './hooks/use-project-identifier.hook';
 
 import classes from './layout.module.scss';
@@ -74,10 +82,18 @@ const getFirstPathSegment = (path: string): string => {
     return path.split('/').pop() || '';
 };
 
+const usePrefetchResources = () => {
+    usePrefetchQuery($api.queryOptions('get', '/api/system/devices/inference'));
+    usePrefetchPipeline();
+    usePrefetchSourcesQuery();
+    usePrefetchSinksQuery();
+};
+
 export const Layout = () => {
     const { pathname } = useLocation();
     // We want to check if the project exists before rendering the layout. If it doesn't, error boundary will catch it.
     useProject();
+    usePrefetchResources();
 
     return (
         <Tabs aria-label='Header navigation' selectedKey={getFirstPathSegment(pathname)}>

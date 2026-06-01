@@ -8,7 +8,7 @@ import { Back } from '@geti/ui/icons';
 import { usePipeline } from 'hooks/api/pipeline.hook';
 import { isEmpty, orderBy } from 'lodash-es';
 
-import { $api } from '../../../api/client';
+import { useSinksQuery } from './api/use-sinks-query';
 import { EditSinkForm } from './edit-sink-form.component';
 import { SinkList } from './sink-list/sink-list.component';
 import { SinkOptions } from './sink-options';
@@ -17,7 +17,7 @@ import { SinkConfig } from './utils';
 export const SinkActions = () => {
     const [view, setView] = useState<'list' | 'options' | 'edit'>('list');
     const [currentSink, setCurrentSink] = useState<SinkConfig | null>(null);
-    const { data: sinks = [], isLoading } = $api.useSuspenseQuery('get', '/api/sinks');
+    const { data: sinks = [], isLoading } = useSinksQuery();
     const filteredSinks = sinks.filter((sink) => sink.sink_type !== 'disconnected');
 
     const pipeline = usePipeline();
