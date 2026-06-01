@@ -28,13 +28,13 @@ from torch import nn
 
 from getitune.config.data import IntensityConfig
 from getitune.data.augmentation.intensity import build_intensity_transform
+from getitune.data.augmentation.transforms import CachedMixUp, CachedMosaic
 from getitune.data.entity.sample import BaseSample
 from getitune.data.utils import import_object_from_module
 
 if TYPE_CHECKING:
-    from torch.utils.data import Dataset
-
     from getitune.config.data import SubsetConfig
+    from getitune.data.dataset.base import VisionDataset
 
 
 _KORNIA_PATCHED = False
@@ -273,7 +273,7 @@ class CPUAugmentationPipeline(nn.Module):
         """Get normalization std."""
         return self._std
 
-    def prepare(self, dataset: Dataset) -> None:
+    def prepare(self, dataset: VisionDataset) -> None:
         """Pre-populate caches in augmentations that support it.
 
         Delegates to ``pre_cache(dataset)`` on each augmentation that
@@ -285,7 +285,7 @@ class CPUAugmentationPipeline(nn.Module):
             dataset: The training dataset (must support ``len()`` and ``[]``).
         """
         for aug in self.augmentations:
-            if hasattr(aug, "pre_cache"):
+            if isinstance(aug, (CachedMosaic, CachedMixUp)):
                 aug.pre_cache(dataset)
 
     @classmethod

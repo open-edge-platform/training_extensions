@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import warnings
 
-import torch  # noqa: TC002
+import torch
 
 
 def get_default_num_async_infer_requests() -> int:
@@ -88,7 +88,7 @@ def rescale_masks_to_original(
     """Rescale predicted binary masks from model input coordinates to original image coordinates.
 
     Handles two preprocessing cases:
-    1. Letterbox (aspect-ratio resize + padding): crop padding, then resize to ori_shape.
+    1. Letterbox (aspect-ratio resize + padding): crop to content using scale_factor, then resize to ori_shape.
     2. Simple resize (no padding): resize directly to ori_shape.
 
     Args:
@@ -101,7 +101,7 @@ def rescale_masks_to_original(
     Returns:
         Tensor of shape (N, ori_H, ori_W) with masks mapped to ori_shape space.
     """
-    import torch.nn.functional as F  # noqa: N812
+    import torch.nn.functional as f
 
     img_h, img_w = img_shape
     ori_h, ori_w = ori_shape
@@ -112,20 +112,21 @@ def rescale_masks_to_original(
     if (img_h, img_w) == (ori_h, ori_w):
         return masks
 
-    if padding != (0, 0, 0, 0):
-        # Letterbox: crop padding, then resize to ori_shape
+    if padding != (0, 0, 0, 0) and scale_factor is not None:
+        # Letterbox: use scale_factor to compute exact content region, then resize to ori_shape
+        scale_h, scale_w = float(scale_factor[0]), float(scale_factor[1])
+        content_h = int(ori_h * scale_h)
+        content_w = int(ori_w * scale_w)
+        pad_left, pad_top = padding[0], padding[1]
+        masks = masks[:, pad_top : pad_top + content_h, pad_left : pad_left + content_w]
+    elif padding != (0, 0, 0, 0):
+        # Fallback: crop using padding directly
         pad_left, pad_top, pad_right, pad_bottom = padding
-        # Crop out the padding region to get the valid content
-        valid_top = pad_top
-        valid_bottom = img_h - pad_bottom
-        valid_left = pad_left
-        valid_right = img_w - pad_right
-        masks = masks[:, valid_top:valid_bottom, valid_left:valid_right]
+        masks = masks[:, pad_top : img_h - pad_bottom, pad_left : img_w - pad_right]
 
-    # Resize masks to ori_shape using nearest interpolation to preserve binary values
-    # F.interpolate expects (N, C, H, W) input
+    # Resize masks to ori_shape using bilinear interpolation
+    # f.interpolate expects (N, C, H, W) input
     masks_4d = masks.unsqueeze(1).float()  # (N, 1, H, W)
-    masks_resized = F.interpolate(masks_4d, size=(ori_h, ori_w), mode="bilinear", align_corners=False)
-    masks_resized = (masks_resized.squeeze(1) > 0.5).to(torch.uint8)  # (N, ori_H, ori_W)
-
-    return masks_resized
+    return (f.interpolate(masks_4d, size=(ori_h, ori_w), mode="bilinear", align_corners=False).squeeze(1) > 0.5).to(
+        torch.uint8
+    )

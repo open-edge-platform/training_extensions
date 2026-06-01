@@ -21,8 +21,7 @@ from getitune.data.augmentation.kernels import (
 from getitune.data.entity.sample import BaseSample
 
 if TYPE_CHECKING:
-    from torch.utils.data import Dataset
-
+    from getitune.data.dataset.base import VisionDataset
     from getitune.data.entity.sample import DetectionSample, InstanceSegmentationSample
 
 
@@ -365,7 +364,7 @@ class CachedMosaic(tvt_v2.Transform):
         self._cache_frozen = True
         self._refresh_rate = refresh_rate
 
-    def pre_cache(self, dataset: Dataset) -> None:
+    def pre_cache(self, dataset: VisionDataset) -> None:
         """Populate cache from dataset and freeze with stochastic refresh.
 
         Call before creating a multi-worker DataLoader so all workers
@@ -884,7 +883,7 @@ class CachedMixUp(tvt_v2.Transform):
         self._cache_frozen = True
         self._refresh_rate = refresh_rate
 
-    def pre_cache(self, dataset: Dataset) -> None:
+    def pre_cache(self, dataset: VisionDataset) -> None:
         """Populate cache from dataset and freeze with stochastic refresh.
 
         Call before creating a multi-worker DataLoader so all workers
