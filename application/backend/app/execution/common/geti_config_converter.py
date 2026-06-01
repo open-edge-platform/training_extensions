@@ -348,7 +348,7 @@ class TransformsUpdater:
     }
 
     @classmethod
-    def update(cls, augmentation_params: dict, config: dict) -> None:  # noqa: C901, PLR0912, PLR0915
+    def update(cls, augmentation_params: dict, config: dict) -> None:  # noqa: C901
         """Update augmentations in the config based on Geti model template.
 
         For each augmentation in augmentation_params:
@@ -388,41 +388,22 @@ class TransformsUpdater:
             params = dict(aug_value)
             enable = params.pop("enable", True)
 
-            # --- Locate existing augmentation in either stage list ---
-            primary_stage = registry_entry["stage"]
-            primary_key = f"augmentations_{primary_stage}"
-            alt_stage = "cpu" if primary_stage == "gpu" else "gpu"
-            alt_key = f"augmentations_{alt_stage}"
-
-            if primary_key not in train_subset:
-                train_subset[primary_key] = []
-
-            aug_list = train_subset[primary_key]
-            existing_idx = cls._find_augmentation(aug_list, registry_entry["class_paths"])
-
-            # Fallback: search the other stage list (e.g. YOLO recipes place
-            # torchvision augmentations in augmentations_cpu while the registry
-            # default stage is "gpu" for the kornia variant).
-            if existing_idx is None and alt_key in train_subset:
-                alt_idx = cls._find_augmentation(train_subset[alt_key], registry_entry["class_paths"])
-                if alt_idx is not None:
-                    aug_list = train_subset[alt_key]
-                    existing_idx = alt_idx
+            aug_list, existing_idx = cls._locate_augmentation(
+                train_subset, registry_entry["class_paths"], registry_entry["stage"]
+            )
 
             if enable:
                 if existing_idx is not None:
-                    # --- Update existing augmentation parameters ---
+                    # Update existing augmentation parameters
                     aug_config = aug_list[existing_idx]
                     class_path = aug_config.get("class_path", "")
                     per_aug_rename = cls._get_param_rename(registry_entry, class_path)
                     init_args = cls._remap_params(params, per_aug_rename, aug_name=aug_name)
                     cls._drop_unsupported_params(init_args, registry_entry, class_path)
-                    if "init_args" not in aug_config:
-                        aug_config["init_args"] = {}
-                    aug_config["init_args"].update(init_args)
+                    aug_config.setdefault("init_args", {}).update(init_args)
                     aug_config.pop("enable", None)
                 else:
-                    # --- Add new augmentation ---
+                    # Add new augmentation
                     class_path, target_stage = cls._choose_variant(registry_entry, is_ultralytics)
                     per_aug_rename = cls._get_param_rename(registry_entry, class_path)
                     init_args = cls._remap_params(params, per_aug_rename, aug_name=aug_name)
@@ -432,8 +413,7 @@ class TransformsUpdater:
                     new_aug: dict[str, Any] = {"class_path": class_path}
                     if init_args:
                         new_aug["init_args"] = init_args
-                    insert_idx = cls._get_insert_position(target_list, target_stage)
-                    target_list.insert(insert_idx, new_aug)
+                    target_list.insert(cls._get_insert_position(target_list, target_stage), new_aug)
             elif existing_idx is not None:
                 if aug_name == "random_resize_crop":
                     aug_list[existing_idx] = {
@@ -454,6 +434,36 @@ class TransformsUpdater:
                     }
                 else:
                     aug_list.pop(existing_idx)
+
+    @classmethod
+    def _locate_augmentation(
+        cls,
+        train_subset: dict,
+        class_paths: list[str],
+        primary_stage: str,
+    ) -> tuple[list[dict], int] | tuple[list[dict], None]:
+        """Find an augmentation in either stage list, preferring the primary stage.
+
+        Searches the primary stage list first (e.g. ``augmentations_gpu`` for
+        kornia-default augmentations), then falls back to the alternate stage
+        (e.g. ``augmentations_cpu`` where Ultralytics recipes place torchvision
+        variants of the same augmentation).
+
+        Returns:
+            Tuple of ``(aug_list, index)`` if found.
+            If not found, returns ``(primary_list, None)`` so callers always
+            have a valid list reference for insertions.
+        """
+        alt_stage = "cpu" if primary_stage == "gpu" else "gpu"
+        for stage in (primary_stage, alt_stage):
+            key = f"augmentations_{stage}"
+            if key in train_subset:
+                idx = cls._find_augmentation(train_subset[key], class_paths)
+                if idx is not None:
+                    return train_subset[key], idx
+        # Ensure primary list exists for potential insertion
+        primary_list = train_subset.setdefault(f"augmentations_{primary_stage}", [])
+        return primary_list, None
 
     @classmethod
     def _choose_variant(cls, registry_entry: dict, is_ultralytics: bool) -> tuple[str, str]:

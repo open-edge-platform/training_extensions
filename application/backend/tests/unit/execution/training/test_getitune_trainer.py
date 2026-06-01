@@ -1231,17 +1231,18 @@ class TestGetiTuneTrainerEvaluateModel:
         # Arrange
         getitune_trainer = fxt_getitune_trainer()
         model_id = uuid4()
-        model_variant_id = uuid4()
+        pytorch_variant_id = uuid4()
         dataset_revision_id = uuid4()
         mock_getitune_engine = Mock()
         mock_getitune_engine.test = Mock(return_value={"metrics/mAP50-95(B)": torch.tensor(0.42)})
         mock_getitune_engine.work_dir = tmp_path / "getitune-workspace"
+        mock_getitune_engine.datamodule = Mock()
         model_checkpoint_path = tmp_path / "best.pt"
         model_checkpoint_path.touch()
 
         model_variants = [
             ModelVariantDescriptor(
-                id=model_variant_id,
+                id=pytorch_variant_id,
                 path=model_checkpoint_path,
                 format=ModelFormat.PYTORCH,
             ),
