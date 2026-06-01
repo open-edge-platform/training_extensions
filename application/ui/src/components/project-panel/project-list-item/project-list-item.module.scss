@@ -12,3 +12,14 @@
 .projectName {
     @include lineClamp.clamp(1);
 }
+
+.itemTag {
+    font-size: var(--spectrum-global-dimension-size-130);
+    padding: var(--spectrum-global-dimension-size-25) !important;
+
+    span {
+        padding-inline-start: var(--spectrum-global-dimension-size-10) !important;
+        padding-inline-end: var(--spectrum-global-dimension-size-10) !important;
+        text-align: center;
+    }
+}
