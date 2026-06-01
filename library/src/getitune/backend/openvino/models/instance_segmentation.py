@@ -163,7 +163,6 @@ class OVInstanceSegmentationModel(OVModel):
                 img_shape=(img_h, img_w),
                 ori_shape=(ori_h, ori_w),
                 padding=img_info.padding,
-                scale_factor=img_info.scale_factor,
             )
             masks.append(rescaled_masks)
 

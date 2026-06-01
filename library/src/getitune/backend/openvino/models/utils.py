@@ -8,6 +8,7 @@ from __future__ import annotations
 import warnings
 
 import torch
+import torch.nn.functional as f
 
 
 def get_default_num_async_infer_requests() -> int:
@@ -83,12 +84,11 @@ def rescale_masks_to_original(
     img_shape: tuple[int, int],
     ori_shape: tuple[int, int],
     padding: tuple[int, int, int, int],
-    scale_factor: tuple[float, float] | None,
 ) -> torch.Tensor:
     """Rescale predicted binary masks from model input coordinates to original image coordinates.
 
     Handles two preprocessing cases:
-    1. Letterbox (aspect-ratio resize + padding): crop to content using scale_factor, then resize to ori_shape.
+    1. Letterbox (aspect-ratio resize + padding): crop padding to get content, then resize to ori_shape.
     2. Simple resize (no padding): resize directly to ori_shape.
 
     Args:
@@ -96,13 +96,10 @@ def rescale_masks_to_original(
         img_shape: (H, W) of the preprocessed model input image.
         ori_shape: (H, W) of the original image.
         padding: (left, top, right, bottom) padding applied during preprocessing.
-        scale_factor: (scale_h, scale_w) applied during preprocessing, or None.
 
     Returns:
         Tensor of shape (N, ori_H, ori_W) with masks mapped to ori_shape space.
     """
-    import torch.nn.functional as f
-
     img_h, img_w = img_shape
     ori_h, ori_w = ori_shape
 
@@ -112,17 +109,13 @@ def rescale_masks_to_original(
     if (img_h, img_w) == (ori_h, ori_w):
         return masks
 
-    if padding != (0, 0, 0, 0) and scale_factor is not None:
-        # Letterbox: use scale_factor to compute exact content region, then resize to ori_shape
-        scale_h, scale_w = float(scale_factor[0]), float(scale_factor[1])
-        content_h = int(ori_h * scale_h)
-        content_w = int(ori_w * scale_w)
-        pad_left, pad_top = padding[0], padding[1]
-        masks = masks[:, pad_top : pad_top + content_h, pad_left : pad_left + content_w]
-    elif padding != (0, 0, 0, 0):
-        # Fallback: crop using padding directly
+    if padding != (0, 0, 0, 0):
+        # Letterbox: crop padding to get the content region, then resize to ori_shape.
+        # Computing content dims from img_shape - padding is exact (no rounding issues).
         pad_left, pad_top, pad_right, pad_bottom = padding
-        masks = masks[:, pad_top : img_h - pad_bottom, pad_left : img_w - pad_right]
+        content_h = img_h - pad_top - pad_bottom
+        content_w = img_w - pad_left - pad_right
+        masks = masks[:, pad_top : pad_top + content_h, pad_left : pad_left + content_w]
 
     # Resize masks to ori_shape using bilinear interpolation
     # f.interpolate expects (N, C, H, W) input

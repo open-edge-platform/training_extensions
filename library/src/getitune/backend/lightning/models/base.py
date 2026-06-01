@@ -82,9 +82,12 @@ class DataInputParams:
         applies ``(input - mean) / scale`` after converting the input to float.
 
         - Models that use ImageNet normalization on [0,1] images (e.g., DEIM, ViT,
-          YOLOX-tiny) should use 0-1 range values: mean=(0.485, 0.456, 0.406).
-        - Models that expect raw [0,255] float input (e.g., YOLOX s/l/x) should
-          use identity values: mean=(0, 0, 0), std=(1, 1, 1).
+          YOLOX-tiny) should use 0-1 range values: mean=(0.485, 0.456, 0.406),
+          std=(0.229, 0.224, 0.225).
+        - Models that expect [0,255] input but receive [0,1] from the intensity
+          pipeline (e.g., YOLOX s/l/x) encode the x*255 scaling in std:
+          mean=(0, 0, 0), std=(1/255, 1/255, 1/255). ModelAPI then computes
+          (x - 0) / (1/255) = x * 255.
     """
 
     input_size: tuple[int, int]

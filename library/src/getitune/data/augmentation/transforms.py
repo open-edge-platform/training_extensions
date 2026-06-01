@@ -13,7 +13,7 @@ import torchvision.transforms.v2 as tvt_v2
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
-from getitune.data.augmentation.cache import _CachedSample, _clone_for_cache
+from getitune.data.augmentation.cache import CacheableMixin, _CachedSample, _clone_for_cache
 from getitune.data.augmentation.kernels import (
     _resize_image_info,
     _resized_crop_image_info,
@@ -21,7 +21,6 @@ from getitune.data.augmentation.kernels import (
 from getitune.data.entity.sample import BaseSample
 
 if TYPE_CHECKING:
-    from getitune.data.dataset.base import VisionDataset
     from getitune.data.entity.sample import DetectionSample, InstanceSegmentationSample
 
 
@@ -163,7 +162,9 @@ class Resize(tvt_v2.Transform):
             interpolation=self.interpolation,
             antialias=self.antialias,
         )
-        sample.image = sample.image.clamp(0, 1)
+        # Bilinear/bicubic interpolation can produce values slightly outside [0,1]
+        if sample.image.is_floating_point():
+            sample.image = sample.image.clamp(0, 1)
         # Apply padding if needed
         if pad_left > 0 or pad_top > 0 or pad_right > 0 or pad_bottom > 0:
             # Normalise pad value to match the image's value range.
@@ -272,7 +273,7 @@ class Resize(tvt_v2.Transform):
         return sample
 
 
-class CachedMosaic(tvt_v2.Transform):
+class CachedMosaic(CacheableMixin, tvt_v2.Transform):
     """Cached Mosaic augmentation with built-in random perspective crop.
 
     Combines four images into a 2x mosaic canvas, then applies a center-based
@@ -335,53 +336,7 @@ class CachedMosaic(tvt_v2.Transform):
         self.random_pop = random_pop
         self.scale = scale
         self.translate = translate
-        self.results_cache: list[_CachedSample] = []
-        self._cache_frozen: bool = False
-        self._refresh_rate: float = 0.05
-
-    def freeze_cache(self, refresh_rate: float = 0.05) -> None:
-        """Freeze the cache with slow stochastic refresh after pre-warming.
-
-        When frozen, the cache is no longer updated via FIFO eviction on
-        every forward call.  Instead, on each call, there is a small
-        probability (``refresh_rate``) that one random cache entry is
-        replaced with the current sample.  This keeps the cache slowly
-        evolving with new data while maintaining the diversity of the
-        pre-warmed pool.
-
-        This is used with multi-worker DataLoaders (spawn context) where
-        each worker receives a copy of the pre-warmed cache at spawn time.
-        Without this mechanism, aggressive FIFO eviction causes each
-        worker to independently fragment the cache.
-
-        Args:
-            refresh_rate: Probability of replacing one cache entry per
-                forward call.  Lower values keep the pre-warmed pool
-                stable longer; higher values bring in fresh samples
-                faster.  Default 0.05 (~1 in 20 samples triggers a
-                replacement).
-        """
-        self._cache_frozen = True
-        self._refresh_rate = refresh_rate
-
-    def pre_cache(self, dataset: VisionDataset) -> None:
-        """Populate cache from dataset and freeze with stochastic refresh.
-
-        Call before creating a multi-worker DataLoader so all workers
-        inherit a full, diverse cache.  Iterating ``dataset[i]`` triggers
-        the transform pipeline which populates ``results_cache`` via
-        :meth:`forward`.
-
-        Args:
-            dataset: The training dataset (must support ``len()`` and ``[]``).
-        """
-        n = min(self.max_cached_images, len(dataset))
-        if len(self.results_cache) >= n:
-            self.freeze_cache()
-            return
-        for i in range(n):
-            dataset[i]
-        self.freeze_cache()
+        self._init_cache()
 
     def _resize_keep_ratio(self, img: torch.Tensor, target_h: int, target_w: int) -> tuple[torch.Tensor, float]:
         """Resize CHW image keeping aspect ratio (FIT mode). Returns (resized, scale)."""
@@ -474,8 +429,9 @@ class CachedMosaic(tvt_v2.Transform):
         center_y = int(torch.empty(1).uniform_(*self.center_ratio_range).item() * target_h)
 
         device = inputs.image.device
+        num_channels = inputs.image.shape[0]
         fill_val = self._fill_val_normalised()
-        mosaic_img = torch.full((3, mosaic_h, mosaic_w), fill_val, dtype=inputs.image.dtype, device=device)
+        mosaic_img = torch.full((num_channels, mosaic_h, mosaic_w), fill_val, dtype=inputs.image.dtype, device=device)
 
         all_bboxes: list[torch.Tensor] = []
         all_labels: list[torch.Tensor] = []
@@ -583,7 +539,7 @@ class CachedMosaic(tvt_v2.Transform):
         pad_left = pad_w // 2
         pad_top = pad_h // 2
 
-        canvas = torch.full((3, target_h, target_w), fill_val, dtype=image.dtype, device=image.device)
+        canvas = torch.full((image.shape[0], target_h, target_w), fill_val, dtype=image.dtype, device=image.device)
         canvas[:, pad_top : pad_top + new_h, pad_left : pad_left + new_w] = resized
 
         if bboxes.numel() > 0:
@@ -643,7 +599,7 @@ class CachedMosaic(tvt_v2.Transform):
         y_end = y_start + crop_h
 
         # Extract crop from input (with fill for out-of-bounds regions)
-        crop = torch.full((3, crop_h, crop_w), fill_val, dtype=image.dtype, device=image.device)
+        crop = torch.full((image.shape[0], crop_h, crop_w), fill_val, dtype=image.dtype, device=image.device)
 
         src_x1 = max(x_start, 0)
         src_y1 = max(y_start, 0)
@@ -726,14 +682,7 @@ class CachedMosaic(tvt_v2.Transform):
         inputs = _inputs[0]
 
         # Cache management (lightweight clone instead of deepcopy)
-        if not self._cache_frozen:
-            self.results_cache.append(_clone_for_cache(inputs))
-            if len(self.results_cache) > self.max_cached_images:
-                idx = int(torch.randint(0, len(self.results_cache), (1,)).item()) if self.random_pop else 0
-                self.results_cache.pop(idx)
-        elif self.results_cache and torch.rand(1).item() < self._refresh_rate:
-            replace_idx = int(torch.randint(0, len(self.results_cache), (1,)).item())
-            self.results_cache[replace_idx] = _clone_for_cache(inputs)
+        self._update_cache(_clone_for_cache(inputs))
 
         target_h, target_w = self.img_scale
         with_mask = hasattr(inputs, "masks") and inputs.masks is not None
@@ -803,7 +752,7 @@ class CachedMosaic(tvt_v2.Transform):
         )
 
 
-class CachedMixUp(tvt_v2.Transform):
+class CachedMixUp(CacheableMixin, tvt_v2.Transform):
     """Geometry-preserved MixUp augmentation for detection / instance segmentation.
 
     Blends the current image with a cached image using alpha blending without
@@ -866,39 +815,7 @@ class CachedMixUp(tvt_v2.Transform):
         self.max_cached_images = max_cached_images
         self.random_pop = random_pop
         self.prob = p
-
-        self.results_cache: list[_CachedSample] = []
-        self._cache_frozen: bool = False
-        self._refresh_rate: float = 0.05
-
-    def freeze_cache(self, refresh_rate: float = 0.05) -> None:
-        """Freeze the cache with slow stochastic refresh.
-
-        Same semantics as :meth:`CachedMosaic.freeze_cache`.
-
-        Args:
-            refresh_rate: Probability of replacing one cache entry per
-                forward call.  Default 0.05.
-        """
-        self._cache_frozen = True
-        self._refresh_rate = refresh_rate
-
-    def pre_cache(self, dataset: VisionDataset) -> None:
-        """Populate cache from dataset and freeze with stochastic refresh.
-
-        Call before creating a multi-worker DataLoader so all workers
-        inherit a full, diverse cache.
-
-        Args:
-            dataset: The training dataset (must support ``len()`` and ``[]``).
-        """
-        n = min(self.max_cached_images, len(dataset))
-        if len(self.results_cache) >= n:
-            self.freeze_cache()
-            return
-        for i in range(n):
-            dataset[i]
-        self.freeze_cache()
+        self._init_cache()
 
     def _get_cached_index(self) -> int:
         """Return index of a cached sample with non-empty bboxes."""
@@ -956,14 +873,7 @@ class CachedMixUp(tvt_v2.Transform):
         inputs = _inputs[0]
 
         # Cache management (lightweight clone instead of deepcopy)
-        if not self._cache_frozen:
-            self.results_cache.append(_clone_for_cache(inputs))
-            if len(self.results_cache) > self.max_cached_images:
-                pop_idx = int(torch.randint(0, len(self.results_cache), (1,)).item()) if self.random_pop else 0
-                self.results_cache.pop(pop_idx)
-        elif self.results_cache and torch.rand(1).item() < self._refresh_rate:
-            replace_idx = int(torch.randint(0, len(self.results_cache), (1,)).item())
-            self.results_cache[replace_idx] = _clone_for_cache(inputs)
+        self._update_cache(_clone_for_cache(inputs))
 
         # Early returns
         if len(self.results_cache) <= 1:

@@ -27,8 +27,8 @@ from omegaconf import DictConfig
 from torch import nn
 
 from getitune.config.data import IntensityConfig
+from getitune.data.augmentation.cache import CacheableMixin
 from getitune.data.augmentation.intensity import build_intensity_transform
-from getitune.data.augmentation.transforms import CachedMixUp, CachedMosaic
 from getitune.data.entity.sample import BaseSample
 from getitune.data.utils import import_object_from_module
 
@@ -285,7 +285,7 @@ class CPUAugmentationPipeline(nn.Module):
             dataset: The training dataset (must support ``len()`` and ``[]``).
         """
         for aug in self.augmentations:
-            if isinstance(aug, (CachedMosaic, CachedMixUp)):
+            if isinstance(aug, CacheableMixin):
                 aug.pre_cache(dataset)
 
     @classmethod
