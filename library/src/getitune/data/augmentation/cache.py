@@ -118,6 +118,13 @@ class CacheableMixin:
             return
         for i in range(n):
             dataset[i]
+        if len(self.results_cache) < n:
+            msg = (
+                f"{type(self).__name__}.pre_cache: expected {n} cached samples "
+                f"but got {len(self.results_cache)}. Ensure the cacheable transform "
+                f"is part of the dataset's CPU augmentation pipeline."
+            )
+            raise RuntimeError(msg)
         self.freeze_cache()
 
     def _update_cache(self, sample: _CachedSample) -> None:

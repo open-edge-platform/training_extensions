@@ -882,7 +882,8 @@ class CachedMixUp(CacheableMixin, tvt_v2.Transform):
         if torch.rand(1).item() > self.prob:
             return inputs
 
-        # Get cached sample
+        # Get cached sample (read-only: mixup creates new tensors via interpolation/concat,
+        # never mutates cached.image/bboxes/label/masks in place)
         cache_idx = self._get_cached_index()
         cached = self.results_cache[cache_idx]
 
