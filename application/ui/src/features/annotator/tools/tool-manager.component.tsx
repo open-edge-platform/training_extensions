@@ -6,6 +6,7 @@ import { BoundingBoxTool } from './bounding-box-tool/bounding-box-tool.component
 import { MagneticLasso } from './magnetic-lasso/magnetic-lasso.component';
 import { PolygonTool } from './polygon-tool/polygon-tool.component';
 import { SegmentAnythingTool } from './segment-anything-tool/segment-anything-tool.component';
+import { SelectionTool } from './selection-tool/selection-tool.component';
 import { SSIMTool } from './ssim-tool/ssim-tool.component';
 import { usePreloadWebworkers } from './use-preload-webworkers.hook';
 
@@ -37,5 +38,5 @@ export const ToolManager = () => {
         return <SSIMTool />;
     }
 
-    return null;
+    return <SelectionTool />;
 };
