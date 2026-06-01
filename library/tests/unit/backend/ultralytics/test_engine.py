@@ -279,6 +279,7 @@ class TestExport:
         trainer = SimpleNamespace(best=best_ckpt, last=tmp_path / "custom_train" / "weights" / "last.pt")
         yolo.trainer = trainer
         yolo.train.return_value = {"fitness": 0.1}
+        mocker.patch.object(engine._model, "load_checkpoint")
 
         result = engine.train(name="custom_train")
 

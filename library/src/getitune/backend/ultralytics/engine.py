@@ -509,6 +509,10 @@ class UltralyticsEngine(Engine):
         if self._datamodule is None:
             return
 
+        # Load best checkpoint — after train() the model may hold last-epoch weights.
+        if self._last_train_checkpoint is not None and self._last_train_checkpoint.exists():
+            self._model.load_checkpoint(self._last_train_checkpoint)
+
         label_info = self._model.label_info or self._datamodule.label_info
         metric = FMeasure(label_info)
         device = self._device
@@ -532,7 +536,7 @@ class UltralyticsEngine(Engine):
                 source=imgs,  # pyrefly: ignore[bad-argument-type]
                 device=device,
                 imgsz=imgsz,
-                conf=0.0,
+                conf=0.01,
                 save=False,
                 verbose=False,
             )
