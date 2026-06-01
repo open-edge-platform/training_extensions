@@ -31,7 +31,7 @@ hyperparameters:
     allowed_values_input_size:
       - 640
     scheduler:
-      type: cosine
+      type: cosine_annealing
       warmup:
         enable: false
     gradient_clip:
