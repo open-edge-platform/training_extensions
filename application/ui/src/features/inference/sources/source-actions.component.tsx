@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { ActionButton, Flex, Loading, Text } from '@geti/ui';
 import { Back } from '@geti/ui/icons';
 import { usePipeline } from 'hooks/api/pipeline.hook';
-import { isEmpty } from 'lodash-es';
+import { isEmpty, orderBy } from 'lodash-es';
 
 import { $api } from '../../../api/client';
 import type { SourceConfig } from '../../../constants/shared-types';
@@ -53,7 +53,15 @@ export const SourceActions = () => {
     }
 
     if (view === 'list') {
-        return <SourcesList sources={filteredSources} onAddSource={handleAddSource} onEditSource={handleEditSource} />;
+        const sourcesWithConnectedFirst = orderBy(filteredSources, (source) => source.id === connectedSourceId, 'desc');
+
+        return (
+            <SourcesList
+                sources={sourcesWithConnectedFirst}
+                onAddSource={handleAddSource}
+                onEditSource={handleEditSource}
+            />
+        );
     }
 
     return (

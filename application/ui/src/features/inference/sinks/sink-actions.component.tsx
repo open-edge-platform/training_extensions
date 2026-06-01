@@ -5,10 +5,10 @@ import { useState } from 'react';
 
 import { ActionButton, Flex, Loading, Text } from '@geti/ui';
 import { Back } from '@geti/ui/icons';
-import { isEmpty } from 'lodash-es';
+import { usePipeline } from 'hooks/api/pipeline.hook';
+import { isEmpty, orderBy } from 'lodash-es';
 
 import { $api } from '../../../api/client';
-import { usePipeline } from '../../../hooks/api/pipeline.hook';
 import { EditSinkForm } from './edit-sink-form.component';
 import { SinkList } from './sink-list/sink-list.component';
 import { SinkOptions } from './sink-options';
@@ -52,7 +52,9 @@ export const SinkActions = () => {
     }
 
     if (view === 'list') {
-        return <SinkList sinks={filteredSinks} onAddSink={handleAddSinks} onEditSink={handleEditSink} />;
+        const sinksWithConnectedFirst = orderBy(filteredSinks, (sink) => sink.id === connectedSinkId, 'desc');
+
+        return <SinkList sinks={sinksWithConnectedFirst} onAddSink={handleAddSinks} onEditSink={handleEditSink} />;
     }
 
     return (
