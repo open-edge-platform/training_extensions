@@ -158,11 +158,11 @@ const Annotator = ({
             <View gridArea={'canvas'} overflow={'hidden'} position={'relative'}>
                 <AnnotatorCanvasSettings>
                     <AnnotatorCanvas
-                        isLoadingPredictions={isLoadingFramesPredictionsDelayed}
-                        mediaItem={mediaItem}
-                        image={image}
                         mode={mode}
+                        image={image}
+                        mediaItem={mediaItem}
                         isReadOnly={isPredictionMode}
+                        isLoadingPredictions={isLoadingFramesPredictionsDelayed}
                     />
                 </AnnotatorCanvasSettings>
             </View>

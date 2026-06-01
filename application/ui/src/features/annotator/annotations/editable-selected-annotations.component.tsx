@@ -1,9 +1,12 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useHotkeys } from 'react-hotkeys-hook';
+
 import { useZoom } from '../../../components/zoom/zoom.provider';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
+import { HOTKEYS } from '../../../shared/hotkeys-definition';
 import { EditBoundingBox } from '../tools/edit-bounding-box/edit-bounding-box.component';
 import { EditPolygon } from '../tools/edit-polygon/edit-polygon.component';
 import { SvgToolCanvas } from '../tools/svg-tool-canvas.component';
@@ -16,12 +19,50 @@ interface EditableSelectedAnnotationsProps {
 export const EditableSelectedAnnotations = ({ image }: EditableSelectedAnnotationsProps) => {
     const { scale } = useZoom();
     const { annotations } = useAnnotationActions();
-    const { selectedAnnotations } = useSelectedAnnotations();
+    const { deleteAnnotations } = useAnnotationActions();
+    const { selectedAnnotations, setSelectedAnnotations } = useSelectedAnnotations();
 
     const selected =
         selectedAnnotations.size === 0
             ? []
             : annotations.filter((annotation) => selectedAnnotations.has(annotation.id));
+
+    const handleDeleteAnnotations = () => {
+        if (selectedAnnotations.size === 0) {
+            return;
+        }
+
+        const annotationsToDelete = Array.from(selectedAnnotations);
+
+        setSelectedAnnotations(new Set());
+        deleteAnnotations(annotationsToDelete);
+    };
+
+    useHotkeys([HOTKEYS.deleteAnnotation, HOTKEYS.deleteAnnotationAlternative], handleDeleteAnnotations);
+
+    useHotkeys(
+        HOTKEYS.selectAllAnnotations,
+        (event) => {
+            event.preventDefault();
+
+            setSelectedAnnotations((prev) => {
+                return new Set([...prev, ...annotations.map((annotation) => annotation.id)]);
+            });
+        },
+        [setSelectedAnnotations, annotations]
+    );
+
+    useHotkeys(
+        HOTKEYS.deselectAllAnnotations,
+        (event) => {
+            event.preventDefault();
+
+            setSelectedAnnotations(() => {
+                return new Set();
+            });
+        },
+        [setSelectedAnnotations]
+    );
 
     if (selected.length === 0) {
         return null;

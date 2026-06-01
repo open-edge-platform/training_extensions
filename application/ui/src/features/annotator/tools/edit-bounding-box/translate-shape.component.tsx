@@ -28,13 +28,14 @@ export const TranslateShape = ({ zoom, onComplete, translateShape, annotation, c
         <g
             id={`translate-annotation-${annotation.id}`}
             stroke='var(--energy-blue)'
+            fillOpacity='var(--annotation-fill-opacity)'
             strokeWidth={STROKE_WIDTH / zoom}
             aria-label='Drag to move shape'
             onPointerDown={allowPanning(onPointerDown)}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerLeave={onPointerUp}
-            style={{ cursor: 'move' }}
+            style={{ cursor: 'move', pointerEvents: 'auto' }}
         >
             {children}
         </g>
