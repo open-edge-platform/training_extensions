@@ -36,8 +36,17 @@ const getAxisTicks = (total: number): number[] => {
     return total % TICK_SPACING !== 0 ? [...ticks, total] : ticks;
 };
 
-const ItemLabel = (props: LabelProps) => {
-    return props.value === 0 ? null : <Label {...props} fill={'white'} />;
+const ItemLabel = (props: LabelProps & { labelColor?: string }) => {
+    const { labelColor, value, ...rest } = props;
+    return value === 0 ? null : (
+        <Label
+            {...rest}
+            value={value}
+            style={{
+                fill: labelColor ? `lch(from ${labelColor} calc((50 - l) * infinity) 0 0)` : 'white',
+            }}
+        />
+    );
 };
 
 export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLabelsChartProps) => {
@@ -52,6 +61,7 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
 
         return {
             label: projectLabel.name,
+            color: projectLabel.color,
             score: matchingInstances?.instances ?? 0,
         };
     });
@@ -84,8 +94,14 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
                     tickLine={false}
                 />
 
-                <Bar dataKey='score' fill='var(--moss)' radius={[4, 4, 4, 4]} barSize={BAR_SIZE}>
-                    <LabelList content={ItemLabel} position='insideEnd' />
+                <Bar dataKey='score' radius={[4, 4, 4, 4]} fill={'color'} barSize={BAR_SIZE}>
+                    <LabelList
+                        dataKey='score'
+                        position='insideEnd'
+                        content={(props) => (
+                            <ItemLabel {...props} labelColor={chartData?.at(props.index ?? 0)?.color} />
+                        )}
+                    />
                 </Bar>
 
                 <Tooltip
