@@ -14,6 +14,7 @@ import {
     View,
     type SpectrumDropZoneProps,
 } from '@geti/ui';
+import isFunction from 'lodash-es/isFunction';
 
 import { ReactComponent as DropFiles } from '../../../assets/drop-files.svg';
 import { getFilesFromDropEvent } from '../../../shared/drop-zone.utils';
@@ -28,26 +29,34 @@ type DatasetDropZoneProps = {
 
 type DropEvent = Parameters<NonNullable<SpectrumDropZoneProps['onDrop']>>[0];
 
+// eslint-disable-next-line max-len
+const supportedFormatsMessage = `Please use supported image (${VALID_IMAGE_EXT.join(', ')}) or video (${VALID_VIDEO_EXT.join(', ')}) formats.`;
+
 export const DatasetDropZone = ({ children, onFilesDropped }: DatasetDropZoneProps) => {
     const handleDrop = async (event: DropEvent) => {
-        if (onFilesDropped === undefined) {
+        if (!isFunction(onFilesDropped)) {
             return;
         }
 
         const files = await getFilesFromDropEvent(event);
         const supported = files.filter(isSupportedMediaFile);
 
+        if (supported.length === 0 && files.length > 0) {
+            toast({
+                type: 'warning',
+                message: `No valid files found. ${supportedFormatsMessage}`,
+            });
+            return;
+        }
+
         if (supported.length < files.length) {
             toast({
                 type: 'neutral',
-                // eslint-disable-next-line max-len
-                message: `Some files were skipped. Please use supported image (${VALID_IMAGE_EXT.join(', ')}) or video (${VALID_VIDEO_EXT.join(', ')}) formats.`,
+                message: `Some files were skipped. ${supportedFormatsMessage}`,
             });
         }
 
-        if (supported.length > 0) {
-            void onFilesDropped(supported);
-        }
+        onFilesDropped(supported);
     };
 
     return (
