@@ -16,6 +16,7 @@ export class PolygonToolPage {
         const relative = await withRelative(this.page);
 
         const startPoint = relative(polygon.points[0].x, polygon.points[0].y);
+        const restPoints = polygon.points.slice(1);
 
         await this.page.mouse.move(startPoint.x, startPoint.y);
         await this.page.mouse.down();
@@ -24,7 +25,7 @@ export class PolygonToolPage {
             await this.page.mouse.up();
         }
 
-        for (const point of polygon.points) {
+        for (const point of restPoints) {
             const relativePoint = relative(point.x, point.y);
 
             await this.page.mouse.move(relativePoint.x, relativePoint.y);

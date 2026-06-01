@@ -1,21 +1,34 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Text } from '@geti/ui';
+import { Divider, Flex, Text } from '@geti/ui';
 import { useDatasetMediaWithReviewStatus } from 'hooks/use-dataset-media-with-review-status.hook';
 
 type TotalItemsProps = {
     totalSelectedElements: number;
 };
 
+const pluralRules = new Intl.PluralRules('en');
+
 export const TotalItems = ({ totalSelectedElements }: TotalItemsProps) => {
     const { totalCount } = useDatasetMediaWithReviewStatus();
 
-    const hasSelectedElements = totalSelectedElements > 0;
-
-    if (hasSelectedElements) {
-        return <Text>{`${totalSelectedElements} selected`}</Text>;
+    if (totalCount === 0) {
+        return null;
     }
 
-    return <Text>{`${totalCount} media item${totalCount === 1 ? '' : 's'}`}</Text>;
+    const hasSelectedElements = totalSelectedElements > 0;
+
+    return (
+        <Flex gap={'size-100'}>
+            {hasSelectedElements && (
+                <>
+                    <Text>{`${totalSelectedElements} selected`}</Text>
+                    <Divider orientation={'vertical'} size={'S'} />
+                </>
+            )}
+
+            <Text>{`${totalCount} media ${pluralRules.select(totalCount) === 'one' ? 'item' : 'items'}`}</Text>
+        </Flex>
+    );
 };

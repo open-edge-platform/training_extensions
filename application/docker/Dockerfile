@@ -3,7 +3,7 @@
 ##############
 # Backend base
 ##############
-FROM python:3.13-slim@sha256:d49c1ff87eb98eac346fc250f52925f726eb913c43a92854246dd03c9692ad67 AS backend-base
+FROM python:3.13-slim@sha256:b04b5d7233d2ad9c379e22ea8927cd1378cd15c60d4ef876c065b25ea8fb3bf3 AS backend-base
 
 # uv / uvx
 COPY --from=docker.io/astral/uv:0.10.4@sha256:4cac394b6b72846f8a85a7a0e577c6d61d4e17fe2ccee65d9451a8b3c9efb4ac /uv /uvx /bin/
@@ -108,7 +108,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ##################
 # Geti UI packages
 ##################
-FROM node:24-alpine3.22@sha256:b689d4005875ae167178471a7a622ec2909459a3bbb32277260be1971af7a99f AS geti-ui-packages
+FROM node:24-alpine3.22@sha256:191c9f0080fcbbc6547a85dc0ff7988072214a355aabdc1d2ec55a7dae5eea8a AS geti-ui-packages
 
 WORKDIR /home/application/ui/
 RUN apk add --no-cache git=2.49.1-r0
@@ -118,7 +118,7 @@ RUN npm run clone-geti-ui-packages
 #############
 # Web UI deps
 #############
-FROM node:24-alpine3.22@sha256:b689d4005875ae167178471a7a622ec2909459a3bbb32277260be1971af7a99f AS web-ui-base
+FROM node:24-alpine3.22@sha256:191c9f0080fcbbc6547a85dc0ff7988072214a355aabdc1d2ec55a7dae5eea8a AS web-ui-base
 
 WORKDIR /home/application/ui/
 
@@ -144,7 +144,7 @@ RUN npm run build
 #########################
 # Base for CPU, GPU and XPU runtime images
 #########################
-FROM python:3.13-slim@sha256:d49c1ff87eb98eac346fc250f52925f726eb913c43a92854246dd03c9692ad67 AS runtime-base
+FROM python:3.13-slim@sha256:b04b5d7233d2ad9c379e22ea8927cd1378cd15c60d4ef876c065b25ea8fb3bf3 AS runtime-base
 
 LABEL org.opencontainers.image.source="https://github.com/open-edge-platform/training_extensions"
 LABEL org.opencontainers.image.description="Geti – train, optimize and deploy deep-learning models"
@@ -229,6 +229,16 @@ RUN set -eu; \
     # Remove cuSolver MG libraries (enterprise feature)
     find "$CLEANUP_ROOT" -name "libcusolverMg.so*" -delete 2>/dev/null || true
 
+FROM xpu-base AS xpu-clean
+
+RUN set -eu; \
+    CLEANUP_ROOT="$("/application/backend/.venv/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    [ -n "$CLEANUP_ROOT" ] && [ -d "$CLEANUP_ROOT" ]; \
+    TARGET_DIR="${CLEANUP_ROOT}/triton/backends/nvidia"; \
+    echo "Removing triton nvidia backend from ${CLEANUP_ROOT}..." && \
+    # Remove triton nvidia backend
+    find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia" -prune -exec rm -rf {} + 2>/dev/null || true
+
 ######################
 # Server (CPU version)
 ######################
@@ -275,7 +285,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 USER ${USER_NAME}
 
-COPY --from=xpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
+COPY --from=xpu-clean --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
 # App code + UI assets last – source-only changes only invalidate this layer
 COPY --link application/backend/app /application/backend/app

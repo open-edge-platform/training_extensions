@@ -13,6 +13,7 @@ import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode'
 import { HOTKEYS } from '../../../../shared/hotkeys-definition';
 import { isImage, isVideoFrame } from '../../../../shared/media-item-utils';
 import { Labels } from '../../../annotator/labels/labels.component';
+import { usePredictionSetup } from '../../../annotator/predictions-setup-provider.component';
 import { useVideoPlayerContext } from '../../../annotator/video-player/video-player-provider.component';
 import { isClassificationTask, isMultiLabelClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
@@ -91,6 +92,7 @@ export const SecondaryToolbar = ({
 }: SecondaryToolbarProps) => {
     const { data: selectedProject } = useProject();
     const videoPlayerContext = useVideoPlayerContext();
+    const { selectableModels } = usePredictionSetup();
     const isPlaying = videoPlayerContext?.videoControls?.isPlaying ?? false;
 
     const { canSubmit, isSaving, submitAnnotations, submitPredictions, initialAnnotations, initialPredictions } =
@@ -138,13 +140,7 @@ export const SecondaryToolbar = ({
     );
 
     return (
-        <Flex
-            width={'100%'}
-            height={'100%'}
-            alignItems={'center'}
-            justifyContent={'space-between'}
-            UNSAFE_className={classes.secondaryToolbarContainer}
-        >
+        <Flex width={'100%'} height={'100%'} alignItems={'center'} justifyContent={'space-between'}>
             <Toolbar.Container>
                 <Flex alignItems={'center'} gap={'size-50'}>
                     <Toolbar.Section>
@@ -160,9 +156,11 @@ export const SecondaryToolbar = ({
 
                     {isPredictionMode && (
                         <Flex gap={'size-50'}>
-                            <Toolbar.Section>
-                                <PredictionModelSelector isDisabled={isLoadingPredictions || isPlaying} />
-                            </Toolbar.Section>
+                            {!isEmpty(selectableModels) ? (
+                                <Toolbar.Section minWidth={'size-2000'}>
+                                    <PredictionModelSelector isDisabled={isLoadingPredictions || isPlaying} />
+                                </Toolbar.Section>
+                            ) : null}
                             <Toolbar.Section>
                                 <PredictionInferenceDevices isDisabled={isLoadingPredictions || isPlaying} />
                             </Toolbar.Section>

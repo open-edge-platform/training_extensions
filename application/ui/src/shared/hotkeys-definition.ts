@@ -12,6 +12,7 @@ const CTRL_OR_COMMAND_KEY = isMac() ? COMMAND_KEY : CTRL_KEY;
 export const HOTKEYS = {
     undo: `${CTRL_OR_COMMAND_KEY}+z`,
     redo: `${CTRL_OR_COMMAND_KEY}+y`,
+    redoAlt: `${CTRL_OR_COMMAND_KEY}+shift+z`,
     toggleAnnotationsVisibility: 'a',
     deleteAnnotation: 'delete',
     deleteAnnotationAlternative: 'backspace',
@@ -30,6 +31,7 @@ export const HOTKEYS = {
 const COMMON_HOTKEYS = {
     undo: HOTKEYS.undo,
     redo: HOTKEYS.redo,
+    redoAlt: HOTKEYS.redoAlt,
     toggleAnnotationsVisibility: HOTKEYS.toggleAnnotationsVisibility,
     deleteAnnotation: HOTKEYS.deleteAnnotation,
     fitToScreen: HOTKEYS.fitToScreen,

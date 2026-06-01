@@ -39,6 +39,10 @@
     --moss: #8bae46;
     --moss-tint-1: #b1d272;
 
+    --training-subset: #86b3ca;
+    --validation-subset: var(--geode-tint);
+    --test-subset: var(--moss);
+
     --annotation-fill-opacity: 0.4;
 
     --spectrum-button-primary-text-font-weight: 500;

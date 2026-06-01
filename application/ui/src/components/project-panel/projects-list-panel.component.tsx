@@ -16,14 +16,14 @@ import {
     Text,
     View,
 } from '@geti/ui';
-import { AddCircle } from '@geti/ui/icons';
+import { Edit } from '@geti/ui/icons';
+import { useProjects } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { partition } from 'lodash-es';
 import { useNavigate } from 'react-router';
 
 import { paths } from '../../constants/paths';
 import { MenuActions } from '../../features/project/list/menu-actions/menu-actions.component';
-import { useProjects } from '../../hooks/api/project.hook';
 import { ProjectThumbnail } from './project-thumbnail/project-thumbnail.component';
 import { ProjectsList } from './projects-list.component';
 
@@ -37,54 +37,48 @@ interface SelectedProjectProps {
 
 const SelectedProjectButton = ({ name, id, isActive }: SelectedProjectProps) => {
     return (
-        <Flex alignItems={'center'} gap={'size-100'}>
-            <Divider alignSelf={'center'} height={'size-400'} orientation={'vertical'} size={'S'} />
-
-            <ActionButton
-                aria-label={`Selected project ${name}`}
-                isQuiet
-                height={'max-content'}
-                staticColor={'white'}
-                UNSAFE_className={classes.selectedProjectButton}
-            >
-                <View margin='size-50'>
-                    <ProjectThumbnail
-                        // when selected project changes, we want to reset the project thumbnail
-                        key={id}
-                        project={{ name, id: id ?? name }}
-                        height={'size-400'}
-                        width={'size-400'}
-                    />
+        <ActionButton
+            aria-label={`Selected project ${name}`}
+            isQuiet
+            height={'max-content'}
+            staticColor={'white'}
+            UNSAFE_className={classes.selectedProjectButton}
+        >
+            <View margin='size-50'>
+                <ProjectThumbnail
+                    // when selected project changes, we want to reset the project thumbnail
+                    key={id}
+                    project={{ name, id: id ?? name }}
+                    height={'size-400'}
+                    width={'size-400'}
+                />
+            </View>
+            <Flex direction={'column'} minWidth={0}>
+                <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.projectName}>
+                    <span title={name}>{name}</span>
                 </View>
-                <Flex direction={'column'} minWidth={0}>
-                    <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.projectName}>
-                        <span title={name}>{name}</span>
-                    </View>
-                    {isActive ? <Tag className={classes.statusTag} text={'Active'} /> : null}
-                </Flex>
-            </ActionButton>
-        </Flex>
+                {isActive ? <Tag className={classes.statusTag} text={'Active'} /> : null}
+            </Flex>
+        </ActionButton>
     );
 };
 
-const AddProjectButton = () => {
+const ManageProjects = () => {
     const navigate = useNavigate();
 
-    const addProject = () => {
-        navigate(paths.project.new({}));
+    const navigateToProjectsList = () => {
+        navigate(paths.project.index({}));
     };
 
     return (
         <ActionButton
             isQuiet
             width={'100%'}
-            marginStart={'size-100'}
-            marginEnd={'size-350'}
-            UNSAFE_className={classes.addProjectButton}
-            onPress={addProject}
+            UNSAFE_className={classes.manageProjectsButton}
+            onPress={navigateToProjectsList}
         >
-            <AddCircle />
-            <Text marginX='size-50'>Create project</Text>
+            <Edit />
+            <Text>Manage projects</Text>
         </ActionButton>
     );
 };
@@ -161,8 +155,8 @@ export const ProjectsListPanel = () => {
                     </>
                 )}
 
-                <ButtonGroup UNSAFE_className={classes.panelButtons}>
-                    <AddProjectButton />
+                <ButtonGroup UNSAFE_className={classes.buttonsGroup}>
+                    <ManageProjects />
                 </ButtonGroup>
             </Dialog>
         </DialogTrigger>

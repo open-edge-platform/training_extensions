@@ -325,8 +325,8 @@ class MediaService(BaseSessionManagedService):
 
         repo.delete(obj_id=str(media.id))
 
-    def get_frame_binary(self, project: Project, video: Video, frame_index: int) -> Image.Image:
-        video_path = self.get_media_binary_path(project_id=project.id, media=video)
+    def get_frame_binary(self, project_id: UUID, video: Video, frame_index: int) -> Image.Image:
+        video_path = self.get_media_binary_path(project_id=project_id, media=video)
         return self._get_frame_binary_from_video_file(video_path=video_path, frame_index=frame_index)
 
     def get_frame_binaries(self, project: Project, video: Video, frame_indexes: list[int]) -> dict[int, np.ndarray]:
@@ -345,7 +345,7 @@ class MediaService(BaseSessionManagedService):
         return self._get_video_service().extract_video_frames(video_path=video_path, frame_indexes=frame_indexes)
 
     def get_frame_thumbnail(self, project: Project, video: Video, frame_index: int) -> Image.Image:
-        video_frame = self.get_frame_binary(project=project, video=video, frame_index=frame_index)
+        video_frame = self.get_frame_binary(project_id=project.id, video=video, frame_index=frame_index)
         return MediaService._crop_image_to_thumbnail(video_frame)
 
     def _get_frame_binary_from_video_file(self, video_path: Path, frame_index: int) -> Image.Image:

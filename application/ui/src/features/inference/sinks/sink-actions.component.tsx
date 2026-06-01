@@ -8,6 +8,7 @@ import { Back } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../api/client';
+import { usePipeline } from '../../../hooks/api/pipeline.hook';
 import { EditSinkForm } from './edit-sink-form.component';
 import { SinkList } from './sink-list/sink-list.component';
 import { SinkOptions } from './sink-options';
@@ -18,6 +19,9 @@ export const SinkActions = () => {
     const [currentSink, setCurrentSink] = useState<SinkConfig | null>(null);
     const { data: sinks = [], isLoading } = $api.useSuspenseQuery('get', '/api/sinks');
     const filteredSinks = sinks.filter((sink) => sink.sink_type !== 'disconnected');
+
+    const pipeline = usePipeline();
+    const connectedSinkId = pipeline.data.sink?.id;
 
     const handleShowList = () => {
         setView('list');
@@ -37,7 +41,14 @@ export const SinkActions = () => {
     }
 
     if (view === 'edit' && !isEmpty(currentSink)) {
-        return <EditSinkForm config={currentSink} onSaved={handleShowList} onBackToList={handleShowList} />;
+        return (
+            <EditSinkForm
+                config={currentSink}
+                onSaved={handleShowList}
+                onBackToList={handleShowList}
+                connectedSinkId={connectedSinkId}
+            />
+        );
     }
 
     if (view === 'list') {
@@ -46,7 +57,7 @@ export const SinkActions = () => {
 
     return (
         <SinkOptions onSaved={handleShowList} hasHeader>
-            <Flex gap={'size-100'} marginBottom={'size-100'} alignItems={'center'} justifyContent={'space-between'}>
+            <Flex gap={'size-100'} marginBottom={'size-100'} alignItems={'center'}>
                 <ActionButton isQuiet onPress={handleShowList}>
                     <Back />
                 </ActionButton>

@@ -14,11 +14,12 @@ import { VideoFile } from './video-file/video-file.component';
 
 interface EditSourceFormProps {
     config: SourceConfig;
+    connectedSourceId: string | undefined;
     onSaved: () => void;
     onBackToList: () => void;
 }
 
-export const EditSourceForm = ({ config, onSaved, onBackToList }: EditSourceFormProps) => {
+export const EditSourceForm = ({ config, connectedSourceId, onSaved, onBackToList }: EditSourceFormProps) => {
     if (config.source_type === 'usb_camera') {
         return (
             <EditSource
@@ -27,6 +28,7 @@ export const EditSourceForm = ({ config, onSaved, onBackToList }: EditSourceForm
                 onBackToList={onBackToList}
                 componentFields={(state) => <UsbCamera defaultState={state} />}
                 bodyFormatter={usbCameraBodyFormatter}
+                isConnected={connectedSourceId === config.id}
             />
         );
     }
@@ -39,6 +41,7 @@ export const EditSourceForm = ({ config, onSaved, onBackToList }: EditSourceForm
                 onBackToList={onBackToList}
                 componentFields={(state) => <IpCamera defaultState={state} />}
                 bodyFormatter={ipCameraBodyFormatter}
+                isConnected={connectedSourceId === config.id}
             />
         );
     }
@@ -51,6 +54,7 @@ export const EditSourceForm = ({ config, onSaved, onBackToList }: EditSourceForm
                 onBackToList={onBackToList}
                 componentFields={(state: VideoFileSourceConfig) => <VideoFile defaultState={state} />}
                 bodyFormatter={videoFileBodyFormatter}
+                isConnected={connectedSourceId === config.id}
             />
         );
     }
@@ -62,6 +66,7 @@ export const EditSourceForm = ({ config, onSaved, onBackToList }: EditSourceForm
             config={config as ImagesFolderSourceConfig}
             componentFields={(state: ImagesFolderSourceConfig) => <ImageFolder defaultState={state} />}
             bodyFormatter={imagesFolderBodyFormatter}
+            isConnected={connectedSourceId === config.id}
         />
     );
 };

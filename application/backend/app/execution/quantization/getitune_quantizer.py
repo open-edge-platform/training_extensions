@@ -11,6 +11,7 @@ import yaml
 from datumaro.experimental.fields import Subset
 from getitune.backend.openvino.engine import OVEngine
 from getitune.config.data import SamplerConfig, SubsetConfig
+from getitune.data.entity.utils import detect_storage_dtype
 from getitune.data.factory import TransformLibFactory
 from getitune.data.module import DataModule
 from loguru import logger
@@ -145,6 +146,11 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         train_subset_config = build_subset_config("train")
         val_subset_config = build_subset_config("val")
         test_subset_config = build_subset_config("test")
+
+        # Detect storage dtype and propagate to subset configs.
+        storage_dtype = detect_storage_dtype(dm_training_dataset)
+        for cfg in (train_subset_config, val_subset_config, test_subset_config):
+            cfg.intensity.storage_dtype = storage_dtype
 
         # Wrap into VisionDataset instances
         getitune_task_type = get_getitune_task_type_by_task(task)
