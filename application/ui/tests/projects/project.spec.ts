@@ -34,7 +34,7 @@ test.describe('Project', () => {
 
     test('creates a project', async ({ page, network }) => {
         const projectPage = new ProjectPage(page);
-        const projectName = 'New Project';
+        const projectName = `new-project-${Date.now()}`;
 
         network.use(
             http.post('/api/projects', async ({ request, response }) => {
@@ -58,6 +58,12 @@ test.describe('Project', () => {
             })
         );
 
+        await stepCreateProject(page, {
+            projectName,
+            task: 'instance_segmentation',
+            labels: ['Person', 'Animal'],
+        });
+
         network.use(
             http.get('/api/projects', () => {
                 return HttpResponse.json([
@@ -79,12 +85,6 @@ test.describe('Project', () => {
                 ]);
             })
         );
-
-        await stepCreateProject(page, {
-            projectName,
-            task: 'instance_segmentation',
-            labels: ['Person', 'Animal'],
-        });
 
         // Go back to project list and confirm the project was created
         await projectPage.gotoList();

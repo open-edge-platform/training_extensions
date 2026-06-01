@@ -5,7 +5,7 @@ import { Page } from '@playwright/test';
 
 export type CreateProjectInput = {
     projectName?: string;
-    withPrefix?: string;
+    projectNamePrefix?: string;
     task: 'classification' | 'detection' | 'instance_segmentation';
     labels: string[];
 };
@@ -31,5 +31,5 @@ export type InferenceSourceSinkConfig = {
 
 export type FlowInput = {
     page: Page;
-    withPrefix: string;
+    projectNamePrefix: string;
 };

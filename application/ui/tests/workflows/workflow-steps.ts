@@ -54,7 +54,7 @@ const openPipelineTab = async (page: Page, tabName: 'Input' | 'Output'): Promise
 const selectPickerOptionIfVisible = async (page: Page, label: string): Promise<void> => {
     const picker = page.getByLabel(label, { exact: true }).last();
 
-    if ((await picker.count()) === 0) {
+    if (!(await picker.isVisible())) {
         return;
     }
 
@@ -67,7 +67,7 @@ const selectPickerOptionIfVisible = async (page: Page, label: string): Promise<v
 
 export const stepCreateProject = async (page: Page, input: CreateProjectInput): Promise<CreatedProject> => {
     const projectPage = new ProjectPage(page);
-    const projectName = input.projectName ?? `${input.withPrefix ?? 'project'}-${input.task}`;
+    const projectName = input.projectName ?? `${input.projectNamePrefix ?? 'project'}-${input.task}`;
 
     await projectPage.gotoCreate();
     await projectPage.fillProjectForm({
@@ -229,14 +229,14 @@ export const stepWaitForCapturedMediaAndOpenAnnotator = async (page: Page, datas
 };
 
 // Flow 1: create project -> add media -> annotate -> train
-export const runFlowCreateAnnotateTrain = async ({ page, withPrefix }: FlowInput): Promise<CreatedProject> => {
+export const runFlowCreateAnnotateTrain = async ({ page, projectNamePrefix }: FlowInput): Promise<CreatedProject> => {
     const datasetPage = new DatasetPage(page);
     const annotatorPage = new AnnotatorPage(page);
     const boundingBoxTool = new BoundingBoxToolPage(page);
     const modelsPage = new ModelsPage(page);
 
     const project = await stepCreateProject(page, {
-        withPrefix,
+        projectNamePrefix,
         task: DEFAULT_TASK,
         labels: DEFAULT_LABELS,
     });
@@ -252,7 +252,7 @@ export const runFlowCreateAnnotateTrain = async ({ page, withPrefix }: FlowInput
 // Flow 2: create project -> configure inference -> stream auto-capture -> annotate -> train
 export const runFlowStreamAutoCaptureAnnotateTrain = async ({
     page,
-    withPrefix,
+    projectNamePrefix,
 }: FlowInput): Promise<CreatedProject> => {
     const datasetPage = new DatasetPage(page);
     const annotatorPage = new AnnotatorPage(page);
@@ -261,7 +261,7 @@ export const runFlowStreamAutoCaptureAnnotateTrain = async ({
     const streamPage = new StreamPage(page);
 
     const project = await stepCreateProject(page, {
-        withPrefix,
+        projectNamePrefix,
         task: DEFAULT_TASK,
         labels: DEFAULT_LABELS,
     });
