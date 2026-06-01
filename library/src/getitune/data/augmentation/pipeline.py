@@ -32,6 +32,8 @@ from getitune.data.entity.sample import BaseSample
 from getitune.data.utils import import_object_from_module
 
 if TYPE_CHECKING:
+    from torch.utils.data import Dataset
+
     from getitune.config.data import SubsetConfig
 
 
@@ -271,7 +273,7 @@ class CPUAugmentationPipeline(nn.Module):
         """Get normalization std."""
         return self._std
 
-    def prepare(self, dataset: Any) -> None:
+    def prepare(self, dataset: Dataset) -> None:
         """Pre-populate caches in augmentations that support it.
 
         Delegates to ``pre_cache(dataset)`` on each augmentation that
