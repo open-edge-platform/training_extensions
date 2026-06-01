@@ -9,6 +9,7 @@
         background-color 0.3s ease-in-out,
         color 0.3s ease-in-out;
     font-weight: 700;
+    font-size: var(--spectrum-global-dimension-size-175);
 
     &:is([aria-pressed='true']) {
         background-color: var(--spectrum-global-color-gray-50);
