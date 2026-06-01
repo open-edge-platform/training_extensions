@@ -43,7 +43,7 @@ const ItemLabel = (props: LabelProps & { labelColor?: string }) => {
             {...rest}
             value={value}
             style={{
-                fill: `lch(from ${labelColor} calc((50 - l) * infinity) 0 0)`,
+                fill: labelColor ? `lch(from ${labelColor} calc((50 - l) * infinity) 0 0)` : 'white',
             }}
         />
     );
@@ -94,7 +94,7 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
                     tickLine={false}
                 />
 
-                <Bar dataKey='score' radius={[4, 4, 4, 4]} barSize={BAR_SIZE}>
+                <Bar dataKey='score' radius={[4, 4, 4, 4]} fill={'color'} barSize={BAR_SIZE}>
                     <LabelList
                         dataKey='score'
                         position='insideEnd'
