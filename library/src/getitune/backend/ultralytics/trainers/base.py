@@ -87,8 +87,12 @@ class GetiTuneDataBridgeMixin:
             return super().get_dataloader(dataset_path, batch_size, rank, mode)  # type: ignore[misc]
 
         dataset = self.build_dataset(dataset_path, mode, batch_size)
-        shuffle = mode == "train"
         nw: int = self.args.workers  # type: ignore[attr-defined]
+
+        if mode == "train" and nw > 0:
+            self._warmup_mosaic_cache(dataset)
+
+        shuffle = mode == "train"
         return InfiniteDataLoader(
             dataset,
             batch_size=batch_size,
@@ -102,6 +106,50 @@ class GetiTuneDataBridgeMixin:
             persistent_workers=nw > 0,
             worker_init_fn=seed_worker,
         )
+
+    @staticmethod
+    def _warmup_mosaic_cache(adapter: UltralyticsDatasetAdapter) -> None:
+        """Pre-populate CachedMosaic cache before workers spawn.
+
+        With spawn multiprocessing, each worker gets a copy of the dataset
+        (including transforms) at spawn time.  If the CachedMosaic cache is
+        empty, each worker independently builds its own cache from a
+        fragmented view of the data, significantly reducing mosaic diversity
+        for small datasets.
+
+        By iterating through samples in the main process before spawning
+        workers, we ensure every worker starts with a full, diverse cache.
+        The cache is then frozen to prevent workers from independently
+        replacing entries via FIFO eviction, which would re-fragment
+        diversity.
+        """
+        from getitune.data.augmentation.pipeline import CPUAugmentationPipeline
+        from getitune.data.augmentation.transforms import CachedMosaic
+
+        vision_dataset = adapter._dataset
+        transforms = vision_dataset.transforms
+        if not isinstance(transforms, CPUAugmentationPipeline):
+            return
+
+        mosaic_transform: CachedMosaic | None = None
+        for aug in transforms.augmentations:
+            if isinstance(aug, CachedMosaic):
+                mosaic_transform = aug
+                break
+
+        if mosaic_transform is None:
+            return
+
+        n_warmup = min(mosaic_transform.max_cached_images, len(vision_dataset))
+        if len(mosaic_transform.results_cache) >= n_warmup:
+            mosaic_transform.freeze_cache()
+            return
+
+        logger.info(f"Pre-warming CachedMosaic cache with {n_warmup} samples")
+        for i in range(n_warmup):
+            vision_dataset[i]
+        mosaic_transform.freeze_cache()
+        logger.info(f"CachedMosaic cache warmed and frozen: {len(mosaic_transform.results_cache)} entries")
 
     def _setup_train(self) -> None:
         """Run parent setup, then fix warmup for small datasets.
@@ -230,6 +278,23 @@ class GetiTuneDataBridgeMixin:
         if self._use_getitune_data:
             return
         super().set_class_weights()  # type: ignore[misc]
+
+    def optimizer_step(self) -> None:
+        """Perform optimizer step with configurable gradient clipping.
+
+        Ultralytics hardcodes ``max_norm=10.0``.  This override reads
+        ``max_grad_norm`` from training args so users can control clipping
+        via the backend UI.  A value of ``0.0`` disables clipping entirely.
+        """
+        max_norm = getattr(self.args, "max_grad_norm", 10.0)  # type: ignore[attr-defined]
+        self.scaler.unscale_(self.optimizer)  # type: ignore[attr-defined]
+        if max_norm and max_norm > 0:
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=max_norm)  # type: ignore[attr-defined]
+        self.scaler.step(self.optimizer)  # type: ignore[attr-defined]
+        self.scaler.update()  # type: ignore[attr-defined]
+        self.optimizer.zero_grad()  # type: ignore[attr-defined]
+        if self.ema:  # type: ignore[attr-defined]
+            self.ema.update(self.model)  # type: ignore[attr-defined]
 
     def plot_training_labels(self) -> None:
         """Skip label plotting (adapter has no ``labels`` attr)."""

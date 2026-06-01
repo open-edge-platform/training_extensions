@@ -20,7 +20,7 @@ capabilities:
 
 hyperparameters:
   training:
-    learning_rate: 0.01
+    learning_rate: 0.001
     weight_decay: 0.0005
     max_epochs: 80
     early_stopping:
@@ -30,10 +30,19 @@ hyperparameters:
     input_size_height: 640
     allowed_values_input_size:
       - 640
+    scheduler:
+      type: cosine
+      warmup:
+        enable: false
+    gradient_clip:
+      enable: true
+      max_grad_norm: 10.0
+    gradient_accumulation:
+      enable: false
   dataset_preparation:
     augmentation:
       mosaic:
-        enable: false
+        enable: true
         probability: 1.0
         scale: 0.5
         translate: 0.1

@@ -91,7 +91,20 @@ class Configurator:
         return configurator.to_config_dict()
 
     def apply_hyper_parameters(self, hyper_parameters: dict) -> None:
-        """Apply standard Geti hyper-parameters."""
+        """Apply standard Geti hyper-parameters.
+
+        Maps all backend-supported hyperparameters to Ultralytics training args:
+
+        - ``learning_rate`` → ``lr0``
+        - ``weight_decay`` → ``weight_decay``
+        - ``max_epochs`` → ``epochs``
+        - ``batch_size`` → ``batch`` + data subset batch sizes
+        - ``input_size_height/width`` → ``imgsz`` + data ``input_size``
+        - ``early_stopping`` → ``patience`` (0 = disabled)
+        - ``scheduler.warmup`` → ``warmup_epochs``
+        - ``gradient_clip`` → ``max_grad_norm`` (used by trainer mixin)
+        - ``gradient_accumulation`` → ``nbs`` (nominal batch size)
+        """
         training = hyper_parameters.get("training", {})
         if not training:
             return
@@ -124,6 +137,68 @@ class Configurator:
                 train_cfg["patience"] = 0
             elif early_stopping.get("enable") is True and early_stopping.get("patience") is not None:
                 train_cfg["patience"] = int(early_stopping["patience"])
+
+        self._apply_scheduler(training.get("scheduler"), train_cfg)
+        self._apply_gradient_clip(training.get("gradient_clip"), train_cfg)
+        self._apply_gradient_accumulation(training.get("gradient_accumulation"), train_cfg)
+
+    @staticmethod
+    def _apply_scheduler(scheduler_cfg: dict | None, train_cfg: dict) -> None:
+        """Map scheduler parameters to Ultralytics training args.
+
+        Ultralytics uses a cosine LR schedule (controlled by ``lrf``), so
+        ``factor`` and ``patience`` from ReduceLROnPlateau are not applicable.
+        Only warmup settings are mapped.
+        """
+        if not isinstance(scheduler_cfg, dict):
+            return
+
+        warmup = scheduler_cfg.get("warmup")
+        if isinstance(warmup, dict):
+            if warmup.get("enable") and warmup.get("epochs") is not None:
+                train_cfg["warmup_epochs"] = float(warmup["epochs"])
+            elif warmup.get("enable") is False:
+                train_cfg["warmup_epochs"] = 0.0
+
+    @staticmethod
+    def _apply_gradient_clip(gradient_clip_cfg: dict | None, train_cfg: dict) -> None:
+        """Map gradient clipping to Ultralytics training args.
+
+        Stores ``max_grad_norm`` in training config for the trainer mixin
+        to use in its ``optimizer_step`` override.
+        """
+        if not isinstance(gradient_clip_cfg, dict):
+            return
+
+        if gradient_clip_cfg.get("enable"):
+            max_norm = gradient_clip_cfg.get("max_grad_norm")
+            if max_norm is not None:
+                train_cfg["max_grad_norm"] = float(max_norm)
+        else:
+            # Disable gradient clipping entirely
+            train_cfg["max_grad_norm"] = 0.0
+
+    @staticmethod
+    def _apply_gradient_accumulation(gradient_accum_cfg: dict | None, train_cfg: dict) -> None:
+        """Map gradient accumulation to Ultralytics ``nbs`` parameter.
+
+        Ultralytics computes ``accumulate = round(nbs / batch_size)``.
+        Setting ``nbs = batch_size * batches`` achieves the desired
+        accumulation factor.
+        """
+        if not isinstance(gradient_accum_cfg, dict):
+            return
+
+        batch_size = train_cfg.get("batch", 16)
+        if gradient_accum_cfg.get("enable"):
+            batches = gradient_accum_cfg.get("batches", 1)
+            if batches is not None and int(batches) > 1:
+                train_cfg["nbs"] = int(batch_size) * int(batches)
+            else:
+                train_cfg["nbs"] = int(batch_size)
+        else:
+            # Disable accumulation: set nbs = batch_size so accumulate = 1
+            train_cfg["nbs"] = int(batch_size)
 
     def to_config_dict(self) -> dict:
         """Return the config consumed by the application trainer.

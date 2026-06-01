@@ -353,6 +353,33 @@ class CachedMosaic(tvt_v2.Transform):
         self.translate = translate
         self.area_thr = area_thr
         self.results_cache: list[_CachedSample] = []
+        self._cache_frozen: bool = False
+        self._refresh_rate: float = 0.05
+
+    def freeze_cache(self, refresh_rate: float = 0.05) -> None:
+        """Freeze the cache with slow stochastic refresh after pre-warming.
+
+        When frozen, the cache is no longer updated via FIFO eviction on
+        every forward call.  Instead, on each call, there is a small
+        probability (``refresh_rate``) that one random cache entry is
+        replaced with the current sample.  This keeps the cache slowly
+        evolving with new data while maintaining the diversity of the
+        pre-warmed pool.
+
+        This is used with multi-worker DataLoaders (spawn context) where
+        each worker receives a copy of the pre-warmed cache at spawn time.
+        Without this mechanism, aggressive FIFO eviction causes each
+        worker to independently fragment the cache.
+
+        Args:
+            refresh_rate: Probability of replacing one cache entry per
+                forward call.  Lower values keep the pre-warmed pool
+                stable longer; higher values bring in fresh samples
+                faster.  Default 0.05 (~1 in 20 samples triggers a
+                replacement).
+        """
+        self._cache_frozen = True
+        self._refresh_rate = refresh_rate
 
     def _resize_keep_ratio(self, img: torch.Tensor, target_h: int, target_w: int) -> tuple[torch.Tensor, float]:
         """Resize CHW image keeping aspect ratio (FIT mode). Returns (resized, scale)."""
@@ -686,10 +713,14 @@ class CachedMosaic(tvt_v2.Transform):
         assert len(_inputs) == 1, "Only single sample input is supported"  # noqa: S101
         inputs = _inputs[0]
 
-        self.results_cache.append(_clone_for_cache(inputs))
-        if len(self.results_cache) > self.max_cached_images:
-            idx = int(torch.randint(0, len(self.results_cache), (1,)).item()) if self.random_pop else 0
-            self.results_cache.pop(idx)
+        if not self._cache_frozen:
+            self.results_cache.append(_clone_for_cache(inputs))
+            if len(self.results_cache) > self.max_cached_images:
+                idx = int(torch.randint(0, len(self.results_cache), (1,)).item()) if self.random_pop else 0
+                self.results_cache.pop(idx)
+        elif self.results_cache and torch.rand(1).item() < self._refresh_rate:
+            replace_idx = int(torch.randint(0, len(self.results_cache), (1,)).item())
+            self.results_cache[replace_idx] = _clone_for_cache(inputs)
 
         target_h, target_w = self.img_scale
         with_mask = hasattr(inputs, "masks") and inputs.masks is not None
