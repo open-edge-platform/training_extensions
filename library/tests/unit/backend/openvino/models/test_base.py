@@ -119,6 +119,7 @@ class TestResolveModelType:
         """Simulates the OVDetectionModel case: default 'SSD' overridden by 'YOLO11' from rt_info."""
         ov_model = object.__new__(OVModel)
         ov_model._model_type = "SSD"
+        ov_model.model_path = "model.xml"
 
         mock_adapter = MagicMock()
         mock_adapter.model.has_rt_info.return_value = True

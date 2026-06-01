@@ -21,6 +21,7 @@ from getitune.data.entity.sample import Prediction, SampleBatch
 from getitune.data.module import DataModule
 from getitune.data.utils.structures.mask.mask_util import encode_rle
 from getitune.engine.engine import Engine
+from getitune.metrics.fmeasure import FMeasure
 from getitune.types.device import DeviceType
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
@@ -189,6 +190,7 @@ class UltralyticsEngine(Engine):
         results = yolo.train(**train_args)
         self._record_last_train_checkpoint(self._resolve_trainer_checkpoint(yolo))
         self._remap_results_csv()
+        self._compute_best_confidence_threshold()
         return self._translate_metrics(results)
 
     def test(self, checkpoint: PathLike | None = None, metric: object | None = None, **kwargs) -> METRICS:
@@ -496,6 +498,84 @@ class UltralyticsEngine(Engine):
 
         results = metric.compute()
         return self._format_torchmetrics_results(results)
+
+    def _compute_best_confidence_threshold(self) -> None:
+        """Run FMeasure on the validation set to find the optimal confidence threshold.
+
+        After training, the best threshold is stored in
+        ``self._export_args["confidence_threshold"]`` so that export
+        embeds the correct value into the model metadata.
+        """
+        if self._datamodule is None:
+            return
+
+        label_info = self._model.label_info or self._datamodule.label_info
+        metric = FMeasure(label_info)
+        device = self._device
+        yolo = self._model.yolo
+        yolo.model.to(device).eval()  # pyrefly: ignore[missing-attribute]
+        metric = metric.to(device)
+
+        self._datamodule.setup(stage="fit")
+        dataloader = self._datamodule.val_dataloader()
+        imgsz = self._model.imgsz
+
+        logger.info("Computing best confidence threshold via FMeasure on validation set")
+
+        n_batches = 0
+        for batch in dataloader:
+            if not isinstance(batch, SampleBatch):
+                continue
+
+            imgs = batch.images.to(device) if isinstance(batch.images, torch.Tensor) else batch.images
+            raw_results = yolo.predict(  # pyrefly: ignore[bad-argument-type]
+                source=imgs,  # pyrefly: ignore[bad-argument-type]
+                device=device,
+                imgsz=imgsz,
+                conf=0.0,
+                save=False,
+                verbose=False,
+            )
+
+            preds_list = []
+            for result in raw_results:
+                pred_dict: dict[str, Any] = {
+                    "boxes": torch.zeros((0, 4), device=device),
+                    "scores": torch.zeros(0, device=device),
+                    "labels": torch.zeros(0, dtype=torch.long, device=device),
+                }
+                if result.boxes is not None and len(result.boxes):
+                    pred_dict["boxes"] = result.boxes.xyxy.to(device)  # pyrefly: ignore[missing-attribute]
+                    pred_dict["scores"] = result.boxes.conf.to(device).float()  # pyrefly: ignore[missing-attribute]
+                    pred_dict["labels"] = result.boxes.cls.to(device).long()  # pyrefly: ignore[missing-attribute]
+                preds_list.append(pred_dict)
+
+            target_list = []
+            for i in range(len(raw_results)):
+                tgt_dict: dict[str, Any] = {
+                    "boxes": torch.zeros((0, 4), device=device),
+                    "labels": torch.zeros(0, dtype=torch.long, device=device),
+                }
+                if batch.bboxes is not None and i < len(batch.bboxes):
+                    boxes = batch.bboxes[i].data.to(device).float()
+                    ori_h, ori_w = batch.bboxes[i].canvas_size
+                    boxes = self._scale_boxes_to_letterbox(boxes, ori_h, ori_w, imgsz)
+                    tgt_dict["boxes"] = boxes
+                if batch.labels is not None and i < len(batch.labels):
+                    tgt_dict["labels"] = batch.labels[i].to(device).long()
+                target_list.append(tgt_dict)
+
+            metric.update(preds=preds_list, target=target_list)
+            n_batches += 1
+
+        if n_batches == 0:
+            logger.warning("No validation batches processed; skipping FMeasure threshold computation")
+            return
+
+        metric.compute(best_confidence_threshold=None)
+        threshold = metric.best_confidence_threshold
+        self._export_args["confidence_threshold"] = threshold
+        logger.info(f"Best confidence threshold from FMeasure: {threshold:.4f}")
 
     @staticmethod
     def _scale_boxes_to_letterbox(boxes: torch.Tensor, ori_h: int, ori_w: int, imgsz: int) -> torch.Tensor:

@@ -610,6 +610,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             exported_model_paths.openvino_model_path.with_suffix(".bin"),
             openvino_variant_dir / "model.bin",
         )
+        ov_metadata = exported_model_paths.openvino_model_path.parent / "metadata.yaml"
+        if ov_metadata.exists():
+            shutil.copyfile(ov_metadata, openvino_variant_dir / "metadata.yaml")
         logger.info("Stored OpenVINO variant at {}", openvino_variant_dir)
 
         # Copy ONNX file
@@ -619,6 +622,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             exported_model_paths.onnx_model_path.with_suffix(".onnx"),
             onnx_variant_dir / "model.onnx",
         )
+        onnx_metadata = exported_model_paths.onnx_model_path.parent / "metadata.yaml"
+        if onnx_metadata.exists():
+            shutil.copyfile(onnx_metadata, onnx_variant_dir / "metadata.yaml")
         logger.info("Stored ONNX variant at {}", onnx_variant_dir)
 
         # Store the metrics
