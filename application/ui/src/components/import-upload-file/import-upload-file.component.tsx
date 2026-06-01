@@ -100,7 +100,7 @@ export const ImportUploadFile = ({ formatOptions, onFileUploaded }: ImportUpload
 
                             <Text UNSAFE_className={classes.formatOptions}>({formatOptions}).zip</Text>
 
-                            <Link href='/' target='_blank' UNSAFE_className={classes.link}>
+                            <Link href='/' target='_blank' rel='noopener noreferrer' UNSAFE_className={classes.link}>
                                 Learn more about the different formats
                                 <LinkOut size='XS' />
                             </Link>

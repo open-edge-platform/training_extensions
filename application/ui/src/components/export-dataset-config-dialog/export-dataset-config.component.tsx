@@ -96,7 +96,7 @@ export const ExportDatasetConfig = ({
 
                             {/* TODO: pending link url
                             https://github.com/open-edge-platform/training_extensions/issues/5512 */}
-                            <Link href='/' target='_blank' UNSAFE_className={classes.link}>
+                            <Link href='/' target='_blank' rel='noopener noreferrer' UNSAFE_className={classes.link}>
                                 Learn more about export formats
                                 <LinkOut size='XS' />
                             </Link>

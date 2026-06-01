@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router';
 import { paths } from '../../../constants/paths';
 import { Project } from '../../../constants/shared-types';
 import { MenuActions } from '../../../features/project/list/menu-actions/menu-actions.component';
-import { MAP_PROJECT_TYPE_TO_TITLE } from '../../../features/project/list/util';
+import { getProjectTypeTitle } from '../../../features/project/list/util';
 import { ProjectThumbnail } from '../project-thumbnail/project-thumbnail.component';
 
 import classes from './project-list-item.module.scss';
@@ -20,7 +20,7 @@ interface ProjectListItemProps {
 export const ProjectListItem = ({ project, projectNames }: ProjectListItemProps) => {
     const navigate = useNavigate();
 
-    const taskType = MAP_PROJECT_TYPE_TO_TITLE[project.task.task_type];
+    const taskType = getProjectTypeTitle(project.task);
 
     const handleNavigateToProject = () => {
         navigate(paths.project.dataset.index({ projectId: project.id }));
@@ -34,9 +34,11 @@ export const ProjectListItem = ({ project, projectNames }: ProjectListItemProps)
                     <Text UNSAFE_className={classes.projectName}>
                         <span title={project.name}>{project.name}</span>
                     </Text>
-                    <Badge variant={'neutral'} UNSAFE_className={classes.itemTag}>
-                        <Text>{taskType}</Text>
-                    </Badge>
+                    {taskType !== undefined && (
+                        <Badge variant={'neutral'} UNSAFE_className={classes.itemTag}>
+                            <Text>{taskType}</Text>
+                        </Badge>
+                    )}
                 </Flex>
 
                 <MenuActions

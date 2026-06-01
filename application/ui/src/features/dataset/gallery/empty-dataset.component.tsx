@@ -24,9 +24,11 @@ export const EmptyDataset = ({ hasActiveFilter }: EmptyDatasetProps) => {
                     </>
                 )}
             </Heading>
-            <Content>
-                <MediaUpload />
-            </Content>
+            {!hasActiveFilter && (
+                <Content>
+                    <MediaUpload />
+                </Content>
+            )}
         </Flex>
     );
 };

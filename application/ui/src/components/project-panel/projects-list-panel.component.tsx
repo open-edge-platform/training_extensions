@@ -25,7 +25,7 @@ import { useNavigate } from 'react-router';
 
 import { paths } from '../../constants/paths';
 import { MenuActions } from '../../features/project/list/menu-actions/menu-actions.component';
-import { MAP_PROJECT_TYPE_TO_TITLE } from '../../features/project/list/util';
+import { getProjectTypeTitle } from '../../features/project/list/util';
 import { ProjectThumbnail } from './project-thumbnail/project-thumbnail.component';
 import { ProjectsList } from './projects-list.component';
 
@@ -96,7 +96,7 @@ export const ProjectsListPanel = () => {
 
     const otherProjectNames = otherProjects.map(({ name }) => name);
 
-    const taskType = MAP_PROJECT_TYPE_TO_TITLE[selectedProject.task.task_type];
+    const taskType = getProjectTypeTitle(selectedProject?.task);
 
     const handleDeleted = () => {
         navigate(paths.project.index({}));
@@ -132,9 +132,11 @@ export const ProjectsListPanel = () => {
                                         {selectedProjectName}
                                     </Heading>
 
-                                    <Badge variant={'neutral'}>
-                                        <Text>{taskType}</Text>
-                                    </Badge>
+                                    {taskType !== undefined && (
+                                        <Badge variant={'neutral'}>
+                                            <Text>{taskType}</Text>
+                                        </Badge>
+                                    )}
                                 </Flex>
 
                                 <MenuActions
