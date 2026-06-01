@@ -271,6 +271,21 @@ class CPUAugmentationPipeline(nn.Module):
         """Get normalization std."""
         return self._std
 
+    def prepare(self, dataset: Any) -> None:
+        """Pre-populate caches in augmentations that support it.
+
+        Delegates to ``pre_cache(dataset)`` on each augmentation that
+        implements this method (e.g. CachedMosaic, CachedMixUp).
+        Call before creating a multi-worker DataLoader so all workers
+        inherit full, diverse caches.
+
+        Args:
+            dataset: The training dataset (must support ``len()`` and ``[]``).
+        """
+        for aug in self.augmentations:
+            if hasattr(aug, "pre_cache"):
+                aug.pre_cache(dataset)
+
     @classmethod
     def list_available_transforms(cls) -> list[type[tvt_v2.Transform]]:
         """List available TorchVision transform (only V2) classes."""
