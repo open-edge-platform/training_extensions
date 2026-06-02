@@ -11,6 +11,7 @@ from uuid import UUID
 from loguru import logger
 from model_api.adapters import OpenvinoAdapter, create_core
 from model_api.models import Model
+from getitune.backend.ultralytics.exporter.yolo_seg_wrapper import YOLO11Seg
 
 from app.models.system import DeviceInfo
 
