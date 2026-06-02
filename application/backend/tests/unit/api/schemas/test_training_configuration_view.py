@@ -753,7 +753,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "name": "Translate",
                                         "description": (
                                             "Translation fraction for random perspective crop. "
-                                            "The crop center shifts by up to \u00b1translate * image_size pixels."
+                                            "The crop center shifts by \u00b1translate * image_size pixels."
                                         ),
                                         "value": 0.1,
                                         "default_value": 0.1,
