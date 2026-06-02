@@ -122,9 +122,7 @@ class YOLO11Seg(DetectionModel):
         parameters["reverse_input_channels"].update_default_value(False)
         parameters["scale_values"].update_default_value([255.0])
         parameters["confidence_threshold"].update_default_value(0.25)
-        parameters["nms_execute"].update_default_value(default_value=True)
         parameters["iou_threshold"].update_default_value(0.5)
-        parameters["nms_max_predictions"].update_default_value(30000)
         return parameters
 
     def postprocess(self, outputs: dict[str, Any], meta: dict[str, Any]) -> InstanceSegmentationResult:  # type: ignore[override]
