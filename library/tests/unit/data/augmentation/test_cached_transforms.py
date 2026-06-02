@@ -1,6 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Unit tests for CachedMosaic, CachedMixUp, RandomIoUCrop, ScaleTo255, and _clone_for_cache."""
+"""Unit tests for CachedMosaic, CachedMixUp, RandomIoUCrop, and _clone_for_cache."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from torchvision import tv_tensors
 
 from getitune.data.augmentation.cache import _clone_for_cache
-from getitune.data.augmentation.transforms import CachedMixUp, CachedMosaic, RandomIoUCrop, ScaleTo255
+from getitune.data.augmentation.transforms import CachedMixUp, CachedMosaic, RandomIoUCrop
 from getitune.data.entity.sample import DetectionSample, InstanceSegmentationSample
 
 
@@ -309,59 +309,6 @@ class TestRandomIoUCrop:
         result = crop(image)
         # Single input + skip → returns single tensor
         assert isinstance(result, torch.Tensor)
-
-
-# =====================================================================
-# ScaleTo255 Tests
-# =====================================================================
-class TestScaleTo255:
-    """Tests for ScaleTo255 transform."""
-
-    def test_scales_float_image_in_sample(self):
-        """Float image in [0,1] is scaled to [0,255]."""
-        transform = ScaleTo255()
-        sample = _make_det_sample(h=32, w=32)
-        # Ensure image is float in [0,1] range
-        assert sample.image.is_floating_point()
-        assert sample.image.max() <= 1.0
-
-        result = transform(sample)
-        # Image should now be in [0, 255] range
-        assert result.image.max() <= 255.0
-        assert result.image.max() > 1.0  # At least some values > 1
-
-    def test_integer_image_unchanged(self):
-        """Integer (uint8) images pass through unchanged."""
-        transform = ScaleTo255()
-        sample = _make_det_sample(h=32, w=32)
-        # Convert to uint8
-        sample.image = (sample.image * 255).to(torch.uint8)
-        original_image = sample.image.clone()
-
-        result = transform(sample)
-        assert torch.equal(result.image, original_image)
-
-    def test_raw_tensor_float(self):
-        """Raw float tensor (not in BaseSample) is scaled."""
-        transform = ScaleTo255()
-        tensor = torch.rand(3, 32, 32)
-
-        result = transform(tensor)
-        assert result.max() <= 255.0
-        assert result.max() > 1.0
-
-    def test_raw_tensor_int_unchanged(self):
-        """Raw integer tensor passes through unchanged."""
-        transform = ScaleTo255()
-        tensor = torch.randint(0, 256, (3, 32, 32), dtype=torch.uint8)
-        original = tensor.clone()
-
-        result = transform(tensor)
-        assert torch.equal(result, original)
-
-    def test_repr(self):
-        transform = ScaleTo255()
-        assert "ScaleTo255" in repr(transform)
 
 
 # =====================================================================
