@@ -244,12 +244,11 @@ class CachedMosaic(CacheableMixin, tvt_v2.Transform):
     """Cached Mosaic augmentation with built-in random perspective crop.
 
     Combines four images into a 2x mosaic canvas, then applies a center-based
-    random affine crop (matching upstream Ultralytics ``RandomPerspective``) to
-    produce an ``img_scale``-sized output.
+    random affine crop to produce an ``img_scale``-sized output.
 
     When mosaic is **skipped** (probability gate or cold cache) the sample is
     letterbox-resized to ``img_scale`` and the same random affine is applied
-    (matching upstream's non-mosaic path).
+    (consistent non-mosaic path).
 
     The output size is **always** ``img_scale`` regardless of whether mosaic
     fires.
@@ -485,7 +484,7 @@ class CachedMosaic(CacheableMixin, tvt_v2.Transform):
         target_h: int,
         target_w: int,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]:
-        """Resize image with keep-ratio and center padding (matching upstream LetterBox).
+        """Resize image with keep-ratio and center padding.
 
         Returns:
             image: (C, target_h, target_w) letterboxed.
@@ -530,7 +529,9 @@ class CachedMosaic(CacheableMixin, tvt_v2.Transform):
         out_h: int,
         out_w: int,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor | None]:
-        """Apply center-based random affine crop matching upstream RandomPerspective.
+        """Apply center-based random affine crop.
+
+        Reference: https://github.com/Megvii-BaseDetection/YOLOX/blob/main/yolox/data/data_augment.py
 
         For mosaic input (2x canvas): crops a variable-size window from the center
         and resizes to (out_h, out_w).  For pass-through input (1x): applies
@@ -550,7 +551,7 @@ class CachedMosaic(CacheableMixin, tvt_v2.Transform):
         _, in_h, in_w = image.shape
         fill_val = self._fill_val_normalised()
 
-        # Sample random scale and translation (matching Ultralytics RandomPerspective)
+        # Sample random scale and translation
         s = torch.empty(1).uniform_(1 - self.scale, 1 + self.scale).item()
         tx_frac = torch.empty(1).uniform_(0.5 - self.translate, 0.5 + self.translate).item()
         ty_frac = torch.empty(1).uniform_(0.5 - self.translate, 0.5 + self.translate).item()
@@ -603,7 +604,7 @@ class CachedMosaic(CacheableMixin, tvt_v2.Transform):
             new_bboxes[:, 0::2] = new_bboxes[:, 0::2].clamp(0, out_w)
             new_bboxes[:, 1::2] = new_bboxes[:, 1::2].clamp(0, out_h)
 
-            # Filter degenerate boxes (matching Ultralytics box_candidates)
+            # Filter degenerate boxes
             new_w = new_bboxes[:, 2] - new_bboxes[:, 0]
             new_h = new_bboxes[:, 3] - new_bboxes[:, 1]
 
