@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import os
 from collections import OrderedDict
 from functools import partial
 from typing import Any, Callable, ClassVar
@@ -266,7 +267,7 @@ class PResNetModule(BaseModule):
         101: [3, 4, 23, 3],
     }
 
-    donwload_url: ClassVar = {
+    download_url: ClassVar = {
         18: "https://storage.geti.intel.com/weights/ResNet18_vd_pretrained_from_paddle.pth",
         34: "https://storage.geti.intel.com/weights/ResNet34_vd_pretrained_from_paddle.pth",
         50: "https://storage.geti.intel.com/weights/ResNet50_vd_ssld_v2_pretrained_from_paddle.pth",
@@ -351,7 +352,10 @@ class PResNetModule(BaseModule):
                 self._freeze_parameters(self.res_layers[i])
 
         if pretrained:
-            state = torch.hub.load_state_dict_from_url(self.donwload_url[depth])
+            state = torch.hub.load_state_dict_from_url(
+                url=self.download_url[depth],
+                model_dir=os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"],
+            )
             self.load_state_dict(state)
             print(f"Load PResNet{depth} state_dict")
 
