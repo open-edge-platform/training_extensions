@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import os
 import shutil
 from collections.abc import Callable
 from contextlib import AbstractContextManager
@@ -154,9 +155,13 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             model_architecture_id = training_params.model_architecture_id
             project_id = training_params.project_id
             if parent_model_revision_id is None:
-                return self._base_weights_service.get_local_weights_path(
+                local_weights_path = self._base_weights_service.get_local_weights_path(
                     task=task.task_type, model_manifest_id=model_architecture_id
                 )
+                # Set PRETRAINED_WEIGHTS_CACHE_DIR to let getitune search the weights in the cache folder
+                # defined by the application rather than in the default location
+                os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"] = str(local_weights_path.parent)
+                return local_weights_path
 
             parent_variants = self._model_service.get_model_variants(
                 project_id=project_id, model_id=parent_model_revision_id

@@ -10,13 +10,18 @@ from pathlib import Path
 
 from getitune.types import *  # noqa: F403
 
-# Set the value of HF_HUB_CACHE to set the cache folder that stores the pretrained weights for timm and huggingface.
-# Refer: huggingface_hub/constants.py::HF_HUB_CACHE
-# Default, Pretrained weight is saved into ~/.cache/torch/hub/checkpoints
-os.environ["HF_HUB_CACHE"] = os.getenv(
-    "HF_HUB_CACHE",
+# The 'PRETRAINED_WEIGHTS_CACHE_DIR' env variable controls where to cache pretrained weights for the majority of
+# the models. The default location is ~/.cache/torch/hub/checkpoints
+os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"] = os.getenv(
+    "PRETRAINED_WEIGHTS_CACHE_DIR",
     str(Path.home() / ".cache" / "torch" / "hub" / "checkpoints"),
 )
+
+# The 'HF_HUB_CACHE' env variable controls where to cache pretrained weights for timm and huggingface models.
+# By default, it is set to the same location of PRETRAINED_WEIGHTS_CACHE_DIR.
+# Refer: huggingface_hub/constants.py::HF_HUB_CACHE
+os.environ["HF_HUB_CACHE"] = os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"]
+
 # Set the value of ONEDNN_PRIMITIVE_CACHE_CAPACITY to set the cache capacity for oneDNN primitives.
 # It will be ignored if no XPU devices are available.
 os.environ["ONEDNN_PRIMITIVE_CACHE_CAPACITY"] = "10000"
