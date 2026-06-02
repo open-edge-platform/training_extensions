@@ -25,7 +25,7 @@ import {
 } from '@geti/ui';
 import { AcceptCircle, CrossCircle, Pending } from '@geti/ui/icons';
 
-import { formatBytes } from '../../../../shared/util';
+import { formatBytes, pluralizeItems } from '../../../../shared/util';
 import { useMediaUploadContext } from '../../providers/media-upload-provider.component';
 import { computeSummary, type UploadFileItem, type UploadItemStatus } from '../../providers/media-upload-reducer';
 
@@ -82,13 +82,13 @@ const buildSubheader = (total: number, succeeded: number, failed: number, isUplo
     if (isUploading) {
         const parts = [`${succeeded} uploaded`, failed > 0 ? `${failed} failed` : null].filter(Boolean).join(', ');
 
-        return `Uploading ${total} item(s) — ${parts}`;
+        return `Uploading ${total} ${pluralizeItems(total)} — ${parts}`;
     }
 
-    if (failed === 0) return `Uploaded ${succeeded} item(s)`;
-    if (succeeded === 0) return `Failed to upload ${failed} item(s)`;
+    if (failed === 0) return `Uploaded ${succeeded} ${pluralizeItems(succeeded)}`;
+    if (succeeded === 0) return `Failed to upload ${failed} ${pluralizeItems(failed)}`;
 
-    return `Uploaded ${succeeded} item(s), ${failed} failed`;
+    return `Uploaded ${succeeded} ${pluralizeItems(succeeded)}, ${failed} failed`;
 };
 
 const UploadDetailsDialogContent = ({ onClose }: { onClose: () => void }) => {
