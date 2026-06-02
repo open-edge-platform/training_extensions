@@ -162,7 +162,7 @@ export const ProjectsListPanel = () => {
                     <>
                         <Divider size={'S'} marginBottom={'size-100'} marginTop={0} />
 
-                        <Content>
+                        <Content margin={0}>
                             <ProjectsList projects={otherProjects} />
                         </Content>
                     </>

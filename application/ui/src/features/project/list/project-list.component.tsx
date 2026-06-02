@@ -3,9 +3,10 @@
 
 import { Suspense, useMemo, useState } from 'react';
 
-import { Content, Flex, Grid, Heading, Loading, Text, View } from '@geti/ui';
+import { Content, ContextualHelp, Flex, Grid, Heading, Loading, Text, View } from '@geti/ui';
 import { useProjects } from 'hooks/api/project.hook';
 
+import { version } from '../../../../package.json';
 import { isNonEmptyArray } from '../../../shared/util';
 import { EmptyProjectList } from './empty-project-list/empty-project-list.component';
 import { ImportJobsList } from './import-jobs-list/import-jobs-list.component';
@@ -59,9 +60,19 @@ const ProjectGrid = () => {
     );
 };
 
+const AppInfo = () => {
+    return (
+        <ContextualHelp variant='info'>
+            <Content margin={0}>
+                <Text>Geti™ v{version}</Text>
+            </Content>
+        </ContextualHelp>
+    );
+};
+
 export const ProjectList = () => {
     return (
-        <View UNSAFE_className={backgroundStyles.projectBackground} height={'100%'}>
+        <View UNSAFE_className={backgroundStyles.projectBackground} height={'100%'} position={'relative'}>
             <Content height={'100%'} maxWidth={'1052px'} margin={'0 auto'} UNSAFE_className={classes.content}>
                 <Flex direction={'column'} height={'100%'}>
                     <ImportJobsList />
@@ -88,6 +99,10 @@ export const ProjectList = () => {
                         </Suspense>
                     </View>
                 </Flex>
+
+                <View bottom={'size-200'} right={'size-200'} position={'absolute'}>
+                    <AppInfo />
+                </View>
             </Content>
         </View>
     );
