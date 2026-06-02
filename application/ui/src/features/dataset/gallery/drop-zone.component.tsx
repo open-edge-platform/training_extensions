@@ -30,7 +30,7 @@ type DatasetDropZoneProps = {
 type DropEvent = Parameters<NonNullable<SpectrumDropZoneProps['onDrop']>>[0];
 
 // eslint-disable-next-line max-len
-const supportedFormatsMessage = `Please use supported image (${VALID_IMAGE_EXT.join(', ')}) or video (${VALID_VIDEO_EXT.join(', ')}) formats.`;
+const supportedFormatsMessage = `Please upload a supported image format (${VALID_IMAGE_EXT.join(', ')}) or video format (${VALID_VIDEO_EXT.join(', ')}) formats.`;
 
 export const DatasetDropZone = ({ children, onFilesDropped }: DatasetDropZoneProps) => {
     const handleDrop = async (event: DropEvent) => {
@@ -52,7 +52,7 @@ export const DatasetDropZone = ({ children, onFilesDropped }: DatasetDropZonePro
         if (supported.length < files.length) {
             toast({
                 type: 'neutral',
-                message: `Some files were skipped. ${supportedFormatsMessage}`,
+                message: `Unsupported files were skipped. ${supportedFormatsMessage}`,
             });
         }
 

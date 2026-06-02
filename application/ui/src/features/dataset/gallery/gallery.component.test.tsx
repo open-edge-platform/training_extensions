@@ -108,7 +108,7 @@ describe('Gallery drag-and-drop upload', () => {
         ]);
 
         const toast = await screen.findByLabelText('toast');
-        expect(toast).toHaveTextContent(/Some files were skipped/i);
+        expect(toast).toHaveTextContent(/Unsupported files were skipped/i);
         expect(uploadMediaMock).toHaveBeenCalledTimes(1);
         expect(uploadMediaMock.mock.calls[0][0].map((f: File) => f.name)).toEqual(['photo.png']);
     });
