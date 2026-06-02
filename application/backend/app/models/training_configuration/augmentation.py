@@ -383,7 +383,7 @@ class Mosaic(BaseAugmentationParameter):
         title="Translate",
         description=(
             "Translation fraction for random perspective crop. "
-            "The crop center shifts by up to ±translate * image_size pixels."
+            "The crop center shifts by ±translate * image_size pixels."
         ),
     )
 
