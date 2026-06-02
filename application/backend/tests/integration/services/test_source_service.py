@@ -324,7 +324,7 @@ class TestSourceUpdateServiceIntegration:
         result = fxt_source_update_service.test_source(source)
 
         assert not result.reachable
-        assert "No such file or directory" in result.error
+        assert "Directory not found" in result.error
 
     def test_test_source_usb_camera_not_available(self, fxt_source_update_service):
         """Test test_source with a USB camera device that is not available."""

@@ -45,6 +45,8 @@ class ImagesFolderStream(VideoStream):
             ignore_existing_images (bool): Flag if images, which already are in the folder at startup moment,
             should be ignored
         """
+        if not os.path.isdir(folder_path):
+            raise Exception(f"Directory not found: {folder_path}")
         self.folder_path = folder_path
         logger.info("Using folder_path: {}", self.folder_path)
 
