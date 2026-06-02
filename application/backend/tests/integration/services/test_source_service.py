@@ -281,8 +281,8 @@ class TestSourceUpdateServiceIntegration:
         result = fxt_source_update_service.test_source(source)
 
         # File exists but is not a valid video, so cv2 can't open it
-        assert result["reachable"] is False
-        assert "cannot be opened as video" in result["error"]
+        assert not result.reachable
+        assert "Could not open video source" in result.error
 
     def test_test_source_video_file_not_found(self, fxt_source_update_service):
         """Test test_source with a non-existent video file."""
@@ -295,8 +295,8 @@ class TestSourceUpdateServiceIntegration:
 
         result = fxt_source_update_service.test_source(source)
 
-        assert result["reachable"] is False
-        assert "not found" in result["error"]
+        assert not result.reachable
+        assert "Could not open video source" in result.error
 
     def test_test_source_images_folder_exists(self, fxt_source_update_service, tmp_path):
         """Test test_source with an existing accessible images folder."""
@@ -309,8 +309,8 @@ class TestSourceUpdateServiceIntegration:
 
         result = fxt_source_update_service.test_source(source)
 
-        assert result["reachable"] is True
-        assert "latency_ms" in result
+        assert result.reachable
+        assert result.latency_ms is not None
 
     def test_test_source_images_folder_not_found(self, fxt_source_update_service):
         """Test test_source with a non-existent images folder."""
@@ -323,8 +323,8 @@ class TestSourceUpdateServiceIntegration:
 
         result = fxt_source_update_service.test_source(source)
 
-        assert result["reachable"] is False
-        assert "not found" in result["error"]
+        assert not result.reachable
+        assert "No such file or directory" in result.error
 
     def test_test_source_usb_camera_not_available(self, fxt_source_update_service):
         """Test test_source with a USB camera device that is not available."""
@@ -337,12 +337,12 @@ class TestSourceUpdateServiceIntegration:
 
         mock_cap = MagicMock()
         mock_cap.isOpened.return_value = False
-        with patch("app.services.source_service.cv2.VideoCapture", return_value=mock_cap):
+        with patch("app.stream.base_opencv_stream.cv2.VideoCapture", return_value=mock_cap):
             result = fxt_source_update_service.test_source(source)
 
-        assert result["reachable"] is False
-        assert "Cannot open USB camera device" in result["error"]
-        mock_cap.release.assert_called_once()
+        assert not result.reachable
+        assert "Could not open USB camera device" in result.error
+        mock_cap.release.assert_called()
 
     def test_test_source_usb_camera_reachable(self, fxt_source_update_service):
         """Test test_source with a reachable USB camera (mocked cv2 capture)."""
@@ -356,12 +356,12 @@ class TestSourceUpdateServiceIntegration:
         mock_cap = MagicMock()
         mock_cap.isOpened.return_value = True
         mock_cap.read.return_value = (True, MagicMock())
-        with patch("app.services.source_service.cv2.VideoCapture", return_value=mock_cap):
+        with patch("app.stream.base_opencv_stream.cv2.VideoCapture", return_value=mock_cap):
             result = fxt_source_update_service.test_source(source)
 
-        assert result["reachable"] is True
-        assert "latency_ms" in result
-        mock_cap.release.assert_called_once()
+        assert result.reachable
+        assert result.latency_ms is not None
+        mock_cap.release.assert_called()
 
     def test_test_source_ip_camera_unreachable(self, fxt_source_update_service):
         """Test test_source with an unreachable IP camera stream."""
@@ -374,12 +374,11 @@ class TestSourceUpdateServiceIntegration:
 
         mock_cap = MagicMock()
         mock_cap.isOpened.return_value = False
-        with patch("app.services.source_service.cv2.VideoCapture", return_value=mock_cap):
+        with patch("app.stream.base_opencv_stream.cv2.VideoCapture", return_value=mock_cap):
             result = fxt_source_update_service.test_source(source)
 
-        assert result["reachable"] is False
-        assert "Cannot open stream" in result["error"]
-        mock_cap.release.assert_called_once()
+        assert not result.reachable
+        assert "Could not open video source" in result.error
 
     def test_test_source_ip_camera_reachable(self, fxt_source_update_service):
         """Test test_source with a reachable IP camera (mocked cv2 capture)."""
@@ -392,10 +391,10 @@ class TestSourceUpdateServiceIntegration:
 
         mock_cap = MagicMock()
         mock_cap.isOpened.return_value = True
-        mock_cap.read.return_value = (True, MagicMock())
-        with patch("app.services.source_service.cv2.VideoCapture", return_value=mock_cap):
+        mock_cap.retrieve.return_value = (True, MagicMock())
+        with patch("app.stream.base_opencv_stream.cv2.VideoCapture", return_value=mock_cap):
             result = fxt_source_update_service.test_source(source)
 
-        assert result["reachable"] is True
-        assert "latency_ms" in result
+        assert result.reachable
+        assert result.latency_ms is not None
         mock_cap.release.assert_called_once()

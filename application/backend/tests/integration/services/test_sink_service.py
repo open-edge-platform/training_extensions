@@ -284,8 +284,8 @@ class TestSinkServiceIntegration:
 
         result = fxt_sink_service.test_sink(sink)
 
-        assert result["reachable"] is True
-        assert "latency_ms" in result
+        assert result.reachable
+        assert result.latency_ms is not None
 
     def test_test_sink_folder_not_found(self, fxt_sink_service):
         """Test test_sink with a non-existent folder."""
@@ -301,8 +301,8 @@ class TestSinkServiceIntegration:
 
         result = fxt_sink_service.test_sink(sink)
 
-        assert result["reachable"] is False
-        assert "not found" in result["error"]
+        assert not result.reachable
+        assert "not found" in result.error
 
     def test_test_sink_mqtt_unreachable(self, fxt_sink_service):
         """Test test_sink with an unreachable MQTT broker."""
@@ -317,13 +317,13 @@ class TestSinkServiceIntegration:
         )
 
         with patch(
-            "app.services.sink_service.socket.create_connection",
+            "app.services.dispatchers.mqtt.socket.create_connection",
             side_effect=OSError("Connection timed out"),
         ):
             result = fxt_sink_service.test_sink(sink)
 
-        assert result["reachable"] is False
-        assert "Cannot connect" in result["error"]
+        assert not result.reachable
+        assert "Cannot connect" in result.error
 
     def test_test_sink_webhook_unreachable(self, fxt_sink_service):
         """Test test_sink with an unreachable webhook URL."""
@@ -339,13 +339,13 @@ class TestSinkServiceIntegration:
         )
 
         with patch(
-            "app.services.sink_service.requests.head",
+            "app.services.dispatchers.webhook.requests.head",
             side_effect=requests.ConnectionError("Connection refused"),
         ):
             result = fxt_sink_service.test_sink(sink)
 
-        assert result["reachable"] is False
-        assert "Cannot reach webhook" in result["error"]
+        assert not result.reachable
+        assert "Cannot reach webhook" in result.error
 
     def test_test_sink_mqtt_reachable(self, fxt_sink_service):
         """Test test_sink with a reachable MQTT broker (mocked socket connection)."""
@@ -360,11 +360,11 @@ class TestSinkServiceIntegration:
         )
 
         mock_sock = MagicMock()
-        with patch("app.services.sink_service.socket.create_connection", return_value=mock_sock):
+        with patch("app.services.dispatchers.mqtt.socket.create_connection", return_value=mock_sock):
             result = fxt_sink_service.test_sink(sink)
 
-        assert result["reachable"] is True
-        assert "latency_ms" in result
+        assert result.reachable
+        assert result.latency_ms is not None
         mock_sock.close.assert_called_once()
 
     def test_test_sink_webhook_reachable(self, fxt_sink_service):
@@ -381,8 +381,8 @@ class TestSinkServiceIntegration:
 
         mock_response = MagicMock()
         mock_response.status_code = 200
-        with patch("app.services.sink_service.requests.head", return_value=mock_response):
+        with patch("app.services.dispatchers.webhook.requests.head", return_value=mock_response):
             result = fxt_sink_service.test_sink(sink)
 
-        assert result["reachable"] is True
-        assert "latency_ms" in result
+        assert result.reachable
+        assert result.latency_ms is not None
