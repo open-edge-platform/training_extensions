@@ -116,7 +116,7 @@
         "vite": "~7.3.0",
         "vite-plugin-svgr": "~4.3.0",
         "vite-tsconfig-paths": "^5.1.4",
-        "vitest": "~3.2.4"
+        "vitest": "~4.1.0"
     },
     "workspaces": [
         "packages/*"
