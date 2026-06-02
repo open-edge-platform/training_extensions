@@ -646,7 +646,9 @@ class CachedMosaic(CacheableMixin, tvt_v2.Transform):
     @typing.no_type_check
     def forward(self, *_inputs: BaseSample) -> BaseSample:
         """Apply CachedMosaic with random perspective crop. Output is always img_scale."""
-        assert len(_inputs) == 1, "Only single sample input is supported"  # noqa: S101
+        if len(_inputs) != 1:
+            msg = "Only single sample input is supported"
+            raise ValueError(msg)
         inputs = _inputs[0]
 
         # Cache management (lightweight clone instead of deepcopy)
@@ -837,7 +839,9 @@ class CachedMixUp(CacheableMixin, tvt_v2.Transform):
     @typing.no_type_check
     def forward(self, *_inputs: BaseSample) -> BaseSample:
         """Apply MixUp transform using pure torch operations."""
-        assert len(_inputs) == 1, "Multiple inputs not supported"  # noqa: S101
+        if len(_inputs) != 1:
+            msg = "Multiple inputs not supported"
+            raise ValueError(msg)
         inputs = _inputs[0]
 
         # Cache management (lightweight clone instead of deepcopy)
