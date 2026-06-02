@@ -20,6 +20,8 @@ MAX_RETRIES = 3
 BACKOFF_FACTOR = 0.3
 RETRY_ON_STATUS = [500, 502, 503, 504]
 
+_TEST_TIMEOUT_SECONDS = 5
+
 
 class WebhookDispatcher(BaseDispatcher):
     def __init__(self, output_config: WebhookSinkConfig) -> None:
@@ -34,6 +36,8 @@ class WebhookDispatcher(BaseDispatcher):
         self.headers = output_config.config_data.headers
         self.timeout = output_config.config_data.timeout
         self.session = requests.Session()
+
+    def connect(self) -> None:
         retries = Retry(
             total=MAX_RETRIES,
             backoff_factor=BACKOFF_FACTOR,
@@ -61,3 +65,13 @@ class WebhookDispatcher(BaseDispatcher):
         payload = self._create_payload(original_image, image_with_visualization, predictions)
 
         self.__send_to_webhook(payload)
+
+    def test(self) -> None:
+        url = self.webhook_url
+        headers = self.headers or {}
+        try:
+            response = requests.head(url, headers=headers, timeout=_TEST_TIMEOUT_SECONDS)
+            if response.status_code >= 500:
+                raise Exception(f"Webhook at {url} returned server error: {response.status_code}")
+        except requests.RequestException as e:
+            raise Exception(f"Cannot reach webhook at {url}: {e}")

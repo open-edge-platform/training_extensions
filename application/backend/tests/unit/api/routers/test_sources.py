@@ -14,7 +14,7 @@ from app.api.dependencies import get_source, get_source_update_service
 from app.api.schemas.source import USBCameraSourceConfigCreate, USBCameraSourceConfigView, VideoFileSourceConfigView
 from app.main import app
 from app.models import SourceType
-from app.models.source import Source, USBCameraConfig, VideoFileConfig
+from app.models.source import Source, SourceTestResult, USBCameraConfig, VideoFileConfig
 from app.services import (
     ResourceInUseError,
     ResourceNotFoundError,
@@ -267,7 +267,7 @@ class TestSourceEndpoints:
         self, fxt_usb_camera_source_view, fxt_get_source, fxt_source_update_service, fxt_client
     ):
         source_id = str(fxt_usb_camera_source_view.id)
-        fxt_source_update_service.test_source.return_value = {"reachable": True, "latency_ms": 12.3}
+        fxt_source_update_service.test_source.return_value = SourceTestResult.success(12.3)
 
         response = fxt_client.post(f"/api/sources/{source_id}:test")
 
@@ -281,10 +281,7 @@ class TestSourceEndpoints:
         self, fxt_usb_camera_source_view, fxt_get_source, fxt_source_update_service, fxt_client
     ):
         source_id = str(fxt_usb_camera_source_view.id)
-        fxt_source_update_service.test_source.return_value = {
-            "reachable": False,
-            "error": "Cannot open USB camera device 1",
-        }
+        fxt_source_update_service.test_source.return_value = SourceTestResult.failure("Cannot open USB camera device 1")
 
         response = fxt_client.post(f"/api/sources/{source_id}:test")
 

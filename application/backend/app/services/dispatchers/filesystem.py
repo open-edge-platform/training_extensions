@@ -25,6 +25,8 @@ class FolderDispatcher(BaseDispatcher):
         """
         super().__init__(output_config=output_config)
         self.output_folder = output_config.config_data.folder_path
+
+    def connect(self) -> None:
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder, exist_ok=True)
 
@@ -41,6 +43,12 @@ class FolderDispatcher(BaseDispatcher):
     def _write_predictions_to_file(predictions: str, file_path: str) -> None:
         with open(file_path, "w") as f:
             f.write(predictions)
+
+    def test(self) -> None:
+        if not os.path.isdir(self.output_folder):
+            raise Exception(f"Directory not found: {self.output_folder}")
+        if not os.access(self.output_folder, os.W_OK):
+            raise Exception(f"Directory is not writable: {self.output_folder}")
 
     def _dispatch(
         self,

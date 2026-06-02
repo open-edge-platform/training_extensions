@@ -1,23 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import os
 import time
 from uuid import UUID
 
-import cv2
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.schema import ProjectDB, SourceDB
 from app.models import Source, SourceType
-from app.models.source import (
-    ImagesFolderSourceConfig,
-    IPCameraSourceConfig,
-    SourceAdapter,
-    SourceConfig,
-    USBCameraSourceConfig,
-    VideoFileSourceConfig,
-)
+from app.models.source import SourceAdapter, SourceConfig, SourceTestResult
 from app.repositories import SourceRepository
 from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 from app.repositories.pipeline_repo import PipelineRepository
@@ -31,6 +22,7 @@ from .base import (
 )
 from .event.event_bus import EventBus, EventType
 from .parent_process_guard import parent_process_only
+from .video_stream_service import VideoStreamService
 
 
 class SourceService:
@@ -136,81 +128,16 @@ class SourceUpdateService(SourceService):
 
     _TEST_TIMEOUT_MS = 5000
 
-    def test_source(self, source: Source) -> dict:
-        """Perform a connectivity check on the source.
-
-        Verifies that the source can be opened based on its type:
-        - USB camera: opens the device and verifies capture is functional
-        - IP camera: opens the RTSP/HTTP stream and verifies frames can be read
-        - Video file: verifies the file exists and can be opened as a video
-        - Images folder: verifies the directory exists and is accessible
-        """
-        start = time.monotonic()
-
+    def test_source(self, source: Source) -> SourceTestResult:
+        """Perform a connectivity check on the source."""
         try:
-            match source:
-                case USBCameraSourceConfig():
-                    reachable, error = self._test_usb_camera(source)
-                case IPCameraSourceConfig():
-                    reachable, error = self._test_ip_camera(source)
-                case VideoFileSourceConfig():
-                    reachable, error = self._test_video_file(source)
-                case ImagesFolderSourceConfig():
-                    reachable, error = self._test_images_folder(source)
-                case _:
-                    return {"reachable": False, "error": f"Unsupported source type: {source.source_type}"}
+            video_stream = VideoStreamService.get_video_stream(input_config=source)
+            if video_stream is None:
+                return SourceTestResult.failure("Disconnected source")
+            start = time.monotonic()
+            with video_stream:
+                video_stream.get_data()
+            elapsed_ms = (time.monotonic() - start) * 1000
+            return SourceTestResult.success(round(elapsed_ms, 1))
         except Exception as e:
-            return {"reachable": False, "error": str(e)}
-
-        if not reachable:
-            return {"reachable": False, "error": error}
-
-        elapsed_ms = (time.monotonic() - start) * 1000
-        return {"reachable": True, "latency_ms": round(elapsed_ms, 1)}
-
-    def _test_usb_camera(self, source: USBCameraSourceConfig) -> tuple[bool, str | None]:
-        cap = cv2.VideoCapture(source.config_data.device_id)
-        try:
-            if not cap.isOpened():
-                return False, f"Cannot open USB camera device {source.config_data.device_id}"
-            ret, _ = cap.read()
-            if not ret:
-                return False, f"USB camera device {source.config_data.device_id} opened but cannot read frames"
-        finally:
-            cap.release()
-        return True, None
-
-    def _test_ip_camera(self, source: IPCameraSourceConfig) -> tuple[bool, str | None]:
-        stream_url = source.config_data.get_configured_stream_url()
-        cap = cv2.VideoCapture(stream_url, cv2.CAP_FFMPEG)
-        cap.set(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, self._TEST_TIMEOUT_MS)
-        cap.set(cv2.CAP_PROP_READ_TIMEOUT_MSEC, self._TEST_TIMEOUT_MS)
-        try:
-            if not cap.isOpened():
-                return False, f"Cannot open stream at {source.config_data.stream_url}"
-            ret, _ = cap.read()
-            if not ret:
-                return False, f"Stream at {source.config_data.stream_url} opened but cannot read frames"
-        finally:
-            cap.release()
-        return True, None
-
-    def _test_video_file(self, source: VideoFileSourceConfig) -> tuple[bool, str | None]:
-        video_path = source.config_data.video_path
-        if not os.path.isfile(video_path):
-            return False, f"Video file not found: {video_path}"
-        cap = cv2.VideoCapture(video_path)
-        try:
-            if not cap.isOpened():
-                return False, f"File exists but cannot be opened as video: {video_path}"
-        finally:
-            cap.release()
-        return True, None
-
-    def _test_images_folder(self, source: ImagesFolderSourceConfig) -> tuple[bool, str | None]:
-        folder_path = source.config_data.images_folder_path
-        if not os.path.isdir(folder_path):
-            return False, f"Directory not found: {folder_path}"
-        if not os.access(folder_path, os.R_OK):
-            return False, f"Directory is not accessible: {folder_path}"
-        return True, None
+            return SourceTestResult.failure(str(e))

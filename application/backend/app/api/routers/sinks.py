@@ -273,4 +273,4 @@ def test_sink(
 ) -> TestResult:
     """Test connectivity to a sink"""
     result = sink_service.test_sink(sink)
-    return TestResult(**result)
+    return TestResult.create(result)
