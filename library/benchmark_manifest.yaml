@@ -32,9 +32,6 @@ experiments:
       - name: mobilenet_v3_large
         priority: extended
         recipe: classification/multi_class_cls/mobilenet_v3_large.yaml
-      - name: vit_tiny
-        priority: extended
-        recipe: classification/multi_class_cls/vit_tiny.yaml
     datasets:
       - flowers102
     criteria:
