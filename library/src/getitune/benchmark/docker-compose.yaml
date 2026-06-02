@@ -16,7 +16,7 @@
 #   docker compose down -v
 #
 # To point the benchmark runner at this server:
-#   python -m otx.benchmark run --mlflow-uri http://<host>:5000 ...
+#   python -m getitune.benchmark run --mlflow-uri http://<host>:5000 ...
 #
 # In CI, set the GitHub Actions secret MLFLOW_TRACKING_URI accordingly.
 
