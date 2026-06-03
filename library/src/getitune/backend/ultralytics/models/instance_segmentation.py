@@ -10,7 +10,6 @@ from typing import ClassVar
 from getitune.backend.lightning.models.base import DataInputParams
 from getitune.backend.ultralytics.trainers.instance_segmentation import SegmentationTrainer
 from getitune.backend.ultralytics.validators.instance_segmentation import SegmentationValidator
-from getitune.config.data import IntensityConfig
 from getitune.types.export import TaskLevelExportParameters
 from getitune.types.label import LabelInfo
 
@@ -37,15 +36,13 @@ class UltralyticsInstSegModel(UltralyticsModel):
     def _default_preprocessing_params(self) -> dict[str, DataInputParams]:
         """Per-variant preprocessing defaults.
 
-        Intensity scaling (divide by 255 for uint8) is handled by
-        ``IntensityConfig``. Mean/std are identity (no additional
-        normalization after intensity scaling).
+        Mean/std are identity (no additional normalization after
+        intensity scaling).
         """
         default = DataInputParams(
             input_size=(640, 640),
             mean=(0.0, 0.0, 0.0),
             std=(1.0, 1.0, 1.0),
-            intensity_config=IntensityConfig(mode="scale_to_unit", storage_dtype="uint8"),
         )
         return {
             "yolo26n-seg": default,

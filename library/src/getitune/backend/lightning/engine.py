@@ -316,7 +316,7 @@ class LightningEngine(Engine):
             msg = "self.checkpoint should be Path or str at this time."
             raise TypeError(msg)
 
-        best_checkpoint_symlink = Path(self.work_dir) / "best_checkpoint.ckpt"
+        best_checkpoint_symlink = Path(self.work_dir) / "best_checkpoint.pt"
         if best_checkpoint_symlink.is_symlink() and best_checkpoint_symlink.exists():
             best_checkpoint_symlink.unlink()
         try:

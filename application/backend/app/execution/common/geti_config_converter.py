@@ -144,17 +144,17 @@ TEMPLATE_ID_MAPPING = {
     },
     "object-detection-yolo26-n": {
         "recipe_path": RECIPE_PATH / "detection" / "yolo26_n.yaml",
-        "status": ModelStatus.SPEED,
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
     "object-detection-yolo26-s": {
         "recipe_path": RECIPE_PATH / "detection" / "yolo26_s.yaml",
-        "status": ModelStatus.BALANCE,
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
     "object-detection-yolo26-m": {
         "recipe_path": RECIPE_PATH / "detection" / "yolo26_m.yaml",
-        "status": ModelStatus.ACCURACY,
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
     # INSTANCE_SEGMENTATION
@@ -200,17 +200,17 @@ TEMPLATE_ID_MAPPING = {
     },
     "instance-segmentation-yolo26-n": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_n_seg.yaml",
-        "status": ModelStatus.SPEED,
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
     "instance-segmentation-yolo26-s": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_s_seg.yaml",
-        "status": ModelStatus.BALANCE,
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
     "instance-segmentation-yolo26-m": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_m_seg.yaml",
-        "status": ModelStatus.ACCURACY,
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
 }

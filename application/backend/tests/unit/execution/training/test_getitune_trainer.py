@@ -781,7 +781,7 @@ class TestGetiTuneTrainerTrainModel:
         Path(mock_getitune_engine.work_dir).mkdir(parents=True)
 
         # Create expected checkpoint file
-        expected_checkpoint_path = Path(mock_getitune_engine.work_dir) / "best_checkpoint.ckpt"
+        expected_checkpoint_path = Path(mock_getitune_engine.work_dir) / "best_checkpoint.pt"
         expected_checkpoint_path.touch()
         mock_getitune_engine.best_checkpoint = expected_checkpoint_path
 
@@ -1004,7 +1004,7 @@ class TestGetiTuneTrainerExecuteCancellation:
         mock_dataset_info.revision_id = dataset_revision_id
         mock_weights_path = Path("/fake/weights.pth")
         mock_getitune_engine = Mock()
-        mock_trained_model_path = Path("/fake/best_checkpoint.ckpt")
+        mock_trained_model_path = Path("/fake/best_checkpoint.pt")
 
         with (
             patch.object(getitune_trainer, "prepare_weights", return_value=mock_weights_path),
@@ -1127,7 +1127,7 @@ class TestGetiTuneTrainerEvaluateModel:
         mock_getitune_engine.work_dir = tmp_path / "getitune-workspace"
         mock_getitune_engine.datamodule = Mock()
 
-        model_checkpoint_path = tmp_path / "best_checkpoint.ckpt"
+        model_checkpoint_path = tmp_path / "best_checkpoint.pt"
         model_checkpoint_path.touch()
         ov_export_path = tmp_path / "exported_model"
         onnx_export_path = tmp_path / "exported_model"
@@ -1277,7 +1277,7 @@ class TestGetiTuneTrainerExportModel:
         # Arrange
         getitune_trainer = fxt_getitune_trainer()
         mock_getitune_engine = Mock()
-        model_checkpoint_path = tmp_path / "best_checkpoint.ckpt"
+        model_checkpoint_path = tmp_path / "best_checkpoint.pt"
         model_checkpoint_path.touch()
         expected_ov_export_path = tmp_path / "exported_openvino_model"
         expected_onnx_export_path = tmp_path / "exported_onnx_model"

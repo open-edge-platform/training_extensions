@@ -10,7 +10,6 @@ from typing import ClassVar
 from getitune.backend.lightning.models.base import DataInputParams
 from getitune.backend.ultralytics.trainers.detection import DetectionTrainer
 from getitune.backend.ultralytics.validators.detection import DetectionValidator
-from getitune.config.data import IntensityConfig
 
 from .base import UltralyticsModel
 
@@ -35,9 +34,7 @@ class UltralyticsDetectionModel(UltralyticsModel):
     def _default_preprocessing_params(self) -> dict[str, DataInputParams]:
         """Per-variant preprocessing defaults.
 
-        All YOLO26 detection models use 640x640 input. The intensity scaling
-        (divide by 255 for uint8) is handled by ``IntensityConfig`` and
-        embedded into the exported model via ``intensity_mode``. The mean/std
+        All YOLO26 detection models use 640x640 input. The mean/std
         here are identity since no additional normalization is needed after
         intensity scaling.
         """
@@ -45,7 +42,6 @@ class UltralyticsDetectionModel(UltralyticsModel):
             input_size=(640, 640),
             mean=(0.0, 0.0, 0.0),
             std=(1.0, 1.0, 1.0),
-            intensity_config=IntensityConfig(mode="scale_to_unit", storage_dtype="uint8"),
         )
         return {
             "yolo26n": default,

@@ -471,7 +471,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
         trained_model_path = getitune_engine.best_checkpoint
         if trained_model_path is None:
-            trained_model_path = Path(getitune_engine.work_dir) / "best_checkpoint.ckpt"
+            trained_model_path = Path(getitune_engine.work_dir) / "best_checkpoint.pt"
         if not trained_model_path.exists():
             raise FileNotFoundError(f"Trained checkpoint not found at {trained_model_path}")
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)

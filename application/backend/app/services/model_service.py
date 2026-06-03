@@ -441,7 +441,6 @@ class ModelService(BaseSessionManagedService):
         bin_file = variant_dir / "model.bin"
         onnx_file = variant_dir / "model.onnx"
         pt_file = variant_dir / "model.pt"
-        ckpt_file = variant_dir / "model.ckpt"
         metadata_file = variant_dir / "metadata.yaml"
 
         if xml_file.exists() and bin_file.exists():
@@ -456,8 +455,6 @@ class ModelService(BaseSessionManagedService):
             return True, tuple(paths)
         if pt_file.exists():
             return True, (pt_file,)
-        if ckpt_file.exists():
-            return True, (ckpt_file,)
 
         return False, ()
 
