@@ -1,10 +1,11 @@
-// Copyright (C) 2026 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { createContext, Dispatch, ReactNode, useContext, useEffect, useMemo, useReducer } from 'react';
 
 import { Button, Flex, Loading, removeToast, toast } from '@geti/ui';
 
+import { pluralizeItems } from '../../../shared/util';
 import { UploadDetailsDialog } from '../gallery/upload-details-dialog/upload-details-dialog.component';
 import { Action, computeSummary, INITIAL_STATE, MediaUploadState, reducer } from './media-upload-reducer';
 
@@ -35,7 +36,7 @@ const ShowDetailsButton = ({ onPress }: { onPress: () => void }) => (
 const InProgressMessage = ({ total, detail }: { total: number; detail: string }): ReactNode => (
     <Flex alignItems={'center'} gap={'size-100'} UNSAFE_style={{ fontSize: UPLOAD_TOAST_FONT_SIZE }}>
         <Loading mode={'inline'} size={'S'} />
-        <span>{`Uploading ${total} item(s)... ${detail}`.trim()}</span>
+        <span>{`Uploading ${total} ${pluralizeItems(total)}... ${detail}`.trim()}</span>
     </Flex>
 );
 
@@ -54,11 +55,11 @@ const showFinalToast = (succeeded: number, failed: number, openDialog: () => voi
     let text: string;
 
     if (failed === 0) {
-        text = `Uploaded ${succeeded} item(s)`;
+        text = `Uploaded ${succeeded} ${pluralizeItems(succeeded)}`;
     } else if (succeeded === 0) {
-        text = `Failed to upload ${failed} item(s)`;
+        text = `Failed to upload ${failed} ${pluralizeItems(failed)}`;
     } else {
-        text = `Uploaded ${succeeded} item(s), ${failed} failed`;
+        text = `Uploaded ${succeeded} ${pluralizeItems(succeeded)}, ${failed} failed`;
     }
 
     toast({
@@ -67,7 +68,7 @@ const showFinalToast = (succeeded: number, failed: number, openDialog: () => voi
         message: <span style={{ fontSize: UPLOAD_TOAST_FONT_SIZE }}>{text}</span>,
         actionButtons: [<ShowDetailsButton key={'show-details'} onPress={openDialog} />],
         hasCloseButton: true,
-        duration: Infinity,
+        duration: 5000,
     });
 };
 
