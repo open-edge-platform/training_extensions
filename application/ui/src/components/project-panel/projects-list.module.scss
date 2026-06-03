@@ -1,6 +1,7 @@
 @use '../../shared/styles/line-clamp' as lineClamp;
 
 .buttonsGroup {
+    margin-top: var(--spectrum-global-dimension-size-100);
     border-top: var(--spectrum-alias-border-size-thick) solid var(--spectrum-global-color-gray-300);
     padding: 0;
 }
@@ -19,6 +20,10 @@
     & div[class*='spectrum-Dialog-grid'] {
         --spectrum-dialog-padding-x: 0;
         --spectrum-dialog-padding-y: 0;
+    }
+
+    & section[class*='Dialog-content'] {
+        padding: 0;
     }
 }
 
