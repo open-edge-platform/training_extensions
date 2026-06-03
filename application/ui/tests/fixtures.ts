@@ -206,6 +206,12 @@ const test = testBase.extend<Fixtures>({
                     http.get('/api/projects/{project_id}/dataset/statistics', () => {
                         return HttpResponse.json(getMockedDatasetStatistics({}));
                     }),
+                    http.get('/api/sources', () => {
+                        return HttpResponse.json([]);
+                    }),
+                    http.get('/api/sinks', () => {
+                        return HttpResponse.json([]);
+                    }),
                 ],
             });
 
