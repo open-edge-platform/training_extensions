@@ -758,6 +758,20 @@ class UltralyticsEngine(Engine):
         header = rows[0]
         mapping = self._model.metric_keys
         new_header = [mapping.get(col.strip(), col.strip()) for col in header]
+
+        # Populate synthetic ``step`` column from ``epoch`` when absent.
+        # Ultralytics logs everything per-epoch, but the Geti application parser
+        # expects a ``step`` column for ``frequency="step"`` metrics.
+        epoch_idx = next((i for i, h in enumerate(new_header) if h.strip() == "epoch"), None)
+        step_idx = next((i for i, h in enumerate(new_header) if h.strip() == "step"), None)
+
+        if step_idx is None and epoch_idx is not None:
+            # No step column — insert one after epoch.
+            new_header.insert(epoch_idx + 1, "step")
+            for row in rows[1:]:
+                epoch_val = row[epoch_idx] if epoch_idx < len(row) else ""
+                row.insert(epoch_idx + 1, epoch_val)
+
         rows[0] = new_header
 
         with results_csv.open("w", encoding="utf-8", newline="") as f:
