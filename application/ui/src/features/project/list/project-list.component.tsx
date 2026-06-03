@@ -83,8 +83,10 @@ export const ProjectList = () => {
                     </Heading>
 
                     <Text UNSAFE_className={classes.description}>
-                        Create projects to configure new computer vision pipelines. <br />
-                        You can switch between the projects at any time to manage the configured pipelines.
+                        Your computer vision journey starts here.
+                        <br />
+                        Create projects by selecting a computer vision task, annotate your data, train models, and run
+                        inference.
                     </Text>
 
                     <View flex={1} UNSAFE_style={{ overflow: 'auto' }}>
