@@ -50,9 +50,7 @@ describe('ProjectList', () => {
         it('renders the description text', async () => {
             renderProjectList();
 
-            expect(
-                await screen.findByText(/Create projects to configure new computer vision pipelines/i)
-            ).toBeInTheDocument();
+            expect(await screen.findByText(/Create projects by selecting a computer vision task/i)).toBeInTheDocument();
         });
 
         it('renders a card for each project', async () => {
