@@ -412,3 +412,15 @@ class TestResize:
         expected_scale = min(128 / orig_w, 128 / orig_h)
         assert abs(result.img_info.scale_factor[0] - expected_scale) < 0.01
         assert abs(result.img_info.scale_factor[1] - expected_scale) < 0.01
+
+    # ==================== Early Exit Tests ====================
+
+    def test_early_exit_same_size(self, square_image_entity: InstanceSegmentationSample) -> None:
+        """Test that Resize returns input unchanged when image is already at target size."""
+        entity = deepcopy(square_image_entity)
+        # Image is 100x100, resize target is 100x100 -> early exit
+        resize = Resize(size=(100, 100), resize_targets=True, keep_aspect_ratio=True)
+        result = resize(entity)
+        # Should return the exact same object (no copy)
+        assert result is entity
+        assert result.image.shape[-2:] == (100, 100)

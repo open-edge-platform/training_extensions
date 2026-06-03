@@ -365,6 +365,27 @@ class Mosaic(BaseAugmentationParameter):
             "Probability of applying mosaic augmentation. A value of 1.0 means mosaic is always applied when enabled."
         ),
     )
+    scale: float = Field(
+        ge=0.0,
+        le=1.0,
+        default=0.5,
+        title="Scale",
+        description=(
+            "Scale factor for random perspective crop applied after mosaic assembly. "
+            "The random scale is sampled from [1-scale, 1+scale]. "
+            "Higher values produce more zoom variation."
+        ),
+    )
+    translate: float = Field(
+        ge=0.0,
+        le=0.5,
+        default=0.1,
+        title="Translate",
+        description=(
+            "Translation fraction for random perspective crop. "
+            "The crop center shifts by ±translate * image_size pixels."
+        ),
+    )
 
 
 class Mixup(BaseAugmentationParameter):
