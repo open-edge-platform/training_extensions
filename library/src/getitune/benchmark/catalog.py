@@ -106,7 +106,6 @@ def _resolve_script_path(script: str) -> Path:
     The *script* field in the catalog is relative to the repo root.
     We walk up from the ``catalog.py`` source file to find ``library/``.
     """
-    # catalog.py is at library/src/getitune/benchmark/catalog.py
     # repo root is 4 levels up (src/getitune/benchmark/catalog.py -> library/)
     library_root = Path(__file__).resolve().parents[3]
     return library_root / script
