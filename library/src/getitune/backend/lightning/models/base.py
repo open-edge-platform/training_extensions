@@ -69,12 +69,25 @@ class DataInputParams:
     Attributes:
         input_size: Spatial dimensions (H, W) expected by the model.
         mean: Per-channel mean for normalization.
-        std: Per-channel standard deviation for normalization.
+        std: Per-channel std for normalization.
         intensity_config: Optional intensity mapping configuration for
             high-bit-depth inputs (uint16, thermal, medical, etc.).
             When present, the exporter embeds these parameters into the
             exported model's ``rt_info`` / ONNX metadata so that ModelAPI
             can reconstruct the correct preprocessing at inference time.
+
+    Note:
+        Mean and std values are written directly to the exported model metadata
+        (``model_info/mean_values`` and ``model_info/scale_values``). ModelAPI
+        applies ``(input - mean) / scale`` after converting the input to float.
+
+        - Models that use ImageNet normalization on [0,1] images (e.g., DEIM, ViT,
+          YOLOX-tiny) should use 0-1 range values: mean=(0.485, 0.456, 0.406),
+          std=(0.229, 0.224, 0.225).
+        - Models that expect [0,255] input but receive [0,1] from the intensity
+          pipeline (e.g., YOLOX s/l/x) encode the x*255 scaling in std:
+          mean=(0, 0, 0), std=(1/255, 1/255, 1/255). ModelAPI then computes
+          (x - 0) / (1/255) = x * 255.
     """
 
     input_size: tuple[int, int]

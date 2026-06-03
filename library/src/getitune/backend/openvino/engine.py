@@ -267,6 +267,7 @@ class OVEngine(Engine):
             task=model.task,
             input_size=model.input_size,
             keep_aspect_ratio=model.keep_aspect_ratio,
+            pad_value=model.pad_value,
         )
 
         if metric is None:
@@ -367,6 +368,7 @@ class OVEngine(Engine):
                     task=model.task,
                     input_size=model.input_size,
                     keep_aspect_ratio=model.keep_aspect_ratio,
+                    pad_value=model.pad_value,
                 )
                 dataloader = datamodule.test_dataloader()
                 task = progress.add_task("Predicting", total=len(dataloader))
@@ -444,6 +446,7 @@ class OVEngine(Engine):
             subset="train",
             input_size=model.input_size,
             keep_aspect_ratio=model.keep_aspect_ratio,
+            pad_value=model.pad_value,
         )
 
         ptq_config: dict[str, int | float] = {}

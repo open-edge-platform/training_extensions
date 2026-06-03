@@ -314,6 +314,7 @@ class AutoConfigurator:
         task: TaskType | None = None,
         input_size: tuple[int, int] | None = None,
         keep_aspect_ratio: bool = False,
+        pad_value: int = 0,
     ) -> DataModule:
         """Returns an DataModule object with OpenVINO subset transforms applied.
 
@@ -329,6 +330,9 @@ class AutoConfigurator:
                 augmentation lists so that aspect ratio is preserved (matching
                 the ``resize_type`` embedded in the IR metadata at export time).
                 Defaults to ``False``.
+            pad_value (int, optional): Padding value for letterbox resize. YOLO-family
+                models use 114 (gray), most others use 0 (black). Read from the
+                exported model's ``pad_value`` metadata. Defaults to ``0``.
 
         Returns:
             DataModule: The modified DataModule object with OpenVINO subset transforms applied.
@@ -347,6 +351,9 @@ class AutoConfigurator:
         if keep_aspect_ratio:
             self._patch_resize_keep_aspect_ratio(subset_config.augmentations_cpu)
             self._patch_resize_keep_aspect_ratio(subset_config.augmentations_gpu)
+        if pad_value != 0:
+            self._patch_resize_pad_value(subset_config.augmentations_cpu, pad_value)
+            self._patch_resize_pad_value(subset_config.augmentations_gpu, pad_value)
         datamodule.tile_config.enable_tiler = False
 
         # Resolve input size: prefer model IR metadata, fall back to
@@ -418,3 +425,20 @@ class AutoConfigurator:
             if "Resize" in aug.get("class_path", ""):
                 init_args = aug.setdefault("init_args", {})
                 init_args["keep_aspect_ratio"] = True
+
+    @staticmethod
+    def _patch_resize_pad_value(augmentations: list[dict], pad_value: int) -> None:
+        """Set ``pad_value`` on every Resize step in an augmentation list.
+
+        YOLO-family models use gray padding (114) during training; this must
+        be replicated during OV inference to avoid a mismatch in padded regions
+        that degrades mAP.
+
+        Args:
+            augmentations: List of augmentation config dicts.
+            pad_value: The padding value to set (e.g. 114 for YOLO models).
+        """
+        for aug in augmentations:
+            if "Resize" in aug.get("class_path", ""):
+                init_args = aug.setdefault("init_args", {})
+                init_args["pad_value"] = pad_value
