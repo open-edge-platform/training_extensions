@@ -271,6 +271,7 @@ def delete_source(
 
 @router.post(
     "/{source_id}:test",
+    response_model=TestResult,
     responses={
         status.HTTP_200_OK: {"description": "Source connectivity test result", "model": TestResult},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID"},

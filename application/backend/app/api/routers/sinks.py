@@ -261,6 +261,7 @@ def delete_sink(
 
 @router.post(
     "/{sink_id}:test",
+    response_model=TestResult,
     responses={
         status.HTTP_200_OK: {"description": "Sink connectivity test result", "model": TestResult},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid sink ID"},

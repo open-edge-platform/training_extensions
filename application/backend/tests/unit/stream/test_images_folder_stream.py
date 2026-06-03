@@ -53,9 +53,9 @@ class TestImagesFolderStream:
     @patch("os.path.isfile", return_value=True)
     @patch("os.listdir", return_value=["file1", "file2"])
     def test_init_do_not_exist(self, mock_listdir, mock_isfile, mock_getmtime, mock_isdir, mock_init_watchdog):
-        with pytest.raises(Exception) as e:
+        with pytest.raises(Exception) as excinfo:
             ImagesFolderStream(folder_path="folder_path", ignore_existing_images=False)
-            assert str(e) == "Directory not found: folder_path"
+        assert str(excinfo.value) == "Directory not found: folder_path"
         mock_listdir.assert_not_called()
         mock_isfile.assert_not_called()
         mock_getmtime.assert_not_called()

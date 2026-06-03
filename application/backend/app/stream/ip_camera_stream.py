@@ -57,7 +57,7 @@ class IPCameraStream(BaseOpenCVStream):
     _FIRST_FRAME_TIMEOUT_S = 10.0
     _NEW_FRAME_TIMEOUT_S = 1.0
 
-    def __init__(self, config: IPCameraSourceConfig) -> None:
+    def __init__(self, config: IPCameraSourceConfig, timeout: int | None = None) -> None:
         stream_url = config.config_data.get_configured_stream_url()
         self._is_rtsp = str(stream_url).lower().startswith("rtsp")
         with self._capture_env():
@@ -65,6 +65,7 @@ class IPCameraStream(BaseOpenCVStream):
                 source=stream_url,
                 source_type=SourceType.IP_CAMERA,
                 stream_url=config.config_data.stream_url,  # Original stream URL is kept for metadata
+                timeout=timeout,
             )
         logger.info("IP camera stream initialized")
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)

@@ -337,7 +337,7 @@ class TestSourceUpdateServiceIntegration:
 
         mock_cap = MagicMock()
         mock_cap.isOpened.return_value = False
-        with patch("app.stream.base_opencv_stream.cv2.VideoCapture", return_value=mock_cap):
+        with patch("app.stream.usb_camera_stream.cv2.VideoCapture", return_value=mock_cap):
             result = fxt_source_update_service.test_source(source)
 
         assert not result.reachable
@@ -353,10 +353,16 @@ class TestSourceUpdateServiceIntegration:
             config_data=USBCameraConfig(device_id=0),
         )
 
+        mock_probe_cap = MagicMock()
+        mock_probe_cap.isOpened.return_value = True
+
         mock_cap = MagicMock()
         mock_cap.isOpened.return_value = True
         mock_cap.read.return_value = (True, MagicMock())
-        with patch("app.stream.base_opencv_stream.cv2.VideoCapture", return_value=mock_cap):
+        with (
+            patch("app.stream.usb_camera_stream.cv2.VideoCapture", return_value=mock_probe_cap),
+            patch("app.stream.base_opencv_stream.cv2.VideoCapture", return_value=mock_cap),
+        ):
             result = fxt_source_update_service.test_source(source)
 
         assert result.reachable

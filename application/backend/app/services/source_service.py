@@ -131,7 +131,7 @@ class SourceUpdateService(SourceService):
     def test_source(self, source: Source) -> SourceTestResult:
         """Perform a connectivity check on the source."""
         try:
-            video_stream = VideoStreamService.get_video_stream(input_config=source)
+            video_stream = VideoStreamService.get_video_stream(input_config=source, timeout=self._TEST_TIMEOUT_MS)
             if video_stream is None:
                 return SourceTestResult.failure("Disconnected source")
             start = time.monotonic()

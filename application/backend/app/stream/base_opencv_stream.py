@@ -21,6 +21,7 @@ class BaseOpenCVStream(VideoStream, ABC):
         source: str | int,
         source_type: SourceType,
         codec: str | None = None,
+        timeout: int | None = None,
         api_preference: int = cv2.CAP_ANY,
         **metadata,
     ) -> None:
@@ -36,6 +37,7 @@ class BaseOpenCVStream(VideoStream, ABC):
         self.source = source
         self.source_type = source_type
         self.codec = codec
+        self.timeout = timeout
         self.api_preference = api_preference
         self.metadata = metadata
         self.cap: cv2.VideoCapture
@@ -48,6 +50,9 @@ class BaseOpenCVStream(VideoStream, ABC):
             raise RuntimeError(f"Could not open video source: {self.source}")
         if self.codec:
             self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*self.codec))  # type: ignore[attr-defined]
+        if self.timeout:
+            self.cap.set(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, self.timeout)
+            self.cap.set(cv2.CAP_PROP_READ_TIMEOUT_MSEC, self.timeout)
 
     def _read_frame(self) -> np.ndarray:
         """Read a frame from the capture device."""
