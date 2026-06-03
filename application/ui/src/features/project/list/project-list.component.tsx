@@ -61,13 +61,7 @@ const ProjectGrid = () => {
 };
 
 const AppInfo = () => {
-    return (
-        <ContextualHelp variant='info'>
-            <Content margin={0}>
-                <Text>Geti™ v{version}</Text>
-            </Content>
-        </ContextualHelp>
-    );
+    return <Text UNSAFE_className={classes.version}>v{version}</Text>;
 };
 
 export const ProjectList = () => {
@@ -100,7 +94,7 @@ export const ProjectList = () => {
                     </View>
                 </Flex>
 
-                <View bottom={'size-200'} right={'size-200'} position={'absolute'}>
+                <View bottom={'size-150'} left={'size-150'} position={'absolute'}>
                     <AppInfo />
                 </View>
             </Content>
