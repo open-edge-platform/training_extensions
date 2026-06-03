@@ -49,9 +49,9 @@ export const useSSIMWorker = (enabled = true) => {
             const worker = new Worker(new URL('../../webworkers/ssim-worker', import.meta.url), {
                 type: 'module',
             });
-            // Terminate the worker if the query is cancelled (e.g. annotator unmounts)
-            // before build() resolves, so we don't leak the in-flight worker.
-            signal.addEventListener('abort', worker.terminate, { once: true });
+            // Wrap in an arrow so `terminate` is called as a method on `worker` (this === worker);
+            // passing `worker.terminate` directly would invoke it with `this === signal` → "Illegal invocation".
+            signal.addEventListener('abort', () => worker.terminate(), { once: true });
 
             try {
                 const instance = await wrap<SSIMWorkerApi>(worker).build();
