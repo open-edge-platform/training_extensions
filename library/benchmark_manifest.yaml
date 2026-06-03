@@ -162,7 +162,7 @@ experiments:
         priority: extended
         recipe: detection/deimv2_s.yaml
     datasets:
-      - voc2007
+      - wgisd
     criteria:
       accuracy_metric: map_50
       thresholds:
