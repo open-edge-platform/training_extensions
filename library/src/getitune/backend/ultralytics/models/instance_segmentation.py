@@ -77,10 +77,8 @@ class UltralyticsInstSegModel(UltralyticsModel):
         )
 
     metric_keys: ClassVar[dict[str, str]] = {
-        "metrics/mAP50(B)": "val/map_50",
-        "metrics/mAP50-95(B)": "val/map",
-        "metrics/mAP50(M)": "val/mask_map_50",
-        "metrics/mAP50-95(M)": "val/mask_map",
+        "metrics/mAP50(M)": "val/map_50",
+        "metrics/mAP50-95(M)": "val/map",
         "metrics/precision(B)": "val/precision",
         "metrics/recall(B)": "val/recall",
         "train/box_loss": "train/loss_bbox",
