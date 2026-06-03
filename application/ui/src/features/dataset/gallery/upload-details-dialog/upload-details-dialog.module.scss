@@ -1,0 +1,10 @@
+.error {
+    color: var(--brand-coral-cobalt) !important;
+    border: none !important;
+
+    &[class*='is-hovered'],
+    &[class*='is-active'] {
+        background-color: transparent !important;
+        border: none !important;
+    }
+}
