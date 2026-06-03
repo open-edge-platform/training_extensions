@@ -43,6 +43,7 @@ dependencies = [
     "openvino-model-api @ git+https://github.com/open-edge-platform/model_api.git@e14364644a5940efed73a9b01313f3d3da2eafe1#subdirectory=model_api",
     "onnx==1.21.0",
     "onnxruntime==1.26.0",
+    "onnxslim>=0.1.71",
     "onnxscript==0.6.2",
     "nncf~=3.0",
     "numpy>=2.0",
