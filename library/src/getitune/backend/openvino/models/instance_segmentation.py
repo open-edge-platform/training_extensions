@@ -12,8 +12,6 @@ import torch
 from model_api.tilers import InstanceSegmentationTiler
 from torchvision import tv_tensors
 
-with contextlib.suppress(ImportError):  # ultralytics is an optional dependency
-    import getitune.backend.ultralytics.exporter.yolo_seg_wrapper  # noqa: F401 — registers YOLO11Seg with ModelAPI
 from getitune.backend.openvino.models.base import OVModel
 from getitune.backend.openvino.models.utils import rescale_bboxes_to_original, rescale_masks_to_original
 from getitune.data.entity.sample import PredictionBatch, SampleBatch

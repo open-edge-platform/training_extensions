@@ -470,160 +470,15 @@ class TestCleanupRawExport:
         """Should not raise for nonexistent raw path."""
         UltralyticsModelExporter._cleanup_raw_export(tmp_path / "nonexistent", tmp_path)
 
-
-class TestYOLO11SegWrapper:
-    """Tests for the YOLO11-seg ModelAPI wrapper."""
-
-    def test_registered_with_model_api(self) -> None:
-        """YOLO11-seg should be discoverable via Model.available_wrappers()."""
-        from model_api.models import Model
-
-        from getitune.backend.ultralytics.exporter import YOLO11Seg  # noqa: F401
-
-        assert "YOLO11-seg" in Model.available_wrappers()
-
-    def test_postprocess_empty_detections(self) -> None:
-        """Should return empty InstanceSegmentationResult when no detections pass threshold."""
-        import numpy as np
-
-        from getitune.backend.ultralytics.exporter.yolo_seg_wrapper import YOLO11Seg
-
-        wrapper = object.__new__(YOLO11Seg)
-        wrapper._det_output_name = "det"
-        wrapper._proto_output_name = "proto"
-        wrapper._mask_dim = 32
-        wrapper._proto_h = 160
-        wrapper._proto_w = 160
-        wrapper._num_classes = 5
-        wrapper.params = MagicMock()
-        wrapper.params.confidence_threshold = 0.5
-        wrapper.params.resize_type = "fit_to_window_letterbox"
-        wrapper.orig_width = 640
-        wrapper.orig_height = 640
-
-        # All zeros → no detection above threshold
-        outputs = {
-            "det": np.zeros((1, 41, 8400), dtype=np.float32),  # 4 + 5 + 32
-            "proto": np.zeros((1, 32, 160, 160), dtype=np.float32),
-        }
-        meta = {"original_shape": (480, 640)}
-
-        result = wrapper.postprocess(outputs, meta)
-
-        assert result.bboxes.shape == (0, 4)
-        assert result.masks.shape == (0, 480, 640)
-        assert result.scores.shape == (0,)
-        assert result.labels.shape == (0,)
-
-    def test_postprocess_with_detections(self) -> None:
-        """Should decode masks and return proper InstanceSegmentationResult."""
-        import numpy as np
-
-        from getitune.backend.ultralytics.exporter.yolo_seg_wrapper import YOLO11Seg
-
-        wrapper = object.__new__(YOLO11Seg)
-        wrapper._det_output_name = "det"
-        wrapper._proto_output_name = "proto"
-        wrapper._mask_dim = 32
-        wrapper._proto_h = 160
-        wrapper._proto_w = 160
-        wrapper._num_classes = 5
-        wrapper.params = MagicMock()
-        wrapper.params.confidence_threshold = 0.1
-        wrapper.params.resize_type = "fit_to_window_letterbox"
-        wrapper.params.iou_threshold = 0.7
-        wrapper.params.nms_execute = True
-        wrapper.params.nms_max_predictions = 30000
-        wrapper.orig_width = 640
-        wrapper.orig_height = 640
-        wrapper.labels = ["class_0", "class_1", "class_2", "class_3", "class_4"]
-        wrapper.get_label_name = lambda i: f"class_{i}"
-
-        # Create a single detection with high confidence
-        det = np.zeros((1, 41, 8400), dtype=np.float32)
-        # Box at center: xywh = (320, 320, 100, 100) → detection 0
-        det[0, 0, 0] = 320.0  # x_center
-        det[0, 1, 0] = 320.0  # y_center
-        det[0, 2, 0] = 100.0  # width
-        det[0, 3, 0] = 100.0  # height
-        det[0, 4, 0] = 0.9  # class 0 confidence
-        # Mask coefficients: all ones
-        det[0, 9:41, 0] = 1.0  # 32 mask coefficients
-
-        # Simple prototypes: uniform → after coeff@proto will be large positive → sigmoid→1 → mask=1
-        proto = np.ones((1, 32, 160, 160), dtype=np.float32) * 0.1
-
-        outputs = {"det": det, "proto": proto}
-        meta = {"original_shape": (640, 640)}
-
-        result = wrapper.postprocess(outputs, meta)
-
-        assert result.bboxes.shape[0] == 1
-        assert result.masks.shape == (1, 640, 640)
-        assert result.scores[0] == pytest.approx(0.9, abs=0.01)
-        assert result.labels[0] == 1  # 0-indexed + 1 for MaskRCNN convention
-        assert result.masks[0].sum() > 0  # mask should have nonzero pixels
-
-    def test_postprocess_non_square_image(self) -> None:
-        """Mask decode should handle non-square (letterboxed) images correctly."""
-        import numpy as np
-
-        from getitune.backend.ultralytics.exporter.yolo_seg_wrapper import YOLO11Seg
-
-        wrapper = object.__new__(YOLO11Seg)
-        wrapper._det_output_name = "det"
-        wrapper._proto_output_name = "proto"
-        wrapper._mask_dim = 32
-        wrapper._proto_h = 160
-        wrapper._proto_w = 160
-        wrapper._num_classes = 5
-        wrapper.params = MagicMock()
-        wrapper.params.confidence_threshold = 0.1
-        wrapper.params.resize_type = "fit_to_window_letterbox"
-        wrapper.params.iou_threshold = 0.7
-        wrapper.params.nms_execute = True
-        wrapper.params.nms_max_predictions = 30000
-        wrapper.orig_width = 640
-        wrapper.orig_height = 640
-        wrapper.labels = ["class_0", "class_1", "class_2", "class_3", "class_4"]
-        wrapper.get_label_name = lambda i: f"class_{i}"
-
-        # Landscape image: 1920x1080 → letterboxed to 640x640 with pad_top=140
-        det = np.zeros((1, 41, 8400), dtype=np.float32)
-        # Box at center of model input: xywh = (320, 320, 100, 100)
-        det[0, 0, 0] = 320.0
-        det[0, 1, 0] = 320.0
-        det[0, 2, 0] = 100.0
-        det[0, 3, 0] = 100.0
-        det[0, 4, 0] = 0.9
-        det[0, 9:41, 0] = 1.0
-
-        proto = np.ones((1, 32, 160, 160), dtype=np.float32) * 0.1
-
-        outputs = {"det": det, "proto": proto}
-        meta = {"original_shape": (1080, 1920)}
-
-        result = wrapper.postprocess(outputs, meta)
-
-        assert result.bboxes.shape[0] == 1
-        assert result.masks.shape == (1, 1080, 1920)
-        assert result.masks[0].sum() > 0
-        # Mask center should be near the center of the original image
-        ys, xs = np.where(result.masks[0] > 0)
-        center_x = (xs.min() + xs.max()) / 2
-        center_y = (ys.min() + ys.max()) / 2
-        assert abs(center_x - 960) < 30  # within 30px of image center
-        assert abs(center_y - 540) < 30
-
     def test_model_type_in_is_export_parameters(self) -> None:
-        """IS model should report model_type='YOLO11-seg'."""
+        """IS model should report model_type='YOLO-seg'."""
         from getitune.backend.ultralytics.models.instance_segmentation import UltralyticsInstSegModel
         from getitune.types.label import LabelInfo
 
         label_info = LabelInfo(label_names=["a"], label_ids=["0"], label_groups=[["a"]])
         model = UltralyticsInstSegModel(model_name="yolo26n-seg", label_info=label_info)
         params = model._export_parameters
-        assert params.model_type == "YOLO11-seg"
+        assert params.model_type == "YOLO-seg"
         assert params.task_type == "instance_segmentation"
 
 
@@ -745,7 +600,7 @@ class TestMetadataYaml:
     def test_instance_segmentation_task_mapping(self, tmp_path: Path) -> None:
         """Instance segmentation task_type should map to 'segment' in metadata."""
         seg_params = TaskLevelExportParameters(
-            model_type="YOLO11-seg",
+            model_type="YOLO-seg",
             model_name="yolo26n-seg",
             task_type="instance_segmentation",
             label_info=_label_info(),

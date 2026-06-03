@@ -66,7 +66,7 @@ class UltralyticsInstSegModel(UltralyticsModel):
         if iou is None:
             iou = self.extra_overrides.get("iou", 0.5)
         return TaskLevelExportParameters(
-            model_type="YOLO11-seg",
+            model_type="YOLO-seg",
             model_name=self.model_name,
             task_type="instance_segmentation",
             label_info=label_info,
