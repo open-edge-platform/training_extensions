@@ -12,26 +12,34 @@ export const downloadFile = (url: string, name?: string, startedMessage?: string
 };
 
 const saveDownload = async (url: string, name?: string, startedMessage?: string): Promise<void> => {
-    const filename = name ?? getFallbackFilename(url);
-    const selectedPath = await save({
-        defaultPath: filename,
-    });
+    const shouldRevokeObjectUrl = url.startsWith('blob:');
 
-    if (selectedPath === null) {
-        return;
+    try {
+        const filename = name ?? getFallbackFilename(url);
+        const selectedPath = await save({
+            defaultPath: filename,
+        });
+
+        if (selectedPath === null) {
+            return;
+        }
+
+        if (startedMessage !== undefined) {
+            toast({ type: 'info', message: startedMessage });
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`download failed: ${response.status} ${response.statusText}`);
+        }
+
+        const fileData = new Uint8Array(await response.arrayBuffer());
+        await writeFile(selectedPath, fileData);
+    } finally {
+        if (shouldRevokeObjectUrl) {
+            URL.revokeObjectURL(url);
+        }
     }
-
-    if (startedMessage !== undefined) {
-        toast({ type: 'info', message: startedMessage });
-    }
-
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`download failed: ${response.status} ${response.statusText}`);
-    }
-
-    const fileData = new Uint8Array(await response.arrayBuffer());
-    await writeFile(selectedPath, fileData);
 };
 
 const getFallbackFilename = (url: string): string => {
@@ -40,7 +48,7 @@ const getFallbackFilename = (url: string): string => {
     }
 
     // Asset download URLs end with /binary, so the previous segment is usually the item id.
-    const segments = new URL(url).pathname.split('/').filter(Boolean);
+    const segments = new URL(url, window.location.origin).pathname.split('/').filter(Boolean);
 
     return segments.at(-2) ?? 'download';
 };
