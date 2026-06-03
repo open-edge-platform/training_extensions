@@ -1,0 +1,122 @@
+name: getitrack checks
+
+on:
+  merge_group:
+    branches:
+      - develop
+      - release/**
+  push:
+    tags:
+      - "v*"
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+permissions: {} # No permissions by default
+
+concurrency:
+  group: getitrack-lint-and-test-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Determines if workflow should execute based on event type and changed paths.
+  # The path filter is scoped to library/getitrack/** and this workflow's own
+  # definition so unrelated library/ changes do not trigger it.
+  check-paths:
+    name: Check if workflow should run
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    outputs:
+      run_workflow: ${{ steps.check_paths.outputs.run }}
+    steps:
+      - &checkout
+        name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check_paths
+        uses: ./.github/actions/check-paths
+        with:
+          files_yaml: |
+            test:
+              - library/getitrack/**
+              - .github/workflows/getitrack-*.yaml
+
+  code-quality-checks:
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    needs: check-paths
+    if: needs.check-paths.outputs.run_workflow == 'true'
+    permissions:
+      contents: read
+    steps:
+      - *checkout
+
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
+        with:
+          uv-version-file: library/getitrack/pyproject.toml
+          python-version: "3.11"
+
+      - name: Prepare venv and install Python dependencies
+        working-directory: library/getitrack
+        run: just venv
+
+      - name: Run linters and type-checkers
+        working-directory: library/getitrack
+        run: just lint
+
+  unit-tests:
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    needs:
+      - check-paths
+    if: needs.check-paths.outputs.run_workflow == 'true'
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.14"]
+    name: unit-tests-with-Python${{ matrix.python-version }}
+    steps:
+      # YAML anchors not used in matrix strategies cause zizmor flags them.
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
+        with:
+          uv-version-file: library/getitrack/pyproject.toml
+          python-version: ${{ matrix.python-version }}
+
+      - name: Installing dependencies
+        working-directory: library/getitrack
+        run: just venv
+
+      - name: Unit testing
+        working-directory: library/getitrack
+        run: just test-unit
+
+  required-check:
+    name: Required Check getitrack-lint-and-test
+    needs:
+      - check-paths
+      - code-quality-checks
+      - unit-tests
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done
