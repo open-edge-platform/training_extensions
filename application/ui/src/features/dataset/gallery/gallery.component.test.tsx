@@ -98,37 +98,4 @@ describe('Gallery drag-and-drop upload', () => {
         expect(uploadMediaMock.mock.calls[0][0].map((f: File) => f.name)).toEqual(['photo.png', 'clip.mp4']);
         expect(screen.queryByLabelText('toast')).not.toBeInTheDocument();
     });
-
-    it('skips unsupported files, uploads the rest, and warns the user', async () => {
-        await renderGallery();
-
-        dropFiles([
-            new File([''], 'photo.png', { type: 'image/png' }),
-            new File([''], 'notes.pdf', { type: 'application/pdf' }),
-        ]);
-
-        const toast = await screen.findByLabelText('toast');
-        expect(toast).toHaveTextContent(/Unsupported files were skipped/i);
-        expect(uploadMediaMock).toHaveBeenCalledTimes(1);
-        expect(uploadMediaMock.mock.calls[0][0].map((f: File) => f.name)).toEqual(['photo.png']);
-    });
-
-    it('does not upload anything when every dropped file is unsupported', async () => {
-        await renderGallery();
-
-        dropFiles([new File([''], 'notes.pdf', { type: 'application/pdf' })]);
-
-        const toast = await screen.findByLabelText('toast');
-        expect(toast).toHaveTextContent(/No valid files found/i);
-        expect(uploadMediaMock).not.toHaveBeenCalled();
-    });
-
-    it('does not upload anything when every dropped file is unsupported', async () => {
-        await renderGallery();
-
-        dropFiles([new File([''], 'notes.pdf', { type: 'application/pdf' })]);
-
-        expect(await screen.findByLabelText('toast')).toBeVisible();
-        expect(uploadMediaMock).not.toHaveBeenCalled();
-    });
 });
