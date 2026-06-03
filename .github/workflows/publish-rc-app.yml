@@ -32,6 +32,7 @@ jobs:
         id: validate
         env:
           TAG: ${{ github.ref_name }}
+        shell: bash
         run: |
           set -euo pipefail
 
@@ -59,9 +60,9 @@ jobs:
           echo "Tagged commit: $TAG_COMMIT"
           echo "::endgroup::"
 
-          # Validate RC number is a positive integer
-          if ! [[ "$RC_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
-            echo "::error::Invalid RC number '$RC_NUMBER'. RC number must be a positive integer (rc1, rc2, etc.)"
+          # Validate RC number is a non-negative integer (including 0)
+          if ! [[ "$RC_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "::error::Invalid RC number '$RC_NUMBER'. RC number must be a non-negative integer (rc0, rc1, rc2, etc.)"
             exit 1
           fi
           echo "✓ RC number is valid"
@@ -100,8 +101,8 @@ jobs:
             echo "✓ Base release tag ${BASE_TAG} exists"
           fi
 
-          # Validate previous RC exists for RC N > 1
-          if [[ "$RC_NUMBER" -gt 1 ]]; then
+          # Validate previous RC exists for RC N > 0
+          if [[ "$RC_NUMBER" -gt 0 ]]; then
             PREV_RC_NUMBER=$((RC_NUMBER - 1))
             PREV_RC_TAG="app/v${TAG_VERSION}rc${PREV_RC_NUMBER}"
 
@@ -114,7 +115,7 @@ jobs:
             if ! git rev-parse --verify "refs/tags/${PREV_RC_TAG}" >/dev/null 2>&1; then
               echo "::error::RC tag '${TAG}' requires previous RC tag '${PREV_RC_TAG}' to exist"
               echo "::error::Cannot create RC${RC_NUMBER} without first creating RC${PREV_RC_NUMBER}"
-              echo "::error::Please create RC tags sequentially: rc1, rc2, rc3, ..."
+              echo "::error::Please create RC tags sequentially: rc0, rc1, rc2, rc3, ..."
               exit 1
             fi
             echo "✓ Previous RC tag ${PREV_RC_TAG} exists"
