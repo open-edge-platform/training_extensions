@@ -40,7 +40,7 @@ describe('UploadDetailsDialog', () => {
         expect(within(dialog).getByText('two.png')).toBeVisible();
     });
 
-    it('reflects per-item status transitions', () => {
+    it('reflects per-item status transitions', async () => {
         const { result } = renderUpload();
 
         let ids: string[] = [];
@@ -59,6 +59,26 @@ describe('UploadDetailsDialog', () => {
 
         expect(screen.getByText('Uploaded')).toBeVisible();
         expect(screen.getByText('Failed')).toBeVisible();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Error details' }));
+        expect(await screen.findByText('boom')).toBeVisible();
+    });
+
+    it('does not render an Error button when failed item has no error message', () => {
+        const { result } = renderUpload();
+
+        let ids: string[] = [];
+        act(() => {
+            ids = result.current.upload.startUploadProgress([makeFile('one.jpg')]);
+            result.current.ctx.dispatch({ type: 'OPEN_DIALOG' });
+        });
+
+        act(() => {
+            result.current.upload.setItemFailed(ids[0]);
+        });
+
+        expect(screen.getByText('Failed')).toBeVisible();
+        expect(screen.queryByRole('button', { name: 'Error details' })).toBeNull();
     });
 
     it('closes when the Close button is pressed', async () => {
