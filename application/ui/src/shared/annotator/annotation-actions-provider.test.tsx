@@ -16,6 +16,7 @@ import { server } from '../../msw-node-setup';
 import { renderHook } from '../../test-utils/render';
 import {
     AnnotationActionsProvider,
+    syncAnnotationLabelsWithProjectLabels,
     useAnnotationActions,
     type AnnotationActionsProviderProps,
 } from './annotation-actions-provider.component';
@@ -127,5 +128,39 @@ describe('submitPredictions', () => {
             expect(savedBody?.annotations).toHaveLength(1);
             expect(savedBody?.annotations[0].labels).toEqual([{ id: label1.id }]);
         });
+    });
+});
+
+describe('Label synchronization', () => {
+    const sourceLabel = getMockedLabel({ id: 'label-1', name: 'Fire', color: '#0000FF', hotkey: 'F' });
+
+    it('updates annotation label metadata when project label changes', () => {
+        const annotations = [
+            {
+                id: 'annotation-1',
+                shape: getMockedShape({ type: 'rectangle' }),
+                labels: [sourceLabel],
+            },
+        ];
+
+        const updatedLabel = getMockedLabel({ id: 'label-1', name: 'Fire23', color: '#FF0000', hotkey: 'R' });
+
+        const result = syncAnnotationLabelsWithProjectLabels(annotations, [updatedLabel]);
+
+        expect(result[0].labels).toEqual([updatedLabel]);
+    });
+
+    it('removes annotation labels that no longer exist in project labels', () => {
+        const annotations = [
+            {
+                id: 'annotation-1',
+                shape: getMockedShape({ type: 'rectangle' }),
+                labels: [sourceLabel],
+            },
+        ];
+
+        const result = syncAnnotationLabelsWithProjectLabels(annotations, []);
+
+        expect(result[0].labels).toEqual([]);
     });
 });

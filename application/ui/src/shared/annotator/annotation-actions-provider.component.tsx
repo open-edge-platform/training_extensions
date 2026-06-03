@@ -55,6 +55,30 @@ const filterOutAnnotationWithEmptyLabel = (annotations: Annotation[]): Annotatio
     return annotations.filter((annotation) => annotation.labels.some((label) => label.id !== EMPTY_LABEL_ID));
 };
 
+export const syncAnnotationLabelsWithProjectLabels = (
+    annotations: Annotation[],
+    projectLabels: Label[]
+): Annotation[] => {
+    const labelMap = new Map(projectLabels.map((label) => [label.id, label]));
+
+    return annotations.map((annotation) => ({
+        ...annotation,
+        labels: annotation.labels.flatMap((annotationLabel) => {
+            const projectLabel = labelMap.get(annotationLabel.id);
+
+            if (projectLabel === undefined) {
+                return [];
+            }
+
+            if (annotationLabel.probability === undefined) {
+                return [projectLabel];
+            }
+
+            return [{ ...projectLabel, probability: annotationLabel.probability }];
+        }),
+    }));
+};
+
 export const AnnotationActionsProvider = ({
     children,
     initialAnnotationsDTO,
@@ -214,7 +238,10 @@ export const AnnotationActionsProvider = ({
             ? predictions.length > 0
             : !hasInvalidAnnotation && (hasChangedAnnotations || hasEmptyLabelSelection);
 
-    const annotationsToRender = mode === 'annotation' ? annotations : predictions;
+    const annotationsToRender = syncAnnotationLabelsWithProjectLabels(
+        mode === 'annotation' ? annotations : predictions,
+        projectLabels
+    );
     const isReadOnlyMode = isReadOnly || mode === 'prediction';
 
     return (
