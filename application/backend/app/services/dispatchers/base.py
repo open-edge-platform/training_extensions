@@ -29,6 +29,13 @@ class DispatchError(Exception):
         super().__init__("Failed to dispatch the output")
 
 
+class UnavailableDispatcherError(Exception):
+    """Exception raised when a dispatcher's connection test fails."""
+
+    def __init__(self, message: str = "Dispatcher is unavailable"):
+        super().__init__(message)
+
+
 class BaseDispatcher(metaclass=ABCMeta):
     """
     Base class for dispatchers.
@@ -73,7 +80,14 @@ class BaseDispatcher(metaclass=ABCMeta):
 
     @abstractmethod
     def test(self) -> None:
-        """Test the connection to the output destination."""
+        """Test the connection to the output destination.
+
+        Returns nothing on success. Raises UnavailableDispatcherError if the
+        connection test fails.
+
+        Raises:
+            UnavailableDispatcherError: If the output destination is unreachable or unusable.
+        """
 
     def _create_payload(
         self, original_image: np.ndarray, image_with_visualization: np.ndarray, predictions: Result

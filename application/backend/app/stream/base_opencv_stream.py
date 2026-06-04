@@ -31,6 +31,7 @@ class BaseOpenCVStream(VideoStream, ABC):
             source: Video source (device ID, file path, or URL)
             source_type: Type of the video source
             codec: Video codec
+            timeout: Timeout in milliseconds for opening/reading the stream. Defaults to None.
             api_preference: OpenCV backend to use (e.g. cv2.CAP_V4L2). Defaults to cv2.CAP_ANY.
             **metadata: Additional metadata for the stream
         """

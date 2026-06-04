@@ -141,6 +141,6 @@ class SinkService:
             destination.test()
 
             elapsed_ms = (time.monotonic() - start) * 1000
-            return SinkTestResult.success(round(elapsed_ms, 1))
+            return SinkTestResult.success(latency_ms=round(elapsed_ms, 1))
         except Exception as e:
             return SinkTestResult.failure(str(e))

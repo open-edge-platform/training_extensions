@@ -13,7 +13,7 @@ from model_api.models.result import Result
 
 from app.models import MqttSinkConfig
 
-from .base import BaseDispatcher
+from .base import BaseDispatcher, UnavailableDispatcherError
 
 if TYPE_CHECKING:
     try:
@@ -173,4 +173,4 @@ class MqttDispatcher(BaseDispatcher):
             sock = socket.create_connection((host, port), timeout=_TEST_TIMEOUT_SECONDS)
             sock.close()
         except OSError as e:
-            raise Exception(f"Cannot connect to MQTT broker at {host}:{port}: {e}")
+            raise UnavailableDispatcherError(f"Cannot connect to MQTT broker at {host}:{port}: {e}")

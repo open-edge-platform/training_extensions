@@ -14,7 +14,7 @@ from urllib3.util.retry import Retry
 
 from app.models import WebhookSinkConfig
 
-from .base import BaseDispatcher
+from .base import BaseDispatcher, UnavailableDispatcherError
 
 MAX_RETRIES = 3
 BACKOFF_FACTOR = 0.3
@@ -72,6 +72,6 @@ class WebhookDispatcher(BaseDispatcher):
         try:
             response = requests.head(url, headers=headers, timeout=_TEST_TIMEOUT_SECONDS)
             if response.status_code >= 500:
-                raise Exception(f"Webhook at {url} returned server error: {response.status_code}")
+                raise UnavailableDispatcherError(f"Webhook at {url} returned server error: {response.status_code}")
         except requests.RequestException as e:
-            raise Exception(f"Cannot reach webhook at {url}: {e}")
+            raise UnavailableDispatcherError(f"Cannot reach webhook at {url}: {e}")

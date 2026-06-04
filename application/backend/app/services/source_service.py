@@ -138,6 +138,6 @@ class SourceUpdateService(SourceService):
             with video_stream:
                 video_stream.get_data()
             elapsed_ms = (time.monotonic() - start) * 1000
-            return SourceTestResult.success(round(elapsed_ms, 1))
+            return SourceTestResult.success(latency_ms=round(elapsed_ms, 1))
         except Exception as e:
             return SourceTestResult.failure(str(e))
