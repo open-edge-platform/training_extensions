@@ -10,5 +10,6 @@
 
 @mixin breakableText {
     overflow-wrap: break-word;
+    overflow-wrap: anywhere;
     word-break: break-word;
 }
