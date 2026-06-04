@@ -16,7 +16,12 @@ type SelectedMediaItemContextProps = {
     mediaItem: Media;
     roi: RegionOfInterest;
     setMediaItem: (item: Media) => void;
+    // Media-space view of the image: width/height always match the media item so
+    // coordinate clamping in drawing tools stays in annotation space.
     image: ImageData;
+    // True once the current item's full-resolution pixels are loaded and decoded.
+    // False during loading, while a placeholder is shown, or for images too large
+    // to rasterise at full size (smart tools are disabled in that case).
     isImageReady: boolean;
 };
 
@@ -86,8 +91,25 @@ export const SelectedMediaItemProvider = ({
 }: SelectedMediaItemProviderProps) => {
     const [mediaItem, setMediaItem] = useMediaItem(initialMediaItem);
 
-    const { data: image = getImageData(new Image()), isSuccess, isPlaceholderData } = useLoadImageQuery(mediaItem);
-    const isImageReady = isSuccess && !isPlaceholderData;
+    const {
+        data: loadedImage = getImageData(new Image()),
+        isSuccess,
+        isPlaceholderData,
+    } = useLoadImageQuery(mediaItem);
+
+    // For oversized media, getImageData returns a downscaled buffer so the
+    // image can still be rendered. Keep `image` dimensions in media-space so
+    // drawing tools continue to clamp coordinates correctly.
+    const decodedAtFullSize = loadedImage.width === mediaItem.width && loadedImage.height === mediaItem.height;
+    const image = decodedAtFullSize
+        ? loadedImage
+        : ({
+              width: mediaItem.width,
+              height: mediaItem.height,
+              data: loadedImage.data,
+              colorSpace: 'srgb',
+          } as ImageData);
+    const isImageReady = isSuccess && !isPlaceholderData && decodedAtFullSize;
 
     const roi: RegionOfInterest = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 

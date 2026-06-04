@@ -11,7 +11,9 @@ import SAMDetectionImg from '../../../../assets/tools/sam-detection.webp';
 import SAMSegmentationImg from '../../../../assets/tools/sam-segmentation.webp';
 import { useProjectTask } from '../../../../hooks/use-project-task.hook';
 import { HOTKEYS } from '../../../../shared/hotkeys-definition';
+import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { ToolConfig } from '../interface';
+import { canRasteriseAtFullSize } from '../utils';
 
 const SELECTION_TOOL_CONFIG: ToolConfig = {
     type: 'selection',
@@ -92,6 +94,13 @@ const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
 
 export const useAvailableTools = (): ToolConfig[] => {
     const taskType = useProjectTask();
+    const { mediaItem } = useSelectedMediaItem();
+
+    if (!canRasteriseAtFullSize(mediaItem.width, mediaItem.height)) {
+        return TASK_TOOL_CONFIG[taskType].filter(
+            (tool) => tool.type !== 'sam' && tool.type !== 'magnetic-lasso' && tool.type !== 'ssim'
+        );
+    }
 
     return TASK_TOOL_CONFIG[taskType];
 };

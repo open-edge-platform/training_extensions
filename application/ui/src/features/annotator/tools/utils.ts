@@ -427,14 +427,54 @@ const drawImageOnCanvas = (img: HTMLImageElement, filter = ''): HTMLCanvasElemen
     const ctx = canvas.getContext('2d');
 
     if (ctx) {
-        const width = img.naturalWidth ? img.naturalWidth : img.width;
-        const height = img.naturalHeight ? img.naturalHeight : img.height;
-
         ctx.filter = filter;
-        ctx.drawImage(img, 0, 0, width, height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     }
 
     return canvas;
+};
+
+// Conservative upper bounds for a single 2D canvas that hold across the
+// browsers we support (Chrome caps total area at 16384^2 ≈ 268 Mpx; per-side
+// limits are higher but we stay well under). Anything above this can't be
+// rasterised at full resolution.
+const MAX_CANVAS_SIDE = 16384;
+const MAX_CANVAS_AREA = MAX_CANVAS_SIDE * MAX_CANVAS_SIDE;
+
+// Whether an image of the given size can be drawn into a full-resolution 2D
+// canvas. We must decide from the dimensions up front: some browsers return a
+// valid 2D context for an oversized canvas but then throw (or hand back a blank
+// ~1 GB buffer) from getImageData, which manifested as the original "white
+// square" + smart-tool crash.
+export const canRasteriseAtFullSize = (width: number, height: number): boolean =>
+    width <= MAX_CANVAS_SIDE && height <= MAX_CANVAS_SIDE && width * height <= MAX_CANVAS_AREA;
+
+// Decode an image that is too large for a full-resolution 2D canvas into a
+// downscaled ImageData that fits MAX_LARGE_IMAGE_DECODE_SIDE on its longest
+// edge. The browser's canvas pixel limit only applies to the destination
+// canvas, so drawing the source HTMLImageElement into a smaller canvas works
+// where a full-size canvas would fail. Returns null only if even the small
+// canvas can't get a 2D context (should never happen in practice).
+const MAX_LARGE_IMAGE_DECODE_SIDE = 4096;
+
+const getDownscaledImageData = (img: HTMLImageElement): ImageData | null => {
+    const sourceWidth = img.naturalWidth || img.width;
+    const sourceHeight = img.naturalHeight || img.height;
+    const scale = Math.min(1, MAX_LARGE_IMAGE_DECODE_SIDE / Math.max(sourceWidth, sourceHeight));
+    const width = Math.max(1, Math.round(sourceWidth * scale));
+    const height = Math.max(1, Math.round(sourceHeight * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext('2d');
+    if (ctx === null) {
+        return null;
+    }
+
+    ctx.drawImage(img, 0, 0, width, height);
+    return ctx.getImageData(0, 0, width, height);
 };
 
 export const getImageData = (img: HTMLImageElement): ImageData => {
@@ -443,13 +483,29 @@ export const getImageData = (img: HTMLImageElement): ImageData => {
         return new ImageData(1, 1);
     }
 
+    const sourceWidth = img.naturalWidth || img.width;
+    const sourceHeight = img.naturalHeight || img.height;
+
+    // Decide from the source dimensions whether a full-resolution canvas is
+    // viable. Relying on getContext('2d') returning null is not enough: some
+    // browsers return a valid context for an oversized canvas and only fail
+    // later in getImageData (throwing OOM or returning a blank buffer), which
+    // surfaced as an immediate smart-tool error on huge images.
+    if (!canRasteriseAtFullSize(sourceWidth, sourceHeight)) {
+        return getDownscaledImageData(img) ?? new ImageData(1, 1);
+    }
+
     const canvas = drawImageOnCanvas(img);
-    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+    const ctx = canvas.getContext('2d');
 
-    const width = img.naturalWidth ? img.naturalWidth : img.width;
-    const height = img.naturalHeight ? img.naturalHeight : img.height;
+    if (ctx !== null) {
+        return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
 
-    return ctx.getImageData(0, 0, width, height);
+    // Defensive fallback: the canvas was within our limits but the context
+    // still couldn't be created (e.g. too many live contexts). Downscale so we
+    // still return a usable buffer rather than a 1x1 placeholder.
+    return getDownscaledImageData(img) ?? new ImageData(1, 1);
 };
 
 export const isKeyboardDelete = (event: KeyboardEvent): boolean =>

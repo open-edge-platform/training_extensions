@@ -37,9 +37,13 @@ export const usePolygonConfig = ({
     }, [worker]);
 
     useEffect(() => {
-        if (isMounted.current && image) {
-            worker?.loadImage(image);
-        }
+        // For oversized media `image.data` is a placeholder whose length doesn't
+        // match width*height*4 — opencv's matFromImageData would throw a numeric
+        // Emscripten exception. Skip loading; those tools are disabled for this case.
+        if (!isMounted.current || !image) return;
+        if (image.data.length !== image.width * image.height * 4) return;
+
+        worker?.loadImage(image);
     }, [image, worker]);
 
     const polygon = useMemo<Polygon | null>(() => {
@@ -66,8 +70,14 @@ export const usePolygonConfig = ({
         return clampPoint(getRelativePoint(canvasRef.current, { x: event.clientX, y: event.clientY }, zoom));
     };
 
-    const setPointFromEvent = (callback: (point: Point) => void) => (event: PointerEvent<SVGElement>) =>
+    const setPointFromEvent = (callback: (point: Point) => void) => (event: PointerEvent<SVGElement>) => {
+        // A debounced/trailing pointer handler can fire after the canvas element
+        // has unmounted (e.g. switching tools or media), leaving `canvasRef.current`
+        // null. `getRelativePoint` would then throw on `getBoundingClientRect`.
+        if (canvasRef.current === null) return;
+
         callback(getPointerRelativePosition(event));
+    };
 
     const onPointerMoveRemove = setPointFromEvent((newPoint: Point) => {
         const intersectionPoint = getIntersectionPoint(

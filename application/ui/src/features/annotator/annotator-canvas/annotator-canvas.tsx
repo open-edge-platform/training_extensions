@@ -18,6 +18,7 @@ import { useSelectedAnnotations } from '../../../shared/annotator/select-annotat
 import { useTool } from '../../../shared/annotator/tool-provider.component';
 import { useEditableAnnotationState } from '../../../shared/annotator/use-editable-annotation-state.hook';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
+import { getMediaBinaryUrl } from '../../../shared/media-url.utils';
 import { Annotations } from '../annotations/annotations.component';
 import { VideoAnnotations, VideoPredictions } from '../annotations/video-annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
@@ -57,15 +58,40 @@ const useDrawImageOnCanvas = (image: ImageData) => {
     return canvasRef;
 };
 
-const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
+// Use <img> for static images to bypass the browser 2D canvas pixel limit
+// (~268 Mpx in Chrome) which renders a white square for very large images.
+const StaticImage = ({ mediaItem }: { mediaItem: Media }) => {
+    const projectId = useProjectIdentifier();
+
+    return (
+        <img
+            src={getMediaBinaryUrl(projectId, mediaItem.id)}
+            width={mediaItem.width}
+            height={mediaItem.height}
+            crossOrigin='anonymous'
+            className={classes.image}
+            alt=''
+        />
+    );
+};
+
+const VideoMediaImage = ({ image }: { image: ImageData }) => {
     const canvasRef = useDrawImageOnCanvas(image);
 
     return (
         <>
             <canvas ref={canvasRef} width={image.width} height={image.height} className={classes.image} />
-            {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && <VideoFrame canvasRef={canvasRef} />}
+            <VideoFrame canvasRef={canvasRef} />
         </>
     );
+};
+
+const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
+    if (isVideo(mediaItem) || isVideoFrame(mediaItem)) {
+        return <VideoMediaImage image={image} />;
+    }
+
+    return <StaticImage mediaItem={mediaItem} />;
 };
 
 type ImageAnnotationsProps = {
