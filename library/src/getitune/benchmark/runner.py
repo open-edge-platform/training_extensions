@@ -164,8 +164,13 @@ def _cleanup_resources(*, reset_cuda_peak: bool = False) -> None:
             torch.cuda.ipc_collect()
             if reset_cuda_peak:
                 torch.cuda.reset_peak_memory_stats()
+        elif hasattr(torch, "xpu") and torch.xpu.is_available():
+            torch.xpu.synchronize()
+            torch.xpu.empty_cache()
+            if reset_cuda_peak:
+                torch.xpu.reset_peak_memory_stats()
     except Exception:
-        logger.debug("CUDA cache cleanup failed (ignored).", exc_info=True)
+        logger.debug("Accelerator cache cleanup failed (ignored).", exc_info=True)
 
 
 # ---------------------------------------------------------------------------

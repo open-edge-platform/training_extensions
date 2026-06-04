@@ -68,7 +68,7 @@ python -m getitune.benchmark run --task detection --model yolox_s --dataset wgis
 Run with ad-hoc config overrides:
 
 ```bash
-python -m getitune.benchmark run --task detection --model yolox_s --dataset wgisd --override model.init_args.optimizer.init_args.lr=0.01 --train-kwarg precision=32 --no-tracking
+python -m getitune.benchmark run --task detection --model yolox_s --dataset wgisd --override model.init_args.optimizer.init_args.lr=0.01 --max-epochs 10 --train-kwarg precision=32 --no-tracking
 ```
 
 ## Report and cleanup commands
@@ -101,6 +101,81 @@ Per-seed work directories are created under:
 Dataset provisioning writes readiness markers at:
 
 - `data/<dataset>/.ready`
+
+## Add a new dataset or model
+
+Use this flow when extending benchmark coverage.
+
+### Add a new dataset
+
+1. Add a dataset provisioning script under `scripts/benchmark_datasets/` (for example, `prepare_my_dataset.py`).
+2. Add an entry in `benchmark_catalog.yaml` that points `script` to that provisioning script.
+3. Reference the dataset name from the relevant task in `benchmark_manifest.yaml` under `experiments.<task>.datasets`.
+4. Provision the dataset.
+5. Verify the new task+dataset combination appears in a dry run.
+
+Catalog example (`benchmark_catalog.yaml`):
+
+```yaml
+datasets:
+  - name: my_dataset
+    script: "scripts/benchmark_datasets/prepare_my_dataset.py"
+    size_tier: medium
+    description: "Short description of dataset size/content."
+    compatible_tasks:
+      - detection
+```
+
+Manifest reference example (`benchmark_manifest.yaml`):
+
+```yaml
+experiments:
+  detection:
+    datasets:
+      - wgisd
+      - my_dataset
+```
+
+Commands (run from `library/`):
+
+```bash
+python -m getitune.benchmark provision --dataset my_dataset
+python -m getitune.benchmark run --dry-run --task detection --dataset my_dataset --num-seeds 1 --no-tracking
+```
+
+Provisioning script contract:
+
+- The script path is read from `benchmark_catalog.yaml` (`script: ...`).
+- `provision` runs the script as `python <script> --output-dir <data_root> --name <dataset_name>`.
+- The script should create `data/<dataset_name>/`; the runner writes `data/<dataset_name>/.ready` after success.
+
+### Add a new model
+
+1. Ensure the model recipe exists under `src/getitune/recipe/<task>/...`.
+2. Add a model entry under `experiments.<task>.models` in `benchmark_manifest.yaml`.
+3. Run a focused benchmark slice for the new model.
+
+Manifest model example (`benchmark_manifest.yaml`):
+
+```yaml
+experiments:
+  detection:
+    models:
+      - name: my_detector
+        priority: extended
+        recipe: detection/my_detector.yaml
+```
+
+Focused run command (from `library/`):
+
+```bash
+python -m getitune.benchmark run --task detection --model my_detector --dataset wgisd --num-seeds 1 --no-tracking
+```
+
+Notes:
+
+- `datasets` in the manifest must reference names declared in `benchmark_catalog.yaml`.
+- A `default` scenario is always present implicitly; optional `scenarios` can further restrict `datasets` and `models`.
 
 ## Optional: centralized MLflow server
 

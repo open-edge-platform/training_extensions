@@ -226,14 +226,20 @@ def _find_csv_metrics(csv_dir: Path) -> Path | None:
 
 
 def _get_peak_gpu_memory_mb() -> float:
-    """Best-effort peak GPU memory reading (returns 0.0 if unavailable)."""
+    """Best-effort peak accelerator memory reading in MB (returns 0.0 if unavailable).
+
+    Covers both CUDA (NVIDIA) and XPU (Intel) devices. XPU is first-class, so
+    we must not assume a CUDA-only environment here.
+    """
     try:
         import torch
 
         if torch.cuda.is_available():
             return torch.cuda.max_memory_allocated() / (1024 * 1024)
+        if hasattr(torch, "xpu") and torch.xpu.is_available():
+            return torch.xpu.max_memory_allocated() / (1024 * 1024)
     except Exception:
-        logger.debug("Could not read peak GPU memory.", exc_info=True)
+        logger.debug("Could not read peak accelerator memory.", exc_info=True)
     return 0.0
 
 
