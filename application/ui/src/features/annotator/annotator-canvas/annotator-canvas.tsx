@@ -34,6 +34,7 @@ import {
 import { getVideoFrameRangeIndexes } from '../video-player/api/utils';
 import { VideoFrame } from '../video-player/video-frame.component';
 import { useVideoPlayer, useVideoPlayerContext } from '../video-player/video-player-provider.component';
+import { drawImageDataOnCanvas } from './draw-image-data-on-canvas';
 
 import classes from './annotator-canvas.module.scss';
 
@@ -52,7 +53,7 @@ const useDrawImageOnCanvas = (image: ImageData) => {
             return;
         }
 
-        ctx.putImageData(image, 0, 0);
+        drawImageDataOnCanvas(ctx, image);
     }, [image]);
 
     return canvasRef;
@@ -75,20 +76,34 @@ const StaticImage = ({ mediaItem }: { mediaItem: Media }) => {
     );
 };
 
-const VideoMediaImage = ({ image }: { image: ImageData }) => {
+type CanvasMediaImageProps = {
+    image: ImageData;
+    showVideoFrame?: boolean;
+};
+
+const CanvasMediaImage = ({ image, showVideoFrame = false }: CanvasMediaImageProps) => {
     const canvasRef = useDrawImageOnCanvas(image);
 
     return (
         <>
             <canvas ref={canvasRef} width={image.width} height={image.height} className={classes.image} />
-            <VideoFrame canvasRef={canvasRef} />
+            {showVideoFrame && <VideoFrame canvasRef={canvasRef} />}
         </>
     );
 };
 
 const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
     if (isVideo(mediaItem) || isVideoFrame(mediaItem)) {
-        return <VideoMediaImage image={image} />;
+        return <CanvasMediaImage image={image} showVideoFrame />;
+    }
+
+    const hasFullResolutionImageData =
+        image.width === mediaItem.width &&
+        image.height === mediaItem.height &&
+        image.data.length === mediaItem.width * mediaItem.height * 4;
+
+    if (hasFullResolutionImageData) {
+        return <CanvasMediaImage image={image} />;
     }
 
     return <StaticImage mediaItem={mediaItem} />;
