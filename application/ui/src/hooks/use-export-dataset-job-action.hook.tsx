@@ -5,7 +5,7 @@ import { useActionState } from 'react';
 
 import { isString } from 'lodash-es';
 
-import { $api } from '../api/client';
+import { useSubmitJob } from './api/jobs/jobs.hook';
 import { useExportDataset } from './storage/use-export-dataset.hook';
 import { useProjectIdentifier } from './use-project-identifier.hook';
 
@@ -30,7 +30,7 @@ type useExportDatasetJobActionProps = {
 
 export const useExportDatasetJobAction = ({ datasetId, onSuccess }: useExportDatasetJobActionProps) => {
     const projectId = useProjectIdentifier();
-    const exportJobMutation = $api.useMutation('post', '/api/jobs');
+    const exportJobMutation = useSubmitJob();
     const { addLsExportId } = useExportDataset();
 
     return useActionState<FormValues, FormData>(async (_prevState, formData) => {
