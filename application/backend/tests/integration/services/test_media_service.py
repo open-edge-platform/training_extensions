@@ -334,6 +334,100 @@ def fxt_project_with_labeled_dataset_items(
 
 
 @pytest.fixture
+def fxt_project_with_labeled_video(fxt_project_with_pipeline, db_session) -> tuple[Project, MediaDB, list[MediaDB]]:
+    """Fixture with a video whose frames carry labels, plus a standalone labeled image.
+
+    Layout:
+      - A video (no dataset item of its own).
+      - Two frames of that video: frame 10 annotated with label_0, frame 20 annotated with label_0.
+      - A standalone image annotated with label_1.
+
+    Returns the project, the video MediaDB and the list of frame MediaDB objects.
+    """
+    project, _ = fxt_project_with_pipeline
+    assert len(project.task.labels) >= 2, "Project must have at least 2 labels for this fixture"
+
+    label_0_id = str(project.task.labels[0].id)
+    label_1_id = str(project.task.labels[1].id)
+
+    created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
+
+    # Video (no dataset item of its own)
+    video = MediaDB(
+        type="video",
+        name="labeled_video",
+        format="avi",
+        size=1024,
+        width=1024,
+        height=768,
+        fps=25.0,
+        frame_count=100,
+        project_id=str(project.id),
+        created_at=created_at,
+    )
+    db_session.add(video)
+    db_session.flush()
+
+    # Two frames of the video, both annotated with label_0
+    frames: list[MediaDB] = []
+    for frame_index in (10, 20):
+        frame = MediaDB(
+            type="video_frame",
+            name=f"labeled_video_frame_{frame_index}",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            video_id=video.id,
+            frame_index=frame_index,
+            project_id=str(project.id),
+            created_at=created_at,
+        )
+        db_session.add(frame)
+        db_session.flush()
+        frame_item = DatasetItemDB(
+            id=frame.id,
+            project_id=str(project.id),
+            subset="unassigned",
+            annotation_data=[{"labels": [{"id": label_0_id}], "shape": {"type": "full_image"}}],
+            user_reviewed=True,
+            created_at=created_at,
+        )
+        db_session.add(frame_item)
+        db_session.flush()
+        db_session.add(DatasetItemLabelDB(dataset_item_id=frame.id, label_id=label_0_id))
+        frames.append(frame)
+
+    # Standalone image annotated with label_1
+    image = MediaDB(
+        type="image",
+        name="labeled_image",
+        format="jpg",
+        size=1024,
+        width=1024,
+        height=768,
+        project_id=str(project.id),
+        created_at=created_at,
+    )
+    db_session.add(image)
+    db_session.flush()
+    image_item = DatasetItemDB(
+        id=image.id,
+        project_id=str(project.id),
+        subset="unassigned",
+        annotation_data=[{"labels": [{"id": label_1_id}], "shape": {"type": "full_image"}}],
+        user_reviewed=True,
+        created_at=created_at,
+    )
+    db_session.add(image_item)
+    db_session.flush()
+    db_session.add(DatasetItemLabelDB(dataset_item_id=image.id, label_id=label_1_id))
+    db_session.flush()
+
+    return project, video, frames
+
+
+@pytest.fixture
 def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tuple[Project, list[DatasetItemDB]]:
     """Fixture with dataset items covering all subset types."""
     project, _ = fxt_project_with_pipeline
@@ -1332,6 +1426,66 @@ class TestMediaServiceIntegration:
         assert len(media_list) == 4
         item_names = {item.name for item in media_list}
         assert item_names == {"item_no_labels", "item_label_0", "item_label_1", "item_both_labels"}
+
+    def test_list_media_filter_by_label_returns_video_not_frames(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_labeled_video: tuple[Project, MediaDB, list[MediaDB]],
+    ):
+        """Filtering by a label annotated only on video frames returns the parent video, not the frames."""
+        project, video, frames = fxt_project_with_labeled_video
+        label_0_id = project.task.labels[0].id
+
+        # Mirror the router behaviour of excluding raw video frames from the listing
+        media_list = fxt_media_service.list_media(
+            project_id=project.id,
+            filters=MediaFilters(label_ids=[label_0_id]),
+            exclude_types=[MediaType.VIDEO_FRAME],
+        )
+
+        assert len(media_list) == 1
+        returned = media_list[0]
+        assert str(returned.id) == video.id
+        assert returned.type == MediaType.VIDEO
+        # Frames must not be returned individually
+        returned_ids = {str(item.id) for item in media_list}
+        assert all(frame.id not in returned_ids for frame in frames)
+
+    def test_count_media_filter_by_label_counts_video_once(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_labeled_video: tuple[Project, MediaDB, list[MediaDB]],
+    ):
+        """A video with multiple frames carrying the label is counted once, not per frame."""
+        project, video, frames = fxt_project_with_labeled_video
+        label_0_id = project.task.labels[0].id
+
+        count = fxt_media_service.count_media(
+            project=project,
+            label_ids=[label_0_id],
+            exclude_types=[MediaType.VIDEO_FRAME],
+        )
+
+        assert count == 1
+
+    def test_list_media_filter_by_label_returns_image_only(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_labeled_video: tuple[Project, MediaDB, list[MediaDB]],
+    ):
+        """Filtering by a label present only on a standalone image returns that image, not the video."""
+        project, video, frames = fxt_project_with_labeled_video
+        label_1_id = project.task.labels[1].id
+
+        media_list = fxt_media_service.list_media(
+            project_id=project.id,
+            filters=MediaFilters(label_ids=[label_1_id]),
+            exclude_types=[MediaType.VIDEO_FRAME],
+        )
+
+        assert len(media_list) == 1
+        assert media_list[0].name == "labeled_image"
+        assert media_list[0].type == MediaType.IMAGE
 
     @pytest.mark.parametrize(
         "subset, expected_count",
