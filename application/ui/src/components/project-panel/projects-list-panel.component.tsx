@@ -56,7 +56,7 @@ const SelectedProjectButton = ({ name, id, isActive }: SelectedProjectProps) => 
                 />
             </View>
             <Flex direction={'column'} minWidth={0}>
-                <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.projectName}>
+                <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.selectedProjectName}>
                     <span title={name}>{name}</span>
                 </View>
                 {isActive ? <Tag className={classes.statusTag} text={'Active'} /> : null}
@@ -128,7 +128,7 @@ export const ProjectsListPanel = () => {
                             />
                             <View width={'100%'} position={'relative'}>
                                 <Flex direction={'column'} alignItems={'center'} gap={'size-50'}>
-                                    <Heading UNSAFE_style={{ textAlign: 'center' }} level={2} marginBottom={0}>
+                                    <Heading UNSAFE_className={classes.dialogProjectName} level={2} marginBottom={0}>
                                         {selectedProjectName}
                                     </Heading>
 
