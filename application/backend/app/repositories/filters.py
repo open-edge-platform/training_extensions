@@ -80,7 +80,7 @@ def _apply_annotation_status_filter_with_video_support(stmt: Select, annotation_
 def _apply_label_filter_with_video_support(stmt: Select, label_ids: list[str] | None = None) -> Select:
     """Apply a label filter to a media query, accounting for the video/frame hierarchy.
 
-    Unlike a plain join on ``DatasetItemLabelDB``, this handles the case where videos do
+    Unlike a plain join on ``DatasetItemLabelDB``, this also works for videos, which do
     not have their own ``DatasetItemDB`` rows. A video is considered to match a label if
     at least one of its frames has a ``DatasetItemDB`` annotated with one of the given
     labels. In that case the video itself is returned (not its individual frames).
