@@ -1,5 +1,5 @@
-#  Copyright (C) 2026 Intel Corporation
-#  SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -100,7 +100,7 @@ class TestBaseWeightsServiceRetryLogic:
         assert direct_session.get.called
 
     def test_download_weights_raises_when_both_connections_fail(self, fxt_base_weights_service):
-        """Test that download raises ValueError when both proxy and direct connections fail."""
+        """Test that download raises RuntimeError when both proxy and direct connections fail."""
         proxy_session = self._make_mock_session()
         proxy_session.get.side_effect = requests.RequestException("proxy error")
         direct_session = self._make_mock_session()
@@ -113,7 +113,7 @@ class TestBaseWeightsServiceRetryLogic:
                 "_build_retry_session",
                 side_effect=[proxy_session, direct_session],
             ),
-            pytest.raises(ValueError, match="weights.pth"),
+            pytest.raises(RuntimeError, match="weights.pth"),
         ):
             fxt_base_weights_service._download_weights(
                 remote_url="https://example.com/weights.pth",

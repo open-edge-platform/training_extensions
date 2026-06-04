@@ -210,7 +210,7 @@ class BaseWeightsService:
             sha_sum: Expected SHA256 checksum for verification
 
         Raises:
-            ValueError: If downloaded file fails integrity check, or if download fails
+            RuntimeError: If downloaded file fails integrity check, or if download fails
         """
         self._check_disk_space(remote_url)
 
@@ -238,21 +238,24 @@ class BaseWeightsService:
                     proxy_mode = "env-proxy" if use_env_proxy else "direct"
                     logger.warning(f"Weight download failed via {proxy_mode} for {remote_url}: {e}")
             else:
-                raise ValueError(f"Failed to download weights from {remote_url}: {last_error}")
+                raise RuntimeError(f"Failed to download weights from {remote_url}: {last_error}")
 
             if not self._verify_file_integrity(temp_path, sha_sum):
                 temp_path.unlink()
-                raise ValueError(f"Downloaded file failed integrity check for {remote_url}")
+                raise RuntimeError(f"Downloaded file failed integrity check for {remote_url}")
 
             # Move temporary file to final location
             temp_path.rename(local_path)
             logger.info(f"Successfully downloaded and verified weights: {local_path}")
         except requests.RequestException as e:
             logger.error(f"Failed to download weights from {remote_url}: {e}")
-            raise ValueError(f"Failed to download weights from {remote_url}: {e}")
+            raise RuntimeError(f"Failed to download weights from {remote_url}: {e}") from e
+        except RuntimeError:
+            # Re-raise runtime errors to preserve the original error type and message and avoid the broad except clause
+            raise
         except Exception as e:
             logger.error(f"Unexpected error downloading weights from {remote_url}: {e}")
-            raise ValueError(f"Unexpected error downloading weights from {remote_url}: {e}")
+            raise RuntimeError(f"Unexpected error downloading weights from {remote_url}: {e}") from e
         finally:
             # Clean up temporary file if it exists
             if temp_path.exists():

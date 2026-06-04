@@ -18,9 +18,12 @@ os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"] = os.getenv(
 )
 
 # The 'HF_HUB_CACHE' env variable controls where to cache pretrained weights for timm and huggingface models.
-# By default, it is set to the same location of PRETRAINED_WEIGHTS_CACHE_DIR.
+# If not explicitly set, it defaults to the same location of PRETRAINED_WEIGHTS_CACHE_DIR.
 # Refer: huggingface_hub/constants.py::HF_HUB_CACHE
-os.environ["HF_HUB_CACHE"] = os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"]
+os.environ["HF_HUB_CACHE"] = os.getenv(
+    "HF_HUB_CACHE",
+    os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"],
+)
 
 # Set the value of ONEDNN_PRIMITIVE_CACHE_CAPACITY to set the cache capacity for oneDNN primitives.
 # It will be ignored if no XPU devices are available.
