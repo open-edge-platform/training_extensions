@@ -274,4 +274,4 @@ def test_sink(
 ) -> TestResult:
     """Test connectivity to a sink"""
     result = sink_service.test_sink(sink)
-    return TestResult.create(result)
+    return TestResult.model_validate(result, from_attributes=True)

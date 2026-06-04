@@ -284,4 +284,4 @@ def test_source(
 ) -> TestResult:
     """Test connectivity to a source"""
     result = source_update_service.test_source(source)
-    return TestResult.create(result)
+    return TestResult.model_validate(result, from_attributes=True)

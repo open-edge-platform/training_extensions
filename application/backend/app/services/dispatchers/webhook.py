@@ -74,4 +74,4 @@ class WebhookDispatcher(BaseDispatcher):
             if response.status_code >= 500:
                 raise UnavailableDispatcherError(f"Webhook at {url} returned server error: {response.status_code}")
         except requests.RequestException as e:
-            raise UnavailableDispatcherError(f"Cannot reach webhook at {url}: {e}")
+            raise UnavailableDispatcherError(f"Cannot reach webhook at {url}: {e}") from e

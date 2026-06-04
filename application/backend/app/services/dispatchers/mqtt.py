@@ -173,4 +173,4 @@ class MqttDispatcher(BaseDispatcher):
             sock = socket.create_connection((host, port), timeout=_TEST_TIMEOUT_SECONDS)
             sock.close()
         except OSError as e:
-            raise UnavailableDispatcherError(f"Cannot connect to MQTT broker at {host}:{port}: {e}")
+            raise UnavailableDispatcherError(f"Cannot connect to MQTT broker at {host}:{port}: {e}") from e
