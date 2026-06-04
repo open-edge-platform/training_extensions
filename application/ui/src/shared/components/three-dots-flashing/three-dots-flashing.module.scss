@@ -6,6 +6,11 @@
 .flashingDots span {
     animation: dotFlash 1.2s infinite ease-in-out;
     opacity: 0.25;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        opacity: 1;
+    }
 }
 
 .flashingDots span:nth-child(2) {
