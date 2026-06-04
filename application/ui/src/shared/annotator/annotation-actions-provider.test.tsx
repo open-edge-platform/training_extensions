@@ -163,4 +163,22 @@ describe('Label synchronization', () => {
 
         expect(result[0].labels).toEqual([]);
     });
+
+    it('derives validation state from synced annotation labels', async () => {
+        const staleLabel = getMockedLabel({ id: 'deleted-label', name: 'Deleted label' });
+        const { result } = renderAnnotationActions({ mode: 'annotation', labels: [] });
+
+        await waitFor(() => expect(result.current).not.toBeNull());
+
+        act(() => {
+            result.current.addAnnotations([getMockedShape({ type: 'rectangle' })], [staleLabel]);
+        });
+
+        await waitFor(() => {
+            expect(result.current.annotations).toHaveLength(1);
+            expect(result.current.annotations[0].labels).toEqual([]);
+            expect(result.current.hasInvalidAnnotation).toBe(true);
+            expect(result.current.canSubmit).toBe(false);
+        });
+    });
 });
