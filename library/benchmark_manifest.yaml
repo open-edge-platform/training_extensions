@@ -252,7 +252,7 @@ experiments:
         priority: extended
         recipe: rotated_detection/maskrcnn_efficientnetb2b.yaml
     datasets:
-      - wgisd
+      - oxford_pets
     criteria:
       accuracy_metric: map_50
       thresholds:
