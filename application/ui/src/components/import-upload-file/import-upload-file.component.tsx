@@ -3,6 +3,7 @@
 
 import { Button, Content, DropZone, FileTrigger, Flex, Heading, IllustratedMessage, Text, toast } from '@geti/ui';
 import { LinkOut } from '@geti/ui/icons';
+import { useSubmitJob } from 'hooks/api/jobs/jobs.hook';
 
 import { $api } from '../../api/client';
 import { ReactComponent as EmptyDataset } from '../../assets/drop-files.svg';
@@ -22,7 +23,7 @@ type ImportUploadFileProps = {
 
 export const ImportUploadFile = ({ formatOptions, onFileUploaded }: ImportUploadFileProps) => {
     const stagedDatasetMutation = $api.useMutation('post', '/api/staged_datasets');
-    const prepareImportJobMutation = $api.useMutation('post', '/api/jobs');
+    const prepareImportJobMutation = useSubmitJob();
 
     const handleLoadingFile = (files: File[]) => {
         const hasMultipleFiles = files.length > 1;
