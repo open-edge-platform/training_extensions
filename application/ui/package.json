@@ -26,7 +26,7 @@
         "preinstall": "npm run clone-geti-ui-packages",
         "preview": "npm run build && rsbuild preview",
         "test:unit": "vitest --config vitest.config.ts",
-        "test:unit:watch": "vitest --config vitest.config.ts --reporter=verbose --watch",
+        "test:unit:watch": "vitest --config vitest.config.ts --reporter=tree --watch",
         "test:unit:coverage": "vitest --coverage",
         "test:component": "npx playwright test --project=component",
         "test:e2e": "ENABLE_BACKEND=True npx playwright test --project=e2e",
@@ -89,7 +89,7 @@
         "@types/uuid": "~10.0.0",
         "@typescript-eslint/eslint-plugin": "~8.31.1",
         "@vitejs/plugin-react": "~4.7.0",
-        "@vitest/coverage-v8": "~3.2.4",
+        "@vitest/coverage-v8": "~4.1.7",
         "@wessberg/pointer-events": "^1.0.9",
         "babel-plugin-react-compiler": "~19.1.0-rc.3",
         "babel-preset-react-app": "~10.1.0",
@@ -116,7 +116,7 @@
         "vite": "~7.3.0",
         "vite-plugin-svgr": "~4.3.0",
         "vite-tsconfig-paths": "^5.1.4",
-        "vitest": "~3.2.4"
+        "vitest": "~4.1.7"
     },
     "workspaces": [
         "packages/*"
