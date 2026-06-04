@@ -81,8 +81,9 @@
     background-color: var(--energy-blue) !important;
 }
 
-.projectName {
+.projectCardName {
     @include lineClamp.clamp(1);
+    @include lineClamp.breakableText;
 }
 
 .labelList {

@@ -27,11 +27,18 @@
     }
 }
 
-.projectName {
+.selectedProjectName {
     @include lineClamp.clamp(3);
+    @include lineClamp.breakableText;
 
     text-align: start;
     font-size: var(--spectrum-global-dimension-size-150);
+}
+
+.dialogProjectName {
+    @include lineClamp.breakableText;
+
+    text-align: center;
 }
 
 .statusTag {

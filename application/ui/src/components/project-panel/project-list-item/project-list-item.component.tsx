@@ -31,7 +31,7 @@ export const ProjectListItem = ({ project, projectNames }: ProjectListItemProps)
             <Flex justifyContent='space-between' alignItems='center' marginX={'size-200'}>
                 <Flex alignItems={'center'} gap={'size-100'} minWidth={0}>
                     <ProjectThumbnail project={project} height={'size-300'} width={'size-300'} />
-                    <Text UNSAFE_className={classes.projectName}>
+                    <Text UNSAFE_className={classes.projectListItemName}>
                         <span title={project.name}>{project.name}</span>
                     </Text>
                     {taskType !== undefined && (

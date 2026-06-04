@@ -7,3 +7,9 @@
     line-clamp: $lines;
     -webkit-box-orient: vertical;
 }
+
+@mixin breakableText {
+    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
