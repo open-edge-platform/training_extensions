@@ -35,6 +35,9 @@ class TVModelHLabelCls(LightningHlabelClsModel):
         label_info (HLabelInfo): Information about the hierarchical labels.
         backbone (TVModelType): The type of Torchvision backbone model.
         pretrained (bool, optional): Whether to use pretrained weights. Defaults to True.
+        pretrained_weights_path (str | None, optional): Path to a local pretrained weights file.
+            If provided and the file exists, weights are loaded from this path instead of downloading
+            from external servers. Defaults to None.
         optimizer (OptimizerCallable, optional): The optimizer callable. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): The learning rate scheduler callable.
             Defaults to DefaultSchedulerCallable.
@@ -49,11 +52,13 @@ class TVModelHLabelCls(LightningHlabelClsModel):
         data_input_params: DataInputParams | dict | None = None,
         model_name: str = "efficientnet_v2_s",
         freeze_backbone: bool = False,
+        pretrained_weights_path: str | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
+        self.pretrained_weights_path = pretrained_weights_path
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -67,7 +72,7 @@ class TVModelHLabelCls(LightningHlabelClsModel):
 
     def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]
         head_config = head_config if head_config is not None else self.label_info.as_head_config_dict()
-        backbone = TorchvisionBackbone(backbone=self.model_name)
+        backbone = TorchvisionBackbone(backbone=self.model_name, pretrained_weights_path=self.pretrained_weights_path)
         return HLabelClassifier(
             backbone=backbone,
             neck=GlobalAveragePooling(dim=2),

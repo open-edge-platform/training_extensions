@@ -39,6 +39,9 @@ class TVModelMulticlassCls(LightningMulticlassClsModel):
             such as input size and normalization. If None is given,
             default parameters for the specific model will be used.
         model_name (str, optional): Backbone model name for feature extraction. Defaults to "efficientnet_v2_s".
+        pretrained_weights_path (str | None, optional): Path to a local pretrained weights file.
+            If provided and the file exists, weights are loaded from this path instead of downloading
+            from external servers. Defaults to None.
         optimizer (OptimizerCallable, optional): Optimizer for model training. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Learning rate scheduler.
             Defaults to DefaultSchedulerCallable.
@@ -52,11 +55,13 @@ class TVModelMulticlassCls(LightningMulticlassClsModel):
         data_input_params: DataInputParams | dict | None = None,
         model_name: str = "efficientnet_v2_s",
         freeze_backbone: bool = False,
+        pretrained_weights_path: str | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
+        self.pretrained_weights_path = pretrained_weights_path
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -70,7 +75,7 @@ class TVModelMulticlassCls(LightningMulticlassClsModel):
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:
         num_classes = num_classes if num_classes is not None else self.num_classes
-        backbone = TorchvisionBackbone(backbone=self.model_name)
+        backbone = TorchvisionBackbone(backbone=self.model_name, pretrained_weights_path=self.pretrained_weights_path)
         neck = GlobalAveragePooling(dim=2)
 
         return ImageClassifier(

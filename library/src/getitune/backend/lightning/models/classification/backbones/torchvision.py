@@ -3,9 +3,14 @@
 
 """Torchvison model's Backbone Class."""
 
+import logging
+from pathlib import Path
+
 import torch
 from torch import nn
 from torchvision.models import get_model, get_model_weights
+
+logger = logging.getLogger(__name__)
 
 TVModels = [
     "alexnet",
@@ -88,6 +93,7 @@ class TorchvisionBackbone(nn.Module):
         self,
         backbone: str,
         pretrained: bool = True,
+        pretrained_weights_path: str | Path | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -95,9 +101,17 @@ class TorchvisionBackbone(nn.Module):
             msg = f"Backbone model name is not supported: {backbone}. Available models: {TVModels}"
             raise ValueError(msg)
         tv_model_cfg = {"name": backbone}
-        if pretrained:
+        if pretrained_weights_path is not None and Path(pretrained_weights_path).exists():
+            # Load weights from local file to avoid downloading from external servers
+            logger.info("Loading pretrained weights for %s from local path: %s", backbone, pretrained_weights_path)
+            net = get_model(**tv_model_cfg)
+            state_dict = torch.load(pretrained_weights_path, map_location="cpu", weights_only=True)
+            net.load_state_dict(state_dict)
+        elif pretrained:
             tv_model_cfg["weights"] = get_model_weights(backbone)
-        net = get_model(**tv_model_cfg)
+            net = get_model(**tv_model_cfg)
+        else:
+            net = get_model(**tv_model_cfg)
         self.features = net.features
 
         last_layer = list(net.children())[-1]
