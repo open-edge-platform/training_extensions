@@ -4,6 +4,7 @@
 import { useActionState } from 'react';
 
 import { Checkbox, dimensionValue, Divider, Flex, Form, Heading, View } from '@geti/ui';
+import { useSubmitJob } from 'hooks/api/jobs/jobs.hook';
 import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { useImportDatasetAsNewProject } from 'hooks/storage/use-import-dataset-as-new-project.hook';
 import { isNil, isString } from 'lodash-es';
@@ -29,7 +30,7 @@ const useFormConfig = (stagedDatasetId: string) => {
     const { datasetImportDialogState } = useImportDatasetDialog();
     const { getImportEntry, updateImportEntry } = useImportDatasetAsNewProject();
     const importEntry = getImportEntry(stagedDatasetId);
-    const importDatasetJobMutation = $api.useMutation('post', '/api/jobs');
+    const importDatasetJobMutation = useSubmitJob();
 
     return useActionState<FormValues, FormData>(async (_prevState, formData) => {
         const filters = {
