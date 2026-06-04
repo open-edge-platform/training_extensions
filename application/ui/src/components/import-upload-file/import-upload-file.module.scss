@@ -3,6 +3,11 @@
     font-size: var(--spectrum-global-dimension-size-150);
 }
 
+.statusTitle {
+    display: inline-flex;
+    align-items: baseline;
+}
+
 .link {
     display: flex;
     align-items: center;
