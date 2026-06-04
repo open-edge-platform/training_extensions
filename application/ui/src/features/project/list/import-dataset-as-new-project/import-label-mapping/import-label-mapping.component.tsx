@@ -9,7 +9,6 @@ import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { useImportDatasetAsNewProject } from 'hooks/storage/use-import-dataset-as-new-project.hook';
 import { isNil, isString } from 'lodash-es';
 
-import { $api } from '../../../../../api/client';
 import { DatasetStatistics } from '../../../../../components/dataset-statistics/dataset-statistics.component';
 import { MultiSelectList } from '../../../../../components/multi-select-list/multi-select-list.component';
 import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
