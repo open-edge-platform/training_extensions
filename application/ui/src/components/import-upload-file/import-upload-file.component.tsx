@@ -7,6 +7,7 @@ import { LinkOut } from '@geti/ui/icons';
 import { $api } from '../../api/client';
 import { ReactComponent as EmptyDataset } from '../../assets/drop-files.svg';
 import { Link } from '../../platform/components/link.component';
+import { ThreeDotsFlashing } from '../../shared/components/three-dots-flashing/three-dots-flashing.component';
 import { getFilesFromDropEvent } from '../../shared/drop-zone.utils';
 import { formatToFileArray, isSupportedDatasetZip } from './util';
 
@@ -80,7 +81,10 @@ export const ImportUploadFile = ({ formatOptions, onFileUploaded }: ImportUpload
                 <Content>
                     {isPending && (
                         <Flex alignItems={'center'} direction={'column'} gap={'size-100'}>
-                            <Heading level={1}>Uploading...</Heading>
+                            <Heading level={1} UNSAFE_className={classes.statusTitle}>
+                                Uploading
+                                <ThreeDotsFlashing />
+                            </Heading>
                             <Text>Dataset is being uploaded</Text>
                         </Flex>
                     )}
