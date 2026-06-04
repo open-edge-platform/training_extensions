@@ -3,9 +3,7 @@
 
 import hashlib
 import shutil
-from collections.abc import Iterator
 from pathlib import Path
-from urllib.parse import urlparse
 
 import requests
 from loguru import logger
@@ -171,7 +169,8 @@ class BaseWeightsService:
         """
         # Use a conservative default (500MB) if the remote size cannot be queried.
         file_size = 500 * 1024 * 1024
-        for use_env_proxy in self._request_modes(remote_url):
+        # Try with and without proxies, as some environments may have proxy issues that cause the HEAD request to fail
+        for use_env_proxy in (True, False):
             try:
                 with self._build_retry_session(use_env_proxy=use_env_proxy) as session:
                     response = session.head(remote_url, allow_redirects=True, timeout=self.REQUEST_TIMEOUT)
@@ -221,9 +220,9 @@ class BaseWeightsService:
             # Ensure all folders exist for the destination path
             local_path.parent.mkdir(parents=True, exist_ok=True)
 
-            # Attempt the download with and without proxies
+            # Attempt the download with and without proxies, since some environment may have proxy issues
             last_error: Exception | None = None
-            for use_env_proxy in self._request_modes(remote_url):
+            for use_env_proxy in (True, False):
                 try:
                     with (
                         self._build_retry_session(use_env_proxy=use_env_proxy) as session,
@@ -259,19 +258,6 @@ class BaseWeightsService:
             if temp_path.exists():
                 temp_path.unlink()
 
-    def _request_modes(self, remote_url: str) -> Iterator[bool]:
-        """Try with environment proxy first, then direct for Geti storage hosts."""
-        # Default path: respect container/host proxy configuration.
-        yield True
-        if self._is_geti_storage_host(remote_url):
-            # Fallback path: bypass env proxies for Geti object storage when proxy tunneling fails.
-            yield False
-
-    @staticmethod
-    def _is_geti_storage_host(remote_url: str) -> bool:
-        host = urlparse(remote_url).hostname or ""
-        return host.endswith("storage.geti.intel.com")
-
     def _build_retry_session(self, use_env_proxy: bool) -> requests.Session:
         session = requests.Session()
         # trust_env=False disables HTTP(S)_PROXY and NO_PROXY from environment.
@@ -279,9 +265,6 @@ class BaseWeightsService:
 
         retry = Retry(
             total=self.RETRY_TOTAL,
-            connect=self.RETRY_TOTAL,
-            read=self.RETRY_TOTAL,
-            status=self.RETRY_TOTAL,
             backoff_factor=self.RETRY_BACKOFF_FACTOR,
             status_forcelist=[429, 500, 502, 503, 504],
             allowed_methods=frozenset(["HEAD", "GET"]),
