@@ -5,7 +5,6 @@ import { useActionState } from 'react';
 
 import { isString } from 'lodash-es';
 
-import { $api } from '../api/client';
 import { useSubmitJob } from './api/jobs/jobs.hook';
 import { useExportDataset } from './storage/use-export-dataset.hook';
 import { useProjectIdentifier } from './use-project-identifier.hook';

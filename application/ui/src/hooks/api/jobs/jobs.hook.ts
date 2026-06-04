@@ -14,7 +14,7 @@ import { useSSE } from '../../use-sse.hook';
 import { isQuantizeJob, isTrainJob } from '../util';
 
 const TERMINAL_STATUSES: string[] = ['DONE', 'FAILED', 'CANCELLED'];
-const ERROR_MESSAGE = 'Model train job failed. Please try resubmitting the job or choosing a different model';
+const ERROR_MESSAGE = 'Job failed. Please check the logs for details and try again.';
 
 export const useStreamJobStatus = (jobId: string | undefined) => {
     const queryClient = useQueryClient();

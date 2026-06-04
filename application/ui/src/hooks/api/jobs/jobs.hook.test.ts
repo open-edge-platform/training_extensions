@@ -97,22 +97,28 @@ describe('useGetCurrentRunningJobs', () => {
 });
 
 describe('useStreamJobStatus', () => {
+    beforeEach(() => {
+        resetMockEventSource();
+    });
+
     it('shows a toast when job status is FAILED', async () => {
         const toastSpy = vi.spyOn(geti, 'toast');
         const failedJob = getMockedJob({ status: 'FAILED' });
 
         renderHook(() => useStreamJobStatus(failedJob.job_id));
 
-        // Trigger the SSE message with a failed job
-        const mockEventSource = MockEventSourceConstructor.mock.results[0]?.value;
-        mockEventSource?.onmessage?.({
-            data: JSON.stringify(failedJob),
-        } as unknown as Event);
+        await waitFor(() => {
+            expect(MockEventSourceConstructor).toHaveBeenCalled();
+        });
+        const eventSource = MockEventSourceConstructor.mock.results.at(-1)?.value;
+
+        expect(eventSource).toBeDefined();
+        eventSource.onmessage?.({ data: JSON.stringify(failedJob) } as unknown as Event);
 
         await waitFor(() => {
             expect(toastSpy).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    message: 'Model train job failed. Please try resubmitting the job or choosing a different model',
+                    message: 'Job failed. Please check the logs for details and try again.',
                     type: 'error',
                 })
             );
