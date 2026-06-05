@@ -5,6 +5,8 @@ import time
 from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
+import pytest
+
 from app.stream.images_folder_stream import ImagesFolderStream
 
 
@@ -12,22 +14,29 @@ class TestImagesFolderStream:
     """Test cases for ImagesFolderStream."""
 
     @patch.object(ImagesFolderStream, "_init_watchdog")
+    @patch("os.path.isdir", return_value=True)
     @patch("os.path.getmtime", return_value=time.time())
     @patch("os.path.isfile", return_value=True)
     @patch("os.listdir", return_value=["file1", "file2"])
-    def test_init_ignore_existing_images(self, mock_listdir, mock_isfile, mock_getmtime, mock_init_watchdog):
+    def test_init_ignore_existing_images(
+        self, mock_listdir, mock_isfile, mock_getmtime, mock_isdir, mock_init_watchdog
+    ):
         stream = ImagesFolderStream(folder_path="folder_path", ignore_existing_images=True)
         assert stream.files == []
         mock_listdir.assert_not_called()
         mock_isfile.assert_not_called()
         mock_getmtime.assert_not_called()
+        mock_isdir.assert_called()
         mock_init_watchdog.assert_called_once_with("folder_path")
 
     @patch.object(ImagesFolderStream, "_init_watchdog")
+    @patch("os.path.isdir", return_value=True)
     @patch("os.path.getmtime", return_value=time.time())
     @patch("os.path.isfile", return_value=True)
     @patch("os.listdir", return_value=["file1", "file2"])
-    def test_init_do_not_ignore_existing_images(self, mock_listdir, mock_isfile, mock_getmtime, mock_init_watchdog):
+    def test_init_do_not_ignore_existing_images(
+        self, mock_listdir, mock_isfile, mock_getmtime, mock_isdir, mock_init_watchdog
+    ):
         stream = ImagesFolderStream(folder_path="folder_path", ignore_existing_images=False)
         file_1 = str(Path("folder_path", "file1"))
         file_2 = str(Path("folder_path", "file2"))
@@ -35,25 +44,44 @@ class TestImagesFolderStream:
         mock_listdir.assert_called_once_with("folder_path")
         mock_isfile.assert_has_calls([call(file_1), call(file_2)])
         mock_getmtime.assert_has_calls([call(file_1), call(file_2)])
+        mock_isdir.assert_called()
         mock_init_watchdog.assert_called_once_with("folder_path")
 
     @patch.object(ImagesFolderStream, "_init_watchdog")
-    def test_get_data_empty_list(self, mock_init_watchdog):
+    @patch("os.path.isdir", return_value=False)
+    @patch("os.path.getmtime", return_value=time.time())
+    @patch("os.path.isfile", return_value=True)
+    @patch("os.listdir", return_value=["file1", "file2"])
+    def test_init_do_not_exist(self, mock_listdir, mock_isfile, mock_getmtime, mock_isdir, mock_init_watchdog):
+        with pytest.raises(Exception) as excinfo:
+            ImagesFolderStream(folder_path="folder_path", ignore_existing_images=False)
+        assert str(excinfo.value) == "Directory not found: folder_path"
+        mock_listdir.assert_not_called()
+        mock_isfile.assert_not_called()
+        mock_getmtime.assert_not_called()
+        mock_isdir.assert_called()
+        mock_init_watchdog.assert_not_called()
+
+    @patch.object(ImagesFolderStream, "_init_watchdog")
+    @patch("os.path.isdir", return_value=True)
+    def test_get_data_empty_list(self, mock_isdir, mock_init_watchdog):
         stream = ImagesFolderStream(folder_path="folder_path", ignore_existing_images=True)
         data = stream.get_data()
         assert data is None
 
     @patch.object(ImagesFolderStream, "_init_watchdog")
-    def test_get_data_cannot_load_image(self, mock_init_watchdog):
+    @patch("os.path.isdir", return_value=True)
+    def test_get_data_cannot_load_image(self, mock_isdir, mock_init_watchdog):
         stream = ImagesFolderStream(folder_path="folder_path", ignore_existing_images=True)
         stream.files = ["folder_path/file1", "folder_path/file2"]
         data = stream.get_data()
         assert data is None
 
     @patch.object(ImagesFolderStream, "_init_watchdog")
+    @patch("os.path.isdir", return_value=True)
     @patch("os.path.getmtime", return_value=time.time())
     @patch("cv2.imread", return_value=MagicMock())
-    def test_get_data(self, mock_imread, mock_getmtime, mock_init_watchdog):
+    def test_get_data(self, mock_imread, mock_getmtime, mock_isdir, mock_init_watchdog):
         stream = ImagesFolderStream(folder_path="folder_path", ignore_existing_images=True)
         stream.files = ["folder_path/file1", "folder_path/file2"]
         data = stream.get_data()
@@ -62,21 +90,24 @@ class TestImagesFolderStream:
         mock_getmtime.assert_called_once_with("folder_path/file1")
 
     @patch.object(ImagesFolderStream, "_init_watchdog")
-    def test_file_added(self, mock_init_watchdog):
+    @patch("os.path.isdir", return_value=True)
+    def test_file_added(self, mock_isdir, mock_init_watchdog):
         stream = ImagesFolderStream(folder_path="folder_path", ignore_existing_images=True)
         stream.files = ["folder_path/file1", "folder_path/file2"]
         stream.file_added("folder_path/file3")
         assert stream.files == ["folder_path/file1", "folder_path/file2", "folder_path/file3"]
 
     @patch.object(ImagesFolderStream, "_init_watchdog")
-    def test_file_deleted(self, mock_init_watchdog):
+    @patch("os.path.isdir", return_value=True)
+    def test_file_deleted(self, mock_isdir, mock_init_watchdog):
         stream = ImagesFolderStream(folder_path="folder_path", ignore_existing_images=True)
         stream.files = ["folder_path/file1", "folder_path/file2"]
         stream.file_deleted("folder_path/file1")
         assert stream.files == ["folder_path/file2"]
 
     @patch.object(ImagesFolderStream, "_init_watchdog")
-    def test_file_deleted_not_in_list(self, mock_init_watchdog):
+    @patch("os.path.isdir", return_value=True)
+    def test_file_deleted_not_in_list(self, mock_isdir, mock_init_watchdog):
         stream = ImagesFolderStream(folder_path="folder_path", ignore_existing_images=True)
         stream.files = ["folder_path/file1", "folder_path/file2"]
         stream.file_deleted("folder_path/file3")

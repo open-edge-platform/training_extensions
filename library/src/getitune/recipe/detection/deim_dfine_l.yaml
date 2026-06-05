@@ -111,10 +111,6 @@ callbacks:
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_size: 1
-                - class_path: getitune.data.augmentation.transforms.Resize
-                  init_args:
-                    size: [640, 640]
-                    keep_aspect_ratio: false
               augmentations_gpu:
                 - class_path: kornia.augmentation.RandomHorizontalFlip
                   init_args:

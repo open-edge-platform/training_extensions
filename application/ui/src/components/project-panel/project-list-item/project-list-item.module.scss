@@ -9,8 +9,9 @@
     }
 }
 
-.projectName {
+.projectListItemName {
     @include lineClamp.clamp(1);
+    @include lineClamp.breakableText;
 }
 
 .itemTag {

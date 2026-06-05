@@ -4,9 +4,9 @@
 import { Fragment, useActionState } from 'react';
 
 import { Checkbox, dimensionValue, Flex, Form, Grid, Heading, Item, Picker, Text, View } from '@geti/ui';
+import { useSubmitJob } from 'hooks/api/jobs/jobs.hook';
 import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
 
-import { $api } from '../../../../../api/client';
 import { DatasetStatistics } from '../../../../../components/dataset-statistics/dataset-statistics.component';
 import { useProject } from '../../../../../hooks/api/project.hook';
 import { useImportDatasetToProject } from '../../../../../hooks/storage/use-import-dataset-to-project.hook';
@@ -29,7 +29,7 @@ type useFormConfigProps = {
 const useFormConfig = ({ datasetLabels, stagedDatasetId, selectedProjectId }: useFormConfigProps) => {
     const { updateImportEntry } = useImportDatasetToProject();
     const { datasetImportDialogState } = useImportDatasetDialogState();
-    const importDatasetJobMutation = $api.useMutation('post', '/api/jobs');
+    const importDatasetJobMutation = useSubmitJob();
 
     return useActionState<{ include_unannotated: boolean }, FormData>(
         async (_prevState, formData) => {

@@ -11,7 +11,7 @@ from model_api.models.result import Result
 
 from app.models import FolderSinkConfig, OutputFormat
 
-from .base import BaseDispatcher
+from .base import BaseDispatcher, UnavailableDispatcherError
 
 
 class FolderDispatcher(BaseDispatcher):
@@ -25,6 +25,8 @@ class FolderDispatcher(BaseDispatcher):
         """
         super().__init__(output_config=output_config)
         self.output_folder = output_config.config_data.folder_path
+
+    def connect(self) -> None:
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder, exist_ok=True)
 
@@ -41,6 +43,12 @@ class FolderDispatcher(BaseDispatcher):
     def _write_predictions_to_file(predictions: str, file_path: str) -> None:
         with open(file_path, "w") as f:
             f.write(predictions)
+
+    def test(self) -> None:
+        if not os.path.isdir(self.output_folder):
+            raise UnavailableDispatcherError(f"Directory not found: {self.output_folder}")
+        if not os.access(self.output_folder, os.W_OK):
+            raise UnavailableDispatcherError(f"Directory is not writable: {self.output_folder}")
 
     def _dispatch(
         self,

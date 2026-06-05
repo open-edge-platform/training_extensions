@@ -1,15 +1,17 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import * as geti from '@geti/ui';
 import { waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { renderHook } from 'test-utils/render';
+import { vi } from 'vitest';
 
 import { getMockedJob } from '../../../../mocks/mock-job';
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
 import { MockEventSourceConstructor, resetMockEventSource } from '../../../test-utils/mock-event-source';
-import { useGetCurrentRunningJobs } from './jobs.hook';
+import { useGetCurrentRunningJobs, useStreamJobStatus } from './jobs.hook';
 
 const PROJECT_ID = '123';
 
@@ -90,6 +92,36 @@ describe('useGetCurrentRunningJobs', () => {
 
         await waitFor(() => {
             expect(MockEventSourceConstructor).not.toHaveBeenCalled();
+        });
+    });
+});
+
+describe('useStreamJobStatus', () => {
+    beforeEach(() => {
+        resetMockEventSource();
+    });
+
+    it('shows a toast when job status is FAILED', async () => {
+        const toastSpy = vi.spyOn(geti, 'toast');
+        const failedJob = getMockedJob({ status: 'FAILED' });
+
+        renderHook(() => useStreamJobStatus(failedJob.job_id));
+
+        await waitFor(() => {
+            expect(MockEventSourceConstructor).toHaveBeenCalled();
+        });
+        const eventSource = MockEventSourceConstructor.mock.results.at(-1)?.value;
+
+        expect(eventSource).toBeDefined();
+        eventSource.onmessage?.({ data: JSON.stringify(failedJob) } as unknown as Event);
+
+        await waitFor(() => {
+            expect(toastSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: 'Job failed. Please check the logs for details and try again.',
+                    type: 'error',
+                })
+            );
         });
     });
 });
