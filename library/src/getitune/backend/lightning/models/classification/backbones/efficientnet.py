@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import math
+import os
 from pathlib import Path
 from typing import Any, Callable, ClassVar
 
@@ -670,7 +671,7 @@ class EfficientNetBackbone:
         )
 
         if pretrained:
-            cache_dir = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
+            cache_dir = Path(os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"])
             download_model(net=model, model_name=f"{model_name}", local_model_store_dir_path=str(cache_dir))
             print(f"Download model weight in {cache_dir!s}")
         return model

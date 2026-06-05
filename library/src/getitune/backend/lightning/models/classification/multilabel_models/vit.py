@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import os
 import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -120,7 +121,7 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, LightningMultila
             parts = urlparse(pretrained_urls[self.model_name])
             filename = Path(parts.path).name
 
-            cache_dir = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
+            cache_dir = Path(os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"])
             cache_file = cache_dir / filename
             if not Path.exists(cache_file):
                 download_url_to_file(pretrained_urls[self.model_name], cache_file, "", progress=True)
