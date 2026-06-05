@@ -20,8 +20,8 @@ concurrency:
 
 jobs:
   # Determines if workflow should execute based on event type and changed paths.
-  # The path filter is scoped to library/getitrack/** and this workflow's own
-  # definition so unrelated library/ changes do not trigger it.
+  # The path filter is scoped to libraries/getitrack/** and this workflow's own
+  # definition so unrelated changes (including getitune at library/) do not trigger it.
   check-paths:
     name: Check if workflow should run
     runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
@@ -40,7 +40,7 @@ jobs:
         with:
           files_yaml: |
             test:
-              - library/getitrack/**
+              - libraries/getitrack/**
               - .github/workflows/getitrack-*.yaml
 
   code-quality-checks:
@@ -55,15 +55,15 @@ jobs:
       - name: Install Python, uv and Just
         uses: ./.github/actions/install-common-deps
         with:
-          uv-version-file: library/getitrack/pyproject.toml
+          uv-version-file: libraries/getitrack/pyproject.toml
           python-version: "3.11"
 
       - name: Prepare venv and install Python dependencies
-        working-directory: library/getitrack
+        working-directory: libraries/getitrack
         run: just venv
 
       - name: Run linters and type-checkers
-        working-directory: library/getitrack
+        working-directory: libraries/getitrack
         run: just lint
 
   unit-tests:
@@ -89,15 +89,15 @@ jobs:
       - name: Install Python, uv and Just
         uses: ./.github/actions/install-common-deps
         with:
-          uv-version-file: library/getitrack/pyproject.toml
+          uv-version-file: libraries/getitrack/pyproject.toml
           python-version: ${{ matrix.python-version }}
 
       - name: Installing dependencies
-        working-directory: library/getitrack
+        working-directory: libraries/getitrack
         run: just venv
 
       - name: Unit testing
-        working-directory: library/getitrack
+        working-directory: libraries/getitrack
         run: just test-unit
 
   required-check:

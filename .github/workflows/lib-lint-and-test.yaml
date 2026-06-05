@@ -42,7 +42,6 @@ jobs:
             test:
               - library/**
               - .github/**
-              - '!library/getitrack/**'
               - '!.github/workflows/getitrack-*.yaml'
 
   code-quality-checks:
