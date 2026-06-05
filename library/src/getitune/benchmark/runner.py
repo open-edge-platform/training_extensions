@@ -19,6 +19,7 @@ from getitune.benchmark.catalog import DatasetCatalog, provision_datasets
 from getitune.benchmark.experiment import (
     ExperimentExecutor,
     ExperimentResult,
+    PhaseExecutionError,
     PhaseResult,
     detect_resume_point,
 )
@@ -98,7 +99,10 @@ def _subprocess_worker(
         )
         outcome: tuple[str, object] = ("ok", result)
     except BaseException as exc:
-        outcome = ("error", (type(exc).__name__, str(exc), _traceback.format_exc()))
+        # Preserve the failing phase (if any) so the parent can reconstruct a
+        # PhaseExecutionError and keep stage information across the boundary.
+        phase = getattr(exc, "phase", None)
+        outcome = ("error", (type(exc).__name__, str(exc), _traceback.format_exc(), phase))
 
     try:
         with open(result_path, "wb") as fh:  # noqa: PTH123
@@ -559,6 +563,8 @@ class BenchmarkRunner:
     @staticmethod
     def _is_deterministic_error(exc: BaseException) -> bool:
         """Check if the exception is due to a missing deterministic implementation."""
+        if isinstance(exc, PhaseExecutionError):
+            exc = exc.original
         return isinstance(exc, RuntimeError) and "does not have a deterministic implementation" in str(exc)
 
     # Deterministic fallback chain: True → "warn" → False
@@ -720,8 +726,12 @@ class BenchmarkRunner:
             return payload_out  # type: ignore[return-value]
 
         # status == "error" — re-raise in the parent so the retry logic sees it.
-        exc_type_name, exc_msg, tb_str = payload_out  # type: ignore[misc]
+        exc_type_name, exc_msg, tb_str, phase = payload_out  # type: ignore[misc]
         err_msg = f"{exc_type_name}: {exc_msg}\n--- child traceback ---\n{tb_str}"
+        if phase is not None:
+            # Rebuild a PhaseExecutionError so the failed stage survives the
+            # process boundary and reaches ExperimentResult.failure().
+            raise PhaseExecutionError(phase, RuntimeError(err_msg))
         raise RuntimeError(err_msg)
 
     def _execute(
@@ -788,6 +798,10 @@ class BenchmarkRunner:
             method = getattr(executor, method_name)
             try:
                 result = method()
+            except Exception as exc:
+                # Tag the failure with the phase that raised it so downstream
+                # reporting can show *where* the run failed (train/export/…).
+                raise PhaseExecutionError(phase_name, exc) from exc
             finally:
                 # Per-phase cleanup: reclaim loky workers spawned by NNCF,
                 # flush PyTorch's CUDA cache, and collect cycle garbage so

@@ -20,6 +20,26 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
+# Errors
+# ---------------------------------------------------------------------------
+
+
+class PhaseExecutionError(Exception):
+    """Wraps an exception raised while running a specific benchmark phase.
+
+    Carries the name of the phase (e.g. ``"train"``, ``"export"``,
+    ``"optimize"``) so that failure reporting can surface *where* in the
+    pipeline the run failed, instead of inferring it heuristically from the
+    traceback.
+    """
+
+    def __init__(self, phase: str, original: BaseException) -> None:
+        self.phase = phase
+        self.original = original
+        super().__init__(f"Phase '{phase}' failed: {type(original).__name__}: {original}")
+
+
+# ---------------------------------------------------------------------------
 # Result types
 # ---------------------------------------------------------------------------
 
@@ -46,6 +66,7 @@ class ExperimentResult:
     phases: list[PhaseResult] = field(default_factory=list)
     error: str | None = None
     traceback: str | None = None
+    failed_phase: str | None = None  # e.g. "train", "export", "optimize"
 
     def all_metrics(self) -> dict[str, float]:
         """Merge metrics from all phases into a single dict."""
@@ -68,8 +89,20 @@ class ExperimentResult:
         scenario: str,
         seed: int,
         exc: BaseException,
+        failed_phase: str | None = None,
     ) -> ExperimentResult:
-        """Construct a failed result from an exception."""
+        """Construct a failed result from an exception.
+
+        When *exc* is a :class:`PhaseExecutionError`, the wrapped original
+        exception is used for the error message/traceback and its ``phase``
+        is recorded as :attr:`failed_phase` (unless *failed_phase* is given
+        explicitly, which then takes precedence).
+        """
+        phase = failed_phase
+        if isinstance(exc, PhaseExecutionError):
+            if phase is None:
+                phase = exc.phase
+            exc = exc.original
         tb_str = "".join(_traceback.format_exception(type(exc), exc, exc.__traceback__))
         return cls(
             task=task,
@@ -81,6 +114,7 @@ class ExperimentResult:
             phases=[],
             error=f"{type(exc).__name__}: {exc}",
             traceback=tb_str,
+            failed_phase=phase,
         )
 
 

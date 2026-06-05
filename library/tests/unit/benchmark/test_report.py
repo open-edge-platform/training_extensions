@@ -426,6 +426,36 @@ class TestGenerateMarkdown:
         assert "Failures" in md
         assert "OOM" in md
 
+    def test_failure_section_shows_stage(self) -> None:
+        report = BenchmarkReport(
+            comparisons=[],
+            failures=[
+                FailureRecord(
+                    task="det",
+                    model="m",
+                    dataset="d",
+                    scenario="default",
+                    seed=0,
+                    error="OOM",
+                    failed_phase="export",
+                ),
+            ],
+        )
+        md = generate_markdown(report)
+        assert "Stage" in md
+        assert "export" in md
+
+    def test_failure_section_unknown_stage(self) -> None:
+        report = BenchmarkReport(
+            comparisons=[],
+            failures=[
+                FailureRecord(task="det", model="m", dataset="d", scenario="default", seed=0, error="OOM"),
+            ],
+        )
+        md = generate_markdown(report)
+        # Missing phase falls back to a readable placeholder rather than blank.
+        assert "unknown" in md
+
     def test_contains_regression_alerts(self) -> None:
         report = BenchmarkReport(
             comparisons=[
@@ -510,6 +540,26 @@ class TestWriteFailuresJson:
         data = json.loads(path.read_text())
         assert len(data) == 1
         assert data[0]["error"] == "OOM"
+
+    def test_includes_failed_phase(self, tmp_path: Path) -> None:
+        failures = [
+            FailureRecord(
+                task="det",
+                model="m",
+                dataset="d",
+                scenario="default",
+                seed=0,
+                error="OOM",
+                failed_phase="optimize",
+            ),
+        ]
+        path = tmp_path / "failures.json"
+        write_failures_json(failures, path)
+
+        import json
+
+        data = json.loads(path.read_text())
+        assert data[0]["failed_phase"] == "optimize"
 
 
 class TestGenerateReportIntegration:

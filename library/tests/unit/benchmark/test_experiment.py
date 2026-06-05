@@ -13,6 +13,7 @@ import pytest
 from getitune.benchmark.experiment import (
     ExperimentExecutor,
     ExperimentResult,
+    PhaseExecutionError,
     PhaseResult,
     _find_csv_metrics,
     _get_peak_gpu_memory_mb,
@@ -114,6 +115,71 @@ class TestExperimentResult:
         assert r.scenario == "tiling"
         assert r.seed == 3
         assert r.phases == []
+
+    def test_failure_default_phase_is_none(self) -> None:
+        r = ExperimentResult.failure(
+            task="det",
+            model="m",
+            dataset="d",
+            scenario="default",
+            seed=0,
+            exc=RuntimeError("boom"),
+        )
+        assert r.failed_phase is None
+
+    def test_failure_explicit_phase(self) -> None:
+        r = ExperimentResult.failure(
+            task="det",
+            model="m",
+            dataset="d",
+            scenario="default",
+            seed=0,
+            exc=RuntimeError("boom"),
+            failed_phase="export",
+        )
+        assert r.failed_phase == "export"
+
+    def test_failure_unwraps_phase_execution_error(self) -> None:
+        original = RuntimeError("kernel missing")
+        r = ExperimentResult.failure(
+            task="det",
+            model="m",
+            dataset="d",
+            scenario="default",
+            seed=0,
+            exc=PhaseExecutionError("optimize", original),
+        )
+        # Phase recorded, and error/traceback reflect the *original* exception.
+        assert r.failed_phase == "optimize"
+        assert r.error == "RuntimeError: kernel missing"
+        assert "PhaseExecutionError" not in (r.error or "")
+
+    def test_failure_explicit_phase_overrides_wrapper(self) -> None:
+        r = ExperimentResult.failure(
+            task="det",
+            model="m",
+            dataset="d",
+            scenario="default",
+            seed=0,
+            exc=PhaseExecutionError("optimize", RuntimeError("x")),
+            failed_phase="train",
+        )
+        assert r.failed_phase == "train"
+
+
+# ---------------------------------------------------------------------------
+# PhaseExecutionError
+# ---------------------------------------------------------------------------
+
+
+class TestPhaseExecutionError:
+    def test_carries_phase_and_original(self) -> None:
+        original = ValueError("bad data")
+        err = PhaseExecutionError("train", original)
+        assert err.phase == "train"
+        assert err.original is original
+        assert "train" in str(err)
+        assert "bad data" in str(err)
 
 
 # ---------------------------------------------------------------------------

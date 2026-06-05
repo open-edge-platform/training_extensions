@@ -613,8 +613,10 @@ class BenchmarkTracker:
                 # Structured failure tags: keep ``error`` as a one-line
                 # human-readable summary, plus separate ``error_type`` /
                 # ``error_phase`` tags so the run table can be filtered
-                # and grouped by failure mode.
-                error_type, error_phase = _classify_error(result.error, getattr(result, "traceback", None))
+                # and grouped by failure mode. Prefer the phase captured at
+                # execution time; fall back to heuristic inference.
+                error_type, inferred_phase = _classify_error(result.error, getattr(result, "traceback", None))
+                error_phase = getattr(result, "failed_phase", None) or inferred_phase
                 mlflow.set_tag("error", _sanitize_error_message(result.error))
                 mlflow.set_tag("error_type", error_type)
                 mlflow.set_tag("error_phase", error_phase)
