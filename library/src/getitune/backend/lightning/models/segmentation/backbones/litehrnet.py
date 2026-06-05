@@ -1234,8 +1234,7 @@ class LiteHRNetModule(nn.Module):
             checkpoint = torch.load(pretrained, "cpu")
             print(f"init weight - {pretrained}")
         elif pretrained is not None:
-            cache_dir = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
-            checkpoint = load_from_http(filename=pretrained, map_location="cpu", model_dir=cache_dir)
+            checkpoint = load_from_http(filename=pretrained, map_location="cpu")
             print(f"init weight - {pretrained}")
         if checkpoint is not None:
             load_checkpoint_to_model(self, checkpoint, prefix=prefix)
