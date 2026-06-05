@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "getitrack"
 version = "0.1.0"
-description = "getitrack: Multi-object tracking toolkit for getitune."
+description = "getitrack: Multi-object tracking toolkit."
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
 license = "Apache-2.0"
