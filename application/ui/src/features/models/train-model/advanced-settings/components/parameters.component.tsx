@@ -345,7 +345,7 @@ const ParametersContainer = ({
     children,
     isReadOnly,
     columnGap = 'size-300',
-    rowGap = 'size-300',
+    rowGap = 'size-350',
     id,
 }: {
     children: ReactNode;
