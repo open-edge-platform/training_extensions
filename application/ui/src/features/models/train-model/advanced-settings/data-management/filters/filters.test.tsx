@@ -199,9 +199,10 @@ describe('Filters', () => {
             expect(getToggleFilter(configurableParameter.name)).toBeChecked();
 
             toggleFilter(configurableParameter.name);
-            await userEvent.click(
-                screen.getByRole('button', { name: `Increase Change ${configurableParameter.name}` })
-            );
+
+            const parameterInput = getFilterParameter(configurableParameter.name);
+            await userEvent.clear(parameterInput);
+            await userEvent.type(parameterInput, String(Number(configurableParameter.value) + 1));
 
             const value = getFilterParameter(configurableParameter.name).getAttribute('value')?.replaceAll(',', '');
             expect(value).toBe(String(Number(configurableParameter.value) + 1));

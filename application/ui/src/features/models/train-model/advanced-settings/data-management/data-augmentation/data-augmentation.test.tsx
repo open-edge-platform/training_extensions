@@ -223,17 +223,18 @@ describe('DataAugmentation', () => {
                         await userEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
                         expect(getToggleEnableParameter(parameter.name)).toBeChecked();
                     } else {
-                        expect(getParameter(parameter.name)).toHaveValue(parameter.value.toString());
+                        const parameterInput = getParameter(parameter.name);
 
-                        await userEvent.click(
-                            screen.getByRole('button', { name: `Increase Change ${parameter.name}` })
-                        );
+                        expect(parameterInput).toHaveValue(parameter.value.toString());
 
-                        expect(getParameter(parameter.name)).toHaveValue((Number(parameter.value) + 0.1).toString());
+                        await userEvent.clear(parameterInput);
+                        await userEvent.type(parameterInput, (Number(parameter.value) + 0.1).toString());
+
+                        expect(parameterInput).toHaveValue((Number(parameter.value) + 0.1).toString());
 
                         await userEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
 
-                        expect(getParameter(parameter.name)).toHaveValue(parameter.default_value.toString());
+                        expect(parameterInput).toHaveValue(parameter.default_value.toString());
                     }
                 }
             }

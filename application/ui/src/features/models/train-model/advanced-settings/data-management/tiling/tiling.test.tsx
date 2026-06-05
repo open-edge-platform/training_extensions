@@ -211,19 +211,16 @@ describe('Tiling', () => {
         expect(getTilingModeButton(TILING_MODES.OFF)).toHaveAttribute('aria-pressed', 'false');
 
         for (const parameter of customParameters) {
-            expect(screen.getByRole('textbox', { name: `Change ${parameter.name}` })).toHaveValue(
-                parameter.value.toString()
-            );
+            const parameterInput = screen.getByRole('textbox', { name: `Change ${parameter.name}` });
 
-            await userEvent.click(screen.getByRole('button', { name: `Increase Change ${parameter.name}` }));
-            expect(screen.getByRole('textbox', { name: `Change ${parameter.name}` })).toHaveValue(
-                (Number(parameter.value) + 1).toString()
-            );
+            expect(parameterInput).toHaveValue(parameter.value.toString());
+
+            await userEvent.clear(parameterInput);
+            await userEvent.type(parameterInput, (Number(parameter.value) + 1).toString());
+            expect(parameterInput).toHaveValue((Number(parameter.value) + 1).toString());
 
             await userEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
-            expect(screen.getByRole('textbox', { name: `Change ${parameter.name}` })).toHaveValue(
-                parameter.default_value.toString()
-            );
+            expect(parameterInput).toHaveValue(parameter.default_value.toString());
         }
     });
 });
