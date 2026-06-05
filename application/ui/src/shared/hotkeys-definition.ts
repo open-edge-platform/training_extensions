@@ -22,7 +22,8 @@ export const HOTKEYS = {
     autoSegmentation: 's',
     polygonTool: 'p',
     magneticLassoTool: 'm',
-    ssimTool: 'i',
+    // TODO: Disable for 3.0, enable for 3.1 after improvements (needs a sidebar to tweak threshold)
+    // ssimTool: 'i',
     selectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+a`,
     deselectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+d`,
     submit: `${CTRL_OR_COMMAND_KEY}+s`,
@@ -53,7 +54,8 @@ export const TASK_HOTKEYS = {
         boundingBoxTool: HOTKEYS.boundingBoxTool,
         polygonTool: HOTKEYS.polygonTool,
         magneticLassoTool: HOTKEYS.magneticLassoTool,
-        ssimTool: HOTKEYS.ssimTool,
+        // TODO: Disable for 3.0, enable for 3.1 after improvements (needs a sidebar to tweak threshold)
+        // ssimTool: HOTKEYS.ssimTool,
         ...COMMON_HOTKEYS,
         ...SELECTION_TOOL_HOTKEY,
         ...AUTO_SEGMENTATION_HOTKEY,
@@ -61,7 +63,8 @@ export const TASK_HOTKEYS = {
     instance_segmentation: {
         polygonTool: HOTKEYS.polygonTool,
         magneticLassoTool: HOTKEYS.magneticLassoTool,
-        ssimTool: HOTKEYS.ssimTool,
+        // TODO: Disable for 3.0, enable for 3.1 after improvements (needs a sidebar to tweak threshold)
+        // ssimTool: HOTKEYS.ssimTool,
         ...COMMON_HOTKEYS,
         ...SELECTION_TOOL_HOTKEY,
         ...AUTO_SEGMENTATION_HOTKEY,
