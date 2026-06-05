@@ -17,7 +17,8 @@ const mockedProject = getMockedProject({
     },
 });
 
-test.describe('SSIM tool', () => {
+// TODO: Re-enable in 3.1 when SSIM tool is restored.
+test.describe.skip('SSIM tool', () => {
     test.beforeEach(async ({ network }) => {
         network.use(
             http.get('/api/projects/{project_id}', () => {
