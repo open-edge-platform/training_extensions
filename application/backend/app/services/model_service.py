@@ -582,10 +582,6 @@ class ModelService(BaseSessionManagedService):
         # Read the CSV file with polars
         df = pl.read_csv(metrics_file)
 
-        # Ensure 'step' column exists (legacy Ultralytics CSVs may lack it).
-        if "step" not in df.columns:
-            df = df.with_columns(pl.lit(None).cast(pl.Int64).alias("step"))
-
         # Due to a quirk in SimpleLearningRateMonitor/LearningRateMonitor, the LR metric does not log the epoch value.
         # Fill in missing epoch values.
         df = df.with_columns(

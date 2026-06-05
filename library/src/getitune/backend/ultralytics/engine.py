@@ -61,6 +61,7 @@ class UltralyticsEngine(Engine):
         data: DataModule | PathLike,
         work_dir: PathLike = "./getitune-workspace",
         device: str | DeviceType = "auto",
+        checkpoint: PathLike | None = None,
         train_args: Mapping[str, Any] | None = None,
         export_args: Mapping[str, Any] | None = None,
         **kwargs,
@@ -73,6 +74,9 @@ class UltralyticsEngine(Engine):
             work_dir: Directory for checkpoints, exports, and logs.
             device: Device string or :class:`DeviceType` enum
                 (``"auto"``, ``"xpu"``, ``"0"``, ``"cpu"``, ``DeviceType.xpu``, etc.).
+            checkpoint: Optional path to a checkpoint (.pt) to load model
+                weights from before training.  Used for both pretrained
+                base weights and parent-revision warm-start.
             train_args: Train-only defaults forwarded to ``yolo.train()``.
             export_args: Export metadata defaults, such as inference thresholds.
             **kwargs: Extra overrides forwarded to Ultralytics calls.
@@ -89,6 +93,9 @@ class UltralyticsEngine(Engine):
         self._train_args = dict(train_args or {})
         self._export_args = dict(export_args or {})
         self._last_train_checkpoint = self._load_last_train_checkpoint()
+
+        if checkpoint is not None:
+            self._model.load_checkpoint(checkpoint)
 
         if isinstance(data, DataModule):
             self._datamodule: DataModule | None = data

@@ -169,7 +169,19 @@ class LightningEngine(Engine):
                 msg = f"Checkpoint {self.checkpoint} does not exist."
                 raise FileNotFoundError(msg)
             chkpt = self._load_model_checkpoint(self.checkpoint, map_location="cpu")
-            self._model.load_state_dict_incrementally(chkpt)
+            if "hyper_parameters" in chkpt and "label_info" in chkpt.get("hyper_parameters", {}):
+                # Getitune checkpoint — full label reconciliation.
+                self._model.load_state_dict_incrementally(chkpt)
+            else:
+                # Plain pretrained weights
+                from getitune.backend.lightning.models.utils.utils import load_checkpoint
+
+                load_checkpoint(
+                    self._model.model,
+                    str(self.checkpoint),
+                    map_location="cpu",
+                    strict=False,
+                )
 
     # ------------------------------------------------------------------------ #
     # General getitune Entry Points

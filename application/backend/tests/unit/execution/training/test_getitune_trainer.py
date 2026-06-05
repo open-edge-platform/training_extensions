@@ -808,7 +808,6 @@ class TestGetiTuneTrainerTrainModel:
                 weights_path=weights_path,
                 model_id=model_id,
                 device=geti_device,
-                has_parent_revision=True,
             )
 
         # Assert
@@ -828,6 +827,7 @@ class TestGetiTuneTrainerTrainModel:
         assert engine_call_kwargs["model"] == mock_getitune_model
         assert engine_call_kwargs["data"] == mock_datamodule
         assert engine_call_kwargs["work_dir"] == getitune_trainer._data_dir / f"getitune-workspace-{model_id}"
+        assert engine_call_kwargs["checkpoint"] == weights_path
 
         # Verify training was started
         mock_getitune_engine.train.assert_called_once()
@@ -896,7 +896,9 @@ class TestGetiTuneTrainerTrainModel:
                 "app.execution.training.getitune_trainer.DataModule.from_vision_datasets", return_value=mock_datamodule
             ),
             patch("app.execution.training.getitune_trainer.ArgumentParser") as mock_parser_cls,
-            patch("app.execution.training.getitune_trainer.create_engine", return_value=mock_engine),
+            patch(
+                "app.execution.training.getitune_trainer.create_engine", return_value=mock_engine
+            ) as mock_create_engine,
         ):
             mock_model_parser = Mock()
             mock_callbacks_parser = Mock()
@@ -910,11 +912,12 @@ class TestGetiTuneTrainerTrainModel:
                 weights_path=weights_path,
                 model_id=model_id,
                 device=DeviceInfo(type=DeviceType.CPU, name="Intel Core", index=None, memory=None),
-                has_parent_revision=True,
             )
 
         # Assert
-        mock_model.load_checkpoint.assert_called_once_with(weights_path)
+        mock_create_engine.assert_called_once()
+        engine_call_kwargs = mock_create_engine.call_args.kwargs
+        assert engine_call_kwargs["checkpoint"] == weights_path
         mock_engine.train.assert_called_once()
         assert trained_model_path == expected_checkpoint_path
         assert returned_engine == mock_engine

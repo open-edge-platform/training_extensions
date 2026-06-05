@@ -391,7 +391,6 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         weights_path: Path,
         model_id: UUID,
         device: DeviceInfo,
-        has_parent_revision: bool,
     ) -> tuple[Path, Engine]:
         """Execute model training.
 
@@ -427,23 +426,14 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         engine_kwargs: dict[str, Any] = {
             "work_dir": self._data_dir / f"getitune-workspace-{model_id}",
             "device": getitune_device_type,
+            "checkpoint": weights_path,
         }
 
         model_parser = ArgumentParser()
-        # Avoid Union so jsonargparse doesn't swallow runtime errors as type mismatches.
         class_path = model_cfg.get("class_path", "")
         model_type = UltralyticsModel if "ultralytics" in class_path else LightningModel
         model_parser.add_argument("--model", type=model_type)
         getitune_model = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
-
-        # Ultralytics models handle their own weight loading (pretrained or
-        # parent checkpoint) via load_checkpoint — call it unconditionally.
-        # Lightning models expect the checkpoint only for parent-revision
-        # training; fresh training uses the model's built-in initialization.
-        if hasattr(getitune_model, "load_checkpoint"):
-            getitune_model.load_checkpoint(weights_path)
-        elif has_parent_revision:
-            engine_kwargs["checkpoint"] = weights_path
 
         if hasattr(getitune_model, "tile_config"):
             getitune_model.tile_config = datamodule.tile_config
@@ -476,7 +466,10 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
         trained_model_path = getitune_engine.best_checkpoint
         if trained_model_path is None:
-            trained_model_path = Path(getitune_engine.work_dir) / "best_checkpoint.pt"
+            raise RuntimeError(
+                f"Training completed but no best checkpoint was produced "
+                f"by the engine ({type(getitune_engine).__name__})."
+            )
         if not trained_model_path.exists():
             raise FileNotFoundError(f"Trained checkpoint not found at {trained_model_path}")
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)
@@ -713,7 +706,6 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
                 weights_path=weights_path,
                 model_id=params.model_id,
                 device=params.device,
-                has_parent_revision=params.parent_model_revision_id is not None,
             )
             exported_model_paths = self.export_model(
                 getitune_engine=getitune_engine, model_checkpoint_path=trained_model_path
