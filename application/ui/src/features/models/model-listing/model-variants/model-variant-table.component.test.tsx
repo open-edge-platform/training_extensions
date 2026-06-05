@@ -187,7 +187,9 @@ describe('ModelVariantTable', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Download model ov-1' }));
 
         expect(downloadFile).toHaveBeenCalledWith(
-            expect.stringContaining(`/api/projects/project-123/models/${model.id}/variants/ov-1/binary`)
+            expect.stringContaining(`/api/projects/project-123/models/${model.id}/variants/ov-1/binary`),
+            undefined,
+            'Model download started'
         );
     });
 

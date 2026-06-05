@@ -17,8 +17,8 @@ export const isNonEmptyArray = <T>(value: T): value is IsValidArrayType<T> => Ar
 
 export const isNonEmptyString = (value: unknown): value is string => isString(value) && value !== '';
 
-export const downloadFile = (url: string, name?: string): void => {
-    platformDownloadFile(url, name);
+export const downloadFile = (url: string, name?: string, startedMessage?: string): void => {
+    platformDownloadFile(url, name, startedMessage);
 };
 
 export const formatBytes = (bytes: number): string => prettyBytes(bytes);
