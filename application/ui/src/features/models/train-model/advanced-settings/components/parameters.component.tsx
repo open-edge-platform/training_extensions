@@ -381,7 +381,7 @@ const ParametersContainer = ({
     rowGap?: DimensionValue;
     id?: string;
 }) => {
-    const columns = isReadOnly ? ['size-3000', '1fr'] : ['size-3000', minmax('size-3400', '1fr'), 'size-400'];
+    const columns = isReadOnly ? ['size-3000', '1fr'] : ['size-3000', minmax(0, '1fr'), 'size-400'];
 
     return (
         <Grid
