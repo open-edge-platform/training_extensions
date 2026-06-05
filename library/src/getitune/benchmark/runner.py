@@ -214,13 +214,7 @@ class RunConfig:
 
     # Process isolation. When True (default), each seed of each experiment
     # runs in a freshly spawned child Python process that exits as soon as
-    # the seed is done. This is the ONLY reliable way to stop host-memory
-    # leaks (persistent DataLoader workers, datumaro dm_subset caches,
-    # Lightning logger buffers, module-level registries, mmap regions, …)
-    # from accumulating across the 30+ experiments in a run. A single
-    # long-lived parent process will otherwise eventually be OOM-killed —
-    # we have observed ~219 GB anon-RSS before the kernel stepped in.
-    # Set to False for debugging or when running a single experiment.
+    # the seed is done.
     isolate_in_subprocess: bool = True
     subprocess_timeout: float | None = None  # seconds; None = no timeout
 
@@ -283,10 +277,7 @@ class BenchmarkRunner:
             )
         )
 
-        # Apply rotation logic for extended models (§6.4.2).
-        # When --rotation-group is set and --no-rotation is *not* set, only
-        # extended-priority models whose hash falls into the given group are
-        # kept.  Core models always run regardless of rotation.
+        # Apply rotation logic for extended models
         rotation_groups = manifest.defaults.rotation.get("extended_groups", 0)
         if self.config.rotation_group is not None and not self.config.no_rotation and rotation_groups > 0:
             group = self.config.rotation_group
@@ -351,11 +342,7 @@ class BenchmarkRunner:
 
             self._run_experiment(experiment, data_path, allowed_phases, size_tier_map)
 
-            # Reclaim resources before the next experiment runs. This is
-            # critical: NNCF's optimize phase leaks loky workers (64 per run),
-            # and PyTorch's caching allocator retains reserved GPU memory.
-            # Over dozens of experiments this eventually triggers the OOM
-            # killer and the whole benchmark process dies without a traceback.
+            # Reclaim resources before the next experiment runs.
             _cleanup_resources(reset_cuda_peak=True)
 
             # Persist report after each experiment so partial results survive crashes

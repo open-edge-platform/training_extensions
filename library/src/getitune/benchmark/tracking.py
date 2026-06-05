@@ -88,11 +88,6 @@ def get_git_branch() -> str:
         return os.environ.get("GITHUB_REF_NAME", "unknown")
 
 
-# Backwards-compatible aliases (deprecated, prefer the public names above).
-_get_git_sha = get_git_sha
-_get_git_branch = get_git_branch
-
-
 def _get_getitune_version() -> str:
     """Return the installed GetiTune version string."""
     try:
@@ -164,11 +159,6 @@ _PRIMARY_METRIC: dict[str, str] = {
     "rotated_detection": "training:val/map_50",
     "semantic_segmentation": "training:val/mIoU",
     "keypoint_detection": "training:val/PCK",
-    "anomaly": "training:val/image_AUROC",
-    "action_classification": "training:val/accuracy",
-    "action_detection": "training:val/map_50",
-    "visual_prompting": "training:val/Dice",
-    "zero_shot_visual_prompting": "training:val/Dice",
 }
 
 
@@ -743,7 +733,7 @@ class BenchmarkTracker:
     def purge_old_runs(
         self,
         *,
-        max_age_days: int = 90,
+        max_age_days: int = 365,
         protect_branches: tuple[str, ...] = ("develop", "main"),
         dry_run: bool = False,
     ) -> int:

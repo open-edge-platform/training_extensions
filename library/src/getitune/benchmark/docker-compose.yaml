@@ -15,10 +15,8 @@
 # Stop and delete all data (DANGER):
 #   docker compose down -v
 #
-# To point the benchmark runner at this server:
-#   python -m getitune.benchmark run --mlflow-uri http://<host>:5000 ...
-#
-# In CI, set the GitHub Actions secret MLFLOW_TRACKING_URI accordingly.
+# To point the benchmark runner at this server (if running on the same server):
+#   python -m getitune.benchmark run --mlflow-uri http://localhost:5000 ...
 
 services:
   # ── PostgreSQL backend store ───────────────────────────────────────────

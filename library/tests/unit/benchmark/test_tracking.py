@@ -16,10 +16,10 @@ from getitune.benchmark.tracking import (
     _classify_error,
     _get_cpu_info,
     _get_getitune_version,
-    _get_git_branch,
-    _get_git_sha,
     _is_per_class_sentinel,
     _sanitize_error_message,
+    get_git_branch,
+    get_git_sha,
 )
 
 # ---------------------------------------------------------------------------
@@ -79,27 +79,27 @@ class TestRunTags:
 class TestGitHelpers:
     @patch("subprocess.check_output", return_value=b"abc1234\n")
     def test_get_git_sha_success(self, mock_co: MagicMock) -> None:
-        assert _get_git_sha() == "abc1234"
+        assert get_git_sha() == "abc1234"
 
     @patch("subprocess.check_output", side_effect=FileNotFoundError)
     def test_get_git_sha_fallback_env(self, mock_co: MagicMock) -> None:
         with patch.dict("os.environ", {"GITHUB_SHA": "env_sha"}):
-            assert _get_git_sha() == "env_sha"
+            assert get_git_sha() == "env_sha"
 
     @patch("subprocess.check_output", side_effect=FileNotFoundError)
     def test_get_git_sha_fallback_unknown(self, mock_co: MagicMock) -> None:
         with patch.dict("os.environ", {}, clear=True):
-            sha = _get_git_sha()
+            sha = get_git_sha()
             assert sha == "unknown" or isinstance(sha, str)
 
     @patch("subprocess.check_output", return_value=b"main\n")
     def test_get_git_branch_success(self, mock_co: MagicMock) -> None:
-        assert _get_git_branch() == "main"
+        assert get_git_branch() == "main"
 
     @patch("subprocess.check_output", side_effect=FileNotFoundError)
     def test_get_git_branch_fallback(self, mock_co: MagicMock) -> None:
         with patch.dict("os.environ", {"GITHUB_REF_NAME": "pr-42"}):
-            assert _get_git_branch() == "pr-42"
+            assert get_git_branch() == "pr-42"
 
     def test_get_getitune_version(self) -> None:
         v = _get_getitune_version()
