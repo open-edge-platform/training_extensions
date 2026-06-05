@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -23,6 +24,19 @@ logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 2
 FAILED_JOBS_FILE = "failed_jobs.json"
+
+
+def _extract_stage(error: str) -> str:
+    """Extract the benchmark stage (e.g. train, export, optimize) from an error message.
+
+    Args:
+        error (str): Error/stderr output captured from a failed job.
+
+    Returns:
+        str: The stage at which the job failed, or "unknown" if it cannot be determined.
+    """
+    match = re.search(r"\(stage:\s*([^)]+)\)", error)
+    return match.group(1).strip() if match else "unknown"
 
 
 def run_job(cmd: list[str], retries: int = MAX_RETRIES) -> dict | None:
@@ -50,11 +64,13 @@ def run_job(cmd: list[str], retries: int = MAX_RETRIES) -> dict | None:
                 )
             except subprocess.CalledProcessError as e2:
                 stderr_output = e2.stderr or ""
-            logger.warning(f"Job failed on attempt {attempt}: {stderr_output.strip() or str(e)}")
+            error_message = stderr_output.strip() or str(e)
+            logger.warning(f"Job failed on attempt {attempt}: {error_message}")
             if attempt == retries:
                 return {
                     "command": cmd,
-                    "error": stderr_output.strip() or str(e),
+                    "stage": _extract_stage(error_message),
+                    "error": error_message,
                     "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
                     "retries": attempt,
                 }

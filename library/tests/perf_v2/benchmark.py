@@ -58,8 +58,8 @@ def task_benchmark_models(task: TaskType) -> dict[str, ModelInfo]:
 class AggregateError(Exception):
     def __init__(self, errors):
         error_messages = []
-        for seed, error in errors:
-            error_messages.append(f"Seed {seed}: {error}")
+        for seed, stage, error in errors:
+            error_messages.append(f"Seed {seed} (stage: {stage}): {error}")
         error_message = "\n".join(error_messages)
 
         super().__init__(f"Exceptions occurred in the following seeds:\n{error_message}")
@@ -363,6 +363,7 @@ class Benchmark:
         }
 
         exceptions = []
+        stage = "setup"
         try:
             sub_work_dir = work_dir / str(seed)
             tags["seed"] = str(seed)
@@ -376,6 +377,7 @@ class Benchmark:
                 if sub_work_dir.exists():
                     shutil.rmtree(sub_work_dir)
 
+                stage = SubCommand.TRAIN.value
                 e2e_train_time = self.train(
                     model_info=model_info,
                     dataset_info=dataset_info,
@@ -400,6 +402,7 @@ class Benchmark:
                     criteria=criteria,
                 )
 
+            stage = f"{SubCommand.TEST.value}:{RunTestType.TORCH.value}"
             self.test(
                 model_info=model_info,
                 dataset_info=dataset_info,
@@ -413,6 +416,7 @@ class Benchmark:
             # Export & test
             if self.eval_upto in ["export", "optimize"]:
                 if "export" not in copied_ops_dir:
+                    stage = SubCommand.EXPORT.value
                     self.export(
                         model_info=model_info,
                         dataset_info=dataset_info,
@@ -424,6 +428,7 @@ class Benchmark:
                     exported_model_path = sub_work_dir / ".latest" / "export" / "exported_model_decoder.xml"
 
                 # Test OpenVINO exported model
+                stage = f"{SubCommand.TEST.value}:{RunTestType.EXPORT.value}"
                 self.test(
                     model_info=model_info,
                     dataset_info=dataset_info,
@@ -437,6 +442,7 @@ class Benchmark:
             # Optimize & test
             if self.eval_upto == "optimize":
                 if "optimize" not in copied_ops_dir:
+                    stage = SubCommand.OPTIMIZE.value
                     self.optimize(
                         dataset_info=dataset_info,
                         sub_work_dir=sub_work_dir,
@@ -450,6 +456,7 @@ class Benchmark:
 
                 optimized_model_path = sub_work_dir / "optimize" / "optimized_model.xml"
 
+                stage = f"{SubCommand.TEST.value}:{RunTestType.OPTIMIZE.value}"
                 self.test(
                     model_info=model_info,
                     dataset_info=dataset_info,
@@ -460,7 +467,7 @@ class Benchmark:
                     what2test=RunTestType.OPTIMIZE,
                 )
         except Exception as e:
-            exceptions.append((seed, str(e)))
+            exceptions.append((seed, stage, str(e)))
 
         if exceptions:
             # Raise the custom exception with all collected errors
