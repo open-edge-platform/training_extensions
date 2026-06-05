@@ -79,14 +79,6 @@ const MAGNETIC_LASSO_TOOL_CONFIG: ToolConfig = {
     },
 };
 
-// TODO: Disable for 3.0, enable for 3.1 after improvements (needs a sidebar to tweak threshold)
-// const SSIM_TOOL_CONFIG: ToolConfig = {
-//     type: 'ssim',
-//     icon: DetectionTool,
-//     hotkey: HOTKEYS.ssimTool,
-//     label: 'Detection assistant',
-// };
-
 const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
     classification: [],
     detection: [SELECTION_TOOL_CONFIG, BOUNDING_BOX_TOOL_CONFIG, AUTO_SEGMENTATION_DETECTION_CONFIG],
@@ -95,8 +87,6 @@ const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
         POLYGON_TOOL_CONFIG,
         MAGNETIC_LASSO_TOOL_CONFIG,
         AUTO_SEGMENTATION_CONFIG,
-        // TODO: Disable for 3.0, enable for 3.1 after improvements (needs a sidebar to tweak threshold)
-        // SSIM_TOOL_CONFIG,
     ],
 };
 
