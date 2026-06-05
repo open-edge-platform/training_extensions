@@ -7,21 +7,10 @@ import { Flex, TextField } from '@geti/ui';
 import { open } from '@tauri-apps/plugin-dialog';
 
 import type { VideoFileSourceConfig } from '../../../../constants/shared-types';
+import { normalizeSelectedPath } from '../../shared/tauri-dialog';
 
 type VideoFileProps = {
     defaultState?: VideoFileSourceConfig;
-};
-
-const normalizeSelectedPath = (selectedPath: string | string[] | null): string | null => {
-    if (typeof selectedPath === 'string') {
-        return selectedPath;
-    }
-
-    if (Array.isArray(selectedPath)) {
-        return selectedPath[0] ?? null;
-    }
-
-    return null;
 };
 
 export const VideoFile = ({ defaultState }: VideoFileProps) => {
@@ -42,13 +31,15 @@ export const VideoFile = ({ defaultState }: VideoFileProps) => {
                     extensions: ['mp4', 'avi', 'mov', 'mkv', 'webm', 'flv', 'wmv', 'm4v', 'mpg', 'mpeg'],
                 },
             ],
-        }).then((selectedPath) => {
-            const nextPath = normalizeSelectedPath(selectedPath);
+        })
+            .then((selectedPath) => {
+                const nextPath = normalizeSelectedPath(selectedPath);
 
-            if (nextPath !== null) {
-                setVideoPath(nextPath);
-            }
-        });
+                if (nextPath !== null) {
+                    setVideoPath(nextPath);
+                }
+            })
+            .catch(console.error);
     }, [videoPath]);
 
     return (
@@ -57,7 +48,13 @@ export const VideoFile = ({ defaultState }: VideoFileProps) => {
             <TextField width='100%' label='Name' name='name' defaultValue={defaultState?.name} />
 
             <Flex direction='row' gap='size-200'>
-                <div onClick={handleOpenFileDialog} style={{ width: '100%' }}>
+                <div
+                    onClick={handleOpenFileDialog}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleOpenFileDialog()}
+                    role='button'
+                    tabIndex={0}
+                    style={{ width: '100%', cursor: 'pointer' }}
+                >
                     <TextField
                         isRequired
                         isReadOnly

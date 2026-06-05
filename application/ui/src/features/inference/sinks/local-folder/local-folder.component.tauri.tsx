@@ -6,24 +6,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { Flex, TextField } from '@geti/ui';
 import { open } from '@tauri-apps/plugin-dialog';
 
+import { normalizeSelectedPath } from '../../shared/tauri-dialog';
 import { OutputFormats } from '../output-formats/output-formats.component';
 import { RateLimitFields } from '../rate-limit/rate-limit-fields.component';
 import { LocalFolderSinkConfig } from '../utils';
 
 type LocalFolderProps = {
     defaultState: LocalFolderSinkConfig;
-};
-
-const normalizeSelectedPath = (selectedPath: string | string[] | null): string | null => {
-    if (typeof selectedPath === 'string') {
-        return selectedPath;
-    }
-
-    if (Array.isArray(selectedPath)) {
-        return selectedPath[0] ?? null;
-    }
-
-    return null;
 };
 
 export const LocalFolder = ({ defaultState }: LocalFolderProps) => {
@@ -38,13 +27,15 @@ export const LocalFolder = ({ defaultState }: LocalFolderProps) => {
             directory: true,
             multiple: false,
             defaultPath: folderPath || undefined,
-        }).then((selectedPath) => {
-            const nextPath = normalizeSelectedPath(selectedPath);
+        })
+            .then((selectedPath) => {
+                const nextPath = normalizeSelectedPath(selectedPath);
 
-            if (nextPath !== null) {
-                setFolderPath(nextPath);
-            }
-        });
+                if (nextPath !== null) {
+                    setFolderPath(nextPath);
+                }
+            })
+            .catch(console.error);
     }, [folderPath]);
 
     return (
@@ -60,7 +51,13 @@ export const LocalFolder = ({ defaultState }: LocalFolderProps) => {
             </Flex>
 
             <Flex gap='size-50'>
-                <div onClick={handleOpenFolderDialog} style={{ width: '100%' }}>
+                <div
+                    onClick={handleOpenFolderDialog}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleOpenFolderDialog()}
+                    role='button'
+                    tabIndex={0}
+                    style={{ width: '100%', cursor: 'pointer' }}
+                >
                     <TextField
                         isRequired
                         isReadOnly
