@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Callable
 
@@ -125,7 +126,7 @@ def _build_pytorchcv_model(
     **kwargs,
 ) -> nn.Module:
     """Build pytorchcv model."""
-    models_cache_root = kwargs.pop("root", Path.home() / ".cache" / "torch" / "hub" / "checkpoints")
+    models_cache_root = Path(kwargs.pop("root", os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"]))
     pretrained = kwargs.pop("pretrained", False)
     print(f"Init model {type}, pretrained={pretrained}, models cache {models_cache_root}")
     model = _models[type](root=models_cache_root, pretrained=pretrained, **kwargs)

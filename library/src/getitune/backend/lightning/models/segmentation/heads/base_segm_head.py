@@ -158,14 +158,12 @@ class BaseSegmentationHead(nn.Module):
             checkpoint = torch.load(pretrained, map_location=torch.device("cpu"))
             print(f"Init weights - {pretrained}")
         elif pretrained is not None:
-            cache_dir = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
             if isinstance(pretrained, Path):
                 msg = "pretrained path doesn't exists"
                 raise ValueError(msg)
             checkpoint = load_from_http(
                 filename=pretrained,
                 map_location="cpu",
-                model_dir=cache_dir,
             )
             print(f"Init weights - {pretrained}")
         if checkpoint is not None:
