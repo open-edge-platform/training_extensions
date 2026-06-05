@@ -180,7 +180,7 @@ class TestMqttDispatcher:
         )
 
         with pytest.raises(ConnectionError, match="Failed to connect to MQTT broker"):
-            MqttDispatcher(config)
+            MqttDispatcher(config).connect()
 
     @pytest.mark.parametrize(
         "output_format", [OutputFormat.IMAGE_ORIGINAL, OutputFormat.IMAGE_WITH_PREDICTIONS, OutputFormat.PREDICTIONS]
@@ -263,6 +263,7 @@ class TestMqttDispatcher:
     def test_publish_failure_handling(self, mqtt_config, sample_image, sample_predictions, mqtt_test_subscriber):
         """Test handling of publish failures."""
         dispatcher = MqttDispatcher(mqtt_config, track_messages=True)
+        dispatcher.connect()
 
         mqtt_test_subscriber.connect_and_subscribe(mqtt_config.config_data.topic)
 
@@ -281,6 +282,9 @@ class TestMqttDispatcher:
     def test_close_dispatcher(self, mqtt_config):
         """Test proper cleanup when closing dispatcher."""
         dispatcher = MqttDispatcher(mqtt_config)
+        assert not dispatcher.is_connected
+
+        dispatcher.connect()
 
         assert dispatcher.is_connected
 

@@ -27,12 +27,14 @@ from omegaconf import DictConfig
 from torch import nn
 
 from getitune.config.data import IntensityConfig
+from getitune.data.augmentation.cache import CacheableMixin
 from getitune.data.augmentation.intensity import build_intensity_transform
 from getitune.data.entity.sample import BaseSample
 from getitune.data.utils import import_object_from_module
 
 if TYPE_CHECKING:
     from getitune.config.data import SubsetConfig
+    from getitune.data.dataset.base import VisionDataset
 
 
 _KORNIA_PATCHED = False
@@ -270,6 +272,21 @@ class CPUAugmentationPipeline(nn.Module):
     def std(self) -> tuple[float, float, float] | None:
         """Get normalization std."""
         return self._std
+
+    def prepare(self, dataset: VisionDataset) -> None:
+        """Pre-populate caches in augmentations that support it.
+
+        Delegates to ``pre_cache(dataset)`` on each augmentation that
+        implements this method (e.g. CachedMosaic, CachedMixUp).
+        Call before creating a multi-worker DataLoader so all workers
+        inherit full, diverse caches.
+
+        Args:
+            dataset: The training dataset (must support ``len()`` and ``[]``).
+        """
+        for aug in self.augmentations:
+            if isinstance(aug, CacheableMixin):
+                aug.pre_cache(dataset)
 
     @classmethod
     def list_available_transforms(cls) -> list[type[tvt_v2.Transform]]:

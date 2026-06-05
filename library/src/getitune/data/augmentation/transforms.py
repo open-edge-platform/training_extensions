@@ -6,57 +6,22 @@
 from __future__ import annotations
 
 import typing
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import torch
 import torchvision.transforms.v2 as tvt_v2
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
+from getitune.data.augmentation.cache import CacheableMixin, _CachedSample, _clone_for_cache
 from getitune.data.augmentation.kernels import (
     _resize_image_info,
     _resized_crop_image_info,
 )
 from getitune.data.entity.sample import BaseSample
 
-
-class _CachedSample:
-    """Lightweight cache entry storing only cloned tensor data for mosaic/mixup.
-
-    Avoids the extreme cost of ``copy.deepcopy`` on full ``BaseSample``
-    objects (which walk the entire Datumaro/PyTorch object graph).  Only
-    the tensor data read during mosaic/mixup assembly is stored, cloned
-    via fast ``Tensor.clone()`` (pure memcpy).
-    """
-
-    __slots__ = ("bboxes", "image", "label", "masks")
-
-    def __init__(
-        self,
-        image: torch.Tensor,
-        bboxes: torch.Tensor,
-        label: torch.Tensor,
-        masks: torch.Tensor | None = None,
-    ) -> None:
-        self.image = image
-        self.bboxes = bboxes
-        self.label = label
-        self.masks = masks
-
-
-def _clone_for_cache(sample: BaseSample) -> _CachedSample:
-    """Create a lightweight cache entry with cloned tensor data.
-
-    Cost: ~3ms for a 3x640x640 float32 image (memcpy only),
-    vs. ~260ms for ``copy.deepcopy`` on a full BaseSample.
-    """
-    masks = getattr(sample, "masks", None)
-    return _CachedSample(
-        image=sample.image.clone(),
-        bboxes=sample.bboxes.clone(),
-        label=sample.label.clone(),
-        masks=masks.clone() if masks is not None else None,
-    )
+if TYPE_CHECKING:
+    from getitune.data.entity.sample import DetectionSample, InstanceSegmentationSample
 
 
 class Resize(tvt_v2.Transform):
@@ -72,11 +37,12 @@ class Resize(tvt_v2.Transform):
             Defaults to True.
         keep_aspect_ratio (bool): If True, preserve the aspect ratio of the original image
             by resizing to fit within the target size and padding to reach exact target dimensions.
+            Padding is applied to bottom-right only (matching YOLOX/DFine post-processing
+            which assumes no left/top offset). Defaults to False.
+        center_padding (bool): If True and ``keep_aspect_ratio`` is True, distribute
+            padding equally on both sides (centered letterbox, matching Ultralytics
+            LetterBox). If False, padding is applied to bottom-right only.
             Defaults to False.
-        center_padding (bool): If True and ``keep_aspect_ratio`` is True, distribute padding
-            equally on both sides (centered letterbox, matching Ultralytics LetterBox).
-            If False, padding is applied to bottom-right only (matching DFine/YOLOX
-            post-processing which assumes no left/top offset). Defaults to False.
         pad_value (int or tuple): Padding value for image. Defaults to 0.
         interpolation: Interpolation mode for images. Defaults to InterpolationMode.BILINEAR.
         antialias: Whether to apply antialiasing. Defaults to True.
@@ -127,7 +93,7 @@ class Resize(tvt_v2.Transform):
         pad_h = target_h - new_h
 
         if self.center_padding:
-            # Centered padding (matching Ultralytics LetterBox): equal on both sides.
+            # Centered letterbox (matching Ultralytics LetterBox): equal on both sides.
             pad_left = pad_w // 2
             pad_right = pad_w - pad_left
             pad_top = pad_h // 2
@@ -164,6 +130,10 @@ class Resize(tvt_v2.Transform):
         # Get original dimensions
         orig_h, orig_w = sample.image.shape[-2:]
 
+        # Early exit: image already at target size — nothing to do
+        if (orig_h, orig_w) == self.size:
+            return sample
+
         # Compute resize and padding parameters
         new_h, new_w, pad_left, pad_top, pad_right, pad_bottom = self._compute_resize_params(orig_h, orig_w)
 
@@ -174,6 +144,7 @@ class Resize(tvt_v2.Transform):
             interpolation=self.interpolation,
             antialias=self.antialias,
         )
+        # Bilinear/bicubic interpolation can produce values slightly outside [0,1]
         if sample.image.is_floating_point():
             sample.image = sample.image.clamp(0, 1)
         # Apply padding if needed
@@ -284,16 +255,15 @@ class Resize(tvt_v2.Transform):
         return sample
 
 
-class CachedMosaic(tvt_v2.Transform):
+class CachedMosaic(CacheableMixin, tvt_v2.Transform):
     """Cached Mosaic augmentation with built-in random perspective crop.
 
     Combines four images into a 2x mosaic canvas, then applies a center-based
-    random affine crop (matching upstream Ultralytics ``RandomPerspective``) to
-    produce an ``img_scale``-sized output.
+    random affine crop to produce an ``img_scale``-sized output.
 
     When mosaic is **skipped** (probability gate or cold cache) the sample is
     letterbox-resized to ``img_scale`` and the same random affine is applied
-    (matching upstream's non-mosaic path).
+    (consistent non-mosaic path).
 
     The output size is **always** ``img_scale`` regardless of whether mosaic
     fires.
@@ -313,8 +283,8 @@ class CachedMosaic(tvt_v2.Transform):
             centre shifts by up to ``± translate * img_scale`` pixels.
             Defaults to 0.1.
         area_thr: Minimum visible-area ratio for keeping a bbox after the
-            perspective crop.  Use 0.01 for instance segmentation.
-            Defaults to 0.1.
+            perspective crop.  Lower values keep more small / partially
+            occluded instances.  Defaults to 0.1.
     """
 
     def __init__(
@@ -352,34 +322,7 @@ class CachedMosaic(tvt_v2.Transform):
         self.scale = scale
         self.translate = translate
         self.area_thr = area_thr
-        self.results_cache: list[_CachedSample] = []
-        self._cache_frozen: bool = False
-        self._refresh_rate: float = 0.05
-
-    def freeze_cache(self, refresh_rate: float = 0.05) -> None:
-        """Freeze the cache with slow stochastic refresh after pre-warming.
-
-        When frozen, the cache is no longer updated via FIFO eviction on
-        every forward call.  Instead, on each call, there is a small
-        probability (``refresh_rate``) that one random cache entry is
-        replaced with the current sample.  This keeps the cache slowly
-        evolving with new data while maintaining the diversity of the
-        pre-warmed pool.
-
-        This is used with multi-worker DataLoaders (spawn context) where
-        each worker receives a copy of the pre-warmed cache at spawn time.
-        Without this mechanism, aggressive FIFO eviction causes each
-        worker to independently fragment the cache.
-
-        Args:
-            refresh_rate: Probability of replacing one cache entry per
-                forward call.  Lower values keep the pre-warmed pool
-                stable longer; higher values bring in fresh samples
-                faster.  Default 0.05 (~1 in 20 samples triggers a
-                replacement).
-        """
-        self._cache_frozen = True
-        self._refresh_rate = refresh_rate
+        self._init_cache()
 
     def _resize_keep_ratio(self, img: torch.Tensor, target_h: int, target_w: int) -> tuple[torch.Tensor, float]:
         """Resize CHW image keeping aspect ratio (FIT mode). Returns (resized, scale)."""
@@ -453,7 +396,7 @@ class CachedMosaic(tvt_v2.Transform):
 
     def _build_mosaic(
         self,
-        inputs: BaseSample,
+        inputs: DetectionSample | InstanceSegmentationSample,
         mix_results: list[_CachedSample],
         with_mask: bool,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor | None]:
@@ -472,8 +415,9 @@ class CachedMosaic(tvt_v2.Transform):
         center_y = int(torch.empty(1).uniform_(*self.center_ratio_range).item() * target_h)
 
         device = inputs.image.device
+        num_channels = inputs.image.shape[0]
         fill_val = self._fill_val_normalised()
-        mosaic_img = torch.full((3, mosaic_h, mosaic_w), fill_val, dtype=inputs.image.dtype, device=device)
+        mosaic_img = torch.full((num_channels, mosaic_h, mosaic_w), fill_val, dtype=inputs.image.dtype, device=device)
 
         all_bboxes: list[torch.Tensor] = []
         all_labels: list[torch.Tensor] = []
@@ -502,14 +446,15 @@ class CachedMosaic(tvt_v2.Transform):
 
             mosaic_img[:, y1_p:y2_p, x1_p:x2_p] = img_i[:, y1_c:y2_c, x1_c:x2_c]
 
+            # Scale and translate bboxes
             bboxes_i = sample.bboxes.float() * scale
             if bboxes_i.numel() > 0:
                 bboxes_i = bboxes_i + bboxes_i.new_tensor([pad_w, pad_h, pad_w, pad_h])
             all_bboxes.append(bboxes_i)
-            all_labels.append(sample.label)
+            all_labels.append(cast("torch.Tensor", sample.label))
 
             if with_mask:
-                masks_i = sample.masks
+                masks_i = getattr(sample, "masks", None)
                 if masks_i is not None and len(masks_i) > 0:
                     s = min(target_h / orig_h, target_w / orig_w)
                     new_mh, new_mw = round(orig_h * s), round(orig_w * s)
@@ -531,6 +476,7 @@ class CachedMosaic(tvt_v2.Transform):
             mosaic_bboxes[..., 0::2] = mosaic_bboxes[..., 0::2].clamp(0, mosaic_w)
             mosaic_bboxes[..., 1::2] = mosaic_bboxes[..., 1::2].clamp(0, mosaic_h)
 
+        # Filter degenerate bboxes
         if mosaic_bboxes.numel() > 0:
             w = mosaic_bboxes[:, 2] - mosaic_bboxes[:, 0]
             h = mosaic_bboxes[:, 3] - mosaic_bboxes[:, 1]
@@ -540,10 +486,12 @@ class CachedMosaic(tvt_v2.Transform):
             if with_mask and all_masks:
                 all_masks_cat = torch.cat(all_masks, dim=0)
                 all_masks_cat = all_masks_cat[valid]
+            else:
+                all_masks_cat = None
         elif with_mask and all_masks:
             all_masks_cat = torch.cat(all_masks, dim=0)
         else:
-            all_masks_cat = None  # type: ignore[assignment]
+            all_masks_cat = None
 
         mosaic_masks = all_masks_cat if (with_mask and all_masks) else None
         return mosaic_img.clamp(0, 1), mosaic_bboxes, mosaic_labels, mosaic_masks
@@ -556,7 +504,7 @@ class CachedMosaic(tvt_v2.Transform):
         target_h: int,
         target_w: int,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]:
-        """Resize image with keep-ratio and center padding (matching upstream LetterBox).
+        """Resize image with keep-ratio and center padding.
 
         Returns:
             image: (C, target_h, target_w) letterboxed.
@@ -577,7 +525,7 @@ class CachedMosaic(tvt_v2.Transform):
         pad_left = pad_w // 2
         pad_top = pad_h // 2
 
-        canvas = torch.full((3, target_h, target_w), fill_val, dtype=image.dtype, device=image.device)
+        canvas = torch.full((image.shape[0], target_h, target_w), fill_val, dtype=image.dtype, device=image.device)
         canvas[:, pad_top : pad_top + new_h, pad_left : pad_left + new_w] = resized
 
         if bboxes.numel() > 0:
@@ -601,16 +549,13 @@ class CachedMosaic(tvt_v2.Transform):
         out_h: int,
         out_w: int,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor | None]:
-        """Apply center-based random affine crop matching upstream RandomPerspective.
+        """Apply center-based random affine crop.
+
+        Reference: https://github.com/Megvii-BaseDetection/YOLOX/blob/main/yolox/data/data_augment.py
 
         For mosaic input (2x canvas): crops a variable-size window from the center
         and resizes to (out_h, out_w).  For pass-through input (1x): applies
         random zoom/pan within the same canvas size.
-
-        The affine is equivalent to upstream's ``M = T @ R @ C`` with:
-          - C: center input at origin
-          - R: scale by ``s ∈ [1-self.scale, 1+self.scale]`` (no rotation)
-          - T: translate to ``(0.5 ± self.translate) * output_size``
 
         Args:
             image: (C, in_h, in_w) input image.
@@ -626,40 +571,48 @@ class CachedMosaic(tvt_v2.Transform):
         _, in_h, in_w = image.shape
         fill_val = self._fill_val_normalised()
 
+        # Sample random scale and translation
         s = torch.empty(1).uniform_(1 - self.scale, 1 + self.scale).item()
         tx_frac = torch.empty(1).uniform_(0.5 - self.translate, 0.5 + self.translate).item()
         ty_frac = torch.empty(1).uniform_(0.5 - self.translate, 0.5 + self.translate).item()
 
+        # Compute crop window size in input coords
         crop_w = round(out_w / s)
         crop_h = round(out_h / s)
 
+        # Compute crop origin (center-biased)
         x_start = round(-tx_frac * out_w / s + in_w / 2)
         y_start = round(-ty_frac * out_h / s + in_h / 2)
         x_end = x_start + crop_w
         y_end = y_start + crop_h
 
-        crop = torch.full((3, crop_h, crop_w), fill_val, dtype=image.dtype, device=image.device)
+        # Extract crop from input (with fill for out-of-bounds regions)
+        crop = torch.full((image.shape[0], crop_h, crop_w), fill_val, dtype=image.dtype, device=image.device)
 
         src_x1 = max(x_start, 0)
         src_y1 = max(y_start, 0)
         src_x2 = min(x_end, in_w)
         src_y2 = min(y_end, in_h)
 
+        dst_x1 = src_x1 - x_start
+        dst_y1 = src_y1 - y_start
+        dst_x2 = dst_x1 + (src_x2 - src_x1)
+        dst_y2 = dst_y1 + (src_y2 - src_y1)
+
         if src_x2 > src_x1 and src_y2 > src_y1:
-            dst_x1 = src_x1 - x_start
-            dst_y1 = src_y1 - y_start
-            dst_x2 = dst_x1 + (src_x2 - src_x1)
-            dst_y2 = dst_y1 + (src_y2 - src_y1)
             crop[:, dst_y1:dst_y2, dst_x1:dst_x2] = image[:, src_y1:src_y2, src_x1:src_x2]
 
+        # Resize crop to output size
         if crop_h != out_h or crop_w != out_w:
             output = F.resize(crop, [out_h, out_w], interpolation=F.InterpolationMode.BILINEAR, antialias=True)
         else:
             output = crop
 
+        # Effective scale factors from input crop to output
         effective_sx = out_w / crop_w
         effective_sy = out_h / crop_h
 
+        # Transform bounding boxes
         if bboxes.numel() > 0:
             new_bboxes = bboxes.float().clone()
             new_bboxes[:, 0] = (bboxes[:, 0].float() - x_start) * effective_sx
@@ -667,9 +620,11 @@ class CachedMosaic(tvt_v2.Transform):
             new_bboxes[:, 2] = (bboxes[:, 2].float() - x_start) * effective_sx
             new_bboxes[:, 3] = (bboxes[:, 3].float() - y_start) * effective_sy
 
+            # Clip to output bounds
             new_bboxes[:, 0::2] = new_bboxes[:, 0::2].clamp(0, out_w)
             new_bboxes[:, 1::2] = new_bboxes[:, 1::2].clamp(0, out_h)
 
+            # Filter degenerate boxes
             new_w = new_bboxes[:, 2] - new_bboxes[:, 0]
             new_h = new_bboxes[:, 3] - new_bboxes[:, 1]
 
@@ -686,6 +641,7 @@ class CachedMosaic(tvt_v2.Transform):
             new_bboxes = new_bboxes[valid]
             labels = labels[valid]
 
+            # Transform masks
             if masks is not None and masks.numel() > 0:
                 mask_crop = torch.zeros(
                     (masks.shape[0], crop_h, crop_w),
@@ -710,17 +666,13 @@ class CachedMosaic(tvt_v2.Transform):
     @typing.no_type_check
     def forward(self, *_inputs: BaseSample) -> BaseSample:
         """Apply CachedMosaic with random perspective crop. Output is always img_scale."""
-        assert len(_inputs) == 1, "Only single sample input is supported"  # noqa: S101
+        if len(_inputs) != 1:
+            msg = "Only single sample input is supported"
+            raise ValueError(msg)
         inputs = _inputs[0]
 
-        if not self._cache_frozen:
-            self.results_cache.append(_clone_for_cache(inputs))
-            if len(self.results_cache) > self.max_cached_images:
-                idx = int(torch.randint(0, len(self.results_cache), (1,)).item()) if self.random_pop else 0
-                self.results_cache.pop(idx)
-        elif self.results_cache and torch.rand(1).item() < self._refresh_rate:
-            replace_idx = int(torch.randint(0, len(self.results_cache), (1,)).item())
-            self.results_cache[replace_idx] = _clone_for_cache(inputs)
+        # Cache management (lightweight clone instead of deepcopy)
+        self._update_cache(_clone_for_cache(inputs))
 
         target_h, target_w = self.img_scale
         with_mask = hasattr(inputs, "masks") and inputs.masks is not None
@@ -743,6 +695,7 @@ class CachedMosaic(tvt_v2.Transform):
                 target_w,
             )
         else:
+            # Non-mosaic path: letterbox resize + same random perspective
             img_lb, bboxes_lb, masks_lb = self._letterbox_resize(
                 inputs.image,
                 inputs.bboxes,
@@ -770,7 +723,7 @@ class CachedMosaic(tvt_v2.Transform):
                     (0, target_h, target_w),
                     dtype=torch.uint8,
                     device=inputs.image.device,
-                )
+                ),
             )
         inputs.img_info = _resized_crop_image_info(inputs.img_info, (target_h, target_w))
         return inputs
@@ -790,7 +743,7 @@ class CachedMosaic(tvt_v2.Transform):
         )
 
 
-class CachedMixUp(tvt_v2.Transform):
+class CachedMixUp(CacheableMixin, tvt_v2.Transform):
     """Geometry-preserved MixUp augmentation for detection / instance segmentation.
 
     Blends the current image with a cached image using alpha blending without
@@ -853,8 +806,7 @@ class CachedMixUp(tvt_v2.Transform):
         self.max_cached_images = max_cached_images
         self.random_pop = random_pop
         self.prob = p
-
-        self.results_cache: list[_CachedSample] = []
+        self._init_cache()
 
     def _get_cached_index(self) -> int:
         """Return index of a cached sample with non-empty bboxes."""
@@ -908,14 +860,13 @@ class CachedMixUp(tvt_v2.Transform):
     @typing.no_type_check
     def forward(self, *_inputs: BaseSample) -> BaseSample:
         """Apply MixUp transform using pure torch operations."""
-        assert len(_inputs) == 1, "Multiple inputs not supported"  # noqa: S101
+        if len(_inputs) != 1:
+            msg = "Multiple inputs not supported"
+            raise ValueError(msg)
         inputs = _inputs[0]
 
-        # Cache management
-        self.results_cache.append(_clone_for_cache(inputs))
-        if len(self.results_cache) > self.max_cached_images:
-            pop_idx = int(torch.randint(0, len(self.results_cache), (1,)).item()) if self.random_pop else 0
-            self.results_cache.pop(pop_idx)
+        # Cache management (lightweight clone instead of deepcopy)
+        self._update_cache(_clone_for_cache(inputs))
 
         # Early returns
         if len(self.results_cache) <= 1:
@@ -924,7 +875,8 @@ class CachedMixUp(tvt_v2.Transform):
         if torch.rand(1).item() > self.prob:
             return inputs
 
-        # Get cached sample
+        # Get cached sample (read-only: mixup creates new tensors via interpolation/concat,
+        # never mutates cached.image/bboxes/label/masks in place)
         cache_idx = self._get_cached_index()
         cached = self.results_cache[cache_idx]
 

@@ -6,7 +6,6 @@ import { BoundingBoxTool } from './bounding-box-tool/bounding-box-tool.component
 import { MagneticLasso } from './magnetic-lasso/magnetic-lasso.component';
 import { PolygonTool } from './polygon-tool/polygon-tool.component';
 import { SegmentAnythingTool } from './segment-anything-tool/segment-anything-tool.component';
-import { SSIMTool } from './ssim-tool/ssim-tool.component';
 import { usePreloadWebworkers } from './use-preload-webworkers.hook';
 
 export const ToolManager = () => {
@@ -33,9 +32,10 @@ export const ToolManager = () => {
         return <MagneticLasso />;
     }
 
-    if (activeTool === 'ssim') {
-        return <SSIMTool />;
-    }
+    // TODO: Disable for 3.0, enable for 3.1 after improvements (needs a sidebar to tweak threshold)
+    // if (activeTool === 'ssim') {
+    //     return <SSIMTool />;
+    // }
 
     return null;
 };

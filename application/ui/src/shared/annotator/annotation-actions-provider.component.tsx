@@ -55,6 +55,30 @@ const filterOutAnnotationWithEmptyLabel = (annotations: Annotation[]): Annotatio
     return annotations.filter((annotation) => annotation.labels.some((label) => label.id !== EMPTY_LABEL_ID));
 };
 
+export const syncAnnotationLabelsWithProjectLabels = (
+    annotations: Annotation[],
+    projectLabels: Label[]
+): Annotation[] => {
+    const labelMap = new Map(projectLabels.map((label) => [label.id, label]));
+
+    return annotations.map((annotation) => ({
+        ...annotation,
+        labels: annotation.labels.flatMap((annotationLabel) => {
+            const projectLabel = labelMap.get(annotationLabel.id);
+
+            if (projectLabel === undefined) {
+                return [];
+            }
+
+            if (annotationLabel.probability === undefined) {
+                return [projectLabel];
+            }
+
+            return [{ ...projectLabel, probability: annotationLabel.probability }];
+        }),
+    }));
+};
+
 export const AnnotationActionsProvider = ({
     children,
     initialAnnotationsDTO,
@@ -187,8 +211,19 @@ export const AnnotationActionsProvider = ({
         await saveAnnotations(serverFormattedAnnotationsWithoutConfidences, subset);
     };
 
+    const syncedAnnotations = useMemo(
+        () => syncAnnotationLabelsWithProjectLabels(annotations, projectLabels),
+        [annotations, projectLabels]
+    );
+    const syncedPredictions = useMemo(
+        () => syncAnnotationLabelsWithProjectLabels(predictions, projectLabels),
+        [predictions, projectLabels]
+    );
+
+    const annotationsToRender = mode === 'annotation' ? syncedAnnotations : syncedPredictions;
+
     const submitAnnotations = async (subset: DatasetSubset) => {
-        const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
+        const filteredAnnotations = filterOutAnnotationWithEmptyLabel(syncedAnnotations);
         const serverAnnotations = mapLocalAnnotationsToServer(filteredAnnotations);
 
         await saveAnnotations(serverAnnotations, subset);
@@ -202,19 +237,17 @@ export const AnnotationActionsProvider = ({
     }, [annotations, initialAnnotationsDTO]);
 
     const hasEmptyLabelSelection = useMemo(() => {
-        return annotations.some((annotation) => annotation.labels.some((label) => label.id === EMPTY_LABEL_ID));
-    }, [annotations]);
+        return syncedAnnotations.some((annotation) => annotation.labels.some((label) => label.id === EMPTY_LABEL_ID));
+    }, [syncedAnnotations]);
 
     const hasInvalidAnnotation = useMemo(() => {
-        return annotations.some((annotation) => annotation.labels.length === 0);
-    }, [annotations]);
+        return syncedAnnotations.some((annotation) => annotation.labels.length === 0);
+    }, [syncedAnnotations]);
 
     const canSubmit =
         mode === 'prediction'
             ? predictions.length > 0
             : !hasInvalidAnnotation && (hasChangedAnnotations || hasEmptyLabelSelection);
-
-    const annotationsToRender = mode === 'annotation' ? annotations : predictions;
     const isReadOnlyMode = isReadOnly || mode === 'prediction';
 
     return (

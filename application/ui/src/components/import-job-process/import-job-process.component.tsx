@@ -6,6 +6,7 @@ import { useImportJobStatus } from 'hooks/api/jobs/use-import-job-status.hook';
 import { getJobProgress, isJobPending } from 'hooks/api/util';
 import { isEmpty } from 'lodash-es';
 
+import { ThreeDotsFlashing } from '../../shared/components/three-dots-flashing/three-dots-flashing.component';
 import { CircularProgress } from '../circular-progress/circular-progress.component';
 
 import classes from './import-job-process.module.scss';
@@ -53,7 +54,10 @@ export const ImportJobProcess = ({ jobId, fileName, message, onError, onSuccess 
             {isPreparingJobLoading && <Loading mode='inline' size='L' style={{ height: 'auto' }} />}
 
             <Flex direction='column' alignItems='center' justifyContent='center'>
-                <Text UNSAFE_className={classes.title}>Preparing</Text>
+                <Text UNSAFE_className={classes.title}>
+                    Preparing
+                    <ThreeDotsFlashing />
+                </Text>
                 <Text UNSAFE_className={classes.description}>{message}</Text>
 
                 <Text marginTop='size-100'>{fileName}</Text>

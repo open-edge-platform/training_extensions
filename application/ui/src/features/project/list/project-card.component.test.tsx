@@ -11,7 +11,7 @@ import { API_BASE_URL } from '../../../api/client';
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
 import { ProjectCard } from './project-card.component';
-import { formatCreationDate } from './util';
+import { formatCreationDate, getProjectTypeTitle } from './util';
 
 describe('ProjectCard', () => {
     const mockProject = getMockedProject({
@@ -137,5 +137,21 @@ describe('ProjectCard', () => {
         render(<ProjectCard item={classificationProject} projectNames={[]} />);
 
         expect(await screen.findByText('Multi-label classification')).toBeInTheDocument();
+    });
+});
+
+describe('getProjectTypeTitle', () => {
+    it('returns undefined when task is missing', () => {
+        expect(getProjectTypeTitle()).toBeUndefined();
+    });
+
+    it('returns multi-label classification for non-exclusive classification tasks', () => {
+        expect(
+            getProjectTypeTitle({
+                task_type: 'classification',
+                exclusive_labels: false,
+                labels: [],
+            })
+        ).toBe('Multi-label classification');
     });
 });

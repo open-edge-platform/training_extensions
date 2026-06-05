@@ -37,7 +37,7 @@ describe('useUploadProgress', () => {
             result.current.startUploadProgress([makeFile('a.jpg')]);
         });
 
-        expect(await screen.findByText('Uploading 1 item(s)...')).toBeVisible();
+        expect(await screen.findByText('Uploading 1 item...')).toBeVisible();
         expect(screen.getByLabelText('Loading...')).toBeVisible();
     });
 
@@ -61,7 +61,7 @@ describe('useUploadProgress', () => {
             result.current.finishUploadProgress();
         });
 
-        expect(await screen.findByText('Uploaded 1 item(s)')).toBeVisible();
+        expect(await screen.findByText('Uploaded 1 item')).toBeVisible();
         expect(screen.queryByLabelText('Loading...')).toBeNull();
     });
 
@@ -73,7 +73,7 @@ describe('useUploadProgress', () => {
             result.current.setItemUploaded(ids[0]);
         });
 
-        expect(await screen.findByText('Uploading 3 item(s)... (1 succeeded)')).toBeVisible();
+        expect(await screen.findByText('Uploading 3 items... (1 succeeded)')).toBeVisible();
     });
 
     it('shows only failed count when there are no successes yet', async () => {
@@ -84,7 +84,7 @@ describe('useUploadProgress', () => {
             result.current.setItemFailed(ids[0], 'bad');
         });
 
-        expect(await screen.findByText('Uploading 3 item(s)... (1 failed)')).toBeVisible();
+        expect(await screen.findByText('Uploading 3 items... (1 failed)')).toBeVisible();
     });
 
     it('shows both counts when there are mixed results', async () => {
@@ -96,7 +96,7 @@ describe('useUploadProgress', () => {
             result.current.setItemFailed(ids[1], 'bad');
         });
 
-        expect(await screen.findByText('Uploading 3 item(s)... (1 succeeded, 1 failed)')).toBeVisible();
+        expect(await screen.findByText('Uploading 3 items... (1 succeeded, 1 failed)')).toBeVisible();
     });
 
     it('finishes upload progress and shows success toast', async () => {
@@ -116,7 +116,7 @@ describe('useUploadProgress', () => {
             failed: 0,
             isUploading: false,
         });
-        expect(await screen.findByText('Uploaded 2 item(s)')).toBeVisible();
+        expect(await screen.findByText('Uploaded 2 items')).toBeVisible();
     });
 
     it('finishes upload progress and shows warning toast for mixed results', async () => {
@@ -129,7 +129,7 @@ describe('useUploadProgress', () => {
             result.current.finishUploadProgress();
         });
 
-        expect(await screen.findByText('Uploaded 1 item(s), 1 failed')).toBeVisible();
+        expect(await screen.findByText('Uploaded 1 item, 1 failed')).toBeVisible();
     });
 
     it('finishes upload progress and shows error toast when all fail', async () => {
@@ -142,7 +142,7 @@ describe('useUploadProgress', () => {
             result.current.finishUploadProgress();
         });
 
-        expect(await screen.findByText('Failed to upload 2 item(s)')).toBeVisible();
+        expect(await screen.findByText('Failed to upload 2 items')).toBeVisible();
     });
 
     it('appends items across subsequent uploads (persists history)', () => {

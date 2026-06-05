@@ -429,6 +429,11 @@ class DataModule(LightningDataModule):
         dataset = self._get_dataset(config.subset_name)
         sampler = instantiate_sampler(config.sampler, dataset=dataset, batch_size=config.batch_size)
 
+        # Pre-populate cached augmentation caches (CachedMosaic, CachedMixUp)
+        # before workers start, so all workers inherit full, diverse caches.
+        if config.num_workers > 0 and hasattr(dataset.transforms, "prepare"):
+            dataset.transforms.prepare(dataset)
+
         common_args = {
             "dataset": dataset,
             "batch_size": config.batch_size,

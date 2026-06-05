@@ -1,6 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Unit tests for CachedMosaic, CachedMixUp, and RandomIoUCrop transforms."""
+"""Unit tests for CachedMosaic, CachedMixUp, RandomIoUCrop, and _clone_for_cache."""
 
 from __future__ import annotations
 
@@ -9,8 +9,9 @@ import torch
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from torchvision import tv_tensors
 
+from getitune.data.augmentation.cache import _clone_for_cache
 from getitune.data.augmentation.transforms import CachedMixUp, CachedMosaic, RandomIoUCrop
-from getitune.data.entity.sample import InstanceSegmentationSample
+from getitune.data.entity.sample import DetectionSample, InstanceSegmentationSample
 
 
 # ---------------------------------------------------------------------------
@@ -71,16 +72,16 @@ class TestCachedMosaicInit:
 class TestCachedMosaicForward:
     """Functional tests for CachedMosaic augmentation."""
 
-    def test_cache_too_small_returns_img_scale(self):
-        """With fewer than 4 cached images, forward applies letterbox+affine (output is img_scale)."""
+    def test_cache_too_small_returns_input(self):
+        """With fewer than 4 cached images, forward returns img_scale (non-mosaic path)."""
         mosaic = CachedMosaic(img_scale=(32, 32), p=1.0, max_cached_images=10)
         sample = _make_det_sample(h=32, w=32)
         result = mosaic(sample)
-        # After first call, cache has 1 item → no mosaic but still letterbox+affine → img_scale output
+        # After first call, cache has 1 item → non-mosaic path → output is img_scale
         assert result.image.shape[-2:] == (32, 32)
 
     def test_mosaic_applied_after_cache_fills(self):
-        """After 4+ samples cached, mosaic produces img_scale output (with built-in affine crop)."""
+        """After 4+ samples cached, mosaic produces img_scale output (with perspective crop)."""
         mosaic = CachedMosaic(img_scale=(32, 32), p=1.0, max_cached_images=40)
         for _ in range(4):
             sample = _make_det_sample(h=32, w=32, n_boxes=2)
@@ -88,7 +89,7 @@ class TestCachedMosaicForward:
         # After 4 calls, cache is full enough; 5th call should produce mosaic
         sample = _make_det_sample(h=32, w=32, n_boxes=2)
         result = mosaic(sample)
-        # Output is always img_scale (built-in affine crop from 2x → 1x)
+        # New behavior: mosaic output is always img_scale (perspective crop applied)
         assert result.image.shape[-2:] == (32, 32)
         # Image values should be in [0, 1]
         assert result.image.min() >= 0.0
@@ -104,15 +105,15 @@ class TestCachedMosaicForward:
         assert result.masks is not None
         assert result.masks.shape[-2:] == (32, 32)
 
-    def test_probability_zero_returns_img_scale(self):
-        """With probability=0, mosaic never applies but output is still img_scale (letterbox+affine)."""
+    def test_probability_zero_returns_input(self):
+        """With probability=0, mosaic never applies (even with full cache)."""
         mosaic = CachedMosaic(img_scale=(32, 32), p=0.0, max_cached_images=40)
         for _ in range(5):
             sample = _make_det_sample(h=32, w=32)
             _ = mosaic(sample)
         sample = _make_det_sample(h=32, w=32)
         result = mosaic(sample)
-        # prob=0 → skip mosaic → letterbox+affine → img_scale output
+        # prob=0 → always skip → original size preserved
         assert result.image.shape[-2:] == (32, 32)
 
     def test_cache_eviction(self):
@@ -153,13 +154,11 @@ class TestCachedMosaicForward:
         assert all(0 <= i < 10 for i in indices)
 
     def test_repr(self):
-        mosaic = CachedMosaic(img_scale=(320, 320), p=0.8, scale=0.5, translate=0.1)
+        mosaic = CachedMosaic(img_scale=(320, 320), p=0.8)
         r = repr(mosaic)
         assert "CachedMosaic" in r
         assert "320" in r
         assert "0.8" in r
-        assert "scale=0.5" in r
-        assert "translate=0.1" in r
 
 
 # =====================================================================
@@ -310,3 +309,48 @@ class TestRandomIoUCrop:
         result = crop(image)
         # Single input + skip → returns single tensor
         assert isinstance(result, torch.Tensor)
+
+
+# =====================================================================
+# _clone_for_cache Tests
+# =====================================================================
+class TestCloneForCache:
+    """Tests for _clone_for_cache utility function."""
+
+    def test_clone_detection_sample(self):
+        """Clone a DetectionSample (no masks) into _CachedSample."""
+        sample = DetectionSample(
+            image=tv_tensors.Image(torch.rand(3, 64, 64)),
+            dm_image_info=DmImageInfo(height=64, width=64),
+            bboxes=tv_tensors.BoundingBoxes(  # type: ignore[no-matching-overload]
+                torch.tensor([[5, 5, 25, 25], [30, 30, 55, 55]], dtype=torch.float32),
+                format=tv_tensors.BoundingBoxFormat.XYXY,
+                canvas_size=(64, 64),
+            ),
+            label=torch.tensor([0, 1], dtype=torch.long),
+        )
+        cached = _clone_for_cache(sample)
+
+        assert torch.equal(cached.image, sample.image)
+        assert torch.equal(cached.bboxes, sample.bboxes)
+        assert sample.label is not None
+        assert torch.equal(cached.label, sample.label)
+        assert cached.masks is None
+        # Verify it's a clone (not the same tensor)
+        assert cached.image.data_ptr() != sample.image.data_ptr()
+
+    def test_clone_instance_segmentation_sample(self):
+        """Clone an InstanceSegmentationSample (with masks) into _CachedSample."""
+        sample = _make_det_sample(h=64, w=64, n_boxes=3)
+        cached = _clone_for_cache(sample)
+
+        assert torch.equal(cached.image, sample.image)
+        assert torch.equal(cached.bboxes, sample.bboxes)
+        assert sample.label is not None
+        assert torch.equal(cached.label, sample.label)
+        assert cached.masks is not None
+        assert sample.masks is not None
+        assert torch.equal(cached.masks, sample.masks)
+        # Verify cloned (not the same tensor)
+        assert cached.image.data_ptr() != sample.image.data_ptr()
+        assert cached.masks.data_ptr() != sample.masks.data_ptr()

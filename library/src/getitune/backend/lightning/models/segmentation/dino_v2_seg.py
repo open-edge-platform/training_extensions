@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import os
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
@@ -93,7 +94,7 @@ class DinoV2Seg(LightningSegmentationModel):
             parts = urlparse(self.pretrained_weights[self.model_name])
             filename = Path(parts.path).name
 
-            cache_dir = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
+            cache_dir = Path(os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"])
             cache_file = cache_dir / filename
             if not Path.exists(cache_file):
                 download_url_to_file(self.pretrained_weights[self.model_name], cache_file, "", progress=True)

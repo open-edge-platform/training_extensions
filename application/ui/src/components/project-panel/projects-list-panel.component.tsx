@@ -3,6 +3,7 @@
 
 import {
     ActionButton,
+    Badge,
     ButtonGroup,
     Content,
     Dialog,
@@ -24,16 +25,17 @@ import { useNavigate } from 'react-router';
 
 import { paths } from '../../constants/paths';
 import { MenuActions } from '../../features/project/list/menu-actions/menu-actions.component';
+import { getProjectTypeTitle } from '../../features/project/list/util';
 import { ProjectThumbnail } from './project-thumbnail/project-thumbnail.component';
 import { ProjectsList } from './projects-list.component';
 
 import classes from './projects-list.module.scss';
 
-interface SelectedProjectProps {
+type SelectedProjectProps = {
     name: string;
     id: string | undefined;
     isActive: boolean;
-}
+};
 
 const SelectedProjectButton = ({ name, id, isActive }: SelectedProjectProps) => {
     return (
@@ -54,7 +56,7 @@ const SelectedProjectButton = ({ name, id, isActive }: SelectedProjectProps) => 
                 />
             </View>
             <Flex direction={'column'} minWidth={0}>
-                <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.projectName}>
+                <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.selectedProjectName}>
                     <span title={name}>{name}</span>
                 </View>
                 {isActive ? <Tag className={classes.statusTag} text={'Active'} /> : null}
@@ -94,6 +96,8 @@ export const ProjectsListPanel = () => {
 
     const otherProjectNames = otherProjects.map(({ name }) => name);
 
+    const taskType = getProjectTypeTitle(selectedProject?.task);
+
     const handleDeleted = () => {
         navigate(paths.project.index({}));
     };
@@ -123,9 +127,18 @@ export const ProjectsListPanel = () => {
                                 width={'size-1000'}
                             />
                             <View width={'100%'} position={'relative'}>
-                                <Heading UNSAFE_style={{ textAlign: 'center' }} level={2} marginBottom={0}>
-                                    {selectedProjectName}
-                                </Heading>
+                                <Flex direction={'column'} alignItems={'center'} gap={'size-50'}>
+                                    <Heading UNSAFE_className={classes.dialogProjectName} level={2} marginBottom={0}>
+                                        {selectedProjectName}
+                                    </Heading>
+
+                                    {taskType !== undefined && (
+                                        <Badge variant={'neutral'}>
+                                            <Text>{taskType}</Text>
+                                        </Badge>
+                                    )}
+                                </Flex>
+
                                 <MenuActions
                                     projectId={selectedProject.id}
                                     projectName={selectedProject.name}
@@ -149,7 +162,7 @@ export const ProjectsListPanel = () => {
                     <>
                         <Divider size={'S'} marginBottom={'size-100'} marginTop={0} />
 
-                        <Content>
+                        <Content margin={0}>
                             <ProjectsList projects={otherProjects} />
                         </Content>
                     </>

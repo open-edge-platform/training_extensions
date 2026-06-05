@@ -6,10 +6,14 @@ from typing import cast
 from sqlalchemy import CursorResult, Select, delete, func, select
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB
+from app.db.schema import DatasetItemDB, MediaDB
 from app.models import MediaType
 
-from .filters import _apply_annotation_status_filter_with_video_support, _apply_subset_filter
+from .filters import (
+    _apply_annotation_status_filter_with_video_support,
+    _apply_label_filter_with_video_support,
+    _apply_subset_filter,
+)
 
 
 class MediaRepository:
@@ -64,8 +68,7 @@ class MediaRepository:
         stmt = self._apply_date_filters(stmt, start_date, end_date)
         stmt = _apply_annotation_status_filter_with_video_support(stmt, annotation_status)
         stmt = _apply_subset_filter(stmt, subset)
-        if label_ids:
-            stmt = stmt.join(DatasetItemLabelDB, isouter=True).where(DatasetItemLabelDB.label_id.in_(label_ids))
+        stmt = _apply_label_filter_with_video_support(stmt, label_ids)
         return self.db.scalar(stmt) or 0
 
     def list_items(  # noqa: PLR0913
@@ -85,10 +88,7 @@ class MediaRepository:
         stmt = self._apply_date_filters(stmt, start_date, end_date)
         stmt = _apply_annotation_status_filter_with_video_support(stmt, annotation_status)
         stmt = _apply_subset_filter(stmt, subset)
-        if label_ids:
-            stmt = (
-                stmt.join(DatasetItemLabelDB, isouter=True).where(DatasetItemLabelDB.label_id.in_(label_ids)).distinct()
-            )
+        stmt = _apply_label_filter_with_video_support(stmt, label_ids)
         stmt = stmt.order_by(MediaDB.created_at.desc()).offset(offset).limit(limit)
         return list(self.db.scalars(stmt).all())
 
