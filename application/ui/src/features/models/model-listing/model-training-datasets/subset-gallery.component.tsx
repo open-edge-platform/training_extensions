@@ -16,6 +16,7 @@ import { useAnnotationsQuery } from '../../../../features/dataset/media-preview/
 import { ReadOnlyAnnotator } from '../../../../features/dataset/media-preview/read-only-annotator.component';
 import { getInitialAnnotations } from '../../../../features/dataset/media-preview/utils';
 import { type GalleryViewMode } from '../../../../shared/gallery-view-modes';
+import { ToolProvider } from '../../../../shared/annotator/tool-provider.component';
 import { getDatasetRevisionThumbnailUrl } from '../../../../shared/media-url.utils';
 import { useLoadImageQuery } from '../../../annotator/hooks/use-load-image-query.hook';
 import { getImageData } from '../../../annotator/tools/utils';
@@ -62,24 +63,26 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
                     columns={['1fr']}
                     areas={['header', 'canvas', 'bottom']}
                 >
-                    <AnnotatorProviders
-                        key={mediaItem.id}
-                        mediaItem={mediaItem}
-                        initialAnnotationsDTO={getInitialAnnotations(isUserReviewed, annotationsDTO)}
-                        initialPredictionsDTO={[]}
-                        isUserReviewed={isUserReviewed}
-                        mode={mode}
-                        isReadOnly
-                    >
-                        <ReadOnlyAnnotator
-                            image={image}
+                    <ToolProvider>
+                        <AnnotatorProviders
+                            key={mediaItem.id}
                             mediaItem={mediaItem}
-                            onClose={onClose}
+                            initialAnnotationsDTO={getInitialAnnotations(isUserReviewed, annotationsDTO)}
+                            initialPredictionsDTO={[]}
+                            isUserReviewed={isUserReviewed}
                             mode={mode}
-                            subset={item.subset}
-                            hasAnnotationStatus={false}
-                        />
-                    </AnnotatorProviders>
+                            isReadOnly
+                        >
+                            <ReadOnlyAnnotator
+                                image={image}
+                                mediaItem={mediaItem}
+                                onClose={onClose}
+                                mode={mode}
+                                subset={item.subset}
+                                hasAnnotationStatus={false}
+                            />
+                        </AnnotatorProviders>
+                    </ToolProvider>
                 </Grid>
             </Content>
         </Dialog>
