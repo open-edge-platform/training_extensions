@@ -59,7 +59,8 @@ describe('ExportCompletedJob', () => {
 
         expect(downloadFile).toHaveBeenCalledWith(
             expect.stringContaining(`/api/staged_datasets/${mockExportJob.metadata.dataset_id}/zip`),
-            `dataset_${mockExportJob.metadata.dataset_id}.zip`
+            `dataset_${mockExportJob.metadata.dataset_id}.zip`,
+            'Dataset download started'
         );
     });
 
@@ -135,6 +136,10 @@ describe('ExportCompletedJob', () => {
         const downloadButton = await screen.findByRole('button', { name: 'download dataset' });
         await userEvent.click(downloadButton);
 
-        expect(await screen.findByText('Dataset download started')).toBeVisible();
+        expect(downloadFile).toHaveBeenCalledWith(
+            expect.stringContaining(`/api/staged_datasets/${mockExportJob.metadata.dataset_id}/zip`),
+            `dataset_${mockExportJob.metadata.dataset_id}.zip`,
+            'Dataset download started'
+        );
     });
 });
