@@ -30,7 +30,7 @@ from model_api.models import Model
 
 from getitune.backend.lightning.models.base import DataInputParams
 from getitune.backend.openvino.engine import OVEngine
-from getitune.backend.ultralytics.configurator import Configurator
+from getitune.backend.ultralytics.tools.configurator import Configurator
 from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.backend.ultralytics.models.base import UltralyticsModel
 from getitune.config.data import SamplerConfig, SubsetConfig, TileConfig
@@ -107,9 +107,10 @@ def test_ultralytics_engine_workflow(
 
     work_dir = tmp_path / spec.task.value
 
-    configurator = Configurator.from_recipe(recipe)
-    data_config = configurator.data_config
-    training_config = configurator.config.get("training", {})
+    # Parse recipe to a config dict
+    config = Configurator.convert(recipe)
+    data_config = config["data"]
+    training_config = config.get("training", {})
 
     train_subset = _build_subset_config(data_config, "train")
     val_subset = _build_subset_config(data_config, "val")
@@ -125,7 +126,7 @@ def test_ultralytics_engine_workflow(
         input_size=tuple(data_config["input_size"]),
     )
 
-    model_cfg = deepcopy(configurator.config["model"])
+    model_cfg = deepcopy(config["model"])
     model_cfg["init_args"]["label_info"] = datamodule.label_info.label_names
     model_cfg["init_args"]["data_input_params"] = DataInputParams(
         input_size=cast("tuple[int, int]", datamodule.input_size),
@@ -146,8 +147,8 @@ def test_ultralytics_engine_workflow(
         device="auto",
         train_args=training_config,
         export_args={
-            "confidence_threshold": configurator.config.get("export", {}).get("confidence_threshold", 0.25),
-            "iou_threshold": configurator.config.get("export", {}).get("iou_threshold", 0.5),
+            "confidence_threshold": config.get("export", {}).get("confidence_threshold", 0.25),
+            "iou_threshold": config.get("export", {}).get("iou_threshold", 0.5),
         },
     )
     assert isinstance(engine, UltralyticsEngine)

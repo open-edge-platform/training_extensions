@@ -12,7 +12,7 @@ from warnings import warn
 
 import yaml
 from getitune.backend.lightning.cli.utils import get_getitune_root_path
-from getitune.backend.ultralytics.configurator import Configurator as UltralyticsConfigurator
+from getitune.backend.ultralytics.tools.configurator import Configurator as UltralyticsConfigurator
 from getitune.tools.auto_configurator import AutoConfigurator
 from loguru import logger
 

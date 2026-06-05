@@ -152,7 +152,15 @@ class GetiTuneDataBridgeMixin:
         logger.info(f"CachedMosaic cache warmed and frozen: {len(mosaic_transform.results_cache)} entries")
 
     def _setup_train(self) -> None:
-        """Run parent setup, then fix warmup for small datasets.
+        """Restore workers, run parent setup, then fix warmup for small datasets.
+
+        Ultralytics 8.4+ sets ``self.args.workers = 0`` when the device is
+        CPU (``if self.device.type in {"cpu", "mps"}``) during ``__init__``.
+        For the DataModule bridge this is counter-productive — our
+        CPU-augmentation pipeline (CachedMosaic, colour jitter, etc.) runs
+        in the DataLoader workers and benefits from parallelism.  We
+        restore a sensible default before the parent ``_setup_train``
+        creates the dataloaders.
 
         Ultralytics enforces a minimum of 100 warmup iterations regardless
         of dataset size (``max(round(warmup_epochs * nb), 100)``).  For
@@ -164,6 +172,8 @@ class GetiTuneDataBridgeMixin:
         ``on_train_batch_start`` callback that applies the same LR /
         momentum ramp but respects the natural iteration count.
         """
+        if self._use_getitune_data and self.args.workers == 0:  # type: ignore[attr-defined]
+            self.args.workers = 4  # type: ignore[attr-defined]
         super()._setup_train()  # type: ignore[misc]
 
         if not self._use_getitune_data:

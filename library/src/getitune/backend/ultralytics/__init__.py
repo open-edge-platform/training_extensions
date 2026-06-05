@@ -3,7 +3,7 @@
 
 """Ultralytics backend for getitune."""
 
-from .configurator import Configurator
+from .tools.configurator import Configurator
 from .engine import UltralyticsEngine
 from .models import UltralyticsDetectionModel, UltralyticsInstSegModel, UltralyticsModel
 

@@ -5,7 +5,7 @@ model:
   class_path: getitune.backend.ultralytics.models.detection.UltralyticsDetectionModel
   init_args:
     model_name: yolo26m.yaml
-    pretrained: false
+    pretrained: true
     imgsz: 640
 
 engine:
