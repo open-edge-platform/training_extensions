@@ -65,6 +65,8 @@ const FilterOption = ({ filterParameter, onFilterChange }: FilterOptionProps) =>
                     value={configurableParameter.value}
                     isDisabled={isUnlimited}
                     onChange={handleParameterChange}
+                    hideStepper
+                    width={'size-900'}
                 />
 
                 <Checkbox

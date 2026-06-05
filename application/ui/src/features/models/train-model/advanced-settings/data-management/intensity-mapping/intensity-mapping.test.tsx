@@ -116,7 +116,8 @@ describe('IntensityMapping', () => {
         const maxIntensityInput = screen.getByRole('textbox', { name: 'Change Maximum pixel intensity' });
         expect(maxIntensityInput).toHaveValue('255');
 
-        await userEvent.click(screen.getByRole('button', { name: 'Increase Change Maximum pixel intensity' }));
+        await userEvent.clear(maxIntensityInput);
+        await userEvent.type(maxIntensityInput, '255.1');
 
         expect(maxIntensityInput).toHaveValue('255.1');
     });
