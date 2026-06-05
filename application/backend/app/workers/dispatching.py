@@ -71,6 +71,10 @@ class DispatchingWorker(BaseThreadWorker):
     def _reload_sink(self) -> None:
         self._sink, self._destinations = self._load_sink()
         logger.info(f"Active sink set to {self._sink}")
+        # Drain stale frames from WebRTC consumer queues so that clients immediately
+        # receive fresh predictions after a pipeline or sink change instead of replaying
+        # frames from the previous configuration.
+        self._rtc_stream_broadcaster.clear()
 
     def _on_source_changed(self) -> None:
         """Drop frames cached from the previous source.
@@ -104,8 +108,13 @@ class DispatchingWorker(BaseThreadWorker):
             image_with_visualization = inference_data.visualized_prediction
             prediction = inference_data.prediction
 
+            # Dispatch to the WebRTC stream first so the live preview stays responsive even if
+            # an external sink or data collection step below is momentarily slow (e.g. a blocking
+            # disk or DB write). broadcast() is non-blocking (drop-oldest per consumer).
+            self._rtc_stream_broadcaster.broadcast(image_with_visualization)
+
             # Postprocess and dispatch results to external sinks (folder, MQTT, ROS, webhook, ...).
-            # Skipped when no sink is configured; WebRTC and data collection still run below.
+            # Skipped when no sink is configured; WebRTC and data collection still run regardless.
             if self._sink.sink_type != SinkType.DISCONNECTED:
                 for destination in self._destinations:
                     destination.dispatch(
@@ -113,9 +122,6 @@ class DispatchingWorker(BaseThreadWorker):
                         image_with_visualization=image_with_visualization,
                         predictions=prediction,
                     )
-
-            # Dispatch to WebRTC stream
-            self._rtc_stream_broadcaster.broadcast(image_with_visualization)
 
             # Collect the image to project dataset if needed
             self._data_collector.collect(
