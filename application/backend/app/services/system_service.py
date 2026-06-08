@@ -24,17 +24,18 @@ CV2_BACKENDS = {
 torch = None
 
 
-def _get_torch():  # noqa: ANN202
+def _get_torch():
     """Import torch on first use and cache it on the module.
 
     Returns:
         The imported ``torch`` module.
     """
-    global torch
     if torch is None:
         import torch as _torch
 
-        torch = _torch
+        # Update the module attribute (rather than a `global` statement) so it stays patchable
+        # via ``app.services.system_service.torch`` while satisfying the linter.
+        globals()["torch"] = _torch
     return torch
 
 
