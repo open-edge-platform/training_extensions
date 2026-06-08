@@ -40,12 +40,26 @@ export const StreamContainer = () => {
         }
     };
 
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!(isConnected || canStart)) return;
+
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            void handleClick();
+        }
+    };
+
     return (
         <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
             <div
                 className={classes.canvasContainer}
-                onClick={handleClick}
-                title={isPipelineRunning ? undefined : 'Enable pipeline to start stream'}
+                onClick={isConnected || canStart ? handleClick : undefined}
+                onKeyDown={handleKeyDown}
+                role={'button'}
+                tabIndex={isConnected || canStart ? 0 : -1}
+                aria-disabled={!(isConnected || canStart)}
+                title={isStopped && !isPipelineRunning ? 'Enable pipeline to start stream' : undefined}
+                style={{ cursor: isConnected || canStart ? 'pointer' : 'default' }}
             >
                 {isStopped && (
                     <Flex justifyContent={'center'} alignItems={'center'} UNSAFE_className={classes.backdrop}>
