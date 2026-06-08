@@ -3,11 +3,18 @@
 
 import { Page } from '@playwright/test';
 
+import type {
+    CreateProjectLabelName,
+    CreateProjectRequest,
+    CreateProjectResponse,
+    CreateProjectTaskType,
+} from '../../src/constants/shared-types';
+
 export type CreateProjectInput = {
-    projectName?: string;
+    projectName?: CreateProjectRequest['name'];
     projectNamePrefix?: string;
-    task: 'classification' | 'detection' | 'instance_segmentation';
-    labels: string[];
+    task: CreateProjectTaskType;
+    labels: CreateProjectLabelName[];
 };
 
 export type UploadMediaItem = {
@@ -16,10 +23,7 @@ export type UploadMediaItem = {
     buffer: Buffer;
 };
 
-export type CreatedProject = {
-    id: string;
-    name: string;
-};
+export type CreatedProject = Pick<CreateProjectResponse, 'id' | 'name'>;
 
 export type InferenceSourceSinkConfig = {
     sourceName: string;

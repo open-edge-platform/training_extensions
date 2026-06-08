@@ -22,9 +22,9 @@ const assetsDirectory = path.resolve(dirname, '../assets');
 const DEFAULT_TASK: CreateProjectInput['task'] = 'detection';
 const DEFAULT_LABELS = ['Object'];
 const DEFAULT_INFERENCE_CONFIG: InferenceSourceSinkConfig = {
-    sourceName: 'E2E Source',
-    sinkName: 'E2E Sink',
-    sinkFolderPath: 'e2e-output',
+    sourceName: 'My Source',
+    sinkName: 'My Sink',
+    sinkFolderPath: 'my-output',
     rateLimitSamples: 5,
     rateLimitSeconds: 1,
 };
@@ -33,6 +33,7 @@ const TIMEOUT = {
     mediaVisible: 60000,
     architectureVisible: 30000,
     trainingStarted: 120000,
+    trainedModelReady: 600000,
     connected: 120000,
     capturedMedia: 180000,
 } as const;
@@ -51,12 +52,10 @@ const openPipelineTab = async (page: Page, tabName: 'Input' | 'Output'): Promise
     await page.getByLabel('Pipeline configuration tabs').getByText(tabName).click();
 };
 
-const selectPickerOptionIfVisible = async (page: Page, label: string): Promise<void> => {
+const selectPickerOption = async (page: Page, label: string): Promise<void> => {
     const picker = page.getByLabel(label, { exact: true }).last();
 
-    if (!(await picker.isVisible())) {
-        return;
-    }
+    await expect(picker).toBeVisible({ timeout: TIMEOUT.architectureVisible });
 
     await picker.click();
 
@@ -79,7 +78,7 @@ export const stepCreateProject = async (page: Page, input: CreateProjectInput): 
     await projectPage.getCreateProjectButton().scrollIntoViewIfNeeded();
     await projectPage.getCreateProjectButton().click();
 
-    await page.waitForURL(/\/projects\/[^/]+\/dataset/);
+    await expect(page).toHaveURL(/\/projects\/[^/]+\/dataset/);
 
     return {
         id: getProjectIdFromUrl(page.url()),
@@ -99,11 +98,18 @@ export const stepUploadMedia = async (
     datasetPage: DatasetPage,
     media: UploadMediaItem[] = getDefaultUploadMedia()
 ): Promise<void> => {
-    await datasetPage.uploadFiles(media);
-
     const mediaGrid = datasetPage.getMediaGrid();
     await expect(mediaGrid).toBeVisible();
-    await expect(mediaGrid.getByRole('option').first()).toBeVisible({ timeout: TIMEOUT.mediaVisible });
+
+    const mediaOptions = mediaGrid.getByRole('option');
+    const initialCount = await mediaOptions.count();
+
+    await datasetPage.uploadFiles(media);
+
+    await expect(datasetPage.getUploadFinishedText(media.length)).toBeVisible({ timeout: TIMEOUT.mediaVisible });
+    await expect
+        .poll(async () => mediaOptions.count(), { timeout: TIMEOUT.mediaVisible })
+        .toBeGreaterThanOrEqual(initialCount + media.length);
 };
 
 export const stepOpenFirstItemInAnnotator = async (page: Page, datasetPage: DatasetPage): Promise<void> => {
@@ -138,8 +144,8 @@ export const stepTrainModel = async (page: Page, modelsPage: ModelsPage, project
     await expect(firstArchitecture).toBeVisible({ timeout: TIMEOUT.architectureVisible });
     await firstArchitecture.click();
 
-    await selectPickerOptionIfVisible(page, 'Select dataset');
-    await selectPickerOptionIfVisible(page, 'Select model revision');
+    await selectPickerOption(page, 'Select dataset');
+    await selectPickerOption(page, 'Select model revision');
 
     await modelsPage.startTraining();
 
@@ -184,11 +190,11 @@ export const stepConfigureInferenceSourceAndSink = async (
     await page.getByRole('button', { name: 'Add new sink' }).click();
     await page.getByRole('button', { name: 'Folder' }).click();
 
-    await page.locator('input[name="name"]').fill(config.sinkName);
-    await page.locator('input[aria-roledescription="Number field"]').first().fill(String(config.rateLimitSamples));
-    await page.locator('input[aria-roledescription="Number field"]').nth(1).fill(String(config.rateLimitSeconds));
-    await page.locator('input[name="folder_path"]').fill(config.sinkFolderPath);
-    await page.locator('input[name="output_formats"][value="predictions"]').check();
+    await page.getByRole('textbox', { name: 'Name' }).fill(config.sinkName);
+    await page.getByLabel('Samples').fill(String(config.rateLimitSamples));
+    await page.getByLabel('Seconds').fill(String(config.rateLimitSeconds));
+    await page.getByRole('textbox', { name: 'Folder Path' }).fill(config.sinkFolderPath);
+    await page.getByRole('checkbox', { name: 'Predictions' }).check();
     await page.getByRole('button', { name: 'Add & Connect' }).click();
 };
 
@@ -197,9 +203,12 @@ export const stepStartStreamWithAutoCapture = async (page: Page, streamPage: Str
 
     await expect(pipelineSwitch).toBeVisible({ timeout: TIMEOUT.mediaVisible });
 
-    if ((await pipelineSwitch.getAttribute('aria-label'))?.toLowerCase().includes('enable') === true) {
+    if (!(await pipelineSwitch.isChecked())) {
         await pipelineSwitch.click();
     }
+
+    await expect(pipelineSwitch).toBeChecked();
+    await expect(page.getByLabel('active model')).toBeVisible({ timeout: TIMEOUT.mediaVisible });
 
     await streamPage.startStream();
     await expect(page.getByLabel('Connected')).toBeVisible({ timeout: TIMEOUT.connected });
@@ -214,6 +223,11 @@ export const stepStartStreamWithAutoCapture = async (page: Page, streamPage: Str
     }
 
     await expect(autoCaptureSwitch).toBeChecked();
+};
+
+export const stepWaitForTrainedModelForInference = async (page: Page, projectId: string): Promise<void> => {
+    await page.goto(`/projects/${projectId}/inference`);
+    await expect(page.getByLabel('active model')).toBeVisible({ timeout: TIMEOUT.trainedModelReady });
 };
 
 export const stepWaitForCapturedMediaAndOpenAnnotator = async (page: Page, datasetPage: DatasetPage): Promise<void> => {
@@ -249,7 +263,7 @@ export const runFlowCreateAnnotateTrain = async ({ page, projectNamePrefix }: Fl
     return project;
 };
 
-// Flow 2: create project -> configure inference -> stream auto-capture -> annotate -> train
+// Flow 2: create project -> annotate -> train -> wait for trained model -> stream auto-capture
 export const runFlowStreamAutoCaptureAnnotateTrain = async ({
     page,
     projectNamePrefix,
@@ -266,13 +280,14 @@ export const runFlowStreamAutoCaptureAnnotateTrain = async ({
         labels: DEFAULT_LABELS,
     });
 
-    await page.goto(`/projects/${project.id}/inference`);
-
-    await stepConfigureInferenceSourceAndSink(page);
-    await stepStartStreamWithAutoCapture(page, streamPage);
-    await stepWaitForCapturedMediaAndOpenAnnotator(page, datasetPage);
+    await stepUploadMedia(datasetPage);
+    await stepOpenFirstItemInAnnotator(page, datasetPage);
     await stepAnnotateSingleBox(page, annotatorPage, boundingBoxTool);
     await stepTrainModel(page, modelsPage, project.id);
+
+    await stepWaitForTrainedModelForInference(page, project.id);
+    await stepConfigureInferenceSourceAndSink(page);
+    await stepStartStreamWithAutoCapture(page, streamPage);
 
     return project;
 };

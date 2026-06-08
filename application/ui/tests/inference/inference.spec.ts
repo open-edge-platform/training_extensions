@@ -280,7 +280,7 @@ test.describe('Inference', () => {
                     return HttpResponse.json(
                         {
                             id: 'generated-source-id',
-                            name: 'E2E Source',
+                            name: 'My Source',
                             source_type: 'usb_camera',
                             device_id: 1,
                         },
@@ -291,7 +291,7 @@ test.describe('Inference', () => {
                     return HttpResponse.json(
                         {
                             id: 'generated-sink-id',
-                            name: 'E2E Sink',
+                            name: 'My Sink',
                             sink_type: 'folder',
                             rate_limit: 5,
                             folder_path: 'e2e-output',
@@ -309,7 +309,7 @@ test.describe('Inference', () => {
             );
             await page.goto('/projects/id-1/inference');
 
-            const usbCamera = 'E2E Source';
+            const usbCamera = 'My Source';
 
             network.use(
                 http.get('/api/sources', () => {
@@ -329,7 +329,7 @@ test.describe('Inference', () => {
                     return HttpResponse.json([
                         {
                             id: '1',
-                            name: 'E2E Sink',
+                            name: 'My Sink',
                             sink_type: 'folder',
                             folder_path: 'e2e-output',
                             rate_limit: 5,
@@ -346,7 +346,7 @@ test.describe('Inference', () => {
             await expect(page.getByText('Device: FaceTime HD Camera')).toBeVisible();
 
             await page.getByLabel('Pipeline configuration tabs').getByText('Output').click();
-            await expect(page.getByText('E2E Sink')).toBeVisible();
+            await expect(page.getByText('My Sink')).toBeVisible();
             await expect(page.getByText('Folder path: e2e-output')).toBeVisible();
             await expect(page.getByText('Rate limit: 5 samples every 1 second')).toBeVisible();
             await expect(page.getByText('Output formats: predictions')).toBeVisible();
