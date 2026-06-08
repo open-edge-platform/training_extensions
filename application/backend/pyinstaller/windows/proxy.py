@@ -75,7 +75,7 @@ WinHttpGetProxyForUrl.argtypes = [
     ctypes.POINTER(WINHTTP_AUTOPROXY_OPTIONS),
     ctypes.POINTER(WINHTTP_PROXY_INFO),
 ]
-WinHttpGetProxyForUrl.restype = wintypes.DWORD
+WinHttpGetProxyForUrl.restype = wintypes.BOOL
 
 WinHttpGetIEProxyConfigForCurrentUser = ctypes.windll.winhttp.WinHttpGetIEProxyConfigForCurrentUser  # type: ignore[attr-defined]
 WinHttpGetIEProxyConfigForCurrentUser.argtypes = [ctypes.POINTER(WINHTTP_CURRENT_USER_IE_PROXY_CONFIG)]
@@ -134,7 +134,7 @@ def _autoproxy_resolve(url: str, auto_detect: bool, config_url: str | None) -> s
 
         proxy_info = WINHTTP_PROXY_INFO()
         result = WinHttpGetProxyForUrl(hSession, url, ctypes.byref(options), ctypes.byref(proxy_info))
-        if result != 1:
+        if not result:
             return None
         # Copy out the proxy and free both allocated buffers (bypass list is unused).
         proxy = _take_str(proxy_info.lpszProxy)
