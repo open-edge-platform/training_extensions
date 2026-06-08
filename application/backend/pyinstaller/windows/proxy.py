@@ -35,19 +35,24 @@ class WINHTTP_AUTOPROXY_OPTIONS(ctypes.Structure):
 
 
 class WINHTTP_PROXY_INFO(ctypes.Structure):
+    # lpszProxy / lpszProxyBypass are allocated by WinHttpGetProxyForUrl and must be released with
+    # GlobalFree by the caller. They are kept as raw pointers (c_void_p) so the underlying buffer
+    # can be freed after its value is copied into a Python string.
     _fields_ = [
         ("dwAccessType", wintypes.DWORD),
-        ("lpszProxy", wintypes.LPWSTR),
-        ("lpszProxyBypass", wintypes.LPWSTR),
+        ("lpszProxy", ctypes.c_void_p),
+        ("lpszProxyBypass", ctypes.c_void_p),
     ]
 
 
 class WINHTTP_CURRENT_USER_IE_PROXY_CONFIG(ctypes.Structure):
+    # lpszAutoConfigUrl / lpszProxy / lpszProxyBypass are allocated by
+    # WinHttpGetIEProxyConfigForCurrentUser and must likewise be released with GlobalFree.
     _fields_ = [
         ("fAutoDetect", wintypes.BOOL),
-        ("lpszAutoConfigUrl", wintypes.LPWSTR),
-        ("lpszProxy", wintypes.LPWSTR),
-        ("lpszProxyBypass", wintypes.LPWSTR),
+        ("lpszAutoConfigUrl", ctypes.c_void_p),
+        ("lpszProxy", ctypes.c_void_p),
+        ("lpszProxyBypass", ctypes.c_void_p),
     ]
 
 
@@ -75,6 +80,30 @@ WinHttpGetProxyForUrl.restype = wintypes.DWORD
 WinHttpGetIEProxyConfigForCurrentUser = ctypes.windll.winhttp.WinHttpGetIEProxyConfigForCurrentUser  # type: ignore[attr-defined]
 WinHttpGetIEProxyConfigForCurrentUser.argtypes = [ctypes.POINTER(WINHTTP_CURRENT_USER_IE_PROXY_CONFIG)]
 WinHttpGetIEProxyConfigForCurrentUser.restype = wintypes.BOOL
+
+GlobalFree = ctypes.windll.kernel32.GlobalFree  # type: ignore[attr-defined]
+GlobalFree.argtypes = [wintypes.HGLOBAL]
+GlobalFree.restype = wintypes.HGLOBAL
+
+
+def _take_str(ptr: int | None) -> str | None:
+    """Copy a wide string from a WinHTTP-allocated pointer and free it with GlobalFree.
+
+    WinHTTP allocates the string fields of its proxy structures with GlobalAlloc; the caller
+    owns them and must release them. This reads the value (if any) and always frees the buffer.
+
+    Args:
+        ptr: Address of the WinHTTP-allocated wide string, or ``None``/0 when not set.
+
+    Returns:
+        The decoded string, or ``None`` when the pointer is null.
+    """
+    if not ptr:
+        return None
+    try:
+        return ctypes.wstring_at(ptr)
+    finally:
+        GlobalFree(ctypes.c_void_p(ptr))
 
 
 def _autoproxy_resolve(url: str, auto_detect: bool, config_url: str | None) -> str | None:
@@ -105,7 +134,12 @@ def _autoproxy_resolve(url: str, auto_detect: bool, config_url: str | None) -> s
 
         proxy_info = WINHTTP_PROXY_INFO()
         result = WinHttpGetProxyForUrl(hSession, url, ctypes.byref(options), ctypes.byref(proxy_info))
-        return proxy_info.lpszProxy if result == 1 else None
+        if result != 1:
+            return None
+        # Copy out the proxy and free both allocated buffers (bypass list is unused).
+        proxy = _take_str(proxy_info.lpszProxy)
+        _take_str(proxy_info.lpszProxyBypass)
+        return proxy
     finally:
         WinHttpCloseHandle(hSession)
 
@@ -121,16 +155,18 @@ def _detect_proxy(url: str) -> str | None:
     has_ie_config = bool(WinHttpGetIEProxyConfigForCurrentUser(ctypes.byref(ie_config)))
 
     if has_ie_config:
+        # Copy out and free all allocated strings up front to avoid leaking the WinHTTP buffers.
+        auto_detect = bool(ie_config.fAutoDetect)
+        ie_proxy = _take_str(ie_config.lpszProxy)
+        ie_config_url = _take_str(ie_config.lpszAutoConfigUrl)
+        _take_str(ie_config.lpszProxyBypass)
+
         # A statically configured proxy needs no network round-trips.
-        if ie_config.lpszProxy:
-            return ie_config.lpszProxy
+        if ie_proxy:
+            return ie_proxy
         # Honour an explicit PAC URL and/or auto-detect, but only when enabled.
-        if ie_config.lpszAutoConfigUrl or ie_config.fAutoDetect:
-            return _autoproxy_resolve(
-                url,
-                auto_detect=bool(ie_config.fAutoDetect),
-                config_url=ie_config.lpszAutoConfigUrl,
-            )
+        if ie_config_url or auto_detect:
+            return _autoproxy_resolve(url, auto_detect=auto_detect, config_url=ie_config_url)
         # IE config present but no proxy configured at all: nothing to do.
         return None
 
