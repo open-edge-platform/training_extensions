@@ -18,6 +18,25 @@ CV2_BACKENDS = {
     "Darwin": cv2.CAP_AVFOUNDATION,
 }
 
+# torch is imported lazily on first use to keep server startup fast (importing torch eagerly
+# added several seconds to boot). Kept as a module-level name so tests can patch
+# ``app.services.system_service.torch``.
+torch = None
+
+
+def _get_torch():  # noqa: ANN202
+    """Import torch on first use and cache it on the module.
+
+    Returns:
+        The imported ``torch`` module.
+    """
+    global torch
+    if torch is None:
+        import torch as _torch
+
+        torch = _torch
+    return torch
+
 
 class SystemService:
     """Service to get system information"""
@@ -52,7 +71,7 @@ class SystemService:
         Returns:
             list[DeviceInfo]: List of available devices
         """
-        import torch
+        torch = _get_torch()
 
         # CPU is always available
         devices: list[DeviceInfo] = [DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)]
