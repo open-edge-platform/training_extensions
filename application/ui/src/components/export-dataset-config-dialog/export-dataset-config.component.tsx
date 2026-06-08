@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 
 import {
     Button,
@@ -11,13 +11,15 @@ import {
     Dialog,
     DialogContainer,
     Divider,
+    Flex,
     Form,
     Heading,
     Radio,
     RadioGroup,
+    Text,
     View,
 } from '@geti/ui';
-import { LinkOut } from '@geti/ui/icons';
+import { Alert, LinkOut } from '@geti/ui/icons';
 import { OverlayTriggerState } from '@react-stately/overlays';
 import { useProject } from 'hooks/api/project.hook';
 
@@ -27,6 +29,20 @@ import { MultiSelectList } from '../multi-select-list/multi-select-list.componen
 import { getFormatOptions } from '../util';
 
 import classes from './export-dataset-config.module.scss';
+
+const WarningMessage = () => {
+    return (
+        <Flex alignItems={'start'} marginTop={'size-100'} gap={'size-100'}>
+            <Flex>
+                <Alert className={classes.warningMessageIcon} />
+            </Flex>
+            <Text>
+                Exporting videos is not supported by this dataset format. All annotated frames from videos will be
+                exported as images.
+            </Text>
+        </Flex>
+    );
+};
 
 type ExportDatasetConfigProps = {
     name?: string;
@@ -51,7 +67,11 @@ export const ExportDatasetConfig = ({
     });
 
     const formatOptions = getFormatOptions(selectedProject.task.task_type);
+    const [selectedExportFormat, setSelectedExportFormat] = useState<string | null>(formatOptions.at(0)?.value ?? null);
+
     const labels = selectedProject.task?.labels?.map((label) => ({ id: label.name, name: label.name })) ?? [];
+
+    const isNonGetiFormatSelected = selectedExportFormat !== 'geti';
 
     return (
         <DialogContainer onDismiss={dialogState.close}>
@@ -85,6 +105,7 @@ export const ExportDatasetConfig = ({
                                     name='export_format'
                                     label='Select dataset export format'
                                     defaultValue={formState.export_format}
+                                    onChange={(value) => setSelectedExportFormat(value)}
                                 >
                                     {formatOptions.map((item) => (
                                         <Radio key={item.value} value={item.value}>
@@ -93,6 +114,8 @@ export const ExportDatasetConfig = ({
                                     ))}
                                 </RadioGroup>
                             </Form>
+
+                            {isNonGetiFormatSelected && <WarningMessage />}
 
                             {/* TODO: pending link url
                             https://github.com/open-edge-platform/training_extensions/issues/5512 */}
