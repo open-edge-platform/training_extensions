@@ -443,14 +443,14 @@ class OVModel:
 
         return validation_fn
 
-    def transform_fn(self, data_batch: SampleBatch) -> np.array:
+    def transform_fn(self, data_batch: SampleBatch) -> np.ndarray:
         """Transform data for PTQ.
 
         Args:
             data_batch (SampleBatch): Input data batch.
 
         Returns:
-            np.array: Transformed data.
+            np.ndarray: Transformed data.
         """
         np_data = self._customize_inputs(data_batch)
         image = np_data["inputs"][0]
@@ -459,11 +459,11 @@ class OVModel:
         resized_image = model.input_transform(resized_image)
         return model._change_layout(resized_image)  # noqa: SLF001
 
-    def _read_ptq_config_from_ir(self, ov_model: Model) -> dict[str, Any]:
+    def _read_ptq_config_from_ir(self, ov_model: openvino.Model) -> dict[str, Any]:
         """Generate PTQ configuration from the OpenVINO model metadata.
 
         Args:
-            ov_model (Model): OpenVINO model.
+            ov_model (openvino.Model): OpenVINO model.
 
         Returns:
             dict[str, Any]: PTQ configuration.
@@ -511,7 +511,7 @@ class OVModel:
         """
         raise NotImplementedError
 
-    def compute_metrics(self, metric: Metric | MetricCollection) -> dict:
+    def compute_metrics(self, metric: Metric | MetricCollection) -> dict[str, Any]:
         """Compute metrics using the provided metric object.
 
         Args:
@@ -522,7 +522,7 @@ class OVModel:
         """
         return self._compute_metrics(metric)
 
-    def _compute_metrics(self, metric: Metric | MetricCollection, **compute_kwargs) -> dict:
+    def _compute_metrics(self, metric: Metric | MetricCollection, **compute_kwargs) -> dict[str, Any]:
         """Compute metrics with additional arguments.
 
         Args:
@@ -549,7 +549,7 @@ class OVModel:
         return results
 
     @property
-    def model_adapter_parameters(self) -> dict:
+    def model_adapter_parameters(self) -> dict[str, Any]:
         """Get model parameters for export.
 
         Returns:

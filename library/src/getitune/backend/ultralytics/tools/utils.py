@@ -6,13 +6,13 @@
 from __future__ import annotations
 
 import copy
-from collections.abc import Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, TypeAlias
+from typing import Any, TypeAlias, cast
 
 import yaml
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 
 from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.types.task import TaskType
@@ -30,7 +30,7 @@ ConfigValue: TypeAlias = str | int | float | bool | None | dict[str, "ConfigValu
 
 
 @contextmanager
-def _temporary_resolver(name: str, func: object) -> object:
+def _temporary_resolver(name: str, func: Callable[..., Any]) -> Generator[None, None, None]:
     """Context manager to temporarily register an OmegaConf resolver.
 
     This ensures that the resolver is only active during the context,
@@ -46,7 +46,7 @@ def _temporary_resolver(name: str, func: object) -> object:
     """
     # Save the old resolver (if any)
     had_resolver = OmegaConf.has_resolver(name)
-    old_resolver = vars(OmegaConf)["_get_resolver"](name) if had_resolver else None
+    old_resolver = OmegaConf._get_resolver(name) if had_resolver else None  # noqa: SLF001
 
     try:
         # Register the new resolver
@@ -84,7 +84,7 @@ def load_recipe(recipe_path: Path) -> dict[str, Any]:
 
     recipe_dir = recipe_path.parent
 
-    def _include_yaml(filename: str) -> object:
+    def _include_yaml(filename: str) -> DictConfig:
         """Load a YAML file relative to the recipe directory, returning OmegaConf config."""
         path = (recipe_dir / filename).resolve()
         if not path.exists():
@@ -109,7 +109,8 @@ def load_recipe(recipe_path: Path) -> dict[str, Any]:
 
     # Resolve interpolations first (so we can merge overrides into the actual data)
     with _temporary_resolver("include", _include_yaml):
-        cfg = OmegaConf.to_container(cfg, resolve=True)
+        resolved = OmegaConf.to_container(cfg, resolve=True)
+        cfg = cast("dict[str, Any]", resolved)
 
     # Apply all overrides via merge
     overrides = raw.get("overrides", {})

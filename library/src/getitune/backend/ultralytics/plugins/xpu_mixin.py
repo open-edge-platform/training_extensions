@@ -122,7 +122,9 @@ class XPUAwareTrainerMixin:
         """Clear GPU caches, with an XPU branch."""
         if self.device.type == "xpu":
             if threshold is not None:
-                assert 0 <= threshold <= 1, "Threshold must be between 0 and 1."  # noqa: S101
+                if not 0 <= threshold <= 1:
+                    msg = f"Threshold must be between 0 and 1, got {threshold}"
+                    raise ValueError(msg)
                 if self._get_memory(fraction=True) <= threshold:
                     return
             gc.collect()

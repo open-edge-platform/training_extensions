@@ -245,7 +245,7 @@ class Configurator:
         return instance
 
     @classmethod
-    def convert(cls, recipe_path: PathLike, hyper_parameters: dict | None = None) -> dict:
+    def convert(cls, recipe_path: PathLike, hyper_parameters: dict[str, Any] | None = None) -> dict[str, Any]:
         """Load an Ultralytics recipe, apply hyper-parameters, return config dict.
 
         This is the primary entry point for the application backend. It
@@ -280,7 +280,7 @@ class Configurator:
 
         return configurator.to_config_dict()
 
-    def apply_hyper_parameters(self, hyper_parameters: dict) -> None:
+    def apply_hyper_parameters(self, hyper_parameters: dict[str, Any]) -> None:
         """Apply standard Geti hyper-parameters.
 
         Maps all backend-supported hyperparameters to Ultralytics training args:
@@ -331,7 +331,7 @@ class Configurator:
         self._apply_gradient_accumulation(training.get("gradient_accumulation"), self._training)
 
     @staticmethod
-    def _apply_scheduler(scheduler_cfg: dict | None, train_cfg: dict) -> None:
+    def _apply_scheduler(scheduler_cfg: dict[str, Any] | None, train_cfg: dict[str, Any]) -> None:
         """Map scheduler parameters to Ultralytics training args."""
         if not isinstance(scheduler_cfg, dict):
             return
@@ -344,7 +344,7 @@ class Configurator:
                 train_cfg["warmup_epochs"] = 0.0
 
     @staticmethod
-    def _apply_gradient_clip(gradient_clip_cfg: dict | None, train_cfg: dict) -> None:
+    def _apply_gradient_clip(gradient_clip_cfg: dict[str, Any] | None, train_cfg: dict[str, Any]) -> None:
         """Map gradient clipping to Ultralytics training args."""
         if not isinstance(gradient_clip_cfg, dict):
             return
@@ -357,7 +357,7 @@ class Configurator:
             train_cfg["max_grad_norm"] = 0.0
 
     @staticmethod
-    def _apply_gradient_accumulation(gradient_accum_cfg: dict | None, train_cfg: dict) -> None:
+    def _apply_gradient_accumulation(gradient_accum_cfg: dict[str, Any] | None, train_cfg: dict[str, Any]) -> None:
         """Map gradient accumulation to Ultralytics ``nbs`` parameter."""
         if not isinstance(gradient_accum_cfg, dict):
             return
@@ -372,7 +372,7 @@ class Configurator:
         else:
             train_cfg["nbs"] = int(batch_size)
 
-    def to_config_dict(self) -> dict:
+    def to_config_dict(self) -> dict[str, Any]:
         """Return the config consumed by the application trainer.
 
         Places ``max_epochs`` at the top level so the application trainer
@@ -418,7 +418,7 @@ class Configurator:
         for key, value in flatten_overrides(overrides).items():
             self._set_dot_path(key, value)
 
-    def _set_dot_path(self, key: str, value: object) -> None:
+    def _set_dot_path(self, key: str, value: str | int | float | bool | None | dict[str, Any] | list[Any]) -> None:
         """Set a dot-path key on the appropriate internal store.
 
         Args:
@@ -450,7 +450,9 @@ class Configurator:
             raise KeyError(msg)
 
     @staticmethod
-    def _set_nested(d: dict[str, object], parts: list[str], value: object) -> None:
+    def _set_nested(
+        d: dict[str, Any], parts: list[str], value: str | int | float | bool | None | dict[str, Any] | list[Any]
+    ) -> None:
         """Set a nested key path in a dict, creating intermediate dicts as needed."""
         current = d
         for part in parts[:-1]:
@@ -499,7 +501,14 @@ class Configurator:
         if "input_size" not in data_config:
             msg = "data config is missing 'input_size'"
             raise ValueError(msg)
-        input_size = tuple(data_config["input_size"])
+        input_size_raw = data_config["input_size"]
+        if not isinstance(input_size_raw, (list, tuple)):
+            msg = f"input_size must be list or tuple, got {type(input_size_raw)}"
+            raise TypeError(msg)
+        if len(input_size_raw) != 2:
+            msg = f"input_size must have 2 elements, got {len(input_size_raw)}"
+            raise ValueError(msg)
+        input_size = (int(input_size_raw[0]), int(input_size_raw[1]))
 
         for subset_name in ("train", "val", "test"):
             key = f"{subset_name}_subset"
@@ -530,6 +539,9 @@ class Configurator:
             return self._model
 
         model_config = copy.deepcopy(self._model_config)  # type: ignore[union-attr]
+        if model_config is None:
+            msg = "Model config is not loaded. Ensure the recipe has a 'model' section."
+            raise ValueError(msg)
         if isinstance(label_info, int):
             label_info = LabelInfo.from_num_classes(num_classes=label_info)
         model_config.setdefault("init_args", {})["label_info"] = label_info.as_dict()
@@ -550,7 +562,7 @@ class Configurator:
         data: DataModule | PathLike | None = None,
         work_dir: PathLike = "./getitune-workspace",
         device: str | DeviceType = DeviceType.auto,
-        **engine_kwargs: object,
+        **engine_kwargs,
     ) -> UltralyticsEngine:
         """Instantiate the configured Ultralytics engine."""
         if data is None:

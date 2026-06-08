@@ -40,10 +40,10 @@ dependencies = [
     "pytorchcv==0.0.74",
     "timm==1.0.3",
     "openvino~=2026.2.0",
-    "openvino-model-api @ git+https://github.com/open-edge-platform/model_api.git@e14364644a5940efed73a9b01313f3d3da2eafe1#subdirectory=model_api",
+    "openvino-model-api~=0.4.4",
     "onnx==1.21.0",
     "onnxruntime==1.26.0",
-    "onnxslim>=0.1.71",
+    "onnxslim~=0.1.71",
     "onnxscript==0.6.2",
     "nncf~=3.0",
     "numpy>=2.0",
@@ -110,7 +110,7 @@ xpu = [
     "torchvision==0.25.0+xpu"
 ]
 ultralytics = [
-    "ultralytics==8.4.41",
+    "ultralytics~=8.4.41",
 ]
 
 docs = [

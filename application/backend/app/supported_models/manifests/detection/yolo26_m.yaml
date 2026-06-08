@@ -3,8 +3,8 @@ name: YOLO26-M
 license: AGPL-3.0
 
 pretrained_weights:
-  url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m.pt
-  mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m.pt
+  url: https://storage.geti.intel.com/weights/yolo26m.pt
+  mirror_url: https://storage.geti.intel.com/weights/yolo26m.pt
   sha_sum: 401cea9ab23ad19246ff7744859816bc599f350e93c9dd30367b6f0a0745d0b7
 
 description: "YOLO26-M is the medium Ultralytics YOLO26 detection model. It targets higher accuracy while using the Geti Tune data pipeline for preprocessing and dataset handling."

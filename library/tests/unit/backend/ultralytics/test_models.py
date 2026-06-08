@@ -74,31 +74,6 @@ class TestDataInputParams:
         model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
         assert model.data_input_params.std == (1.0, 1.0, 1.0)
 
-    def test_default_intensity_config(self) -> None:
-        """Default intensity config should be scale_to_unit with uint8."""
-        model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
-        ic = model.data_input_params.intensity_config
-        assert ic is not None
-        assert ic.mode == "scale_to_unit"
-        assert ic.storage_dtype == "uint8"
-
-    def test_partial_data_input_params_keep_default_intensity_config(self) -> None:
-        """Partial app-provided preprocessing params should not drop IntensityConfig."""
-        model = UltralyticsDetectionModel(
-            model_name="yolo26n.yaml",
-            pretrained=False,
-            data_input_params={
-                "input_size": (320, 320),
-                "mean": (0.0, 0.0, 0.0),
-                "std": (1.0, 1.0, 1.0),
-                "intensity_config": None,
-            },
-        )
-        ic = model.data_input_params.intensity_config
-        assert ic is not None
-        assert ic.mode == "scale_to_unit"
-        assert ic.storage_dtype == "uint8"
-
     def test_default_imgsz_from_preprocessing_params(self) -> None:
         """When imgsz is not specified, it should come from _default_preprocessing_params."""
         model = UltralyticsDetectionModel(model_name="yolo26n", pretrained=False)

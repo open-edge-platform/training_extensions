@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 class _YOLOExportable(Protocol):
     """Protocol for the subset of ``ultralytics.YOLO`` used during export."""
 
-    def export(self, **kwargs: object) -> str | Path:
+    def export(self, **kwargs: Any) -> str | Path:  # noqa: ANN401
         """Export the model and return the produced artifact path."""
 
     @property

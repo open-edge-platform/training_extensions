@@ -128,7 +128,7 @@ class TestInitData:
     def test_invalid_data_type_raises(self) -> None:
         with pytest.raises(TypeError, match="data must be PathLike or DataModule"):
             Configurator(
-                data=42,
+                data=42,  # type: ignore[arg-type]
                 model=_DETECTION_MODEL_NAME,
                 task=TaskType.DETECTION,
             )
@@ -219,7 +219,7 @@ class TestInitModel:
         with pytest.raises(TypeError, match="model must be str, PathLike, or UltralyticsModel"):
             Configurator(
                 data=Path("dummy"),
-                model=42,
+                model=42,  # type: ignore[arg-type]
                 task=TaskType.DETECTION,
             )
 
@@ -989,6 +989,7 @@ class TestInstanceSegmentation:
             model=variant,
             task=TaskType.INSTANCE_SEGMENTATION,
         )
+        assert cfg.model_config is not None
         assert cfg.model_config["init_args"]["model_name"] == fname
 
 

@@ -3,8 +3,8 @@ name: YOLO26-N
 license: AGPL-3.0
 
 pretrained_weights:
-  url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt
-  mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt
+  url: https://storage.geti.intel.com/weights/yolo26n.pt
+  mirror_url: https://storage.geti.intel.com/weights/yolo26n.pt
   sha_sum: 9b09cc8bf347f0fc8a5f7657480587f25db09b34bf33b0652110fb03a8ad4fef
 
 description: "YOLO26-N is the nano Ultralytics YOLO26 detection model. It is optimized for fast fine-tuning and low-latency inference while using the Geti Tune data pipeline for preprocessing and dataset handling."

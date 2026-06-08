@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Sequence
 import torch
 from torch.nn import functional
 from torchvision import tv_tensors
+from ultralytics.utils.metrics import ClassifyMetrics, DetMetrics, SegmentMetrics
 
 from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import Prediction, SampleBatch
@@ -38,6 +39,9 @@ if TYPE_CHECKING:
     from getitune.types.types import ANNOTATIONS, DATA, METRICS, MODEL
 
 logger = logging.getLogger(__name__)
+
+# Unified type for ultralytics metrics objects returned by train/val
+UMETRICS = DetMetrics | SegmentMetrics | ClassifyMetrics
 
 
 class _UltralyticsResultLike(Protocol):
@@ -121,7 +125,7 @@ class UltralyticsEngine(Engine):
         lr0: float | None = None,
         patience: int | None = None,
         max_epochs: int | None = None,
-        callbacks: list | None = None,
+        callbacks: list[Any] | None = None,
         **kwargs,
     ) -> METRICS:
         """Train the model via a custom Ultralytics trainer.
@@ -200,7 +204,7 @@ class UltralyticsEngine(Engine):
         self._compute_best_confidence_threshold()
         return self._translate_metrics(results)
 
-    def test(self, checkpoint: PathLike | None = None, metric: object | None = None, **kwargs) -> METRICS:
+    def test(self, checkpoint: PathLike | None = None, metric: Callable[..., Any] | None = None, **kwargs) -> METRICS:
         """Evaluate the model using torchmetrics or the Ultralytics validator.
 
         When a ``metric`` callable is provided **and** a DataModule is
@@ -432,7 +436,9 @@ class UltralyticsEngine(Engine):
         Returns:
             Flat metric dict, e.g. ``{"test/map": 0.75, "test/map_50": 0.90}``.
         """
-        assert self._datamodule is not None  # noqa: S101
+        if self._datamodule is None:
+            msg = "_test_with_torchmetrics requires a DataModule"
+            raise TypeError(msg)
 
         label_info = self._model.label_info or self._datamodule.label_info
         metric = metric_callable(label_info)
@@ -658,7 +664,9 @@ class UltralyticsEngine(Engine):
 
     def _predict_with_datamodule(self, overrides: dict[str, Any]) -> list[Prediction]:
         """Run inference through ``DataModule.predict_dataloader()``."""
-        assert self._datamodule is not None  # guaranteed by caller  # noqa: S101
+        if self._datamodule is None:
+            msg = "_predict_with_datamodule requires a DataModule"
+            raise TypeError(msg)
         overrides.pop("batch", None)
         dataloader = self._datamodule.predict_dataloader()
 
@@ -816,7 +824,7 @@ class UltralyticsEngine(Engine):
 
     @staticmethod
     def _extract_progress_callback(
-        callbacks: list | None,
+        callbacks: list[Any] | None,
     ) -> tuple[Callable[[float], None] | None, float, float]:
         """Extract progress reporting callable from Lightning-style callbacks.
 
@@ -861,7 +869,7 @@ class UltralyticsEngine(Engine):
         overrides.update(kwargs)
         return overrides
 
-    def _translate_metrics(self, results: object) -> dict[str, float]:
+    def _translate_metrics(self, results: UMETRICS | dict[str, Any] | None) -> dict[str, float]:
         """Map Ultralytics metric keys to getitune names.
 
         Translates aggregate metrics via ``metric_keys`` and extracts
@@ -886,7 +894,7 @@ class UltralyticsEngine(Engine):
         return translated
 
     @staticmethod
-    def _add_per_class_metrics(results: object, metrics: dict[str, float]) -> None:
+    def _add_per_class_metrics(results: UMETRICS | dict[str, Any], metrics: dict[str, float]) -> None:
         """Extract per-class metrics from the Ultralytics results object.
 
         Adds keys like ``val/precision/<ClassName>``, ``val/recall/<ClassName>``,

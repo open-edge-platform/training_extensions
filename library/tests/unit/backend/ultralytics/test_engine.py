@@ -358,8 +358,7 @@ class TestModelExporter:
 
         assert exporter.data_input_params.mean == (0.0, 0.0, 0.0)
         assert exporter.data_input_params.std == (1.0, 1.0, 1.0)
-        assert exporter.data_input_params.intensity_config is not None
-        assert exporter.data_input_params.intensity_config.mode == "scale_to_unit"
+        assert exporter.data_input_params.intensity_config is None
 
     def test_default_yolo_preprocessing_values(self, mocker, tmp_path) -> None:
         model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
@@ -419,7 +418,7 @@ class TestPerClassMetrics:
             (0.70, 0.60, 0.65, 0.40),
         ][i]
 
-        metrics = engine._translate_metrics(results)
+        metrics = engine._translate_metrics(results)  # pyrefly: ignore[bad-argument-type]
 
         # Aggregate metrics translated
         assert metrics["val/map_50"] == 0.75
@@ -443,7 +442,7 @@ class TestPerClassMetrics:
             results_dict={"metrics/mAP50(B)": 0.75},
         )
 
-        metrics = engine._translate_metrics(results)
+        metrics = engine._translate_metrics(results)  # pyrefly: ignore[bad-argument-type]
 
         assert metrics["val/map_50"] == 0.75
         # No per-class keys

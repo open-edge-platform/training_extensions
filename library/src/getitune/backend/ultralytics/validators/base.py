@@ -19,6 +19,8 @@ from getitune.backend.ultralytics.data.adapter import UltralyticsDatasetAdapter
 from getitune.backend.ultralytics.data.collate import collate_fn
 
 if TYPE_CHECKING:
+    from ultralytics.engine.trainer import BaseTrainer
+
     from getitune.data.module import DataModule
 
 
@@ -35,7 +37,7 @@ class GetiTuneValidatorMixin:
     _datamodule: DataModule | None = None
     _include_masks: bool = False
 
-    def __call__(self, trainer: object = None, model: object = None) -> dict:
+    def __call__(self, trainer: BaseTrainer | None = None, model: torch.nn.Module | None = None) -> dict:
         """Dispatch to upstream (training) or standalone DataModule validation."""
         if trainer is not None or self._datamodule is None:
             return super().__call__(trainer=trainer, model=model)  # type: ignore[misc]
@@ -52,7 +54,7 @@ class GetiTuneValidatorMixin:
             batch["masks"] = batch["masks"].float()
         return batch
 
-    def _run_standalone_eval(self, model: object) -> dict:
+    def _run_standalone_eval(self, model: torch.nn.Module | None) -> dict:
         """Run validation using DataModule without YAML data config.
 
         Replicates the essential non-training setup from
@@ -78,7 +80,9 @@ class GetiTuneValidatorMixin:
         self.args.half = model.fp16  # type: ignore[attr-defined]
         imgsz = check_imgsz(self.args.imgsz, stride=model.stride)  # type: ignore[attr-defined]
 
-        assert self._datamodule is not None  # guaranteed by caller  # noqa: S101
+        if self._datamodule is None:
+            msg = "Standalone evaluation requires a DataModule"
+            raise TypeError(msg)
         li = self._datamodule.label_info
         self.data = {  # type: ignore[attr-defined]
             "nc": li.num_classes,
@@ -132,7 +136,9 @@ class GetiTuneValidatorMixin:
 
     def _build_adapter_dataloader(self) -> DataLoader:
         """Build a DataLoader from the DataModule's val/test subset."""
-        assert self._datamodule is not None  # guaranteed by caller  # noqa: S101
+        if self._datamodule is None:
+            msg = "_build_adapter_dataloader requires a DataModule"
+            raise TypeError(msg)
         subset = self._datamodule.subsets.get("test") or self._datamodule.subsets["val"]
         adapter = UltralyticsDatasetAdapter(subset, include_masks=self._include_masks)
         return DataLoader(
