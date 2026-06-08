@@ -539,3 +539,18 @@ export const projectPointOnLine = ([startPoint, endPoint]: ProjectLine, point: P
         y: b.y * scale + startPoint.y,
     };
 };
+
+/**
+ * Checks if an image is oversized (has placeholder data).
+ *
+ * For oversized media (> ~268 Mpx), the ImageData.data buffer is a placeholder
+ * whose length doesn't match width * height * 4. This indicates that tools like
+ * the intelligent scissors worker should not be used, as they would fail when
+ * calling cv.matFromImageData.
+ *
+ * @param image - The ImageData to check
+ * @returns true if the image is oversized, false otherwise
+ */
+export const isImageOversized = (image: ImageData): boolean => {
+    return image.data.length !== image.width * image.height * 4;
+};

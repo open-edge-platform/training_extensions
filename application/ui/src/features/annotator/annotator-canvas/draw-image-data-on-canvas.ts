@@ -1,8 +1,10 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { isImageOversized } from '../tools/utils';
+
 export const drawImageDataOnCanvas = (ctx: CanvasRenderingContext2D, image: ImageData): boolean => {
-    if (image.data.length !== image.width * image.height * 4) {
+    if (isImageOversized(image)) {
         return false;
     }
 

@@ -9,7 +9,7 @@ import { differenceWith, isEmpty, isEqual, isNil } from 'lodash-es';
 import { Point, Polygon } from '../../../../shared/types';
 import { usePolygonState } from '../polygon-tool/polygon-state-provider.component';
 import { deleteSegments, ERASER_FIELD_DEFAULT_RADIUS } from '../polygon-tool/utils';
-import { convertToolShapeToGetiShape, getRelativePoint } from '../utils';
+import { convertToolShapeToGetiShape, getRelativePoint, isImageOversized } from '../utils';
 import { useIntelligentScissorsWorker } from './use-intelligent-scissors-worker.hook';
 
 export const usePolygonConfig = ({
@@ -41,7 +41,7 @@ export const usePolygonConfig = ({
         // match width*height*4 — opencv's matFromImageData would throw a numeric
         // Emscripten exception. Skip loading; those tools are disabled for this case.
         if (!isMounted.current || !image) return;
-        if (image.data.length !== image.width * image.height * 4) return;
+        if (isImageOversized(image)) return;
 
         worker?.loadImage(image);
     }, [image, worker]);

@@ -1,8 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect } from 'react';
-
 import { Divider } from '@geti/ui';
 import { partition } from 'lodash-es';
 
@@ -18,12 +16,6 @@ export const AnnotatorTools = () => {
 
     const availableTools = useAvailableTools();
     const [selectionTool, otherTools] = partition(availableTools, (tool) => tool.type === 'selection');
-
-    useEffect(() => {
-        if (activeTool !== null && !availableTools.some((tool) => tool.type === activeTool)) {
-            setActiveTool(availableTools[0]?.type ?? null);
-        }
-    }, [activeTool, availableTools, setActiveTool]);
 
     return (
         <>
