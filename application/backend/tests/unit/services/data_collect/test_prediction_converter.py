@@ -204,8 +204,13 @@ def test_convert_prediction_segmentation_reduces_polygon_points() -> None:
     mask = np.zeros((400, 400), dtype=np.uint8)
     cv2.circle(mask, (200, 200), 150, 255, -1)
 
-    raw_contours, _ = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-    raw_point_count = len(raw_contours[0])
+    raw_contours, hierarchies = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    assert hierarchies is not None
+    # Mirror the converter's filtering: only external contours (parent index == -1) are used.
+    external_point_counts = [
+        len(contour) for contour, hierarchy in zip(raw_contours, hierarchies[0], strict=True) if hierarchy[3] == -1
+    ]
+    raw_point_count = max(external_point_counts)
 
     label = Label(id=uuid4(), project_id=uuid4(), name="cat", color="#ff0000", hotkey="c")
     raw_prediction = InstanceSegmentationResult(

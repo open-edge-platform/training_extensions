@@ -181,7 +181,7 @@ def _convert_segmentation_prediction(
             if len(contour) <= 2 or cv2.contourArea(contour) < 1.0:
                 continue
             simplified_contour = _simplify_contour(contour)
-            polygon = Polygon(points=[Point(x=point[0][0], y=point[0][1]) for point in list(simplified_contour)])
+            polygon = Polygon(points=[Point(x=point[0][0], y=point[0][1]) for point in simplified_contour])
             annotation = DatasetItemAnnotation(
                 labels=[LabelReference(id=label.id)], shape=polygon, confidences=[polygon_confidence]
             )
