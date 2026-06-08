@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Sequence
 
 import torch
-from torch.nn import functional
 from torchvision import tv_tensors
 from ultralytics.utils.metrics import ClassifyMetrics, DetMetrics, SegmentMetrics
 
@@ -501,10 +500,8 @@ class UltralyticsEngine(Engine):
                 if batch.labels is not None and i < len(batch.labels):
                     tgt_dict["labels"] = batch.labels[i].to(device).long()
                 if batch.masks is not None and i < len(batch.masks):
-                    target_masks = batch.masks[i].data  # (N, ori_h, ori_w)
-                    mask_ori_h, mask_ori_w = target_masks.shape[-2:]
-                    scaled_masks = self._scale_masks_to_letterbox(target_masks, mask_ori_h, mask_ori_w, imgsz)
-                    tgt_dict["masks"] = [encode_rle(m) for m in scaled_masks]
+                    target_masks = batch.masks[i].data  # (N, imgsz, imgsz)
+                    tgt_dict["masks"] = [encode_rle(m) for m in target_masks]
                 target_list.append(tgt_dict)
 
             metric.update(preds=preds_list, target=target_list)
@@ -624,43 +621,6 @@ class UltralyticsEngine(Engine):
         scaled[:, 2] = boxes[:, 2] * scale + pad_x
         scaled[:, 3] = boxes[:, 3] * scale + pad_y
         return scaled
-
-    @staticmethod
-    def _scale_masks_to_letterbox(masks: torch.Tensor, ori_h: int, ori_w: int, imgsz: int) -> torch.Tensor:
-        """Transform binary masks from original image coords to letterbox-padded coords.
-
-        Analogous to ``_scale_boxes_to_letterbox`` but for spatial mask tensors.
-        Resizes each mask with nearest-neighbor interpolation to preserve binary
-        values, then center-pads to ``(imgsz, imgsz)``.
-
-        Args:
-            masks: ``(N, ori_h, ori_w)`` binary mask tensor.
-            ori_h: Original image height.
-            ori_w: Original image width.
-            imgsz: Model input size (square).
-
-        Returns:
-            ``(N, imgsz, imgsz)`` binary mask tensor in letterbox coords.
-        """
-        if masks.numel() == 0:
-            return torch.zeros((0, imgsz, imgsz), dtype=torch.bool, device=masks.device)
-
-        scale = min(imgsz / ori_h, imgsz / ori_w)
-        new_h = round(ori_h * scale)
-        new_w = round(ori_w * scale)
-
-        resized = functional.interpolate(
-            masks.unsqueeze(1).float(),
-            size=(new_h, new_w),
-            mode="nearest",
-        ).squeeze(1)
-
-        pad_y = (imgsz - new_h) // 2
-        pad_x = (imgsz - new_w) // 2
-
-        result = torch.zeros((masks.shape[0], imgsz, imgsz), dtype=torch.bool, device=masks.device)
-        result[:, pad_y : pad_y + new_h, pad_x : pad_x + new_w] = resized > 0.5
-        return result
 
     def _predict_with_datamodule(self, overrides: dict[str, Any]) -> list[Prediction]:
         """Run inference through ``DataModule.predict_dataloader()``."""

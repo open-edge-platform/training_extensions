@@ -55,6 +55,7 @@ def _find_project_label(
         if label:
             return label
 
+        # Only attempt unmangled lookup if "_" is present (avoids unnecessary dict lookup noise)
         if "_" in label_name:
             label = unmangled_map.get(label_name)
             if label:

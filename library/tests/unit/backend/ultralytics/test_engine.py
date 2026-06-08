@@ -596,66 +596,6 @@ class TestScaleBoxesToLetterbox:
         assert result.shape == (0, 4)
 
 
-class TestScaleMasksToLetterbox:
-    """Tests for _scale_masks_to_letterbox coordinate transformation."""
-
-    def test_identity_when_image_fits_exactly(self) -> None:
-        """When original image matches imgsz, masks should not change spatially."""
-        mask = torch.zeros((1, 640, 640), dtype=torch.bool)
-        mask[0, 100:200, 100:300] = True
-        result = UltralyticsEngine._scale_masks_to_letterbox(mask, ori_h=640, ori_w=640, imgsz=640)
-        assert result.shape == (1, 640, 640)
-        assert torch.equal(result, mask)
-
-    def test_landscape_image_vertical_padding(self) -> None:
-        """480x640 image letterboxed to 640x640: mask gets 80px vertical padding."""
-        mask = torch.zeros((1, 480, 640), dtype=torch.bool)
-        mask[0, 0:10, 0:10] = True  # top-left block
-        result = UltralyticsEngine._scale_masks_to_letterbox(mask, ori_h=480, ori_w=640, imgsz=640)
-        assert result.shape == (1, 640, 640)
-        # scale=1.0, pad_y=80 → block shifted down by 80
-        assert result[0, 80:90, 0:10].all()
-        assert not result[0, 0:80, :].any()
-
-    def test_portrait_image_horizontal_padding(self) -> None:
-        """640x480 image letterboxed to 640x640: mask gets 80px horizontal padding."""
-        mask = torch.zeros((1, 640, 480), dtype=torch.bool)
-        mask[0, 0:10, 0:10] = True
-        result = UltralyticsEngine._scale_masks_to_letterbox(mask, ori_h=640, ori_w=480, imgsz=640)
-        assert result.shape == (1, 640, 640)
-        # scale=1.0, pad_x=80 → block shifted right by 80
-        assert result[0, 0:10, 80:90].all()
-        assert not result[0, :, 0:80].any()
-
-    def test_small_image_scale_up(self) -> None:
-        """320x320 image scaled 2x to 640x640: mask scaled up."""
-        mask = torch.zeros((1, 320, 320), dtype=torch.bool)
-        mask[0, 0:10, 0:10] = True  # 10x10 block at top-left
-        result = UltralyticsEngine._scale_masks_to_letterbox(mask, ori_h=320, ori_w=320, imgsz=640)
-        assert result.shape == (1, 640, 640)
-        # Scaled 2x → 20x20 block, no padding
-        assert result[0, 0:20, 0:20].all()
-
-    def test_multiple_masks(self) -> None:
-        """Multiple masks (N > 1) should all be transformed."""
-        masks = torch.zeros((3, 320, 320), dtype=torch.bool)
-        masks[0, 0:10, 0:10] = True
-        masks[1, 100:120, 100:120] = True
-        masks[2, 200:220, 200:220] = True
-        result = UltralyticsEngine._scale_masks_to_letterbox(masks, ori_h=320, ori_w=320, imgsz=640)
-        assert result.shape == (3, 640, 640)
-        # Each scaled 2x
-        assert result[0, 0:20, 0:20].all()
-        assert result[1, 200:240, 200:240].all()
-        assert result[2, 400:440, 400:440].all()
-
-    def test_empty_masks(self) -> None:
-        """Empty mask tensor should return correctly shaped zeros."""
-        masks = torch.zeros((0, 480, 640), dtype=torch.bool)
-        result = UltralyticsEngine._scale_masks_to_letterbox(masks, ori_h=480, ori_w=640, imgsz=640)
-        assert result.shape == (0, 640, 640)
-
-
 class TestInstSegTorchmetrics:
     """Tests for instance segmentation torchmetrics evaluation."""
 

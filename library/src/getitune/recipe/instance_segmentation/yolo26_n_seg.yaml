@@ -79,7 +79,7 @@ overrides:
             size: $(input_size)
             keep_aspect_ratio: true
             center_padding: true
-            resize_targets: false
+            resize_targets: true
       augmentations_gpu: []
       sampler:
         class_path: torch.utils.data.SequentialSampler
@@ -92,7 +92,7 @@ overrides:
             size: $(input_size)
             keep_aspect_ratio: true
             center_padding: true
-            resize_targets: false
+            resize_targets: true
       augmentations_gpu: []
       sampler:
         class_path: torch.utils.data.SequentialSampler

@@ -337,8 +337,6 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         )
 
         openvino_fp16_variant = self._get_openvino_fp16_variant(model)
-        if openvino_fp16_variant is None:
-            raise FileNotFoundError(f"Model {params.model_id} does not have an OpenVINO FP16 variant")
         self.store_artifacts(
             params=params,
             quantized_model_path=quantized_model_path,
