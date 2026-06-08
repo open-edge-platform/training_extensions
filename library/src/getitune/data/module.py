@@ -147,20 +147,14 @@ class DataModule(LightningDataModule):
             dataset: A ``datumaro.experimental.Dataset`` loaded via ``import_dataset``.
         """
         storage_dtype: str | None = None
-        # Use explicit subset names to avoid collision when subset_name defaults
-        # to "train" for all SubsetConfigs (the default value).
-        config_mapping = {
-            "train": self.train_subset,
-            "val": self.val_subset,
-            "test": self.test_subset,
-        }
-
-        subset_names = [cfg.subset_name for cfg in config_mapping.values()]
+        subset_configs = [self.train_subset, self.val_subset, self.test_subset]
+        subset_names = [cfg.subset_name for cfg in subset_configs]
         if len(set(subset_names)) != len(subset_names):
             msg = (
                 f"Subset names must be unique, got {subset_names}. Ensure each SubsetConfig has a distinct subset_name."
             )
             raise ValueError(msg)
+        config_mapping = {cfg.subset_name: cfg for cfg in subset_configs}
 
         if self.auto_num_workers:
             if self.device not in [DeviceType.gpu, DeviceType.auto]:

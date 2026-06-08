@@ -71,6 +71,7 @@ class Engine(ABC):
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def best_checkpoint(self) -> Path | None:
         """Path to the best model checkpoint after training.
 
