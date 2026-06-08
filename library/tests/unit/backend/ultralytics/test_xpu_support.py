@@ -396,7 +396,7 @@ class TestXPUAwareTrainerMixin:
                 model_dtype_during_validation["dtype"] = next(self.model.parameters()).dtype
                 return {}
 
-        class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
+        class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):  # pyrefly: ignore[inconsistent-inheritance]
             pass
 
         trainer = TestTrainer()
@@ -423,7 +423,7 @@ class TestXPUAwareTrainerMixin:
                 self.validate_called = True
                 return {}
 
-        class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
+        class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):  # pyrefly: ignore[inconsistent-inheritance]
             pass
 
         trainer = TestTrainer()
@@ -445,7 +445,7 @@ class TestXPUAwareTrainerMixin:
                 self.validate_called = True
                 return {}
 
-        class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
+        class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):  # pyrefly: ignore[inconsistent-inheritance]
             pass
 
         trainer = TestTrainer()

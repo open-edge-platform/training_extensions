@@ -14,6 +14,7 @@ import pytest
 import torch
 from torchvision import tv_tensors
 
+from getitune.backend.ultralytics.data.geometry import scale_boxes_to_letterbox
 from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.backend.ultralytics.models import UltralyticsDetectionModel, UltralyticsInstSegModel
 from getitune.data.entity.base import ImageInfo
@@ -549,18 +550,18 @@ class TestTorchmetricsEval:
 
 
 class TestScaleBoxesToLetterbox:
-    """Tests for _scale_boxes_to_letterbox coordinate transformation."""
+    """Tests for scale_boxes_to_letterbox coordinate transformation."""
 
     def test_identity_when_image_fits_exactly(self) -> None:
         """When original image matches imgsz, boxes should not change."""
         boxes = torch.tensor([[10.0, 20.0, 100.0, 200.0]])
-        result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=640, ori_w=640, imgsz=640)
+        result = scale_boxes_to_letterbox(boxes, ori_h=640, ori_w=640, imgsz=640)
         assert torch.allclose(result, boxes)
 
     def test_landscape_image_vertical_padding(self) -> None:
         """480x640 image letterboxed to 640x640: vertical padding of 80px each side."""
         boxes = torch.tensor([[0.0, 0.0, 640.0, 480.0]])
-        result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=480, ori_w=640, imgsz=640)
+        result = scale_boxes_to_letterbox(boxes, ori_h=480, ori_w=640, imgsz=640)
         # scale = min(640/480, 640/640) = 1.0, pad_x = 0, pad_y = 80
         expected = torch.tensor([[0.0, 80.0, 640.0, 560.0]])
         assert torch.allclose(result, expected)
@@ -568,7 +569,7 @@ class TestScaleBoxesToLetterbox:
     def test_portrait_image_horizontal_padding(self) -> None:
         """640x480 image letterboxed to 640x640: horizontal padding of 80px each side."""
         boxes = torch.tensor([[100.0, 50.0, 300.0, 400.0]])
-        result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=640, ori_w=480, imgsz=640)
+        result = scale_boxes_to_letterbox(boxes, ori_h=640, ori_w=480, imgsz=640)
         # scale = min(640/640, 640/480) = 1.0, pad_x = 80, pad_y = 0
         expected = torch.tensor([[180.0, 50.0, 380.0, 400.0]])
         assert torch.allclose(result, expected)
@@ -576,7 +577,7 @@ class TestScaleBoxesToLetterbox:
     def test_small_image_scale_up(self) -> None:
         """320x320 image scaled 2x to fill 640x640: no padding, boxes scaled."""
         boxes = torch.tensor([[10.0, 20.0, 100.0, 200.0]])
-        result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=320, ori_w=320, imgsz=640)
+        result = scale_boxes_to_letterbox(boxes, ori_h=320, ori_w=320, imgsz=640)
         # scale = 2.0, pad_x = 0, pad_y = 0
         expected = torch.tensor([[20.0, 40.0, 200.0, 400.0]])
         assert torch.allclose(result, expected)
@@ -584,7 +585,7 @@ class TestScaleBoxesToLetterbox:
     def test_non_square_with_scaling(self) -> None:
         """960x1280 image scaled 0.5x to 640x640: vertical padding."""
         boxes = torch.tensor([[0.0, 0.0, 1280.0, 960.0]])
-        result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=960, ori_w=1280, imgsz=640)
+        result = scale_boxes_to_letterbox(boxes, ori_h=960, ori_w=1280, imgsz=640)
         # scale = min(640/960, 640/1280) = 0.5, pad_x = 0, pad_y = (640-480)/2 = 80
         expected = torch.tensor([[0.0, 80.0, 640.0, 560.0]])
         assert torch.allclose(result, expected)
@@ -592,7 +593,7 @@ class TestScaleBoxesToLetterbox:
     def test_empty_boxes(self) -> None:
         """Empty box tensor should pass through unchanged."""
         boxes = torch.zeros((0, 4))
-        result = UltralyticsEngine._scale_boxes_to_letterbox(boxes, ori_h=480, ori_w=640, imgsz=640)
+        result = scale_boxes_to_letterbox(boxes, ori_h=480, ori_w=640, imgsz=640)
         assert result.shape == (0, 4)
 
 

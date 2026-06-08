@@ -106,6 +106,25 @@ class UltralyticsDatasetAdapter(TorchDataset):
                 if mask_tensor.ndim == 2:
                     mask_tensor = mask_tensor.unsqueeze(0)
 
+                if mask_tensor.shape[1:] != (tensor_h, tensor_w):
+                    pad_left, pad_top, pad_right, pad_bottom = padding
+                    content_h = tensor_h - pad_top - pad_bottom
+                    content_w = tensor_w - pad_left - pad_right
+
+                    mask_tensor = torch.nn.functional.interpolate(
+                        mask_tensor.unsqueeze(0).float(),
+                        size=(content_h, content_w),
+                        mode="nearest",
+                    )[0]
+
+                    if pad_left > 0 or pad_top > 0 or pad_right > 0 or pad_bottom > 0:
+                        mask_tensor = torch.nn.functional.pad(
+                            mask_tensor,
+                            (pad_left, pad_right, pad_top, pad_bottom),
+                            mode="constant",
+                            value=0,
+                        )
+
                 result["masks"] = mask_tensor.to(torch.uint8)
 
                 # Generate per-pixel semantic class labels at the same spatial

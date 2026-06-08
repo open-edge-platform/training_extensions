@@ -16,6 +16,7 @@ import torch
 from torchvision import tv_tensors
 from ultralytics.utils.metrics import ClassifyMetrics, DetMetrics, SegmentMetrics
 
+from getitune.backend.ultralytics.data.geometry import scale_boxes_to_letterbox, scale_masks_to_letterbox
 from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import Prediction, SampleBatch
 from getitune.data.module import DataModule
@@ -32,9 +33,11 @@ from .models.base import UltralyticsModel
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
+    from torchmetrics import Metric
     from ultralytics import YOLO
 
     from getitune.types import PathLike
+    from getitune.types.label import LabelInfo
     from getitune.types.types import ANNOTATIONS, DATA, METRICS, MODEL
 
 logger = logging.getLogger(__name__)
@@ -356,7 +359,7 @@ class UltralyticsEngine(Engine):
     @property
     def model(self) -> UltralyticsModel:
         """The wrapped :class:`UltralyticsModel`."""
-        return self._model  # type: ignore[return-value]
+        return self._model
 
     @property
     def best_checkpoint(self) -> Path | None:
@@ -374,10 +377,13 @@ class UltralyticsEngine(Engine):
 
     @property
     def datamodule(self) -> DATA:
-        """The attached DataModule, or ``None``."""
+        """The attached DataModule, or data root path."""
         if self._datamodule is not None:
-            return self._datamodule  # type: ignore[return-value]
-        return None  # type: ignore[return-value]
+            return self._datamodule
+        if self._data_root is not None:
+            return self._data_root
+        msg = "No DataModule or data_root configured"
+        raise ValueError(msg)
 
     def _test_with_datamodule(self, overrides: dict, checkpoint: PathLike | None = None) -> dict[str, float]:
         """Run validation via a bound validator class with DataModule data."""
@@ -405,7 +411,7 @@ class UltralyticsEngine(Engine):
         results = validator(model=self._model.yolo.model)
         return self._translate_metrics(results)
 
-    def _test_with_torchmetrics(self, metric_callable: Any) -> dict[str, float]:  # noqa: ANN401
+    def _test_with_torchmetrics(self, metric_callable: Callable[[LabelInfo], Metric]) -> dict[str, float]:
         """Evaluate using torchmetrics — same metrics as Lightning models.
 
         Iterates the DataModule's test dataloader, runs YOLO predictions on
@@ -457,8 +463,8 @@ class UltralyticsEngine(Engine):
                 raise TypeError(msg)
 
             imgs = batch.images.to(device) if isinstance(batch.images, torch.Tensor) else batch.images
-            raw_results = yolo.predict(  # pyrefly: ignore[bad-argument-type]
-                source=imgs,  # pyrefly: ignore[bad-argument-type]
+            raw_results = yolo.predict(
+                source=imgs,
                 device=device,
                 imgsz=imgsz,
                 conf=0.0,
@@ -491,13 +497,15 @@ class UltralyticsEngine(Engine):
                 if batch.bboxes is not None and i < len(batch.bboxes):
                     boxes = batch.bboxes[i].data.to(device).float()
                     ori_h, ori_w = batch.bboxes[i].canvas_size
-                    boxes = self._scale_boxes_to_letterbox(boxes, ori_h, ori_w, imgsz)
+                    boxes = scale_boxes_to_letterbox(boxes, ori_h, ori_w, imgsz)
                     tgt_dict["boxes"] = boxes
                 if batch.labels is not None and i < len(batch.labels):
                     tgt_dict["labels"] = batch.labels[i].to(device).long()
                 if batch.masks is not None and i < len(batch.masks):
-                    target_masks = batch.masks[i].data  # (N, imgsz, imgsz)
-                    tgt_dict["masks"] = [encode_rle(m) for m in target_masks]
+                    target_masks = batch.masks[i].data  # (N, ori_h, ori_w)
+                    mask_ori_h, mask_ori_w = target_masks.shape[-2:]
+                    scaled_masks = scale_masks_to_letterbox(target_masks, mask_ori_h, mask_ori_w, imgsz)
+                    tgt_dict["masks"] = [encode_rle(m) for m in scaled_masks]
                 target_list.append(tgt_dict)
 
             metric.update(preds=preds_list, target=target_list)
@@ -538,8 +546,8 @@ class UltralyticsEngine(Engine):
                 continue
 
             imgs = batch.images.to(device) if isinstance(batch.images, torch.Tensor) else batch.images
-            raw_results = yolo.predict(  # pyrefly: ignore[bad-argument-type]
-                source=imgs,  # pyrefly: ignore[bad-argument-type]
+            raw_results = yolo.predict(
+                source=imgs,
                 device=device,
                 imgsz=imgsz,
                 conf=0.01,
@@ -569,7 +577,7 @@ class UltralyticsEngine(Engine):
                 if batch.bboxes is not None and i < len(batch.bboxes):
                     boxes = batch.bboxes[i].data.to(device).float()
                     ori_h, ori_w = batch.bboxes[i].canvas_size
-                    boxes = self._scale_boxes_to_letterbox(boxes, ori_h, ori_w, imgsz)
+                    boxes = scale_boxes_to_letterbox(boxes, ori_h, ori_w, imgsz)
                     tgt_dict["boxes"] = boxes
                 if batch.labels is not None and i < len(batch.labels):
                     tgt_dict["labels"] = batch.labels[i].to(device).long()
@@ -586,37 +594,6 @@ class UltralyticsEngine(Engine):
         threshold = metric.best_confidence_threshold
         self._export_args["confidence_threshold"] = threshold
         logger.info(f"Best confidence threshold from FMeasure: {threshold:.4f}")
-
-    @staticmethod
-    def _scale_boxes_to_letterbox(boxes: torch.Tensor, ori_h: int, ori_w: int, imgsz: int) -> torch.Tensor:
-        """Transform bounding boxes from original image coords to letterbox-padded coords.
-
-        The DataModule's test augmentations use ``Resize(keep_aspect_ratio=True,
-        center_padding=True, resize_targets=False)``, so target boxes remain in
-        the original image coordinate space.  YOLO predictions, however, are in
-        the letterbox-padded ``imgsz x imgsz`` space.  This method applies the
-        same scale + center-pad offset to align the two.
-
-        Args:
-            boxes: ``(N, 4)`` tensor of xyxy boxes in original coords.
-            ori_h: Original image height.
-            ori_w: Original image width.
-            imgsz: Model input size (square).
-
-        Returns:
-            Transformed ``(N, 4)`` tensor in letterbox coords.
-        """
-        if boxes.numel() == 0:
-            return boxes
-        scale = min(imgsz / ori_h, imgsz / ori_w)
-        pad_x = (imgsz - ori_w * scale) / 2.0
-        pad_y = (imgsz - ori_h * scale) / 2.0
-        scaled = boxes.clone()
-        scaled[:, 0] = boxes[:, 0] * scale + pad_x
-        scaled[:, 1] = boxes[:, 1] * scale + pad_y
-        scaled[:, 2] = boxes[:, 2] * scale + pad_x
-        scaled[:, 3] = boxes[:, 3] * scale + pad_y
-        return scaled
 
     def _predict_with_datamodule(self, overrides: dict[str, Any]) -> list[Prediction]:
         """Run inference through ``DataModule.predict_dataloader()``."""
@@ -640,8 +617,8 @@ class UltralyticsEngine(Engine):
                 raise TypeError(msg)
 
             imgs = batch.images.to(device)
-            raw_results = yolo.predict(  # pyrefly: ignore[bad-argument-type]
-                source=imgs,  # pyrefly: ignore[bad-argument-type]
+            raw_results = yolo.predict(
+                source=imgs,
                 device=device,
                 imgsz=self._model.imgsz,
                 save=False,
@@ -689,7 +666,7 @@ class UltralyticsEngine(Engine):
         """Persist the latest training checkpoint at a canonical location.
 
         Creates a copy at ``<work_dir>/best_checkpoint.pt`` to provide a
-        backend-agnostic checkpoint path (matching Lightning's convention).
+        backend-agnostic checkpoint path.
         """
         checkpoint_file = self._work_dir / self._LAST_TRAIN_CHECKPOINT_FILE
         if checkpoint is None:

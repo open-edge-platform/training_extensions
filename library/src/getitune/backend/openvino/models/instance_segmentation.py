@@ -153,12 +153,15 @@ class OVInstanceSegmentationModel(OVModel):
             scores.append(torch.tensor(output.scores.reshape(-1)))
 
             raw_masks = torch.tensor(output.masks)
-            rescaled_masks = rescale_masks_to_original(
-                raw_masks,
-                img_shape=(img_h, img_w),
-                ori_shape=(ori_h, ori_w),
-                padding=img_info.padding,
-            )
+            if raw_masks.shape[-2:] == (ori_h, ori_w):
+                rescaled_masks = raw_masks
+            else:
+                rescaled_masks = rescale_masks_to_original(
+                    raw_masks,
+                    img_shape=(img_h, img_w),
+                    ori_shape=(ori_h, ori_w),
+                    padding=img_info.padding,
+                )
             masks.append(rescaled_masks)
 
             labels.append(torch.tensor(output.labels.reshape(-1) - 1, dtype=torch.long))

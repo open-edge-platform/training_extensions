@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 import torch
+import torch.nn.functional as f
 
 
 def xyxy_abs_to_xywh_norm(
@@ -140,3 +141,71 @@ def build_ratio_pad(
     rw = content_w / ori_w if ori_w > 0 else 1.0
 
     return (rh, rw), (pad_left, pad_top)
+
+
+def scale_masks_to_letterbox(masks: torch.Tensor, ori_h: int, ori_w: int, imgsz: int) -> torch.Tensor:
+    """Transform binary masks from original image coords to letterbox-padded coords.
+
+    Analogous to ``scale_boxes_to_letterbox`` but for spatial mask tensors.
+    Resizes each mask with nearest-neighbor interpolation to preserve binary
+    values, then center-pads to ``(imgsz, imgsz)``.
+
+    Args:
+        masks: ``(N, ori_h, ori_w)`` binary mask tensor.
+        ori_h: Original image height.
+        ori_w: Original image width.
+        imgsz: Model input size (square).
+
+    Returns:
+        ``(N, imgsz, imgsz)`` binary mask tensor in letterbox coords.
+    """
+    if masks.numel() == 0:
+        return torch.zeros((0, imgsz, imgsz), dtype=torch.bool, device=masks.device)
+
+    scale = min(imgsz / ori_h, imgsz / ori_w)
+    new_h = round(ori_h * scale)
+    new_w = round(ori_w * scale)
+
+    resized = f.interpolate(
+        masks.unsqueeze(1).float(),
+        size=(new_h, new_w),
+        mode="nearest",
+    ).squeeze(1)
+
+    pad_y = (imgsz - new_h) // 2
+    pad_x = (imgsz - new_w) // 2
+
+    result = torch.zeros((masks.shape[0], imgsz, imgsz), dtype=torch.bool, device=masks.device)
+    result[:, pad_y : pad_y + new_h, pad_x : pad_x + new_w] = resized > 0.5
+    return result
+
+
+def scale_boxes_to_letterbox(boxes: torch.Tensor, ori_h: int, ori_w: int, imgsz: int) -> torch.Tensor:
+    """Transform bounding boxes from original image coords to letterbox-padded coords.
+
+    The DataModule's test augmentations use ``Resize(keep_aspect_ratio=True,
+    center_padding=True, resize_targets=False)``, so target boxes remain in
+    the original image coordinate space.  YOLO predictions, however, are in
+    the letterbox-padded ``imgsz x imgsz`` space.  This method applies the
+    same scale + center-pad offset to align the two.
+
+    Args:
+        boxes: ``(N, 4)`` tensor of xyxy boxes in original coords.
+        ori_h: Original image height.
+        ori_w: Original image width.
+        imgsz: Model input size (square).
+
+    Returns:
+        Transformed ``(N, 4)`` tensor in letterbox coords.
+    """
+    if boxes.numel() == 0:
+        return boxes
+    scale = min(imgsz / ori_h, imgsz / ori_w)
+    pad_x = (imgsz - ori_w * scale) / 2.0
+    pad_y = (imgsz - ori_h * scale) / 2.0
+    scaled = boxes.clone()
+    scaled[:, 0] = boxes[:, 0] * scale + pad_x
+    scaled[:, 1] = boxes[:, 1] * scale + pad_y
+    scaled[:, 2] = boxes[:, 2] * scale + pad_x
+    scaled[:, 3] = boxes[:, 3] * scale + pad_y
+    return scaled

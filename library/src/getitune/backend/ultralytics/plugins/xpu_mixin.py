@@ -56,7 +56,7 @@ class XPUAwareTrainerMixin:
     model: Any
     scaler: Any
 
-    def _setup_train(self) -> None:  # type: ignore[override]
+    def _setup_train(self) -> None:
         """Run base setup with XPU-specific bf16 configuration.
 
         On XPU we:
@@ -75,7 +75,7 @@ class XPUAwareTrainerMixin:
             _orig_check_amp = _trainer_mod.check_amp
             _trainer_mod.check_amp = lambda *_a, **_kw: False
             try:
-                super()._setup_train()  # type: ignore[misc]
+                super()._setup_train()  # pyrefly: ignore[missing-attribute]
             finally:
                 _trainer_mod.check_amp = _orig_check_amp
 
@@ -87,9 +87,9 @@ class XPUAwareTrainerMixin:
             self.scaler = torch.amp.GradScaler(self.device.type, enabled=False)
             logger.info("XPU: bf16 training (model.bfloat16), EMA fp32, GradScaler disabled")
         else:
-            super()._setup_train()  # type: ignore[misc]
+            super()._setup_train()  # pyrefly: ignore[missing-attribute]
 
-    def validate(self) -> Any:  # type: ignore[override]  # noqa: ANN401
+    def validate(self) -> tuple[dict | None, float | None]:
         """Run validation in fp32 on XPU when EMA is not available.
 
         When ``ModelEMA`` is active (the common case), Ultralytics passes
@@ -103,12 +103,12 @@ class XPUAwareTrainerMixin:
             if not has_ema:
                 self.model.float()
                 try:
-                    return super().validate()  # type: ignore[misc]
+                    return super().validate()  # pyrefly: ignore[missing-attribute]
                 finally:
                     self.model.bfloat16()
-        return super().validate()  # type: ignore[misc]
+        return super().validate()  # pyrefly: ignore[missing-attribute]
 
-    def _get_memory(self, fraction: bool = False) -> float:  # type: ignore[override]
+    def _get_memory(self, fraction: bool = False) -> float:
         """Return reserved GPU memory (GiB) or fraction, with an XPU branch."""
         if self.device.type == "xpu":
             memory = torch.xpu.memory_reserved(self.device)
@@ -116,9 +116,9 @@ class XPUAwareTrainerMixin:
                 total = torch.xpu.get_device_properties(self.device).total_memory
                 return (memory / total) if total > 0 else 0.0
             return memory / 2**30
-        return super()._get_memory(fraction)  # type: ignore[misc]
+        return super()._get_memory(fraction)  # pyrefly: ignore[missing-attribute]
 
-    def _clear_memory(self, threshold: float | None = None) -> None:  # type: ignore[override]
+    def _clear_memory(self, threshold: float | None = None) -> None:
         """Clear GPU caches, with an XPU branch."""
         if self.device.type == "xpu":
             if threshold is not None:
@@ -130,7 +130,7 @@ class XPUAwareTrainerMixin:
             gc.collect()
             torch.xpu.empty_cache()
             return
-        super()._clear_memory(threshold)  # type: ignore[misc]
+        super()._clear_memory(threshold)  # pyrefly: ignore[missing-attribute]
 
     def _move_batch_to_device(self, batch: dict[str, Any]) -> dict[str, Any]:
         """Move DataModule tensors to the active device.
