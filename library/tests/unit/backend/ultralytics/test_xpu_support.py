@@ -297,7 +297,9 @@ class TestXPUAwareTrainerMixin:
 
         with patch(
             "getitune.backend.ultralytics.plugins.xpu_mixin.isinstance",
-            side_effect=lambda o, t: True if t is torch.Tensor and o in (img_tensor, label_tensor) else isinstance(o, t),
+            side_effect=lambda o, t: True
+            if t is torch.Tensor and o in (img_tensor, label_tensor)
+            else isinstance(o, t),
         ):
             result = trainer._move_batch_to_device(batch)
 
@@ -327,7 +329,7 @@ class TestXPUAwareTrainerMixin:
             "getitune.backend.ultralytics.plugins.xpu_mixin.isinstance",
             side_effect=lambda o, t: True if t is torch.Tensor and o is tensor else isinstance(o, t),
         ):
-            result = trainer._move_batch_to_device(batch)
+            _ = trainer._move_batch_to_device(batch)
 
         tensor.to.assert_called_once_with(torch.device("cuda:0"), non_blocking=True)
         tensor.bfloat16.assert_not_called()
@@ -390,7 +392,7 @@ class TestXPUAwareTrainerMixin:
                 self.device = torch.device("xpu:0")
                 self.model = torch.nn.Linear(4, 2).bfloat16()
 
-            def validate(self):
+            def validate(self) -> dict:
                 model_dtype_during_validation["dtype"] = next(self.model.parameters()).dtype
                 return {}
 
@@ -401,7 +403,9 @@ class TestXPUAwareTrainerMixin:
         trainer.validate()
 
         assert model_dtype_during_validation["dtype"] == torch.float32, "model must be fp32 during validation"
-        assert next(trainer.model.parameters()).dtype == torch.bfloat16, "model must be restored to bf16 after validation"
+        assert next(trainer.model.parameters()).dtype == torch.bfloat16, (
+            "model must be restored to bf16 after validation"
+        )
 
     def test_validate_skips_conversion_when_ema_exists(self) -> None:
         """On XPU with EMA, validate() should NOT convert model (EMA is already fp32)."""
@@ -415,7 +419,7 @@ class TestXPUAwareTrainerMixin:
                 self.ema.ema = torch.nn.Linear(4, 2)  # fp32 EMA
                 self.validate_called = False
 
-            def validate(self):
+            def validate(self) -> dict:
                 self.validate_called = True
                 return {}
 
@@ -437,7 +441,7 @@ class TestXPUAwareTrainerMixin:
                 self.device = torch.device("cuda:0")
                 self.validate_called = False
 
-            def validate(self):
+            def validate(self) -> dict:
                 self.validate_called = True
                 return {}
 

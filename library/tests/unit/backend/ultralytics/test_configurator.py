@@ -11,11 +11,12 @@ from unittest.mock import patch
 import pytest
 import yaml
 
+from getitune.backend.ultralytics.models.base import UltralyticsModel
 from getitune.backend.ultralytics.tools.configurator import Configurator
 from getitune.backend.ultralytics.tools.utils import (
     flatten_overrides,
 )
-from getitune.backend.ultralytics.models.base import UltralyticsModel
+from getitune.data.module import DataModule
 from getitune.types.label import LabelInfo
 from getitune.types.task import TaskType
 
@@ -972,7 +973,7 @@ class TestInstanceSegmentation:
         assert cfg.model_config["class_path"] == _INST_SEG_CLASS_PATH
 
     @pytest.mark.parametrize(
-        "variant,fname",
+        ("variant", "fname"),
         [
             ("yolo26_n_seg", "yolo26n-seg.yaml"),
             ("yolo26_s_seg", "yolo26s-seg.yaml"),

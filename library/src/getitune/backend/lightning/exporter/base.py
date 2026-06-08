@@ -9,6 +9,8 @@ import logging as log
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Literal
 
+from onnxruntime.transformers.float16 import convert_float_to_float16
+
 from getitune.types.export import ExportFormat, TaskLevelExportParameters
 from getitune.types.precision import Precision
 
@@ -344,8 +346,6 @@ def _convert_onnx_to_float16(onnx_model: onnx.ModelProto) -> onnx.ModelProto:
     Returns:
         The converted FP16 ONNX model with FP32 I/O preserved.
     """
-    from onnxruntime.transformers.float16 import convert_float_to_float16
-
     fp16_model = convert_float_to_float16(onnx_model, keep_io_types=True, disable_shape_infer=True)
     _remove_duplicate_nodes(fp16_model.graph)
     _topological_sort_nodes(fp16_model.graph)

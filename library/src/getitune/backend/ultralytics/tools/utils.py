@@ -9,17 +9,13 @@ import copy
 from collections.abc import Mapping
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import Any, TypeAlias
 
 import yaml
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import OmegaConf
 
 from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.types.task import TaskType
-
-if TYPE_CHECKING:
-    from getitune.backend.ultralytics.tools.configurator import Configurator
-
 
 RECIPE_DIR: Path = Path(__file__).resolve().parents[3] / "recipe"
 TASK_TO_RECIPE_SUBDIR: dict[str, str] = {
@@ -34,7 +30,7 @@ ConfigValue: TypeAlias = str | int | float | bool | None | dict[str, "ConfigValu
 
 
 @contextmanager
-def _temporary_resolver(name: str, func: Any) -> Any:
+def _temporary_resolver(name: str, func: object) -> object:
     """Context manager to temporarily register an OmegaConf resolver.
 
     This ensures that the resolver is only active during the context,
@@ -50,7 +46,7 @@ def _temporary_resolver(name: str, func: Any) -> Any:
     """
     # Save the old resolver (if any)
     had_resolver = OmegaConf.has_resolver(name)
-    old_resolver = OmegaConf._get_resolver(name) if had_resolver else None
+    old_resolver = vars(OmegaConf)["_get_resolver"](name) if had_resolver else None
 
     try:
         # Register the new resolver
@@ -88,7 +84,7 @@ def load_recipe(recipe_path: Path) -> dict[str, Any]:
 
     recipe_dir = recipe_path.parent
 
-    def _include_yaml(filename: str):
+    def _include_yaml(filename: str) -> object:
         """Load a YAML file relative to the recipe directory, returning OmegaConf config."""
         path = (recipe_dir / filename).resolve()
         if not path.exists():

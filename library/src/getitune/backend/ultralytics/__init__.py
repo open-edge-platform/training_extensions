@@ -3,9 +3,9 @@
 
 """Ultralytics backend for getitune."""
 
-from .tools.configurator import Configurator
 from .engine import UltralyticsEngine
 from .models import UltralyticsDetectionModel, UltralyticsInstSegModel, UltralyticsModel
+from .tools.configurator import Configurator
 
 __all__ = [
     "Configurator",

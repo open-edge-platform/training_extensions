@@ -30,9 +30,9 @@ from model_api.models import Model
 
 from getitune.backend.lightning.models.base import DataInputParams
 from getitune.backend.openvino.engine import OVEngine
-from getitune.backend.ultralytics.tools.configurator import Configurator
 from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.backend.ultralytics.models.base import UltralyticsModel
+from getitune.backend.ultralytics.tools.configurator import Configurator
 from getitune.config.data import SamplerConfig, SubsetConfig, TileConfig
 from getitune.data.module import DataModule
 from getitune.engine import create_engine

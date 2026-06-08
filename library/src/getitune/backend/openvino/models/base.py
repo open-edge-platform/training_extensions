@@ -250,8 +250,6 @@ class OVModel:
             dict[str, Any]: Customized input data.
         """
         images = [np.transpose(im.cpu().numpy(), (1, 2, 0)) for im in entity.images]
-        if self._needs_bgr_input:
-            images = [img[:, :, ::-1].copy() for img in images]
         return {"inputs": images}
 
     def _customize_outputs(
@@ -285,43 +283,9 @@ class OVModel:
         """
         async_inference = async_inference and self.async_inference
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
-
-        # ModelAPI's embedded PPP expects raw uint8 [0, 255] images when
-        # input_dtype="u8" — it will internally divide by 255 (scale_to_unit).
-        # The DataModule's CPUAugmentationPipeline already scaled from uint8
-        # [0, 255] to float32 [0, 1].  Reverse this for the inference path
-        # (NOT for transform_fn / quantization, which bypasses PPP).
-        if self._expects_uint8_input:
-            numpy_inputs = [(img * 255).clip(0, 255).astype(np.uint8) for img in numpy_inputs]
-
         outputs = self.model.infer_batch(numpy_inputs) if async_inference else [self.model(im) for im in numpy_inputs]
 
         return self._customize_outputs(outputs, inputs)
-
-    @property
-    def _needs_bgr_input(self) -> bool:
-        """Return True when ModelAPI's PPP expects BGR input.
-
-        ModelAPI's ``reverse_input_channels`` flag indicates the PPP will convert
-        BGR→RGB.  Since the DataModule provides RGB images, we must swap to BGR
-        before feeding to ModelAPI when this flag is set.
-        """
-        base = self.model.model if isinstance(self.model, Tiler) else self.model
-        return bool(getattr(getattr(base, "params", None), "reverse_input_channels", False))
-
-    @property
-    def _expects_uint8_input(self) -> bool:
-        """Return True when ModelAPI's embedded PPP expects uint8 [0, 255] input.
-
-        When the model has ``input_dtype="u8"`` (with any intensity mode that
-        scales from integer to float), the embedded PPP internally converts from
-        uint8 to float32 and divides by the max value. The DataModule's intensity
-        transform already performed this conversion, so we must reverse it (multiply
-        by 255 and cast to uint8) to avoid double-scaling.
-        """
-        base = self.model.model if isinstance(self.model, Tiler) else self.model
-        input_dtype = getattr(getattr(base, "params", None), "input_dtype", None)
-        return input_dtype in ("u8", "u16")
 
     def optimize(
         self,

@@ -126,7 +126,7 @@ class GetiTuneDataBridgeMixin:
         from getitune.data.augmentation.pipeline import CPUAugmentationPipeline
         from getitune.data.augmentation.transforms import CachedMosaic
 
-        vision_dataset = adapter._dataset
+        vision_dataset = adapter._dataset  # noqa: SLF001
         transforms = vision_dataset.transforms
         if not isinstance(transforms, CPUAugmentationPipeline):
             return

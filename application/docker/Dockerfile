@@ -177,10 +177,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update \
     && apt-get install -y --no-install-recommends \
         git=1:2.47.3-0* \
-        libgl1=1.7.0-* \
-        libglib2.0-0t64=2.84.* \
-        libglx-mesa0=25.0.* \
-        libv4l-0t64=1.30.*
+        libgl1=1.7.0-1+b2 \
+        libglib2.0-0t64=2.84.4-3~deb13u3 \
+        libglx-mesa0=25.0.7-2 \
+        libv4l-0t64=1.30.1-1
 
 # Place the venv at the front of PATH so we can call python directly (no uv needed at runtime)
 ENV PATH="/application/backend/.venv/bin:${PATH}"
@@ -189,7 +189,7 @@ ENV PATH="/application/backend/.venv/bin:${PATH}"
 RUN mkdir -p /application/backend/app ${STATIC_FILES_DIR} /home/${USER_NAME} && \
     chown -R ${UID}:${UID} \
     /application \
-    /home
+    /home/${USER_NAME}
 
 WORKDIR /application/backend
 

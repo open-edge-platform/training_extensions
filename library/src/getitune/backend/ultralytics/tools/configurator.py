@@ -7,18 +7,11 @@ from __future__ import annotations
 
 import copy
 import os
-from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from warnings import warn
 
-import yaml
 from jsonargparse import ArgumentParser, Namespace
-
-from getitune.config.data import TileConfig
-from getitune.data.module import DataModule
-from getitune.types.device import DeviceType
-from getitune.types.task import TaskType
 
 from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.backend.ultralytics.models.base import UltralyticsModel
@@ -30,10 +23,16 @@ from getitune.backend.ultralytics.tools.utils import (
     flatten_overrides,
     load_recipe,
 )
+from getitune.config.data import TileConfig
+from getitune.data.module import DataModule
+from getitune.types.device import DeviceType
+from getitune.types.label import LabelInfo
+from getitune.types.task import TaskType
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from getitune.types import PathLike
-    from getitune.types.label import LabelInfo
 
 
 class Configurator:
@@ -132,7 +131,8 @@ class Configurator:
         if isinstance(model_ref, Path) or os.sep in model_str:
             path = Path(model_ref).resolve()
             if not path.exists():
-                raise FileNotFoundError(f"Recipe not found: {path}")
+                msg = f"Recipe not found: {path}"
+                raise FileNotFoundError(msg)
             return path
 
         # Case 2: Bare model name - resolve via task subdir
@@ -160,7 +160,7 @@ class Configurator:
         model_config = recipe.get("model")
         if not isinstance(model_config, dict):
             msg = f"Recipe at {recipe_path} is missing a valid 'model' section"
-            raise ValueError(msg)
+            raise TypeError(msg)
 
         if "class_path" not in model_config:
             msg = f"Recipe at {recipe_path} has a 'model' section without 'class_path'"
@@ -188,7 +188,7 @@ class Configurator:
         """The UltralyticsModel if already built, otherwise ``None``."""
         if self._model is None:
             msg = "Model not instantiated yet. Call create_model() with label_info / num_classes to build it."
-            warn(msg)
+            warn(msg, stacklevel=2)
         return self._model
 
     @property
@@ -222,24 +222,25 @@ class Configurator:
             A new Configurator instance.
         """
         instance = cls.__new__(cls)
+        v = vars(instance)
 
         # Initialize all attributes
-        instance._data_root = None
-        instance._datamodule = None
-        instance._model = None
+        v["_data_root"] = None
+        v["_datamodule"] = None
+        v["_model"] = None
 
         # Validate and set task
         task = recipe.get("task")
         if task not in SUPPORTED_TASKS:
             msg = f"Unsupported task '{task}'. Supported: {sorted(SUPPORTED_TASKS)}"
             raise ValueError(msg)
-        instance._task = task
+        v["_task"] = task
 
         # Extract sections from the already-loaded recipe
-        instance._model_config = cls._extract_model_section(recipe, recipe_path)
-        instance._data_config = recipe.get("data")
-        instance._training = copy.deepcopy(recipe.get("training", {}))
-        instance._export = copy.deepcopy(recipe.get("export", {}))
+        v["_model_config"] = cls._extract_model_section(recipe, recipe_path)
+        v["_data_config"] = recipe.get("data")
+        v["_training"] = copy.deepcopy(recipe.get("training", {}))
+        v["_export"] = copy.deepcopy(recipe.get("export", {}))
 
         return instance
 
@@ -417,7 +418,7 @@ class Configurator:
         for key, value in flatten_overrides(overrides).items():
             self._set_dot_path(key, value)
 
-    def _set_dot_path(self, key: str, value: Any) -> None:
+    def _set_dot_path(self, key: str, value: object) -> None:
         """Set a dot-path key on the appropriate internal store.
 
         Args:
@@ -449,7 +450,7 @@ class Configurator:
             raise KeyError(msg)
 
     @staticmethod
-    def _set_nested(d: dict[str, Any], parts: list[str], value: Any) -> None:
+    def _set_nested(d: dict[str, object], parts: list[str], value: object) -> None:
         """Set a nested key path in a dict, creating intermediate dicts as needed."""
         current = d
         for part in parts[:-1]:
