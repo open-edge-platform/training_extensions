@@ -101,7 +101,13 @@ class ImagesFolderStream(VideoStream):
     def get_data(self) -> StreamData | None:
         try:
             file = self.files.pop(0)
-            image = cv2.imread(file)
+            try:
+                image = cv2.imread(file)
+            except FileNotFoundError:
+                # Ultralytics patches cv2.imread with np.fromfile which raises
+                # FileNotFoundError on missing/corrupt files instead of returning None.
+                # Catching it here keeps the "skip unreadable files" contract.
+                image = None
             if image is None:
                 # Image cannot be loaded
                 return None

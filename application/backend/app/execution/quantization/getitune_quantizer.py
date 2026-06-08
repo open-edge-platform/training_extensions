@@ -57,8 +57,12 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         self._db_session_factory = quantization_deps.db_session_factory
 
     @step("Validate Model", 5)
-    def validate_model(self, params: QuantizationJobParams) -> ModelRevision:
-        """Verify the source model is valid for quantization."""
+    def validate_model(self, params: QuantizationJobParams) -> tuple[ModelRevision, ModelVariant]:
+        """Verify the source model is valid for quantization.
+
+        Returns:
+            Tuple of (model, openvino_fp16_variant).
+        """
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
             model = self._model_service.get_model(project_id=params.project_id, model_id=params.model_id)
@@ -83,8 +87,18 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         if not ov_model_xml_path.exists():
             raise FileNotFoundError(f"OpenVINO model files not found at {ov_model_xml_path}")
 
+        # Validate metadata.yaml structure if it exists (optional — Lightning models don't produce it)
+        metadata_path = ov_model_xml_path.parent / "metadata.yaml"
+        if metadata_path.exists():
+            with open(metadata_path) as f:
+                metadata = yaml.safe_load(f)
+            if not isinstance(metadata, dict):
+                raise ValueError(f"metadata.yaml is malformed (not a dict) at {metadata_path}")
+            if "args" not in metadata or not isinstance(metadata["args"], dict):
+                raise ValueError(f"metadata.yaml is missing 'args' dict at {metadata_path}")
+
         logger.info("Model {} validated for quantization (architecture={})", model.id, model.architecture)
-        return model
+        return model, openvino_variant
 
     @step("Prepare Calibration Dataset", 20)
     def prepare_calibration_dataset(
@@ -283,9 +297,8 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         if source_metadata_path.exists():
             with open(source_metadata_path) as f:
                 metadata = yaml.safe_load(f)
-            if isinstance(metadata.get("args"), dict):
-                metadata["args"]["int8"] = True
-                metadata["args"]["half"] = False
+            metadata["args"]["int8"] = True
+            metadata["args"]["half"] = False
             dest_metadata_path = variant_dir / "metadata.yaml"
             with open(dest_metadata_path, "w") as f:
                 yaml.dump(metadata, f, default_flow_style=False, sort_keys=False)
@@ -295,7 +308,7 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
 
     def execute(self, params: QuantizationJobParams) -> None:
         """Execute the full quantization pipeline."""
-        model = self.validate_model(params=params)
+        model, openvino_fp16_variant = self.validate_model(params=params)
 
         with self._db_session_factory() as db:
             self._project_service.set_db_session(db)
@@ -336,7 +349,6 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
             dataset_revision_id=model.training_info.dataset_revision_id,
         )
 
-        openvino_fp16_variant = self._get_openvino_fp16_variant(model)
         self.store_artifacts(
             params=params,
             quantized_model_path=quantized_model_path,

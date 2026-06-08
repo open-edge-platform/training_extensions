@@ -753,6 +753,12 @@ class UltralyticsEngine(Engine):
             writer = csv.writer(f)
             writer.writerows(rows)
 
+        # Write the same remapped content to csv/version_0/metrics.csv to match
+        # Lightning's CSVLogger output structure, so downstream consumers can
+        # always find metrics at a single known path.
+        csv_version_dir = self._work_dir / "csv" / "version_0"
+        csv_version_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(results_csv, csv_version_dir / "metrics.csv")
         logger.info(f"Remapped results.csv columns to standard metric names: {results_csv}")
 
     def _make_bound_trainer(

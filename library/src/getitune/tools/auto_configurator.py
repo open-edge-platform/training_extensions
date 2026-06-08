@@ -327,9 +327,9 @@ class AutoConfigurator:
                 ``datamodule.input_size`` so that ``$(input_size)`` placeholders
                 in the OV recipe augmentations resolve to the correct value.
             keep_aspect_ratio (bool, optional): When ``True`` and the model uses
-                letterbox preprocessing (fit_to_window_letterbox), the DataModule
-                skips image resize entirely and lets ModelAPI handle
-                preprocessing internally. This avoids padding/pad-value
+                letterbox preprocessing (fit_to_window_letterbox), every Resize
+                transform in the OV pipeline is patched to preserve aspect ratio
+                (letterbox-style) instead of stretching. This avoids padding/pad-value
                 mismatches between the DataModule Resize and the model's native
                 letterbox.  When ``False``, the OV recipe augmentations are
                 applied as usual (simple stretch resize).

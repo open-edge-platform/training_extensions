@@ -4,7 +4,7 @@ license: AGPL-3.0
 
 pretrained_weights:
   url: https://storage.geti.intel.com/weights/yolo26n-seg.pt
-  mirror_url: https://storage.geti.intel.com/weights/yolo26n-seg.pt
+  mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-seg.pt
   sha_sum: "361fbfabab285c3237700b6bb91d7ecfa602cd945fffda8dbe1242829b71e73f"
 
 description: "YOLO26-N-Seg is the nano Ultralytics YOLO26 instance segmentation model. It is optimized for fast fine-tuning and low-latency inference while using the Geti Tune data pipeline for preprocessing and dataset handling."

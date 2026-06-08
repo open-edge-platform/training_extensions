@@ -161,7 +161,7 @@ class TestGetiTuneQuantizerValidateModel:
 
         fxt_model_service.get_model.return_value = model
 
-        result = quantizer.validate_model(params=fxt_quantization_params)
+        result, _ = quantizer.validate_model(params=fxt_quantization_params)
 
         assert result.id == model.id
         fxt_model_service.get_model.assert_called_once_with(
@@ -248,6 +248,75 @@ class TestGetiTuneQuantizerValidateModel:
         # Do NOT create the XML file on disk
 
         with pytest.raises(FileNotFoundError, match="OpenVINO model files not found"):
+            quantizer.validate_model(params=fxt_quantization_params)
+
+    def test_validate_model_success_with_valid_metadata_yaml(
+        self,
+        tmp_path: Path,
+        fxt_getitune_quantizer: Callable[[], GetiTuneQuantizer],
+        fxt_model_service: Mock,
+        fxt_quantization_params: QuantizationJobParams,
+    ):
+        """Optional metadata.yaml with valid dict content passes validation."""
+        import yaml
+
+        quantizer = fxt_getitune_quantizer()
+        model = _make_model_revision(fxt_quantization_params.model_id)
+
+        fp16_variant = model.variants[0]
+        xml_path = (
+            tmp_path
+            / "projects"
+            / str(fxt_quantization_params.project_id)
+            / "models"
+            / str(fxt_quantization_params.model_id)
+            / "variants"
+            / str(fp16_variant.id)
+            / "model.xml"
+        )
+        xml_path.parent.mkdir(parents=True, exist_ok=True)
+        xml_path.write_text("<model/>")
+
+        # Create a valid metadata.yaml
+        with open(xml_path.parent / "metadata.yaml", "w") as f:
+            yaml.dump({"args": {"half": True, "int8": False, "batch": 1}}, f)
+
+        fxt_model_service.get_model.return_value = model
+
+        result, _ = quantizer.validate_model(params=fxt_quantization_params)
+        assert result.id == model.id
+
+    def test_validate_model_fails_malformed_metadata_yaml(
+        self,
+        tmp_path: Path,
+        fxt_getitune_quantizer: Callable[[], GetiTuneQuantizer],
+        fxt_model_service: Mock,
+        fxt_quantization_params: QuantizationJobParams,
+    ):
+        """Optional metadata.yaml with non-dict content raises ValueError."""
+        quantizer = fxt_getitune_quantizer()
+        model = _make_model_revision(fxt_quantization_params.model_id)
+
+        fp16_variant = model.variants[0]
+        xml_path = (
+            tmp_path
+            / "projects"
+            / str(fxt_quantization_params.project_id)
+            / "models"
+            / str(fxt_quantization_params.model_id)
+            / "variants"
+            / str(fp16_variant.id)
+            / "model.xml"
+        )
+        xml_path.parent.mkdir(parents=True, exist_ok=True)
+        xml_path.write_text("<model/>")
+
+        # Create a malformed metadata.yaml (empty file → yaml.safe_load returns None)
+        (xml_path.parent / "metadata.yaml").write_text("")
+
+        fxt_model_service.get_model.return_value = model
+
+        with pytest.raises(ValueError, match="metadata.yaml is malformed"):
             quantizer.validate_model(params=fxt_quantization_params)
 
 

@@ -4,7 +4,7 @@ license: AGPL-3.0
 
 pretrained_weights:
   url: https://storage.geti.intel.com/weights/yolo26s.pt
-  mirror_url: https://storage.geti.intel.com/weights/yolo26s.pt
+  mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s.pt
   sha_sum: 646f8bc3fe0a656803d95c294f7852321748cb29d13466a1af8862e2db384a1b
 
 description: "YOLO26-S is the small Ultralytics YOLO26 detection model. It provides a balanced accuracy/latency profile while using the Geti Tune data pipeline for preprocessing and dataset handling."
