@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import platform
 import re
+from typing import Any
 
 import cv2
 import psutil
@@ -20,11 +21,11 @@ CV2_BACKENDS = {
 
 # torch is imported lazily on first use to keep server startup fast (importing torch eagerly
 # added several seconds to boot). Kept as a module-level name so tests can patch
-# ``app.services.system_service.torch``.
-torch = None
+# ``app.services.system_service.torch``. Typed as Any because the module is loaded lazily.
+torch: Any = None
 
 
-def _get_torch():
+def _get_torch() -> Any:
     """Import torch on first use and cache it on the module.
 
     Returns:

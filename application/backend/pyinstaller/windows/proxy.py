@@ -100,10 +100,13 @@ def _take_str(ptr: int | None) -> str | None:
     """
     if not ptr:
         return None
+    # The c_void_p fields yield an integer address; normalise explicitly so wstring_at / GlobalFree
+    # always receive a plain int address regardless of the ctypes value wrapper.
+    address = int(ptr)
     try:
-        return ctypes.wstring_at(ptr)
+        return ctypes.wstring_at(address)
     finally:
-        GlobalFree(ctypes.c_void_p(ptr))
+        GlobalFree(ctypes.c_void_p(address))
 
 
 def _autoproxy_resolve(url: str, auto_detect: bool, config_url: str | None) -> str | None:
