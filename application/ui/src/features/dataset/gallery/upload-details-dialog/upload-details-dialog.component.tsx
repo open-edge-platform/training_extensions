@@ -4,6 +4,7 @@
 import { ReactNode } from 'react';
 
 import {
+    ActionButton,
     Button,
     ButtonGroup,
     Cell,
@@ -11,6 +12,7 @@ import {
     Content,
     Dialog,
     DialogContainer,
+    DialogTrigger,
     Divider,
     Flex,
     Heading,
@@ -25,9 +27,11 @@ import {
 } from '@geti/ui';
 import { AcceptCircle, CrossCircle, Pending } from '@geti/ui/icons';
 
-import { formatBytes } from '../../../../shared/util';
+import { formatBytes, pluralizeItems } from '../../../../shared/util';
 import { useMediaUploadContext } from '../../providers/media-upload-provider.component';
 import { computeSummary, type UploadFileItem, type UploadItemStatus } from '../../providers/media-upload-reducer';
+
+import classes from './upload-details-dialog.module.scss';
 
 const STATUS_LABEL: Record<UploadItemStatus, string> = {
     queued: 'Queued',
@@ -59,7 +63,7 @@ const StatusIcon = ({ status }: { status: UploadItemStatus }): ReactNode => {
 };
 
 const StatusCell = ({ item }: { item: UploadFileItem }) => {
-    const content = (
+    const statusContent = (
         <Flex alignItems={'center'} gap={'size-100'}>
             <StatusIcon status={item.status} />
             <Text>{STATUS_LABEL[item.status]}</Text>
@@ -68,27 +72,38 @@ const StatusCell = ({ item }: { item: UploadFileItem }) => {
 
     if (item.status === 'failed' && item.errorMessage) {
         return (
-            <TooltipTrigger>
-                {content}
-                <Tooltip>{item.errorMessage}</Tooltip>
-            </TooltipTrigger>
+            <Flex alignItems={'center'} gap={'size-100'}>
+                {statusContent}
+                <DialogTrigger type={'popover'}>
+                    <ActionButton isQuiet aria-label={'Error details'} UNSAFE_className={classes.error}>
+                        Error
+                    </ActionButton>
+                    <Dialog>
+                        <Heading>Upload error</Heading>
+                        <Divider />
+                        <Content>
+                            <Text>{item.errorMessage}</Text>
+                        </Content>
+                    </Dialog>
+                </DialogTrigger>
+            </Flex>
         );
     }
 
-    return content;
+    return statusContent;
 };
 
 const buildSubheader = (total: number, succeeded: number, failed: number, isUploading: boolean): string => {
     if (isUploading) {
         const parts = [`${succeeded} uploaded`, failed > 0 ? `${failed} failed` : null].filter(Boolean).join(', ');
 
-        return `Uploading ${total} item(s) — ${parts}`;
+        return `Uploading ${total} ${pluralizeItems(total)} — ${parts}`;
     }
 
-    if (failed === 0) return `Uploaded ${succeeded} item(s)`;
-    if (succeeded === 0) return `Failed to upload ${failed} item(s)`;
+    if (failed === 0) return `Uploaded ${succeeded} ${pluralizeItems(succeeded)}`;
+    if (succeeded === 0) return `Failed to upload ${failed} ${pluralizeItems(failed)}`;
 
-    return `Uploaded ${succeeded} item(s), ${failed} failed`;
+    return `Uploaded ${succeeded} ${pluralizeItems(succeeded)}, ${failed} failed`;
 };
 
 const UploadDetailsDialogContent = ({ onClose }: { onClose: () => void }) => {

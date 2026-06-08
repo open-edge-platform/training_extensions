@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Divider, Flex, Text, toast, View } from '@geti/ui';
+import { Button, Divider, Flex, Text, View } from '@geti/ui';
 import { useDeleteStagedDataset, useStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { isNil } from 'lodash-es';
 
@@ -39,8 +39,7 @@ export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps
     const handleDownload = () => {
         const url = `${API_BASE_URL}/api/staged_datasets/${job.metadata.dataset_id}/zip`;
 
-        downloadFile(url, `dataset_${job.metadata.dataset_id}.zip`);
-        toast({ type: 'info', message: 'Dataset download started' });
+        downloadFile(url, `dataset_${job.metadata.dataset_id}.zip`, 'Dataset download started');
     };
 
     return (

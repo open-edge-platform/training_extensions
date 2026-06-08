@@ -16,6 +16,7 @@ import { server } from '../../msw-node-setup';
 import { renderHook } from '../../test-utils/render';
 import {
     AnnotationActionsProvider,
+    syncAnnotationLabelsWithProjectLabels,
     useAnnotationActions,
     type AnnotationActionsProviderProps,
 } from './annotation-actions-provider.component';
@@ -126,6 +127,58 @@ describe('submitPredictions', () => {
             expect(savedBody).toBeDefined();
             expect(savedBody?.annotations).toHaveLength(1);
             expect(savedBody?.annotations[0].labels).toEqual([{ id: label1.id }]);
+        });
+    });
+});
+
+describe('Label synchronization', () => {
+    const sourceLabel = getMockedLabel({ id: 'label-1', name: 'Fire', color: '#0000FF', hotkey: 'F' });
+
+    it('updates annotation label metadata when project label changes', () => {
+        const annotations = [
+            {
+                id: 'annotation-1',
+                shape: getMockedShape({ type: 'rectangle' }),
+                labels: [sourceLabel],
+            },
+        ];
+
+        const updatedLabel = getMockedLabel({ id: 'label-1', name: 'Fire23', color: '#FF0000', hotkey: 'R' });
+
+        const result = syncAnnotationLabelsWithProjectLabels(annotations, [updatedLabel]);
+
+        expect(result[0].labels).toEqual([updatedLabel]);
+    });
+
+    it('removes annotation labels that no longer exist in project labels', () => {
+        const annotations = [
+            {
+                id: 'annotation-1',
+                shape: getMockedShape({ type: 'rectangle' }),
+                labels: [sourceLabel],
+            },
+        ];
+
+        const result = syncAnnotationLabelsWithProjectLabels(annotations, []);
+
+        expect(result[0].labels).toEqual([]);
+    });
+
+    it('derives validation state from synced annotation labels', async () => {
+        const staleLabel = getMockedLabel({ id: 'deleted-label', name: 'Deleted label' });
+        const { result } = renderAnnotationActions({ mode: 'annotation', labels: [] });
+
+        await waitFor(() => expect(result.current).not.toBeNull());
+
+        act(() => {
+            result.current.addAnnotations([getMockedShape({ type: 'rectangle' })], [staleLabel]);
+        });
+
+        await waitFor(() => {
+            expect(result.current.annotations).toHaveLength(1);
+            expect(result.current.annotations[0].labels).toEqual([]);
+            expect(result.current.hasInvalidAnnotation).toBe(true);
+            expect(result.current.canSubmit).toBe(false);
         });
     });
 });

@@ -1,6 +1,8 @@
 .title {
     font-weight: 500;
     font-size: var(--spectrum-global-dimension-size-350);
+    display: inline-flex;
+    align-items: baseline;
 }
 
 .description {

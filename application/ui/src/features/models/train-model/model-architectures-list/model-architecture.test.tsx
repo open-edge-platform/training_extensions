@@ -13,13 +13,15 @@ import { ModelArchitectureWithPerformanceCategory } from '../../../../constants/
 import { DetailedModelArchitecture, ModelArchitecture } from './model-architecture.component';
 import { ModelArchitecturesListLayout } from './model-architectures-list-layout/model-architectures-list-layout.component';
 
+type OnSelectedModelArchitectureIdChange = (modelArchitectureId: string | null) => void;
+
 const renderModelArchitecture = ({
     selectedModelArchitectureId = null,
-    onSelectedModelArchitectureIdChange = vi.fn(),
+    onSelectedModelArchitectureIdChange = vi.fn<OnSelectedModelArchitectureIdChange>(),
     modelArchitecture = getMockedModelArchitecture(),
 }: {
     selectedModelArchitectureId?: string | null;
-    onSelectedModelArchitectureIdChange?: ReturnType<typeof vi.fn>;
+    onSelectedModelArchitectureIdChange?: OnSelectedModelArchitectureIdChange;
     modelArchitecture?: ModelArchitectureWithPerformanceCategory;
 } = {}) => {
     render(
@@ -41,11 +43,11 @@ const renderModelArchitecture = ({
 
 const renderDetailedModelArchitecture = ({
     selectedModelArchitectureId = null,
-    onSelectedModelArchitectureIdChange = vi.fn(),
+    onSelectedModelArchitectureIdChange = vi.fn<OnSelectedModelArchitectureIdChange>(),
     modelArchitecture = getMockedModelArchitecture(),
 }: {
     selectedModelArchitectureId?: string | null;
-    onSelectedModelArchitectureIdChange?: ReturnType<typeof vi.fn>;
+    onSelectedModelArchitectureIdChange?: OnSelectedModelArchitectureIdChange;
     modelArchitecture?: ModelArchitectureWithPerformanceCategory;
 } = {}) => {
     render(

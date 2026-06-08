@@ -88,7 +88,7 @@ export const ProjectCard = ({ item, prioritizeImage = false, projectNames }: Pro
 
                     <View flex={1} padding={cardPadding}>
                         <Flex alignItems={'center'} justifyContent={'space-between'}>
-                            <Heading level={2} marginEnd={'size-400'} UNSAFE_className={classes.projectName}>
+                            <Heading level={2} marginEnd={'size-400'} UNSAFE_className={classes.projectCardName}>
                                 <span title={item.name}>{item.name}</span>
                             </Heading>
                         </Flex>

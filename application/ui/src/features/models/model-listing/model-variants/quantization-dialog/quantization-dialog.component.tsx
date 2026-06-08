@@ -107,22 +107,24 @@ export const QuantizationDialog = ({ modelId, onClose }: QuantizationDialogProps
 
                         <Divider size={'S'} marginY={'size-200'} />
 
-                        <MaxAccuracyDropField
-                            value={accuracyDrop}
-                            onChange={setAccuracyDrop}
-                            isDisabled={hasNoMaxAccuracyDrop}
-                            onDisabledChange={setHasNoMaxAccuracyDrop}
-                            onReset={() => setAccuracyDrop(DEFAULT_QUANTIZATION_PARAMETERS.accuracyDrop)}
-                        />
+                        <Flex gap={'size-125'} alignItems={'center'} direction={'column'}>
+                            <MaxAccuracyDropField
+                                value={accuracyDrop}
+                                onChange={setAccuracyDrop}
+                                isDisabled={hasNoMaxAccuracyDrop}
+                                onDisabledChange={setHasNoMaxAccuracyDrop}
+                                onReset={() => setAccuracyDrop(DEFAULT_QUANTIZATION_PARAMETERS.accuracyDrop)}
+                            />
 
-                        <CalibrationDatasetSizeField
-                            value={effectiveCalibrationSize}
-                            onChange={setCalibrationSize}
-                            maxValue={maxCalibrationSize}
-                            isDisabled={usesFullCalibrationDataset}
-                            onDisabledChange={setUsesFullCalibrationDataset}
-                            onReset={() => setCalibrationSize(DEFAULT_QUANTIZATION_PARAMETERS.calibrationSize)}
-                        />
+                            <CalibrationDatasetSizeField
+                                value={effectiveCalibrationSize}
+                                onChange={setCalibrationSize}
+                                maxValue={maxCalibrationSize}
+                                isDisabled={usesFullCalibrationDataset}
+                                onDisabledChange={setUsesFullCalibrationDataset}
+                                onReset={() => setCalibrationSize(DEFAULT_QUANTIZATION_PARAMETERS.calibrationSize)}
+                            />
+                        </Flex>
 
                         <Flex gap={'size-100'} alignItems={'center'} marginTop={'size-300'}>
                             <InfoOutline />

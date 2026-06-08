@@ -143,6 +143,19 @@ class OVModel:
         resize_type = getattr(getattr(base, "params", None), "resize_type", None)
         return resize_type in _aspect_ratio_resize_types
 
+    @property
+    def pad_value(self) -> int:
+        """Return the padding value embedded in the exported model metadata.
+
+        YOLO-family models use ``114`` (gray) while most other architectures
+        use ``0`` (black).  The value is read from the ModelAPI model parameters
+        which are populated from the IR ``model_info/pad_value`` metadata key.
+
+        Defaults to ``0`` when the attribute is not accessible.
+        """
+        base = self.model.model if isinstance(self.model, Tiler) else self.model
+        return int(getattr(getattr(base, "params", None), "pad_value", 0))
+
     def _get_hparams_from_adapter(self, model_adapter: OpenvinoAdapter) -> None:
         """Read model configuration from the ModelAPI OpenVINO adapter.
 

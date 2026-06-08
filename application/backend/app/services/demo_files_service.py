@@ -124,16 +124,15 @@ class DemoFilesService:
                 continue
             try:
                 frame_index = media.frame_count // 2
-                video_frame = self._media_service.get_frame_binary(
-                    project_id=project_id, video=media, frame_index=frame_index
-                )
+                video_path = self._media_service.get_media_binary_path(project_id=project_id, media=media)
+                video_frame = self._encode_video_frame_as_jpeg(video_path=video_path, frame_index=frame_index)
                 logger.info(
                     "No image found in project {}; extracting frame {} from video {} as sample image.",
                     project_id,
                     frame_index,
                     media.id,
                 )
-                return video_frame.tobytes()
+                return video_frame
             except Exception:
                 logger.exception("Failed to extract a sample frame from video {} (project {})", media.id, project_id)
                 continue

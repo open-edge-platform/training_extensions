@@ -1,51 +1,54 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-// `<a download>` is ignored by WKWebView/Chromium for cross-origin URLs (it
-// navigates instead of downloading). To match the web build we fetch the
-// response, expose it as a same-origin blob URL, and let the anchor flow
-// auto-save it to the user's Downloads folder. Blob URLs strip
-// `Content-Disposition`, so the caller-supplied `name` (or the URL's last
-// path segment) is used as the filename.
+import { toast } from '@geti/ui';
+import { save } from '@tauri-apps/plugin-dialog';
+import { writeFile } from '@tauri-apps/plugin-fs';
 
-export const downloadFile = (url: string, name?: string): void => {
-    if (url.startsWith('blob:')) {
-        downloadViaAnchor(url, name);
-
-        return;
-    }
-
-    void autoDownload(url, name).catch((error: unknown) => {
+export const downloadFile = (url: string, name?: string, startedMessage?: string): void => {
+    void saveDownload(url, name, startedMessage).catch((error: unknown) => {
         console.error('[tauri downloadFile] failed', error);
     });
 };
 
-const autoDownload = async (url: string, name?: string): Promise<void> => {
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`download failed: ${response.status} ${response.statusText}`);
+const saveDownload = async (url: string, name?: string, startedMessage?: string): Promise<void> => {
+    const shouldRevokeObjectUrl = url.startsWith('blob:');
+
+    try {
+        const filename = name ?? getFallbackFilename(url);
+        const selectedPath = await save({
+            defaultPath: filename,
+        });
+
+        if (selectedPath === null) {
+            return;
+        }
+
+        if (startedMessage !== undefined) {
+            toast({ type: 'info', message: startedMessage });
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`download failed: ${response.status} ${response.statusText}`);
+        }
+
+        const fileData = new Uint8Array(await response.arrayBuffer());
+        await writeFile(selectedPath, fileData);
+    } finally {
+        if (shouldRevokeObjectUrl) {
+            URL.revokeObjectURL(url);
+        }
     }
-
-    // The urls for downloading assets end with /binary, so we take the preceding segment as the filename.
-    // If that segment is missing for some reason, we fall back to a generic name.
-    const segments = new URL(url).pathname.split('/').filter(Boolean);
-    const filename = name ?? segments.at(-2) ?? 'download';
-    const blobUrl = URL.createObjectURL(await response.blob());
-
-    downloadViaAnchor(blobUrl, filename);
 };
 
-const downloadViaAnchor = (url: string, name?: string): void => {
-    const link = document.createElement('a');
-
-    link.href = url;
-    if (name !== undefined) {
-        link.download = name;
-    }
-    link.hidden = true;
-    link.click();
-
+const getFallbackFilename = (url: string): string => {
     if (url.startsWith('blob:')) {
-        URL.revokeObjectURL(url);
+        return 'download';
     }
+
+    // Asset download URLs end with /binary, so the previous segment is usually the item id.
+    const segments = new URL(url, window.location.origin).pathname.split('/').filter(Boolean);
+
+    return segments.at(-2) ?? 'download';
 };
