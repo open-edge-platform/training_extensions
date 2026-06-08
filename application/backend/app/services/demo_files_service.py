@@ -11,7 +11,7 @@ from uuid import UUID
 
 from loguru import logger
 
-from app.models.media import MediaType, Video
+from app.models.media import Image, MediaType, Video
 from app.models.model_revision import ModelFormat
 
 if TYPE_CHECKING:
@@ -23,6 +23,8 @@ _MODEL_FILENAME_BY_FORMAT: dict[ModelFormat, str] = {
     ModelFormat.OPENVINO: "model.xml",
     ModelFormat.ONNX: "model.onnx",
 }
+
+_DEFAULT_IMAGE_FILENAME = "image.jpg"
 
 
 @dataclass(frozen=True)
@@ -57,30 +59,51 @@ class DemoFilesService:
         model_filename = _MODEL_FILENAME_BY_FORMAT[model_format]
         files: list[DemoFile] = []
 
-        sample_image = self._pick_sample_image(project_id=project_id)
-        if sample_image is not None:
-            files.append(DemoFile(name="image.jpg", data=sample_image))
+        # Preserve the original sample image format/extension: 16-bit images (PNG/TIFF)
+        # must not be re-encoded to JPEG, which would silently downcast them to 8-bit.
+        sample = self._pick_sample_image(project_id=project_id)
+        if sample is not None:
+            image_filename, image_bytes = sample
+            files.append(DemoFile(name=image_filename, data=image_bytes))
         else:
+            image_filename = _DEFAULT_IMAGE_FILENAME
             logger.warning(
-                "No suitable sample image found in project {}; the model archive will not include 'image.jpg'.",
+                "No suitable sample image found in project {}; the model archive will not include a sample image.",
                 project_id,
             )
 
-        files.append(DemoFile(name="demo.py", data=_DEMO.format(model_filename=model_filename).encode("utf-8")))
         files.append(
-            DemoFile(name="demo_async.py", data=_DEMO_ASYNC.format(model_filename=model_filename).encode("utf-8"))
+            DemoFile(
+                name="demo.py",
+                data=_DEMO.format(model_filename=model_filename, image_filename=image_filename).encode("utf-8"),
+            )
+        )
+        files.append(
+            DemoFile(
+                name="demo_async.py",
+                data=_DEMO_ASYNC.format(model_filename=model_filename, image_filename=image_filename).encode("utf-8"),
+            )
         )
         files.append(DemoFile(name="pyproject.toml", data=_PY_PROJECT.encode("utf-8")))
-        files.append(DemoFile(name="README.md", data=_README.format(model_filename=model_filename).encode("utf-8")))
+        files.append(
+            DemoFile(
+                name="README.md",
+                data=_README.format(model_filename=model_filename, image_filename=image_filename).encode("utf-8"),
+            )
+        )
         return files
 
-    def _pick_sample_image(self, project_id: UUID) -> bytes | None:
-        """Pick a sample image from the project's dataset and return its JPEG bytes.
+    def _pick_sample_image(self, project_id: UUID) -> tuple[str, bytes] | None:  # noqa: C901
+        """Pick a sample image from the project's dataset.
+
+        Returns a (filename, data) tuple where filename preserves the original
+        image extension (so 16-bit PNG/TIFF images are bundled verbatim, without any
+        lossy re-encoding) and data is the raw file content.
 
         Resolution order:
-          1. The first available plain image in the project.
+          1. The first available plain image in the project (kept in its original format).
           2. If no images exist but at least one video does, the **middle frame**
-             of the first video is decoded and encoded as JPEG.
+             of the first video is decoded and encoded as JPEG (named image.jpg).
           3. Otherwise, returns None.
         """
         try:
@@ -103,7 +126,8 @@ class DemoFilesService:
             try:
                 path: Path = self._media_service.get_media_binary_path(project_id=project_id, media=media)
                 if path.exists():
-                    return path.read_bytes()
+                    extension = media.format.value if isinstance(media, Image) else path.suffix.lstrip(".") or "jpg"
+                    return f"image.{extension}", path.read_bytes()
             except Exception:
                 logger.exception("Failed to read sample image {} for project {}", media.id, project_id)
                 continue
@@ -126,13 +150,15 @@ class DemoFilesService:
                 frame_index = media.frame_count // 2
                 video_path = self._media_service.get_media_binary_path(project_id=project_id, media=media)
                 video_frame = self._encode_video_frame_as_jpeg(video_path=video_path, frame_index=frame_index)
+                if video_frame is None:
+                    continue
                 logger.info(
                     "No image found in project {}; extracting frame {} from video {} as sample image.",
                     project_id,
                     frame_index,
                     media.id,
                 )
-                return video_frame
+                return _DEFAULT_IMAGE_FILENAME, video_frame
             except Exception:
                 logger.exception("Failed to extract a sample frame from video {} (project {})", media.id, project_id)
                 continue
@@ -176,33 +202,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import cv2
-import numpy as np
 from model_api.models import Model
-from PIL import Image
+from model_api.visualizer import Visualizer
 
 HERE = Path(__file__).resolve().parent
 MODEL_PATH = HERE / "{model_filename}"
-IMAGE_PATH = HERE / "image.jpg"
+IMAGE_PATH = HERE / "{image_filename}"
 OUTPUT_PATH = HERE / "result.jpg"
-
-
-def overlay_predictions(image_bgr: np.ndarray, result) -> np.ndarray:
-    """Render predictions on top of the input image using model_api visualizers."""
-    # model_api visualizers consume PIL/RGB images.
-    image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
-    image_pil = Image.fromarray(image_rgb)
-
-    try:
-        from model_api.visualizer import Visualizer
-
-        visualizer = Visualizer()
-        visualizer.show(image=image_pil, result=result)
-        rendered = visualizer.render(image=image_pil, result=result)
-        return cv2.cvtColor(np.array(rendered), cv2.COLOR_RGB2BGR)
-    except Exception as exc:
-        print(f"Visualization failed ({{exc}}), printing raw result instead:")
-        print(result)
-        return image_bgr
 
 
 def main() -> None:
@@ -215,16 +221,32 @@ def main() -> None:
     model = Model.create_model(str(MODEL_PATH))
 
     print(f"Loading image from {{IMAGE_PATH}}...")
-    image_bgr = cv2.imread(str(IMAGE_PATH))
+    # IMREAD_UNCHANGED preserves the original bit depth (e.g. 16-bit PNG/TIFF images).
+    image_bgr = cv2.imread(str(IMAGE_PATH), cv2.IMREAD_UNCHANGED)
     if image_bgr is None:
         raise RuntimeError(f"Failed to decode image: {{IMAGE_PATH}}")
+
+    # The model expects a 3-channel (BGR) image. Images decoded with IMREAD_UNCHANGED
+    # may be single-channel (grayscale / 16-bit) or carry an extra alpha channel, so
+    # normalize them to 3 channels here.
+    if image_bgr.ndim == 2:
+        image_bgr = cv2.cvtColor(image_bgr, cv2.COLOR_GRAY2BGR)
+    elif image_bgr.shape[2] == 4:
+        image_bgr = cv2.cvtColor(image_bgr, cv2.COLOR_BGRA2BGR)
 
     print("Running synchronous inference...")
     result = model(image_bgr)
     print("Predictions:")
     print(result)
 
-    output = overlay_predictions(image_bgr, result)
+    # The visualizer (PIL under the hood) only handles 8-bit images, so down-convert
+    # higher bit depths (e.g. 16-bit) for rendering. Inference above used the original.
+    if image_bgr.dtype != "uint8":
+        display_image = cv2.normalize(image_bgr, None, 0, 255, cv2.NORM_MINMAX).astype("uint8")
+    else:
+        display_image = image_bgr
+
+    output = Visualizer().render(display_image, result)
     cv2.imwrite(str(OUTPUT_PATH), output)
     print(f"Saved annotated result to {{OUTPUT_PATH}}")
 
@@ -249,32 +271,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import cv2
-import numpy as np
 from model_api.models import Model
 from model_api.pipelines import AsyncPipeline
-from PIL import Image
+from model_api.visualizer import Visualizer
 
 HERE = Path(__file__).resolve().parent
 MODEL_PATH = HERE / "{model_filename}"
-IMAGE_PATH = HERE / "image.jpg"
+IMAGE_PATH = HERE / "{image_filename}"
 OUTPUT_PATH = HERE / "result_async.jpg"
-
-
-def overlay_predictions(image_bgr: np.ndarray, result) -> np.ndarray:
-    image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
-    image_pil = Image.fromarray(image_rgb)
-
-    try:
-        from model_api.visualizer import Visualizer
-
-        visualizer = Visualizer()
-        visualizer.show(image=image_pil, result=result)
-        rendered = visualizer.render(image=image_pil, result=result)
-        return cv2.cvtColor(np.array(rendered), cv2.COLOR_RGB2BGR)
-    except Exception as exc:
-        print(f"Visualization failed ({{exc}}), printing raw result instead:")
-        print(result)
-        return image_bgr
 
 
 def main() -> None:
@@ -287,9 +291,18 @@ def main() -> None:
     model = Model.create_model(str(MODEL_PATH))
 
     print(f"Loading image from {{IMAGE_PATH}}...")
-    image_bgr = cv2.imread(str(IMAGE_PATH))
+    # IMREAD_UNCHANGED preserves the original bit depth (e.g. 16-bit PNG/TIFF images).
+    image_bgr = cv2.imread(str(IMAGE_PATH), cv2.IMREAD_UNCHANGED)
     if image_bgr is None:
         raise RuntimeError(f"Failed to decode image: {{IMAGE_PATH}}")
+
+    # The model expects a 3-channel (BGR) image. Images decoded with IMREAD_UNCHANGED
+    # may be single-channel (grayscale / 16-bit) or carry an extra alpha channel, so
+    # normalize them to 3 channels here.
+    if image_bgr.ndim == 2:
+        image_bgr = cv2.cvtColor(image_bgr, cv2.COLOR_GRAY2BGR)
+    elif image_bgr.shape[2] == 4:
+        image_bgr = cv2.cvtColor(image_bgr, cv2.COLOR_BGRA2BGR)
 
     print("Running asynchronous inference...")
     pipeline = AsyncPipeline(model)
@@ -299,7 +312,14 @@ def main() -> None:
     print("Predictions:")
     print(result)
 
-    output = overlay_predictions(image_bgr, result)
+    # The visualizer (PIL under the hood) only handles 8-bit images, so down-convert
+    # higher bit depths (e.g. 16-bit) for rendering. Inference above used the original.
+    if image_bgr.dtype != "uint8":
+        display_image = cv2.normalize(image_bgr, None, 0, 255, cv2.NORM_MINMAX).astype("uint8")
+    else:
+        display_image = image_bgr
+
+    output = Visualizer().render(display_image, result)
     cv2.imwrite(str(OUTPUT_PATH), output)
     print(f"Saved annotated result to {{OUTPUT_PATH}}")
 
@@ -337,14 +357,14 @@ ready-to-run inference demos.
 | File | Description |
 | ---- | ----------- |
 | `{model_filename}` (+ `model.bin` for OpenVINO IR) | The exported model weights. |
-| `image.jpg` (optional) | Sample input image from the project's dataset (may be omitted if no image is available). |
+| `{image_filename}` (optional) | Sample input image from the project's dataset, kept in its original format. |
 | `demo.py` | Minimal **synchronous** inference example. |
 | `demo_async.py` | Minimal **asynchronous** inference example. |
-| `requirements.txt` | Python dependencies required by the demos. |
+| `pyproject.toml` | Python dependencies required by the demos. |
 | `README.md` | This file. |
 
- If `image.jpg` is missing, copy any image into this directory and name it `image.jpg` 
- (or edit the demos to point to a different file).
+The image may be omitted if no image is available. If `{image_filename}` is missing, copy any image into this directory 
+and name it `{image_filename}` (or edit the demos to point to a different file).
  
 ## Setup
 
@@ -388,7 +408,7 @@ python demo.py
 python demo_async.py
 ```
 
-Both scripts load `image.jpg`, run inference on it with OpenVINO Model API and
+Both scripts load `{image_filename}`, run inference on it with OpenVINO Model API and
 save an output image with the predicted bounding boxes / labels / masks
 overlaid on top.
 
