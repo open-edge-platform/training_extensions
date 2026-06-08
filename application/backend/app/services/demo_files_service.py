@@ -202,6 +202,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import cv2
+import numpy as np
+from PIL import Image as PILImage
 from model_api.models import Model
 from model_api.visualizer import Visualizer
 
@@ -246,8 +248,10 @@ def main() -> None:
     else:
         display_image = image_bgr
 
-    output = Visualizer().render(display_image, result)
-    cv2.imwrite(str(OUTPUT_PATH), output)
+    display_rgb = cv2.cvtColor(display_image, cv2.COLOR_BGR2RGB)
+    rendered = Visualizer().render(image=PILImage.fromarray(display_rgb), result=result)
+    output_bgr = cv2.cvtColor(np.array(rendered), cv2.COLOR_RGB2BGR)
+    cv2.imwrite(str(OUTPUT_PATH), output_bgr)
     print(f"Saved annotated result to {{OUTPUT_PATH}}")
 
 
@@ -271,6 +275,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import cv2
+import numpy as np
+from PIL import Image as PILImage
 from model_api.models import Model
 from model_api.pipelines import AsyncPipeline
 from model_api.visualizer import Visualizer
@@ -319,8 +325,10 @@ def main() -> None:
     else:
         display_image = image_bgr
 
-    output = Visualizer().render(display_image, result)
-    cv2.imwrite(str(OUTPUT_PATH), output)
+    display_rgb = cv2.cvtColor(display_image, cv2.COLOR_BGR2RGB)
+    rendered = Visualizer().render(image=PILImage.fromarray(display_rgb), result=result)
+    output_bgr = cv2.cvtColor(np.array(rendered), cv2.COLOR_RGB2BGR)
+    cv2.imwrite(str(OUTPUT_PATH), output_bgr)
     print(f"Saved annotated result to {{OUTPUT_PATH}}")
 
 
