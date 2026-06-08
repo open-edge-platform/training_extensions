@@ -402,9 +402,9 @@ class AutoConfigurator:
         if not datamodule.data_root and datamodule.subsets:
             datamodule.train_subset.input_size = actual_input_size
             return DataModule.from_vision_datasets(
-                train_dataset=datamodule.subsets["train"],
-                val_dataset=datamodule.subsets["val"],
-                test_dataset=datamodule.subsets.get("test"),
+                train_dataset=datamodule.subsets[datamodule.train_subset.subset_name],
+                val_dataset=datamodule.subsets[datamodule.val_subset.subset_name],
+                test_dataset=datamodule.subsets.get(datamodule.test_subset.subset_name),
                 train_subset=datamodule.train_subset,
                 val_subset=datamodule.val_subset,
                 test_subset=datamodule.test_subset,

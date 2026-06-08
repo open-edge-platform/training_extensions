@@ -71,7 +71,9 @@ class GetiTuneDataBridgeMixin:
             msg = "DataModule is required when _use_getitune_data=True"
             raise RuntimeError(msg)
 
-        subset_key = "train" if mode == "train" else "val"
+        subset_key = (
+            self._datamodule.train_subset.subset_name if mode == "train" else self._datamodule.val_subset.subset_name
+        )
         vision_dataset = self._datamodule.subsets[subset_key]  # type: ignore[union-attr]
         return UltralyticsDatasetAdapter(vision_dataset, include_masks=self._include_masks)
 

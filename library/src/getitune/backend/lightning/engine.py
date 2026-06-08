@@ -1214,10 +1214,11 @@ class LightningEngine(Engine):
             return False
 
         # Set DataAugSwitch for the training dataset
+        train_key = self.datamodule.train_subset.subset_name
         if (
             hasattr(self.datamodule, "subsets")
-            and "train" in self.datamodule.subsets
-            and set_data_aug_switch_if_supported(self.datamodule.subsets["train"])
+            and train_key in self.datamodule.subsets
+            and set_data_aug_switch_if_supported(self.datamodule.subsets[train_key])
         ):
             msg = "DataAugSwitch set for train_dataset"
             logging.info(msg)

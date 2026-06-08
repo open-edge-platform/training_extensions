@@ -139,7 +139,9 @@ class GetiTuneValidatorMixin:
         if self._datamodule is None:
             msg = "_build_adapter_dataloader requires a DataModule"
             raise TypeError(msg)
-        subset = self._datamodule.subsets.get("test") or self._datamodule.subsets["val"]
+        test_key = self._datamodule.test_subset.subset_name
+        val_key = self._datamodule.val_subset.subset_name
+        subset = self._datamodule.subsets.get(test_key) or self._datamodule.subsets[val_key]
         adapter = UltralyticsDatasetAdapter(subset, include_masks=self._include_masks)
         return DataLoader(
             adapter,

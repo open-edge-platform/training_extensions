@@ -625,11 +625,11 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             shutil.copyfile(onnx_metadata, onnx_variant_dir / "metadata.yaml")
         logger.info("Stored ONNX variant at {}", onnx_variant_dir)
 
-        csv_source_path = getitune_work_dir / "csv"
-        if csv_source_path.exists() and csv_source_path.is_dir():
-            metrics_dest_path = model_dir / "metrics"
-            shutil.move(csv_source_path, metrics_dest_path)
-            logger.info("Stored training metrics at {}", metrics_dest_path)
+        # Store the metrics
+        metrics_source_path = getitune_work_dir / "csv"
+        metrics_dest_path = model_dir / "metrics"
+        if metrics_source_path.exists():
+            shutil.move(metrics_source_path, metrics_dest_path)
 
     def create_model_variants(self, model_revision_id: UUID) -> dict[ModelFormat, UUID]:
         """Create variant records in the database for all exported formats.

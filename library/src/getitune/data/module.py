@@ -155,6 +155,13 @@ class DataModule(LightningDataModule):
             "test": self.test_subset,
         }
 
+        subset_names = [cfg.subset_name for cfg in config_mapping.values()]
+        if len(set(subset_names)) != len(subset_names):
+            msg = (
+                f"Subset names must be unique, got {subset_names}. Ensure each SubsetConfig has a distinct subset_name."
+            )
+            raise ValueError(msg)
+
         if self.auto_num_workers:
             if self.device not in [DeviceType.gpu, DeviceType.auto]:
                 logger.warning(
@@ -204,8 +211,8 @@ class DataModule(LightningDataModule):
                     dataset=subset_dataset,
                     tile_config=self.tile_config,
                 )
-            self.subsets[name] = subset_dataset
-            label_infos += [self.subsets[name].label_info]
+            self.subsets[subset_cfg.subset_name] = subset_dataset
+            label_infos += [self.subsets[subset_cfg.subset_name].label_info]
 
         if self._is_meta_info_valid(label_infos) is False:
             msg = "All data meta infos of subsets should be the same."
@@ -284,7 +291,6 @@ class DataModule(LightningDataModule):
         instance = cls.__new__(cls)
         LightningDataModule.__init__(instance)
         # Set basic attributes
-        instance.subsets = {"train": train_dataset, "val": val_dataset, "test": test_dataset}
         instance.task = train_dataset.task_type  # type: ignore[assignment]
         instance.data_root = ""
         instance.tile_config = (
@@ -332,6 +338,11 @@ class DataModule(LightningDataModule):
 
             # Set the 'train_subset', 'val_subset', 'test_subset' attributes
             setattr(instance, f"{name}_subset", subset_to_assign)
+
+        instance.subsets = {}
+        for name, ds in zip(["train", "val", "test"], [train_dataset, val_dataset, test_dataset]):
+            cfg = getattr(instance, f"{name}_subset")
+            instance.subsets[cfg.subset_name] = ds
 
         # Derive normalization params from the CPU pipeline's Normalize transform if available.
         if getattr(instance.train_subset, "augmentations_cpu", None):
