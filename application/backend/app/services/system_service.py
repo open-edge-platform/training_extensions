@@ -4,9 +4,7 @@ import platform
 import re
 
 import cv2
-import openvino as ov
 import psutil
-import torch
 from cv2_enumerate_cameras import enumerate_cameras
 from loguru import logger
 
@@ -54,6 +52,8 @@ class SystemService:
         Returns:
             list[DeviceInfo]: List of available devices
         """
+        import torch
+
         # CPU is always available
         devices: list[DeviceInfo] = [DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)]
 
@@ -99,6 +99,8 @@ class SystemService:
         Returns:
             list[DeviceInfo]: List of available inference devices.
         """
+        import openvino as ov
+
         try:
             core = ov.Core()
             available_devices: list[str] = list(core.available_devices)
