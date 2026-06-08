@@ -59,6 +59,12 @@ test.describe('Inference', () => {
 
     test('Inference workflow', async ({ streamPage, page, network }) => {
         await test.step('starts stream', async () => {
+            network.use(
+                http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
+                    return response(200).json(getMockedPipeline({ status: 'running' }));
+                })
+            );
+
             await page.goto('/projects/id-1/inference');
 
             await streamPage.startStream();
@@ -67,6 +73,12 @@ test.describe('Inference', () => {
         });
 
         await test.step('toggles pipeline', async () => {
+            network.use(
+                http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
+                    return response(200).json(getMockedPipeline({ status: 'idle' }));
+                })
+            );
+
             await page.goto('/projects/id-1/inference');
 
             await expect(page.getByRole('switch', { name: /Enable pipeline/i })).toBeEnabled();
@@ -398,7 +410,7 @@ test.describe('Inference', () => {
 
         await page.getByRole('tab', { name: 'Inference' }).click();
 
-        await expect(page.getByLabel('Enable pipeline to start stream')).toBeVisible();
+        await expect(page.getByTitle('Enable pipeline to start stream')).toBeVisible();
         await expect(page.getByRole('switch', { name: /Enable pipeline/i })).toBeVisible();
     });
 
