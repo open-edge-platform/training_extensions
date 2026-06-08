@@ -12,3 +12,8 @@
     gap: var(--spectrum-global-dimension-size-125);
     margin-top: var(--spectrum-global-dimension-size-125);
 }
+
+.warningMessageIcon {
+    fill: var(--spectrum-semantic-notice-color-icon);
+    margin-top: var(--spectrum-global-dimension-size-25);
+}
