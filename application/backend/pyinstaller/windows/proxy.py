@@ -182,11 +182,13 @@ print("Setup Hook: Detecting proxy")
 # Skip detection entirely when a proxy is already configured in the environment.
 # This covers both user-provided HTTP(S)_PROXY and child/worker processes that
 # inherit the value resolved by the parent, avoiding repeated WPAD discovery.
-if os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY"):
+# Both upper- and lower-case variants are honoured, as either can be set by users.
+if any(os.environ.get(name) for name in ("HTTPS_PROXY", "HTTP_PROXY", "https_proxy", "http_proxy")):
     print("Setup Hook: Proxy already set in environment, skipping detection")
 else:
     proxy = _detect_proxy("https://huggingface.co")
-    print("Setup Hook: Detected proxy: ", proxy)
+    # Avoid printing the proxy value itself: it can embed credentials.
+    print("Setup Hook: Proxy detected" if proxy else "Setup Hook: No proxy detected")
     if proxy:
         os.environ["HTTP_PROXY"] = proxy
         os.environ["HTTPS_PROXY"] = proxy
