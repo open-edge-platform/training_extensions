@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Content, DatePicker, Dialog, DialogTrigger, Flex, PressableElement, Text } from '@geti/ui';
-import { DateValue, getLocalTimeZone, parseAbsoluteToLocal } from '@internationalized/date';
+import { getLocalTimeZone, parseAbsoluteToLocal, type DateValue } from '@internationalized/date';
 import dayjs from 'dayjs';
 import { useDatasetFiltersSearchParams } from 'hooks/use-dataset-filters-search-params.hook';
 import { isEmpty } from 'lodash-es';
@@ -79,7 +79,7 @@ export const DateFilter = () => {
                             hourCycle={24}
                             minValue={MIN_DATE}
                             maxValue={endDate === null ? MAX_DATE : parseAbsoluteToLocal(endDate)}
-                            defaultValue={startDate === null ? null : parseAbsoluteToLocal(startDate)}
+                            value={startDate === null ? null : parseAbsoluteToLocal(startDate)}
                             onChange={handleStartDateChange}
                         />
                         <DatePicker
