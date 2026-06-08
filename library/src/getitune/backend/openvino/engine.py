@@ -552,3 +552,8 @@ class OVEngine(Engine):
             msg = "Please include the `data_root` or `datamodule` when creating the Engine."
             raise RuntimeError(msg)
         return self._datamodule
+
+    @property
+    def best_checkpoint(self) -> Path | None:
+        """OVEngine does not produce checkpoints."""
+        return None
