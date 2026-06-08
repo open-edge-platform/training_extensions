@@ -22,7 +22,7 @@ hyperparameters:
   training:
     learning_rate: 0.001
     weight_decay: 0.0005
-    max_epochs: 80
+    max_epochs: 100
     early_stopping:
       enable: false
     batch_size: 16
@@ -51,7 +51,7 @@ hyperparameters:
         probability: 0.5
         alpha: 1.5
       color_jitter:
-        enable: false
+        enable: true
         brightness:
           - 0.6
           - 1.4

@@ -22,7 +22,7 @@ hyperparameters:
   training:
     learning_rate: 0.001
     weight_decay: 0.0005
-    max_epochs: 80
+    max_epochs: 100
     early_stopping:
       enable: false
     batch_size: 8

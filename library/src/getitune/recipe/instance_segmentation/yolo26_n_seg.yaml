@@ -12,7 +12,7 @@ engine:
   device: auto
 
 training:
-  epochs: 150
+  epochs: 100
   batch: 16
   optimizer: AdamW
   lr0: 0.001
