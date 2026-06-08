@@ -51,6 +51,10 @@ class DispatchingWorker(BaseThreadWorker):
             [EventType.SINK_CHANGED, EventType.PIPELINE_STATUS_CHANGED],
             self._reload_sink,
         )
+        event_bus.subscribe(
+            [EventType.SOURCE_CHANGED],
+            self._on_source_changed,
+        )
 
     def setup(self) -> None:
         pass
@@ -65,6 +69,17 @@ class DispatchingWorker(BaseThreadWorker):
     def _reload_sink(self) -> None:
         self._sink, self._destinations = self._load_sink()
         logger.info(f"Active sink set to {self._sink}")
+
+    def _on_source_changed(self) -> None:
+        """Drop frames cached from the previous source.
+
+        The broadcaster keeps the latest frame and seeds it to newly connecting
+        WebRTC consumers. When the source changes, that cached frame belongs to the
+        old source and would otherwise be replayed (a frozen frame) until the new
+        source starts producing frames. Clearing the broadcaster prevents this.
+        """
+        self._rtc_stream_broadcaster.clear()
+        logger.info("Cleared WebRTC broadcaster after source change")
 
     def run_loop(self) -> None:
         while not self.should_stop():
