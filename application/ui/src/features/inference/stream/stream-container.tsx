@@ -42,7 +42,7 @@ export const StreamContainer = () => {
     };
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-        if (!(isConnected || canStart)) return;
+        if (!isInteractive) return;
 
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
