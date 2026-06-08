@@ -418,7 +418,7 @@ class Configurator:
         for key, value in flatten_overrides(overrides).items():
             self._set_dot_path(key, value)
 
-    def _set_dot_path(self, key: str, value: str | int | float | bool | None | dict[str, Any] | list[Any]) -> None:
+    def _set_dot_path(self, key: str, value: Any) -> None:  # noqa: ANN401
         """Set a dot-path key on the appropriate internal store.
 
         Args:
@@ -451,7 +451,9 @@ class Configurator:
 
     @staticmethod
     def _set_nested(
-        d: dict[str, Any], parts: list[str], value: str | int | float | bool | None | dict[str, Any] | list[Any]
+        d: dict[str, Any],
+        parts: list[str],
+        value: Any,  # noqa: ANN401
     ) -> None:
         """Set a nested key path in a dict, creating intermediate dicts as needed."""
         current = d
