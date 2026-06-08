@@ -42,8 +42,6 @@ export const StreamContainer = () => {
     };
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-        if (!isInteractive) return;
-
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             void handleClick();
