@@ -18,16 +18,19 @@ if getattr(sys, "frozen", False) and __name__ == "__main__":
     # https://pyinstaller.org/en/stable/common-issues-and-pitfalls.html#multi-processing
     multiprocessing.freeze_support()
 
+import asyncio
 import logging
 from collections.abc import Awaitable, Callable
 from os import getenv
 from pathlib import Path
 from typing import cast
 
-import uvicorn
 from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from hypercorn.asyncio import serve
+from hypercorn.config import Config
+from hypercorn.typing import ASGIFramework
 from loguru import logger
 
 from app.api.cache_utils import CachedStaticFiles
@@ -148,17 +151,25 @@ if static_dir is not None and static_dir.is_dir() and any(static_dir.iterdir()):
         return FileResponse(cast(Path, static_dir) / "index.html")
 
 
+async def main_async() -> None:
+    """Async main application entry point for Hypercorn"""
+    logger.info("Starting {} in {} mode via Hypercorn (HTTP/2)", settings.app_name, settings.environment)
+
+    config = Config()
+    config.bind = [f"{settings.host}:{settings.port}"]
+    config.certfile = str(settings.data_dir / settings.certfile)
+    config.keyfile = str(settings.data_dir / settings.keyfile)
+    config.loglevel = settings.log_level.upper()
+
+    await serve(cast(ASGIFramework, app), config)
+
+
 def main() -> None:
-    """Main application entry point"""
-    logger.info(f"Starting {settings.app_name} in {settings.environment} mode")
-    uvicorn.run(
-        app,
-        host=settings.host,
-        port=settings.port,
-        # FIXME: reload mode currently does not work with multiple workers
-        # reload=settings.environment == "dev",
-        log_level=settings.log_level.lower(),
-    )
+    """Synchronous wrapper to start the async loop"""
+    try:
+        asyncio.run(main_async())
+    except KeyboardInterrupt:
+        logger.info("Application shutdown cleanly via KeyboardInterrupt")
 
 
 if __name__ == "__main__":

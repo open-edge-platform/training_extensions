@@ -168,7 +168,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     settings = get_settings()
     settings.ensure_dirs_exist()
     app.state.settings = settings
-    logger.info("Starting {} application...", settings.app_name)
 
     # Setup logging
     setup_logging(config=LogConfig(level=settings.log_level))

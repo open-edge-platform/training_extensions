@@ -180,7 +180,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libgl1=1.7.0-1+b2 \
         libglib2.0-0t64=2.84.4-3~deb13u3 \
         libglx-mesa0=25.0.7-2 \
-        libv4l-0t64=1.30.1-1
+        libv4l-0t64=1.30.1-1 \
+        openssl=3*
 
 # Place the venv at the front of PATH so we can call python directly (no uv needed at runtime)
 ENV PATH="/application/backend/.venv/bin:${PATH}"
@@ -192,9 +193,11 @@ RUN mkdir -p /application/backend/app ${STATIC_FILES_DIR} /home/${USER_NAME} && 
     /home/${USER_NAME}
 
 WORKDIR /application/backend
+COPY --link application/docker/entrypoint.sh /entrypoint.sh
 
 USER ${USER_NAME}
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["python", "app/main.py"]
 
 ######################
@@ -234,7 +237,6 @@ FROM xpu-base AS xpu-clean
 RUN set -eu; \
     CLEANUP_ROOT="$("/application/backend/.venv/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
     [ -n "$CLEANUP_ROOT" ] && [ -d "$CLEANUP_ROOT" ]; \
-    TARGET_DIR="${CLEANUP_ROOT}/triton/backends/nvidia"; \
     echo "Removing triton nvidia backend from ${CLEANUP_ROOT}..." && \
     # Remove triton nvidia backend
     find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia" -prune -exec rm -rf {} + 2>/dev/null || true

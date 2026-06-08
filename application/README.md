@@ -92,6 +92,27 @@ For a full list of runtime options, run `just --usage run-image`.
 
 After the container starts, you can access the Geti web application at [**http://localhost:7860**](http://localhost:7860) (assuming default settings).
 
+#### TLS certificates
+
+By default, the container generates a self-signed certificate at startup and serves over HTTPS on the configured port.
+For production deployments, mount your certificate and private key into the container using `--volumes`, then point
+`--certfile` and `--keyfile` to the in-container paths:
+
+```bash
+just run-image --accelerator xpu \
+    --volumes "/path/to/certs:/certs:ro" \
+    --certfile /certs/server.pem \
+    --keyfile  /certs/server-key.pem
+```
+
+The cert directory is mounted read-only and is separate from the data volume - it is never modified by the container.
+
+> [!NOTE]
+> The self-signed certificate triggers a browser security warning. For a trusted local setup, generate a
+> locally-trusted cert with [mkcert](https://github.com/FiloSottile/mkcert) and pass it the same way.
+
+After the container starts, access Geti at [**https://localhost:7860**](https://localhost:7860).
+
 ### Run from source (for development)
 
 For development purposes, you can run the Geti server and UI as standalone components without Docker.

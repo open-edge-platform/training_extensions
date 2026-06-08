@@ -73,7 +73,11 @@ build-image accelerator="cpu" tag="latest": install-uv
 [arg("coturn_port", long="coturn-port", help="Coturn server listening port (default: 443)")]
 [arg("stun_server", long="stun", help="STUN server URL to use for WebRTC")]
 [arg("gpu-slots", long="gpu-slots", help="Number of GPU slots available for model tuning (default: 1)")]
-run-image accelerator="cpu" tag="latest" port="7860" container-port="7860" container-name="" detach="false" remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="" gpu-slots="1":
+[arg("certfile", long="certfile", help="Path to TLS certificate file for HTTPs (optional, for secure hosting)")]
+[arg("keyfile", long="keyfile", help="Path to TLS key file for HTTPs (optional, for secure hosting)")]
+run-image accelerator="cpu" tag="latest" port="7860" container-port="7860" container-name="" detach="false" \
+remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" \
+coturn_port="443" stun_server="" gpu-slots="1" certfile="" keyfile="":
     #!/usr/bin/env bash
     set -euo pipefail
     shopt -s nullglob
@@ -143,6 +147,16 @@ run-image accelerator="cpu" tag="latest" port="7860" container-port="7860" conta
     STUN_ENV=""
     if [[ -n "{{ stun_server }}" ]]; then
         STUN_ENV="--env STUN_SERVER={{ stun_server }}"
+    fi
+
+    CERTFILE_ENV=""
+    if [[ -n "{{ certfile }}" ]]; then
+        CERTFILE_ENV="--env CERTFILE={{ certfile }}"
+    fi
+
+    KEYFILE_ENV=""
+    if [[ -n "{{ keyfile }}" ]]; then
+        KEYFILE_ENV="--env KEYFILE={{ keyfile }}"
     fi
 
     HOST_IP=$($PYTHON -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()")
@@ -222,6 +236,8 @@ run-image accelerator="cpu" tag="latest" port="7860" container-port="7860" conta
         --env WEBRTC_ADVERTISE_IP="${HOST_IP}" \
         $COTURN_ENV \
         $STUN_ENV \
+        $CERTFILE_ENV \
+        $KEYFILE_ENV \
         --sysctl net.ipv4.ip_local_port_range="{{ replace(webrtc-ports, '-', ' ') }}" \
         --volume {{ data-volume }}:/application/data/ \
         --volume {{ logs-volume }}:/application/logs/ \

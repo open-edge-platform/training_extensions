@@ -33,6 +33,7 @@ dependencies = [
     "polars~=1.37.0",
     "optree~=0.19.0",
     "av~=16.1.0",
+    "hypercorn[h2]~=0.18.0",
 ]
 
 [project.optional-dependencies]
