@@ -1,0 +1,30 @@
+.parameterName {
+    font-size: var(--spectrum-global-dimension-static-font-size-100);
+    font-weight: var(--spectrum-global-font-weight-medium);
+}
+
+.parameterGroupContainer {
+    border: var(--spectrum-global-dimension-static-size-10) solid var(--spectrum-global-color-gray-300);
+    border-radius: var(--spectrum-global-dimension-size-75);
+    padding: var(--spectrum-global-dimension-size-200);
+    background-color: var(--spectrum-global-color-gray-75);
+    grid-column: 1 / -1;
+
+    + .parameterGroupContainer {
+        margin-top: var(--spectrum-global-dimension-size-200);
+    }
+}
+
+.parameterGroupTitle {
+    display: block;
+    margin-bottom: var(--spectrum-global-dimension-size-150);
+    font-size: var(--spectrum-global-dimension-size-200);
+    font-weight: var(--spectrum-global-font-weight-bold);
+    color: var(--spectrum-global-color-gray-700);
+}
+
+.parameterGroupHeader {
+    font-size: var(--spectrum-global-dimension-size-200);
+    font-weight: var(--spectrum-global-font-weight-bold);
+    color: var(--spectrum-global-color-gray-700);
+}

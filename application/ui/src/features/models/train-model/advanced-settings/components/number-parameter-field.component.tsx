@@ -50,6 +50,8 @@ export const NumberParameterField = ({
             <NumberField
                 aria-label={`Change ${name}`}
                 step={fieldStep}
+                hideStepper
+                width={'size-900'}
                 value={parameterValue}
                 minValue={minValue === null ? undefined : minValue}
                 maxValue={maxValue === null ? undefined : maxValue}
@@ -74,8 +76,9 @@ export const NumberParameterField = ({
                 isDisabled={isDisabled}
             />
             <NumberField
-                isQuiet
+                hideStepper
                 step={fieldStep}
+                width={'size-900'}
                 value={parameterValue}
                 minValue={minValue}
                 maxValue={maxValue}

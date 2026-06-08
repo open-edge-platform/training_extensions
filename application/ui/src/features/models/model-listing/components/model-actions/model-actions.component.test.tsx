@@ -122,7 +122,11 @@ describe('ModelActions', () => {
 
         await userEvent.click(await screen.findByRole('button', { name: 'Download logs' }));
 
-        expect(downloadFile).toHaveBeenCalledWith(expect.stringMatching(/^blob:/), `training-logs-${mockModel.id}.log`);
+        expect(downloadFile).toHaveBeenCalledWith(
+            expect.stringMatching(/^blob:/),
+            `training-logs-${mockModel.id}.log`,
+            'Training logs download started'
+        );
         expect(await screen.findByText('Training logs downloaded successfully')).toBeInTheDocument();
     });
 

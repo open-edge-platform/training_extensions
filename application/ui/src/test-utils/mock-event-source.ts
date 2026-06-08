@@ -12,7 +12,7 @@ type MockEventSource = {
 
 let mockEventSourceInstances: MockEventSource[] = [];
 
-export const MockEventSourceConstructor = vi.fn().mockImplementation((url: string) => {
+export const MockEventSourceConstructor = vi.fn().mockImplementation(function (url: string) {
     const instance: MockEventSource = {
         onopen: null,
         onmessage: null,
