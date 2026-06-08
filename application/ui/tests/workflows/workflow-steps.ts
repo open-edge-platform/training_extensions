@@ -191,10 +191,10 @@ export const stepConfigureInferenceSourceAndSink = async (
     await page.getByRole('button', { name: 'Folder' }).click();
 
     await page.getByRole('textbox', { name: 'Name' }).fill(config.sinkName);
-    await page.getByLabel('Samples').fill(String(config.rateLimitSamples));
-    await page.getByLabel('Seconds').fill(String(config.rateLimitSeconds));
+    await page.getByRole('textbox', { name: 'Samples' }).fill(String(config.rateLimitSamples));
+    await page.getByRole('textbox', { name: 'Seconds' }).fill(String(config.rateLimitSeconds));
     await page.getByRole('textbox', { name: 'Folder Path' }).fill(config.sinkFolderPath);
-    await page.getByRole('checkbox', { name: 'Predictions' }).check();
+    await page.getByRole('checkbox', { name: 'Predictions', exact: true }).check();
     await page.getByRole('button', { name: 'Add & Connect' }).click();
 };
 
