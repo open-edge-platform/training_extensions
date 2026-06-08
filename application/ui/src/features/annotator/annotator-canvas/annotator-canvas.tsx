@@ -59,8 +59,7 @@ const useDrawImageOnCanvas = (image: ImageData) => {
     return canvasRef;
 };
 
-// Use <img> for static images to bypass the browser 2D canvas pixel limit
-// (~268 Mpx in Chrome) which renders a white square for very large images.
+// Oversized static images: use <img> to bypass canvas rasterization limit.
 const StaticImage = ({ mediaItem }: { mediaItem: Media }) => {
     const projectId = useProjectIdentifier();
 
@@ -97,12 +96,13 @@ const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
         return <CanvasMediaImage image={image} showVideoFrame />;
     }
 
-    const hasFullResolutionImageData =
+    // Render via canvas if image was decoded at full resolution, else use <img>.
+    const isFullResolution =
         image.width === mediaItem.width &&
         image.height === mediaItem.height &&
         image.data.length === mediaItem.width * mediaItem.height * 4;
 
-    if (hasFullResolutionImageData) {
+    if (isFullResolution) {
         return <CanvasMediaImage image={image} />;
     }
 

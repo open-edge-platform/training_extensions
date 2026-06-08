@@ -12,6 +12,8 @@ import type { RegionOfInterest } from '../../shared/types';
 import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
 import { getImageData } from './tools/utils';
 
+// See tools/utils.ts for the oversized image handling flow (downscale → display
+// in media-space → disable smart tools or coordinate-transform at boundaries).
 type SelectedMediaItemContextProps = {
     mediaItem: Media;
     roi: RegionOfInterest;
@@ -97,9 +99,8 @@ export const SelectedMediaItemProvider = ({
         isPlaceholderData,
     } = useLoadImageQuery(mediaItem);
 
-    // For oversized media, getImageData returns a downscaled buffer so the
-    // image can still be rendered. Keep `image` dimensions in media-space so
-    // drawing tools continue to clamp coordinates correctly.
+    // For oversized media: wrap downscaled data in full-size dimensions so
+    // drawing tools clamp to media-space, not the smaller buffer dimensions.
     const decodedAtFullSize = loadedImage.width === mediaItem.width && loadedImage.height === mediaItem.height;
     const image = decodedAtFullSize
         ? loadedImage

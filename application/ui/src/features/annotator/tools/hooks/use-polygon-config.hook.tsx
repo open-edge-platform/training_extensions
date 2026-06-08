@@ -37,12 +37,7 @@ export const usePolygonConfig = ({
     }, [worker]);
 
     useEffect(() => {
-        // For oversized media `image.data` is a placeholder whose length doesn't
-        // match width*height*4 — opencv's matFromImageData would throw a numeric
-        // Emscripten exception. Skip loading; those tools are disabled for this case.
-        if (!isMounted.current || !image) return;
-        if (isImageOversized(image)) return;
-
+        if (!isMounted.current || !image || isImageOversized(image)) return;
         worker?.loadImage(image);
     }, [image, worker]);
 

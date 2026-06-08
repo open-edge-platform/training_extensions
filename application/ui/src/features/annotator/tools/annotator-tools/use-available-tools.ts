@@ -96,6 +96,7 @@ export const useAvailableTools = (): ToolConfig[] => {
     const taskType = useProjectTask();
     const { mediaItem } = useSelectedMediaItem();
 
+    // Disable smart tools (SAM, magnetic lasso, SSIM) for oversized media.
     if (!canRasteriseAtFullSize(mediaItem.width, mediaItem.height)) {
         return TASK_TOOL_CONFIG[taskType].filter(
             (tool) => tool.type !== 'sam' && tool.type !== 'magnetic-lasso' && tool.type !== 'ssim'
