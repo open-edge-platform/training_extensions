@@ -77,7 +77,9 @@ WinHttpGetProxyForUrl.argtypes = [
 ]
 WinHttpGetProxyForUrl.restype = wintypes.BOOL
 
-WinHttpGetIEProxyConfigForCurrentUser = ctypes.windll.winhttp.WinHttpGetIEProxyConfigForCurrentUser  # type: ignore[attr-defined]
+WinHttpGetIEProxyConfigForCurrentUser = (
+    ctypes.windll.winhttp.WinHttpGetIEProxyConfigForCurrentUser  # type: ignore[attr-defined]
+)
 WinHttpGetIEProxyConfigForCurrentUser.argtypes = [ctypes.POINTER(WINHTTP_CURRENT_USER_IE_PROXY_CONFIG)]
 WinHttpGetIEProxyConfigForCurrentUser.restype = wintypes.BOOL
 
