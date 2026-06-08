@@ -42,7 +42,11 @@ export const StreamContainer = () => {
 
     return (
         <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
-            <div className={classes.canvasContainer} onClick={handleClick}>
+            <div
+                className={classes.canvasContainer}
+                onClick={handleClick}
+                title={isPipelineRunning ? undefined : 'Enable pipeline to start stream'}
+            >
                 {isStopped && (
                     <Flex justifyContent={'center'} alignItems={'center'} UNSAFE_className={classes.backdrop}>
                         <Flex
