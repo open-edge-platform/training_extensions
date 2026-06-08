@@ -97,28 +97,15 @@ class OVInstanceSegmentationModel(OVModel):
         if self._is_onnx:
             # For ONNX models, the adapter parses metadata_props into a flat dict.
             metadata = model_adapter.onnx_metadata.get("model_info", {})
-            if "confidence_threshold" in metadata:
-                self.hparams["best_confidence_threshold"] = float(metadata["confidence_threshold"])
-            else:
-                log.warning(
-                    "Cannot get best_confidence_threshold from model metadata. "
-                    "Please check whether this model is trained by getitune or not. "
-                    "Without this information, it can produce a wrong F1 metric score. "
-                    "At this time, it will be set as the default value = None."
-                )
-                self.hparams["best_confidence_threshold"] = None
+            best_confidence_threshold = metadata.get("confidence_threshold", None)
+            self.hparams["best_confidence_threshold"] = (
+                float(best_confidence_threshold) if best_confidence_threshold is not None else None
+            )
         elif model_adapter.model.has_rt_info(["model_info", "confidence_threshold"]):
             best_confidence_threshold = model_adapter.model.get_rt_info(["model_info", "confidence_threshold"]).value
-            self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
-        else:
-            msg = (
-                "Cannot get best_confidence_threshold from model metadata. "
-                "Please check whether this model is trained by getitune or not. "
-                "Without this information, it can produce a wrong F1 metric score. "
-                "At this time, it will be set as the default value = None."
+            self.hparams["best_confidence_threshold"] = (
+                float(best_confidence_threshold) if best_confidence_threshold is not None else None
             )
-            log.warning(msg)
-            self.hparams["best_confidence_threshold"] = None
 
     def _customize_outputs(
         self,

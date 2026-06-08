@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 _MP_CONTEXT = multiprocessing.get_context("spawn")
 
 
-class GetiTuneDataBridgeMixin:
+class GetiTuneBaseTrainer:
     """Shared DataModule bridge logic for Ultralytics trainers."""
 
     _datamodule: DataModule | None = None

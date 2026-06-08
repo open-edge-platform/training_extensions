@@ -100,7 +100,7 @@ def test_move_batch_to_device_uses_non_blocking_for_xpu() -> None:
 
 
 class TestClearMemory:
-    """Tests for the optimized _clear_memory override in GetiTuneDataBridgeMixin."""
+    """Tests for the optimized _clear_memory override in GetiTuneBaseTrainer."""
 
     def _make_trainer(self, *, use_bridge: bool, device_type: str = "cuda") -> DetectionTrainer:
         trainer = object.__new__(DetectionTrainer)

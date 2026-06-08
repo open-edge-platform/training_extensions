@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import torch
@@ -64,12 +64,12 @@ class UltralyticsDatasetAdapter(TorchDataset):
         bboxes_raw = getattr(sample, "bboxes", None)
         if bboxes_raw is not None and len(bboxes_raw) > 0:
             canvas = getattr(bboxes_raw, "canvas_size", None)
-            canvas_size = tuple(canvas) if canvas is not None else None
+            canvas_size = cast("tuple[int, int] | None", tuple(canvas) if canvas is not None else None)
             bboxes_xywh = xyxy_abs_to_xywh_norm(
                 bboxes_raw,
                 img_w=tensor_w,
                 img_h=tensor_h,
-                canvas_size=canvas_size if _is_hw_tuple(canvas_size) else None,
+                canvas_size=canvas_size,
                 scale_factor=img_info.scale_factor if img_info is not None else None,
                 padding=padding,
             )
@@ -120,8 +120,3 @@ class UltralyticsDatasetAdapter(TorchDataset):
                 result["sem_masks"] = torch.zeros((tensor_h, tensor_w), dtype=torch.float32)
 
         return result
-
-
-def _is_hw_tuple(value: object) -> bool:
-    """Return True for ``(height, width)`` integer tuples."""
-    return isinstance(value, tuple) and len(value) == 2 and all(isinstance(item, int) for item in value)

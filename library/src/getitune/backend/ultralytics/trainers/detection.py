@@ -14,10 +14,10 @@ from ultralytics.models.yolo.detect import DetectionValidator as _UltralyticsDet
 from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 from getitune.backend.ultralytics.validators.detection import DetectionValidator
 
-from .base import GetiTuneDataBridgeMixin
+from .base import GetiTuneBaseTrainer
 
 
-class DetectionTrainer(GetiTuneDataBridgeMixin, XPUAwareTrainerMixin, _UltralyticsDetectionTrainer):
+class DetectionTrainer(GetiTuneBaseTrainer, XPUAwareTrainerMixin, _UltralyticsDetectionTrainer):
     """Detection trainer that routes data through a getitune DataModule.
 
     When ``_datamodule`` is set (via the engine's dynamic subclass),

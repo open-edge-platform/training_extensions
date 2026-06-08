@@ -154,10 +154,11 @@ class UltralyticsModel:
             logger.info(f"Loading pretrained weights: {weights_url}")
             yolo.load(weights_url)
         elif self.pretrained and self._pretrained_weights:
-            logger.warning(
+            msg = (
                 f"pretrained=True but no pretrained weights found for '{base_name}'. "
                 f"Available: {list(self._pretrained_weights.keys())}"
             )
+            raise ValueError(msg)
 
         return yolo
 

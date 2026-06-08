@@ -16,13 +16,13 @@ from ultralytics.models.yolo.segment import SegmentationValidator as _Ultralytic
 from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
 from getitune.backend.ultralytics.validators.instance_segmentation import SegmentationValidator
 
-from .base import GetiTuneDataBridgeMixin
+from .base import GetiTuneBaseTrainer
 
 # Ultralytics default mask downsample ratio (proto output = input_size / MASK_RATIO).
 _MASK_RATIO = 4
 
 
-class SegmentationTrainer(GetiTuneDataBridgeMixin, XPUAwareTrainerMixin, _UltralyticsSegmentationTrainer):
+class SegmentationTrainer(GetiTuneBaseTrainer, XPUAwareTrainerMixin, _UltralyticsSegmentationTrainer):
     """Instance-segmentation trainer that routes data through a getitune DataModule.
 
     Mirrors :class:`DetectionTrainer` but passes ``include_masks=True``

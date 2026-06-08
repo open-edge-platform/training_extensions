@@ -119,22 +119,20 @@ class UltralyticsEngine(Engine):
 
     def train(
         self,
-        epochs: int | None = None,
+        max_epochs: int | None = None,
         batch: int | None = None,
         lr0: float | None = None,
         patience: int | None = None,
-        max_epochs: int | None = None,
         callbacks: list[Any] | None = None,
         **kwargs,
     ) -> METRICS:
         """Train the model via a custom Ultralytics trainer.
 
         Args:
-            epochs: Number of training epochs.
+            max_epochs: Number of training epochs (canonical cross-backend name).
             batch: Batch size.
             lr0: Initial learning rate.
             patience: Early stopping patience (0 to disable).
-            max_epochs: Alias for ``epochs`` (Lightning compatibility).
             callbacks: Accepted for API compatibility; unused by Ultralytics.
             **kwargs: Additional overrides forwarded to Ultralytics training.
 
@@ -156,9 +154,7 @@ class UltralyticsEngine(Engine):
         # Drop Lightning-only kwargs that have no Ultralytics equivalent.
         kwargs.pop("precision", None)
         explicit: dict[str, Any] = {}
-        if epochs is not None:
-            explicit["epochs"] = epochs
-        elif max_epochs is not None:
+        if max_epochs is not None:
             explicit["epochs"] = max_epochs
         if batch is not None:
             explicit["batch"] = batch

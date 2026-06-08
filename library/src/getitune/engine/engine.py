@@ -78,4 +78,5 @@ class Engine(ABC):
         produced.  Subclasses should override to expose their
         backend-specific checkpoint resolution.
         """
-        return None
+        msg = "Subclasses must implement best_checkpoint"
+        raise NotImplementedError(msg)
