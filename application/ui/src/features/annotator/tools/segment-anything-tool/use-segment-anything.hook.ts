@@ -18,7 +18,6 @@ import type {
 } from '../../webworkers/segment-anything.worker.interface';
 import { executeWithTimeout } from '../execute-with-timeout';
 import { convertToolShapeToGetiShape } from '../utils';
-import { SAM_NEXT_FRAME_PREFETCH } from './sam-prefetch';
 import {
     SAM_DECODER_TIMEOUT_MS,
     SAM_ENCODER_TIMEOUT_MS,
@@ -209,7 +208,7 @@ export const useSegmentAnythingModel = ({ nextMediaItem }: SegmentAnythingModelO
     const { mediaItem, image, isImageReady } = useSelectedMediaItem();
     const nextImageQuery = useQuery({
         ...loadImageQueryOptions(projectId, nextMediaItem ?? mediaItem),
-        enabled: SAM_NEXT_FRAME_PREFETCH && nextMediaItem !== undefined,
+        enabled: nextMediaItem !== undefined,
     });
 
     // First we get the encoding for the CURRENT image
@@ -218,7 +217,7 @@ export const useSegmentAnythingModel = ({ nextMediaItem }: SegmentAnythingModelO
     // At the same time we start prefetching the encoding for the NEXT image,
     // so when the user moves to the next media item the decoding will be faster.
     // We don't need to get the decoding query result for the next image, we just want to cache the encoding result.
-    const canPrefetch = SAM_NEXT_FRAME_PREFETCH && nextImageQuery.isSuccess && !encodingQuery.isFetching;
+    const canPrefetch = nextImageQuery.isSuccess && !encodingQuery.isFetching;
     useEncodingQuery(model, nextMediaItem, nextImageQuery.data, canPrefetch);
 
     const decodingQueryFn = useDecodingFn(model, encodingQuery.data);
