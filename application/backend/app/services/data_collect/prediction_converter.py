@@ -11,6 +11,32 @@ from model_api.models.result import Result
 
 from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
 
+# Fraction of a contour's perimeter used as the Douglas-Peucker approximation
+# tolerance (epsilon) when simplifying instance-segmentation masks into polygons.
+# Larger values yield fewer points (more aggressive simplification).
+_POLYGON_APPROX_EPSILON_RATIO = 0.0025
+
+
+def _simplify_contour(contour: np.ndarray) -> np.ndarray:
+    """Reduce the number of points in a contour using the Douglas-Peucker algorithm.
+
+    The approximation tolerance is scaled by the contour's perimeter so that
+    large and small shapes are simplified proportionally. A closed approximation
+    that collapses to fewer than 3 points falls back to the original contour to
+    avoid producing a degenerate polygon.
+
+    Args:
+        contour: Contour as returned by ``cv2.findContours``, shaped ``(N, 1, 2)``.
+
+    Returns:
+        The simplified contour, shaped ``(M, 1, 2)`` with ``M <= N``.
+    """
+    epsilon = _POLYGON_APPROX_EPSILON_RATIO * cv2.arcLength(contour, True)
+    approx = cv2.approxPolyDP(contour, epsilon, True)
+    if len(approx) < 3:
+        return contour
+    return approx
+
 
 def _build_label_maps(labels: Sequence[Label]) -> tuple[dict[str, Label], dict[str, Label]]:
     """Precompute name→label and unmangled-name→label dicts for O(1) lookup."""
@@ -154,7 +180,8 @@ def _convert_segmentation_prediction(
                 continue
             if len(contour) <= 2 or cv2.contourArea(contour) < 1.0:
                 continue
-            polygon = Polygon(points=[Point(x=point[0][0], y=point[0][1]) for point in list(contour)])
+            simplified_contour = _simplify_contour(contour)
+            polygon = Polygon(points=[Point(x=point[0][0], y=point[0][1]) for point in list(simplified_contour)])
             annotation = DatasetItemAnnotation(
                 labels=[LabelReference(id=label.id)], shape=polygon, confidences=[polygon_confidence]
             )
