@@ -54,7 +54,16 @@ export const MaxAccuracyDropField = ({
         <QuantizationFieldLayout onReset={onReset}>
             <Text>Max accuracy drop (%)</Text>
             <ContextualHelp>
-                <Content>Maximum allowed drop in validation accuracy</Content>
+                <Content>
+                    Maximum allowed drop in validation accuracy.
+                    <br />
+                    <br />
+                    Beware that accuracy-aware quantization may take a long time when the max allowed drop is small.
+                    <br />
+                    <br />
+                    Also note that the final testing accuracy may be lower than the specified validation accuracy
+                    threshold, especially for relatively small datasets.
+                </Content>
             </ContextualHelp>
             <Flex gap={'size-100'}>
                 <Slider
