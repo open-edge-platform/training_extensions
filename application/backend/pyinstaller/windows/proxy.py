@@ -86,23 +86,24 @@ GlobalFree.argtypes = [wintypes.HGLOBAL]
 GlobalFree.restype = wintypes.HGLOBAL
 
 
-def _take_str(ptr: int | None) -> str | None:
+def _take_str(ptr: int | ctypes.c_void_p | None) -> str | None:
     """Copy a wide string from a WinHTTP-allocated pointer and free it with GlobalFree.
 
     WinHTTP allocates the string fields of its proxy structures with GlobalAlloc; the caller
     owns them and must release them. This reads the value (if any) and always frees the buffer.
 
     Args:
-        ptr: Address of the WinHTTP-allocated wide string, or ``None``/0 when not set.
+        ptr: Address (or ``c_void_p``) of the WinHTTP-allocated wide string, or ``None``/0 when
+            not set.
 
     Returns:
         The decoded string, or ``None`` when the pointer is null.
     """
-    if not ptr:
+    # c_void_p fields may yield a plain int address or a c_void_p wrapper; normalise to an int
+    # so wstring_at / GlobalFree always receive a plain int address.
+    address = ptr if isinstance(ptr, int) else int(getattr(ptr, "value", 0) or 0)
+    if not address:
         return None
-    # The c_void_p fields yield an integer address; normalise explicitly so wstring_at / GlobalFree
-    # always receive a plain int address regardless of the ctypes value wrapper.
-    address = int(ptr)
     try:
         return ctypes.wstring_at(address)
     finally:
