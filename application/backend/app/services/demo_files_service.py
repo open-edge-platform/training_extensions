@@ -72,16 +72,12 @@ class DemoFilesService:
                 project_id,
             )
 
+        files.append(DemoFile(name="demo.py", data=_DEMO.encode("utf-8")))
+        files.append(DemoFile(name="demo_async.py", data=_DEMO_ASYNC.encode("utf-8")))
         files.append(
             DemoFile(
-                name="demo.py",
-                data=_DEMO.format(model_filename=model_filename, image_filename=image_filename).encode("utf-8"),
-            )
-        )
-        files.append(
-            DemoFile(
-                name="demo_async.py",
-                data=_DEMO_ASYNC.format(model_filename=model_filename, image_filename=image_filename).encode("utf-8"),
+                name="utils.py",
+                data=_UTILS.format(model_filename=model_filename, image_filename=image_filename).encode("utf-8"),
             )
         )
         files.append(DemoFile(name="pyproject.toml", data=_PY_PROJECT.encode("utf-8")))
@@ -199,64 +195,24 @@ output image with the overlaid predictions to result.jpg.
 """
 from __future__ import annotations
 
-from pathlib import Path
-
-import cv2
-import numpy as np
-from PIL import Image as PILImage
-from model_api.models import Model
-from model_api.visualizer import Visualizer
-
-HERE = Path(__file__).resolve().parent
-MODEL_PATH = HERE / "{model_filename}"
-IMAGE_PATH = HERE / "{image_filename}"
-OUTPUT_PATH = HERE / "result.jpg"
+from utils import load_image, load_model, visualise_result
 
 
 def main() -> None:
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(f"Model file not found: {{MODEL_PATH}}")
-    if not IMAGE_PATH.exists():
-        raise FileNotFoundError(f"Sample image not found: {{IMAGE_PATH}}")
-
-    print(f"Loading model from {{MODEL_PATH}}...")
-    model = Model.create_model(str(MODEL_PATH))
-
-    print(f"Loading image from {{IMAGE_PATH}}...")
-    # IMREAD_UNCHANGED preserves the original bit depth (e.g. 16-bit PNG/TIFF images).
-    image_bgr = cv2.imread(str(IMAGE_PATH), cv2.IMREAD_UNCHANGED)
-    if image_bgr is None:
-        raise RuntimeError(f"Failed to decode image: {{IMAGE_PATH}}")
-
-    # The model expects a 3-channel (BGR) image. Images decoded with IMREAD_UNCHANGED
-    # may be single-channel (grayscale / 16-bit) or carry an extra alpha channel, so
-    # normalize them to 3 channels here.
-    if image_bgr.ndim == 2:
-        image_bgr = cv2.cvtColor(image_bgr, cv2.COLOR_GRAY2BGR)
-    elif image_bgr.shape[2] == 4:
-        image_bgr = cv2.cvtColor(image_bgr, cv2.COLOR_BGRA2BGR)
+    model = load_model()
+    image = load_image()
 
     print("Running synchronous inference...")
-    result = model(image_bgr)
+    result = model(image)
     print("Predictions:")
     print(result)
 
-    # The visualizer (PIL under the hood) only handles 8-bit images, so down-convert
-    # higher bit depths (e.g. 16-bit) for rendering. Inference above used the original.
-    if image_bgr.dtype != "uint8":
-        display_image = cv2.normalize(image_bgr, None, 0, 255, cv2.NORM_MINMAX).astype("uint8")
-    else:
-        display_image = image_bgr
-
-    display_rgb = cv2.cvtColor(display_image, cv2.COLOR_BGR2RGB)
-    rendered = Visualizer().render(image=PILImage.fromarray(display_rgb), result=result)
-    output_bgr = cv2.cvtColor(np.array(rendered), cv2.COLOR_RGB2BGR)
-    cv2.imwrite(str(OUTPUT_PATH), output_bgr)
-    print(f"Saved annotated result to {{OUTPUT_PATH}}")
+    visualise_result(image, result)
 
 
 if __name__ == "__main__":
     main()
+
 '''
 
 
@@ -268,73 +224,85 @@ Asynchronous inference demo for a model exported from Geti.
 
 Uses OpenVINO Model API's AsyncPipeline to submit the sample image
 asynchronously and retrieve the prediction once it is ready. The resulting
-image with the overlaid predictions is saved to result_async.jpg.
+image with the overlaid predictions is saved to result.jpg.
 """
+
 from __future__ import annotations
 
-from pathlib import Path
-
-import cv2
-import numpy as np
-from PIL import Image as PILImage
-from model_api.models import Model
 from model_api.pipelines import AsyncPipeline
-from model_api.visualizer import Visualizer
-
-HERE = Path(__file__).resolve().parent
-MODEL_PATH = HERE / "{model_filename}"
-IMAGE_PATH = HERE / "{image_filename}"
-OUTPUT_PATH = HERE / "result_async.jpg"
+from utils import load_image, load_model, visualise_result
 
 
 def main() -> None:
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(f"Model file not found: {{MODEL_PATH}}")
-    if not IMAGE_PATH.exists():
-        raise FileNotFoundError(f"Sample image not found: {{IMAGE_PATH}}")
-
-    print(f"Loading model from {{MODEL_PATH}}...")
-    model = Model.create_model(str(MODEL_PATH))
-
-    print(f"Loading image from {{IMAGE_PATH}}...")
-    # IMREAD_UNCHANGED preserves the original bit depth (e.g. 16-bit PNG/TIFF images).
-    image_bgr = cv2.imread(str(IMAGE_PATH), cv2.IMREAD_UNCHANGED)
-    if image_bgr is None:
-        raise RuntimeError(f"Failed to decode image: {{IMAGE_PATH}}")
-
-    # The model expects a 3-channel (BGR) image. Images decoded with IMREAD_UNCHANGED
-    # may be single-channel (grayscale / 16-bit) or carry an extra alpha channel, so
-    # normalize them to 3 channels here.
-    if image_bgr.ndim == 2:
-        image_bgr = cv2.cvtColor(image_bgr, cv2.COLOR_GRAY2BGR)
-    elif image_bgr.shape[2] == 4:
-        image_bgr = cv2.cvtColor(image_bgr, cv2.COLOR_BGRA2BGR)
+    model = load_model()
+    image = load_image()
 
     print("Running asynchronous inference...")
     pipeline = AsyncPipeline(model)
-    pipeline.submit_data(image_bgr, id=0)
+    pipeline.submit_data(image, id=0)
     pipeline.await_all()
     result, _meta = pipeline.get_result(0)
     print("Predictions:")
     print(result)
 
-    # The visualizer (PIL under the hood) only handles 8-bit images, so down-convert
-    # higher bit depths (e.g. 16-bit) for rendering. Inference above used the original.
-    if image_bgr.dtype != "uint8":
-        display_image = cv2.normalize(image_bgr, None, 0, 255, cv2.NORM_MINMAX).astype("uint8")
-    else:
-        display_image = image_bgr
-
-    display_rgb = cv2.cvtColor(display_image, cv2.COLOR_BGR2RGB)
-    rendered = Visualizer().render(image=PILImage.fromarray(display_rgb), result=result)
-    output_bgr = cv2.cvtColor(np.array(rendered), cv2.COLOR_RGB2BGR)
-    cv2.imwrite(str(OUTPUT_PATH), output_bgr)
-    print(f"Saved annotated result to {{OUTPUT_PATH}}")
+    visualise_result(image, result)
 
 
 if __name__ == "__main__":
     main()
+
 '''
+
+_UTILS = """\
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import cv2
+from model_api.models import Model
+from model_api.visualizer import Visualizer
+
+HERE = Path(__file__).resolve().parent
+MODEL_PATH = HERE / "{model_filename}"
+IMAGE_PATH = HERE / "{image_filename}"
+OUTPUT_PATH = HERE / "result.jpg"
+
+if not MODEL_PATH.exists():
+    raise FileNotFoundError(f"Model file not found: {{MODEL_PATH}}")
+if not IMAGE_PATH.exists():
+    raise FileNotFoundError(f"Sample image not found:{{IMAGE_PATH}}")
+
+
+def load_model() -> Model:
+    print(f"Loading model from {{MODEL_PATH}}...")
+    return Model.create_model(str(MODEL_PATH))
+
+
+def load_image() -> cv2.Mat:
+    print(f"Loading image from {{IMAGE_PATH}}...")
+    # IMREAD_UNCHANGED preserves the original bit depth (e.g. 16-bit PNG/TIFF images).
+    image_raw = cv2.imread(str(IMAGE_PATH), cv2.IMREAD_UNCHANGED)
+    if image_raw is None:
+        raise RuntimeError(f"Failed to decode image: {{IMAGE_PATH}}")
+
+    return cv2.cvtColor(image_raw, cv2.COLOR_BGR2RGB)
+
+
+def visualise_result(image, result) -> None:
+    if image.dtype != "uint8":
+        display_image = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX).astype("uint8")
+    else:
+        display_image = image
+    
+    Visualizer().show(display_image, result)
+    output = Visualizer().render(display_image, result)
+    cv2.imwrite(str(OUTPUT_PATH), output)
+    print(f"Saved annotated result to {{OUTPUT_PATH}}")
+
+"""
 
 
 _PY_PROJECT = """\
@@ -368,6 +336,7 @@ ready-to-run inference demos.
 | `{image_filename}` (optional) | Sample input image from the project's dataset, kept in its original format. |
 | `demo.py` | Minimal **synchronous** inference example. |
 | `demo_async.py` | Minimal **asynchronous** inference example. |
+| `utils.py` | Shared utility functions for loading the model/image and visualising the results. |
 | `pyproject.toml` | Python dependencies required by the demos. |
 | `README.md` | This file. |
 

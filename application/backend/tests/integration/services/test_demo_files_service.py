@@ -201,19 +201,27 @@ class TestDemoFilesServiceIntegration:
 
         names = [f.name for f in files]
         assert "image.jpg" not in names
-        assert names == ["demo.py", "demo_async.py", "pyproject.toml", "README.md"]
+        assert names == ["demo.py", "demo_async.py", "utils.py", "pyproject.toml", "README.md"]
 
-    def test_openvino_bundle_contents(
+    @pytest.mark.parametrize(
+        "export_format,expected_format,unexpected_format",
+        [(ModelFormat.OPENVINO, "model.xml", "model.onnx"), (ModelFormat.ONNX, "model.onnx", "model.xml")],
+        ids=["openvino", "onnx"],
+    )
+    def test_bundle_contents(
         self,
         fxt_demo_files_service: DemoFilesService,
         fxt_project_with_image: tuple[Project, MediaDB],
+        export_format,
+        expected_format,
+        unexpected_format,
     ) -> None:
         project, _ = fxt_project_with_image
 
-        files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=ModelFormat.OPENVINO)
+        files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=export_format)
 
         names = [f.name for f in files]
-        assert names == ["image.jpg", "demo.py", "demo_async.py", "pyproject.toml", "README.md"]
+        assert names == ["image.jpg", "demo.py", "demo_async.py", "utils.py", "pyproject.toml", "README.md"]
         # Every entry must be a DemoFile with a non-empty bytes payload.
         for f in files:
             assert isinstance(f, DemoFile)
@@ -223,14 +231,13 @@ class TestDemoFilesServiceIntegration:
         by_name = {f.name: f.data for f in files}
 
         # Demo scripts must reference the OpenVINO IR XML, not the ONNX model.
-        demo = by_name["demo.py"].decode("utf-8")
-        demo_async = by_name["demo_async.py"].decode("utf-8")
-        assert 'MODEL_PATH = HERE / "model.xml"' in demo
-        assert 'MODEL_PATH = HERE / "model.xml"' in demo_async
-        assert "model.onnx" not in demo
-        assert "model.onnx" not in demo_async
+        utils = by_name["utils.py"].decode("utf-8")
+        assert f'MODEL_PATH = HERE / "{expected_format}"' in utils
+        assert unexpected_format not in utils
 
         # Sync vs async hints
+        demo = by_name["demo.py"].decode("utf-8")
+        demo_async = by_name["demo_async.py"].decode("utf-8")
         assert "synchronous" in demo.lower()
         assert "AsyncPipeline" in demo_async
 
@@ -244,26 +251,8 @@ class TestDemoFilesServiceIntegration:
         assert "uv" in readme.lower()
         assert "demo.py" in readme
         assert "demo_async.py" in readme
-        assert "model.xml" in readme
-
-    def test_onnx_bundle_uses_onnx_model_filename(
-        self,
-        fxt_demo_files_service: DemoFilesService,
-        fxt_project_with_image: tuple[Project, MediaDB],
-    ) -> None:
-        project, _ = fxt_project_with_image
-
-        files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=ModelFormat.ONNX)
-
-        by_name = {f.name: f.data for f in files}
-        assert set(by_name) == {"image.jpg", "demo.py", "demo_async.py", "pyproject.toml", "README.md"}
-
-        for script_name in ("demo.py", "demo_async.py"):
-            script = by_name[script_name].decode("utf-8")
-            assert 'MODEL_PATH = HERE / "model.onnx"' in script
-            assert "model.xml" not in script
-
-        assert "model.onnx" in by_name["README.md"].decode("utf-8")
+        assert "utils.py" in readme
+        assert expected_format in readme
 
     def test_sample_image_matches_stored_binary(
         self,
@@ -306,7 +295,7 @@ class TestDemoFilesServiceIntegration:
 
         names = [f.name for f in files]
         # (1) The archive includes image.<ext> (not image.jpg) as the very first entry.
-        assert names == [expected_name, "demo.py", "demo_async.py", "pyproject.toml", "README.md"]
+        assert names == [expected_name, "demo.py", "demo_async.py", "utils.py", "pyproject.toml", "README.md"]
 
         by_name = {f.name: f.data for f in files}
 
@@ -320,10 +309,9 @@ class TestDemoFilesServiceIntegration:
         assert decoded.dtype == np.uint16
 
         # (2) The demo scripts reference the actual filename, never the JPEG default.
-        for script_name in ("demo.py", "demo_async.py"):
-            script = by_name[script_name].decode("utf-8")
-            assert f'IMAGE_PATH = HERE / "{expected_name}"' in script
-            assert 'HERE / "image.jpg"' not in script
+        script = by_name["utils.py"].decode("utf-8")
+        assert f'IMAGE_PATH = HERE / "{expected_name}"' in script
+        assert 'HERE / "image.jpg"' not in script
 
         # ...and so does the README.
         readme = by_name["README.md"].decode("utf-8")
@@ -344,7 +332,7 @@ class TestDemoFilesServiceIntegration:
         names = [f.name for f in files]
         assert "image.jpg" not in names
         # The rest of the bundle is still produced.
-        assert names == ["demo.py", "demo_async.py", "pyproject.toml", "README.md"]
+        assert names == ["demo.py", "demo_async.py", "utils.py", "pyproject.toml", "README.md"]
 
     def test_video_middle_frame_used_when_no_image_available(
         self,
@@ -364,7 +352,7 @@ class TestDemoFilesServiceIntegration:
         files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=ModelFormat.OPENVINO)
 
         names = [f.name for f in files]
-        assert names == ["image.jpg", "demo.py", "demo_async.py", "pyproject.toml", "README.md"]
+        assert names == ["image.jpg", "demo.py", "demo_async.py", "utils.py", "pyproject.toml", "README.md"]
 
         sample = next(f for f in files if f.name == "image.jpg")
         assert len(sample.data) > 0
@@ -430,4 +418,4 @@ class TestDemoFilesServiceIntegration:
 
         names = [f.name for f in files]
         assert "image.jpg" not in names
-        assert names == ["demo.py", "demo_async.py", "pyproject.toml", "README.md"]
+        assert names == ["demo.py", "demo_async.py", "utils.py", "pyproject.toml", "README.md"]
