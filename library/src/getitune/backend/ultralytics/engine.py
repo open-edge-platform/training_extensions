@@ -591,6 +591,7 @@ class UltralyticsEngine(Engine):
 
             metric.update(preds=preds_list, target=target_list)
 
+        metric.compute(best_confidence_threshold=None)
         return metric.best_confidence_threshold
 
     def _predict_with_datamodule(self, overrides: dict[str, Any]) -> list[Prediction]:
