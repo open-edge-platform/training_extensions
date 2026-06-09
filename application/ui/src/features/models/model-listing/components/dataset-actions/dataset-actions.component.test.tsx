@@ -13,6 +13,7 @@ import type { DatasetGroup } from '../../types';
 import { DatasetActions } from './dataset-actions.component';
 
 const mockDataset: DatasetGroup = {
+    type: 'dataset',
     id: 'dataset-123',
     name: 'Test Dataset',
     createdAt: '10 Jan 2025',

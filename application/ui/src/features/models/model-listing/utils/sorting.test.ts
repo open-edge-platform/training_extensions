@@ -186,20 +186,53 @@ describe('sortModels', () => {
     });
 
     describe('dataset', () => {
-        it('sorts models by dataset revision name ascending', () => {
+        it('sorts models by dataset revision creation date, newest first', () => {
             const revisions = [
-                getMockedDatasetRevision({ id: 'rev-a', name: 'Alpha Dataset' }),
-                getMockedDatasetRevision({ id: 'rev-c', name: 'Charlie Dataset' }),
-                getMockedDatasetRevision({ id: 'rev-b', name: 'Bravo Dataset' }),
+                getMockedDatasetRevision({ id: 'rev-old', name: 'Alpha Dataset', created_at: '2025-01-01T00:00:00Z' }),
+                getMockedDatasetRevision({ id: 'rev-new', name: 'Bravo Dataset', created_at: '2025-03-01T00:00:00Z' }),
+                getMockedDatasetRevision({
+                    id: 'rev-mid',
+                    name: 'Charlie Dataset',
+                    created_at: '2025-02-01T00:00:00Z',
+                }),
             ];
             const models = [
                 getMockedModel({
-                    id: 'model-c',
-                    training_info: { status: 'successful', dataset_revision_id: 'rev-c' },
+                    id: 'model-old',
+                    training_info: { status: 'successful', dataset_revision_id: 'rev-old' },
                 }),
+                getMockedModel({
+                    id: 'model-new',
+                    training_info: { status: 'successful', dataset_revision_id: 'rev-new' },
+                }),
+                getMockedModel({
+                    id: 'model-mid',
+                    training_info: { status: 'successful', dataset_revision_id: 'rev-mid' },
+                }),
+            ];
+
+            const sorted = sortModels(models, 'dataset', revisions);
+
+            expect(sorted[0].id).toBe('model-new');
+            expect(sorted[1].id).toBe('model-mid');
+            expect(sorted[2].id).toBe('model-old');
+        });
+
+        it('sorts by name Z->A when creation dates are equal', () => {
+            const sharedDate = '2025-06-01T00:00:00Z';
+            const revisions = [
+                getMockedDatasetRevision({ id: 'rev-a', name: 'Alpha Dataset', created_at: sharedDate }),
+                getMockedDatasetRevision({ id: 'rev-c', name: 'Charlie Dataset', created_at: sharedDate }),
+                getMockedDatasetRevision({ id: 'rev-b', name: 'Bravo Dataset', created_at: sharedDate }),
+            ];
+            const models = [
                 getMockedModel({
                     id: 'model-a',
                     training_info: { status: 'successful', dataset_revision_id: 'rev-a' },
+                }),
+                getMockedModel({
+                    id: 'model-c',
+                    training_info: { status: 'successful', dataset_revision_id: 'rev-c' },
                 }),
                 getMockedModel({
                     id: 'model-b',
@@ -209,21 +242,21 @@ describe('sortModels', () => {
 
             const sorted = sortModels(models, 'dataset', revisions);
 
-            expect(sorted[0].id).toBe('model-a');
+            expect(sorted[0].id).toBe('model-c');
             expect(sorted[1].id).toBe('model-b');
-            expect(sorted[2].id).toBe('model-c');
+            expect(sorted[2].id).toBe('model-a');
         });
 
         it('places models with no dataset_revision_id last', () => {
             const revisions = [getMockedDatasetRevision({ id: 'rev-1', name: 'Zebra Dataset' })];
             const models = [
                 getMockedModel({
-                    id: 'has-dataset',
-                    training_info: { status: 'successful', dataset_revision_id: 'rev-1' },
-                }),
-                getMockedModel({
                     id: 'no-dataset',
                     training_info: { status: 'not_started', dataset_revision_id: null },
+                }),
+                getMockedModel({
+                    id: 'has-dataset',
+                    training_info: { status: 'successful', dataset_revision_id: 'rev-1' },
                 }),
             ];
 
@@ -237,18 +270,17 @@ describe('sortModels', () => {
             const revisions = [getMockedDatasetRevision({ id: 'rev-known', name: 'Known Dataset' })];
             const models = [
                 getMockedModel({
-                    id: 'known',
-                    training_info: { status: 'successful', dataset_revision_id: 'rev-known' },
-                }),
-                getMockedModel({
                     id: 'unknown',
                     training_info: { status: 'successful', dataset_revision_id: 'rev-unknown' },
+                }),
+                getMockedModel({
+                    id: 'known',
+                    training_info: { status: 'successful', dataset_revision_id: 'rev-known' },
                 }),
             ];
 
             const sorted = sortModels(models, 'dataset', revisions);
 
-            // 'rev-unknown' is not in the revisions map, so it sorts after 'Known Dataset'
             expect(sorted[0].id).toBe('known');
             expect(sorted[1].id).toBe('unknown');
         });

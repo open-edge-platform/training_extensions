@@ -3,6 +3,8 @@
 
 import { useMemo } from 'react';
 
+import { orderBy } from 'lodash-es';
+
 import type { DatasetRevision, Model } from '../../../../constants/shared-types';
 import { GroupByMode, GroupedModels, SortBy } from '../types';
 import {
@@ -13,6 +15,7 @@ import {
     removeEmpty,
     sortGroupedModels,
 } from '../utils/model-transforms';
+import { sortModels } from '../utils/sorting';
 
 type UseGroupedModelsOptions = {
     groupBy: GroupByMode;
@@ -38,8 +41,24 @@ export const useGroupedModels = (models: Model[] | undefined, options: UseGroupe
             : filterOutFailedModels(filteredByTraining);
         const filteredBySearch = filterBySearch(filteredByFailedModels, searchBy);
         const grouped = groupModels(filteredBySearch, groupBy, datasetRevisions);
-        const sorted = sortGroupedModels(grouped, sortBy, datasetRevisions);
+        const sortedModelsInsideGroup = sortGroupedModels(grouped, sortBy, datasetRevisions);
+        const sortedGroupsByDatasetRevisionDate = orderBy(
+            sortedModelsInsideGroup,
+            (group) => {
+                if (group.group.type === 'dataset') {
+                    return group.group.createdAt;
+                }
 
-        return removeEmpty(sorted);
+                const mostRecentModel = sortModels(group.models, 'dataset', datasetRevisions)?.at(0);
+                const datasetRevisionDate = datasetRevisions.find(
+                    (datasetRevision) => mostRecentModel?.training_info.dataset_revision_id === datasetRevision.id
+                )?.created_at;
+
+                return datasetRevisionDate;
+            },
+            'desc'
+        );
+
+        return removeEmpty(sortedGroupsByDatasetRevisionDate);
     }, [models, groupBy, sortBy, searchBy, datasetRevisions, showFailedModels]);
 };

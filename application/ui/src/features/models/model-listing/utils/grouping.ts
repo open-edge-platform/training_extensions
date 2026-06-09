@@ -42,6 +42,7 @@ export const groupModelsByDataset = (models: Model[], options?: GroupModelsByDat
         if (!groups[datasetId]) {
             groups[datasetId] = {
                 group: {
+                    type: 'dataset',
                     id: datasetId,
                     name: datasetRevision?.name ?? `Dataset #${datasetId.slice(0, 8)}`,
                     createdAt: formatDatasetStartTime(
@@ -77,6 +78,7 @@ export const groupModelsByArchitecture = (models: Model[]): GroupedModels[] => {
         if (!groups[arch]) {
             groups[arch] = {
                 group: {
+                    type: 'architecture',
                     id: arch,
                 },
                 models: [],
