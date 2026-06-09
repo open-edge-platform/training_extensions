@@ -5,7 +5,7 @@ import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { getMockedModel } from 'mocks/mock-model';
 import { getMockedVariant } from 'mocks/mock-model-variant';
 
-import { sortModels } from './sorting';
+import { sortGropedModelsByDatasetRevisionDate, sortModels } from './sorting';
 
 describe('sortModels', () => {
     describe('name', () => {
@@ -305,5 +305,107 @@ describe('sortModels', () => {
 
             errorSpy.mockRestore();
         });
+    });
+});
+
+describe('sortGropedModelsByDatasetRevisionDate', () => {
+    // Builds a minimal DatasetGroup; the createdAt display string is irrelevant to ordering.
+    const makeDatasetGroup = (id: string, models: ReturnType<typeof getMockedModel>[]) => ({
+        group: {
+            type: 'dataset' as const,
+            id,
+            name: `Dataset ${id}`,
+            createdAt: '-',
+            labelCount: 0,
+            imageCount: 0,
+            trainingSubsets: { training: 0, validation: 0, testing: 0 },
+            filesDeleted: false,
+        },
+        models,
+    });
+
+    const makeModel = (id: string, revisionId: string) =>
+        getMockedModel({ id, training_info: { status: 'successful', dataset_revision_id: revisionId } });
+
+    it('returns empty array for empty input', () => {
+        expect(sortGropedModelsByDatasetRevisionDate([], [])).toEqual([]);
+    });
+
+    it('returns a single group unchanged', () => {
+        const group = makeDatasetGroup('rev-only', []);
+        const result = sortGropedModelsByDatasetRevisionDate([group], []);
+
+        expect(result).toHaveLength(1);
+        expect(result[0].group.id).toBe('rev-only');
+    });
+
+    it('places the group with the newest dataset revision first, oldest last', () => {
+        // Jan < Feb < Mar chronologically. The correct desc order is Mar, Feb, Jan.
+        const revisions = [
+            getMockedDatasetRevision({ id: 'rev-jan', created_at: '2025-01-01T00:00:00Z' }),
+            getMockedDatasetRevision({ id: 'rev-feb', created_at: '2025-02-01T00:00:00Z' }),
+            getMockedDatasetRevision({ id: 'rev-mar', created_at: '2025-03-01T00:00:00Z' }),
+        ];
+        const groups = [
+            makeDatasetGroup('group-jan', [makeModel('model-jan', 'rev-jan')]),
+            makeDatasetGroup('group-feb', [makeModel('model-feb', 'rev-feb')]),
+            makeDatasetGroup('group-mar', [makeModel('model-mar', 'rev-mar')]),
+        ];
+
+        const result = sortGropedModelsByDatasetRevisionDate(groups, revisions);
+
+        expect(result[0].group.id).toBe('group-mar');
+        expect(result[1].group.id).toBe('group-feb');
+        expect(result[2].group.id).toBe('group-jan');
+    });
+
+    it('newly trained model group appears at the top even when given last in input order', () => {
+        // Regression guard for the original bug: the group with the most recent revision
+        // must always be rendered first regardless of the order returned by the API.
+        const revisions = [
+            getMockedDatasetRevision({ id: 'rev-old', created_at: '2025-01-01T00:00:00Z' }),
+            getMockedDatasetRevision({ id: 'rev-new', created_at: '2025-06-01T00:00:00Z' }),
+        ];
+        const olderGroup = makeDatasetGroup('group-old', [makeModel('model-old', 'rev-old')]);
+        const newerGroup = makeDatasetGroup('group-new', [makeModel('model-new', 'rev-new')]);
+
+        // Intentionally supply the newer group last to confirm input order has no influence.
+        const result = sortGropedModelsByDatasetRevisionDate([olderGroup, newerGroup], revisions);
+
+        expect(result[0].group.id).toBe('group-new');
+        expect(result[1].group.id).toBe('group-old');
+    });
+
+    it('group order is driven by revision date, not by number of models per group', () => {
+        // A group with many models on an older revision must not outrank a group
+        // with fewer models on a newer revision.
+        const revisions = [
+            getMockedDatasetRevision({ id: 'rev-old', created_at: '2025-01-01T00:00:00Z' }),
+            getMockedDatasetRevision({ id: 'rev-new', created_at: '2025-06-01T00:00:00Z' }),
+        ];
+        const bigOlderGroup = makeDatasetGroup('group-old', [
+            makeModel('a1', 'rev-old'),
+            makeModel('a2', 'rev-old'),
+            makeModel('a3', 'rev-old'),
+        ]);
+        const smallNewerGroup = makeDatasetGroup('group-new', [makeModel('b1', 'rev-new')]);
+
+        const result = sortGropedModelsByDatasetRevisionDate([bigOlderGroup, smallNewerGroup], revisions);
+
+        expect(result[0].group.id).toBe('group-new');
+        expect(result[1].group.id).toBe('group-old');
+    });
+
+    it('group whose dataset revision is not in the revisions list sinks to the bottom', () => {
+        // If the API returns a model whose dataset_revision_id has no matching revision,
+        // that group must not float to the top and obscure more recent, known groups.
+        const revisions = [getMockedDatasetRevision({ id: 'rev-known', created_at: '2025-01-01T00:00:00Z' })];
+        const missingRevGroup = makeDatasetGroup('group-missing', [makeModel('model-missing', 'rev-unknown')]);
+        const knownRevGroup = makeDatasetGroup('group-known', [makeModel('model-known', 'rev-known')]);
+
+        const result = sortGropedModelsByDatasetRevisionDate([missingRevGroup, knownRevGroup], revisions);
+
+        expect(result[0].group.id).toBe('group-known');
+        expect(result[1].group.id).toBe('group-missing');
     });
 });

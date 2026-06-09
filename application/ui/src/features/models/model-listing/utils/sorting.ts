@@ -6,7 +6,7 @@ import { orderBy } from 'lodash-es';
 
 import type { DatasetRevision, Model } from '../../../../constants/shared-types';
 import { getTestingMetric } from '../components/model-row/utils';
-import type { SortBy } from '../types';
+import type { GroupedModels, SortBy } from '../types';
 
 export const sortModels = (models: Model[], sortBy: SortBy, datasetRevisions: DatasetRevision[]): Model[] => {
     switch (sortBy) {
@@ -59,4 +59,26 @@ export const sortModels = (models: Model[], sortBy: SortBy, datasetRevisions: Da
             console.error(`Unknown sort option: ${sortBy satisfies never}`);
             return models;
     }
+};
+
+export const sortGropedModelsByDatasetRevisionDate = (
+    groupedModels: GroupedModels[],
+    datasetRevisions: DatasetRevision[]
+): GroupedModels[] => {
+    const datasetRevisionsMap = new Map(
+        datasetRevisions.map((datasetRevision) => [datasetRevision.id, datasetRevision])
+    );
+
+    return orderBy(
+        groupedModels,
+        (group) => {
+            const mostRecentModel = sortModels(group.models, 'dataset', datasetRevisions)?.at(0);
+            const modelDatasetRevisionId = mostRecentModel?.training_info?.dataset_revision_id;
+            const datasetRevisionDate =
+                modelDatasetRevisionId != null ? datasetRevisionsMap.get(modelDatasetRevisionId)?.created_at : null;
+
+            return datasetRevisionDate ?? '';
+        },
+        'desc'
+    );
 };
