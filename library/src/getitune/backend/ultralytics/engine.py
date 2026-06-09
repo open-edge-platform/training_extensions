@@ -199,7 +199,13 @@ class UltralyticsEngine(Engine):
         results = yolo.train(**train_args)
         self._record_last_train_checkpoint(self._resolve_trainer_checkpoint(yolo))
         self._remap_results_csv()
-        self._compute_best_confidence_threshold()
+        best_val_confidence_thr = self._compute_best_confidence_threshold()
+        if best_val_confidence_thr is not None:
+            # Cap at the user-specified confidence threshold (0.25 by default)
+            # to avoid overly aggressive pruning that can harm export performance.
+            threshold = min(best_val_confidence_thr, self._export_args.get("confidence_threshold", 0.25))
+            self._export_args["confidence_threshold"] = threshold
+            logger.info(f"Best confidence threshold from FMeasure: {threshold:.4f}")
         return self._translate_metrics(results)
 
     def test(self, checkpoint: PathLike | None = None, metric: Callable[..., Any] | None = None, **kwargs) -> METRICS:
@@ -513,15 +519,19 @@ class UltralyticsEngine(Engine):
         results = metric.compute()
         return self._format_torchmetrics_results(results)
 
-    def _compute_best_confidence_threshold(self) -> None:
+    def _compute_best_confidence_threshold(self) -> float | None:
         """Run FMeasure on the validation set to find the optimal confidence threshold.
 
         After training, the best threshold is stored in
         ``self._export_args["confidence_threshold"]`` so that export
         embeds the correct value into the model metadata.
+
+        Returns:
+            The best confidence threshold according to FMeasure, or ``None``
+            if datamodule is unavailable.
         """
         if self._datamodule is None:
-            return
+            return None
 
         # Load best checkpoint — after train() the model may hold last-epoch weights.
         if self._last_train_checkpoint is not None and self._last_train_checkpoint.exists():
@@ -540,11 +550,7 @@ class UltralyticsEngine(Engine):
 
         logger.info("Computing best confidence threshold via FMeasure on validation set")
 
-        n_batches = 0
         for batch in dataloader:
-            if not isinstance(batch, SampleBatch):
-                continue
-
             imgs = batch.images.to(device) if isinstance(batch.images, torch.Tensor) else batch.images
             raw_results = yolo.predict(
                 source=imgs,
@@ -584,16 +590,8 @@ class UltralyticsEngine(Engine):
                 target_list.append(tgt_dict)
 
             metric.update(preds=preds_list, target=target_list)
-            n_batches += 1
 
-        if n_batches == 0:
-            logger.warning("No validation batches processed; skipping FMeasure threshold computation")
-            return
-
-        metric.compute(best_confidence_threshold=None)
-        threshold = metric.best_confidence_threshold
-        self._export_args["confidence_threshold"] = threshold
-        logger.info(f"Best confidence threshold from FMeasure: {threshold:.4f}")
+        return metric.best_confidence_threshold
 
     def _predict_with_datamodule(self, overrides: dict[str, Any]) -> list[Prediction]:
         """Run inference through ``DataModule.predict_dataloader()``."""
