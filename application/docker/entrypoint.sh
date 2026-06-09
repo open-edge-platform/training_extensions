@@ -8,7 +8,7 @@ CERTFILE="${CERTFILE:-${CERT_DIR}/localhost.pem}"
 KEYFILE="${KEYFILE:-${CERT_DIR}/localhost-key.pem}"
 
 if [[ ! -f "$CERTFILE" || ! -f "$KEYFILE" ]]; then
-    echo "TLS certs not found — generating self-signed cert in ${CERT_DIR}..."
+    echo "TLS certs not found — generating self-signed cert (cert: ${CERTFILE}, key: ${KEYFILE})..."
     mkdir -p "${CERT_DIR}"
     openssl req -x509 -newkey rsa:2048 -nodes \
         -keyout "$KEYFILE" \

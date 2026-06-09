@@ -149,7 +149,7 @@ jobs:
           # Wait up to 60 seconds for the /health endpoint to respond
           echo "Waiting for /health endpoint ..."
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:7860/health; then
+            if curl -sf --insecure https://localhost:7860/health; then
               echo ""
               echo "Backend health check passed!"
               break
@@ -164,11 +164,11 @@ jobs:
           done
 
           # Verify the UI is being served
-          TEST_URL="http://localhost:7860"
+          TEST_URL="https://localhost:7860"
           EXPECTED_TITLE="Geti"
           echo "Checking HTML title..."
 
-          HTML_CONTENT=$(curl -sf $TEST_URL)
+          HTML_CONTENT=$(curl -sf --insecure $TEST_URL)
           if echo "$HTML_CONTENT" | grep -q "<title>.*$EXPECTED_TITLE.*</title>"; then
             echo "✅ HTML title check passed - found: $EXPECTED_TITLE"
           else

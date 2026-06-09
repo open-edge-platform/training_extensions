@@ -90,7 +90,7 @@ If you built the image with a different accelerator, make sure to specify the sa
 
 For a full list of runtime options, run `just --usage run-image`.
 
-After the container starts, you can access the Geti web application at [**http://localhost:7860**](http://localhost:7860) (assuming default settings).
+After the container starts, you can access the Geti web application at [**https://localhost:7860**](https://localhost:7860) (assuming default settings).
 
 #### TLS certificates
 

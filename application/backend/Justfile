@@ -78,7 +78,7 @@ gen-api-spec output-path="openapi.json": install-uv
 gen-certs:
     #!/usr/bin/env bash
     set -euo pipefail
-    CERT_DIR="data/certs"
+    CERT_DIR="${DATA_DIR:-data}/certs"
     mkdir -p "$CERT_DIR"
     if [[ ! -f "$CERT_DIR/localhost.pem" || ! -f "$CERT_DIR/localhost-key.pem" ]]; then
         openssl req -x509 -newkey rsa:2048 -nodes \
