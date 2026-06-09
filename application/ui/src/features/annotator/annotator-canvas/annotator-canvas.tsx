@@ -96,7 +96,9 @@ const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
         return <CanvasMediaImage image={image} showVideoFrame />;
     }
 
-    // Render via canvas if image was decoded at full resolution, else use <img>.
+    // Render via canvas only when decoded at native resolution.
+    // `ImageData.data.length` is expected to be width * height * 4
+    // (RGBA: 4 channels, 1 byte per channel = 4 bytes per pixel).
     const isFullResolution =
         image.width === mediaItem.width &&
         image.height === mediaItem.height &&

@@ -30,7 +30,7 @@ const ClipperJS = Clipper.default || Clipper;
  *  3b. NO   → Downscale to 4096px (max) via destination canvas:
  *             • Draw source HTMLImageElement into smaller canvas
  *             • Extract downscaled ImageData
- *             • Return smaller buffer (data.length ≠ width*height*4)
+ *             • Return smaller buffer (data.length ≠ width*height*4, where 4 = RGBA bytes per pixel)
  *  4. Provider wraps downscaled data in original dimensions:
  *     • image.width/height = mediaItem dimensions (media-space)
  *     • image.data = downscaled buffer
@@ -509,13 +509,12 @@ export const getImageData = (img: HTMLImageElement): ImageData => {
 
     // Oversized media: downscale to fit canvas limits instead of relying on
     // getContext('2d') returning null (some browsers fail later at getImageData).
-    if (!canRasteriseAtFullSize(sourceWidth, sourceHeight)) {
-        return getDownscaledImageData(img) ?? new ImageData(1, 1);
-    }
+    if (canRasteriseAtFullSize(sourceWidth, sourceHeight)) {
+        const canvas = drawImageOnCanvas(img);
+        const ctx = canvas.getContext('2d');
 
-    const canvas = drawImageOnCanvas(img);
-    const ctx = canvas.getContext('2d');
-    if (ctx !== null) return ctx.getImageData(0, 0, canvas.width, canvas.height);
+        if (ctx !== null) return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
 
     // Fallback: context creation failed despite size check → downscale.
     return getDownscaledImageData(img) ?? new ImageData(1, 1);
@@ -555,7 +554,8 @@ export const projectPointOnLine = ([startPoint, endPoint]: ProjectLine, point: P
 
 /**
  * Checks if an ImageData is a placeholder (oversized media decoded at smaller size).
- * Oversized images have downscaled data, so data.length ≠ width*height*4.
+ * Full-size ImageData satisfies width * height * 4 entries in `data`
+ * (RGBA: 4 channels, 1 byte each). Downscaled/placeholder buffers can break that.
  * @returns true if data doesn't match full size (i.e., is placeholder/downscaled)
  */
 export const isImageOversized = (image: ImageData): boolean => {
