@@ -20,7 +20,7 @@ describe('distributeByLargestRemainder', () => {
         expect(distributeByLargestRemainder([0, 0, 0], 100)).toEqual([0, 0, 0]);
     });
 
-    it('returns all zeros for empty input with non-zero total', () => {
+    it('returns empty array for empty input with non-zero total', () => {
         expect(distributeByLargestRemainder([], 100)).toEqual([]);
     });
 
