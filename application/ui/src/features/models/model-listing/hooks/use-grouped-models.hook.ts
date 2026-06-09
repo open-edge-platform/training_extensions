@@ -13,6 +13,7 @@ import {
     removeEmpty,
     sortGroupedModels,
 } from '../utils/model-transforms';
+import { sortGroupedModelsByDatasetRevisionDate } from '../utils/sorting';
 
 type UseGroupedModelsOptions = {
     groupBy: GroupByMode;
@@ -38,8 +39,12 @@ export const useGroupedModels = (models: Model[] | undefined, options: UseGroupe
             : filterOutFailedModels(filteredByTraining);
         const filteredBySearch = filterBySearch(filteredByFailedModels, searchBy);
         const grouped = groupModels(filteredBySearch, groupBy, datasetRevisions);
-        const sorted = sortGroupedModels(grouped, sortBy, datasetRevisions);
+        const sortedModelsInsideGroup = sortGroupedModels(grouped, sortBy, datasetRevisions);
+        const sortedGroupsByDatasetRevisionDate = sortGroupedModelsByDatasetRevisionDate(
+            sortedModelsInsideGroup,
+            datasetRevisions
+        );
 
-        return removeEmpty(sorted);
+        return removeEmpty(sortedGroupsByDatasetRevisionDate);
     }, [models, groupBy, sortBy, searchBy, datasetRevisions, showFailedModels]);
 };
