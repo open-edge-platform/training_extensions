@@ -11,6 +11,7 @@ import { MediaItem } from '../../../../components/media-item/media-item.componen
 import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { DatasetRevisionItem } from '../../../../constants/shared-types';
+import { SelectedMediaItemProvider } from '../../../../features/annotator/selected-media-item-provider.component';
 import { AnnotatorProviders } from '../../../../features/dataset/media-preview/annotator-providers.component';
 import { useAnnotationsQuery } from '../../../../features/dataset/media-preview/api/use-annotations-query';
 import { ReadOnlyAnnotator } from '../../../../features/dataset/media-preview/read-only-annotator.component';
@@ -64,24 +65,26 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
                     areas={['header', 'canvas', 'bottom']}
                 >
                     <ToolProvider>
-                        <AnnotatorProviders
-                            key={mediaItem.id}
-                            mediaItem={mediaItem}
-                            initialAnnotationsDTO={getInitialAnnotations(isUserReviewed, annotationsDTO)}
-                            initialPredictionsDTO={[]}
-                            isUserReviewed={isUserReviewed}
-                            mode={mode}
-                            isReadOnly
-                        >
-                            <ReadOnlyAnnotator
-                                image={image}
+                        <SelectedMediaItemProvider mediaItem={mediaItem}>
+                            <AnnotatorProviders
+                                key={mediaItem.id}
                                 mediaItem={mediaItem}
-                                onClose={onClose}
+                                initialAnnotationsDTO={getInitialAnnotations(isUserReviewed, annotationsDTO)}
+                                initialPredictionsDTO={[]}
+                                isUserReviewed={isUserReviewed}
                                 mode={mode}
-                                subset={item.subset}
-                                hasAnnotationStatus={false}
-                            />
-                        </AnnotatorProviders>
+                                isReadOnly
+                            >
+                                <ReadOnlyAnnotator
+                                    image={image}
+                                    mediaItem={mediaItem}
+                                    onClose={onClose}
+                                    mode={mode}
+                                    subset={item.subset}
+                                    hasAnnotationStatus={false}
+                                />
+                            </AnnotatorProviders>
+                        </SelectedMediaItemProvider>
                     </ToolProvider>
                 </Grid>
             </Content>
