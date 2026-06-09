@@ -6,7 +6,7 @@ import { orderBy } from 'lodash-es';
 
 import type { DatasetRevision, Model } from '../../../../constants/shared-types';
 import { getTestingMetric } from '../components/model-row/utils';
-import type { SortBy } from '../types';
+import type { GroupedModels, SortBy } from '../types';
 
 export const sortModels = (models: Model[], sortBy: SortBy, datasetRevisions: DatasetRevision[]): Model[] => {
     switch (sortBy) {
@@ -28,37 +28,57 @@ export const sortModels = (models: Model[], sortBy: SortBy, datasetRevisions: Da
             return orderBy(models, (model) => model.size ?? 0, 'asc');
         case 'score':
             return orderBy(models, (model) => getTestingMetric(model)?.value ?? 0, 'desc');
-        case 'dataset':
+        case 'dataset': {
             const datasetRevisionsMap = new Map(
-                datasetRevisions.map((datasetRevision) => [datasetRevision.id, datasetRevision.name])
+                datasetRevisions.map((datasetRevision) => [datasetRevision.id, datasetRevision])
             );
+
+            const getDatasetRevision = (model: Model) => {
+                const id = model.training_info?.dataset_revision_id;
+                return id != null ? datasetRevisionsMap.get(id) : undefined;
+            };
+
             return orderBy(
                 models,
                 [
-                    // First we sort by models that have dataset revision so they are on the top.
+                    // First: models with a resolvable dataset revision come first.
+                    (model) => (getDatasetRevision(model) != null ? 1 : 0),
+                    // Second: sort by dataset revision creation date, newest first.
                     (model) => {
-                        const name =
-                            model.training_info?.dataset_revision_id != null
-                                ? datasetRevisionsMap.get(model.training_info.dataset_revision_id)
-                                : undefined;
+                        const createdAt = getDatasetRevision(model)?.created_at;
 
-                        return name != null ? 0 : 1;
+                        return createdAt ?? '';
                     },
-                    // Then we sort alphabetically by dataset name
-                    (model) => {
-                        if (model.training_info?.dataset_revision_id != null) {
-                            return (
-                                datasetRevisionsMap.get(model.training_info.dataset_revision_id)?.toLowerCase() ?? ''
-                            );
-                        }
-
-                        return '';
-                    },
+                    // Third: sort by dataset revision name, Z -> A.
+                    (model) => getDatasetRevision(model)?.name?.toLowerCase() ?? '',
                 ],
-                ['asc', 'asc']
+                ['desc', 'desc', 'desc']
             );
+        }
         default:
             console.error(`Unknown sort option: ${sortBy satisfies never}`);
             return models;
     }
+};
+
+export const sortGroupedModelsByDatasetRevisionDate = (
+    groupedModels: GroupedModels[],
+    datasetRevisions: DatasetRevision[]
+): GroupedModels[] => {
+    const datasetRevisionsMap = new Map(
+        datasetRevisions.map((datasetRevision) => [datasetRevision.id, datasetRevision])
+    );
+
+    return orderBy(
+        groupedModels,
+        (group) => {
+            const mostRecentModel = sortModels(group.models, 'dataset', datasetRevisions)?.at(0);
+            const modelDatasetRevisionId = mostRecentModel?.training_info?.dataset_revision_id;
+            const datasetRevisionDate =
+                modelDatasetRevisionId != null ? datasetRevisionsMap.get(modelDatasetRevisionId)?.created_at : null;
+
+            return datasetRevisionDate ?? '';
+        },
+        'desc'
+    );
 };
