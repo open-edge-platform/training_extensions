@@ -5,7 +5,7 @@ import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { getMockedModel } from 'mocks/mock-model';
 import { getMockedVariant } from 'mocks/mock-model-variant';
 
-import { sortGropedModelsByDatasetRevisionDate, sortModels } from './sorting';
+import { sortGroupedModelsByDatasetRevisionDate, sortModels } from './sorting';
 
 describe('sortModels', () => {
     describe('name', () => {
@@ -308,7 +308,7 @@ describe('sortModels', () => {
     });
 });
 
-describe('sortGropedModelsByDatasetRevisionDate', () => {
+describe('sortGroupedModelsByDatasetRevisionDate', () => {
     // Builds a minimal DatasetGroup; the createdAt display string is irrelevant to ordering.
     const makeDatasetGroup = (id: string, models: ReturnType<typeof getMockedModel>[]) => ({
         group: {
@@ -328,12 +328,12 @@ describe('sortGropedModelsByDatasetRevisionDate', () => {
         getMockedModel({ id, training_info: { status: 'successful', dataset_revision_id: revisionId } });
 
     it('returns empty array for empty input', () => {
-        expect(sortGropedModelsByDatasetRevisionDate([], [])).toEqual([]);
+        expect(sortGroupedModelsByDatasetRevisionDate([], [])).toEqual([]);
     });
 
     it('returns a single group unchanged', () => {
         const group = makeDatasetGroup('rev-only', []);
-        const result = sortGropedModelsByDatasetRevisionDate([group], []);
+        const result = sortGroupedModelsByDatasetRevisionDate([group], []);
 
         expect(result).toHaveLength(1);
         expect(result[0].group.id).toBe('rev-only');
@@ -352,7 +352,7 @@ describe('sortGropedModelsByDatasetRevisionDate', () => {
             makeDatasetGroup('group-mar', [makeModel('model-mar', 'rev-mar')]),
         ];
 
-        const result = sortGropedModelsByDatasetRevisionDate(groups, revisions);
+        const result = sortGroupedModelsByDatasetRevisionDate(groups, revisions);
 
         expect(result[0].group.id).toBe('group-mar');
         expect(result[1].group.id).toBe('group-feb');
@@ -370,7 +370,7 @@ describe('sortGropedModelsByDatasetRevisionDate', () => {
         const newerGroup = makeDatasetGroup('group-new', [makeModel('model-new', 'rev-new')]);
 
         // Intentionally supply the newer group last to confirm input order has no influence.
-        const result = sortGropedModelsByDatasetRevisionDate([olderGroup, newerGroup], revisions);
+        const result = sortGroupedModelsByDatasetRevisionDate([olderGroup, newerGroup], revisions);
 
         expect(result[0].group.id).toBe('group-new');
         expect(result[1].group.id).toBe('group-old');
@@ -390,7 +390,7 @@ describe('sortGropedModelsByDatasetRevisionDate', () => {
         ]);
         const smallNewerGroup = makeDatasetGroup('group-new', [makeModel('b1', 'rev-new')]);
 
-        const result = sortGropedModelsByDatasetRevisionDate([bigOlderGroup, smallNewerGroup], revisions);
+        const result = sortGroupedModelsByDatasetRevisionDate([bigOlderGroup, smallNewerGroup], revisions);
 
         expect(result[0].group.id).toBe('group-new');
         expect(result[1].group.id).toBe('group-old');
@@ -403,7 +403,7 @@ describe('sortGropedModelsByDatasetRevisionDate', () => {
         const missingRevGroup = makeDatasetGroup('group-missing', [makeModel('model-missing', 'rev-unknown')]);
         const knownRevGroup = makeDatasetGroup('group-known', [makeModel('model-known', 'rev-known')]);
 
-        const result = sortGropedModelsByDatasetRevisionDate([missingRevGroup, knownRevGroup], revisions);
+        const result = sortGroupedModelsByDatasetRevisionDate([missingRevGroup, knownRevGroup], revisions);
 
         expect(result[0].group.id).toBe('group-known');
         expect(result[1].group.id).toBe('group-missing');

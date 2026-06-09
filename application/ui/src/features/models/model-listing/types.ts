@@ -8,7 +8,6 @@ export type GroupByMode = 'dataset' | 'architecture';
 export type SortBy = 'name' | 'trained' | 'architecture' | 'dataset' | 'size' | 'score';
 
 export type DatasetGroup = {
-    type: 'dataset';
     id: string;
     name: string;
     createdAt: string;
@@ -23,7 +22,6 @@ export type DatasetGroup = {
 };
 
 export type ArchitectureGroup = {
-    type: 'architecture';
     id: string;
 };
 

@@ -47,7 +47,7 @@ export const sortModels = (models: Model[], sortBy: SortBy, datasetRevisions: Da
                     (model) => {
                         const createdAt = getDatasetRevision(model)?.created_at;
 
-                        return createdAt ?? 0;
+                        return createdAt ?? '';
                     },
                     // Third: sort by dataset revision name, Z -> A.
                     (model) => getDatasetRevision(model)?.name?.toLowerCase() ?? '',
@@ -61,7 +61,7 @@ export const sortModels = (models: Model[], sortBy: SortBy, datasetRevisions: Da
     }
 };
 
-export const sortGropedModelsByDatasetRevisionDate = (
+export const sortGroupedModelsByDatasetRevisionDate = (
     groupedModels: GroupedModels[],
     datasetRevisions: DatasetRevision[]
 ): GroupedModels[] => {

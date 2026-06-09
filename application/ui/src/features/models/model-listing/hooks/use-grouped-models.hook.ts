@@ -13,7 +13,7 @@ import {
     removeEmpty,
     sortGroupedModels,
 } from '../utils/model-transforms';
-import { sortGropedModelsByDatasetRevisionDate } from '../utils/sorting';
+import { sortGroupedModelsByDatasetRevisionDate } from '../utils/sorting';
 
 type UseGroupedModelsOptions = {
     groupBy: GroupByMode;
@@ -40,7 +40,7 @@ export const useGroupedModels = (models: Model[] | undefined, options: UseGroupe
         const filteredBySearch = filterBySearch(filteredByFailedModels, searchBy);
         const grouped = groupModels(filteredBySearch, groupBy, datasetRevisions);
         const sortedModelsInsideGroup = sortGroupedModels(grouped, sortBy, datasetRevisions);
-        const sortedGroupsByDatasetRevisionDate = sortGropedModelsByDatasetRevisionDate(
+        const sortedGroupsByDatasetRevisionDate = sortGroupedModelsByDatasetRevisionDate(
             sortedModelsInsideGroup,
             datasetRevisions
         );
