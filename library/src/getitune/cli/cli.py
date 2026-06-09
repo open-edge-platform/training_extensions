@@ -402,17 +402,14 @@ class CLI:
             "disable_infer_num_classes",
             False,
         ):
-            from getitune.backend.lightning.models.keypoint_detection.base import LightningKeypointDetectionModel
-
-            if not issubclass(model_cls, LightningKeypointDetectionModel):
-                model_config.init_args.label_info = self.datamodule.label_info
-                warning_msg = (
-                    "Automatically infer label_info from the given dataset. "
-                    "Then, giving it to the LightningModel.__init__() argument. "
-                    "If you don't want this behavior, please use `--disable-infer-num-classes` option."
-                )
-                warn(warning_msg, stacklevel=0)
-                skip.add("label_info")
+            model_config.init_args.label_info = self.datamodule.label_info
+            warning_msg = (
+                "Automatically infer label_info from the given dataset. "
+                "Then, giving it to the LightningModel.__init__() argument. "
+                "If you don't want this behavior, please use `--disable-infer-num-classes` option."
+            )
+            warn(warning_msg, stacklevel=0)
+            skip.add("label_info")
 
         # Update tile config due to adaptive tiling
         if can_pass_tile_config(model_cls):
