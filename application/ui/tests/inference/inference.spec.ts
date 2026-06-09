@@ -6,6 +6,7 @@ import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
+import { stepConfigureInferenceSourceAndSink } from '../workflows/workflow-steps';
 
 test.describe('Inference', () => {
     test.beforeEach(({ network }) => {
@@ -287,6 +288,30 @@ test.describe('Inference', () => {
                 http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
                     return response(200).json(getMockedPipeline({ source: null, sink: null }));
                 }),
+                http.post('/api/sources', () => {
+                    return HttpResponse.json(
+                        {
+                            id: 'generated-source-id',
+                            name: 'My Source',
+                            source_type: 'usb_camera',
+                            device_id: 1,
+                        },
+                        { status: 201 }
+                    );
+                }),
+                http.post('/api/sinks', () => {
+                    return HttpResponse.json(
+                        {
+                            id: 'generated-sink-id',
+                            name: 'My Sink',
+                            sink_type: 'folder',
+                            rate_limit: 5,
+                            folder_path: 'e2e-output',
+                            output_formats: ['predictions'],
+                        },
+                        { status: 201 }
+                    );
+                }),
                 http.patch('/api/sources/{source_id}', () => {
                     return HttpResponse.json({});
                 }),
@@ -296,13 +321,7 @@ test.describe('Inference', () => {
             );
             await page.goto('/projects/id-1/inference');
 
-            await page.getByRole('button', { name: 'Add new source' }).click();
-            await page.getByRole('button', { name: 'USB Camera' }).click();
-
-            const usbCamera = 'new camera';
-            await page.getByRole('textbox', { name: 'Name' }).fill(usbCamera);
-            await page.getByRole('button', { name: 'Camera list' }).click();
-            await page.getByLabel('FaceTime HD Camera', { exact: true }).click();
+            const usbCamera = 'My Source';
 
             network.use(
                 http.get('/api/sources', () => {
@@ -317,31 +336,14 @@ test.describe('Inference', () => {
                 })
             );
 
-            await page.getByRole('button', { name: 'Add & Connect' }).click();
-
-            await expect(page.getByText(usbCamera)).toBeVisible();
-            await expect(page.getByText('Device: FaceTime HD Camera')).toBeVisible();
-
-            // Go to output tab
-            await page.getByLabel('Pipeline configuration tabs').getByText('Output').click();
-
-            await page.getByRole('button', { name: 'Add new sink' }).click();
-            await page.getByRole('button', { name: 'Folder' }).click();
-            await page.locator('input[name="name"]').fill('New Folder');
-            await page.locator('input[aria-roledescription="Number field"]').first().fill('5');
-            await page.locator('input[aria-roledescription="Number field"]').nth(1).fill('5');
-
-            await page.locator('input[name="folder_path"]').fill('some/path');
-            await page.locator('input[name="output_formats"][value="predictions"]').click();
-
             network.use(
                 http.get('/api/sinks', () => {
                     return HttpResponse.json([
                         {
                             id: '1',
-                            name: 'New Folder',
+                            name: 'My Sink',
                             sink_type: 'folder',
-                            folder_path: 'some/path',
+                            folder_path: 'e2e-output',
                             rate_limit: 5,
                             output_formats: ['predictions'],
                         },
@@ -349,10 +351,15 @@ test.describe('Inference', () => {
                 })
             );
 
-            await page.getByRole('button', { name: 'Add & Connect' }).click();
+            await stepConfigureInferenceSourceAndSink(page);
 
-            await expect(page.getByText('New Folder')).toBeVisible();
-            await expect(page.getByText('Folder path: some/path')).toBeVisible();
+            await page.getByLabel('Pipeline configuration tabs').getByText('Input').click();
+            await expect(page.getByText(usbCamera)).toBeVisible();
+            await expect(page.getByText('Device: FaceTime HD Camera')).toBeVisible();
+
+            await page.getByLabel('Pipeline configuration tabs').getByText('Output').click();
+            await expect(page.getByText('My Sink')).toBeVisible();
+            await expect(page.getByText('Folder path: e2e-output')).toBeVisible();
             await expect(page.getByText('Rate limit: 5 samples every 1 second')).toBeVisible();
             await expect(page.getByText('Output formats: predictions')).toBeVisible();
         });
