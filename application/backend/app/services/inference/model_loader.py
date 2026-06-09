@@ -50,7 +50,7 @@ class ModelLoader:
         Returns:
             A LoadedModelHandle containing the ready-to-use Model API model.
         """
-        logger.debug("Loading model '{}' on device '{}'", model_xml_path, device)
+        logger.info("Loading model '{}' on device '{}'", model_xml_path, device)
         ie = create_core()
         adapter = OpenvinoAdapter(
             ie,
@@ -75,12 +75,25 @@ class ModelLoader:
         Explicitly deletes the compiled model and async queue from the adapter so that OpenVINO frees GPU/CPU memory
         immediately rather than waiting for the Python GC.
 
+        Before deleting the async inference queue, all in-flight requests are drained via ``wait_all()``.
+        This is essential: the ``AsyncInferQueue`` destructor waits for outstanding requests to finish **while
+        holding the GIL**, but an outstanding request can only finish by running its Python completion callback,
+        which itself needs the GIL. Deleting the queue with a request still in flight therefore deadlocks the
+        whole inference process (it wedges inside ``del``, never loading another model again - observed as a frozen
+        / black video stream after toggling the pipeline). ``wait_all()`` releases the GIL while waiting, allowing
+        the pending callbacks to run and complete, so the subsequent ``del`` has nothing left to wait for.
+
         Args:
             handle: The handle returned by a previous call to `load`.
         """
-        logger.debug("Unloading model '{}'", handle.model_id)
+        logger.info("Unloading model '{}'", handle.model_id)
         adapter = cast(OpenvinoAdapter, handle.model.inference_adapter)
         if hasattr(adapter, "async_queue"):
+            # Drain in-flight requests with the GIL released to avoid a GIL deadlock in the queue destructor.
+            try:
+                adapter.async_queue.wait_all()
+            except Exception:
+                logger.exception("Error while draining in-flight inference requests during unload")
             del adapter.async_queue
         if hasattr(adapter, "compiled_model"):
             del adapter.compiled_model
