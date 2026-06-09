@@ -2,20 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING
 
 import numpy as np
 from loguru import logger
-from model_api.models import ClassificationResult
-from model_api.models.result import DetectionResult, InstanceSegmentationResult, Label, Result
-from model_api.visualizer import BoundingBox, Flatten, Polygon
-from model_api.visualizer.defaults import SCALE_BASELINE
-from model_api.visualizer.scene import ClassificationScene, DetectionScene, InstanceSegmentationScene
 from PIL import Image
 
 from app.utils.singleton import Singleton
 
-R = TypeVar("R", bound=Result)
+if TYPE_CHECKING:
+    from model_api.models.result import ClassificationResult, DetectionResult, InstanceSegmentationResult, Result
 
 
 def _compute_scale(image: np.ndarray) -> float:
@@ -24,6 +20,8 @@ def _compute_scale(image: np.ndarray) -> float:
     Uses SCALE_BASELINE (720p longer edge = 1280) as the reference: at 1280px the
     scale is 1.0; at 4K (3840px) the scale is ~3.0. Never shrinks below 1.0.
     """
+    from model_api.visualizer.defaults import SCALE_BASELINE
+
     if image is None or image.size == 0:
         return 1.0
     h, w = image.shape[:2]
@@ -31,26 +29,28 @@ def _compute_scale(image: np.ndarray) -> float:
     return max(1.0, longer_edge / float(SCALE_BASELINE))
 
 
-class VisualizerCreator(ABC, Generic[R]):
+class VisualizerCreator(ABC):
     """Abstract base class for visualizer creators."""
 
     @abstractmethod
     def create_visualization(
         self,
         original_image: np.ndarray,
-        predictions: R,
+        predictions: "Result",
     ) -> np.ndarray:
         """Create a visualization of the predictions on the original image."""
 
 
-class ClassificationVisualizerCreator(VisualizerCreator[ClassificationResult]):
+class ClassificationVisualizerCreator(VisualizerCreator):
     """Creator for classification visualizations."""
 
-    def create_visualization(
+    def create_visualization(  # pyrefly: ignore[bad-override]
         self,
         original_image: np.ndarray,
-        predictions: ClassificationResult,
+        predictions: "ClassificationResult",
     ) -> np.ndarray:
+        from model_api.visualizer.scene import ClassificationScene
+
         image_pil = Image.fromarray(original_image)
         scale = _compute_scale(original_image)
         classification_scene = ClassificationScene(
@@ -62,14 +62,18 @@ class ClassificationVisualizerCreator(VisualizerCreator[ClassificationResult]):
         return np.array(rendered)
 
 
-class DetectionVisualizerCreator(VisualizerCreator[DetectionResult]):
+class DetectionVisualizerCreator(VisualizerCreator):
     """Creator for detection visualizations."""
 
-    def create_visualization(
+    def create_visualization(  # pyrefly: ignore[bad-override]
         self,
         original_image: np.ndarray,
-        predictions: DetectionResult,
+        predictions: "DetectionResult",
     ) -> np.ndarray:
+        from model_api.models.result import Label
+        from model_api.visualizer import BoundingBox, Flatten
+        from model_api.visualizer.scene import DetectionScene
+
         image_pil = Image.fromarray(original_image)
         scale = _compute_scale(original_image)
         detection_scene = DetectionScene(
@@ -82,14 +86,18 @@ class DetectionVisualizerCreator(VisualizerCreator[DetectionResult]):
         return np.array(rendered)
 
 
-class InstanceSegmentationVisualizerCreator(VisualizerCreator[InstanceSegmentationResult]):
+class InstanceSegmentationVisualizerCreator(VisualizerCreator):
     """Creator for instance segmentation visualizations."""
 
-    def create_visualization(
+    def create_visualization(  # pyrefly: ignore[bad-override]
         self,
         original_image: np.ndarray,
-        predictions: InstanceSegmentationResult,
+        predictions: "InstanceSegmentationResult",
     ) -> np.ndarray:
+        from model_api.models.result import Label
+        from model_api.visualizer import Flatten, Polygon
+        from model_api.visualizer.scene import InstanceSegmentationScene
+
         image_pil = Image.fromarray(original_image)
         scale = _compute_scale(original_image)
         segmentation_scene = InstanceSegmentationScene(
@@ -106,6 +114,8 @@ class VisualizationDispatcher(metaclass=Singleton):
     """Dispatcher for creating visualizations."""
 
     def __init__(self) -> None:
+        from model_api.models.result import ClassificationResult, DetectionResult, InstanceSegmentationResult, Result
+
         self._creator_map: dict[type[Result], VisualizerCreator] = {
             DetectionResult: DetectionVisualizerCreator(),
             ClassificationResult: ClassificationVisualizerCreator(),
@@ -115,7 +125,7 @@ class VisualizationDispatcher(metaclass=Singleton):
     def create_visualization(
         self,
         original_image: np.ndarray,
-        predictions: Result,
+        predictions: "Result",
     ) -> np.ndarray | None:
         if original_image.size == 0:
             raise ValueError("The image provided through the 'original_image' parameter cannot be empty.")
@@ -131,7 +141,7 @@ class Visualizer:
     @staticmethod
     def overlay_predictions(
         original_image: np.ndarray,
-        predictions: Result,
+        predictions: "Result",
     ) -> np.ndarray:
         """Overlay predictions on the original image.
 

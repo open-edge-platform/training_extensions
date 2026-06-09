@@ -7,13 +7,11 @@ import threading
 from dataclasses import dataclass
 from multiprocessing.synchronize import Event as EventClass
 from multiprocessing.synchronize import Lock
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import cv2
 from loguru import logger
 from loguru._logger import Logger as LoguruLogger
-from model_api.models import Model
-from model_api.models.result import Result
 
 from app.services import ActiveModelService, MetricsService
 from app.services.inference.model_loader import LoadedModelHandle
@@ -21,6 +19,10 @@ from app.settings import Settings, get_settings
 from app.stream.stream_data import InferenceData, StreamData
 from app.utils import Visualizer
 from app.workers.base import BaseProcessWorker
+
+if TYPE_CHECKING:
+    from model_api.models import Model
+    from model_api.models.result import Result
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -117,7 +119,7 @@ class InferenceWorker(BaseProcessWorker):
             raise RuntimeError("Prediction buffer not initialized (method 'setup' not called?)")
         return self.__prediction_buffer
 
-    def _on_inference_completed(self, inf_result: Result, userdata: dict[str, Any]) -> None:
+    def _on_inference_completed(self, inf_result: "Result", userdata: dict[str, Any]) -> None:
         start_time = float(userdata["inference_start_time"])
         model_id = userdata["model_id"]
         self._metrics_service.record_inference_end(model_id=model_id, start_time=start_time)  # type: ignore
@@ -144,7 +146,7 @@ class InferenceWorker(BaseProcessWorker):
                 except queue.Full:
                     logger.debug("Prediction queue is full, retrying...")
 
-    def _install_callback_if_needed(self, model: Model) -> None:
+    def _install_callback_if_needed(self, model: "Model") -> None:
         """Install inference completion callback once per model object instance."""
         obj_id = id(model)
         if obj_id == self._last_model_obj_id:

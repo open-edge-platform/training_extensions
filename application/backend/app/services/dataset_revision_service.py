@@ -3,12 +3,10 @@
 
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
-import datumaro.experimental as dm
 import polars as pl
-from datumaro.experimental.export_import import export_dataset, import_dataset
 from loguru import logger
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.exc import IntegrityError
@@ -26,6 +24,9 @@ from app.utils.images import crop_to_thumbnail
 from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
 from .media_service import InvalidImageError
 
+if TYPE_CHECKING:
+    from datumaro.experimental import Dataset
+
 # Thumbnails for dataset revisions are generated on the fly and need to be smaller than pregenerated thumbnails
 DATASET_REVISION_ITEM_THUMBNAIL_SIZE = 128
 
@@ -35,7 +36,7 @@ class DatasetRevisionService(BaseSessionManagedService):
         super().__init__(db_session)
         self.projects_dir = data_dir / "projects"
 
-    def save_revision(self, project_id: UUID, dataset: dm.Dataset) -> UUID:
+    def save_revision(self, project_id: UUID, dataset: "Dataset") -> UUID:
         """
         Saves the dataset as a new revision.
 
@@ -49,6 +50,8 @@ class DatasetRevisionService(BaseSessionManagedService):
         Returns:
             UUID: The UUID of the newly created dataset revision.
         """
+        from datumaro.experimental.export_import import export_dataset
+
         item_counts = self._count_dataset_revision_items(dataset=dataset)
         if not (item_counts.training and item_counts.validation and item_counts.testing):
             raise ValueError(
@@ -90,7 +93,7 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         return UUID(revision_db.id)
 
-    def load_revision(self, project_id: UUID, dataset_revision_id: UUID) -> dm.Dataset:
+    def load_revision(self, project_id: UUID, dataset_revision_id: UUID) -> "Dataset":
         """
         Loads the Datumaro dataset belonging to the dataset revision.
 
@@ -98,8 +101,10 @@ class DatasetRevisionService(BaseSessionManagedService):
             project_id: The UUID of the project.
             dataset_revision_id: The UUID of the dataset revision.
         Returns:
-            dm.Dataset: The dataset revision as a Datumaro dataset.
+            Dataset: The dataset revision as a Datumaro dataset.
         """
+        from datumaro.experimental.export_import import import_dataset
+
         dataset_revision = self.get_dataset_revision(project_id, dataset_revision_id)
         if dataset_revision.files_deleted:
             raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(dataset_revision_id))
@@ -277,7 +282,7 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         return parquet_path
 
-    def _count_dataset_revision_items(self, dataset: dm.Dataset) -> DatasetRevisionCounts:
+    def _count_dataset_revision_items(self, dataset: "Dataset") -> DatasetRevisionCounts:
         """
         Count the number of dataset items in a dataset revision, grouped by subset.
 
