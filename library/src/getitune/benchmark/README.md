@@ -45,6 +45,28 @@ Run commands from `library/`.
    python -m getitune.benchmark run --task detection --model yolox_s --dataset wgisd --accelerator <cpu|cuda|xpu> --num-seeds 1 --no-tracking
    ```
 
+## CI benchmark schedule
+
+The `Model Benchmark` GitHub workflow runs in two modes: a weekly scheduled run and a manual run.
+
+| Trigger             | Timeline                  | Source ref                   | Model groups / categories                                            | Dataset size tiers          | Scenario                   | Eval phase                                    | Seeds                       | Accelerators                   |
+| ------------------- | ------------------------- | ---------------------------- | -------------------------------------------------------------------- | --------------------------- | -------------------------- | --------------------------------------------- | --------------------------- | ------------------------------ |
+| `schedule`          | Every Friday, `19:00 UTC` | `develop`                    | `core,extended`                                                      | `tiny,small,medium,large`   | `default`                  | `optimize`                                    | `2`                         | `gpu` and `xpu`                |
+| `workflow_dispatch` | On demand                 | User-selected (`source_ref`) | User-selected (`core`, `core,extended`, `core,extended,exploratory`) | User-selected (`size_tier`) | User-selected (`scenario`) | User-selected (`train`, `export`, `optimize`) | User-selected (`num_seeds`) | User-selected (`gpu` or `xpu`) |
+
+### Rotation and timeline details
+
+- Weekly runs use model rotation for `extended` priority models.
+- Rotation group is computed as `ISO week number % extended_groups`.
+- `extended_groups` is read from `benchmark_manifest.yaml` (`defaults.rotation.extended_groups`, currently `2`).
+- `core` models are not rotated and are always included when `priority=core,extended`.
+
+Practical effect with `extended_groups: 2`:
+
+- Week A: all `core` models + one half of `extended` models.
+- Week B: all `core` models + the other half of `extended` models.
+- After two weekly runs, the full `extended` set has been covered once (per accelerator).
+
 ## Useful run examples
 
 Dry run only (prints what would execute):
