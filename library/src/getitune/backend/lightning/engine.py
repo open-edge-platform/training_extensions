@@ -168,20 +168,7 @@ class LightningEngine(Engine):
             if not isinstance(self.checkpoint, (Path, str)) and not Path(self.checkpoint).exists():
                 msg = f"Checkpoint {self.checkpoint} does not exist."
                 raise FileNotFoundError(msg)
-            chkpt = self._load_model_checkpoint(self.checkpoint, map_location="cpu")
-            if "hyper_parameters" in chkpt and "label_info" in chkpt.get("hyper_parameters", {}):
-                # Getitune checkpoint — full label reconciliation.
-                self._model.load_state_dict_incrementally(chkpt)
-            else:
-                # Plain pretrained weights
-                from getitune.backend.lightning.models.utils.utils import load_checkpoint
-
-                load_checkpoint(
-                    self._model.model,
-                    str(self.checkpoint),
-                    map_location="cpu",
-                    strict=False,
-                )
+            self._load_model_checkpoint(self.checkpoint, map_location="cpu")
 
     # ------------------------------------------------------------------------ #
     # General getitune Entry Points
@@ -270,7 +257,6 @@ class LightningEngine(Engine):
                 ...     --resume True
                 ```
         """
-        checkpoint = checkpoint if checkpoint is not None else self.checkpoint
         if adaptive_bs != "None":
             adapt_batch_size(engine=self, **locals(), not_increase=(adaptive_bs != "Full"))
 
@@ -306,12 +292,7 @@ class LightningEngine(Engine):
             # load the entire model state from the checkpoint using the pl.Trainer's API.
             fit_kwargs["ckpt_path"] = checkpoint
         elif not resume and checkpoint:
-            # NOTE: If `resume` is not enabled but `checkpoint` is provided,
-            # load the model state from the checkpoint incrementally.
-            # This means only the model weights are loaded. If there is a mismatch in label_info,
-            # perform incremental weight loading for the model's classification layer.
-            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
-            self.model.load_state_dict_incrementally(ckpt)
+            self._load_model_checkpoint(checkpoint, map_location="cpu")
 
         with override_metric_callable(model=self.model, new_metric_callable=metric) as model:
             # Setup DataAugSwitch for datasets before training starts
@@ -1258,9 +1239,8 @@ class LightningEngine(Engine):
         """Check if the engine is supported for the given model and data."""
         return bool(isinstance(model, LightningModel) and isinstance(data, DataModule))
 
-    @staticmethod
-    def _load_model_checkpoint(checkpoint: PathLike, map_location: str | None = None) -> dict[str, Any]:
-        """Load model checkpoint from the given path.
+    def _load_model_checkpoint(self, checkpoint: PathLike, map_location: str = "cpu") -> dict[str, Any]:
+        """Load model checkpoint from the given path and apply weights to the model.
 
         Args:
             checkpoint (PathLike): Path to the checkpoint file.
@@ -1282,6 +1262,13 @@ class LightningEngine(Engine):
         except Exception as e:
             msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
             raise RuntimeError(e) from None
+
+        if "hyper_parameters" in ckpt and "label_info" in ckpt.get("hyper_parameters", {}):
+            self._model.load_state_dict_incrementally(ckpt)
+        else:
+            from getitune.backend.lightning.models.utils.utils import load_checkpoint
+
+            load_checkpoint(self._model.model, str(checkpoint), map_location=map_location, strict=False)
 
         return ckpt
 
