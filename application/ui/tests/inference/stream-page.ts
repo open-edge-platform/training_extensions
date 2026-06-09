@@ -7,7 +7,7 @@ export class StreamPage {
     constructor(private page: Page) {}
 
     getStartStreamButton() {
-        return this.page.getByLabel('Start stream');
+        return this.page.getByRole('button', { name: 'Start stream' });
     }
 
     async startStream() {
