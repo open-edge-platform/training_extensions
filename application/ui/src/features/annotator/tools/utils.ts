@@ -12,14 +12,6 @@ import type { ClipperPoint, Point, Polygon, Rect, RegionOfInterest, Shape } from
 // @ts-expect-error `default` actually exists in the module
 const ClipperJS = Clipper.default || Clipper;
 
-/**
- * Oversized image handling (Chrome canvas limit ~268 Mpx):
- * - `getImageData` returns a 1×1 placeholder for media too large to rasterise.
- * - Such media is displayed via an <img> tag (see annotator-canvas.tsx).
- * - Smart tools (SAM, magnetic lasso, SSIM) are disabled for it, because they
- *   rely on a full-resolution canvas/OpenCV buffer that cannot be produced.
- */
-
 export enum PointerType {
     Mouse = 'mouse',
     Pen = 'pen',
@@ -500,6 +492,14 @@ export const projectPointOnLine = ([startPoint, endPoint]: ProjectLine, point: P
         y: b.y * scale + startPoint.y,
     };
 };
+
+/**
+ * Oversized image handling (Chrome canvas limit ~268 Mpx):
+ * - `getImageData` returns a 1×1 placeholder for media too large to rasterise.
+ * - Such media is displayed via an <img> tag (see annotator-canvas.tsx).
+ * - Smart tools (SAM, magnetic lasso, SSIM) are disabled for it, because they
+ *   rely on a full-resolution canvas/OpenCV buffer that cannot be produced.
+ */
 
 /**
  * Checks if an ImageData is a placeholder for oversized media.
