@@ -23,6 +23,63 @@ type MenuActionsProps = {
     projectNames: string[];
 };
 
+export type ProjectActionMetadata = {
+    projectId: string;
+    projectName: string;
+    projectNames: string[];
+    onDeleted?: () => void;
+};
+
+type ProjectActionsMenuProps = MenuActionsProps & {
+    onRename: (metadata: ProjectActionMetadata) => void;
+    onDelete: (metadata: ProjectActionMetadata) => void;
+    onEnableBlocked: (metadata: ProjectActionMetadata) => void;
+};
+
+export const ProjectActionsMenu = ({
+    projectId,
+    projectName,
+    isPipelineRunning,
+    actionButtonStyle,
+    onDeleted,
+    projectNames,
+    onRename,
+    onDelete,
+    onEnableBlocked,
+}: ProjectActionsMenuProps) => {
+    const metadata = { projectId, projectName, projectNames, onDeleted };
+    const { menuActions, handleAction } = useProjectMenuActions(
+        projectId,
+        {
+            onRename: () => onRename(metadata),
+            onDelete: () => onDelete(metadata),
+            onEnableBlocked: () => onEnableBlocked(metadata),
+        },
+        isPipelineRunning
+    );
+
+    return (
+        <MenuTrigger>
+            <ActionButton
+                isQuiet
+                UNSAFE_style={{
+                    fill: 'var(--spectrum-gray-900)',
+                    ...actionButtonStyle,
+                }}
+                aria-label={'open project options'}
+                data-testid={projectId}
+            >
+                <MoreMenu />
+            </ActionButton>
+            <Menu onAction={handleAction} UNSAFE_className={classes.actionMenu}>
+                {menuActions.map(({ key, label }) => (
+                    <Item key={key}>{label}</Item>
+                ))}
+            </Menu>
+        </MenuTrigger>
+    );
+};
+
 export const MenuActions = ({
     projectId,
     projectName,
@@ -35,36 +92,19 @@ export const MenuActions = ({
     const deleteProjectDialogState = useOverlayTriggerState({});
     const editProjectNameDialogState = useOverlayTriggerState({});
 
-    const { menuActions, handleAction } = useProjectMenuActions(
-        projectId,
-        {
-            onRename: editProjectNameDialogState.open,
-            onDelete: deleteProjectDialogState.open,
-            onEnableBlocked: () => setIsEnableBlockedDialogOpen(true),
-        },
-        isPipelineRunning
-    );
-
     return (
         <>
-            <MenuTrigger>
-                <ActionButton
-                    isQuiet
-                    UNSAFE_style={{
-                        fill: 'var(--spectrum-gray-900)',
-                        ...actionButtonStyle,
-                    }}
-                    aria-label={'open project options'}
-                    data-testid={projectId}
-                >
-                    <MoreMenu />
-                </ActionButton>
-                <Menu onAction={handleAction} UNSAFE_className={classes.actionMenu}>
-                    {menuActions.map(({ key, label }) => (
-                        <Item key={key}>{label}</Item>
-                    ))}
-                </Menu>
-            </MenuTrigger>
+            <ProjectActionsMenu
+                projectId={projectId}
+                projectName={projectName}
+                isPipelineRunning={isPipelineRunning}
+                actionButtonStyle={actionButtonStyle}
+                onDeleted={onDeleted}
+                projectNames={projectNames}
+                onRename={editProjectNameDialogState.open}
+                onDelete={deleteProjectDialogState.open}
+                onEnableBlocked={() => setIsEnableBlockedDialogOpen(true)}
+            />
 
             <EnablePipelineBlockedDialog
                 isOpen={isEnableBlockedDialogOpen}
