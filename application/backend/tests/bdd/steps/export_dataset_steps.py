@@ -7,12 +7,12 @@ import secrets
 from pathlib import Path
 from typing import cast
 
-import requests
 from behave import given, then, when
 from behave.model import Table
 from behave.runner import Context
 from datumaro.experimental import LazyImage, LazyVideoFrame
 from datumaro.experimental.export_import import import_dataset
+from requests import Session
 
 from app.api.schemas import ProjectView
 from app.api.schemas.jobs.dataset_export import ExportDatasetMetadata
@@ -23,6 +23,7 @@ from tests.bdd.utils import export_dataset, generate_random_image, generate_rand
 @given('A {task_type} project "{project_name}" with labels {labels} exists')  # pyrefly: ignore
 @given('An {task_type} project "{project_name}" with labels {labels} exists')  # pyrefly: ignore
 def step_project_exists(context: Context, task_type: TaskType, project_name: str, labels: str) -> None:
+    session = cast(Session, context.session)
     labels_list = ast.literal_eval(labels)
     project_body = {
         "name": project_name,
@@ -32,7 +33,7 @@ def step_project_exists(context: Context, task_type: TaskType, project_name: str
             "labels": [{"name": label, "color": f"#{secrets.token_hex(3)}"} for label in labels_list],
         },
     }
-    response = requests.post(f"{context.base_url}/api/projects", json=project_body)
+    response = session.post(f"{context.base_url}/api/projects", json=project_body)
     project = ProjectView.model_validate(response.json())
     context.project = project
     context.task = project.task
@@ -48,6 +49,7 @@ def step_project_dataset_has_images(context: Context) -> None:
     """
     project = cast(ProjectView, context.project)
     tmp_path = cast(Path, context.tmp_path)
+    session = cast(Session, context.session)
     images_dir = tmp_path / "images"
     images_dir.mkdir(parents=True, exist_ok=True)
     label_name_to_uuid = {label.name: str(label.id) for label in project.task.labels}
@@ -70,7 +72,7 @@ def step_project_dataset_has_images(context: Context) -> None:
                     buffer.write(image_file.read())
                 buffer.seek(0)
                 files = {"file": (image_path.name, buffer, "image/jpeg")}
-                media_response = requests.post(
+                media_response = session.post(
                     f"{context.base_url}/api/projects/{project.id}/dataset/media", files=files
                 )
                 media_id = media_response.json()["id"]
@@ -121,7 +123,7 @@ def step_project_dataset_has_images(context: Context) -> None:
                                 }
                             ]
                         }
-                response = requests.post(
+                response = session.post(
                     f"{context.base_url}/api/projects/{project.id}/dataset/media/{media_id}/annotations",
                     json=annotation_body,
                 )
@@ -140,6 +142,7 @@ def step_project_dataset_has_video_frames(context: Context) -> None:
     """
     tmp_path = cast(Path, context.tmp_path)
     project = cast(ProjectView, context.project)
+    session = cast(Session, context.session)
     # 1. Upload random video
     video_dir = tmp_path / "videos"
     video_dir.mkdir(parents=True, exist_ok=True)
@@ -149,7 +152,7 @@ def step_project_dataset_has_video_frames(context: Context) -> None:
         buffer.write(video_file.read())
     buffer.seek(0)
     files = {"file": (video_path.name, buffer, "image/jpeg")}
-    media_response = requests.post(f"{context.base_url}/api/projects/{project.id}/dataset/media", files=files)
+    media_response = session.post(f"{context.base_url}/api/projects/{project.id}/dataset/media", files=files)
     video_id = media_response.json()["id"]
     label_name_to_uuid = {label.name: str(label.id) for label in project.task.labels}
     frame_idx = 0
@@ -210,7 +213,7 @@ def step_project_dataset_has_video_frames(context: Context) -> None:
                                 }
                             ]
                         }
-                response = requests.post(
+                response = session.post(
                     f"{context.base_url}/api/projects/{project.id}/dataset/media/{video_id}/annotations?"
                     f"frame_index={frame_idx}",
                     json=annotation_body,
@@ -225,14 +228,15 @@ def step_project_dataset_has_video_frames(context: Context) -> None:
 def step_export_dataset(context: Context, export_format: str, filters: str) -> None:
     project = cast(ProjectView, context.project)
     export_format = DatasetFormat(export_format.lower())
-    job = export_dataset(str(context.base_url), str(project.id), export_format, filters)
+    job = export_dataset(cast(Session, context.session), str(context.base_url), str(project.id), export_format, filters)
     context.export_format = export_format
     context.dataset_id = cast(ExportDatasetMetadata, job.metadata).dataset_id
 
 
 @then("the staged dataset archive {archive_name} should exist")  # pyrefly: ignore
 def step_staged_dataset_archive_exists(context: Context, archive_name: str) -> None:
-    response = requests.get(f"{context.base_url}/api/staged_datasets/{context.dataset_id}")
+    session = cast(Session, context.session)
+    response = session.get(f"{context.base_url}/api/staged_datasets/{context.dataset_id}")
     assert response.status_code == 200, (
         f"Expected status code 200, got {response.status_code}, response: {response.text}"
     )

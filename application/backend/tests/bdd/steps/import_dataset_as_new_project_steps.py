@@ -5,11 +5,11 @@ import ast
 from typing import Any, cast
 from uuid import UUID
 
-import requests
 from behave import given, then, when
 from behave.runner import Context
 from datumaro.experimental import Dataset
 from datumaro.experimental.categories import Categories, LabelCategories
+from requests import Session
 
 from app.api.schemas import ProjectView
 from app.api.schemas.jobs.dataset_import import ImportDatasetMetadata
@@ -55,6 +55,7 @@ def step_import_dataset_as_new_project(context: Context, task_type: str, project
     labels_list = ast.literal_eval(labels)
 
     job = import_dataset_as_new_project(
+        session=cast(Session, context.session),
         base_url=cast(str, context.base_url),
         project_name=project_name,
         staged_dataset_id=str(staged_dataset_id),
@@ -68,7 +69,8 @@ def step_import_dataset_as_new_project(context: Context, task_type: str, project
 @then('the project "{project_name}" is created with labels {labels}')  # pyrefly: ignore
 def step_project_created_with_labels(context: Context, project_name: str, labels: str) -> None:
     """Verify that the project was created with the expected name and labels."""
-    response = requests.get(f"{context.base_url}/api/projects/{context.project_id}")
+    session = cast(Session, context.session)
+    response = session.get(f"{context.base_url}/api/projects/{context.project_id}")
     assert response.status_code == 200, (
         f"Expected status code 200, got {response.status_code}, response: {response.text}"
     )

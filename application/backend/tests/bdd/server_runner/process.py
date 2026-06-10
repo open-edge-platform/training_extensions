@@ -20,6 +20,7 @@ class ProcessRunner(BaseServerRunner):
     def start_server(self):
         port = 7861
         tmp_dir = cast(Path, self.tmp_dir)
+        certs_dir = Path("data/certs").resolve()
         env = {
             **os.environ.copy(),
             "DATA_DIR": str(tmp_dir / "data"),
@@ -27,8 +28,22 @@ class ProcessRunner(BaseServerRunner):
             "PORT": str(port),
         }
 
+        # TODO: Process runner doesn't work after migrating to hypercorn, we need to either find a workaround, or
+        # drop support. Issue when running uv run python -m hypercorn app.main:app --insecure-bind 0.0.0.0:7860 from
+        # console: AssertionError: daemonic processes are not allowed to have children.
         self.process = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", str(port)],
+            [
+                sys.executable,
+                "-m",
+                "hypercorn",
+                "app.main:app",
+                "--insecure-bind",
+                f"0.0.0.0:{port}",
+                "--certfile",
+                str(certs_dir / "localhost.pem"),
+                "--keyfile",
+                str(certs_dir / "localhost-key.pem"),
+            ],
             env=env,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
