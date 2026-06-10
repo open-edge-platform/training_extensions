@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, TextField } from '@geti/ui';
+import { Flex, Switch, TextField } from '@geti/ui';
 
 import type { VideoFileSourceConfig } from '../../../../constants/shared-types';
 
@@ -24,6 +24,15 @@ export const VideoFile = ({ defaultState }: VideoFileProps) => {
                     defaultValue={String(defaultState?.video_path)}
                 />
             </Flex>
+
+            <Switch
+                aria-label='loop video'
+                name='loop'
+                defaultSelected={defaultState?.loop}
+                key={defaultState?.loop ? 'true' : 'false'}
+            >
+                Loop video
+            </Switch>
         </Flex>
     );
 };
