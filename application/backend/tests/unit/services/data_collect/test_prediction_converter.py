@@ -12,6 +12,36 @@ from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, 
 from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
 
 
+def test_convert_prediction_detection_underscore_label_names() -> None:
+    """Labels with spaces should match model predictions where spaces are underscores.
+
+    Model API embeds label names in a space-separated rt_info field, so
+    spaces within a label name are replaced with underscores during export.
+    The prediction converter must normalise the name before matching.
+    """
+    frame_data = np.random.rand(100, 100, 3)
+    project_id = uuid4()
+    labels = [
+        Label(id=uuid4(), project_id=project_id, name="Cabernet Franc", color="#ff0000", hotkey=""),
+        Label(id=uuid4(), project_id=project_id, name="Sauvignon Blanc", color="#00ff00", hotkey=""),
+    ]
+    coords = [[10, 20, 50, 60], [70, 80, 130, 150]]
+    raw_prediction = DetectionResult(
+        bboxes=np.array(coords),
+        labels=np.array([0, 1]),
+        scores=np.array([0.91, 0.85]),
+        label_names=["Cabernet_Franc", "Sauvignon_Blanc"],  # underscores from model
+    )
+
+    annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=raw_prediction)
+
+    assert len(annotations) == 2
+    assert annotations[0].labels == [LabelReference(id=labels[0].id)]
+    assert annotations[0].confidences == [0.91]
+    assert annotations[1].labels == [LabelReference(id=labels[1].id)]
+    assert annotations[1].confidences == [0.85]
+
+
 def test_get_confidence_scores_classification() -> None:
     # Arrange
     raw_prediction = ClassificationResult(

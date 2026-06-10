@@ -70,7 +70,7 @@ class MediaPredictionService(BaseSessionManagedService):
 
     def _load_media_binary(self, project_id: UUID, media: Media) -> np.ndarray:
         binary_path = self._media_service.get_media_binary_path(project_id=project_id, media=media)
-        binary_data = cv2.imread(binary_path)
+        binary_data = cv2.imread(str(binary_path))
         if binary_data is None:
             raise BinaryNotFoundError(f"Media {str(media.id)} binary cannot be found")
         return cv2.cvtColor(binary_data, cv2.COLOR_BGR2RGB)

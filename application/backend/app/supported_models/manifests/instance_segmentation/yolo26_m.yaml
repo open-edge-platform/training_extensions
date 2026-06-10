@@ -1,0 +1,70 @@
+id: instance-segmentation-yolo26-m
+name: YOLO26-M-Seg
+license: AGPL-3.0
+
+pretrained_weights:
+  url: https://storage.geti.intel.com/weights/yolo26m-seg.pt
+  mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-seg.pt
+  sha_sum: "16b636f04e8fb6a325b3370f22dc5e5535ff473e384f4d041fd28d788f6ee9f5"
+
+description: "YOLO26-M-Seg is the medium Ultralytics YOLO26 instance segmentation model. It delivers higher accuracy at the cost of increased latency while using the Geti Tune data pipeline for preprocessing and dataset handling."
+stats:
+  gigaflops: 121.5
+  trainable_parameters: 23.6
+  benchmark_metrics:
+    coco_map_50_95: 44.1
+
+capabilities:
+  tiling: false
+  xai: false
+
+hyperparameters:
+  training:
+    learning_rate: 0.001
+    weight_decay: 0.0005
+    max_epochs: 100
+    early_stopping:
+      enable: false
+    batch_size: 16
+    input_size_width: 640
+    input_size_height: 640
+    allowed_values_input_size:
+      - 640
+    scheduler:
+      type: cosine_annealing
+      warmup:
+        enable: false
+    gradient_clip:
+      enable: true
+      max_grad_norm: 10.0
+    gradient_accumulation:
+      enable: false
+  dataset_preparation:
+    augmentation:
+      mosaic:
+        enable: true
+        probability: 1.0
+        scale: 0.5
+        translate: 0.1
+      mixup:
+        enable: false
+        probability: 0.5
+        alpha: 1.5
+      color_jitter:
+        enable: true
+        brightness:
+          - 0.6
+          - 1.4
+        contrast:
+          - 0.6
+          - 1.4
+        saturation:
+          - 0.3
+          - 1.7
+        hue:
+          - -0.015
+          - 0.015
+        probability: 1.0
+      random_horizontal_flip:
+        enable: true
+        probability: 0.5

@@ -70,8 +70,7 @@ class DetectionVisualizerCreator(VisualizerCreator):
         original_image: np.ndarray,
         predictions: "DetectionResult",
     ) -> np.ndarray:
-        from model_api.models.result import Label
-        from model_api.visualizer import BoundingBox, Flatten
+        from model_api.visualizer import BoundingBox, Flatten, Label
         from model_api.visualizer.scene import DetectionScene
 
         image_pil = Image.fromarray(original_image)
@@ -79,7 +78,7 @@ class DetectionVisualizerCreator(VisualizerCreator):
         detection_scene = DetectionScene(
             image=image_pil,
             result=predictions,
-            layout=Flatten(BoundingBox, Label),  # pyrefly: ignore[bad-argument-type]
+            layout=Flatten(BoundingBox, Label),
             scale=scale,
         )
         rendered = detection_scene.render()
@@ -94,8 +93,7 @@ class InstanceSegmentationVisualizerCreator(VisualizerCreator):
         original_image: np.ndarray,
         predictions: "InstanceSegmentationResult",
     ) -> np.ndarray:
-        from model_api.models.result import Label
-        from model_api.visualizer import Flatten, Polygon
+        from model_api.visualizer import Flatten, Label, Polygon
         from model_api.visualizer.scene import InstanceSegmentationScene
 
         image_pil = Image.fromarray(original_image)
@@ -103,7 +101,7 @@ class InstanceSegmentationVisualizerCreator(VisualizerCreator):
         segmentation_scene = InstanceSegmentationScene(
             image=image_pil,
             result=predictions,
-            layout=Flatten(Polygon, Label),  # pyrefly: ignore[bad-argument-type]
+            layout=Flatten(Polygon, Label),
             scale=scale,
         )
         rendered = segmentation_scene.render()

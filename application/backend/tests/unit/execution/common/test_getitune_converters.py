@@ -174,3 +174,17 @@ class TestConvertMetrics:
         assert result["accuracy"] == pytest.approx(0.8)
         assert result["f1"] == pytest.approx(0.7)
         assert result["loss"] == pytest.approx(0.123, rel=1e-5)
+
+    def test_per_class_keys_preserve_class_name(self):
+        """Per-class metric keys (val/metric/ClassName) must keep the class name after stripping the phase prefix."""
+        metrics = {
+            "val/precision/cat": 0.85,
+            "val/recall/dog": 0.70,
+            "val/map_50/Cabernet Franc": 0.90,
+        }
+        result = convert_metrics(metrics)
+        assert result == {
+            "precision/cat": pytest.approx(0.85),
+            "recall/dog": pytest.approx(0.70),
+            "map_50/Cabernet Franc": pytest.approx(0.90),
+        }

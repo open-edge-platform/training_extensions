@@ -183,7 +183,7 @@ class TestGetiTuneTrainerPrepareWeights:
             / str(parent_model_revision_id)
             / "variants"
             / str(parent_model_variant_id)
-            / "model.ckpt"
+            / "model.pt"
         )
         expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
         expected_weights_path.touch()
@@ -261,7 +261,7 @@ class TestGetiTuneTrainerPrepareWeights:
             / str(parent_model_revision_id)
             / "variants"
             / str(parent_model_variant_id)
-            / "model.ckpt"
+            / "model.pt"
         )
         getitune_trainer = fxt_getitune_trainer()
 
@@ -774,44 +774,41 @@ class TestGetiTuneTrainerTrainModel:
         )
         mock_datamodule.tile_config = None
 
-        # Mock LightningModel
-        mock_getitune_model = Mock()
-
-        # Mock LightningEngine
+        # Mock model and engine
+        mock_getitune_model = Mock(spec=[])
         mock_getitune_engine = Mock()
         mock_getitune_engine.work_dir = str(tmp_path / f"getitune-workspace-{model_id}")
         Path(mock_getitune_engine.work_dir).mkdir(parents=True)
 
         # Create expected checkpoint file
-        expected_checkpoint_path = Path(mock_getitune_engine.work_dir) / "best_checkpoint.ckpt"
+        expected_checkpoint_path = Path(mock_getitune_engine.work_dir) / "best_checkpoint.pt"
         expected_checkpoint_path.touch()
+        mock_getitune_engine.best_checkpoint = expected_checkpoint_path
 
-        with patch(
-            "app.execution.training.getitune_trainer.DataModule.from_vision_datasets"
-        ) as mock_datamodule_factory:
-            mock_datamodule_factory.return_value = mock_datamodule
-
-            with patch("app.execution.training.getitune_trainer.ArgumentParser") as mock_parser_class:
-                mock_parser = Mock()
-                mock_parser_class.return_value = mock_parser
-
-                # Mock model instantiation
-                mock_model_namespace = Mock()
-                mock_model_namespace.get.return_value = mock_getitune_model
-                mock_parser.instantiate_classes.return_value = mock_model_namespace
-
-                with patch("app.execution.training.getitune_trainer.LightningEngine") as mock_engine_class:
-                    mock_engine_class.return_value = mock_getitune_engine
-
-                    # Act
-                    trained_model_path, returned_engine = getitune_trainer.train_model(
-                        training_config=training_config,
-                        dataset_info=mock_dataset_info,
-                        weights_path=weights_path,
-                        model_id=model_id,
-                        device=geti_device,
-                        has_parent_revision=True,
-                    )
+        with (
+            patch(
+                "app.execution.training.getitune_trainer.DataModule.from_vision_datasets",
+                return_value=mock_datamodule,
+            ) as mock_datamodule_factory,
+            patch("app.execution.training.getitune_trainer.ArgumentParser") as mock_parser_cls,
+            patch(
+                "app.execution.training.getitune_trainer.create_engine",
+                return_value=mock_getitune_engine,
+            ) as mock_create_engine,
+        ):
+            mock_model_parser = Mock()
+            mock_callbacks_parser = Mock()
+            mock_parser_cls.side_effect = [mock_model_parser, mock_callbacks_parser]
+            mock_model_parser.instantiate_classes.return_value.get.return_value = mock_getitune_model
+            mock_callbacks_parser.instantiate_classes.return_value.get.return_value = []
+            # Act
+            trained_model_path, returned_engine = getitune_trainer.train_model(
+                training_config=training_config,
+                dataset_info=mock_dataset_info,
+                weights_path=weights_path,
+                model_id=model_id,
+                device=geti_device,
+            )
 
         # Assert
         # Verify DataModule was created correctly
@@ -824,13 +821,12 @@ class TestGetiTuneTrainerTrainModel:
             test_subset=mock_testing_subset_config,
         )
 
-        # Verify LightningEngine was initialized
-        mock_engine_class.assert_called_once()
-        engine_call_kwargs = mock_engine_class.call_args.kwargs
+        # Verify engine was created via create_engine
+        mock_create_engine.assert_called_once()
+        engine_call_kwargs = mock_create_engine.call_args.kwargs
         assert engine_call_kwargs["model"] == mock_getitune_model
         assert engine_call_kwargs["data"] == mock_datamodule
         assert engine_call_kwargs["work_dir"] == getitune_trainer._data_dir / f"getitune-workspace-{model_id}"
-        assert engine_call_kwargs["device"] == getitune_device
         assert engine_call_kwargs["checkpoint"] == weights_path
 
         # Verify training was started
@@ -841,7 +837,7 @@ class TestGetiTuneTrainerTrainModel:
             assert train_call_kwargs["precision"] == "32"
         else:
             assert "precision" not in train_call_kwargs
-        if geti_device.type == DeviceType.CPU or not geti_device.index:
+        if geti_device.type == DeviceType.CPU or geti_device.index is None:
             assert "devices" not in train_call_kwargs
         else:
             assert train_call_kwargs["devices"] == [geti_device.index]
@@ -850,6 +846,81 @@ class TestGetiTuneTrainerTrainModel:
         # Verify return values
         assert trained_model_path == expected_checkpoint_path
         assert returned_engine == mock_getitune_engine
+
+    def test_train_ultralytics_model_uses_unified_path(
+        self,
+        fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
+        tmp_path: Path,
+    ):
+        """Test Ultralytics model training goes through the unified train_model path."""
+        # Arrange
+        getitune_trainer = fxt_getitune_trainer()
+        model_id = uuid4()
+        weights_path = tmp_path / "model.pt"
+        weights_path.touch()
+        expected_checkpoint_path = tmp_path / "best.pt"
+        expected_checkpoint_path.touch()
+        training_config: dict[str, Any] = {
+            "backend": "ultralytics",
+            "task": "DETECTION",
+            "max_epochs": 3,
+            "model": {
+                "class_path": "getitune.backend.ultralytics.models.detection.UltralyticsDetectionModel",
+                "init_args": {"model_name": "yolo26n.yaml"},
+            },
+            "training": {"epochs": 3, "batch": 2},
+        }
+        mock_dataset_info = Mock()
+        mock_dataset_info.getitune_training_dataset = Mock()
+        mock_dataset_info.getitune_validation_dataset = Mock()
+        mock_dataset_info.getitune_testing_dataset = Mock()
+        mock_dataset_info.getitune_training_subset_config = Mock()
+        mock_dataset_info.getitune_validation_subset_config = Mock()
+        mock_dataset_info.getitune_testing_subset_config = Mock()
+        mock_datamodule = Mock()
+        mock_datamodule.label_info = Mock()
+        mock_datamodule.label_info.label_names = ["cls_a", "cls_b"]
+        mock_datamodule.input_size = (640, 640)
+        mock_datamodule.input_mean = (0.0, 0.0, 0.0)
+        mock_datamodule.input_std = (1.0, 1.0, 1.0)
+        mock_datamodule.input_intensity_config = None
+        mock_datamodule.tile_config = None
+        mock_model = Mock()
+        mock_model.load_checkpoint = Mock()
+        mock_engine = Mock()
+        mock_engine.best_checkpoint = expected_checkpoint_path
+        mock_engine.work_dir = tmp_path
+
+        with (
+            patch(
+                "app.execution.training.getitune_trainer.DataModule.from_vision_datasets", return_value=mock_datamodule
+            ),
+            patch("app.execution.training.getitune_trainer.ArgumentParser") as mock_parser_cls,
+            patch(
+                "app.execution.training.getitune_trainer.create_engine", return_value=mock_engine
+            ) as mock_create_engine,
+        ):
+            mock_model_parser = Mock()
+            mock_callbacks_parser = Mock()
+            mock_parser_cls.side_effect = [mock_model_parser, mock_callbacks_parser]
+            mock_model_parser.instantiate_classes.return_value.get.return_value = mock_model
+            mock_callbacks_parser.instantiate_classes.return_value.get.return_value = []
+            # Act
+            trained_model_path, returned_engine = getitune_trainer.train_model(
+                training_config=training_config,
+                dataset_info=mock_dataset_info,
+                weights_path=weights_path,
+                model_id=model_id,
+                device=DeviceInfo(type=DeviceType.CPU, name="Intel Core", index=None, memory=None),
+            )
+
+        # Assert
+        mock_create_engine.assert_called_once()
+        engine_call_kwargs = mock_create_engine.call_args.kwargs
+        assert engine_call_kwargs["checkpoint"] == weights_path
+        mock_engine.train.assert_called_once()
+        assert trained_model_path == expected_checkpoint_path
+        assert returned_engine == mock_engine
 
 
 class TestGetiTuneTrainerExecuteCancellation:
@@ -936,7 +1007,7 @@ class TestGetiTuneTrainerExecuteCancellation:
         mock_dataset_info.revision_id = dataset_revision_id
         mock_weights_path = Path("/fake/weights.pth")
         mock_getitune_engine = Mock()
-        mock_trained_model_path = Path("/fake/best_checkpoint.ckpt")
+        mock_trained_model_path = Path("/fake/best_checkpoint.pt")
 
         with (
             patch.object(getitune_trainer, "prepare_weights", return_value=mock_weights_path),
@@ -1059,7 +1130,7 @@ class TestGetiTuneTrainerEvaluateModel:
         mock_getitune_engine.work_dir = tmp_path / "getitune-workspace"
         mock_getitune_engine.datamodule = Mock()
 
-        model_checkpoint_path = tmp_path / "best_checkpoint.ckpt"
+        model_checkpoint_path = tmp_path / "best_checkpoint.pt"
         model_checkpoint_path.touch()
         ov_export_path = tmp_path / "exported_model"
         onnx_export_path = tmp_path / "exported_model"
@@ -1156,6 +1227,46 @@ class TestGetiTuneTrainerEvaluateModel:
             {"accuracy": 0.83, "precision": 0.80, "recall": 0.86}, rel=1e-6
         )
 
+    def test_evaluate_ultralytics_model_without_lightning_metric(
+        self,
+        fxt_getitune_trainer: Callable[[], GetiTuneTrainer],
+        tmp_path: Path,
+        fxt_model_service: Mock,
+    ):
+        """Test Ultralytics evaluation passes metric uniformly (engine ignores it)."""
+        # Arrange
+        getitune_trainer = fxt_getitune_trainer()
+        model_id = uuid4()
+        pytorch_variant_id = uuid4()
+        dataset_revision_id = uuid4()
+        mock_getitune_engine = Mock()
+        mock_getitune_engine.test = Mock(return_value={"metrics/mAP50-95(B)": torch.tensor(0.42)})
+        mock_getitune_engine.work_dir = tmp_path / "getitune-workspace"
+        mock_getitune_engine.datamodule = Mock()
+        model_checkpoint_path = tmp_path / "best.pt"
+        model_checkpoint_path.touch()
+
+        model_variants = [
+            ModelVariantDescriptor(
+                id=pytorch_variant_id,
+                path=model_checkpoint_path,
+                format=ModelFormat.PYTORCH,
+            ),
+        ]
+
+        # Act
+        getitune_trainer.evaluate_model(
+            getitune_engine=mock_getitune_engine,
+            task=Task(task_type=TaskType.DETECTION),
+            model_revision_id=model_id,
+            model_variants=model_variants,
+            dataset_revision_id=dataset_revision_id,
+        )
+
+        # Assert — metric is always passed uniformly; Ultralytics engines ignore it.
+        mock_getitune_engine.test.assert_called_once_with(metric=MeanAPCallable)
+        fxt_model_service.save_evaluation_result.assert_called_once()
+
 
 class TestGetiTuneTrainerExportModel:
     """Tests for the GetiTuneTrainer.export_model method."""
@@ -1169,7 +1280,7 @@ class TestGetiTuneTrainerExportModel:
         # Arrange
         getitune_trainer = fxt_getitune_trainer()
         mock_getitune_engine = Mock()
-        model_checkpoint_path = tmp_path / "best_checkpoint.ckpt"
+        model_checkpoint_path = tmp_path / "best_checkpoint.pt"
         model_checkpoint_path.touch()
         expected_ov_export_path = tmp_path / "exported_openvino_model"
         expected_onnx_export_path = tmp_path / "exported_onnx_model"
@@ -1236,7 +1347,7 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         getitune_work_dir.mkdir(parents=True)
 
         # Create model checkpoint
-        trained_model_path = getitune_work_dir / "best_checkpoint.ckpt"
+        trained_model_path = getitune_work_dir / "best_checkpoint.pt"
         trained_model_path.write_text("checkpoint content")
 
         # Create exported model files
@@ -1273,11 +1384,10 @@ class TestGetiTuneTrainerStoreModelArtifacts:
         variants_dir = model_dir / "variants"
         assert variants_dir.exists()
 
-        # Check PyTorch variant
         pytorch_dir = variants_dir / str(pytorch_variant_id)
         assert pytorch_dir.exists()
-        assert (pytorch_dir / "model.ckpt").exists()
-        assert (pytorch_dir / "model.ckpt").read_text() == "checkpoint content"
+        assert (pytorch_dir / "model.pt").exists()
+        assert (pytorch_dir / "model.pt").read_text() == "checkpoint content"
 
         # Check OpenVINO variant
         openvino_dir = variants_dir / str(openvino_variant_id)
