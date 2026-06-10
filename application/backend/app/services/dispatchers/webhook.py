@@ -3,18 +3,20 @@
 
 """This module contains the WebhookDispatcher class for dispatching images and predictions to a webhook endpoint."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import requests
 from loguru import logger
-from model_api.models.result import Result
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from app.models import WebhookSinkConfig
 
 from .base import BaseDispatcher
+
+if TYPE_CHECKING:
+    from model_api.models.result import Result
 
 MAX_RETRIES = 3
 BACKOFF_FACTOR = 0.3
@@ -56,7 +58,7 @@ class WebhookDispatcher(BaseDispatcher):
         self,
         original_image: np.ndarray,
         image_with_visualization: np.ndarray,
-        predictions: Result,
+        predictions: "Result",
     ) -> None:
         payload = self._create_payload(original_image, image_with_visualization, predictions)
 

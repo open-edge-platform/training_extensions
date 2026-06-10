@@ -55,7 +55,7 @@ class TestDetectionVisualizerCreator(unittest.TestCase):
         creator = DetectionVisualizerCreator()
         original_image = np.zeros((100, 100, 3), dtype=np.uint8)
         predictions = DetectionResult(bboxes, labels)
-        with mock.patch("app.utils.visualization.DetectionScene") as mock_scene:
+        with mock.patch("model_api.visualizer.scene.DetectionScene") as mock_scene:
             creator.create_visualization(original_image, predictions)
         layout = mock_scene.call_args.kwargs["layout"]
         self.assertIsInstance(layout, Flatten)
@@ -75,7 +75,7 @@ class TestInstanceSegmentationVisualizerCreator(unittest.TestCase):
         creator = InstanceSegmentationVisualizerCreator()
         original_image = np.zeros((100, 100, 3), dtype=np.uint8)
         predictions = InstanceSegmentationResult(bboxes, labels, masks)
-        with mock.patch("app.utils.visualization.InstanceSegmentationScene") as mock_scene:
+        with mock.patch("model_api.visualizer.scene.InstanceSegmentationScene") as mock_scene:
             creator.create_visualization(original_image, predictions)
         layout = mock_scene.call_args.kwargs["layout"]
         self.assertIsInstance(layout, Flatten)
