@@ -158,7 +158,7 @@ describe('VideoFrameSegment', () => {
                 renderSegment({ mode: 'annotation' });
 
                 await waitFor(() => {
-                    expect(screen.getAllByRole('presentation', { name: 'Not labelled' })).toHaveLength(
+                    expect(screen.getAllByRole('presentation', { name: 'Not labeled' })).toHaveLength(
                         [labelA, labelB].length
                     );
                 });
@@ -208,11 +208,11 @@ describe('VideoFrameSegment', () => {
                 });
             });
 
-            it('shows "Not labelled" for the unmatched label', async () => {
+            it('shows "Not labeled" for the unmatched label', async () => {
                 renderSegment({ mode: 'annotation' });
 
                 await waitFor(() => {
-                    expect(screen.getAllByRole('presentation', { name: 'Not labelled' })).toHaveLength(
+                    expect(screen.getAllByRole('presentation', { name: 'Not labeled' })).toHaveLength(
                         [labelB, labels].length
                     );
                 });

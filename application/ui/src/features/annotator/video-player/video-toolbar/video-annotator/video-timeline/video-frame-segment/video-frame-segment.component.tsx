@@ -25,7 +25,7 @@ const getAriaLabel = (label: Label | undefined, isPrediction: boolean) => {
     }
 
     if (label === undefined) {
-        return 'Not labelled';
+        return 'Not labeled';
     }
     return label.name;
 };
