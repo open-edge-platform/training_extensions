@@ -41,14 +41,6 @@ datasets:
     compatible_tasks:
       - classification/h_label_cls
 
-  - name: voc2007
-    script: "scripts/benchmark_datasets/prepare_voc2007.py"
-    size_tier: large
-    description: "Pascal VOC 2007 — 9,963 images with bounding box annotations for 20 object classes."
-    compatible_tasks:
-      - detection
-      - classification/multi_label_cls # per-image multi-label from object presence
-
   - name: oxford_pets
     script: "scripts/benchmark_datasets/prepare_oxford_pets.py"
     size_tier: large
@@ -58,12 +50,16 @@ datasets:
       - instance_segmentation # trimap foreground → single instance polygon
       - detection # foreground mask → bounding box
 
-  - name: coco_person_kps
-    script: "scripts/benchmark_datasets/prepare_coco_person_kps.py"
-    size_tier: large
-    description: "COCO 2017 val person keypoints — ~2,700 images with 17-joint human pose annotations."
+  - name: bccd
+    script: "scripts/benchmark_datasets/prepare_bccd.py"
+    size_tier: small
+    description: "Blood Cell Count and Detection — 364 microscopy blood-smear images with Pascal VOC bounding-box annotations for 3 cell types (RBC, WBC, Platelets)."
     compatible_tasks:
-      - keypoint_detection
-      - detection # person bounding boxes
-      - instance_segmentation # person segmentation masks available in COCO
+      - detection
 
+  - name: aid_multilabel
+    script: "scripts/benchmark_datasets/prepare_aid_multilabel.py"
+    size_tier: medium
+    description: "AID Multi-Label — 3,000 overhead aerial-scene images (600×600) with multi-label annotations across 17 co-occurring land-cover classes."
+    compatible_tasks:
+      - classification/multi_label_cls

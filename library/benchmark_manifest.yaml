@@ -64,7 +64,7 @@ experiments:
         priority: extended
         recipe: classification/multi_label_cls/efficientnet_v2.yaml
     datasets:
-      - voc2007
+      - aid_multilabel
     criteria:
       accuracy_metric: accuracy
       thresholds:
@@ -132,6 +132,7 @@ experiments:
         recipe: detection/deimv2_s.yaml
     datasets:
       - wgisd
+      - bccd
     criteria:
       accuracy_metric: map_50
       thresholds:
