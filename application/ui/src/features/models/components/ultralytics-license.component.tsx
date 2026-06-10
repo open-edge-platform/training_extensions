@@ -3,7 +3,7 @@
 
 import { Link } from '../../../platform/components/link.component';
 
-const ULTRALYTICS_LICENSE_TEXT = 'Follow Ultralytics guidance for the license usage';
+const ULTRALYTICS_LICENSE_TEXT = 'Follow Ultralytics guidance on license usage';
 
 export const UltralyticsLicense = () => {
     return (
