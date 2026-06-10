@@ -12,7 +12,7 @@ from app.db import get_db_session
 from app.models import DisconnectedSinkConfig, Sink, SinkType
 from app.services import DispatchService, SinkService
 from app.services.data_collect import DataCollector
-from app.services.dispatchers import Dispatcher
+from app.services.dispatchers import Dispatcher, DispatchError
 from app.services.event.event_bus import EventBus, EventType
 from app.stream.stream_data import StreamData
 from app.webrtc import FrameBroadcaster
@@ -107,12 +107,15 @@ class DispatchingWorker(BaseThreadWorker):
             # Postprocess and dispatch results to external sinks (folder, MQTT, ROS, webhook, ...).
             # Skipped when no sink is configured; WebRTC and data collection still run regardless.
             if self._sink.sink_type != SinkType.DISCONNECTED:
-                for destination in self._destinations:
-                    destination.dispatch(
-                        original_image=stream_data.frame_data,
-                        image_with_visualization=image_with_visualization,
-                        predictions=prediction,
-                    )
+                try:
+                    for destination in self._destinations:
+                        destination.dispatch(
+                            original_image=stream_data.frame_data,
+                            image_with_visualization=image_with_visualization,
+                            predictions=prediction,
+                        )
+                except DispatchError:
+                    logger.exception("Failed to dispatch results to external sink")
 
             # Collect the image to project dataset if needed
             self._data_collector.collect(
