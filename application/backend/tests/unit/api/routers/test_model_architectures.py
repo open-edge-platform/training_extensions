@@ -17,7 +17,7 @@ class TestModelArchitecturesEndpoint:
 
         data = response.json()
         assert "model_architectures" in data
-        assert len(data["model_architectures"]) == 16
+        assert len(data["model_architectures"]) == 19
 
         # Verify structure of first detection model
         detection_model = next(
@@ -57,8 +57,8 @@ class TestModelArchitecturesEndpoint:
     @pytest.mark.parametrize(
         "task_filter, total_models",
         [
-            ("detection", 16),
-            ("instance_segmentation", 8),
+            ("detection", 19),
+            ("instance_segmentation", 11),
             ("classification", 6),
         ],
     )
