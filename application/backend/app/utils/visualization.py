@@ -7,8 +7,8 @@ from typing import Generic, TypeVar
 import numpy as np
 from loguru import logger
 from model_api.models import ClassificationResult
-from model_api.models.result import DetectionResult, InstanceSegmentationResult, Label, Result
-from model_api.visualizer import BoundingBox, Flatten, Polygon
+from model_api.models.result import DetectionResult, InstanceSegmentationResult, Result
+from model_api.visualizer import BoundingBox, Flatten, Label, Polygon
 from model_api.visualizer.defaults import SCALE_BASELINE
 from model_api.visualizer.scene import ClassificationScene, DetectionScene, InstanceSegmentationScene
 from PIL import Image
@@ -75,7 +75,7 @@ class DetectionVisualizerCreator(VisualizerCreator[DetectionResult]):
         detection_scene = DetectionScene(
             image=image_pil,
             result=predictions,
-            layout=Flatten(BoundingBox, Label),  # pyrefly: ignore[bad-argument-type]
+            layout=Flatten(BoundingBox, Label),
             scale=scale,
         )
         rendered = detection_scene.render()
@@ -95,7 +95,7 @@ class InstanceSegmentationVisualizerCreator(VisualizerCreator[InstanceSegmentati
         segmentation_scene = InstanceSegmentationScene(
             image=image_pil,
             result=predictions,
-            layout=Flatten(Polygon, Label),  # pyrefly: ignore[bad-argument-type]
+            layout=Flatten(Polygon, Label),
             scale=scale,
         )
         rendered = segmentation_scene.render()
