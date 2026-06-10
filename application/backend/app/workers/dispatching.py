@@ -107,15 +107,20 @@ class DispatchingWorker(BaseThreadWorker):
             # Postprocess and dispatch results to external sinks (folder, MQTT, ROS, webhook, ...).
             # Skipped when no sink is configured; WebRTC and data collection still run regardless.
             if self._sink.sink_type != SinkType.DISCONNECTED:
-                try:
-                    for destination in self._destinations:
+                for destination in self._destinations:
+                    try:
                         destination.dispatch(
                             original_image=stream_data.frame_data,
                             image_with_visualization=image_with_visualization,
                             predictions=prediction,
                         )
-                except DispatchError:
-                    logger.exception("Failed to dispatch results to external sink")
+                    except DispatchError:
+                        logger.exception(
+                            "Failed to dispatch results to sink: id={}, name={!r} dispatcher={}",
+                            self._sink.id,
+                            self._sink.name,
+                            type(destination).__name__,
+                        )
 
             # Collect the image to project dataset if needed
             self._data_collector.collect(
