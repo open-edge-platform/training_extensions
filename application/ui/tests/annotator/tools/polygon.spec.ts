@@ -36,6 +36,9 @@ test.describe('Polygon', () => {
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(mockedDetectionProject);
             }),
+            http.get('/api/projects', () => {
+                return HttpResponse.json([mockedDetectionProject]);
+            }),
             candyBinaryHandler
         );
     });
