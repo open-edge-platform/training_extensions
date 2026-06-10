@@ -102,7 +102,7 @@ export const ProjectsListPanel = () => {
     const deleteProjectDialogState = useOverlayTriggerState({});
     const editProjectNameDialogState = useOverlayTriggerState({});
     const [isEnableBlockedDialogOpen, setIsEnableBlockedDialogOpen] = useState(false);
-    const [projectActionTarget, setProjectActionTarget] = useState<ProjectActionMetadata | null>(null);
+    const [projectActionMetadata, setProjectActionMetadata] = useState<ProjectActionMetadata | null>(null);
 
     const [[selectedProject], otherProjects] = partition(data, (project) => project.id === projectId);
     const selectedProjectName = selectedProject?.name ?? '';
@@ -117,21 +117,36 @@ export const ProjectsListPanel = () => {
     };
 
     const handleRename = (metadata: ProjectActionMetadata) => {
-        setProjectActionTarget(metadata);
+        setProjectActionMetadata(metadata);
         projectSelectorState.close();
         editProjectNameDialogState.open();
     };
 
     const handleDelete = (metadata: ProjectActionMetadata) => {
-        setProjectActionTarget(metadata);
+        setProjectActionMetadata(metadata);
         projectSelectorState.close();
         deleteProjectDialogState.open();
     };
 
     const handleEnableBlocked = (metadata: ProjectActionMetadata) => {
-        setProjectActionTarget(metadata);
+        setProjectActionMetadata(metadata);
         projectSelectorState.close();
         setIsEnableBlockedDialogOpen(true);
+    };
+
+    const handleCloseEnableBlocked = () => {
+        setIsEnableBlockedDialogOpen(false);
+        setProjectActionMetadata(null);
+    };
+
+    const handleCloseEdit = () => {
+        editProjectNameDialogState.close();
+        setProjectActionMetadata(null);
+    };
+
+    const handleCloseDelete = () => {
+        deleteProjectDialogState.close();
+        setProjectActionMetadata(null);
     };
 
     return (
@@ -224,31 +239,28 @@ export const ProjectsListPanel = () => {
                 </Dialog>
             </DialogTrigger>
 
-            {projectActionTarget !== null && (
+            {projectActionMetadata !== null && (
                 <EditProjectNameDialog
-                    key={`edit-${projectActionTarget.projectId}`}
-                    projectId={projectActionTarget.projectId}
-                    projectName={projectActionTarget.projectName}
-                    projectNames={projectActionTarget.projectNames}
+                    key={`edit-${projectActionMetadata.projectId}`}
+                    projectId={projectActionMetadata.projectId}
+                    projectName={projectActionMetadata.projectName}
+                    projectNames={projectActionMetadata.projectNames}
                     isOpen={editProjectNameDialogState.isOpen}
-                    onClose={editProjectNameDialogState.close}
+                    onClose={handleCloseEdit}
                 />
             )}
 
-            {projectActionTarget !== null && (
+            {projectActionMetadata !== null && (
                 <DeleteProjectDialog
-                    projectId={projectActionTarget.projectId}
-                    projectName={projectActionTarget.projectName}
+                    projectId={projectActionMetadata.projectId}
+                    projectName={projectActionMetadata.projectName}
                     isOpen={deleteProjectDialogState.isOpen}
-                    onClose={deleteProjectDialogState.close}
-                    onDeleted={projectActionTarget.onDeleted}
+                    onClose={handleCloseDelete}
+                    onDeleted={projectActionMetadata.onDeleted}
                 />
             )}
 
-            <EnablePipelineBlockedDialog
-                isOpen={isEnableBlockedDialogOpen}
-                onClose={() => setIsEnableBlockedDialogOpen(false)}
-            />
+            <EnablePipelineBlockedDialog isOpen={isEnableBlockedDialogOpen} onClose={handleCloseEnableBlocked} />
         </>
     );
 };
