@@ -110,13 +110,7 @@ const useVideoTimelinePredictions = ({ frameNumber }: { frameNumber: number }) =
         selector: selectPredictionsForFrame(frameNumber),
     });
 
-    const predictedLabels = data?.prediction?.flatMap((prediction) => {
-        if (isEmpty(prediction)) {
-            return [EMPTY_LABEL_ID];
-        }
-
-        return prediction.labels.map(({ id }) => id);
-    });
+    const predictedLabels = data?.prediction?.flatMap((prediction) => prediction.labels.map(({ id }) => id));
 
     return {
         predictedLabels,
