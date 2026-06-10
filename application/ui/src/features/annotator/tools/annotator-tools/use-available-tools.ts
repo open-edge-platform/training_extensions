@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { BoundingBox, DetectionTool, Polygon, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
+import { BoundingBox, Polygon, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
 
 import { ReactComponent as MagneticLasso } from '../../../../assets/icons/magnetic-lasso.svg';
 import BoundingBoxImg from '../../../../assets/tools/bounding-box.webp';
@@ -79,13 +79,6 @@ const MAGNETIC_LASSO_TOOL_CONFIG: ToolConfig = {
     },
 };
 
-const SSIM_TOOL_CONFIG: ToolConfig = {
-    type: 'ssim',
-    icon: DetectionTool,
-    hotkey: HOTKEYS.ssimTool,
-    label: 'Detection assistant',
-};
-
 const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
     classification: [],
     detection: [SELECTION_TOOL_CONFIG, BOUNDING_BOX_TOOL_CONFIG, AUTO_SEGMENTATION_DETECTION_CONFIG],
@@ -94,7 +87,6 @@ const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
         POLYGON_TOOL_CONFIG,
         MAGNETIC_LASSO_TOOL_CONFIG,
         AUTO_SEGMENTATION_CONFIG,
-        SSIM_TOOL_CONFIG,
     ],
 };
 

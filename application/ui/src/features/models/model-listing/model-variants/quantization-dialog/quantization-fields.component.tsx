@@ -27,13 +27,13 @@ const QuantizationFieldLayout = ({ children, onReset }: QuantizationFieldLayoutP
     </Grid>
 );
 
-interface MaxAccuracyDropFieldProps {
+type MaxAccuracyDropFieldProps = {
     value: number;
     onChange: (value: number) => void;
     isDisabled: boolean;
     onDisabledChange: (isDisabled: boolean) => void;
     onReset: () => void;
-}
+};
 
 export const MaxAccuracyDropField = ({
     value,
@@ -54,7 +54,16 @@ export const MaxAccuracyDropField = ({
         <QuantizationFieldLayout onReset={onReset}>
             <Text>Max accuracy drop (%)</Text>
             <ContextualHelp>
-                <Content>Maximum allowed drop in validation accuracy</Content>
+                <Content>
+                    Maximum allowed drop in validation accuracy.
+                    <br />
+                    <br />
+                    Beware that accuracy-aware quantization may take a long time when the max allowed drop is small.
+                    <br />
+                    <br />
+                    Also note that the final testing accuracy may be lower than the specified validation accuracy
+                    threshold, especially for relatively small datasets.
+                </Content>
             </ContextualHelp>
             <Flex gap={'size-100'}>
                 <Slider
@@ -70,7 +79,7 @@ export const MaxAccuracyDropField = ({
                     isDisabled={isDisabled}
                 />
                 <NumberField
-                    isQuiet
+                    hideStepper
                     step={0.1}
                     value={parameterValue}
                     minValue={0.1}
@@ -88,14 +97,14 @@ export const MaxAccuracyDropField = ({
     );
 };
 
-interface CalibrationDatasetSizeFieldProps {
+type CalibrationDatasetSizeFieldProps = {
     value: number;
     onChange: (value: number) => void;
     maxValue: number;
     isDisabled: boolean;
     onDisabledChange: (isDisabled: boolean) => void;
     onReset: () => void;
-}
+};
 
 export const CalibrationDatasetSizeField = ({
     value,
@@ -116,9 +125,11 @@ export const CalibrationDatasetSizeField = ({
     return (
         <QuantizationFieldLayout onReset={onReset}>
             <Text>Max calibration size</Text>
+
             <ContextualHelp>
                 <Content>Calibration samples will be randomly selected within the dataset</Content>
             </ContextualHelp>
+
             <Flex gap={'size-100'}>
                 <Slider
                     aria-label={'Change Max calibration size slider'}
@@ -133,7 +144,7 @@ export const CalibrationDatasetSizeField = ({
                     isDisabled={isDisabled}
                 />
                 <NumberField
-                    isQuiet
+                    hideStepper
                     step={1}
                     value={parameterValue}
                     minValue={1}

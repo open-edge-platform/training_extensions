@@ -137,12 +137,36 @@ class InferenceWorker(BaseProcessWorker):
         # then check if next expected predictions are ready to be queued
         self._prediction_buffer.add_prediction_for_timestamp(timestamp=start_time, stream_data=stream_data)
         for stream_data in self._prediction_buffer.get_ready_predictions():
-            while not self.should_stop():
-                try:
-                    self._pred_queue.put(stream_data, timeout=1)
-                    break
-                except queue.Full:
-                    logger.debug("Prediction queue is full, retrying...")
+            self._enqueue_prediction(stream_data)
+
+    def _enqueue_prediction(self, stream_data: StreamData) -> None:
+        """Push a prediction to the prediction queue without ever blocking.
+
+        This callback runs on the Model API / OpenVINO inference thread. It MUST return
+        promptly: ``model_api`` (via OpenVINO's ``AsyncInferQueue``) waits for all in-flight
+        requests to complete when the model is unloaded/reloaded. If this method blocked on a
+        full prediction queue (e.g. because the downstream dispatcher is momentarily stalled on
+        a DB or disk write), the model unload would deadlock and the whole inference process
+        would wedge - never loading another model again.
+
+        Since the visualization stream is live, we use drop-oldest semantics: when the queue is
+        full we evict the stalest prediction in favour of the newest one.
+        """
+        try:
+            self._pred_queue.put_nowait(stream_data)
+            return
+        except queue.Full:
+            pass
+
+        # Queue full: drop the oldest prediction to make room for the newest one.
+        try:
+            self._pred_queue.get_nowait()
+        except queue.Empty:
+            pass
+        try:
+            self._pred_queue.put_nowait(stream_data)
+        except queue.Full:
+            logger.debug("Prediction queue still full, dropping prediction")
 
     def _install_callback_if_needed(self, model: Model) -> None:
         """Install inference completion callback once per model object instance."""
@@ -169,9 +193,10 @@ class InferenceWorker(BaseProcessWorker):
             self._model_reload_event.clear()
             loaded_model = self._model_service.get_loaded_inference_model(force_reload=True)  # type: ignore
 
-        if loaded_model is not None:
-            # Clear prediction buffer
-            self._prediction_buffer.clear()
+        # Always clear the prediction buffer on reload to prevent stale timestamps
+        # from blocking future predictions (e.g. in-flight async inferences that were
+        # cancelled when the old model was unloaded will never produce callbacks).
+        self._prediction_buffer.clear()
 
         return loaded_model
 

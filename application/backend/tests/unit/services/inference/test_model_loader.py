@@ -72,10 +72,27 @@ class TestModelLoader:
     def test_unload_deletes_async_queue_and_compiled_model(self, fxt_loaded_handle: LoadedModelHandle) -> None:
         """unload() should delete both async_queue and compiled_model from the adapter."""
         adapter = cast(OpenvinoAdapter, fxt_loaded_handle.model.inference_adapter)
-        adapter.async_queue = Mock()
+        async_queue = Mock()
+        adapter.async_queue = async_queue
         adapter.compiled_model = Mock()
 
         ModelLoader.unload(fxt_loaded_handle)
 
+        # In-flight requests must be drained before deleting the queue to avoid a GIL deadlock.
+        async_queue.wait_all.assert_called_once_with()
+        assert not hasattr(adapter, "async_queue")
+        assert not hasattr(adapter, "compiled_model")
+
+    def test_unload_still_releases_resources_if_drain_fails(self, fxt_loaded_handle: LoadedModelHandle) -> None:
+        """If draining in-flight requests raises, unload() must still release the native resources."""
+        adapter = cast(OpenvinoAdapter, fxt_loaded_handle.model.inference_adapter)
+        async_queue = Mock()
+        async_queue.wait_all.side_effect = RuntimeError("boom")
+        adapter.async_queue = async_queue
+        adapter.compiled_model = Mock()
+
+        ModelLoader.unload(fxt_loaded_handle)
+
+        async_queue.wait_all.assert_called_once_with()
         assert not hasattr(adapter, "async_queue")
         assert not hasattr(adapter, "compiled_model")
