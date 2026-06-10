@@ -1,8 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
@@ -20,7 +19,7 @@ const otherProjectName = 'Other Project';
 const selectedProject = getMockedProject({ id: selectedProjectId, name: selectedProjectName, active_pipeline: false });
 const otherProject = getMockedProject({ id: otherProjectId, name: otherProjectName, active_pipeline: false });
 
-const mockNavigate = vi.hoisted(() => vi.fn());
+const mockNavigate = vi.fn();
 
 vi.mock('react-router', async (importOriginal) => {
     const actual = await importOriginal<typeof import('react-router')>();
@@ -32,34 +31,48 @@ describe('ProjectsListPanel', () => {
         mockNavigate.mockClear();
         server.use(
             http.get('/api/projects', () => HttpResponse.json([selectedProject, otherProject])),
-            http.get('/api/projects/{project_id}/pipeline', () => HttpResponse.json(getMockedPipeline()))
+            http.get('/api/projects/{project_id}/pipeline', () =>
+                HttpResponse.json(
+                    getMockedPipeline({
+                        status: 'idle',
+                        model: null,
+                        source: null,
+                    })
+                )
+            ),
+            http.patch('/api/projects/{project_id}/pipeline', () =>
+                HttpResponse.json({
+                    project_id: selectedProjectId,
+                    status: 'idle',
+                    device: 'cpu',
+                })
+            )
         );
     });
 
-    const renderPanel = () => {
+    const renderPanel = (projectId: string = selectedProjectId) => {
         return render(<ProjectsListPanel />, {
-            route: `/projects/${selectedProjectId}`,
+            route: `/projects/${projectId}`,
         });
     };
 
-    const openSelector = async (user: ReturnType<typeof userEvent.setup>) => {
+    const openSelector = async (projectName: string = selectedProjectName) => {
         const selectorButton = await screen.findByRole('button', {
-            name: new RegExp(`Selected project ${selectedProjectName}`, 'i'),
+            name: new RegExp(`Selected project ${projectName}`, 'i'),
         });
-        await user.click(selectorButton);
+        fireEvent.click(selectorButton);
         await screen.findByText('Manage projects');
     };
 
     it('rename from another project row closes selector and opens rename dialog prefilled with project name', async () => {
-        const user = userEvent.setup();
         renderPanel();
-        await openSelector(user);
+        await openSelector();
 
         const otherProjectMenuButton = screen.getByTestId(otherProjectId);
-        await user.click(otherProjectMenuButton);
+        fireEvent.click(otherProjectMenuButton);
 
         const renameOption = await screen.findByText('Rename');
-        await user.click(renameOption);
+        fireEvent.click(renameOption);
 
         await waitFor(() => {
             expect(screen.queryByText('Manage projects')).not.toBeInTheDocument();
@@ -71,17 +84,14 @@ describe('ProjectsListPanel', () => {
     });
 
     it('blocked enable pipeline from selector closes selector and shows explanation dialog', async () => {
-        server.use(http.get('/api/projects/{project_id}/pipeline', () => new HttpResponse(null, { status: 404 })));
-
-        const user = userEvent.setup();
         renderPanel();
-        await openSelector(user);
+        await openSelector();
 
         const otherProjectMenuButton = screen.getByTestId(otherProjectId);
-        await user.click(otherProjectMenuButton);
+        fireEvent.click(otherProjectMenuButton);
 
         const enableOption = await screen.findByText('Enable pipeline');
-        await user.click(enableOption);
+        fireEvent.click(enableOption);
 
         await waitFor(() => {
             expect(screen.queryByText('Manage projects')).not.toBeInTheDocument();
@@ -102,15 +112,14 @@ describe('ProjectsListPanel', () => {
             })
         );
 
-        const user = userEvent.setup();
         renderPanel();
-        await openSelector(user);
+        await openSelector();
 
         const selectedProjectMenuButton = screen.getByTestId(selectedProjectId);
-        await user.click(selectedProjectMenuButton);
+        fireEvent.click(selectedProjectMenuButton);
 
         const deleteOption = await screen.findByText('Delete');
-        await user.click(deleteOption);
+        fireEvent.click(deleteOption);
 
         await waitFor(() => {
             expect(screen.queryByText('Manage projects')).not.toBeInTheDocument();
@@ -121,7 +130,7 @@ describe('ProjectsListPanel', () => {
         ).toBeVisible();
 
         const confirmDeleteButton = await screen.findByRole('button', { name: 'Delete' });
-        await user.click(confirmDeleteButton);
+        fireEvent.click(confirmDeleteButton);
 
         await waitFor(() => {
             expect(deletedProjectIds).toContain(selectedProjectId);
