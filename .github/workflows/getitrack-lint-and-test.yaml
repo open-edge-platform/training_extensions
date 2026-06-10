@@ -20,8 +20,9 @@ concurrency:
 
 jobs:
   # Determines if workflow should execute based on event type and changed paths.
-  # The path filter is scoped to libraries/getitrack/** and this workflow's own
-  # definition so unrelated changes (including getitune at library/) do not trigger it.
+  # The path filter covers libraries/getitrack/**, this workflow's own definition,
+  # and the shared actions it uses (check-paths, install-common-deps), so unrelated
+  # changes (including getitune at library/) do not trigger it.
   check-paths:
     name: Check if workflow should run
     runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
@@ -42,6 +43,7 @@ jobs:
             test:
               - libraries/getitrack/**
               - .github/workflows/getitrack-*.yaml
+              - .github/actions/**
 
   code-quality-checks:
     runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
