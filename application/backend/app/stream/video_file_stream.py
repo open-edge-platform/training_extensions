@@ -54,3 +54,7 @@ class VideoFileStream(BaseOpenCVStream):
 
     def is_real_time(self) -> bool:
         return False
+
+    def is_finished(self) -> bool:
+        """A non-looping video file is finished once it has been fully read."""
+        return self._exhausted

@@ -85,3 +85,41 @@ class TestVideoFileStream:
                 assert data.frame_data is not None
 
             assert stream._exhausted is False
+
+    def test_is_finished_reports_true_at_eof_when_not_looping(self, video_path: str):
+        """is_finished() is False until the non-looping video is fully consumed, then True."""
+        with VideoFileStream(video_path=video_path, loop=False) as stream:
+            # Not finished before reaching the end.
+            assert stream.is_finished() is False
+            while stream.get_data() is not None:
+                # Still producing frames -> not finished yet.
+                assert stream.is_finished() is False
+
+            # Once exhausted, the stream reports it is finished so consumers can stop polling.
+            assert stream.is_finished() is True
+
+    def test_is_finished_stays_false_when_looping(self, video_path: str):
+        """A looping stream never finishes, even after reading past the end of the file."""
+        with VideoFileStream(video_path=video_path, loop=True) as stream:
+            for _ in range(NUM_FRAMES * 2 + 1):
+                assert stream.get_data() is not None
+                assert stream.is_finished() is False
+
+    def test_looping_can_be_re_enabled_after_a_non_looping_stream_finished(self, video_path: str):
+        """After a non-looping stream is exhausted and stopped, a fresh looping stream over the
+        same file works again (i.e. re-enabling looping after being disabled still works)."""
+        # First, a non-looping stream that runs to completion and stops.
+        with VideoFileStream(video_path=video_path, loop=False) as finite_stream:
+            while finite_stream.get_data() is not None:
+                pass
+            assert finite_stream.is_finished() is True
+
+        # Re-enable looping by opening a new stream over the same file; it must keep producing
+        # frames indefinitely and never report itself as finished.
+        with VideoFileStream(video_path=video_path, loop=True) as looping_stream:
+            for _ in range(NUM_FRAMES * 2 + 1):
+                data = looping_stream.get_data()
+                assert data is not None
+                assert data.frame_data is not None
+            assert looping_stream.is_finished() is False
+            assert looping_stream._exhausted is False
