@@ -288,15 +288,15 @@ def load_image() -> cv2.Mat:
     if image_raw is None:
         raise RuntimeError(f"Failed to decode image: {{IMAGE_PATH}}")
 
-    return cv2.cvtColor(image_raw, cv2.COLOR_BGR2RGB)
+    return image_raw
 
 
 def visualise_result(image, result) -> None:
     if image.dtype != "uint8":
-        display_image = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX).astype("uint8")
-    else:
-        display_image = image
-    
+        image = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX).astype("uint8")
+
+    display_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
     Visualizer().show(display_image, result)
     output = Visualizer().render(display_image, result)
     cv2.imwrite(str(OUTPUT_PATH), output)
