@@ -12,6 +12,7 @@
 #   name        – unique identifier (referenced from benchmark_manifest.yaml)
 #   script      – path to preparation script (relative to library/ root)
 #   size_tier   – tiny | small | medium | large
+#   url         – upstream source the preparation script downloads from
 
 version: 1
 
@@ -19,6 +20,7 @@ datasets:
   - name: wgisd
     script: "scripts/benchmark_datasets/prepare_wgisd.py"
     size_tier: small
+    url: "https://github.com/thsant/wgisd"
     description: "Wine Grape Instance Segmentation Dataset — 137 images of grape clusters with COCO-style polygon annotations (5 varieties)."
     compatible_tasks:
       - instance_segmentation
@@ -30,6 +32,7 @@ datasets:
   - name: flowers102
     script: "scripts/benchmark_datasets/prepare_flowers102.py"
     size_tier: large
+    url: "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/"
     description: "Oxford Flowers 102 — 8,189 images across 102 flower categories with official train/val/test splits."
     compatible_tasks:
       - classification/multi_class_cls
@@ -37,6 +40,7 @@ datasets:
   - name: oxford_pets_hlabel
     script: "scripts/benchmark_datasets/prepare_oxford_pets_hlabel.py"
     size_tier: large
+    url: "https://www.robots.ox.ac.uk/~vgg/data/pets/"
     description: "Oxford-IIIT Pet with hierarchical labels — 7,349 images with natural 2-level hierarchy: species (cat/dog) → 37 breeds."
     compatible_tasks:
       - classification/h_label_cls
@@ -44,6 +48,7 @@ datasets:
   - name: oxford_pets
     script: "scripts/benchmark_datasets/prepare_oxford_pets.py"
     size_tier: large
+    url: "https://www.robots.ox.ac.uk/~vgg/data/pets/"
     description: "Oxford-IIIT Pet — 7,349 images of 37 pet breeds with pixel-level trimap segmentation masks."
     compatible_tasks:
       - semantic_segmentation
@@ -53,6 +58,7 @@ datasets:
   - name: bccd
     script: "scripts/benchmark_datasets/prepare_bccd.py"
     size_tier: small
+    url: "https://github.com/Shenggan/BCCD_Dataset"
     description: "Blood Cell Count and Detection — 364 microscopy blood-smear images with Pascal VOC bounding-box annotations for 3 cell types (RBC, WBC, Platelets)."
     compatible_tasks:
       - detection
@@ -60,6 +66,7 @@ datasets:
   - name: aid_multilabel
     script: "scripts/benchmark_datasets/prepare_aid_multilabel.py"
     size_tier: medium
+    url: "https://huggingface.co/datasets/jonathan-roberts1/AID_MultiLabel"
     description: "AID Multi-Label — 3,000 overhead aerial-scene images (600×600) with multi-label annotations across 17 co-occurring land-cover classes."
     compatible_tasks:
       - classification/multi_label_cls
