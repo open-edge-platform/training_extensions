@@ -9,6 +9,7 @@ import { render } from 'test-utils/render';
 
 import { http } from '../../../../../../../api/utils';
 import { server } from '../../../../../../../msw-node-setup';
+import { EMPTY_LABEL_ID } from '../../../../../../../shared/annotator/labels';
 import { VideoFrameSegment } from './video-frame-segment.component';
 
 const FRAME_NUMBER = 0;
@@ -26,7 +27,8 @@ const mockVideoFrame = getMockedVideoFrame({
 
 const labelA = getMockedLabel({ id: 'label-a', name: 'Cat', color: '#ff0000' });
 const labelB = getMockedLabel({ id: 'label-b', name: 'Dog', color: '#00ff00' });
-const labels = [labelA, labelB];
+const labelC = getMockedLabel({ id: EMPTY_LABEL_ID, name: 'No object', color: '#FFF' });
+const labels = [labelA, labelB, labelC];
 
 vi.mock('../../../../video-player-provider.component', () => ({
     useVideoPlayer: () => ({
@@ -146,14 +148,27 @@ describe('VideoFrameSegment', () => {
                     expect(
                         screen.getByRole('gridcell', { name: `Label ${labelB.name} in frame number ${FRAME_NUMBER}` })
                     ).toBeInTheDocument();
+                    expect(
+                        screen.getByRole('gridcell', { name: `Label ${labelC.name} in frame number ${FRAME_NUMBER}` })
+                    ).toBeInTheDocument();
                 });
             });
 
-            it('marks each label segment as "No label" when no annotations are present', async () => {
+            it('marks each label segment as "Not labeled label" when no annotations are present', async () => {
                 renderSegment({ mode: 'annotation' });
 
                 await waitFor(() => {
-                    expect(screen.getAllByRole('presentation', { name: 'No label' })).toHaveLength(labels.length);
+                    expect(screen.getAllByRole('presentation', { name: 'Not labelled' })).toHaveLength(
+                        [labelA, labelB].length
+                    );
+                });
+            });
+
+            it('marks segment that have the empty label as "No object"', async () => {
+                renderSegment({ mode: 'annotation' });
+
+                await waitFor(() => {
+                    expect(screen.getByRole('presentation', { name: labelC.name })).toBeInTheDocument();
                 });
             });
         });
@@ -193,11 +208,13 @@ describe('VideoFrameSegment', () => {
                 });
             });
 
-            it('shows "No label" for the unmatched label', async () => {
+            it('shows "Not labelled" for the unmatched label', async () => {
                 renderSegment({ mode: 'annotation' });
 
                 await waitFor(() => {
-                    expect(screen.getByRole('presentation', { name: 'No label' })).toBeInTheDocument();
+                    expect(screen.getAllByRole('presentation', { name: 'Not labelled' })).toHaveLength(
+                        [labelB, labels].length
+                    );
                 });
             });
         });
@@ -230,6 +247,9 @@ describe('VideoFrameSegment', () => {
                     expect(
                         screen.getByRole('gridcell', { name: `Label ${labelB.name} in frame number ${FRAME_NUMBER}` })
                     ).toBeInTheDocument();
+                    expect(
+                        screen.getByRole('gridcell', { name: `Label ${labelC.name} in frame number ${FRAME_NUMBER}` })
+                    ).toBeInTheDocument();
                 });
             });
 
@@ -237,7 +257,17 @@ describe('VideoFrameSegment', () => {
                 renderSegment({ mode: 'prediction' });
 
                 await waitFor(() => {
-                    expect(screen.getAllByRole('presentation', { name: 'No prediction' })).toHaveLength(labels.length);
+                    expect(screen.getAllByRole('presentation', { name: 'No prediction' })).toHaveLength(
+                        [labelA, labelB].length
+                    );
+                });
+            });
+
+            it('marks segment that have the empty label as "Predicted No object"', async () => {
+                renderSegment({ mode: 'prediction' });
+
+                await waitFor(() => {
+                    expect(screen.getByRole('presentation', { name: `Predicted ${labelC.name}` })).toBeInTheDocument();
                 });
             });
         });
@@ -276,7 +306,9 @@ describe('VideoFrameSegment', () => {
                 renderSegment({ mode: 'prediction' });
 
                 await waitFor(() => {
-                    expect(screen.getByRole('presentation', { name: 'No prediction' })).toBeInTheDocument();
+                    expect(screen.getAllByRole('presentation', { name: 'No prediction' })).toHaveLength(
+                        [labelA, labelC].length
+                    );
                 });
             });
         });
