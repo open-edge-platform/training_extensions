@@ -1,15 +1,12 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # SETUP CONFIGURATION.                                                        #
 [build-system]
-requires = [
-    "setuptools>=77.0.0",
-    "wheel",
-]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "getitrack"
-version = "0.1.0"
+dynamic = ["version"]
 description = "getitrack: Multi-object tracking toolkit."
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
@@ -45,12 +42,11 @@ lint = [
 default-groups = ["dev", "lint"]
 required-version = "~=0.10.4"
 
-[tool.setuptools]
-include-package-data = true
+[tool.hatch.version]
+path = "src/getitrack/__init__.py"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["getitrack*"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/getitrack"]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # COVERAGE CONFIGURATION.                                                     #
