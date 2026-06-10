@@ -20,9 +20,10 @@ from pathlib import Path
 
 import pytest
 from datumaro.experimental.categories import LabelCategories
-from datumaro.experimental.data_formats.voc.sample import VocSample
 from datumaro.experimental.export_import import import_dataset
 from datumaro.experimental.fields import Subset
+
+from getitune.data.entity.sample import DetectionSample
 
 # Path to the script under test.
 _SCRIPT = Path(__file__).resolve().parents[3] / "scripts" / "benchmark_datasets" / "prepare_bccd.py"
@@ -76,16 +77,19 @@ def test_prepare_bccd_end_to_end(tmp_path: Path) -> None:
         counts[sample.subset] += 1
     assert counts == _EXPECTED_COUNTS, f"Unexpected subset distribution: {counts}"
 
-    # BCCD's custom labels are not part of datumaro's default VOC label set, so a
-    # naive VOC load would silently drop every annotation. Verify the VocSample
-    # fallback preserved the bounding boxes by re-reading with the VOC schema.
-    voc_dataset = dataset.convert_to_schema(VocSample)
+    # The exported dataset must convert to the getitune detection schema, which
+    # only accepts COCO-style boxes (the dataset is therefore exported as
+    # ``CocoSample``/``xywh``, not VOC ``xyxy``). This mirrors what
+    # ``DetectionDataset`` does during training and guards the regression where
+    # a VOC ``xyxy`` export failed with "Input format 'xyxy' is not supported".
+    detection_dataset = dataset.convert_to_schema(DetectionSample)
     samples_with_boxes = 0
     total_boxes = 0
-    for sample in voc_dataset:
-        if sample.bboxes is not None and len(sample.bboxes) > 0:
+    for sample in detection_dataset:
+        n_boxes = 0 if sample.bboxes is None else len(sample.bboxes)
+        if n_boxes:
             samples_with_boxes += 1
-            total_boxes += len(sample.bboxes)
+            total_boxes += n_boxes
 
     assert samples_with_boxes == _EXPECTED_TOTAL, (
         f"Expected every image to carry annotations, got {samples_with_boxes}/{_EXPECTED_TOTAL}"

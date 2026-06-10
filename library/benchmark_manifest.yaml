@@ -131,7 +131,6 @@ experiments:
         priority: extended
         recipe: detection/deimv2_s.yaml
     datasets:
-      - wgisd
       - bccd
     criteria:
       accuracy_metric: map_50

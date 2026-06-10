@@ -7,15 +7,6 @@
 Downloads the BCCD (Blood Cell Count and Detection) dataset from GitHub and
 exports it in the experimental Datumaro dataset format for detection benchmarks.
 
-BCCD ships in standard Pascal VOC layout (``JPEGImages/``, ``Annotations/``,
-``ImageSets/Main/``) but does **not** include a ``labelmap.txt``. Its custom
-labels (RBC, WBC, Platelets) are not part of the default Pascal VOC label set,
-so without a labelmap the VOC reader would drop every annotation. We therefore
-write a ``labelmap.txt`` with BCCD's classes before loading, which lets the
-experimental Datumaro VOC reader (``load_voc_dataset``) resolve the labels
-directly and return ``VocSample`` instances. The official ``train`` / ``val`` /
-``test`` split files are mapped to the TRAINING / VALIDATION / TESTING subsets.
-
 BCCD contains microscopy images of blood smears annotated with three cell
 types (RBC, WBC, Platelets). It contains no people and no other
 privacy-sensitive content, making it a safe public detection benchmark.
@@ -28,6 +19,9 @@ from __future__ import annotations
 import shutil
 from typing import TYPE_CHECKING
 
+import numpy as np
+from datumaro.experimental import Dataset
+from datumaro.experimental.data_formats.coco.sample import CocoCategories, CocoSample
 from datumaro.experimental.data_formats.voc.io import load_voc_dataset
 from datumaro.experimental.export_import import export_dataset
 
@@ -36,7 +30,6 @@ from getitune.benchmark.dataset_helpers import download, extract_archive, parse_
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from datumaro.experimental import Dataset
 
 _COMMIT = "d272fb14cdff6e473fafeeeba32aba5f560e9e43"
 _URL = f"https://github.com/Shenggan/BCCD_Dataset/archive/{_COMMIT}.zip"
@@ -102,6 +95,56 @@ def _load_bccd_dataset(extracted_root: Path) -> Dataset:
     return dataset
 
 
+def _to_coco_dataset(voc_dataset: Dataset) -> Dataset:
+    """Convert a VOC ``xyxy`` dataset into a COCO ``xywh`` ``CocoSample`` dataset.
+
+    The getitune detection pipeline converts datasets to its ``DetectionSample``
+    schema, and that converter only supports COCO-style ``xywh`` (and a couple of
+    other) box formats — not VOC's ``xyxy``. Re-emitting the samples as
+    ``CocoSample`` keeps BCCD consistent with the other detection benchmarks
+    (e.g. wgisd) and trainable out of the box.
+    """
+    dataset: Dataset = Dataset(
+        CocoSample,
+        categories={"labels": CocoCategories(labels=_LABEL_NAMES)},
+    )
+
+    for image_id, sample in enumerate(voc_dataset):
+        xyxy = sample.bboxes
+        if xyxy is not None and len(xyxy) > 0:
+            xywh = xyxy.astype(np.float32).copy()
+            # [xmin, ymin, xmax, ymax] -> [x, y, w, h]
+            xywh[:, 2] = xyxy[:, 2] - xyxy[:, 0]
+            xywh[:, 3] = xyxy[:, 3] - xyxy[:, 1]
+            labels = sample.labels.astype(np.int64) if sample.labels is not None else None
+            areas = (xywh[:, 2] * xywh[:, 3]).astype(np.float32)
+            iscrowd = np.zeros(len(xywh), dtype=np.int32)
+        else:
+            xywh = None
+            labels = None
+            areas = None
+            iscrowd = None
+
+        dataset.append(
+            CocoSample(
+                image=sample.image,
+                image_info=sample.image_info,
+                image_id=image_id,
+                subset=sample.subset,
+                bboxes=xywh,
+                labels=labels,
+                polygons=None,
+                areas=areas,
+                iscrowd=iscrowd,
+                caption_group_ids=None,
+                captions=None,
+                keypoints=None,
+            ),
+        )
+
+    return dataset
+
+
 def main() -> None:
     """Download BCCD, convert it to the experimental Datumaro format, and save it."""
     args = parse_args(description="Prepare the bccd benchmark dataset.")
@@ -121,7 +164,8 @@ def main() -> None:
     extracted_root = repo_root / "BCCD"
 
     print("Loading BCCD with the experimental Datumaro VOC reader ...")
-    dataset = _load_bccd_dataset(extracted_root)
+    voc_dataset = _load_bccd_dataset(extracted_root)
+    dataset = _to_coco_dataset(voc_dataset)
     print(f"  Dataset length: {len(dataset)}")
 
     # ``export_dataset`` requires that the output path does NOT exist yet,
