@@ -17,6 +17,7 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
 
 from getitune.config.data import SubsetConfig, TileConfig
+from getitune.data._coco_bbox_fix import apply_coco_bbox_fix
 from getitune.data.augmentation import CPUAugmentationPipeline
 from getitune.data.dataset.tile import TileDatasetFactory
 from getitune.data.entity.utils import detect_storage_dtype
@@ -109,6 +110,10 @@ class DataModule(LightningDataModule):
         self.subsets: dict[str, VisionDataset] = {}
         self.save_hyperparameters(ignore=["input_size"])
 
+        # Workaround: fix Datumaro COCO multi-polygon bbox expansion bug.
+        # See ``_coco_bbox_fix.py`` for details.
+        apply_coco_bbox_fix()
+
         dataset = import_dataset(self.data_root)
 
         if input_size is not None:
@@ -142,11 +147,14 @@ class DataModule(LightningDataModule):
             dataset: A ``datumaro.experimental.Dataset`` loaded via ``import_dataset``.
         """
         storage_dtype: str | None = None
-        config_mapping = {
-            self.train_subset.subset_name: self.train_subset,
-            self.val_subset.subset_name: self.val_subset,
-            self.test_subset.subset_name: self.test_subset,
-        }
+        subset_configs = [self.train_subset, self.val_subset, self.test_subset]
+        subset_names = [cfg.subset_name for cfg in subset_configs]
+        if len(set(subset_names)) != len(subset_names):
+            msg = (
+                f"Subset names must be unique, got {subset_names}. Ensure each SubsetConfig has a distinct subset_name."
+            )
+            raise ValueError(msg)
+        config_mapping = {cfg.subset_name: cfg for cfg in subset_configs}
 
         if self.auto_num_workers:
             if self.device not in [DeviceType.gpu, DeviceType.auto]:
@@ -197,8 +205,8 @@ class DataModule(LightningDataModule):
                     dataset=subset_dataset,
                     tile_config=self.tile_config,
                 )
-            self.subsets[name] = subset_dataset
-            label_infos += [self.subsets[name].label_info]
+            self.subsets[subset_cfg.subset_name] = subset_dataset
+            label_infos += [self.subsets[subset_cfg.subset_name].label_info]
 
         if self._is_meta_info_valid(label_infos) is False:
             msg = "All data meta infos of subsets should be the same."
@@ -277,7 +285,6 @@ class DataModule(LightningDataModule):
         instance = cls.__new__(cls)
         LightningDataModule.__init__(instance)
         # Set basic attributes
-        instance.subsets = {"train": train_dataset, "val": val_dataset, "test": test_dataset}
         instance.task = train_dataset.task_type  # type: ignore[assignment]
         instance.data_root = ""
         instance.tile_config = (
@@ -325,6 +332,11 @@ class DataModule(LightningDataModule):
 
             # Set the 'train_subset', 'val_subset', 'test_subset' attributes
             setattr(instance, f"{name}_subset", subset_to_assign)
+
+        instance.subsets = {}
+        for name, ds in zip(["train", "val", "test"], [train_dataset, val_dataset, test_dataset]):
+            cfg = getattr(instance, f"{name}_subset")
+            instance.subsets[cfg.subset_name] = ds
 
         # Derive normalization params from the CPU pipeline's Normalize transform if available.
         if getattr(instance.train_subset, "augmentations_cpu", None):

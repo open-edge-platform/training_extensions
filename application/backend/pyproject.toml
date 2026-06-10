@@ -40,9 +40,9 @@ dependencies = [
 # - cpu: only CPU training (no GPU support)
 # - xpu: support training on compatible Intel GPUs
 # - cuda: support training on compatible NVIDIA GPUs
-cpu = ["getitune[cpu]"]
-xpu = ["getitune[xpu]"]
-cuda = ["getitune[cuda]"]
+cpu = ["getitune[cpu,ultralytics]"]
+xpu = ["getitune[xpu,ultralytics]"]
+cuda = ["getitune[cuda,ultralytics]"]
 
 mqtt = [
     "paho-mqtt~=2.1.0",
