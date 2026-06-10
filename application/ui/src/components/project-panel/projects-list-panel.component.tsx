@@ -113,7 +113,11 @@ export const ProjectsListPanel = () => {
     const taskType = getProjectTypeTitle(selectedProject?.task);
 
     const handleDeleted = () => {
-        navigate(paths.project.index({}));
+        if (selectedProject.id === projectActionMetadata?.projectId) {
+            navigate(paths.project.index({}));
+        }
+
+        setProjectActionMetadata(null);
     };
 
     const handleRename = (metadata: ProjectActionMetadata) => {
@@ -141,11 +145,6 @@ export const ProjectsListPanel = () => {
 
     const handleCloseEdit = () => {
         editProjectNameDialogState.close();
-        setProjectActionMetadata(null);
-    };
-
-    const handleCloseDelete = () => {
-        deleteProjectDialogState.close();
         setProjectActionMetadata(null);
     };
 
@@ -201,7 +200,6 @@ export const ProjectsListPanel = () => {
                                         projectName={selectedProject.name}
                                         isPipelineRunning={selectedProject.active_pipeline}
                                         projectNames={otherProjectNames}
-                                        onDeleted={handleDeleted}
                                         onRename={handleRename}
                                         onDelete={handleDelete}
                                         onEnableBlocked={handleEnableBlocked}
@@ -255,8 +253,8 @@ export const ProjectsListPanel = () => {
                     projectId={projectActionMetadata.projectId}
                     projectName={projectActionMetadata.projectName}
                     isOpen={deleteProjectDialogState.isOpen}
-                    onClose={handleCloseDelete}
-                    onDeleted={projectActionMetadata.onDeleted}
+                    onClose={deleteProjectDialogState.close}
+                    onDeleted={handleDeleted}
                 />
             )}
 

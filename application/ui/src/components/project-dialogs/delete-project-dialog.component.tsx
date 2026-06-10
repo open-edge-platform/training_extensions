@@ -26,7 +26,6 @@ export const DeleteProjectDialog = ({
             { params: { path: { project_id: projectId } } },
             {
                 onSuccess: () => {
-                    onClose();
                     onDeleted?.();
                     toast({ type: 'success', message: 'Project deleted successfully' });
                 },

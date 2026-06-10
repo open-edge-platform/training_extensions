@@ -19,7 +19,6 @@ type MenuActionsProps = {
     projectName: string;
     isPipelineRunning?: boolean;
     actionButtonStyle?: CSSProperties;
-    onDeleted?: () => void;
     projectNames: string[];
 };
 
@@ -27,7 +26,6 @@ export type ProjectActionMetadata = {
     projectId: string;
     projectName: string;
     projectNames: string[];
-    onDeleted?: () => void;
 };
 
 type ProjectActionsMenuProps = MenuActionsProps & {
@@ -41,13 +39,12 @@ export const ProjectActionsMenu = ({
     projectName,
     isPipelineRunning,
     actionButtonStyle,
-    onDeleted,
     projectNames,
     onRename,
     onDelete,
     onEnableBlocked,
 }: ProjectActionsMenuProps) => {
-    const metadata = { projectId, projectName, projectNames, onDeleted };
+    const metadata = { projectId, projectName, projectNames };
     const { menuActions, handleAction } = useProjectMenuActions(
         projectId,
         {
@@ -85,7 +82,6 @@ export const MenuActions = ({
     projectName,
     isPipelineRunning,
     actionButtonStyle,
-    onDeleted,
     projectNames,
 }: MenuActionsProps) => {
     const [isEnableBlockedDialogOpen, setIsEnableBlockedDialogOpen] = useState(false);
@@ -99,7 +95,6 @@ export const MenuActions = ({
                 projectName={projectName}
                 isPipelineRunning={isPipelineRunning}
                 actionButtonStyle={actionButtonStyle}
-                onDeleted={onDeleted}
                 projectNames={projectNames}
                 onRename={editProjectNameDialogState.open}
                 onDelete={deleteProjectDialogState.open}
@@ -124,7 +119,6 @@ export const MenuActions = ({
                 projectName={projectName}
                 isOpen={deleteProjectDialogState.isOpen}
                 onClose={deleteProjectDialogState.close}
-                onDeleted={onDeleted}
             />
         </>
     );
