@@ -21,7 +21,7 @@ from app.models.dataset_revision import DatasetRevision, DatasetRevisionCounts
 from app.models.media import ImageFormat
 from app.repositories import DatasetRevisionRepository
 from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
-from app.utils.images import crop_to_thumbnail
+from app.utils.images import convert_to_jpeg_compatible, crop_to_thumbnail
 
 from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
 from .media_service import InvalidImageError
@@ -459,8 +459,9 @@ class DatasetRevisionService(BaseSessionManagedService):
                     target_height=DATASET_REVISION_ITEM_THUMBNAIL_SIZE,
                 )
             # Ensure thumbnail is in a JPEG-compatible mode before it is encoded downstream.
-            if thumbnail.mode not in ("RGB", "L"):
-                thumbnail = thumbnail.convert("RGB")
+            # High bit depth images (e.g. 16-bit) are normalized so they are not washed out;
+            # a plain .convert("RGB") would keep only the high byte and produce white thumbnails.
+            thumbnail = convert_to_jpeg_compatible(thumbnail)
         except UnidentifiedImageError:
             logger.error("Failed to open image {} for thumbnail generation", binary_path)
             raise InvalidImageError("Failed to open image for thumbnail generation.")
