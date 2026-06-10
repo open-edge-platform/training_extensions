@@ -9,7 +9,6 @@ from contextlib import asynccontextmanager
 from functools import partial
 from multiprocessing.synchronize import Condition
 from pathlib import Path
-from typing import Any
 
 from aiortc import RTCConfiguration, RTCIceServer
 from fastapi import FastAPI
@@ -20,6 +19,14 @@ from app.core.jobs.models import JobType
 from app.core.logging import LogConfig, setup_logging, setup_uvicorn_logging
 from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
+from app.execution.builders import (
+    build_export_dataset,
+    build_import_as_new_project,
+    build_import_to_project,
+    build_prepare_dataset,
+    build_quantizer,
+    build_trainer,
+)
 from app.scheduler import Scheduler
 from app.services import (
     DatasetRevisionService,
@@ -39,54 +46,6 @@ from app.services.subset_assignment import SubsetAssigner, SubsetService
 from app.services.video import CacheConfig, VideoService
 from app.settings import get_settings
 from app.webrtc import SDPHandler, WebRTCManager, WebRTCSettings
-
-# The heavy ML stack (torch / lightning / openvino / getitune) is imported lazily inside the
-# builders below instead of at module import time. The API server process never runs jobs
-# itself — jobs execute in spawned worker processes — so importing that stack at startup only
-# delayed boot. These builders are module-level (hence picklable) and are invoked only inside
-# the worker process, where the heavy import actually belongs.
-
-
-def _build_trainer(**deps: Any) -> Runnable:
-    """Lazily import the training stack and build a trainer runnable in the worker process."""
-    from app.execution import GetiTuneTrainer, TrainingDependencies
-
-    return GetiTuneTrainer(training_deps=TrainingDependencies(**deps))
-
-
-def _build_quantizer(**deps: Any) -> Runnable:
-    """Lazily import the quantization stack and build a quantizer runnable in the worker process."""
-    from app.execution import GetiTuneQuantizer, QuantizationDependencies
-
-    return GetiTuneQuantizer(quantization_deps=QuantizationDependencies(**deps))
-
-
-def _build_export_dataset(**kwargs: Any) -> Runnable:
-    """Lazily import and build a dataset-export runnable in the worker process."""
-    from app.execution import ExportDataset
-
-    return ExportDataset(**kwargs)
-
-
-def _build_prepare_dataset(**kwargs: Any) -> Runnable:
-    """Lazily import and build a prepare-dataset runnable in the worker process."""
-    from app.execution import PrepareDataset
-
-    return PrepareDataset(**kwargs)
-
-
-def _build_import_to_project(**kwargs: Any) -> Runnable:
-    """Lazily import and build an import-to-project runnable in the worker process."""
-    from app.execution import ImportDatasetToProject
-
-    return ImportDatasetToProject(**kwargs)
-
-
-def _build_import_as_new_project(**kwargs: Any) -> Runnable:
-    """Lazily import and build an import-as-new-project runnable in the worker process."""
-    from app.execution.dataset_import.import_as_new_project import ImportDatasetAsNewProject
-
-    return ImportDatasetAsNewProject(**kwargs)
 
 
 def setup_job_controller(
@@ -125,7 +84,7 @@ def setup_job_controller(
     job_runnable_factory.register(
         JobType.TRAIN,
         partial(
-            _build_trainer,
+            build_trainer,
             base_weights_service=BaseWeightsService(data_dir=data_dir),
             subset_service=SubsetService(),
             subset_assigner=SubsetAssigner(),
@@ -140,7 +99,7 @@ def setup_job_controller(
     job_runnable_factory.register(
         JobType.QUANTIZE,
         partial(
-            _build_quantizer,
+            build_quantizer,
             data_dir=data_dir,
             model_service=ModelService(data_dir=data_dir),
             dataset_revision_service=dataset_revision_service,
@@ -152,7 +111,7 @@ def setup_job_controller(
     job_runnable_factory.register(
         JobType.EXPORT_DATASET,
         partial(
-            _build_export_dataset,
+            build_export_dataset,
             staged_datasets_dir=staged_datasets_dir,
             dataset_service=dataset_service,
             dataset_revision_service=dataset_revision_service,
@@ -162,14 +121,14 @@ def setup_job_controller(
     job_runnable_factory.register(
         JobType.PREPARE_DATASET_FOR_IMPORT,
         partial(
-            _build_prepare_dataset,
+            build_prepare_dataset,
             staged_datasets_dir=staged_datasets_dir,
         ),
     )
     job_runnable_factory.register(
         JobType.IMPORT_DATASET_TO_PROJECT,
         partial(
-            _build_import_to_project,
+            build_import_to_project,
             staged_datasets_dir=staged_datasets_dir,
             dataset_service=dataset_service,
             label_service=label_service,
@@ -180,7 +139,7 @@ def setup_job_controller(
     job_runnable_factory.register(
         JobType.IMPORT_DATASET_AS_NEW_PROJECT,
         partial(
-            _build_import_as_new_project,
+            build_import_as_new_project,
             staged_datasets_dir=staged_datasets_dir,
             project_service=project_service,
             dataset_service=dataset_service,
