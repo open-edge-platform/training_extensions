@@ -8,14 +8,13 @@ Downloads the BCCD (Blood Cell Count and Detection) dataset from GitHub and
 exports it in the experimental Datumaro dataset format for detection benchmarks.
 
 BCCD ships in standard Pascal VOC layout (``JPEGImages/``, ``Annotations/``,
-``ImageSets/Main/``), so we first try to load it directly with the experimental
-Datumaro VOC reader (``load_voc_dataset``). BCCD does not, however, ship a
-``labelmap.txt`` and its custom labels (RBC, WBC, Platelets) are not part of the
-default Pascal VOC label set, so the auto-detected categories drop every
-annotation. When that happens we fall back to building the dataset by hand using
-``VocSample`` (xyxy bboxes) with the correct ``VocCategories``. Either path maps
-the official ``train`` / ``val`` / ``test`` split files to the
-TRAINING / VALIDATION / TESTING subsets.
+``ImageSets/Main/``) but does **not** include a ``labelmap.txt``. Its custom
+labels (RBC, WBC, Platelets) are not part of the default Pascal VOC label set,
+so without a labelmap the VOC reader would drop every annotation. We therefore
+write a ``labelmap.txt`` with BCCD's classes before loading, which lets the
+experimental Datumaro VOC reader (``load_voc_dataset``) resolve the labels
+directly and return ``VocSample`` instances. The official ``train`` / ``val`` /
+``test`` split files are mapped to the TRAINING / VALIDATION / TESTING subsets.
 
 BCCD contains microscopy images of blood smears annotated with three cell
 types (RBC, WBC, Platelets). It contains no people and no other
@@ -27,165 +26,80 @@ Source: https://github.com/Shenggan/BCCD_Dataset
 from __future__ import annotations
 
 import shutil
-import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING
 
-import numpy as np
-from datumaro.experimental import Dataset, LazyImage
-from datumaro.experimental.categories import MaskCategories
 from datumaro.experimental.data_formats.voc.io import load_voc_dataset
-from datumaro.experimental.data_formats.voc.sample import VocCategories, VocSample
 from datumaro.experimental.export_import import export_dataset
-from datumaro.experimental.fields import ImageInfo, Subset
 
 from getitune.benchmark.dataset_helpers import download, extract_archive, parse_args
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from datumaro.experimental import Dataset
+
 _COMMIT = "d272fb14cdff6e473fafeeeba32aba5f560e9e43"
 _URL = f"https://github.com/Shenggan/BCCD_Dataset/archive/{_COMMIT}.zip"
 
-# BCCD ships official Pascal VOC split files under ``ImageSets/Main/``.
-# Map each split directly to a Datumaro subset for a deterministic,
-# reproducible assignment across runs.
-_SPLIT_TO_SUBSET = {
-    "train": Subset.TRAINING,
-    "val": Subset.VALIDATION,
-    "test": Subset.TESTING,
-}
-
-# Class names are fixed by the dataset. Listing them explicitly (sorted) keeps
-# the label index mapping stable regardless of annotation parsing order.
+# Class names are fixed by the dataset. The order defines the label indices, so
+# it is kept stable here and written verbatim into the VOC ``labelmap.txt``.
 _LABEL_NAMES = ("Platelets", "RBC", "WBC")
 
+# Canonical split files mapped to TRAINING / VALIDATION / TESTING. BCCD also
+# ships a ``trainval.txt`` (train plus val); the VOC reader maps it to TRAINING
+# too, which would duplicate every train/val image. We drop it before loading.
+_CANONICAL_SPLITS = ("train", "val", "test")
 
-def _read_split(split_file: Path) -> list[str]:
-    """Return the (sorted) image stems listed in a VOC split file."""
-    if not split_file.exists():
-        return []
-    stems = [line.strip() for line in split_file.read_text().splitlines() if line.strip()]
-    return sorted(stems)
+# Arbitrary but distinct colours for the VOC labelmap (only the name is used by
+# the detection reader; colours matter only for segmentation masks).
+_LABEL_COLORS = (
+    (220, 20, 60),
+    (0, 128, 0),
+    (0, 0, 255),
+)
 
 
-def _parse_voc_annotation(
-    xml_path: Path,
-    label_to_idx: dict[str, int],
-) -> tuple[int, int, list[list[float]], list[int]]:
-    """Parse a Pascal VOC XML file into image size, xyxy bboxes, and label indices.
+def _write_labelmap(extracted_root: Path) -> None:
+    """Write a Pascal VOC ``labelmap.txt`` so the reader resolves BCCD's labels.
 
-    Args:
-        xml_path: Path to the VOC annotation file.
-        label_to_idx: Mapping from class name to contiguous label index.
-
-    Returns:
-        A tuple ``(width, height, bboxes, labels)`` where ``bboxes`` are in
-        VOC ``[xmin, ymin, xmax, ymax]`` format and ``labels`` are integer class
-        indices.
+    The VOC labelmap format is ``name:r,g,b:parts:actions``; only the name is
+    used for detection. ``background`` is intentionally omitted so the label
+    indices match :data:`_LABEL_NAMES` exactly.
     """
-    root = ET.parse(xml_path).getroot()  # noqa: S314 - trusted in-repo benchmark data
-
-    size = root.find("size")
-    width = int(size.findtext("width", default="0")) if size is not None else 0
-    height = int(size.findtext("height", default="0")) if size is not None else 0
-
-    bboxes: list[list[float]] = []
-    labels: list[int] = []
-    for obj in root.findall("object"):
-        name = obj.findtext("name")
-        if name is None or name not in label_to_idx:
-            continue
-        bndbox = obj.find("bndbox")
-        if bndbox is None:
-            continue
-        x_min = float(bndbox.findtext("xmin", default="0"))
-        y_min = float(bndbox.findtext("ymin", default="0"))
-        x_max = float(bndbox.findtext("xmax", default="0"))
-        y_max = float(bndbox.findtext("ymax", default="0"))
-        # VOC bboxes use absolute xyxy coordinates.
-        bboxes.append([x_min, y_min, x_max, y_max])
-        labels.append(label_to_idx[name])
-
-    return width, height, bboxes, labels
+    lines = [f"{name}:{r},{g},{b}::" for name, (r, g, b) in zip(_LABEL_NAMES, _LABEL_COLORS, strict=True)]
+    (extracted_root / "labelmap.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _build_voc_dataset(extracted_root: Path) -> Dataset:
-    """Parse BCCD VOC annotations and build a Datumaro ``VocSample`` dataset.
+def _prune_redundant_splits(extracted_root: Path) -> None:
+    """Remove ImageSets/Main split files other than train/val/test.
 
-    Used as a fallback when ``load_voc_dataset`` cannot resolve BCCD's custom
-    labels. Bounding boxes are stored in VOC xyxy format and labels reference the
-    explicit ``VocCategories`` built from :data:`_LABEL_NAMES`.
+    BCCD's ``trainval.txt`` overlaps ``train``/``val`` and the VOC reader maps it
+    to TRAINING, which would otherwise duplicate those images in the dataset.
     """
-    images_dir = extracted_root / "JPEGImages"
-    ann_dir = extracted_root / "Annotations"
     splits_dir = extracted_root / "ImageSets" / "Main"
-
-    label_to_idx = {name: idx for idx, name in enumerate(_LABEL_NAMES)}
-
-    categories = VocCategories(labels=_LABEL_NAMES)
-    # ``VocSample`` declares lazy mask fields whose schema requires
-    # ``MaskCategories`` even though BCCD has no segmentation masks; build them
-    # the same way the experimental VOC reader does so ``append`` validates.
-    mask_categories = MaskCategories.generate(
-        size=len(categories.labels),
-        include_background=True,
-        labels=list(categories.labels),
-    )
-    dataset: Dataset = Dataset(
-        VocSample,
-        categories={"labels": categories, "class_mask": mask_categories},
-    )
-
-    for split_name, subset in _SPLIT_TO_SUBSET.items():
-        for stem in _read_split(splits_dir / f"{split_name}.txt"):
-            xml_path = ann_dir / f"{stem}.xml"
-            img_path = images_dir / f"{stem}.jpg"
-            if not xml_path.exists() or not img_path.exists():
-                continue
-
-            width, height, bboxes_list, labels_list = _parse_voc_annotation(xml_path, label_to_idx)
-
-            if bboxes_list:
-                bboxes = np.asarray(bboxes_list, dtype=np.float32)
-                labels = np.asarray(labels_list, dtype=np.uint32)
-            else:
-                bboxes = None
-                labels = None
-
-            dataset.append(
-                VocSample(
-                    image=LazyImage(img_path),
-                    image_info=ImageInfo(width=width, height=height),
-                    subset=subset,
-                    bboxes=bboxes,
-                    labels=labels,
-                    difficult=None,
-                    truncated=None,
-                    occluded=None,
-                    pose=None,
-                    class_mask=None,
-                    instance_mask=None,
-                ),
-            )
-
-    return dataset
+    if not splits_dir.is_dir():
+        return
+    for txt_file in splits_dir.glob("*.txt"):
+        if txt_file.stem not in _CANONICAL_SPLITS:
+            txt_file.unlink()
 
 
 def _load_bccd_dataset(extracted_root: Path) -> Dataset:
-    """Load BCCD, preferring the VOC reader and falling back to a manual build.
+    """Load BCCD with the experimental Datumaro VOC reader.
 
-    First attempts the experimental Datumaro VOC reader. BCCD's labels are not
-    part of the default VOC label set and it has no ``labelmap.txt``, so the
-    reader may silently drop annotations; in that case we rebuild the dataset
-    with explicit ``VocCategories``.
+    A ``labelmap.txt`` is written first so the reader resolves BCCD's custom
+    labels instead of falling back to the default VOC label set, and the
+    redundant ``trainval`` split is removed so images are not duplicated.
     """
+    _write_labelmap(extracted_root)
+    _prune_redundant_splits(extracted_root)
     dataset = load_voc_dataset(root_dir=str(extracted_root))
-    loaded_labels = set(dataset.label_categories.labels)
-    if set(_LABEL_NAMES).issubset(loaded_labels):
-        return dataset
 
-    print("  VOC reader did not resolve BCCD labels; rebuilding with VocSample ...")
-    return _build_voc_dataset(extracted_root)
+    loaded_labels = set(dataset.label_categories.labels) if dataset.label_categories is not None else set()
+    if not set(_LABEL_NAMES).issubset(loaded_labels):
+        msg = f"VOC reader did not resolve BCCD labels; got {sorted(loaded_labels)}"
+        raise RuntimeError(msg)
+    return dataset
 
 
 def main() -> None:
