@@ -3,6 +3,8 @@
 
 import { Flex, Text } from '@geti/ui';
 
+import { distributeByLargestRemainder } from '../../../utils';
+
 import classes from './three-section-range.module.scss';
 
 type ThreeSectionRangeProps = {
@@ -12,38 +14,13 @@ type ThreeSectionRangeProps = {
     testingValue: number;
 };
 
-// Distribute rounded percentages so that they always sum to 100%
-const computeRoundedPercentages = (values: number[]): number[] => {
-    const total = values.reduce((sum, value) => sum + value, 0);
-
-    if (total <= 0) {
-        return values.map(() => 0);
-    }
-
-    const exactPercentages = values.map((value) => (value * 100) / total);
-    const flooredPercentages = exactPercentages.map((percentage) => Math.floor(percentage));
-    let remainder = 100 - flooredPercentages.reduce((sum, value) => sum + value, 0);
-
-    const indicesByRemainder = exactPercentages
-        .map((percentage, index) => ({ index, fractional: percentage - Math.floor(percentage) }))
-        .sort((a, b) => b.fractional - a.fractional);
-
-    const result = [...flooredPercentages];
-    for (const { index } of indicesByRemainder) {
-        if (remainder <= 0) break;
-        result[index] += 1;
-        remainder -= 1;
-    }
-
-    return result;
-};
+const MAX_VALUE = 100;
 
 export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingValue }: ThreeSectionRangeProps) => {
-    const [trainingPercentage, validationPercentage, testingPercentage] = computeRoundedPercentages([
-        trainingValue,
-        validationValue,
-        testingValue,
-    ]);
+    const [trainingPercentage, validationPercentage, testingPercentage] = distributeByLargestRemainder(
+        [trainingValue, validationValue, testingValue],
+        MAX_VALUE
+    );
 
     const labelledPercentages = [
         { label: 'Training', percentage: trainingPercentage, color: 'var(--training-subset)' },

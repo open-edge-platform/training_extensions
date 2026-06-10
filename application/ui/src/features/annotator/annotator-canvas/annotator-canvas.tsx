@@ -190,9 +190,13 @@ type AnnotatorCanvasProps = {
 
 type UseToolLayerPointerPassthroughProps = {
     canEditSelectedAnnotation: boolean;
+    areToolsDisabled: boolean;
 };
 
-const useToolLayerPointerPassthrough = ({ canEditSelectedAnnotation }: UseToolLayerPointerPassthroughProps) => {
+const useToolLayerPointerPassthrough = ({
+    canEditSelectedAnnotation,
+    areToolsDisabled,
+}: UseToolLayerPointerPassthroughProps) => {
     const { activeTool } = useTool();
     const isSelectionToolActive = activeTool === 'selection';
     const toolLayerRef = useRef<HTMLDivElement>(null);
@@ -266,8 +270,15 @@ const useToolLayerPointerPassthrough = ({ canEditSelectedAnnotation }: UseToolLa
         };
     }, []);
 
+    // When tools are disabled (prediction/read-only mode, or scene busy) we keep `ToolManager` mounted so
+    // worker-backed tools (notably Segment Anything) don't unmount and discard their in-flight encoder
+    // promises — coming back used to stack new encoder RPCs behind the still-running ones and trip the
+    // SAM encoder timeout. Pointer-events: none routes clicks/hover straight through to the annotations
+    // layer below, matching the previous behavior of unmounting the tool layer entirely.
     const toolLayerPointerEvents =
-        isSelectionToolActive || (canEditSelectedAnnotation && isToolLayerPointerPassthrough) ? 'none' : 'auto';
+        areToolsDisabled || isSelectionToolActive || (canEditSelectedAnnotation && isToolLayerPointerPassthrough)
+            ? 'none'
+            : 'auto';
 
     return { toolLayerRef, toolLayerPointerEvents, handlePointerMove } as const;
 };
@@ -292,6 +303,7 @@ export const AnnotatorCanvas = ({
     const canEditSelectedAnnotation = !areToolsDisabled && isSingleEditableSelection;
     const { toolLayerRef, toolLayerPointerEvents, handlePointerMove } = useToolLayerPointerPassthrough({
         canEditSelectedAnnotation,
+        areToolsDisabled,
     });
 
     const isPlaceholderImage = image.width === 1 && image.height === 1;
@@ -313,18 +325,17 @@ export const AnnotatorCanvas = ({
                 <MediaImage image={image} mediaItem={mediaItem} />
                 <MediaAnnotations mediaItem={mediaItem} mode={mode} />
 
-                {!areToolsDisabled && (
-                    <div
-                        ref={toolLayerRef}
-                        style={{
-                            position: 'absolute',
-                            inset: 0,
-                            pointerEvents: toolLayerPointerEvents,
-                        }}
-                    >
-                        <ToolManager />
-                    </div>
-                )}
+                <div
+                    ref={toolLayerRef}
+                    aria-hidden={areToolsDisabled || undefined}
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                        pointerEvents: toolLayerPointerEvents,
+                    }}
+                >
+                    <ToolManager />
+                </div>
             </div>
         </ZoomTransform>
     );
