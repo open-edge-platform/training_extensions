@@ -5,13 +5,15 @@ import base64
 import time
 from abc import ABCMeta, abstractmethod
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import cv2
 import numpy as np
-from model_api.models.result import Result
 
 from app.models import OutputFormat, Sink
+
+if TYPE_CHECKING:
+    from model_api.models.result import Result
 
 
 def numpy_to_base64(image: np.ndarray, fmt: str = ".jpg") -> str:
@@ -55,7 +57,7 @@ class BaseDispatcher(metaclass=ABCMeta):
         self,
         original_image: np.ndarray,
         image_with_visualization: np.ndarray,
-        predictions: Result,
+        predictions: "Result",
     ) -> None:
         """
         Internal method to dispatch an image with predictions.
@@ -68,7 +70,7 @@ class BaseDispatcher(metaclass=ABCMeta):
         """
 
     def _create_payload(
-        self, original_image: np.ndarray, image_with_visualization: np.ndarray, predictions: Result
+        self, original_image: np.ndarray, image_with_visualization: np.ndarray, predictions: "Result"
     ) -> dict[str, Any]:
         """Create a JSON payload with the requested output formats."""
         result: dict[str, Any] = {}
@@ -95,7 +97,7 @@ class BaseDispatcher(metaclass=ABCMeta):
         self,
         original_image: np.ndarray,
         image_with_visualization: np.ndarray,
-        predictions: Result,
+        predictions: "Result",
     ) -> None:
         """
         Dispatch an image with predictions.

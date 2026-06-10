@@ -5,14 +5,16 @@ import shutil
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
-from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, import_dataset
-
-from app.datumaro_converter.domain.samples.import_export import BaseImportExportSample
 from app.models import AnnotationType, DatasetFormat, StagedDataset
 from app.models.dataset import DatasetMetadata
+
+if TYPE_CHECKING:
+    from datumaro.experimental import Dataset
+
+    from app.datumaro_converter.domain.samples.import_export import BaseImportExportSample
 
 _ANNOTATION_SHAPE_ATTRS: list[tuple[str, AnnotationType]] = [
     ("bboxes", AnnotationType.BOUNDING_BOX),
@@ -25,7 +27,7 @@ _ANNOTATION_LABEL_ATTRS: list[tuple[str, AnnotationType]] = [
 ]
 
 
-def _count_annotations(sample: BaseImportExportSample) -> tuple[AnnotationType, int]:
+def _count_annotations(sample: "BaseImportExportSample") -> tuple[AnnotationType, int]:
     if (
         hasattr(sample, "annotation_type")
         and callable(getattr(sample, "annotation_type", None))
@@ -63,7 +65,9 @@ class _Counts:
     video_paths: set[str] = field(default_factory=set)
 
 
-def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
+def _get_dataset_metadata(dataset: "Dataset") -> DatasetMetadata:
+    from datumaro.experimental import LazyImage, LazyVideoFrame
+
     labels = []
     label_attr_name = "label" if "label" in dataset.schema.attributes else "labels"
     label_attr = dataset.schema.attributes[label_attr_name]
@@ -243,6 +247,8 @@ class StagedDatasetService:
         return sum(item.stat().st_size for item in path.rglob("*") if item.is_file())
 
     def _get_staged_dataset_from_path(self, dataset_id: UUID, dataset_path: Path) -> StagedDataset:
+        from datumaro.experimental import import_dataset
+
         size = self._calculate_path_size(dataset_path)
         compressed = dataset_path.is_file() and dataset_path.suffix == ".zip"
         dataset_format = _infer_format_from_filename(dataset_path.name) if compressed else DatasetFormat.GETI

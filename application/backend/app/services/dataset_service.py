@@ -4,12 +4,11 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
-import datumaro.experimental as dm
 from sqlalchemy.orm import Session
 
-from app.datumaro_converter import SampleMode, convert_dataset
 from app.db.schema import DatasetItemDB, MediaDB
 from app.models import (
     DatasetItem,
@@ -32,6 +31,11 @@ from app.services.media_service import MediaService
 
 from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
 from .label_service import LabelService
+
+if TYPE_CHECKING:
+    from datumaro.experimental import Dataset
+
+    from app.datumaro_converter import SampleMode
 
 DEFAULT_THUMBNAIL_SIZE = 256
 
@@ -350,8 +354,10 @@ class DatasetService(BaseSessionManagedService):
         project_id: UUID,
         task: Task,
         annotation_status: DatasetItemAnnotationStatus | None,
-        sample_mode: SampleMode,
-    ) -> dm.Dataset:
+        sample_mode: "SampleMode",
+    ) -> "Dataset":
+        from app.datumaro_converter import SampleMode, convert_dataset
+
         def get_dataset_items_and_media(offset: int, limit: int) -> list[tuple[DatasetItem, Media]]:
             return self.list_dataset_items_with_media(
                 project_id=project_id,

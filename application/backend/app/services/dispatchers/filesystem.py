@@ -3,15 +3,18 @@
 
 import os
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
 from loguru import logger
-from model_api.models.result import Result
 
 from app.models import FolderSinkConfig, OutputFormat
 
 from .base import BaseDispatcher
+
+if TYPE_CHECKING:
+    from model_api.models.result import Result
 
 
 class FolderDispatcher(BaseDispatcher):
@@ -46,7 +49,7 @@ class FolderDispatcher(BaseDispatcher):
         self,
         original_image: np.ndarray,
         image_with_visualization: np.ndarray,
-        predictions: Result,
+        predictions: "Result",
     ) -> None:
         timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S_%f")[:-3]  # up to milliseconds
         image_orig_file = os.path.join(self.output_folder, f"{timestamp}-original.jpg")
