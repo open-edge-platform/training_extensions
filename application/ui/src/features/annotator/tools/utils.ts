@@ -13,38 +13,11 @@ import type { ClipperPoint, Point, Polygon, Rect, RegionOfInterest, Shape } from
 const ClipperJS = Clipper.default || Clipper;
 
 /**
- * ═══════════════════════════════════════════════════════════════════════════
- * OVERSIZED IMAGE HANDLING FLOW
- * ═══════════════════════════════════════════════════════════════════════════
- *
- * Problem: Browser canvas rasterization limit (~268 Mpx in Chrome) causes
- *          "white square" rendering for very large images (e.g., 19156×15010).
- *
- * Solution: Transparently downscale oversized images for display while keeping
- *           all annotations in original (media-space) coordinates.
- *
- * FLOW:
- *  1. User loads image (getImageData in utils.ts)
- *  2. Check dimensions: canRasteriseAtFullSize(width, height)?
- *  3a. YES  → Return full-resolution ImageData directly.
- *  3b. NO   → Downscale to 4096px (max) via destination canvas:
- *             • Draw source HTMLImageElement into smaller canvas
- *             • Extract downscaled ImageData
- *             • Return smaller buffer (data.length ≠ width*height*4, where 4 = RGBA bytes per pixel)
- *  4. Provider wraps downscaled data in original dimensions:
- *     • image.width/height = mediaItem dimensions (media-space)
- *     • image.data = downscaled buffer
- *     • isImageReady = true only if decoded at full size
- *  5. Display decision:
- *     • Full-resolution → Canvas rendering
- *     • Downscaled     → Fallback to <img> tag (bypasses canvas limit)
- *  6. Smart tools (SAM, scissors):
- *     • Disabled for oversized (canRasteriseAtFullSize = false)
- *     • Or coordinate-transform at boundaries when enabled
- *
- * Key invariant: All React state stays in media-space; convert ONLY at
- * boundaries (coordinate clamping, smart tool calls).
- * ═══════════════════════════════════════════════════════════════════════════
+ * Oversized image handling (Chrome canvas limit ~268 Mpx):
+ * - `getImageData` returns a 1×1 placeholder for media too large to rasterise.
+ * - Such media is displayed via an <img> tag (see annotator-canvas.tsx).
+ * - Smart tools (SAM, magnetic lasso, SSIM) are disabled for it, because they
+ *   rely on a full-resolution canvas/OpenCV buffer that cannot be produced.
  */
 
 export enum PointerType {
@@ -474,32 +447,9 @@ const drawImageOnCanvas = (img: HTMLImageElement, filter = ''): HTMLCanvasElemen
 // oversized canvases but then fail/throw at getImageData time (returning
 // blank buffers or OOM), which caused the original "white square" issue.
 const MAX_CANVAS_SIDE = 16384;
-const MAX_CANVAS_AREA = MAX_CANVAS_SIDE * MAX_CANVAS_SIDE;
 
 export const canRasteriseAtFullSize = (width: number, height: number): boolean =>
-    width <= MAX_CANVAS_SIDE && height <= MAX_CANVAS_SIDE && width * height <= MAX_CANVAS_AREA;
-
-// For oversized media, decode to this smaller size by drawing the source
-// image into a destination canvas (only destination size is capped).
-const MAX_LARGE_IMAGE_DECODE_SIDE = 4096;
-
-const getDownscaledImageData = (img: HTMLImageElement): ImageData | null => {
-    const sourceWidth = img.naturalWidth || img.width;
-    const sourceHeight = img.naturalHeight || img.height;
-    const scale = Math.min(1, MAX_LARGE_IMAGE_DECODE_SIDE / Math.max(sourceWidth, sourceHeight));
-    const width = Math.max(1, Math.round(sourceWidth * scale));
-    const height = Math.max(1, Math.round(sourceHeight * scale));
-
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-
-    const ctx = canvas.getContext('2d');
-    if (ctx === null) return null;
-
-    ctx.drawImage(img, 0, 0, width, height);
-    return ctx.getImageData(0, 0, width, height);
-};
+    width <= MAX_CANVAS_SIDE && height <= MAX_CANVAS_SIDE;
 
 export const getImageData = (img: HTMLImageElement): ImageData => {
     if (img.width === 0 && img.height === 0) return new ImageData(1, 1);
@@ -507,17 +457,16 @@ export const getImageData = (img: HTMLImageElement): ImageData => {
     const sourceWidth = img.naturalWidth || img.width;
     const sourceHeight = img.naturalHeight || img.height;
 
-    // Oversized media: downscale to fit canvas limits instead of relying on
-    // getContext('2d') returning null (some browsers fail later at getImageData).
-    if (canRasteriseAtFullSize(sourceWidth, sourceHeight)) {
-        const canvas = drawImageOnCanvas(img);
-        const ctx = canvas.getContext('2d');
-
-        if (ctx !== null) return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    // Oversized media cannot be rasterised to a canvas (and smart tools can't
+    // run on it either), so return a placeholder; it is displayed via <img>.
+    if (!canRasteriseAtFullSize(sourceWidth, sourceHeight)) {
+        return new ImageData(1, 1);
     }
 
-    // Fallback: context creation failed despite size check → downscale.
-    return getDownscaledImageData(img) ?? new ImageData(1, 1);
+    const canvas = drawImageOnCanvas(img);
+    const ctx = canvas.getContext('2d');
+
+    return ctx !== null ? ctx.getImageData(0, 0, canvas.width, canvas.height) : new ImageData(1, 1);
 };
 
 export const isKeyboardDelete = (event: KeyboardEvent): boolean =>
@@ -553,10 +502,10 @@ export const projectPointOnLine = ([startPoint, endPoint]: ProjectLine, point: P
 };
 
 /**
- * Checks if an ImageData is a placeholder (oversized media decoded at smaller size).
+ * Checks if an ImageData is a placeholder for oversized media.
  * Full-size ImageData satisfies width * height * 4 entries in `data`
- * (RGBA: 4 channels, 1 byte each). Downscaled/placeholder buffers can break that.
- * @returns true if data doesn't match full size (i.e., is placeholder/downscaled)
+ * (RGBA: 4 channels, 1 byte each). A 1×1 placeholder breaks that.
+ * @returns true if data doesn't match full size (i.e., is a placeholder)
  */
 export const isImageOversized = (image: ImageData): boolean => {
     return image.data.length !== image.width * image.height * 4;

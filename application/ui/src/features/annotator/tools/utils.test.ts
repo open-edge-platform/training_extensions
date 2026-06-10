@@ -61,32 +61,29 @@ describe('getImageData', () => {
         expect(imageData.height).toBe(1);
     });
 
-    it('downscales oversized images to max side 4096', () => {
+    it('returns a 1x1 placeholder for oversized images', () => {
+        const imageData = getImageData(createImage(19156, 15010));
+
+        expect(imageData.width).toBe(1);
+        expect(imageData.height).toBe(1);
+    });
+
+    it('rasterises images within the canvas limit at full size', () => {
         const context = createCanvasContext();
         mockCanvasCreation([context]);
 
-        const imageData = getImageData(createImage(19156, 15010));
-        const drawImageArgs = vi.mocked(context.drawImage).mock.calls[0];
+        const imageData = getImageData(createImage(4000, 3000));
 
-        const decodedWidth = drawImageArgs[3] as number;
-        const decodedHeight = drawImageArgs[4] as number;
-
-        expect(Math.max(decodedWidth, decodedHeight)).toBe(4096);
-        expect([imageData.width, imageData.height].sort((a, b) => a - b)).toEqual([3209, 4096]);
+        expect(imageData.width).toBe(4000);
+        expect(imageData.height).toBe(3000);
     });
 
-    it('falls back to downscaled decode when full-size canvas context is unavailable', () => {
-        const fallbackContext = createCanvasContext();
-        const createElementSpy = mockCanvasCreation([null, fallbackContext]);
+    it('returns a 1x1 placeholder when the canvas context is unavailable', () => {
+        mockCanvasCreation([null]);
 
         const imageData = getImageData(createImage(4000, 3000));
-        const fallbackArgs = vi.mocked(fallbackContext.drawImage).mock.calls[0];
 
-        const decodedWidth = fallbackArgs[3] as number;
-        const decodedHeight = fallbackArgs[4] as number;
-
-        expect(createElementSpy).toHaveBeenCalledTimes(2);
-        expect([decodedWidth, decodedHeight].sort((a, b) => a - b)).toEqual([3000, 4000]);
-        expect([imageData.width, imageData.height].sort((a, b) => a - b)).toEqual([3000, 4000]);
+        expect(imageData.width).toBe(1);
+        expect(imageData.height).toBe(1);
     });
 });

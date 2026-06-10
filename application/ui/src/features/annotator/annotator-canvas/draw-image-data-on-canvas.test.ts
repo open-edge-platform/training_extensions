@@ -5,12 +5,6 @@ import { drawImageDataOnCanvas } from './draw-image-data-on-canvas';
 
 const createCanvasContext = () => {
     return {
-        createImageData: vi.fn((width: number, height: number) => ({
-            width,
-            height,
-            data: new Uint8ClampedArray(width * height * 4),
-            colorSpace: 'srgb',
-        })),
         putImageData: vi.fn(),
     } as unknown as CanvasRenderingContext2D;
 };
@@ -28,11 +22,10 @@ describe('drawImageDataOnCanvas', () => {
         const didDraw = drawImageDataOnCanvas(ctx, invalidImage);
 
         expect(didDraw).toBe(false);
-        expect(ctx.createImageData).not.toHaveBeenCalled();
         expect(ctx.putImageData).not.toHaveBeenCalled();
     });
 
-    it('normalizes and draws valid image-shaped data', () => {
+    it('draws valid image-shaped data directly', () => {
         const ctx = createCanvasContext();
         const image = {
             width: 2,
@@ -43,11 +36,7 @@ describe('drawImageDataOnCanvas', () => {
 
         const didDraw = drawImageDataOnCanvas(ctx, image);
 
-        const created = vi.mocked(ctx.createImageData).mock.results[0]?.value as ImageData;
-
         expect(didDraw).toBe(true);
-        expect(ctx.createImageData).toHaveBeenCalledWith(2, 3);
-        expect(created.data).toEqual(image.data);
-        expect(ctx.putImageData).toHaveBeenCalledWith(created, 0, 0);
+        expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
     });
 });

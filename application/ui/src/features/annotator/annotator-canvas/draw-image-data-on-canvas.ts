@@ -7,9 +7,7 @@ import { isImageOversized } from '../tools/utils';
 export const drawImageDataOnCanvas = (ctx: CanvasRenderingContext2D, image: ImageData): boolean => {
     if (isImageOversized(image)) return false;
 
-    const compatibleImageData = ctx.createImageData(image.width, image.height);
-    compatibleImageData.data.set(image.data);
-    ctx.putImageData(compatibleImageData, 0, 0);
+    ctx.putImageData(image, 0, 0);
 
     return true;
 };
