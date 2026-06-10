@@ -49,7 +49,7 @@ export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
     return (
         <Flex direction={'column'} gap={'size-100'}>
             {isUltralyticsModel(model.architecture) && (
-                <Flex gap={'size-50'}>
+                <Flex gap={'size-50'} alignItems={'center'}>
                     <Info />
                     <UltralyticsLicense />
                 </Flex>
