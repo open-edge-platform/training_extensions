@@ -16,7 +16,6 @@ import torch.utils._pytree as pytree
 from datumaro.experimental.dataset import Sample  # noqa: TC002
 from datumaro.experimental.fields import image_field
 from datumaro.experimental.fields.images import ImageField, ImagePathField
-from datumaro.experimental.fields.videos import MediaPathField
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -59,7 +58,7 @@ def detect_storage_dtype(dataset: Dataset) -> str:
         ValueError: If no image field is found in the dataset schema.
     """
     for name, attr in dataset.schema.attributes.items():
-        if isinstance(attr.field, (ImagePathField, MediaPathField)):
+        if isinstance(attr.field, ImagePathField):
             return _detect_dtype_from_file(Path(dataset.df[name][0]))
         if isinstance(attr.field, ImageField):
             return str(attr.field.dtype).lower()
