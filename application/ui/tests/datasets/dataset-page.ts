@@ -137,6 +137,14 @@ export class DatasetPage {
         return this.getContinueButton().click();
     }
 
+    getSkipButton() {
+        return this.page.getByRole('button', { name: 'Skip' });
+    }
+
+    clickSkip() {
+        return this.getSkipButton().click();
+    }
+
     getBulkDialogAssignButton() {
         return this.getLabelAssignmentDialog().getByRole('button', { name: 'Assign' });
     }
