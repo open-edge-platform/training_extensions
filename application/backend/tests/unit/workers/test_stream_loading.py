@@ -29,8 +29,39 @@ class _FakeVideoStream:
     def is_real_time(self) -> bool:
         return True
 
+    def is_finished(self) -> bool:
+        return False
+
     def release(self) -> None:
         pass
+
+
+class _ExhaustibleVideoStream:
+    """Stand-in for a finite (non-looping) VideoStream that finishes after a fixed number of frames."""
+
+    def __init__(self, frame: np.ndarray, num_frames: int) -> None:
+        self._frame = frame
+        self._remaining = num_frames
+        self._exhausted = False
+        self.released = False
+        self.finished_calls = 0
+
+    def get_data(self) -> StreamData | None:
+        if self._remaining > 0:
+            self._remaining -= 1
+            return StreamData(frame_data=self._frame, timestamp=time.time(), source_metadata={})
+        self._exhausted = True
+        return None
+
+    def is_real_time(self) -> bool:
+        return False
+
+    def is_finished(self) -> bool:
+        self.finished_calls += 1
+        return self._exhausted
+
+    def release(self) -> None:
+        self.released = True
 
 
 class _TestableStreamLoader(StreamLoader):
@@ -250,3 +281,103 @@ class TestStreamLoaderErrorHandling:
         # run_loop should handle None stream gracefully
         stop_event.set()
         loader.run_loop()
+
+
+def _video_file_source() -> VideoFileSourceConfig:
+    return VideoFileSourceConfig(
+        source_type=SourceType.VIDEO_FILE,
+        id=uuid4(),
+        name="Test Video File Source",
+        config_data=VideoFileConfig(video_path="fake_path.mp4"),
+    )
+
+
+class TestStreamLoaderFinishedStream:
+    """Tests for stopping a finite stream once it has been fully consumed (e.g. non-looping video)."""
+
+    def _make_loader(self, frame_queue, stop_event, source_changed_condition=None):
+        return StreamLoader(
+            frame_queue=frame_queue,
+            stop_event=stop_event,
+            source_changed_condition=source_changed_condition,
+            logger_=Mock(),
+        )
+
+    def test_run_loop_releases_and_clears_finished_stream(self, mp_manager, stop_event, sample_frame):
+        """When the stream finishes, run_loop releases it and clears it instead of polling forever."""
+        frame_queue = mp_manager.Queue(maxsize=10)
+        fake = _ExhaustibleVideoStream(frame=sample_frame, num_frames=3)
+        loader = self._make_loader(frame_queue, stop_event)
+        loader._source = _video_file_source()
+        loader._video_stream = fake  # pyrefly: ignore[bad-assignment]
+
+        thread = Thread(target=loader.run_loop, daemon=True)
+        thread.start()
+        try:
+            # Wait until the finished stream has been released by the loader.
+            deadline = time.monotonic() + 5
+            while not fake.released and time.monotonic() < deadline:
+                time.sleep(0.02)
+        finally:
+            stop_event.set()
+            thread.join(timeout=3)
+
+        assert fake.released is True, "Finished stream should be released"
+        assert loader._video_stream is None, "Finished stream should be cleared so polling stops"
+        assert fake.finished_calls > 0, "Loader should have checked is_finished() when get_data() returned None"
+        assert not thread.is_alive()
+
+        # Exactly the produced frames were enqueued (no None frames, no infinite retries).
+        drained = []
+        while not frame_queue.empty():
+            try:
+                drained.append(frame_queue.get_nowait())
+            except queue.Empty:
+                break
+        assert len(drained) == 3
+
+    def test_run_loop_keeps_polling_when_not_finished(self, frame_queue, stop_event, sample_frame):
+        """A transient None (stream not finished) must not stop the stream; it keeps the stream alive."""
+        stream = Mock()
+        stream.get_data.return_value = None
+        stream.is_finished.return_value = False
+        stream.is_real_time.return_value = False
+
+        loader = self._make_loader(frame_queue, stop_event)
+        loader._source = _video_file_source()
+        loader._video_stream = stream
+
+        thread = Thread(target=loader.run_loop, daemon=True)
+        thread.start()
+        try:
+            # Give the loop time to run through several polling iterations.
+            deadline = time.monotonic() + 1
+            while stream.get_data.call_count < 2 and time.monotonic() < deadline:
+                time.sleep(0.02)
+        finally:
+            stop_event.set()
+            thread.join(timeout=3)
+
+        stream.release.assert_not_called()
+        assert loader._video_stream is stream, "A non-finished stream must not be cleared"
+
+    @patch("app.workers.stream_loading.VideoStreamService.get_video_stream")
+    def test_finished_stream_can_be_re_enabled_via_source_reload(
+        self, mock_get_stream, frame_queue, stop_event, sample_frame
+    ):
+        """After a non-looping stream finished and was stopped (cleared to None), reloading the source
+        (e.g. with looping enabled) re-creates a working stream that produces frames again."""
+        loader = self._make_loader(frame_queue, stop_event)
+        # Simulate the state left behind after a finished stream was stopped.
+        loader._source = _video_file_source()
+        loader._video_stream = None
+
+        # The reloaded source yields a fresh (looping) stream that never finishes.
+        looping_stream = _FakeVideoStream(frame=sample_frame)
+        mock_get_stream.return_value = looping_stream
+
+        loader._reset_stream()
+
+        assert loader._video_stream is looping_stream, "Reloading the source should re-create the stream"
+        assert loader._video_stream.get_data() is not None, "Re-enabled stream should produce frames again"
+        assert loader._video_stream.is_finished() is False
