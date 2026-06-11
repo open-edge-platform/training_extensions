@@ -207,7 +207,11 @@ test.describe('Dataset', () => {
             { name: 'upload-video.mp4', mimeType: 'video/mp4', buffer: sampleVideoBuffer },
         ];
 
-        const mockNetwork = (network: NetworkFixture, project: SchemaProjectView) => {
+        const mockNetwork = (
+            network: NetworkFixture,
+            project: SchemaProjectView,
+            options?: { onUpload?: () => Promise<void> }
+        ) => {
             const createAnnotationPayloads: [string, AnnotationDTO[]][] = [];
             let getMediaCount = 0;
 
@@ -216,6 +220,8 @@ test.describe('Dataset', () => {
                     const media = mockedMedia[getMediaCount];
 
                     getMediaCount++;
+
+                    await options?.onUpload?.();
 
                     return HttpResponse.json(media, {
                         status: 201,
@@ -378,6 +384,40 @@ test.describe('Dataset', () => {
                     [mockedImages[1].id, []],
                 ]);
             }).toPass();
+        });
+
+        test('Skip closes the dialog without waiting for the upload to finish', async ({ network, datasetPage }) => {
+            let releaseUpload: () => void = () => {};
+            const uploadGate = new Promise<void>((resolve) => {
+                releaseUpload = resolve;
+            });
+
+            const createAnnotationPayloads = mockNetwork(
+                network,
+                getMockedProject({
+                    task: {
+                        task_type: 'classification',
+                        exclusive_labels: true,
+                        labels: mockedLabels,
+                    },
+                }),
+                { onUpload: () => uploadGate }
+            );
+
+            await datasetPage.goto();
+
+            await datasetPage.uploadFiles(filesToUpload);
+
+            await expect(datasetPage.getLabelAssignmentHeading()).toBeVisible();
+
+            await datasetPage.clickSkip();
+
+            await expect(datasetPage.getLabelAssignmentHeading()).toBeHidden();
+
+            releaseUpload();
+            await expect(datasetPage.getUploadFinishedText(filesToUpload.length)).toBeVisible();
+
+            expect(createAnnotationPayloads).toEqual([]);
         });
     });
 
