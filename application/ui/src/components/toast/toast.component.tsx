@@ -136,7 +136,7 @@ const CustomToast = ({ message, id, actionButtons, type, hasCloseButton = true, 
 const DEFAULT_TOAST_DURATION = 8000;
 
 export const removeToast = (id: string | number) => {
-    if (isEmpty(id)) return;
+    if (typeof id === 'string' && id.length === 0) return;
 
     soonerToast.dismiss(id);
 };
@@ -156,7 +156,7 @@ export const toast = ({
     position,
     title,
 }: ToastProps) => {
-    const toastId = `id-${parseId(id ?? String(message))}`;
+    const toastId = id ?? `id-${parseId(String(message))}`;
 
     return soonerToast.custom(
         () => {
