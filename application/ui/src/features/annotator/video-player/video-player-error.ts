@@ -23,7 +23,13 @@ export const getVideoErrorMessage = (error: VideoPlayerErrorReason | null) => {
         return 'Cannot play video due to a network error, please refresh and try again.';
     }
 
-    if ([VideoPlayerErrorReason.MEDIA_ERR_DECODE, VideoPlayerErrorReason.MEDIA_ERR_SRC_NOT_SUPPORTED].includes(error)) {
-        return 'Unable to play video, please try a different browser or a different video format (mp4/webm).';
+    if (VideoPlayerErrorReason.MEDIA_ERR_DECODE === error) {
+        return 'Unable to play video, please try again.';
     }
+
+    if (VideoPlayerErrorReason.MEDIA_ERR_SRC_NOT_SUPPORTED === error) {
+        return 'Unable to play video, please try a different video format (mp4/webm).';
+    }
+
+    return 'Unable to play video, please try again.';
 };
