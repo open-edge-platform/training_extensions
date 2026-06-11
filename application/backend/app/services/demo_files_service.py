@@ -287,7 +287,8 @@ def load_image() -> cv2.Mat:
     image_raw = cv2.imread(str(IMAGE_PATH), cv2.IMREAD_UNCHANGED)
     if image_raw is None:
         raise RuntimeError(f"Failed to decode image: {{IMAGE_PATH}}")
-
+    if image_raw.dtype == "uint8":
+        return cv2.cvtColor(image_raw, cv2.COLOR_BGR2RGB)
     return image_raw
 
 
@@ -295,9 +296,9 @@ def visualise_result(image, result) -> None:
     if image.dtype != "uint8":
         image = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX).astype("uint8")
 
+    Visualizer().show(image, result)
+    
     display_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    Visualizer().show(display_image, result)
     output = Visualizer().render(display_image, result)
     cv2.imwrite(str(OUTPUT_PATH), output)
     print(f"Saved annotated result to {{OUTPUT_PATH}}")
