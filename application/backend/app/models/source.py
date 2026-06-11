@@ -83,6 +83,7 @@ class IPCameraSourceConfig(BaseSourceConfig):
 
 class VideoFileConfig(SourceConfig):
     video_path: str
+    loop: bool = False
 
 
 class VideoFileSourceConfig(BaseSourceConfig):
