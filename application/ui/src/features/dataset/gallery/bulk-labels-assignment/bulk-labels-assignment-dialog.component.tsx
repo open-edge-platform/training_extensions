@@ -114,7 +114,7 @@ export const BulkLabelsAssignmentDialog = ({ files, onClose }: BulkLabelsAssignm
     const bulkAssignLabel = useBulkAssignLabel();
 
     const handleSkip = async () => {
-        uploadMedia(files);
+        void uploadMedia(files);
         onClose();
     };
 
