@@ -412,8 +412,8 @@ main() {
     ensure_source_code
 
     # Initialize log file and build tools directory
-    : > "$LOG_FILE"
     mkdir -p "$BUILD_TOOLS_DIR"
+    : > "$LOG_FILE"
 
     install_build_tools
     detect_hardware
