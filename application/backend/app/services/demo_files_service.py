@@ -283,13 +283,10 @@ def load_model() -> Model:
 
 def load_image() -> cv2.Mat:
     print(f"Loading image from {{IMAGE_PATH}}...")
-    # IMREAD_UNCHANGED preserves the original bit depth (e.g. 16-bit PNG/TIFF images).
-    image_raw = cv2.imread(str(IMAGE_PATH), cv2.IMREAD_UNCHANGED)
+    image_raw = cv2.imread(str(IMAGE_PATH))
     if image_raw is None:
         raise RuntimeError(f"Failed to decode image: {{IMAGE_PATH}}")
-    if image_raw.dtype == "uint8":
-        return cv2.cvtColor(image_raw, cv2.COLOR_BGR2RGB)
-    return image_raw
+    return cv2.cvtColor(image_raw, cv2.COLOR_BGR2RGB)
 
 
 def visualise_result(image, result) -> None:
