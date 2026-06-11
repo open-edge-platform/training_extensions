@@ -12,7 +12,7 @@ export class VideoPage {
     }
 
     getPlayButton(): Locator {
-        return this.page.getByRole('button', { name: 'Play video' });
+        return this.page.getByRole('button', { name: 'Play video' }).first();
     }
 
     getPauseButton(): Locator {
