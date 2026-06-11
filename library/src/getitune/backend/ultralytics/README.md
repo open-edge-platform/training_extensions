@@ -15,9 +15,9 @@ Licensing Information: Ultralytics YOLO models are distributed under the AGPL-3.
 
 | Model | Task | Variants |
 |-------|------|----------|
-| [YOLO26-N](./../../../recipe/detection/yolo26_n.yaml) | Detection | `yolo26n` |
-| [YOLO26-S](./../../../recipe/detection/yolo26_s.yaml) | Detection | `yolo26s` |
-| [YOLO26-M](./../../../recipe/detection/yolo26_m.yaml) | Detection | `yolo26m` |
-| [YOLO26-N Seg](./../../../recipe/instance_segmentation/yolo26_n_seg.yaml) | Instance Segmentation | `yolo26n-seg` |
-| [YOLO26-S Seg](./../../../recipe/instance_segmentation/yolo26_s_seg.yaml) | Instance Segmentation | `yolo26s-seg` |
-| [YOLO26-M Seg](./../../../recipe/instance_segmentation/yolo26_m_seg.yaml) | Instance Segmentation | `yolo26m-seg` |
+| [YOLO26-N](./../../recipe/detection/yolo26_n.yaml) | Detection | `yolo26n` |
+| [YOLO26-S](./../../recipe/detection/yolo26_s.yaml) | Detection | `yolo26s` |
+| [YOLO26-M](./../../recipe/detection/yolo26_m.yaml) | Detection | `yolo26m` |
+| [YOLO26-N Seg](./../../recipe/instance_segmentation/yolo26_n_seg.yaml) | Instance Segmentation | `yolo26n-seg` |
+| [YOLO26-S Seg](./../../recipe/instance_segmentation/yolo26_s_seg.yaml) | Instance Segmentation | `yolo26s-seg` |
+| [YOLO26-M Seg](./../../recipe/instance_segmentation/yolo26_m_seg.yaml) | Instance Segmentation | `yolo26m-seg` |
