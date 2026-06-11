@@ -1,8 +1,6 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-
 import {
     ActionButton,
     Badge,
@@ -24,19 +22,17 @@ import { useProjects } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { partition } from 'lodash-es';
 import { useNavigate } from 'react-router';
-import { useOverlayTriggerState } from 'react-stately';
 
 import { EnablePipelineBlockedDialog } from '../../components/enable-pipeline-blocked-dialog/enable-pipeline-blocked-dialog.component';
 import { DeleteProjectDialog } from '../../components/project-dialogs/delete-project-dialog.component';
 import { EditProjectNameDialog } from '../../components/project-dialogs/edit-project-name-dialog.component';
 import { paths } from '../../constants/paths';
-import {
-    ProjectActionsMenu,
-    type ProjectActionMetadata,
-} from '../../features/project/list/menu-actions/menu-actions.component';
+import { Project } from '../../constants/shared-types';
+import { ProjectActionsMenu } from '../../features/project/list/menu-actions/menu-actions.component';
 import { getProjectTypeTitle } from '../../features/project/list/util';
 import { ProjectThumbnail } from './project-thumbnail/project-thumbnail.component';
 import { ProjectsList } from './projects-list.component';
+import { useProjectActionsDialogStates } from './use-project-actions-dialog-states';
 
 import classes from './projects-list.module.scss';
 
@@ -98,13 +94,9 @@ export const ProjectsListPanel = () => {
     const navigate = useNavigate();
     const projectId = useProjectIdentifier();
     const { data } = useProjects();
-    const projectSelectorState = useOverlayTriggerState({});
-    const deleteProjectDialogState = useOverlayTriggerState({});
-    const editProjectNameDialogState = useOverlayTriggerState({});
-    const [isEnableBlockedDialogOpen, setIsEnableBlockedDialogOpen] = useState(false);
-    const [projectActionMetadata, setProjectActionMetadata] = useState<ProjectActionMetadata | null>(null);
 
-    const [[selectedProject], otherProjects] = partition(data, (project) => project.id === projectId);
+    const [matchedProjects, otherProjects] = partition(data, (project) => project.id === projectId);
+    const selectedProject: Project | undefined = matchedProjects.at(0);
     const selectedProjectName = selectedProject?.name ?? '';
     const hasActivePipeline = Boolean(selectedProject?.active_pipeline);
 
@@ -112,40 +104,28 @@ export const ProjectsListPanel = () => {
 
     const taskType = getProjectTypeTitle(selectedProject?.task);
 
+    const {
+        projectActionMetadata,
+        deleteProject,
+        editProject,
+        closeEditProject,
+        closeEnablePipelineBlocked,
+        enablePipelineBlocked,
+        isDeleteProjectDialogOpen,
+        isEditProjectNameDialogOpen,
+        isProjectListOpen,
+        isEnableBlockedDialogOpen,
+        closeDeleteProject,
+        changeProjectListDialogState,
+        clearProjectActionMetadata,
+    } = useProjectActionsDialogStates();
+
     const handleDeleted = () => {
-        if (selectedProject.id === projectActionMetadata?.projectId) {
+        if (selectedProject?.id === projectActionMetadata?.projectId) {
             navigate(paths.project.index({}));
         }
 
-        setProjectActionMetadata(null);
-    };
-
-    const handleRename = (metadata: ProjectActionMetadata) => {
-        setProjectActionMetadata(metadata);
-        projectSelectorState.close();
-        editProjectNameDialogState.open();
-    };
-
-    const handleDelete = (metadata: ProjectActionMetadata) => {
-        setProjectActionMetadata(metadata);
-        projectSelectorState.close();
-        deleteProjectDialogState.open();
-    };
-
-    const handleEnableBlocked = (metadata: ProjectActionMetadata) => {
-        setProjectActionMetadata(metadata);
-        projectSelectorState.close();
-        setIsEnableBlockedDialogOpen(true);
-    };
-
-    const handleCloseEnableBlocked = () => {
-        setIsEnableBlockedDialogOpen(false);
-        setProjectActionMetadata(null);
-    };
-
-    const handleCloseEdit = () => {
-        editProjectNameDialogState.close();
-        setProjectActionMetadata(null);
+        clearProjectActionMetadata();
     };
 
     return (
@@ -153,8 +133,8 @@ export const ProjectsListPanel = () => {
             <DialogTrigger
                 type='popover'
                 hideArrow
-                isOpen={projectSelectorState.isOpen}
-                onOpenChange={projectSelectorState.setOpen}
+                isOpen={isProjectListOpen}
+                onOpenChange={changeProjectListDialogState}
             >
                 <SelectedProjectButton name={selectedProjectName} id={projectId} isActive={hasActivePipeline} />
 
@@ -200,9 +180,9 @@ export const ProjectsListPanel = () => {
                                         projectName={selectedProject.name}
                                         isPipelineRunning={selectedProject.active_pipeline}
                                         projectNames={otherProjectNames}
-                                        onRename={handleRename}
-                                        onDelete={handleDelete}
-                                        onEnableBlocked={handleEnableBlocked}
+                                        onRename={editProject}
+                                        onDelete={deleteProject}
+                                        onEnableBlocked={enablePipelineBlocked}
                                         actionButtonStyle={{
                                             position: 'absolute',
                                             top: '50%',
@@ -223,9 +203,9 @@ export const ProjectsListPanel = () => {
                             <Content margin={0}>
                                 <ProjectsList
                                     projects={otherProjects}
-                                    onRename={handleRename}
-                                    onDelete={handleDelete}
-                                    onEnableBlocked={handleEnableBlocked}
+                                    onRename={editProject}
+                                    onDelete={deleteProject}
+                                    onEnableBlocked={enablePipelineBlocked}
                                 />
                             </Content>
                         </>
@@ -243,8 +223,8 @@ export const ProjectsListPanel = () => {
                     projectId={projectActionMetadata.projectId}
                     projectName={projectActionMetadata.projectName}
                     projectNames={projectActionMetadata.projectNames}
-                    isOpen={editProjectNameDialogState.isOpen}
-                    onClose={handleCloseEdit}
+                    isOpen={isEditProjectNameDialogOpen}
+                    onClose={closeEditProject}
                 />
             )}
 
@@ -252,13 +232,13 @@ export const ProjectsListPanel = () => {
                 <DeleteProjectDialog
                     projectId={projectActionMetadata.projectId}
                     projectName={projectActionMetadata.projectName}
-                    isOpen={deleteProjectDialogState.isOpen}
-                    onClose={deleteProjectDialogState.close}
+                    isOpen={isDeleteProjectDialogOpen}
+                    onClose={closeDeleteProject}
                     onDeleted={handleDeleted}
                 />
             )}
 
-            <EnablePipelineBlockedDialog isOpen={isEnableBlockedDialogOpen} onClose={handleCloseEnableBlocked} />
+            <EnablePipelineBlockedDialog isOpen={isEnableBlockedDialogOpen} onClose={closeEnablePipelineBlocked} />
         </>
     );
 };
