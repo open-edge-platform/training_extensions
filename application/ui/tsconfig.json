@@ -1,5 +1,4 @@
 {
-    "extends": "@geti/config/typescript",
     "include": [
         "src",
         "tests",
@@ -10,6 +9,21 @@
         "mocks"
     ],
     "compilerOptions": {
+        "target": "esnext",
+        "lib": ["dom", "dom.iterable", "esnext"],
+        "allowJs": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "noFallthroughCasesInSwitch": true,
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react-jsx",
         "types": ["vitest/globals"],
         "paths": {
             "test-utils/*": ["./src/test-utils/*"],
