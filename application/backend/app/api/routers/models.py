@@ -117,6 +117,7 @@ def download_model_binary(
     filename = f"model-{str(model_id).split('-')[0]}-{model_variant.format}-{model_variant.precision}.zip"
 
     architecture = model_service.get_model_revision_architecture(project_id=project.id, model_id=model_id)
+    print(architecture, model_variant, model_variant.format)
     is_ultralytics = "yolo26" in architecture
 
     demo_files = demo_files_service.build_demo_files(
