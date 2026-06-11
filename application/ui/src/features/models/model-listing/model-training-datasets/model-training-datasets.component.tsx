@@ -1,11 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, MediaViewModes, Text, useViewMode, ViewModes } from '@geti/ui';
+import { Flex, MediaViewModes, Text, ViewModes } from '@geti/ui';
 import { useNumberFormatter } from 'react-aria';
 
 import type { DatasetRevision, DatasetSubset } from '../../../../constants/shared-types';
 import { useGetDatasetRevisionItems } from '../../../../hooks/use-get-dataset-revision-items.hook';
+import { useViewMode } from '../../../../hooks/use-view-mode.hook';
 import { GALLERY_VIEW_MODES, type GalleryViewMode } from '../../../../shared/gallery-view-modes';
 import { Box } from '../components/box/box.component';
 import { SubsetGallery } from './subset-gallery.component';
