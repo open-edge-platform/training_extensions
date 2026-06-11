@@ -38,7 +38,7 @@ class DemoFilesService:
         self._media_service: MediaService = media_service
 
     def build_demo_files(
-        self, project_id: UUID, model_format: ModelFormat, *, is_ultralytics: bool = False
+        self, project_id: UUID, model_format: ModelFormat, *, license: str = "Apache 2.0"
     ) -> list[DemoFile]:
         """Build the auxiliary deployment files to bundle in with the model archive.
 
@@ -49,8 +49,8 @@ class DemoFilesService:
         Args:
             project_id: Project that owns the model.
             model_format: Format of the model variant being downloaded.
-            is_ultralytics: Whether the model uses the Ultralytics backend (YOLO26).
-                When True, an AGPL-3.0 LICENSE file is included and a licensing
+            license: The license of the model (e.g., "Apache 2.0", "AGPL-3.0").
+                When AGPL-3.0, a LICENSE file is included and a licensing
                 note is added to the README.
 
         Returns:
@@ -78,7 +78,7 @@ class DemoFilesService:
         files.append(DemoFile(name="pyproject.toml", data=_PY_PROJECT.encode("utf-8")))
 
         readme = _README.format(model_filename=model_filename)
-        if is_ultralytics:
+        if license == "AGPL-3.0":
             readme += _README_AGPL_NOTE
             files.append(DemoFile(name="LICENSE", data=_LICENSE_AGPL.encode("utf-8")))
 
