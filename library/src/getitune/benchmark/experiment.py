@@ -175,12 +175,7 @@ def detect_resume_point(seed_dir: Path) -> tuple[bool, str | None]:
             shutil.rmtree(seed_dir)
         return False, None
 
-    # The trained checkpoint is named ``best_checkpoint.ckpt`` by the Lightning
-    # backend and ``best_checkpoint.pt`` by the Ultralytics backend. Either is a
-    # valid completion marker for the train phase.
-    checkpoint_exists = any(
-        (seed_dir / "train" / name).exists() for name in ("best_checkpoint.ckpt", "best_checkpoint.pt")
-    )
+    checkpoint_exists = (seed_dir / "train" / "best_checkpoint.pt").exists()
     if not checkpoint_exists:
         # metrics exist but checkpoint missing -> corrupt
         shutil.rmtree(seed_dir)
@@ -411,8 +406,8 @@ class ExperimentExecutor:
 
     @property
     def _checkpoint_name(self) -> str:
-        """Trained-checkpoint filename for the active backend."""
-        return "best_checkpoint.pt" if self.is_ultralytics else "best_checkpoint.ckpt"
+        """Trained-checkpoint filename written by the engine after training."""
+        return "best_checkpoint.pt"
 
     def _build_torch_engine(self, work_dir: Path) -> Engine:
         """Build the torch-side engine (Lightning or Ultralytics) for *work_dir*."""

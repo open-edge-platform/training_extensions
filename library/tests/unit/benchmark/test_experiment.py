@@ -262,7 +262,7 @@ class TestDetectResumePoint:
         seed_dir = tmp_path / "seed"
         (seed_dir / "train").mkdir(parents=True)
         (seed_dir / "train" / "metrics.csv").write_text("epoch,val/f1\n1,0.5\n")
-        (seed_dir / "train" / "best_checkpoint.ckpt").write_text("fake")
+        (seed_dir / "train" / "best_checkpoint.pt").write_text("fake")
         # test/torch marker missing
         skip, resume_from = detect_resume_point(seed_dir)
         assert skip is False
@@ -272,7 +272,7 @@ class TestDetectResumePoint:
         seed_dir = tmp_path / "seed"
         (seed_dir / "train").mkdir(parents=True)
         (seed_dir / "train" / "metrics.csv").write_text("epoch,val/f1\n1,0.5\n")
-        (seed_dir / "train" / "best_checkpoint.ckpt").write_text("fake")
+        (seed_dir / "train" / "best_checkpoint.pt").write_text("fake")
         (seed_dir / "test" / "torch").mkdir(parents=True)
         (seed_dir / "test" / "torch" / "result.json").write_text("{}")
         skip, resume_from = detect_resume_point(seed_dir)
@@ -283,7 +283,7 @@ class TestDetectResumePoint:
         seed_dir = tmp_path / "seed"
         (seed_dir / "train").mkdir(parents=True)
         (seed_dir / "train" / "metrics.csv").write_text("epoch,val/f1\n1,0.5\n")
-        (seed_dir / "train" / "best_checkpoint.ckpt").write_text("fake")
+        (seed_dir / "train" / "best_checkpoint.pt").write_text("fake")
         (seed_dir / "test" / "torch").mkdir(parents=True)
         (seed_dir / "test" / "torch" / "result.json").write_text("{}")
         (seed_dir / "export").mkdir(parents=True)
@@ -476,7 +476,7 @@ class TestDetectResumePointEdgeCases:
         seed_dir = tmp_path / "seed"
         (seed_dir / "train").mkdir(parents=True)
         (seed_dir / "train" / "metrics.csv").write_text("epoch,val/f1\n1,0.5\n")
-        (seed_dir / "train" / "best_checkpoint.ckpt").write_text("fake")
+        (seed_dir / "train" / "best_checkpoint.pt").write_text("fake")
         (seed_dir / "test" / "torch").mkdir(parents=True)
         (seed_dir / "test" / "torch" / "result.json").write_text("{}")
         (seed_dir / "export").mkdir(parents=True)
@@ -493,7 +493,7 @@ class TestDetectResumePointEdgeCases:
         seed_dir = tmp_path / "seed"
         (seed_dir / "train").mkdir(parents=True)
         (seed_dir / "train" / "metrics.csv").write_text("epoch,val/f1\n1,0.5\n")
-        (seed_dir / "train" / "best_checkpoint.ckpt").write_text("fake")
+        (seed_dir / "train" / "best_checkpoint.pt").write_text("fake")
         (seed_dir / "test" / "torch").mkdir(parents=True)
         (seed_dir / "test" / "torch" / "result.json").write_text("{}")
         (seed_dir / "export").mkdir(parents=True)
@@ -670,7 +670,7 @@ class TestExecutorBackendDispatch:
             work_dir=tmp_path / "work",
         )
         assert executor.is_ultralytics is False
-        assert executor._checkpoint_name == "best_checkpoint.ckpt"
+        assert executor._checkpoint_name == "best_checkpoint.pt"
 
     def test_ultralytics_recipe_properties(self, tmp_path: Path) -> None:
         recipe = tmp_path / "yolo.yaml"
