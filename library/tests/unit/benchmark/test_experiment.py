@@ -17,10 +17,14 @@ from getitune.benchmark.experiment import (
     PhaseResult,
     _find_csv_metrics,
     _get_peak_gpu_memory_mb,
+    _recipe_backend,
     _scrape_csv_metrics,
+    _ultralytics_torch_metric,
+    _write_phase_metrics_csv,
     detect_resume_point,
     resolve_overrides,
 )
+from getitune.types.task import TaskType
 
 # ---------------------------------------------------------------------------
 # PhaseResult
@@ -581,3 +585,113 @@ class TestFindCsvMetrics:
     def test_returns_none_for_nonexistent_dir(self, tmp_path: Path) -> None:
         found = _find_csv_metrics(tmp_path / "nonexistent")
         assert found is None
+
+
+# ---------------------------------------------------------------------------
+# Ultralytics backend support
+# ---------------------------------------------------------------------------
+
+
+_ULTRALYTICS_RECIPE = """\
+backend: ultralytics
+task: DETECTION
+model:
+  class_path: getitune.backend.ultralytics.models.detection.UltralyticsDetectionModel
+  init_args:
+    model_name: yolo26n.yaml
+"""
+
+_LIGHTNING_RECIPE = """\
+task: DETECTION
+model:
+  class_path: getitune.backend.lightning.models.detection.atss.ATSS
+"""
+
+
+class TestRecipeBackend:
+    def test_ultralytics_recipe_detected(self, tmp_path: Path) -> None:
+        recipe = tmp_path / "yolo.yaml"
+        recipe.write_text(_ULTRALYTICS_RECIPE)
+        backend, task_type = _recipe_backend(recipe)
+        assert backend == "ultralytics"
+        assert task_type == TaskType.DETECTION
+
+    def test_lightning_recipe_detected(self, tmp_path: Path) -> None:
+        recipe = tmp_path / "atss.yaml"
+        recipe.write_text(_LIGHTNING_RECIPE)
+        backend, task_type = _recipe_backend(recipe)
+        assert backend == "lightning"
+        assert task_type is None
+
+    def test_missing_recipe_defaults_to_lightning(self, tmp_path: Path) -> None:
+        backend, task_type = _recipe_backend(tmp_path / "missing.yaml")
+        assert backend == "lightning"
+        assert task_type is None
+
+
+class TestUltralyticsTorchMetric:
+    def test_detection_has_metric(self) -> None:
+        assert _ultralytics_torch_metric(TaskType.DETECTION) is not None
+
+    def test_instance_segmentation_has_metric(self) -> None:
+        assert _ultralytics_torch_metric(TaskType.INSTANCE_SEGMENTATION) is not None
+
+    def test_unsupported_task_returns_none(self) -> None:
+        assert _ultralytics_torch_metric(TaskType.MULTI_CLASS_CLS) is None
+        assert _ultralytics_torch_metric(None) is None
+
+
+class TestWritePhaseMetricsCsv:
+    def test_writes_scalar_metrics(self, tmp_path: Path) -> None:
+        _write_phase_metrics_csv(tmp_path, {"test/map_50": 0.8, "test/f1-score": 0.7})
+        csv_file = tmp_path / "csv" / "version_0" / "metrics.csv"
+        assert csv_file.exists()
+        import pandas as pd
+
+        frame = pd.read_csv(csv_file)
+        assert frame["test/map_50"].iloc[0] == pytest.approx(0.8)
+
+    def test_empty_metrics_no_file(self, tmp_path: Path) -> None:
+        _write_phase_metrics_csv(tmp_path, {})
+        assert not (tmp_path / "csv").exists()
+
+    def test_non_scalar_metrics_filtered(self, tmp_path: Path) -> None:
+        _write_phase_metrics_csv(tmp_path, {"classes": [1, 2, 3]})
+        assert not (tmp_path / "csv").exists()
+
+
+class TestExecutorBackendDispatch:
+    def test_lightning_recipe_properties(self, tmp_path: Path) -> None:
+        recipe = tmp_path / "atss.yaml"
+        recipe.write_text(_LIGHTNING_RECIPE)
+        executor = ExperimentExecutor(
+            recipe_path=recipe,
+            data_path=tmp_path / "data",
+            work_dir=tmp_path / "work",
+        )
+        assert executor.is_ultralytics is False
+        assert executor._checkpoint_name == "best_checkpoint.ckpt"
+
+    def test_ultralytics_recipe_properties(self, tmp_path: Path) -> None:
+        recipe = tmp_path / "yolo.yaml"
+        recipe.write_text(_ULTRALYTICS_RECIPE)
+        executor = ExperimentExecutor(
+            recipe_path=recipe,
+            data_path=tmp_path / "data",
+            work_dir=tmp_path / "work",
+        )
+        assert executor.is_ultralytics is True
+        assert executor._checkpoint_name == "best_checkpoint.pt"
+
+
+class TestDetectResumePointUltralytics:
+    def test_pt_checkpoint_accepted(self, tmp_path: Path) -> None:
+        """An Ultralytics ``best_checkpoint.pt`` is a valid train-completion marker."""
+        seed_dir = tmp_path / "seed"
+        (seed_dir / "train").mkdir(parents=True)
+        (seed_dir / "train" / "metrics.csv").write_text("epoch,val/map_50\n1,0.5\n")
+        (seed_dir / "train" / "best_checkpoint.pt").write_text("fake")
+        skip, resume_from = detect_resume_point(seed_dir)
+        assert skip is False
+        assert resume_from == "test/torch"
+        assert seed_dir.exists()  # not deleted as corrupt
