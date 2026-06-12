@@ -41,7 +41,7 @@ export default [
             '**/coverage',
             '**/node_modules',
             '**/*.tsx.snap',
-            'src/assets\\(!/icons/**/index.ts)',
+            'src/assets',
             'src/__mocks__',
             '**/dex_templates',
             '**/oauth2_proxy_templates',
@@ -107,7 +107,7 @@ export default [
                 ...GLOBALS_BROWSER_FIX,
             },
             parser: tsParser,
-            ecmaVersion: 11,
+            ecmaVersion: 'latest',
             sourceType: 'module',
 
             parserOptions: {
