@@ -1,12 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { KeyboardEvent, useState } from 'react';
 
-import { dimensionValue, Flex, Loading, Text, toast, View } from '@geti/ui';
+import { dimensionValue, Flex, Loading, Text, View } from '@geti/ui';
 import { Pause, Play } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 
+import { toast } from '../../../components/toast/toast.component';
 import { usePipeline } from '../../../hooks/api/pipeline.hook';
 import { Stream } from './stream';
 import { useWebRTCConnection } from './web-rtc-connection-provider';
@@ -25,6 +26,7 @@ export const StreamContainer = () => {
     const [isPaused, setIsPaused] = useState(false);
 
     const canStart = isStopped && isPipelineRunning;
+    const isInteractive = isConnected || canStart;
 
     const handleClick = async () => {
         if (isConnected) {
@@ -40,9 +42,26 @@ export const StreamContainer = () => {
         }
     };
 
+    const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            void handleClick();
+        }
+    };
+
     return (
         <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
-            <div className={classes.canvasContainer} onClick={handleClick}>
+            <div
+                className={classes.canvasContainer}
+                onClick={isInteractive ? handleClick : undefined}
+                onKeyDown={isInteractive ? handleKeyDown : undefined}
+                role={isInteractive ? 'button' : undefined}
+                tabIndex={isInteractive ? 0 : -1}
+                aria-label={isConnected ? 'Stop stream' : 'Start stream'}
+                aria-disabled={!isPipelineRunning}
+                title={isStopped && !isPipelineRunning ? 'Enable pipeline to start stream' : undefined}
+                style={{ cursor: isInteractive ? 'pointer' : 'default' }}
+            >
                 {isStopped && (
                     <Flex justifyContent={'center'} alignItems={'center'} UNSAFE_className={classes.backdrop}>
                         <Flex
@@ -56,7 +75,6 @@ export const StreamContainer = () => {
                                 color={'currentColor'}
                                 width={dimensionValue('size-400')}
                                 height={dimensionValue('size-400')}
-                                aria-label={isPipelineRunning ? 'Start stream' : 'Enable pipeline to start stream'}
                                 aria-disabled={!isPipelineRunning}
                             />
                             <Text UNSAFE_style={{ paddingRight: dimensionValue('size-100') }}>Start stream</Text>

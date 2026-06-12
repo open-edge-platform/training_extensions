@@ -47,7 +47,7 @@ class InstanceSegDataset(VisionDataset):
             max_refetch=max_refetch,
         )
 
-        labels = list(dm_subset.schema.attributes["label"].categories.labels)
+        labels = list(dm_subset.label_categories.labels)  # type: ignore[missing-attribute]
         self.label_info = LabelInfo(
             label_names=labels,
             label_groups=[labels],

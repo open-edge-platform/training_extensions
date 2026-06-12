@@ -2,11 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 import platform
 import re
+from typing import Any
 
 import cv2
-import openvino as ov
 import psutil
-import torch
 from cv2_enumerate_cameras import enumerate_cameras
 from loguru import logger
 
@@ -19,6 +18,26 @@ CV2_BACKENDS = {
     "Linux": cv2.CAP_V4L2,
     "Darwin": cv2.CAP_AVFOUNDATION,
 }
+
+# torch is imported lazily on first use to keep server startup fast (importing torch eagerly
+# added several seconds to boot). Kept as a module-level name so tests can patch
+# ``app.services.system_service.torch``. Typed as Any because the module is loaded lazily.
+torch: Any = None
+
+
+def _get_torch() -> Any:
+    """Import torch on first use and cache it on the module.
+
+    Returns:
+        The imported ``torch`` module.
+    """
+    if torch is None:
+        import torch as _torch
+
+        # Update the module attribute (rather than a `global` statement) so it stays patchable
+        # via ``app.services.system_service.torch`` while satisfying the linter.
+        globals()["torch"] = _torch
+    return torch
 
 
 class SystemService:
@@ -54,6 +73,8 @@ class SystemService:
         Returns:
             list[DeviceInfo]: List of available devices
         """
+        torch = _get_torch()
+
         # CPU is always available
         devices: list[DeviceInfo] = [DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)]
 
@@ -99,6 +120,8 @@ class SystemService:
         Returns:
             list[DeviceInfo]: List of available inference devices.
         """
+        import openvino as ov
+
         try:
             core = ov.Core()
             available_devices: list[str] = list(core.available_devices)

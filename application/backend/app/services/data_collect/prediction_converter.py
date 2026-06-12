@@ -1,15 +1,43 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Sequence
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import cv2
 import numpy as np
 from loguru import logger
-from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
-from model_api.models.result import Result
+
+if TYPE_CHECKING:
+    from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
+    from model_api.models.result import Result
 
 from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
+
+# Fraction of a contour's perimeter used as the Douglas-Peucker approximation
+# tolerance (epsilon) when simplifying instance-segmentation masks into polygons.
+# Larger values yield fewer points (more aggressive simplification).
+_POLYGON_APPROX_EPSILON_RATIO = 0.0025
+
+
+def _simplify_contour(contour: np.ndarray) -> np.ndarray:
+    """Reduce the number of points in a contour using the Douglas-Peucker algorithm.
+
+    The approximation tolerance is scaled by the contour's perimeter so that
+    large and small shapes are simplified proportionally. A closed approximation
+    that collapses to fewer than 3 points falls back to the original contour to
+    avoid producing a degenerate polygon.
+
+    Args:
+        contour: Contour as returned by ``cv2.findContours``, shaped ``(N, 1, 2)``.
+
+    Returns:
+        The simplified contour, shaped ``(M, 1, 2)`` with ``M <= N``.
+    """
+    epsilon = _POLYGON_APPROX_EPSILON_RATIO * cv2.arcLength(contour, True)
+    approx = cv2.approxPolyDP(contour, epsilon, True)
+    if len(approx) < 3:
+        return contour
+    return approx
 
 
 def _build_label_maps(labels: Sequence[Label]) -> tuple[dict[str, Label], dict[str, Label]]:
@@ -26,8 +54,7 @@ def _find_project_label(
     label_name: str | None,
     predicted_class_index: int | None = None,
 ) -> Label | None:
-    """
-    Find a project label matching the predicted label using a three-stage fallback strategy.
+    """Find a project label matching the predicted label using a three-stage fallback strategy.
 
     Resolution order:
     1. **Exact name match** - performs an O(1) lookup of ``label_name`` in ``name_map``.
@@ -68,7 +95,7 @@ def _find_project_label(
 
 
 def _convert_classification_prediction(
-    labels: Sequence[Label], prediction: ClassificationResult
+    labels: Sequence[Label], prediction: "ClassificationResult"
 ) -> list[DatasetItemAnnotation]:
     predicted_labels: list[LabelReference] = []
     predicted_confidences: list[float] = []
@@ -96,7 +123,9 @@ def _convert_classification_prediction(
     return [DatasetItemAnnotation(labels=predicted_labels, shape=FullImage(), confidences=predicted_confidences)]
 
 
-def _convert_detection_prediction(labels: Sequence[Label], prediction: DetectionResult) -> list[DatasetItemAnnotation]:
+def _convert_detection_prediction(
+    labels: Sequence[Label], prediction: "DetectionResult"
+) -> list[DatasetItemAnnotation]:
     name_map, unmangled_map = _build_label_maps(labels)
     result = []
     prediction_scores_list = prediction.scores.tolist()
@@ -126,7 +155,7 @@ def _convert_detection_prediction(labels: Sequence[Label], prediction: Detection
 def _convert_segmentation_prediction(
     labels: Sequence[Label],
     frame_data: np.ndarray,
-    prediction: InstanceSegmentationResult,
+    prediction: "InstanceSegmentationResult",
 ) -> list[DatasetItemAnnotation]:
     name_map, unmangled_map = _build_label_maps(labels)
     height, width, _ = frame_data.shape
@@ -154,7 +183,8 @@ def _convert_segmentation_prediction(
                 continue
             if len(contour) <= 2 or cv2.contourArea(contour) < 1.0:
                 continue
-            polygon = Polygon(points=[Point(x=point[0][0], y=point[0][1]) for point in list(contour)])
+            simplified_contour = _simplify_contour(contour)
+            polygon = Polygon(points=[Point(x=point[0][0], y=point[0][1]) for point in simplified_contour])
             annotation = DatasetItemAnnotation(
                 labels=[LabelReference(id=label.id)], shape=polygon, confidences=[polygon_confidence]
             )
@@ -162,7 +192,7 @@ def _convert_segmentation_prediction(
     return result
 
 
-def get_confidence_scores(prediction: Result) -> list[float]:
+def get_confidence_scores(prediction: "Result") -> list[float]:
     """
     Gets model prediction confidence scores depending on the
     specific type of prediction result (segmentation, detection, or classification).
@@ -175,6 +205,8 @@ def get_confidence_scores(prediction: Result) -> list[float]:
     Returns:
         list[float]: List of confidence scores.
     """
+    from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
+
     match prediction:
         case InstanceSegmentationResult() | DetectionResult():
             return prediction.scores.tolist()
@@ -186,7 +218,7 @@ def get_confidence_scores(prediction: Result) -> list[float]:
 
 
 def convert_prediction(
-    labels: Sequence[Label], frame_data: np.ndarray, prediction: Result
+    labels: Sequence[Label], frame_data: np.ndarray, prediction: "Result"
 ) -> list[DatasetItemAnnotation]:
     """
     Converts model predictions to dataset annotations based on prediction type.
@@ -218,6 +250,8 @@ def convert_prediction(
         ...     prediction=detection_result
         ... )
     """
+    from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
+
     match prediction:
         case InstanceSegmentationResult():
             return _convert_segmentation_prediction(labels=labels, frame_data=frame_data, prediction=prediction)

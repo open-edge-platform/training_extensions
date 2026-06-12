@@ -19,8 +19,62 @@ type MenuActionsProps = {
     projectName: string;
     isPipelineRunning?: boolean;
     actionButtonStyle?: CSSProperties;
-    onDeleted?: () => void;
     projectNames: string[];
+};
+
+export type ProjectActionMetadata = {
+    projectId: string;
+    projectName: string;
+    projectNames: string[];
+};
+
+type ProjectActionsMenuProps = MenuActionsProps & {
+    onRename: (metadata: ProjectActionMetadata) => void;
+    onDelete: (metadata: ProjectActionMetadata) => void;
+    onEnableBlocked: (metadata: ProjectActionMetadata) => void;
+};
+
+export const ProjectActionsMenu = ({
+    projectId,
+    projectName,
+    isPipelineRunning,
+    actionButtonStyle,
+    projectNames,
+    onRename,
+    onDelete,
+    onEnableBlocked,
+}: ProjectActionsMenuProps) => {
+    const metadata = { projectId, projectName, projectNames };
+    const { menuActions, handleAction } = useProjectMenuActions(
+        projectId,
+        {
+            onRename: () => onRename(metadata),
+            onDelete: () => onDelete(metadata),
+            onEnableBlocked: () => onEnableBlocked(metadata),
+        },
+        isPipelineRunning
+    );
+
+    return (
+        <MenuTrigger>
+            <ActionButton
+                isQuiet
+                UNSAFE_style={{
+                    fill: 'var(--spectrum-gray-900)',
+                    ...actionButtonStyle,
+                }}
+                aria-label={'open project options'}
+                data-testid={projectId}
+            >
+                <MoreMenu />
+            </ActionButton>
+            <Menu onAction={handleAction} UNSAFE_className={classes.actionMenu}>
+                {menuActions.map(({ key, label }) => (
+                    <Item key={key}>{label}</Item>
+                ))}
+            </Menu>
+        </MenuTrigger>
+    );
 };
 
 export const MenuActions = ({
@@ -28,43 +82,24 @@ export const MenuActions = ({
     projectName,
     isPipelineRunning,
     actionButtonStyle,
-    onDeleted,
     projectNames,
 }: MenuActionsProps) => {
     const [isEnableBlockedDialogOpen, setIsEnableBlockedDialogOpen] = useState(false);
     const deleteProjectDialogState = useOverlayTriggerState({});
     const editProjectNameDialogState = useOverlayTriggerState({});
 
-    const { menuActions, handleAction } = useProjectMenuActions(
-        projectId,
-        {
-            onRename: editProjectNameDialogState.open,
-            onDelete: deleteProjectDialogState.open,
-            onEnableBlocked: () => setIsEnableBlockedDialogOpen(true),
-        },
-        isPipelineRunning
-    );
-
     return (
         <>
-            <MenuTrigger>
-                <ActionButton
-                    isQuiet
-                    UNSAFE_style={{
-                        fill: 'var(--spectrum-gray-900)',
-                        ...actionButtonStyle,
-                    }}
-                    aria-label={'open project options'}
-                    data-testid={projectId}
-                >
-                    <MoreMenu />
-                </ActionButton>
-                <Menu onAction={handleAction} UNSAFE_className={classes.actionMenu}>
-                    {menuActions.map(({ key, label }) => (
-                        <Item key={key}>{label}</Item>
-                    ))}
-                </Menu>
-            </MenuTrigger>
+            <ProjectActionsMenu
+                projectId={projectId}
+                projectName={projectName}
+                isPipelineRunning={isPipelineRunning}
+                actionButtonStyle={actionButtonStyle}
+                projectNames={projectNames}
+                onRename={editProjectNameDialogState.open}
+                onDelete={deleteProjectDialogState.open}
+                onEnableBlocked={() => setIsEnableBlockedDialogOpen(true)}
+            />
 
             <EnablePipelineBlockedDialog
                 isOpen={isEnableBlockedDialogOpen}
@@ -84,7 +119,6 @@ export const MenuActions = ({
                 projectName={projectName}
                 isOpen={deleteProjectDialogState.isOpen}
                 onClose={deleteProjectDialogState.close}
-                onDeleted={onDeleted}
             />
         </>
     );

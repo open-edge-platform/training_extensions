@@ -102,8 +102,15 @@ class ImagesFolderStream(VideoStream):
     def get_data(self) -> StreamData | None:
         try:
             file = self.files.pop(0)
-            # IMREAD_UNCHANGED preserves the original bit depth (e.g. 16-bit PNG/TIFF images).
-            image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
+            try:
+                # IMREAD_UNCHANGED preserves the original bit depth (e.g. 16-bit PNG/TIFF images).
+                image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
+            except FileNotFoundError:
+                # On Windows, Ultralytics patches cv2.imread with an np.fromfile-based
+                # version (ultralytics/utils/__init__.py) which raises FileNotFoundError
+                # on missing/corrupt files instead of returning None.
+                # On Linux this exception does not fire, but catching it is harmless.
+                image = None
             if image is None:
                 # Image cannot be loaded
                 return None

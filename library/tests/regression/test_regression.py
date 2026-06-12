@@ -90,7 +90,7 @@ class BaseTest:
                 train_cfg.extend(["--deterministic", deterministic])
 
                 run_main(command_cfg=train_cfg, open_subprocess=True)
-                checkpoint = test_case.output_dir / ".latest" / "train" / "best_checkpoint.ckpt"
+                checkpoint = test_case.output_dir / ".latest" / "train" / "best_checkpoint.pt"
                 assert checkpoint.exists()
 
                 test_cfg = command_cfg.copy()

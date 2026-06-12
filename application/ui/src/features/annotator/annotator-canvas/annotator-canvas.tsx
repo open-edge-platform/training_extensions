@@ -18,6 +18,7 @@ import { useSelectedAnnotations } from '../../../shared/annotator/select-annotat
 import { useTool } from '../../../shared/annotator/tool-provider.component';
 import { useEditableAnnotationState } from '../../../shared/annotator/use-editable-annotation-state.hook';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
+import { getMediaBinaryUrl } from '../../../shared/media-url.utils';
 import { Annotations } from '../annotations/annotations.component';
 import { VideoAnnotations, VideoPredictions } from '../annotations/video-annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
@@ -33,6 +34,7 @@ import {
 import { getVideoFrameRangeIndexes } from '../video-player/api/utils';
 import { VideoFrame } from '../video-player/video-frame.component';
 import { useVideoPlayer, useVideoPlayerContext } from '../video-player/video-player-provider.component';
+import { drawImageDataOnCanvas } from './draw-image-data-on-canvas';
 
 import classes from './annotator-canvas.module.scss';
 
@@ -51,21 +53,62 @@ const useDrawImageOnCanvas = (image: ImageData) => {
             return;
         }
 
-        ctx.putImageData(image, 0, 0);
+        drawImageDataOnCanvas(ctx, image);
     }, [image]);
 
     return canvasRef;
 };
 
-const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
+// Oversized static images: use <img> to bypass canvas rasterization limit.
+const StaticImage = ({ mediaItem }: { mediaItem: Media }) => {
+    const projectId = useProjectIdentifier();
+
+    return (
+        <img
+            src={getMediaBinaryUrl(projectId, mediaItem.id)}
+            width={mediaItem.width}
+            height={mediaItem.height}
+            crossOrigin='anonymous'
+            className={classes.image}
+            alt=''
+        />
+    );
+};
+
+type CanvasMediaImageProps = {
+    image: ImageData;
+    showVideoFrame?: boolean;
+};
+
+const CanvasMediaImage = ({ image, showVideoFrame = false }: CanvasMediaImageProps) => {
     const canvasRef = useDrawImageOnCanvas(image);
 
     return (
         <>
             <canvas ref={canvasRef} width={image.width} height={image.height} className={classes.image} />
-            {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && <VideoFrame canvasRef={canvasRef} />}
+            {showVideoFrame && <VideoFrame canvasRef={canvasRef} />}
         </>
     );
+};
+
+const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
+    if (isVideo(mediaItem) || isVideoFrame(mediaItem)) {
+        return <CanvasMediaImage image={image} showVideoFrame />;
+    }
+
+    // Render via canvas only when decoded at native resolution.
+    // `ImageData.data.length` is expected to be width * height * 4
+    // (RGBA: 4 channels, 1 byte per channel = 4 bytes per pixel).
+    const isFullResolution =
+        image.width === mediaItem.width &&
+        image.height === mediaItem.height &&
+        image.data.length === mediaItem.width * mediaItem.height * 4;
+
+    if (isFullResolution) {
+        return <CanvasMediaImage image={image} />;
+    }
+
+    return <StaticImage mediaItem={mediaItem} />;
 };
 
 type ImageAnnotationsProps = {
@@ -190,9 +233,13 @@ type AnnotatorCanvasProps = {
 
 type UseToolLayerPointerPassthroughProps = {
     canEditSelectedAnnotation: boolean;
+    areToolsDisabled: boolean;
 };
 
-const useToolLayerPointerPassthrough = ({ canEditSelectedAnnotation }: UseToolLayerPointerPassthroughProps) => {
+const useToolLayerPointerPassthrough = ({
+    canEditSelectedAnnotation,
+    areToolsDisabled,
+}: UseToolLayerPointerPassthroughProps) => {
     const { activeTool } = useTool();
     const isSelectionToolActive = activeTool === 'selection';
     const toolLayerRef = useRef<HTMLDivElement>(null);
@@ -266,8 +313,15 @@ const useToolLayerPointerPassthrough = ({ canEditSelectedAnnotation }: UseToolLa
         };
     }, []);
 
+    // When tools are disabled (prediction/read-only mode, or scene busy) we keep `ToolManager` mounted so
+    // worker-backed tools (notably Segment Anything) don't unmount and discard their in-flight encoder
+    // promises — coming back used to stack new encoder RPCs behind the still-running ones and trip the
+    // SAM encoder timeout. Pointer-events: none routes clicks/hover straight through to the annotations
+    // layer below, matching the previous behavior of unmounting the tool layer entirely.
     const toolLayerPointerEvents =
-        isSelectionToolActive || (canEditSelectedAnnotation && isToolLayerPointerPassthrough) ? 'none' : 'auto';
+        areToolsDisabled || isSelectionToolActive || (canEditSelectedAnnotation && isToolLayerPointerPassthrough)
+            ? 'none'
+            : 'auto';
 
     return { toolLayerRef, toolLayerPointerEvents, handlePointerMove } as const;
 };
@@ -292,6 +346,7 @@ export const AnnotatorCanvas = ({
     const canEditSelectedAnnotation = !areToolsDisabled && isSingleEditableSelection;
     const { toolLayerRef, toolLayerPointerEvents, handlePointerMove } = useToolLayerPointerPassthrough({
         canEditSelectedAnnotation,
+        areToolsDisabled,
     });
 
     const isPlaceholderImage = image.width === 1 && image.height === 1;
@@ -313,18 +368,17 @@ export const AnnotatorCanvas = ({
                 <MediaImage image={image} mediaItem={mediaItem} />
                 <MediaAnnotations mediaItem={mediaItem} mode={mode} />
 
-                {!areToolsDisabled && (
-                    <div
-                        ref={toolLayerRef}
-                        style={{
-                            position: 'absolute',
-                            inset: 0,
-                            pointerEvents: toolLayerPointerEvents,
-                        }}
-                    >
-                        <ToolManager />
-                    </div>
-                )}
+                <div
+                    ref={toolLayerRef}
+                    aria-hidden={areToolsDisabled || undefined}
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                        pointerEvents: toolLayerPointerEvents,
+                    }}
+                >
+                    <ToolManager />
+                </div>
             </div>
         </ZoomTransform>
     );
