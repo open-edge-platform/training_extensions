@@ -142,6 +142,7 @@ class DataModule(LightningDataModule):
             dataset: A ``datumaro.experimental.Dataset`` loaded via ``import_dataset``.
         """
         storage_dtype: str | None = None
+        num_channels: int | None = None
         config_mapping = {
             self.train_subset.subset_name: self.train_subset,
             self.val_subset.subset_name: self.val_subset,
@@ -175,7 +176,7 @@ class DataModule(LightningDataModule):
                 continue
 
             if storage_dtype is None:
-                storage_dtype = detect_storage_dtype(dm_subset)
+                storage_dtype, num_channels = detect_storage_dtype(dm_subset)
 
             if subset_cfg.intensity.storage_dtype != storage_dtype:
                 logger.warning(
@@ -183,6 +184,17 @@ class DataModule(LightningDataModule):
                     f"with auto-detected '{storage_dtype}'",
                 )
                 subset_cfg.intensity.storage_dtype = storage_dtype
+
+            # Auto-set repeat_channels for single-channel (grayscale) images.
+            # The model backbone expects 3-channel input, so channel-repeat is
+            # needed for both the training pipeline and the exported OV model
+            # (embedded preprocessing metadata).
+            if num_channels == 1 and subset_cfg.intensity.repeat_channels < 3:
+                logger.info(
+                    f"Single-channel image detected ({num_channels}ch). "
+                    f"Auto-setting intensity.repeat_channels=3 for subset '{name}'.",
+                )
+                subset_cfg.intensity.repeat_channels = 3
 
             subset_dataset = DatasetFactory.create(
                 task=self.task,

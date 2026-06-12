@@ -262,6 +262,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import cv2
+import numpy as np
 from model_api.models import Model
 from model_api.visualizer import Visualizer
 
@@ -283,19 +284,29 @@ def load_model() -> Model:
 
 def load_image() -> cv2.Mat:
     print(f"Loading image from {{IMAGE_PATH}}...")
-    image_raw = cv2.imread(str(IMAGE_PATH))
+    # IMREAD_UNCHANGED preserves the original bit depth (e.g. 16-bit PNG/TIFF images).
+    image_raw = cv2.imread(str(IMAGE_PATH), cv2.IMREAD_UNCHANGED)
     if image_raw is None:
         raise RuntimeError(f"Failed to decode image: {{IMAGE_PATH}}")
-    return cv2.cvtColor(image_raw, cv2.COLOR_BGR2RGB)
+
+    # Add explicit channel dimension for 2D grayscale: (H, W) -> (H, W, 1)
+    if image_raw.ndim == 2:
+        image_raw = image_raw[..., np.newaxis]
+
+    # Convert BGR to RGB for standard 3-channel images
+    if image_raw.ndim == 3 and image_raw.shape[2] == 3:
+        image_raw = cv2.cvtColor(image_raw, cv2.COLOR_BGR2RGB)
+
+    return image_raw
 
 
 def visualise_result(image, result) -> None:
-    if image.dtype != "uint8":
-        image = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX).astype("uint8")
+    if image.dtype != np.uint8:
+        image = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
 
-    Visualizer().show(image, result)
-    
     display_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    Visualizer().show(display_image, result)
     output = Visualizer().render(display_image, result)
     cv2.imwrite(str(OUTPUT_PATH), output)
     print(f"Saved annotated result to {{OUTPUT_PATH}}")
