@@ -97,99 +97,53 @@ Would you like to see a specific model added to the list? Let us know by opening
 > - [Physical AI Studio](https://github.com/open-edge-platform/physical-ai-studio) → robot learning, VLA (Vision-Language-Action)
 > - [Instant Learn](https://github.com/open-edge-platform/instant-learn) → visual prompting
 
-## Getting started
+## Quick Start
 
-There are several ways to run Geti — choose the method that best fits your workflow:
+Get Geti running and train your first model in a few minutes. For full instructions and all options, see the
+[official documentation](https://docs.geti.intel.com/) and the [application README](application/README.md).
 
-- **Docker (recommended)** — download and run one of the pre-built Docker images, or build one yourself.
-- **Native Windows app (MSIX)** — install Geti as a desktop application on Windows.
-- **From source (for development)** — run the server and the UI as standalone components.
-- **Python API (`getitune`)** — install the training engine from PyPI to drive Geti's capabilities programmatically.
+**Minimum recommended setup:** 8 CPU threads, 16 GB RAM, 40 GB free disk. A GPU (Intel® XPU or NVIDIA® CUDA) is
+recommended for larger models.
 
-System requirements (minimum recommended): **8 CPU threads, 16 GB RAM, 40 GB free disk space**. Smaller models train on
-CPU; a GPU (Intel® XPU or NVIDIA® CUDA) is recommended for larger models.
+### 1. Run Geti
 
-For complete, up-to-date instructions and all runtime options, see the [application README](application/README.md).
-
-### Run with Docker
-
-The easiest and most portable way to run Geti is through Docker. Pre-built images are provided for Intel® XPU,
-NVIDIA® CUDA, and CPU-only platforms, or you can build your own image from source.
-
-**Prerequisites** (on the host system):
-
-- Docker v29+ [[docs]](https://docs.docker.com/)
-- (Optional, recommended) Just v1.46+ [[docs]](https://github.com/casey/just)
-- (Only for Intel® XPU) the latest driver suitable for your hardware [[docs]](https://www.intel.com/content/www/us/en/developer/articles/tool/pytorch-prerequisites-for-intel-gpu/2-11.html)
-- (Only for NVIDIA® GPU) NVIDIA driver and the NVIDIA Container Toolkit [[docs]](https://www.nvidia.com/Download/index.aspx)
-
-> [!WARNING]
-> The official Docker images for Geti 3.x have not been released yet. For now, build the image from source (see below).
+The easiest way to run Geti is with Docker — pull a pre-built image for your hardware and launch it:
 
 ```bash
 docker pull ghcr.io/open-edge-platform/geti-xpu    # modern Intel® CPU/GPU (recommended)
 docker pull ghcr.io/open-edge-platform/geti-cuda   # NVIDIA® CUDA platforms
 docker pull ghcr.io/open-edge-platform/geti-cpu    # CPU-only (most lightweight)
+
+just run-image --accelerator xpu                   # launch the application
 ```
 
-Alternatively, build the image from source. From the `application` directory:
-
-```bash
-# Build for Intel® XPU (recommended); use --accelerator cuda or cpu for other targets
-just build-image --accelerator xpu
-```
-
-Once you have the image, launch the application:
-
-```bash
-just run-image --accelerator xpu
-```
-
-After the container starts, open the Geti web application at [**http://localhost:7860**](http://localhost:7860)
-(default settings).
-
-### Install the Windows app (MSIX)
+Then open the Geti web application at [**http://localhost:7860**](http://localhost:7860).
 
 > [!WARNING]
-> The MSIX app for Geti 3.x has not been released yet.
+> The official Docker images and Windows (MSIX) app for Geti 3.x have not been released yet. For now, build the image
+> from source — see the [installation guide](https://docs.geti.intel.com/) or the [application README](application/README.md)
+> for Docker build, native Windows app, and run-from-source instructions.
 
-Geti 3.0 can be installed as a native Windows desktop application via a simple MSIX installer. Installation instructions
-will be published with the release.
+### 2. Train your first model
 
-### Run from source (for development)
+Once Geti is running, build your first model directly in the web UI:
 
-For development, you can run the Geti server and UI as standalone components without Docker.
+1. **Create a project** — choose a task (object detection, instance segmentation, or classification) and define your labels.
+2. **Upload media** — drag in 20–50 representative images to start.
+3. **Annotate** — label your media with the built-in manual and AI-assisted tools.
+4. **Train** — pick a recommended architecture and start training; watch progress in the Jobs panel.
+5. **Deploy** — build an inference pipeline (source → model → sink) and run predictions in real time, or export an
+   OpenVINO™-optimized bundle for the edge.
 
-**Prerequisites:** Just v1.46+, Node.js v24.2+, and the appropriate GPU driver/toolkit for Intel® XPU or NVIDIA® CUDA.
-
-```bash
-# Start the server (from the repo root)
-cd application/backend
-just venv --accelerator xpu     # initialize the environment (cpu, xpu, or cuda)
-just run-server                 # add --setup-demo to pre-populate demo data
-```
-
-```bash
-# Start the UI in a separate terminal (from the repo root)
-cd application/ui
-npm install
-npm run build
-npm run start
-```
-
-After the UI starts, open the Geti web application at [**http://localhost:3000**](http://localhost:3000)
-(default settings). See the [application README](application/README.md) for all options.
+See [Training your first model](https://docs.geti.intel.com/) for the full walkthrough.
 
 ### Use the Python API (`getitune`)
 
-Geti's training engine is also available as a low-code Python package for developers who want to train, optimize, and
-deploy models programmatically. It requires **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, and
-**NumPy ≥ 2.0**.
+Prefer to work programmatically? Geti's training engine is published on PyPI and can train, optimize, and deploy models
+from Python. It requires **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, and **NumPy ≥ 2.0**.
 
 ```bash
-pip install "getitune[cpu]"    # CPU-only
-pip install "getitune[xpu]"    # Intel® GPU (XPU)
-pip install "getitune[cuda]"   # NVIDIA® GPU (CUDA 12.8)
+pip install "getitune[cpu]"    # or [xpu] for Intel® GPU, [cuda] for NVIDIA® GPU
 ```
 
 ```python
@@ -218,14 +172,16 @@ Geti 3.0 introduces a simplified, dataset-based workflow. When upgrading:
   in the new environment.
 
 The REST API has also been redesigned, and model export and deployment have been streamlined (now using the
-OpenVINO™ Model API instead of the SDK). Please follow the migration guidance in the
-[documentation](#documentation).
+OpenVINO™ Model API instead of the SDK). Please follow the
+[migration guidance](https://docs.geti.intel.com/) in the documentation.
 
 ## Documentation
 
+For complete user and developer documentation, visit [**docs.geti.intel.com**](https://docs.geti.intel.com/).
+
 | Component                  | README                                          | Documentation                                                                            |
 | -------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| **Geti application**       | [application/README.md](application/README.md)  | Coming soon!                                                                             |
+| **Geti application**       | [application/README.md](application/README.md)  | [docs.geti.intel.com](https://docs.geti.intel.com/)                                       |
 | **Python API (getitune)**  | [library/README.md](library/README.md)          | [Docs](https://open-edge-platform.github.io/training_extensions/latest/index.html)       |
 
 ## Community
