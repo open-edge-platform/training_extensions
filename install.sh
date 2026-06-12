@@ -185,22 +185,34 @@ install_nvm() {
 }
 
 install_npm() {
-    local required_node_version
-    local required_npm_version
+    local required_node_version required_npm_version
     required_node_version=$(get_required_node_version)
     required_npm_version=$(get_required_npm_version)
 
     NPM_BIN="$NVM_DIR/versions/node/v${required_node_version}/bin/npm"
-    local node_bin
+    local node_bin installed_npm_version
     node_bin="$(dirname "$NPM_BIN")"
 
-    if [ -x "$node_bin/node" ]; then
-        echo "node $required_node_version and npm found in $node_bin."
+    if [ -x "$node_bin/node" ] && [ -x "$NPM_BIN" ]; then
+        installed_npm_version=$("$NPM_BIN" --version)
+        if [ "$(printf '%s\n' "$required_npm_version" "$installed_npm_version" | sort -V | head -n1)" = "$required_npm_version" ]; then
+            echo "node $required_node_version and npm $installed_npm_version found in $node_bin."
+            return 0
+        fi
+
+        echo "npm version too old: installed=$installed_npm_version, required>=$required_npm_version. Upgrading..."
+        run_cmd "$NPM_BIN" install -g "npm@$required_npm_version"
         return 0
     fi
 
     echo "Required node $required_node_version not found in $NVM_DIR. Installing..."
     run_cmd nvm install "$required_node_version"
+
+    installed_npm_version=$("$NPM_BIN" --version)
+    if [ "$(printf '%s\n' "$required_npm_version" "$installed_npm_version" | sort -V | head -n1)" != "$required_npm_version" ]; then
+        run_cmd "$NPM_BIN" install -g "npm@$required_npm_version"
+    fi
+
     echo "node/npm installation complete: $node_bin"
 }
 
