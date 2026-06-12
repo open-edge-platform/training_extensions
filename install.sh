@@ -410,13 +410,13 @@ register_shell_cmd() {
     {
         echo ""
         echo "$begin_marker"
-        echo "function geti { cd '$WORK_DIR/application/backend' && env STATIC_FILES_DIR=html \"\$@\" '$UV_DIR/uv' run app/main.py; }"
+        echo "function geti { (cd '$WORK_DIR/application/backend' && STATIC_FILES_DIR=html '$UV_DIR/uv' run app/main.py \"\$@\"); }"
         echo "$end_marker"
     } >> "$shell_profile"
 
     echo "Function 'geti' written to $shell_profile"
     echo "Run 'source $shell_profile' to activate it in the current session."
-    echo "Example: geti HOST=0.0.0.0 PORT=8080"
+    echo "Example: HOST=0.0.0.0 PORT=8080 geti"
 }
 
 main() {
