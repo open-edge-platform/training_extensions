@@ -66,30 +66,94 @@ Would you like to see a specific model added to the list? Let us know by opening
 
 <!-- markdownlint-disable MD060 -->
 
-| Computer Vision Task | Model Architecture | Paper |
-| -------------------- | ------------------ | ----- |
-| **Object Detection**<br>Locate and classify objects with bounding boxes, e.g. counting items, defect localization, surveillance. | | |
-| | D-FINE M / L / X | [DEIM](https://arxiv.org/abs/2412.04234) + [D-FINE](https://arxiv.org/abs/2410.13842) |
-| | DINOv3 DETR S / M / L | [DINOv3](https://arxiv.org/abs/2508.10104) + [DEIMv2](https://arxiv.org/html/2509.20787v4) + [DETR](https://arxiv.org/abs/2005.12872) |
-| | MobileNet V2 ATSS | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [ATSS](https://arxiv.org/abs/1912.02424) |
-| | MobileNet V2 SSD | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [SSD](https://arxiv.org/abs/1512.02325) |
-| | RF-DETR S / M / L | [RF-DETR](https://arxiv.org/abs/2511.09554) |
-| | RT-DETR R50 | [RT-DETR](https://arxiv.org/abs/2304.08069) |
-| | YOLO26 Nano / Small / Medium | [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) |
-| | YOLOX Tiny / S / L / X | [YOLOX](https://arxiv.org/abs/2107.08430) |
-| **Instance Segmentation**<br>Detect objects and produce pixel-precise masks per instance, e.g. measuring object area, robotics, medical imaging. | | |
-| | RTMDet Tiny | [RTMDet](https://arxiv.org/abs/2212.07784) |
-| | Mask-RCNN EfficientNet B2 | [EfficientNet](https://arxiv.org/abs/1905.11946) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
-| | Mask-RCNN ResNet50 | [ResNet](https://arxiv.org/abs/1512.03385) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
-| | Mask-RCNN Swin-T | [Swin Transformer](https://arxiv.org/abs/2103.14030) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
-| | RF-DETR S / M / L | [RF-DETR](https://arxiv.org/abs/2511.09554) |
-| | YOLO26 Nano / Small / Medium | [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) |
-| **Classification** (multi-class, multi-label)<br>Assign one or more labels to an entire image, e.g. quality pass/fail, product categorization, content tagging. | | |
-| | ViT Tiny | [ViT](https://arxiv.org/abs/2010.11929) |
-| | DINOv2 Small | [DINOv2](https://arxiv.org/abs/2304.07193) |
-| | EfficientNet B0 / B3 | [EfficientNet](https://arxiv.org/abs/1905.11946) |
-| | EfficientNet V2 Small | [EfficientNetV2](https://arxiv.org/abs/2104.00298) |
-| | MobileNet V3 Large | [MobileNetV3](https://arxiv.org/abs/1905.02244) |
+<table>
+  <thead>
+    <tr>
+      <th>Computer Vision Task</th>
+      <th>Model Architecture</th>
+      <th>Paper</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="8"><b>Object Detection</b><br>Locate and classify objects with bounding boxes, e.g. counting items, defect localization, surveillance.</td>
+      <td>D-FINE M / L / X</td>
+      <td><a href="https://arxiv.org/abs/2412.04234">DEIM</a> + <a href="https://arxiv.org/abs/2410.13842">D-FINE</a></td>
+    </tr>
+    <tr>
+      <td>DINOv3 DETR S / M / L</td>
+      <td><a href="https://arxiv.org/abs/2508.10104">DINOv3</a> + <a href="https://arxiv.org/html/2509.20787v4">DEIMv2</a> + <a href="https://arxiv.org/abs/2005.12872">DETR</a></td>
+    </tr>
+    <tr>
+      <td>MobileNet V2 ATSS</td>
+      <td><a href="https://arxiv.org/abs/1801.04381">MobileNetV2</a> + <a href="https://arxiv.org/abs/1912.02424">ATSS</a></td>
+    </tr>
+    <tr>
+      <td>MobileNet V2 SSD</td>
+      <td><a href="https://arxiv.org/abs/1801.04381">MobileNetV2</a> + <a href="https://arxiv.org/abs/1512.02325">SSD</a></td>
+    </tr>
+    <tr>
+      <td>RF-DETR S / M / L</td>
+      <td><a href="https://arxiv.org/abs/2511.09554">RF-DETR</a></td>
+    </tr>
+    <tr>
+      <td>RT-DETR R50</td>
+      <td><a href="https://arxiv.org/abs/2304.08069">RT-DETR</a></td>
+    </tr>
+    <tr>
+      <td>YOLO26 Nano / Small / Medium</td>
+      <td><a href="https://github.com/ultralytics/ultralytics">Ultralytics YOLO</a></td>
+    </tr>
+    <tr>
+      <td>YOLOX Tiny / S / L / X</td>
+      <td><a href="https://arxiv.org/abs/2107.08430">YOLOX</a></td>
+    </tr>
+    <tr>
+      <td rowspan="5"><b>Instance Segmentation</b><br>Detect objects and produce pixel-precise masks per instance, e.g. measuring object area, robotics, medical imaging.</td>
+      <td>RTMDet Tiny</td>
+      <td><a href="https://arxiv.org/abs/2212.07784">RTMDet</a></td>
+    </tr>
+    <tr>
+      <td>Mask-RCNN EfficientNet B2</td>
+      <td><a href="https://arxiv.org/abs/1905.11946">EfficientNet</a> + <a href="https://arxiv.org/abs/1703.06870">Mask R-CNN</a></td>
+    </tr>
+    <tr>
+      <td>Mask-RCNN ResNet50</td>
+      <td><a href="https://arxiv.org/abs/1512.03385">ResNet</a> + <a href="https://arxiv.org/abs/1703.06870">Mask R-CNN</a></td>
+    </tr>
+    <tr>
+      <td>Mask-RCNN Swin-T</td>
+      <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer</a> + <a href="https://arxiv.org/abs/1703.06870">Mask R-CNN</a></td>
+    </tr>
+    <tr>
+      <td>RF-DETR S / M / L</td>
+      <td><a href="https://arxiv.org/abs/2511.09554">RF-DETR</a></td>
+    </tr>
+    <tr>
+      <td rowspan="5"><b>Classification</b> (multi-class, multi-label)<br>Assign one or more labels to an entire image, e.g. quality pass/fail, product categorization, content tagging.</td>
+      <td>ViT Tiny</td>
+      <td><a href="https://arxiv.org/abs/2010.11929">ViT</a></td>
+    </tr>
+    <tr>
+      <td>DINOv2 Small</td>
+      <td><a href="https://arxiv.org/abs/2304.07193">DINOv2</a></td>
+    </tr>
+    <tr>
+      <td>EfficientNet B0 / B3</td>
+      <td><a href="https://arxiv.org/abs/1905.11946">EfficientNet</a></td>
+    </tr>
+    <tr>
+      <td>EfficientNet V2 Small</td>
+      <td><a href="https://arxiv.org/abs/2104.00298">EfficientNetV2</a></td>
+    </tr>
+    <tr>
+      <td>MobileNet V3 Large</td>
+      <td><a href="https://arxiv.org/abs/1905.02244">MobileNetV3</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-enable MD060 -->
 
 <!-- markdownlint-enable MD060 -->
 
