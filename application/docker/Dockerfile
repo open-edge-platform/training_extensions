@@ -49,7 +49,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library/pyproject.toml,target=/library/pyproject.toml \
     --mount=type=bind,source=library/src/getitune/__init__.py,target=/library/src/getitune/__init__.py \
-    uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace --extra mqtt --extra cpu
+    uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace \
+    --no-install-package av --extra mqtt --extra cpu
 
 # Step 2: Build and install the local getitune package + the project itself.
 # This layer is invalidated by library source changes, but is fast since all
@@ -73,7 +74,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library/pyproject.toml,target=/library/pyproject.toml \
     --mount=type=bind,source=library/src/getitune/__init__.py,target=/library/src/getitune/__init__.py \
-    uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace --extra mqtt --extra cuda
+    uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace \
+    --no-install-package av --extra mqtt --extra cuda
 
 # Step 2: Build and install the local getitune package + the project itself.
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -95,7 +97,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library/pyproject.toml,target=/library/pyproject.toml \
     --mount=type=bind,source=library/src/getitune/__init__.py,target=/library/src/getitune/__init__.py \
-    uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace --extra mqtt --extra xpu
+    uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace \
+    --no-install-package av --extra mqtt --extra xpu
 
 # Step 2: Build and install the local getitune package + the project itself.
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -175,6 +178,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     libdrm-dev=2.4* \
     libva-dev=2.22* \
     libnuma-dev=2.0* \
+    libvpx-dev=1.15.0* \
     && rm -rf /var/lib/apt/lists/*
 
 # Python packaging tools for building wheels.
@@ -242,7 +246,8 @@ RUN ./configure \
       --enable-vaapi \
       --enable-shared \
       --enable-libsvtav1 \
-      --enable-libopenh264 && \
+      --enable-libopenh264 \
+      --enable-libvpx && \
     make -j"$(nproc)" && \
     make install && \
     ldconfig
@@ -297,7 +302,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libglx-mesa0=25.0.7-2 \
         libv4l-0t64=1.30.1-1 \
         libva2=2.22.* \
-        libva-drm2=2.22.*
+        libva-drm2=2.22.* \
+        libvpx9=1.15.0*
 
 # Place the venv at the front of PATH so we can call python directly (no uv needed at runtime)
 ENV PATH="/application/backend/.venv/bin:${PATH}"
