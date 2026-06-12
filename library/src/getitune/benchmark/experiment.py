@@ -410,9 +410,43 @@ class ExperimentExecutor:
         return "best_checkpoint.pt"
 
     def _build_torch_engine(self, work_dir: Path) -> Engine:
-        """Build the torch-side engine (Lightning or Ultralytics) for *work_dir*."""
+        """Build the torch-side engine (Lightning or Ultralytics) for *work_dir*.
+
+        The Ultralytics path mirrors the application's getitune trainer: it
+        builds a model + datamodule from the recipe and dispatches them through
+        the library's ``create_engine`` factory.
+        """
         if self.is_ultralytics:
-            return self._build_ultralytics_engine(work_dir)
+            from getitune.backend.ultralytics.tools.configurator import Configurator
+            from getitune.engine import create_engine
+
+            configurator = Configurator(
+                data=self.data_path,
+                model=self.recipe_path,
+                task=self._task_type,
+            )
+            if self.scenario_overrides:
+                try:
+                    configurator.apply_overrides(self.scenario_overrides)
+                except (KeyError, ValueError, TypeError):
+                    logger.warning(
+                        "Could not apply scenario overrides %s to Ultralytics recipe %s; ignoring.",
+                        self.scenario_overrides,
+                        self.recipe_path,
+                    )
+            datamodule = configurator.build_datamodule()
+            model: Any = configurator.create_model(datamodule.label_info)
+            return create_engine(
+                model=model,
+                data=datamodule,
+                work_dir=work_dir,
+                device=self.accelerator,
+                train_args=configurator.training,
+                export_args={
+                    "confidence_threshold": configurator.export.get("confidence_threshold", 0.25),
+                    "iou_threshold": configurator.export.get("iou_threshold", 0.5),
+                },
+            )
 
         from getitune.backend.lightning.engine import LightningEngine
 
@@ -423,33 +457,6 @@ class ExperimentExecutor:
             work_dir=work_dir,
             device=self.accelerator,
             **overrides,
-        )
-
-    def _build_ultralytics_engine(self, work_dir: Path) -> Engine:
-        """Build an Ultralytics engine from the recipe via the Configurator."""
-        from getitune.backend.ultralytics.tools.configurator import Configurator
-
-        configurator = Configurator(
-            data=self.data_path,
-            model=self.recipe_path,
-            task=self._task_type,
-        )
-        if self.scenario_overrides:
-            try:
-                configurator.apply_overrides(self.scenario_overrides)
-            except (KeyError, ValueError, TypeError):
-                logger.warning(
-                    "Could not apply scenario overrides %s to Ultralytics recipe %s; ignoring.",
-                    self.scenario_overrides,
-                    self.recipe_path,
-                )
-        datamodule = configurator.build_datamodule()
-        model = configurator.create_model(datamodule.label_info)
-        return configurator.create_engine(
-            model=model,
-            data=datamodule,
-            work_dir=work_dir,
-            device=self.accelerator,
         )
 
     # -- phases ------------------------------------------------------------
