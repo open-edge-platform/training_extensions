@@ -77,11 +77,7 @@ class MediaPredictionService(BaseSessionManagedService):
         # Add explicit channel dimension for 2D grayscale: (H, W) → (H, W, 1)
         if binary_data.ndim == 2:
             binary_data = binary_data[..., np.newaxis]
-        # Expand 1-channel grayscale to 3-channel for models exported without
-        # intensity_repeat_channels in the embedded preprocessing graph.
-        elif binary_data.shape[-1] == 1:
-            binary_data = np.repeat(binary_data, 3, axis=2)
-        # Convert only 3-channel BGR images to RGB; pass other formats through.
+        # Convert only 3-channel BGR images to RGB; pass grayscale and other formats through.
         if binary_data.shape[-1] == 3:
             binary_data = cv2.cvtColor(binary_data, cv2.COLOR_BGR2RGB)
         return binary_data
