@@ -35,6 +35,7 @@
 
     --annotation-fill: var(--energy-blue);
     --annotation-stroke: var(--energy-blue-light, #7bdeff);
+    --no-label: #fff;
 
     --moss: #8bae46;
     --moss-tint-1: #b1d272;

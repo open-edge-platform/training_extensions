@@ -1,11 +1,12 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex } from '@geti/ui';
+import { ActionButton, Flex, PressableElement, Tooltip, TooltipTrigger } from '@geti/ui';
 import { Pause, Play, SoundOff, SoundOn, StepBackward, StepForward } from '@geti/ui/icons';
 
 import { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
 import { useIsFetchingPredictions } from '../../api/use-media-predictions';
+import { getVideoErrorMessage } from '../video-player-error';
 import { useVideoPlayer } from '../video-player-provider.component';
 
 type VideoControlsProps = {
@@ -13,11 +14,13 @@ type VideoControlsProps = {
 };
 
 export const VideoControls = ({ mode }: VideoControlsProps) => {
-    const { isMuted, toggleMute, videoControls, videoFrame } = useVideoPlayer();
+    const { isMuted, toggleMute, videoControls, videoFrame, videoError } = useVideoPlayer();
     const { isPlaying, play, pause, previousFrame, nextFrame, canSelectPreviousFrame, canSelectNextFrame } =
         videoControls;
 
     const isLoadingPredictions = useIsFetchingPredictions(videoFrame.id) && mode === 'prediction';
+
+    const isPlayDisabled = videoError !== null || isLoadingPredictions;
 
     return (
         <Flex alignItems={'center'} gap={'size-100'}>
@@ -35,9 +38,14 @@ export const VideoControls = ({ mode }: VideoControlsProps) => {
                         <Pause />
                     </ActionButton>
                 ) : (
-                    <ActionButton isQuiet aria-label={'Play video'} onPress={play} isDisabled={isLoadingPredictions}>
-                        <Play />
-                    </ActionButton>
+                    <TooltipTrigger delay={500} isDisabled={videoError === null}>
+                        <PressableElement>
+                            <ActionButton isQuiet aria-label={'Play video'} onPress={play} isDisabled={isPlayDisabled}>
+                                <Play />
+                            </ActionButton>
+                        </PressableElement>
+                        <Tooltip>{getVideoErrorMessage(videoError)}</Tooltip>
+                    </TooltipTrigger>
                 )}
                 <ActionButton
                     isQuiet
