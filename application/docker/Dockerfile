@@ -141,6 +141,112 @@ ENV ASSET_PREFIX="/html"
 
 RUN npm run build
 
+#===========================================================================
+# pyav + ffmpeg
+# ===========================================================================
+FROM python:3.13-slim@sha256:b04b5d7233d2ad9c379e22ea8927cd1378cd15c60d4ef876c065b25ea8fb3bf3 AS ffmpeg-builder
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Pin refs/versions if you want reproducible builds.
+ARG LIBVPL_REF=778a66d6c6537f08eabb91955dbbf1bce3812894
+ARG FFMPEG_REF=9dd0fe0225c2c3406ca49430a74c8660b1713889
+ARG PYAV_VERSION=16.1.0
+ARG OPENH264_REF=e3f5b10438e2bacc155cf54578222bd4236c9f06
+ARG SVTAV1_REF=349f4eb9c369f68d463029d1cd37551c90b7de51
+
+# Install build and runtime dependencies.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash=5.2* \
+    ca-certificates=202* \
+    curl=8.14.1-2* \
+    git=1:2.47.3-0* \
+    build-essential=12.12 \
+    cmake=3.31* \
+    meson=1.7* \
+    ninja-build=1.12* \
+    pkg-config=1.8* \
+    yasm=1.3* \
+    nasm=2.16* \
+    libdrm-dev=2.4* \
+    libva-dev=2.22* \
+    libnuma-dev=2.0* \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python packaging tools for building wheels.
+RUN python -m pip install --no-cache-dir \
+    "pip==25.*" \
+    "setuptools==75.*" \
+    "wheel==0.45.*" \
+    "Cython==3.0.*" \
+    "auditwheel==6.*"
+
+# Build/install oneVPL dispatcher + headers.
+ENV VPL_INSTALL_DIR=/opt/vpl
+WORKDIR /tmp
+
+RUN git clone --depth 1 https://github.com/intel/libvpl.git && \
+    git -C libvpl checkout "${LIBVPL_REF}" && \
+    cmake -B libvpl/build -S /tmp/libvpl \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX="${VPL_INSTALL_DIR}" && \
+    cmake --build libvpl/build -j"$(nproc)" && \
+    cmake --install libvpl/build
+
+# Make custom libvpl and FFmpeg visible to later build steps.
+ENV FFMPEG_INSTALL_DIR=/opt/ffmpeg-vpl
+ENV PKG_CONFIG_PATH="/opt/vpl/lib/pkgconfig:/opt/vpl/lib64/pkgconfig:/opt/ffmpeg-vpl/lib/pkgconfig:/usr/local/lib/pkgconfig"
+ENV LD_LIBRARY_PATH="/opt/vpl/lib:/opt/vpl/lib64:/opt/ffmpeg-vpl/lib:/usr/local/lib"
+ENV PATH="/opt/ffmpeg-vpl/bin:${PATH}"
+
+# Optional software fallback encoders.
+# Remove these two blocks if you do not want libopenh264 / libsvtav1.
+
+RUN git clone --depth 1 https://github.com/cisco/openh264.git && \
+    git -C openh264 checkout "${OPENH264_REF}" && \
+    make -C openh264 -j"$(nproc)" && \
+    make -C openh264 install && \
+    ldconfig
+
+RUN git clone --depth 1 https://gitlab.com/AOMediaCodec/SVT-AV1.git svtav1 && \
+    git -C svtav1 checkout "${SVTAV1_REF}" && \
+    cmake -B svtav1/build -S /tmp/svtav1 -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build svtav1/build -j"$(nproc)" && \
+    cmake --install svtav1/build && \
+    ldconfig
+
+# Build FFmpeg with libvpl enabled
+RUN git clone --depth 3 https://github.com/FFmpeg/FFmpeg.git ffmpeg && \
+    git -C ffmpeg checkout ${FFMPEG_REF}
+
+WORKDIR /tmp/ffmpeg
+
+# Configure and compile inside the repository context
+RUN ./configure \
+      --prefix="${FFMPEG_INSTALL_DIR}" \
+      --extra-cflags="-I${VPL_INSTALL_DIR}/include" \
+      --extra-ldflags="-L${VPL_INSTALL_DIR}/lib -L${VPL_INSTALL_DIR}/lib64" \
+      --extra-libs="-lpthread -lm" \
+      --enable-libvpl \
+      --enable-vaapi \
+      --enable-shared \
+      --enable-libsvtav1 \
+      --enable-libopenh264 && \
+    make -j"$(nproc)" && \
+    make install && \
+    ldconfig
+
+# Verify FFmpeg exposes QSV encoders.
+RUN ffmpeg -version && \
+    ffmpeg -hide_banner -encoders | grep qsv && \
+    ffmpeg -hide_banner -h encoder=h264_qsv > /dev/null
+
+# Build PyAV wheel from source against the FFmpeg we just built.
+WORKDIR /build
+RUN python -m pip wheel --no-binary av "av==${PYAV_VERSION}" -w /dist
+
 #########################
 # Base for CPU, GPU and XPU runtime images
 #########################
@@ -180,7 +286,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libgl1=1.7.0-1+b2 \
         libglib2.0-0t64=2.84.4-3~deb13u3 \
         libglx-mesa0=25.0.7-2 \
-        libv4l-0t64=1.30.1-1
+        libv4l-0t64=1.30.1-1 \
+        libva2=2.22.* \
+        libva-drm2=2.22.*
 
 # Place the venv at the front of PATH so we can call python directly (no uv needed at runtime)
 ENV PATH="/application/backend/.venv/bin:${PATH}"
@@ -190,6 +298,16 @@ RUN mkdir -p /application/backend/app ${STATIC_FILES_DIR} /home/${USER_NAME} && 
     chown -R ${UID}:${UID} \
     /application \
     /home/${USER_NAME}
+
+# Copy custom FFmpeg shared libs and PyAV wheel
+COPY --link --from=ffmpeg-builder /dist /dist
+COPY --link --from=ffmpeg-builder /opt/vpl /opt/vpl
+COPY --link --from=ffmpeg-builder /opt/ffmpeg-vpl /opt/ffmpeg-vpl
+COPY --link --from=ffmpeg-builder /usr/local/lib/libSvtAv1* /usr/local/lib/
+COPY --link --from=ffmpeg-builder /usr/local/lib/libopenh264* /usr/local/lib/
+
+ENV LD_LIBRARY_PATH="/opt/vpl/lib:/opt/vpl/lib64:/opt/ffmpeg-vpl/lib:/usr/local/lib"
+ENV PATH="/opt/ffmpeg-vpl/bin:${PATH}"
 
 WORKDIR /application/backend
 
@@ -234,7 +352,6 @@ FROM xpu-base AS xpu-clean
 RUN set -eu; \
     CLEANUP_ROOT="$("/application/backend/.venv/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
     [ -n "$CLEANUP_ROOT" ] && [ -d "$CLEANUP_ROOT" ]; \
-    TARGET_DIR="${CLEANUP_ROOT}/triton/backends/nvidia"; \
     echo "Removing triton nvidia backend from ${CLEANUP_ROOT}..." && \
     # Remove triton nvidia backend
     find "$CLEANUP_ROOT" -type d -path "*/triton/backends/nvidia" -prune -exec rm -rf {} + 2>/dev/null || true
@@ -245,6 +362,11 @@ RUN set -eu; \
 FROM runtime-base AS geti-cpu
 
 COPY --from=cpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
+COPY --from=docker.io/astral/uv:0.10.4@sha256:4cac394b6b72846f8a85a7a0e577c6d61d4e17fe2ccee65d9451a8b3c9efb4ac /uv /bin/uv
+
+# Replace pyav
+RUN uv pip install --no-deps --force-reinstall /dist/av-*.whl && \
+    python -c "import av; print('PyAV:', av.__version__, av.library_versions)"
 
 # App code + UI assets last – source-only changes only invalidate this layer
 COPY --link application/backend/app /application/backend/app
@@ -256,6 +378,11 @@ COPY --link --from=web-ui /home/application/ui/dist/ ${STATIC_FILES_DIR}
 FROM runtime-base AS geti-cuda
 
 COPY --from=cuda-clean --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
+COPY --from=docker.io/astral/uv:0.10.4@sha256:4cac394b6b72846f8a85a7a0e577c6d61d4e17fe2ccee65d9451a8b3c9efb4ac /uv /bin/uv
+
+# Replace pyav
+RUN uv pip install --no-deps --force-reinstall /dist/av-*.whl && \
+    python -c "import av; print('PyAV:', av.__version__, av.library_versions)"
 
 # App code + UI assets last – source-only changes only invalidate this layer
 COPY --link application/backend/app /application/backend/app
@@ -272,6 +399,8 @@ USER root
 # Includes Intel graphics drivers (steps from https://dgpu-docs.intel.com/driver/client/overview.html#ubuntu-latest)
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+RUN groupadd -g 992 render_host || true && usermod -aG 992 "${USER_NAME}"
+
 RUN echo "deb [arch=amd64 trusted=yes] https://ppa.launchpadcontent.net/kobuk-team/intel-graphics/ubuntu noble main" \
     | tee /etc/apt/sources.list.d/kobuk-intel.list
 
@@ -286,6 +415,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 USER ${USER_NAME}
 
 COPY --from=xpu-clean --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
+COPY --from=docker.io/astral/uv:0.10.4@sha256:4cac394b6b72846f8a85a7a0e577c6d61d4e17fe2ccee65d9451a8b3c9efb4ac /uv /bin/uv
+
+# Replace pyav
+RUN uv pip install --no-deps --force-reinstall /dist/av-*.whl && \
+    python -c "import av; print('PyAV:', av.__version__, av.library_versions)"
 
 # App code + UI assets last – source-only changes only invalidate this layer
 COPY --link application/backend/app /application/backend/app
