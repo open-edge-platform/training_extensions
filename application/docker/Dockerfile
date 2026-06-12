@@ -158,7 +158,9 @@ ARG OPENH264_REF=e3f5b10438e2bacc155cf54578222bd4236c9f06
 ARG SVTAV1_REF=349f4eb9c369f68d463029d1cd37551c90b7de51
 
 # Install build and runtime dependencies.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     bash=5.2* \
     ca-certificates=202* \
     curl=8.14.1-2* \
@@ -180,15 +182,16 @@ RUN python -m pip install --no-cache-dir \
     "pip==25.*" \
     "setuptools==75.*" \
     "wheel==0.45.*" \
-    "Cython==3.0.*" \
-    "auditwheel==6.*"
+    "Cython==3.0.*"
 
 # Build/install oneVPL dispatcher + headers.
 ENV VPL_INSTALL_DIR=/opt/vpl
 WORKDIR /tmp
 
-RUN git clone --depth 1 https://github.com/intel/libvpl.git && \
-    git -C libvpl checkout "${LIBVPL_REF}" && \
+RUN git init libvpl && \
+    git -C libvpl remote add origin https://github.com/intel/libvpl.git && \
+    git -C libvpl fetch --depth 1 origin "${LIBVPL_REF}" && \
+    git -C libvpl checkout FETCH_HEAD && \
     cmake -B libvpl/build -S /tmp/libvpl \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_INSTALL_PREFIX="${VPL_INSTALL_DIR}" && \
@@ -204,22 +207,28 @@ ENV PATH="/opt/ffmpeg-vpl/bin:${PATH}"
 # Optional software fallback encoders.
 # Remove these two blocks if you do not want libopenh264 / libsvtav1.
 
-RUN git clone --depth 1 https://github.com/cisco/openh264.git && \
-    git -C openh264 checkout "${OPENH264_REF}" && \
+RUN git init openh264 && \
+    git -C openh264 remote add origin https://github.com/cisco/openh264.git && \
+    git -C openh264 fetch --depth 1 origin "${OPENH264_REF}" && \
+    git -C openh264 checkout FETCH_HEAD && \
     make -C openh264 -j"$(nproc)" && \
     make -C openh264 install && \
     ldconfig
 
-RUN git clone --depth 1 https://gitlab.com/AOMediaCodec/SVT-AV1.git svtav1 && \
-    git -C svtav1 checkout "${SVTAV1_REF}" && \
+RUN git init svtav1 && \
+    git -C svtav1 remote add origin https://gitlab.com/AOMediaCodec/SVT-AV1.git && \
+    git -C svtav1 fetch --depth 1 origin "${SVTAV1_REF}" && \
+    git -C svtav1 checkout FETCH_HEAD && \
     cmake -B svtav1/build -S /tmp/svtav1 -DCMAKE_BUILD_TYPE=Release && \
     cmake --build svtav1/build -j"$(nproc)" && \
     cmake --install svtav1/build && \
     ldconfig
 
 # Build FFmpeg with libvpl enabled
-RUN git clone --depth 3 https://github.com/FFmpeg/FFmpeg.git ffmpeg && \
-    git -C ffmpeg checkout ${FFMPEG_REF}
+RUN git init ffmpeg && \
+    git -C ffmpeg remote add origin https://github.com/FFmpeg/FFmpeg.git && \
+    git -C ffmpeg fetch --depth 1 origin "${FFMPEG_REF}" && \
+    git -C ffmpeg checkout FETCH_HEAD
 
 WORKDIR /tmp/ffmpeg
 
@@ -299,6 +308,8 @@ RUN mkdir -p /application/backend/app ${STATIC_FILES_DIR} /home/${USER_NAME} && 
     /application \
     /home/${USER_NAME}
 
+COPY --from=docker.io/astral/uv:0.10.4@sha256:4cac394b6b72846f8a85a7a0e577c6d61d4e17fe2ccee65d9451a8b3c9efb4ac /uv /bin/uv
+
 # Copy custom FFmpeg shared libs and PyAV wheel
 COPY --link --from=ffmpeg-builder /dist /dist
 COPY --link --from=ffmpeg-builder /opt/vpl /opt/vpl
@@ -362,7 +373,6 @@ RUN set -eu; \
 FROM runtime-base AS geti-cpu
 
 COPY --from=cpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
-COPY --from=docker.io/astral/uv:0.10.4@sha256:4cac394b6b72846f8a85a7a0e577c6d61d4e17fe2ccee65d9451a8b3c9efb4ac /uv /bin/uv
 
 # Replace pyav
 RUN uv pip install --no-deps --force-reinstall /dist/av-*.whl && \
@@ -378,7 +388,6 @@ COPY --link --from=web-ui /home/application/ui/dist/ ${STATIC_FILES_DIR}
 FROM runtime-base AS geti-cuda
 
 COPY --from=cuda-clean --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
-COPY --from=docker.io/astral/uv:0.10.4@sha256:4cac394b6b72846f8a85a7a0e577c6d61d4e17fe2ccee65d9451a8b3c9efb4ac /uv /bin/uv
 
 # Replace pyav
 RUN uv pip install --no-deps --force-reinstall /dist/av-*.whl && \
@@ -399,7 +408,7 @@ USER root
 # Includes Intel graphics drivers (steps from https://dgpu-docs.intel.com/driver/client/overview.html#ubuntu-latest)
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-RUN groupadd -g 992 render_host || true && usermod -aG 992 "${USER_NAME}"
+RUN getent group render_host >/dev/null || groupadd -g 992 render_host && usermod -aG render_host "${USER_NAME}"
 
 RUN echo "deb [arch=amd64 trusted=yes] https://ppa.launchpadcontent.net/kobuk-team/intel-graphics/ubuntu noble main" \
     | tee /etc/apt/sources.list.d/kobuk-intel.list
@@ -415,7 +424,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 USER ${USER_NAME}
 
 COPY --from=xpu-clean --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
-COPY --from=docker.io/astral/uv:0.10.4@sha256:4cac394b6b72846f8a85a7a0e577c6d61d4e17fe2ccee65d9451a8b3c9efb4ac /uv /bin/uv
 
 # Replace pyav
 RUN uv pip install --no-deps --force-reinstall /dist/av-*.whl && \
