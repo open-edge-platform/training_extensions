@@ -56,13 +56,16 @@ docker pull ghcr.io/open-edge-platform/geti-cuda
 
 # Alternative: lightweight CPU-only image
 docker pull ghcr.io/open-edge-platform/geti-cpu
+
+# Retag the pulled image as `geti-{cpu,xpu,cuda}:latest` for using with `just run-image`
+docker tag ghcr.io/open-edge-platform/geti-cpu:latest geti-cpu:latest
 ```
 
 <details>
 <summary><strong>Advanced: Build the image</strong></summary>
 
 Geti Docker images can be built from source using the [`Dockerfile`](./docker/Dockerfile) in the `application` directory.
-This can be useful if you want to customize the application or optimize it for a specific usecase that is not covered by the pre-built images.
+This can be useful if you want to customize the application or optimize it for a specific use case that is not covered by the pre-built images.
 
 The instructions below use `just` to simplify the build process, but you can also build the image manually with `docker build` if you prefer.
 
@@ -86,7 +89,7 @@ just run-image --accelerator xpu --port 8080
 
 Run `just --usage run-image` to see all available runtime options.
 
-After the container starts, you can access the Geti web application at [**http://localhost:8080**](http://localhost:7860) (assuming default settings).
+After the container starts, you can access the Geti web application at [**http://localhost:8080**](http://localhost:8080) (assuming default settings).
 
 <details>
 <summary><strong>Advanced: Run with a TURN server</strong></summary>
@@ -132,6 +135,8 @@ docker run --rm -v geti-data:/data alpine ls -l /data/projects/<PROJECT_ID>/data
 When running Geti with Docker, all logs are stored in the `geti-logs` Docker volume.
 You can view these logs by running a temporary container that mounts the volume and prints the log files to the console.
 
+These examples use `jq` to format the JSON logs; install `jq` on the host or omit the `| jq -r '.text'` part to see the
+raw JSON output.
 **Application logs:**
 
 ```bash
@@ -149,7 +154,7 @@ docker run --rm -v geti-logs:/logs alpine cat /logs/app.log | jq -r '.text' > ge
 docker run --rm -v geti-logs:/logs alpine ls -l /logs/jobs
 
 # Print the logs of a specific job to the console
-docker run --rm -v geti-logs:/logs alpine cat /logs/jobs/<job_id>.log | jq -r '.text'
+docker run --rm -v geti-logs:/logs alpine cat /logs/jobs/<job_type>-<job_id>.log | jq -r '.text'
 ```
 
 **Logs of other worker processes:**
