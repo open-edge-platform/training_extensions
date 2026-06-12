@@ -21,7 +21,7 @@ in a rapid, feedback-driven loop. Geti runs locally as a single Docker image or 
 for Intel® hardware with OpenVINO™ for fast inference across the full Intel® XPU portfolio.
 
 <p align="center">
- <img src="assets/geti-model-lifecycle.jpg" width="600" alt="Geti™ - Learning Cycle"/>
+ <img src="assets/model-lifecycle-infinity-light.png" width="600" alt="Geti™ - Learning Cycle"/>
 </p>
 
 > [!IMPORTANT]
