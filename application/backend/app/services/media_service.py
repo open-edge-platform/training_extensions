@@ -88,6 +88,10 @@ class MediaService(BaseSessionManagedService):
 
     @staticmethod
     def _read_image_from_ndarray(data: np.ndarray) -> Image.Image:
+        # Pillow does not support multi-channel uint16 arrays (e.g. 16-bit RGB from datumaro).
+        # Such arrays are always grayscale duplicated across channels - collapse to single channel.
+        if data.dtype == np.uint16 and data.ndim == 3:
+            data = data[:, :, 0]
         return Image.fromarray(data)
 
     @staticmethod
