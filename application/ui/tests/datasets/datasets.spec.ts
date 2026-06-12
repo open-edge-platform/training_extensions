@@ -16,10 +16,9 @@ import { SchemaProjectView } from '../../src/api/openapi-spec';
 import { AnnotationDTO } from '../../src/constants/shared-types';
 import { expect, http, test } from '../fixtures';
 
-const mockedItems = getMultipleMockedMediaImage(20, '1');
+const mockedItems = getMultipleMockedMediaImage(40, '1');
 const mockedItems2 = getMultipleMockedMediaImage(20, '2');
-const mockedItems3 = getMultipleMockedMediaImage(20, '3');
-const totalElements = mockedItems.length + mockedItems2.length + mockedItems3.length;
+const totalElements = mockedItems.length + mockedItems2.length;
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const sampleImagePath = path.resolve(dirname, '../assets/candy-thumbnail.png');
@@ -38,7 +37,7 @@ test.describe('Dataset', () => {
             http.get('/api/projects/{project_id}/dataset/media', ({ query }) => {
                 const offset = Number(query.get('offset') ?? 0);
                 const limit = Number(query.get('limit'));
-                const items = offset === 0 ? mockedItems : offset === 20 ? mockedItems2 : mockedItems3;
+                const items = offset === 0 ? mockedItems : mockedItems2;
 
                 return HttpResponse.json({
                     items,
@@ -59,15 +58,12 @@ test.describe('Dataset', () => {
                 (response) => response.url().includes('/dataset/media') && response.url().includes(`offset=${offset}`)
             );
 
-        const batch20 = waitForBatch(20);
         const batch40 = waitForBatch(40);
 
         await datasetPage.goto();
 
         await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
 
-        await datasetPage.getMediaGrid().press('End');
-        await batch20;
         await datasetPage.getMediaGrid().press('End');
         await batch40;
 
