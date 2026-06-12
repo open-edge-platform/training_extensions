@@ -84,9 +84,10 @@ confirm() {
     fi
     local response
     read -rp "$prompt [Y/n]: " response
-    if [[ "$response" =~ ^[Nn]$ ]]; then
+    if [[ "${response,,}" =~ ^n(o)?$ ]]; then
         return 1
     fi
+    return 0
 }
 
 run_cmd() {
