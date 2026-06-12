@@ -58,7 +58,7 @@ class TestImagesFolderStream:
         stream.files = ["folder_path/file1", "folder_path/file2"]
         data = stream.get_data()
         assert data is not None
-        mock_imread.assert_called_once_with("folder_path/file1")
+        mock_imread.assert_called_once_with("folder_path/file1", -1)
         mock_getmtime.assert_called_once_with("folder_path/file1")
 
     @patch.object(ImagesFolderStream, "_init_watchdog")

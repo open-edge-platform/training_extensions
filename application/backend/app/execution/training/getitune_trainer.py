@@ -324,9 +324,11 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             test_subset_config = build_subset_config("test")
 
             # Detect storage dtype and propagate to subset configs.
-            storage_dtype = detect_storage_dtype(dm_training_dataset)
+            storage_dtype, num_channels = detect_storage_dtype(dm_training_dataset)
             for cfg in (train_subset_config, val_subset_config, test_subset_config):
                 cfg.intensity.storage_dtype = storage_dtype
+                if num_channels == 1:
+                    cfg.intensity.repeat_channels = 3
 
             # Wrap them into VisionDataset instances
             getitune_task_type = get_getitune_task_type_by_task(task)
