@@ -4,8 +4,9 @@
 import os
 from functools import cache
 from importlib import resources
+from typing import Any
 
-import hiyapyco
+import yaml
 
 from app.models.model_manifest import ModelManifest
 from app.supported_models import manifests
@@ -16,6 +17,30 @@ class ManifestNotFoundException(Exception):
 
     def __init__(self, model_manifest_id: str):
         super().__init__(f"Model architecture with ID '{model_manifest_id}' not found.")
+
+
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    """Recursively merge ``override`` into ``base``, returning a new dict.
+
+    Nested mappings are merged key by key. Any non-mapping value (including
+    ``None``, lists and scalars) from ``override`` replaces the corresponding
+    value in ``base`` wholesale.
+
+    Args:
+        base: The base mapping whose values may be overridden.
+        override: The mapping whose values take precedence.
+
+    Returns:
+        dict[str, Any]: A new dictionary containing the merged result.
+    """
+    merged: dict[str, Any] = dict(base)
+    for key, override_value in override.items():
+        base_value = merged.get(key)
+        if isinstance(base_value, dict) and isinstance(override_value, dict):
+            merged[key] = _deep_merge(base_value, override_value)
+        else:
+            merged[key] = override_value
+    return merged
 
 
 class ModelManifestService:
@@ -39,19 +64,19 @@ class ModelManifestService:
             ModelManifest: A populated Algorithm object containing the parsed manifest data.
 
         Note:
-            Uses hiyapyco library for YAML merging with substitution method and interpolation.
-            Fails if any of the specified manifest files cannot be found.
+            Manifest files are merged with a recursive deep merge: nested mappings are
+            combined key by key, while lists and scalar values from later files replace
+            those from earlier files. Raises if any of the specified manifest files
+            cannot be found.
         """
         if relative:
             manifest_sources = tuple(str(resources.files(manifests).joinpath(path)) for path in manifest_sources)
-        yaml_manifest = hiyapyco.load(
-            *manifest_sources,
-            method=hiyapyco.METHOD_SUBSTITUTE,
-            interpolate=True,
-            failonmissingfiles=True,
-            none_behavior=hiyapyco.NONE_BEHAVIOR_OVERRIDE,
-        )
-        return ModelManifest(**yaml_manifest)  # pyrefly: ignore[missing-argument,bad-unpacking]
+        merged_manifest: dict = {}
+        for source in manifest_sources:
+            with open(source, encoding="utf-8") as manifest_file:
+                loaded = yaml.safe_load(manifest_file) or {}
+            merged_manifest = _deep_merge(merged_manifest, loaded)
+        return ModelManifest(**merged_manifest)  # pyrefly: ignore[missing-argument,bad-unpacking]
 
     @classmethod
     def get_model_manifest_by_id(cls, model_manifest_id: str) -> ModelManifest:
