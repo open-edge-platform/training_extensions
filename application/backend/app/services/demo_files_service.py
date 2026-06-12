@@ -310,9 +310,9 @@ def visualise_result(image, result) -> None:
     if image.dtype != np.uint8:
         image = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
 
+    Visualizer().show(image, result)
+    
     display_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    Visualizer().show(display_image, result)
     output = Visualizer().render(display_image, result)
     cv2.imwrite(str(OUTPUT_PATH), output)
     print(f"Saved annotated result to {{OUTPUT_PATH}}")
