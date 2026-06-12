@@ -42,8 +42,7 @@ for Intel® hardware with OpenVINO™ for fast inference across the full Intel®
 - **Iterative model improvement**: start with as few as 10-20 images and refine your model in a rapid, feedback-driven
   loop, using the current model's predictions to annotate new data faster.
 - **Multiple computer vision tasks**: image classification, object detection, and instance segmentation from the no-code
-  web interface, with hierarchical classification, rotated detection, semantic segmentation, and keypoint detection
-  available through the Python API (`getitune`).
+  web interface, with even more tasks available through the Python API (`getitune`).
 - **State-of-the-art models**: a curated catalog spanning RF-DETR, DINOv3 DETR, YOLO26, YOLOX, D-FINE, Mask R-CNN, and
   more — see the [full list below](#supported-tasks-and-models).
 - **Smart annotations**: manual and semi-automated labeling powered by models like SAM (Segment Anything Model), plus
@@ -69,11 +68,6 @@ Would you like to see a specific model added to the list? Let us know by opening
 
 | Computer Vision Task | Use Case | Model Architecture | Paper |
 | -------------------- | -------- | ------------------ | ----- |
-| **Classification** (multi-class, multi-label, hierarchical) | Assign one or more labels to an entire image, e.g. quality pass/fail, product categorization, content tagging. | ViT Tiny | [ViT](https://arxiv.org/abs/2010.11929) |
-| | | DINOv2 Small | [DINOv2](https://arxiv.org/abs/2304.07193) |
-| | | EfficientNet B0 / B3 | [EfficientNet](https://arxiv.org/abs/1905.11946) |
-| | | EfficientNet V2 Small | [EfficientNetV2](https://arxiv.org/abs/2104.00298) |
-| | | MobileNet V3 Large | [MobileNetV3](https://arxiv.org/abs/1905.02244) |
 | **Object Detection** | Locate and classify objects with bounding boxes, e.g. counting items, defect localization, surveillance. | D-FINE M / L / X | [DEIM](https://arxiv.org/abs/2412.04234) + [D-FINE](https://arxiv.org/abs/2410.13842) |
 | | | DINOv3 DETR S / M / L | [DINOv3](https://arxiv.org/abs/2508.10104) + [DEIMv2](https://arxiv.org/html/2509.20787v4) + [DETR](https://arxiv.org/abs/2005.12872) |
 | | | MobileNet V2 ATSS | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [ATSS](https://arxiv.org/abs/1912.02424) |
@@ -88,6 +82,11 @@ Would you like to see a specific model added to the list? Let us know by opening
 | | | Mask-RCNN Swin-T | [Swin Transformer](https://arxiv.org/abs/2103.14030) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
 | | | RF-DETR S / M / L | [RF-DETR](https://arxiv.org/abs/2511.09554) |
 | | | YOLO26 Nano / Small / Medium | [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) |
+| **Classification** (multi-class, multi-label) | Assign one or more labels to an entire image, e.g. quality pass/fail, product categorization, content tagging. | ViT Tiny | [ViT](https://arxiv.org/abs/2010.11929) |
+| | | DINOv2 Small | [DINOv2](https://arxiv.org/abs/2304.07193) |
+| | | EfficientNet B0 / B3 | [EfficientNet](https://arxiv.org/abs/1905.11946) |
+| | | EfficientNet V2 Small | [EfficientNetV2](https://arxiv.org/abs/2104.00298) |
+| | | MobileNet V3 Large | [MobileNetV3](https://arxiv.org/abs/1905.02244) |
 
 <!-- markdownlint-enable MD060 -->
 
