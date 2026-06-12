@@ -65,21 +65,6 @@ web interface, while others are accessible through the Python API (`getitune`) �
 application.
 Would you like to see a specific model added to the list? Let us know by opening a [GitHub issue](https://github.com/open-edge-platform/training_extensions/issues)!
 
-<!-- markdownlint-disable MD060 -->
-
-| Task                        | Web UI | Python API (`getitune`) |
-| --------------------------- | ------ | ----------------------- |
-| Multiclass Classification   | ✅     | ✅                      |
-| Multilabel Classification   | ✅     | ✅                      |
-| Hierarchical Classification | ✖️     | ✅                      |
-| Object Detection            | ✅     | ✅                      |
-| Instance Segmentation       | ✅     | ✅                      |
-| Semantic Segmentation       | ✖️     | ✅                      |
-| Rotated Detection           | ✖️     | ✅                      |
-| Keypoint Detection          | ✖️     | ✅                      |
-
-<!-- markdownlint-enable MD060 -->
-
 > [!TIP]
 > Other projects of the Open Edge Platform enable even more tasks and models, check them:
 >
@@ -87,90 +72,39 @@ Would you like to see a specific model added to the list? Let us know by opening
 > - [Physical AI Studio](https://github.com/open-edge-platform/physical-ai-studio) → robot learning, VLA (Vision-Language-Action)
 > - [Instant Learn](https://github.com/open-edge-platform/instant-learn) → visual prompting
 
-### Image Classification
+<!-- markdownlint-disable MD060 -->
 
-<details>
-<summary>Show models</summary>
+| Computer Vision Task | Use Case | Model Architecture | Paper |
+| -------------------- | -------- | ------------------ | ----- |
+| **Classification** (multi-class, multi-label, hierarchical) | Assign one or more labels to an entire image, e.g. quality pass/fail, product categorization, content tagging. | ViT Tiny | [ViT](https://arxiv.org/abs/2010.11929) |
+| | | DINOv2 Small | [DINOv2](https://arxiv.org/abs/2304.07193) |
+| | | EfficientNet B0 / B3 | [EfficientNet](https://arxiv.org/abs/1905.11946) |
+| | | EfficientNet V2 Small | [EfficientNetV2](https://arxiv.org/abs/2104.00298) |
+| | | MobileNet V3 Large | [MobileNetV3](https://arxiv.org/abs/1905.02244) |
+| **Object Detection** | Locate and classify objects with bounding boxes, e.g. counting items, defect localization, surveillance. | D-FINE M / L / X | [DEIM](https://arxiv.org/abs/2412.04234) + [D-FINE](https://arxiv.org/abs/2410.13842) |
+| | | DINOv3 DETR S / M / L | [DINOv3](https://arxiv.org/abs/2508.10104) + [DEIMv2](https://arxiv.org/html/2509.20787v4) + [DETR](https://arxiv.org/abs/2005.12872) |
+| | | MobileNet V2 ATSS | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [ATSS](https://arxiv.org/abs/1912.02424) |
+| | | MobileNet V2 SSD | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [SSD](https://arxiv.org/abs/1512.02325) |
+| | | RF-DETR S / M / L | [RF-DETR](https://arxiv.org/abs/2511.09554) |
+| | | RT-DETR R50 | [RT-DETR](https://arxiv.org/abs/2304.08069) |
+| | | YOLO26 Nano / Small / Medium | [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) |
+| | | YOLOX Tiny / S / L / X | [YOLOX](https://arxiv.org/abs/2107.08430) |
+| **Instance Segmentation** | Detect objects and produce pixel-precise masks per instance, e.g. measuring object area, robotics, medical imaging. | RTMDet Tiny | [RTMDet](https://arxiv.org/abs/2212.07784) |
+| | | Mask-RCNN EfficientNet B2 | [EfficientNet](https://arxiv.org/abs/1905.11946) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
+| | | Mask-RCNN ResNet50 | [ResNet](https://arxiv.org/abs/1512.03385) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
+| | | Mask-RCNN Swin-T | [Swin Transformer](https://arxiv.org/abs/2103.14030) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
+| | | RF-DETR S / M / L | [RF-DETR](https://arxiv.org/abs/2511.09554) |
+| | | YOLO26 Nano / Small / Medium | [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) |
+| **Semantic Segmentation** <sup>API only</sup> | Classify every pixel into a category, e.g. scene parsing, land cover mapping, defect area segmentation. | DINOv2 Small | [DINOv2](https://arxiv.org/abs/2304.07193) |
+| | | Lite-HRNet 18 / S / X | [Lite-HRNet](https://arxiv.org/abs/2104.06403) |
+| | | SegNeXt Tiny / Small / Base | [SegNeXt](https://arxiv.org/abs/2209.08575) |
+| **Rotated Detection** <sup>API only</sup> | Detect oriented objects with rotated bounding boxes, e.g. aerial imagery, document analysis, packaged goods. | Mask-RCNN EfficientNet B2 | [EfficientNet](https://arxiv.org/abs/1905.11946) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
+| | | Mask-RCNN ResNet50 | [ResNet](https://arxiv.org/abs/1512.03385) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
+| **Keypoint Detection** <sup>API only</sup> | Locate keypoints on objects, e.g. pose estimation, body/hand tracking, landmark detection. | RTMPose Tiny | [RTMPose](https://arxiv.org/abs/2212.07784) |
 
-| Model Architecture    | Paper                                              |
-| --------------------- | -------------------------------------------------- |
-| ViT Tiny              | [ViT](https://arxiv.org/abs/2010.11929)            |
-| DINOv2 Small          | [DINOv2](https://arxiv.org/abs/2304.07193)         |
-| EfficientNet B0 / B3  | [EfficientNet](https://arxiv.org/abs/1905.11946)   |
-| EfficientNet V2 Small | [EfficientNetV2](https://arxiv.org/abs/2104.00298) |
-| MobileNet V3 Large    | [MobileNetV3](https://arxiv.org/abs/1905.02244)    |
+<!-- markdownlint-enable MD060 -->
 
-</details>
-
-### Object Detection
-
-<details>
-<summary>Show models</summary>
-
-| Model Architecture     | Paper                                                                                                                                 |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| D-FINE M / L / X       | [DEIM](https://arxiv.org/abs/2412.04234) + [D-FINE](https://arxiv.org/abs/2410.13842)                                                 |
-| DINOv3 DETR S / M / L  | [DINOv3](https://arxiv.org/abs/2508.10104) + [DEIMv2](https://arxiv.org/html/2509.20787v4) + [DETR](https://arxiv.org/abs/2005.12872) |
-| MobileNet V2 ATSS      | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [ATSS](https://arxiv.org/abs/1912.02424)                                            |
-| MobileNet V2 SSD       | [MobileNetV2](https://arxiv.org/abs/1801.04381) + [SSD](https://arxiv.org/abs/1512.02325)                                             |
-| RF-DETR S / M / L      | [RF-DETR](https://arxiv.org/abs/2511.09554)                                                                                           |
-| RT-DETR R50            | [RT-DETR](https://arxiv.org/abs/2304.08069)                                                                                           |
-| YOLO26 Nano / Small / Medium | [Ultralytics YOLO](https://github.com/ultralytics/ultralytics)                                                                  |
-| YOLOX Tiny / S / L / X | [YOLOX](https://arxiv.org/abs/2107.08430)                                                                                             |
-
-</details>
-
-### Instance Segmentation
-
-<details>
-<summary>Show models</summary>
-
-| Model Architecture        | Paper                                                                                                 |
-| ------------------------- | ----------------------------------------------------------------------------------------------------- |
-| RTMDet Tiny               | [RTMDet](https://arxiv.org/abs/2212.07784)                                                            |
-| Mask-RCNN EfficientNet B2 | [EfficientNet](https://arxiv.org/abs/1905.11946) + [Mask R-CNN](https://arxiv.org/abs/1703.06870)     |
-| Mask-RCNN ResNet50        | [ResNet](https://arxiv.org/abs/1512.03385) + [Mask R-CNN](https://arxiv.org/abs/1703.06870)           |
-| Mask-RCNN Swin-T          | [Swin Transformer](https://arxiv.org/abs/2103.14030) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
-| RF-DETR S / M / L         | [RF-DETR](https://arxiv.org/abs/2511.09554)                                                           |
-| YOLO26 Nano / Small / Medium | [Ultralytics YOLO](https://github.com/ultralytics/ultralytics)                                     |
-
-</details>
-
-### Semantic Segmentation
-
-<details>
-<summary>Show models</summary>
-
-| Model Architecture          | Paper                                          |
-| --------------------------- | ---------------------------------------------- |
-| DINOv2 Small                | [DINOv2](https://arxiv.org/abs/2304.07193)     |
-| Lite-HRNet 18 / S / X       | [Lite-HRNet](https://arxiv.org/abs/2104.06403) |
-| SegNeXt Tiny / Small / Base | [SegNeXt](https://arxiv.org/abs/2209.08575)    |
-
-</details>
-
-### Rotated Detection
-
-<details>
-<summary>Show models</summary>
-
-| Model Architecture        | Paper                                                                                             |
-| ------------------------- | ------------------------------------------------------------------------------------------------- |
-| Mask-RCNN EfficientNet B2 | [EfficientNet](https://arxiv.org/abs/1905.11946) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
-| Mask-RCNN ResNet50        | [ResNet](https://arxiv.org/abs/1512.03385) + [Mask R-CNN](https://arxiv.org/abs/1703.06870)       |
-
-</details>
-
-### Keypoint Detection
-
-<details>
-<summary>Show models</summary>
-
-| Model Architecture | Paper                                       |
-| ------------------ | ------------------------------------------- |
-| RTMPose Tiny       | [RTMPose](https://arxiv.org/abs/2212.07784) |
-
-</details>
+<sup>API only</sup> tasks are available through the Python API (`getitune`); all other tasks are available from both the no-code web interface and the Python API.
 
 ## Getting started
 
