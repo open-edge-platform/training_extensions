@@ -95,16 +95,8 @@ Would you like to see a specific model added to the list? Let us know by opening
 | | | Mask-RCNN Swin-T | [Swin Transformer](https://arxiv.org/abs/2103.14030) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
 | | | RF-DETR S / M / L | [RF-DETR](https://arxiv.org/abs/2511.09554) |
 | | | YOLO26 Nano / Small / Medium | [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) |
-| **Semantic Segmentation** <sup>API only</sup> | Classify every pixel into a category, e.g. scene parsing, land cover mapping, defect area segmentation. | DINOv2 Small | [DINOv2](https://arxiv.org/abs/2304.07193) |
-| | | Lite-HRNet 18 / S / X | [Lite-HRNet](https://arxiv.org/abs/2104.06403) |
-| | | SegNeXt Tiny / Small / Base | [SegNeXt](https://arxiv.org/abs/2209.08575) |
-| **Rotated Detection** <sup>API only</sup> | Detect oriented objects with rotated bounding boxes, e.g. aerial imagery, document analysis, packaged goods. | Mask-RCNN EfficientNet B2 | [EfficientNet](https://arxiv.org/abs/1905.11946) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
-| | | Mask-RCNN ResNet50 | [ResNet](https://arxiv.org/abs/1512.03385) + [Mask R-CNN](https://arxiv.org/abs/1703.06870) |
-| **Keypoint Detection** <sup>API only</sup> | Locate keypoints on objects, e.g. pose estimation, body/hand tracking, landmark detection. | RTMPose Tiny | [RTMPose](https://arxiv.org/abs/2212.07784) |
 
 <!-- markdownlint-enable MD060 -->
-
-<sup>API only</sup> tasks are available through the Python API (`getitune`); all other tasks are available from both the no-code web interface and the Python API.
 
 ## Getting started
 
