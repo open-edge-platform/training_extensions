@@ -74,7 +74,11 @@ class ModelManifestService:
         merged_manifest: dict = {}
         for source in manifest_sources:
             with open(source, encoding="utf-8") as manifest_file:
-                loaded = yaml.safe_load(manifest_file) or {}
+                loaded: Any = yaml.safe_load(manifest_file)
+            if loaded is None:
+                loaded = {}
+            if not isinstance(loaded, dict):
+                raise ValueError(f"Manifest '{source}' must be a YAML mapping at the top level.")
             merged_manifest = _deep_merge(merged_manifest, loaded)
         return ModelManifest(**merged_manifest)  # pyrefly: ignore[missing-argument,bad-unpacking]
 
