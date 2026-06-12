@@ -65,13 +65,6 @@ web interface, while others are accessible through the Python API (`getitune`) �
 application.
 Would you like to see a specific model added to the list? Let us know by opening a [GitHub issue](https://github.com/open-edge-platform/training_extensions/issues)!
 
-> [!TIP]
-> Other projects of the Open Edge Platform enable even more tasks and models, check them:
->
-> - [Anomalib (Studio)](https://github.com/open-edge-platform/anomalib) → anomaly detection
-> - [Physical AI Studio](https://github.com/open-edge-platform/physical-ai-studio) → robot learning, VLA (Vision-Language-Action)
-> - [Instant Learn](https://github.com/open-edge-platform/instant-learn) → visual prompting
-
 <!-- markdownlint-disable MD060 -->
 
 | Computer Vision Task | Use Case | Model Architecture | Paper |
@@ -97,6 +90,13 @@ Would you like to see a specific model added to the list? Let us know by opening
 | | | YOLO26 Nano / Small / Medium | [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) |
 
 <!-- markdownlint-enable MD060 -->
+
+> [!TIP]
+> Other projects of the Open Edge Platform enable even more tasks and models, check them:
+>
+> - [Anomalib (Studio)](https://github.com/open-edge-platform/anomalib) → anomaly detection
+> - [Physical AI Studio](https://github.com/open-edge-platform/physical-ai-studio) → robot learning, VLA (Vision-Language-Action)
+> - [Instant Learn](https://github.com/open-edge-platform/instant-learn) → visual prompting
 
 ## Getting started
 
