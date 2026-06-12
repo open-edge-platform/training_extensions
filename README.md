@@ -15,26 +15,10 @@
 
 ## Introduction
 
-Developing AI models from scratch is often slow, complex, and resource-intensive. Managing datasets, training pipelines,
-optimization, and deployment typically requires stitching together multiple tools and workflows.
-
-Geti™ is a single, end-to-end application for building and deploying computer vision AI models. It covers the complete
-model lifecycle — from dataset preparation, to annotation, to model training and optimization, to deployment and
-inference at the edge — all within one application. Optimized for Intel® hardware yet flexible enough to run on a variety
-of platforms, Geti lets you manage datasets, fine-tune and quantize models, and deploy them for inference without
-stitching together separate tools.
-
-With **Geti™ 3.0**, the entire workflow runs **locally on your own hardware**. You no longer need a Kubernetes cluster or
-a data-center GPU: you can fine-tune models and run inference directly on edge and client hardware — including
-Intel® Panther Lake and Arc™ Battlemage (B-series) GPUs — keeping your data, training, and deployment on the same
-machine. The result is a faster, simpler, and more private way to go from data to a deployed model, whether on a laptop,
-a workstation, or an edge device.
-
-Geti is delivered as a self-contained application that you can run as a **single Docker image** or install as a
-**native Windows app**. Under the hood, Geti is powered by its own low-code training engine, which is also published on
-PyPI as [`getitune`](https://pypi.org/project/getitune/) for developers who want to drive the same training,
-optimization, and deployment capabilities programmatically from Python. The engine ships *inside* Geti — it is not a
-separate product or a separate release.
+Geti™ is an end-to-end application that takes you from raw images to a deployed computer vision model — annotate, train,
+optimize, and run inference, all in one place, all on your own hardware. Start with as few as 10-20 images and iterate
+in a rapid, feedback-driven loop. Geti runs locally as a single Docker image or a native Windows app, and is optimized
+for Intel® hardware with OpenVINO™ for fast inference across the full Intel® XPU portfolio.
 
 <p align="center">
  <img src="assets/geti-model-lifecycle.jpg" width="600" alt="Geti™ - Learning Cycle"/>
@@ -47,88 +31,32 @@ separate product or a separate release.
 > published on PyPI as [`getitune`](https://pypi.org/project/getitune/), while the old package `otx` is deprecated but
 > still available for download.
 
-## What's new in Geti™ 3.0
-
-Geti 3.0 marks a fundamental shift: from a cloud-native, cluster-bound platform to a lightweight application that runs
-locally on your own hardware.
-
-- **Runs on the edge**: fine-tune models and run inference directly on edge and client hardware, keeping data, training,
-  and deployment on the same machine.
-- **Dramatically lower hardware requirements**: Geti no longer depends on Kubernetes, so the footprint is significantly
-  reduced. The minimum recommended configuration is **8 CPU threads, 16 GB RAM, and 40 GB of free disk space**. Smaller
-  models can be trained on CPU with modest memory usage, while a GPU is recommended for larger models.
-- **A whole new installation experience**:
-  - **Native Windows app** — run Geti directly on Windows via a simple MSIX installer.
-  - **Single Docker image** — run Geti from one container on Linux or Windows, while remaining compatible with
-    Kubernetes deployments.
-- **Apache 2.0 license** — the Geti 3.0 code is now under the permissive Apache 2.0 license, simplifying adoption,
-  integration, and redistribution.
-- **State-of-the-art model architectures** — RF-DETR (S/M/L) on a DINOv2 backbone, DINOv3 DETR (S/M/L) built on Meta's
-  DINOv3 self-supervised backbone, and an Ultralytics integration that brings YOLO26 (NMS-free, edge-optimized) across
-  the full lifecycle: training, inference, quantization, and OpenVINO™ export.
-- **Dataset versioning** — track how datasets evolve as images and annotations are added, explore revisions, link models
-  to a specific dataset state, and train on any prior revision.
-- **Model versioning & lineage** — track model lineage with links to parent revisions and weights, view exact training
-  hyperparameters, and fine-tune from any previous model version.
-- **Configurable training devices** — select from available hardware (CPU, GPU), including specific GPUs in multi-device
-  setups.
-- **16-bit grayscale media support** — train and infer on high-bit-depth images and video with configurable intensity
-  range preprocessing (not supported for YOLOX-S/M/L).
-- **Decoupled, edge-ready pipelines** — build flexible inference pipelines where data sources (cameras, files, streams)
-  and output targets can be swapped or reconfigured without retraining models.
-- **Pipeline export for edge deployment** — package complete pipelines (model, preprocessing, and configuration) into
-  OpenVINO™-optimized bundles ready for consistent, efficient deployment on edge and Intel®-based hardware.
-- **Integrated deployment & inference** — a new Inference page builds custom pipelines (source → model → sink) to deploy
-  models inside Geti and monitor predictions in real time. Sources include USB/IP cameras and video files; optional
-  sinks include MQTT, webhook, and folder.
-- **Improved evaluation metrics** — expanded training-time and evaluation metrics, including mAP at multiple thresholds
-  for detection and segmentation tasks.
-- **Label filtering for dataset import/export** — selectively include or exclude labels during dataset export and
-  import, automatically filtering out associated annotations.
-- **Native dataset format (Geti)** — export and import datasets in a Geti-optimized format, designed for improved
-  performance on large datasets while preserving full metadata.
-- **Manual subset assignment** — explicitly assign images and video frames to training, validation, or test subsets in
-  the annotator, with safeguards to prevent data leakage.
-- **Real-time training logs** — monitor training logs live during job execution and access them later via the UI.
-- **Demo scripts for inference** — exported ONNX and OpenVINO™ model packages include minimal example scripts to run
-  inference on sample images.
-- **Bulk annotation for classification** — assign one or more labels to multiple images or video frames at once.
-- **Accuracy-aware quantization** — define an acceptable accuracy drop during INT8 model optimization to balance
-  inference performance and accuracy.
-
-> [!NOTE]
-> Some capabilities from earlier versions are no longer included in Geti 3.0 or have been reworked. Anomaly detection is
-> now a standalone product, [Anomalib Studio](https://github.com/open-edge-platform/anomalib). Task chaining,
-> hierarchical classification, and rotated detection are being unified under simplified single-task and instance
-> segmentation workflows. Semantic segmentation, keypoint detection, and XAI are not available in the Geti 3.0
-> application. Multi-user workspaces, user management, and API keys/tokens are not part of Geti 3.0. Dedicated test
-> dataset splits and project-level import/export have been replaced by the unified, dataset-based workflow. See the
-> [migration notes](#migrating-from-geti-2x) below.
-
 ## Key Features
 
-- **Hardware Acceleration**: Geti™ is optimized for modern Intel® hardware with AI capabilities, such as Intel® Arc™
-  GPUs and Intel® Core™ Ultra processors. Every trained model is automatically exported with
-  [OpenVINO™](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html) and it can be
-  deployed for inference across the full Intel® XPU portfolio. NVIDIA® CUDA and CPU-only execution are also supported.
-- **Iterative Model Improvement**: Geti™ enables users to start building computer vision models with as few as 10-20
-  images and iterate on those models in a rapid, feedback-driven loop. This allows you to quickly see results and make
-  improvements without needing a large initial dataset; you can add more data as you go, and the predictions from the
-  current model can help you annotate new data faster.
-- **Multiple Computer Vision Tasks**: Geti™ supports image classification, object detection, and instance segmentation
-  through its no-code web interface, while its Python API (`getitune`) unlocks even more use cases including hierarchical
-  classification, rotated object detection, semantic segmentation, and keypoint detection.
-- **Smart Annotations**: Geti™ includes powerful annotation tools that support both manual and semi-automated labeling
-  by means of state-of-the-art AI models like SAM (Segment Anything Model). This significantly reduces the time and
-  effort required to create high-quality training datasets.
-- **Dataset Import & Export**: Geti™ supports importing and exporting datasets in common formats like COCO, Pascal VOC,
-  and YOLO, plus a Geti-optimized native format, making it easy to integrate with other tools and workflows.
-- **Model Optimization**: Geti™ provides built-in support for quantization and optimization techniques that can reduce
-  model size and improve inference speed, making it easier to deploy models on resource-constrained edge devices.
-- **Inference Stream**: Geti™ includes a built-in inference pipeline that enables your trained models for real-time
-  inference on video streams, with support for various input sources (cameras, video files, RTSP stream, ...). The
-  predictions are visualized directly in the web application, and you can also configure it to forward the results to
-  different destinations (folder, MQTT, webhook, ...) for easy integration with other systems.
+- **Runs locally, on the edge**: fine-tune models and run inference directly on edge and client hardware — including
+  Intel® Panther Lake and Arc™ Battlemage (B-series) GPUs — with no Kubernetes cluster or data-center GPU required.
+  Minimum recommended setup: **8 CPU threads, 16 GB RAM, 40 GB free disk**.
+- **Hardware acceleration**: optimized for modern Intel® hardware (Arc™ GPUs, Core™ Ultra processors). Every model is
+  automatically exported with [OpenVINO™](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html)
+  for deployment across the full Intel® XPU portfolio; NVIDIA® CUDA and CPU-only execution are also supported.
+- **Iterative model improvement**: start with as few as 10-20 images and refine your model in a rapid, feedback-driven
+  loop, using the current model's predictions to annotate new data faster.
+- **Multiple computer vision tasks**: image classification, object detection, and instance segmentation from the no-code
+  web interface, with hierarchical classification, rotated detection, semantic segmentation, and keypoint detection
+  available through the Python API (`getitune`).
+- **State-of-the-art models**: a curated catalog spanning RF-DETR, DINOv3 DETR, YOLO26, YOLOX, D-FINE, Mask R-CNN, and
+  more — see the [full list below](#supported-tasks-and-models).
+- **Smart annotations**: manual and semi-automated labeling powered by models like SAM (Segment Anything Model), plus
+  bulk labeling to dramatically speed up dataset creation.
+- **Dataset & model versioning**: track how datasets and models evolve, link models to a specific dataset revision, view
+  exact training hyperparameters, and fine-tune from any previous version.
+- **Dataset import & export**: COCO, Pascal VOC, and YOLO formats plus a Geti-optimized native format, with label
+  filtering to selectively include or exclude labels on import/export.
+- **Model optimization**: built-in quantization with accuracy-aware INT8 optimization to balance inference speed and
+  accuracy on resource-constrained edge devices.
+- **Integrated deployment & inference**: build custom pipelines (source → model → sink) to deploy models inside Geti and
+  monitor real-time predictions on video streams. Sources include USB/IP cameras and video files; optional sinks include
+  folder, MQTT, and webhook. Complete pipelines can be exported as OpenVINO™-optimized bundles for edge deployment.
 
 ## Supported tasks and models
 
