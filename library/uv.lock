@@ -1368,7 +1368,6 @@ dev = [
     { name = "py-cpuinfo" },
     { name = "pytest" },
     { name = "pytest-cov" },
-    { name = "pytest-csv" },
     { name = "pytest-forked" },
     { name = "pytest-html" },
     { name = "pytest-mock" },
@@ -1456,7 +1455,6 @@ dev = [
     { name = "py-cpuinfo" },
     { name = "pytest", specifier = "~=9.0.3" },
     { name = "pytest-cov", specifier = ">=4.0.0" },
-    { name = "pytest-csv" },
     { name = "pytest-forked" },
     { name = "pytest-html" },
     { name = "pytest-mock" },
@@ -4458,19 +4456,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b1/51/a849f96e117386044471c8ec2bd6cfebacda285da9525c9106aeb28da671/pytest_cov-7.1.0.tar.gz", hash = "sha256:30674f2b5f6351aa09702a9c8c364f6a01c27aae0c1366ae8016160d1efc56b2", size = 55592, upload-time = "2026-03-21T20:11:16.284Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9d/7a/d968e294073affff457b041c2be9868a40c1c71f4a35fcc1e45e5493067b/pytest_cov-7.1.0-py3-none-any.whl", hash = "sha256:a0461110b7865f9a271aa1b51e516c9a95de9d696734a2f71e3e78f46e1d4678", size = 22876, upload-time = "2026-03-21T20:11:14.438Z" },
-]
-
-[[package]]
-name = "pytest-csv"
-version = "3.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pytest" },
-    { name = "six" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/76/a6/dd9820c07c0d6251ab9c8764307aca3cd2ce9057f7f9459edd173dab342e/pytest-csv-3.0.0.tar.gz", hash = "sha256:6d01e7db1aa2137eae822d3fdb2d6a5dd0ce736548593b5311ae3cf41e2d12d4", size = 21923, upload-time = "2021-04-22T19:31:53.512Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e6/2c/2ce553f606e1544655928d7a9280c63270d57a431e3dad621132e09a8147/pytest_csv-3.0.0-py2.py3-none-any.whl", hash = "sha256:599ab855d2ba748275dc7f814f63f9f6593bdd9a064f27cfd3940e68e6525c36", size = 26401, upload-time = "2021-04-22T19:31:52.472Z" },
 ]
 
 [[package]]

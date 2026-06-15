@@ -1076,7 +1076,6 @@ dev = [
     { name = "py-cpuinfo" },
     { name = "pytest", specifier = "~=9.0.3" },
     { name = "pytest-cov", specifier = ">=4.0.0" },
-    { name = "pytest-csv" },
     { name = "pytest-forked" },
     { name = "pytest-html" },
     { name = "pytest-mock" },
