@@ -17,6 +17,7 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
 
 from getitune.config.data import SubsetConfig, TileConfig
+from getitune.data.utils._coco_bbox_fix import apply_coco_bbox_fix
 from getitune.data.augmentation import CPUAugmentationPipeline
 from getitune.data.dataset.tile import TileDatasetFactory
 from getitune.data.entity.utils import detect_storage_dtype
@@ -34,6 +35,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Apply temporary Datumaro COCO workaround.
+apply_coco_bbox_fix()
 
 _MP_CONTEXT = multiprocessing.get_context("spawn")
 
