@@ -42,6 +42,7 @@ jobs:
             test:
               - library/**
               - .github/**
+              - '!.github/workflows/getitrack-*.yaml'
 
   code-quality-checks:
     runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}

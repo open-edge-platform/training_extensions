@@ -1,0 +1,53 @@
+#!/usr/bin/env just --justfile
+
+default:
+    @just --list --unsorted
+
+# -------------------------------------------------------------------------------------------------
+# Virtual environment management
+# -------------------------------------------------------------------------------------------------
+
+uv_version := `grep -A 3 '\[tool\.uv\]' pyproject.toml | grep 'required-version' | sed 's/.*= "[~=<>]*\(.*\)"/\1/'`
+
+_ensure_uv:
+    @if ! command -v uv > /dev/null; then \
+        curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/astral-sh/uv/releases/download/{{uv_version}}/uv-installer.sh" | sh; \
+    fi
+
+# Create a virtual environment and install dependencies
+venv: _ensure_uv
+    uv lock --check
+    uv sync --frozen
+
+# Generate or update the uv lock file
+venv-lock: _ensure_uv
+    uv lock
+
+# -------------------------------------------------------------------------------------------------
+# Linting and formatting
+# -------------------------------------------------------------------------------------------------
+
+# Run linters (ruff + pyrefly)
+lint: ruff pyrefly
+
+# Run ruff for linting and format checking
+ruff: _ensure_uv
+    uv run ruff check --output-format=github
+    uv run ruff format --check
+
+# Run ruff to format the code and apply fixes
+ruff-fix: _ensure_uv
+    uv run ruff check --fix
+    uv run ruff format
+
+# Run pyrefly to detect potential type errors
+pyrefly: _ensure_uv
+    uv run pyrefly check
+
+# -------------------------------------------------------------------------------------------------
+# Testing
+# -------------------------------------------------------------------------------------------------
+
+# Run unit tests with pytest
+test-unit *ARGS: _ensure_uv
+    uv run pytest ./tests/unit -v {{ ARGS }}
