@@ -17,12 +17,12 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
 
 from getitune.config.data import SubsetConfig, TileConfig
-from getitune.data.utils._coco_bbox_fix import apply_coco_bbox_fix
 from getitune.data.augmentation import CPUAugmentationPipeline
 from getitune.data.dataset.tile import TileDatasetFactory
 from getitune.data.entity.utils import detect_storage_dtype
 from getitune.data.factory import DatasetFactory
 from getitune.data.utils import get_adaptive_num_workers, instantiate_sampler
+from getitune.data.utils._coco_bbox_fix import apply_coco_bbox_fix
 from getitune.types.device import DeviceType
 from getitune.types.label import LabelInfo
 from getitune.types.task import TaskType

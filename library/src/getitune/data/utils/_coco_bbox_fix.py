@@ -21,9 +21,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import datumaro.experimental.data_formats.coco.helpers as coco_helpers
 import numpy as np
 from datumaro.experimental.data_formats.coco.helpers import _segmentation_to_poly_parts
-import datumaro.experimental.data_formats.coco.helpers as coco_helpers
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,6 @@ def _fixed_collect_instances_for_image(
     cat_id_to_idx: dict[int, int],
 ) -> tuple[list[list[float] | None], list[np.ndarray], list[int | None], list[float], list[bool]]:
     """Return one bbox per annotation instead of one bbox per polygon part."""
-
     bboxes_list: list[list[float] | None] = []
     polygons_list: list[np.ndarray] = []
     labels_list: list[int | None] = []
@@ -109,7 +108,6 @@ def apply_coco_bbox_fix() -> None:
 
     if _ORIGINAL_FN is not None:
         return
-
 
     _ORIGINAL_FN = coco_helpers._collect_instances_for_image  # noqa: SLF001
     coco_helpers._collect_instances_for_image = _fixed_collect_instances_for_image  # noqa: SLF001
