@@ -3,13 +3,13 @@
 
 <img src="assets/geti-header.png" alt="Geti™ - A framework to rapidly build and deploy computer vision AI models">
 
-**Train and deploy Vision-Language-Action (VLA) models for robotic imitation learning**
+**Enable anyone from domain experts to data scientists to rapidly develop production-ready AI models**
+
 [Key Features](#key-features) •
+[Supported tasks and models](#supported-tasks-and-models) •
 [Quick Start](#quick-start) •
 [Documentation](#documentation) •
 [Contributing](#contributing)
-
-<br>
 
 [![Daily checks](https://github.com/open-edge-platform/training_extensions/actions/workflows/daily.yml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/daily.yml)
 [![Docker build](https://github.com/open-edge-platform/training_extensions/actions/workflows/build.yaml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/build.yaml)
