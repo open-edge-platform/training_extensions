@@ -326,7 +326,10 @@ class DinoVisionTransformer(nn.Module):
             x = torch.where(masks.unsqueeze(-1), self.mask_token.to(x.dtype).unsqueeze(0), x)
             cls_token = self.cls_token
         else:
-            cls_token = self.cls_token + 0 * self.mask_token
+            # Keep mask_token in the autograd graph (DDP requires all parameters to be used).
+            # Using subtraction instead of `0 * self.mask_token` to avoid an aten.mul type-promotion
+            # bug in torch.onnx.export that produces "prim.device != aten.mul" assertion errors.
+            cls_token = self.cls_token + self.mask_token - self.mask_token
         if self.n_storage_tokens > 0:
             storage_tokens = self.storage_tokens
         else:

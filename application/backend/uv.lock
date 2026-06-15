@@ -846,7 +846,6 @@ dependencies = [
     { name = "datumaro", extra = ["experimental"] },
     { name = "fastapi", extra = ["standard"] },
     { name = "faster-coco-eval" },
-    { name = "hiyapyco" },
     { name = "loguru" },
     { name = "opencv-python-headless" },
     { name = "optree" },
@@ -911,7 +910,6 @@ requires-dist = [
     { name = "getitune", extras = ["cpu"], marker = "extra == 'cpu'", editable = "../../library" },
     { name = "getitune", extras = ["cuda"], marker = "extra == 'cuda'", editable = "../../library" },
     { name = "getitune", extras = ["xpu"], marker = "extra == 'xpu'", editable = "../../library" },
-    { name = "hiyapyco", specifier = "==0.7.0" },
     { name = "loguru", specifier = "~=0.7.3" },
     { name = "opencv-python-headless", specifier = "~=4.13.0" },
     { name = "optree", specifier = "~=0.19.0" },
@@ -1203,20 +1201,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/54/75/07f6aa680575d9646c4167db6407c41340cbe2357f5654c4e72a1b01ca14/hf_xet-1.4.2-cp37-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:6b0932eb8b10317ea78b7da6bab172b17be03bbcd7809383d8d5abd6a2233e04", size = 4432751, upload-time = "2026-03-13T06:58:46.533Z" },
     { url = "https://files.pythonhosted.org/packages/cd/71/193eabd7e7d4b903c4aa983a215509c6114915a5a237525ec562baddb868/hf_xet-1.4.2-cp37-abi3-win_amd64.whl", hash = "sha256:ad185719fb2e8ac26f88c8100562dbf9dbdcc3d9d2add00faa94b5f106aea53f", size = 3671149, upload-time = "2026-03-13T06:58:57.07Z" },
     { url = "https://files.pythonhosted.org/packages/b4/7e/ccf239da366b37ba7f0b36095450efae4a64980bdc7ec2f51354205fdf39/hf_xet-1.4.2-cp37-abi3-win_arm64.whl", hash = "sha256:32c012286b581f783653e718c1862aea5b9eb140631685bb0c5e7012c8719a87", size = 3533426, upload-time = "2026-03-13T06:58:55.46Z" },
-]
-
-[[package]]
-name = "hiyapyco"
-version = "0.7.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "jinja2" },
-    { name = "markupsafe" },
-    { name = "pyyaml" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/4a/4c/48999f3383f99a4bb49723983147b2b4ef62f29fdeca81ec87cb0cc70d8c/HiYaPyCo-0.7.0.tar.gz", hash = "sha256:83387c217e109956af61a23884cf8cc9ba5f19241b3ac68141e3ad1153fc4597", size = 33358, upload-time = "2024-10-20T04:14:00.309Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/03/3d/3f847839e28e354873c81ebc3d3322d6e73d0d386971e84c178b45e82ff4/HiYaPyCo-0.7.0-py2.py3-none-any.whl", hash = "sha256:d56ae0f746506955c6b0072f7338f1cd50661bfd07c7ee9b49175a085fcbaf41", size = 24720, upload-time = "2024-10-20T04:13:57.817Z" },
 ]
 
 [[package]]
