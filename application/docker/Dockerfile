@@ -60,7 +60,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library,target=/library,rw \
-    uv sync --frozen --no-dev --no-editable --extra mqtt --extra cpu
+    uv sync --frozen --no-dev --no-editable --no-install-package av --extra mqtt --extra cpu
 
 ###########
 # CUDA Base
@@ -83,7 +83,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library,target=/library,rw \
-    uv sync --frozen --no-dev --no-editable --extra mqtt --extra cuda
+    uv sync --frozen --no-dev --no-editable --no-install-package av --extra mqtt --extra cuda
 
 ##########
 # XPU Base
@@ -106,7 +106,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library,target=/library,rw \
-    uv sync --frozen --no-dev --no-editable --extra mqtt --extra xpu
+    uv sync --frozen --no-dev --no-editable --no-install-package av --extra mqtt --extra xpu
 
 ##################
 # Geti UI packages
