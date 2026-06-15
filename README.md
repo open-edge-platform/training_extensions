@@ -46,16 +46,16 @@ for Intel® hardware with OpenVINO™ for fast inference across the full Intel®
   YOLOX, D-FINE, and Mask R-CNN — see the [full list below](#supported-tasks-and-models).
 - **Multiple computer vision tasks**: image classification, object detection, and instance segmentation from the no-code
   web interface, with even more tasks available through the Python API (`getitune`).
+- **Smart annotations**: manual and semi-automated labeling powered by models like SAM (Segment Anything Model), plus
+  bulk labeling to dramatically speed up dataset creation.
+- **Dataset & model versioning**: track how datasets and models evolve, link models to a specific dataset revision, view
+  exact training hyperparameters, and fine-tune from any previous version.
 - **Runs locally, on the edge**: fine-tune models and run inference directly on edge and client hardware — including
   Intel® Panther Lake and Arc™ Battlemage (B-series) GPUs — with no Kubernetes cluster or data-center GPU required.
   Minimum recommended setup: **8 CPU threads, 16 GB RAM, 40 GB free disk**.
 - **Hardware acceleration**: optimized for modern Intel® hardware (Arc™ GPUs, Core™ Ultra processors). Every model is
   automatically exported with [OpenVINO™](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html)
   for deployment across the full Intel® XPU portfolio; NVIDIA® CUDA and CPU-only execution are also supported.
-- **Smart annotations**: manual and semi-automated labeling powered by models like SAM (Segment Anything Model), plus
-  bulk labeling to dramatically speed up dataset creation.
-- **Dataset & model versioning**: track how datasets and models evolve, link models to a specific dataset revision, view
-  exact training hyperparameters, and fine-tune from any previous version.
 - **Dataset import & export**: COCO, Pascal VOC, and YOLO formats plus a Geti-optimized native format, with label
   filtering to selectively include or exclude labels on import/export.
 - **Model optimization**: built-in quantization with accuracy-aware INT8 optimization to balance inference speed and
