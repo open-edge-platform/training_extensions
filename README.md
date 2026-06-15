@@ -181,7 +181,9 @@ recommended for larger models.
 
 ### 1. Run Geti
 
-The easiest way to run Geti is with Docker — pull a pre-built image for your hardware and launch it:
+#### Docker
+
+Pull a pre-built image for your hardware and launch it:
 
 ```bash
 docker pull ghcr.io/open-edge-platform/geti-xpu    # modern Intel® CPU/GPU (recommended)
@@ -193,10 +195,13 @@ just run-image --accelerator xpu                   # launch the application
 
 Then open the Geti web application at [**http://localhost:7860**](http://localhost:7860).
 
-> [!WARNING]
-> The official Docker images and Windows (MSIX) app for Geti 3.x have not been released yet. For now, build the image
-> from source — see the [installation guide](https://docs.geti.intel.com/) or the [application README](application/README.md)
-> for Docker build, native Windows app, and run-from-source instructions.
+#### Windows app (MSIX)
+
+1. Download the `.msix` package and double-click to install.
+2. Launch Geti from the Start menu.
+
+For build-from-source options and advanced setup, see the [installation guide](https://docs.geti.intel.com/) and the
+[application README](application/README.md).
 
 ### 2. Train your first model
 
