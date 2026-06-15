@@ -238,16 +238,8 @@ inference/optimization examples.
 
 ## Migrating from Geti 2.x
 
-Geti 3.0 introduces a simplified, dataset-based workflow. When upgrading:
-
-- **Models** trained in 2.x must be retrained on imported datasets.
-- **Projects with multiple datasets** require each dataset to be exported and imported separately.
-- **Project-level import/export** has been replaced by dataset-based migration — transfer your data and retrain models
-  in the new environment.
-
-The REST API has also been redesigned, and model export and deployment have been streamlined (now using the
-OpenVINO™ Model API instead of the SDK). Please follow the
-[migration guidance](https://docs.geti.intel.com/) in the documentation.
+Geti 3.0 introduces a simplified dataset‑based workflow: datasets must be exported and imported individually, models from 2.x require retraining, project-level migration is replaced by dataset-level transfer, and the REST API and deployment now use the OpenVINO™ Model API — **Please follow the
+[migration guidance](https://docs.geti.intel.com/) in the documentation.**
 
 ## Documentation
 
