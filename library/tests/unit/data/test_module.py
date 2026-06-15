@@ -218,11 +218,15 @@ class TestDataModule:
         mock_config.input_size = (224, 224)
         mock_config.intensity = IntensityConfig()
 
-        return {
+        configs = {
             "train_subset": deepcopy(mock_config),
             "val_subset": deepcopy(mock_config),
             "test_subset": deepcopy(mock_config),
         }
+        configs["train_subset"].subset_name = "train"
+        configs["val_subset"].subset_name = "val"
+        configs["test_subset"].subset_name = "test"
+        return configs
 
     @pytest.fixture
     def fxt_mock_dataset(self) -> callable:
