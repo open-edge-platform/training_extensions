@@ -534,7 +534,7 @@ class TestGetiTuneTrainerCreateTrainingDataset:
 
         with (
             patch("app.execution.training.getitune_trainer.TransformLibFactory.generate") as mock_generate,
-            patch("app.execution.training.getitune_trainer.detect_storage_dtype", return_value="uint8"),
+            patch("app.execution.training.getitune_trainer.detect_storage_dtype", return_value=("uint8", 3)),
         ):
             mock_generate.side_effect = [mock_train_transforms, mock_val_transforms, mock_test_transforms]
 

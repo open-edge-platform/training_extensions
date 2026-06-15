@@ -221,7 +221,11 @@ class InferenceWorker(BaseProcessWorker):
 
                     inference_start_time = self._metrics_service.record_inference_start()  # type: ignore
                     self._prediction_buffer.register_expected_timestamp(inference_start_time)
-                    rgb_frame = cv2.cvtColor(item.frame_data, cv2.COLOR_BGR2RGB)
+                    # Convert only 3-channel BGR images to RGB; pass grayscale / other formats through.
+                    if item.frame_data.ndim == 3 and item.frame_data.shape[2] == 3:
+                        rgb_frame = cv2.cvtColor(item.frame_data, cv2.COLOR_BGR2RGB)
+                    else:
+                        rgb_frame = item.frame_data
                     model.infer_async(
                         rgb_frame,
                         user_data={
