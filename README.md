@@ -33,10 +33,9 @@ for Intel® hardware with OpenVINO™ for fast inference across the full Intel®
 
 ## Key Features
 
-- **Interactive model training**: Geti™ enables users to start building deep-learning computer vision models with as
-  few as 10-20 images, then improve accuracy in a rapid train-predict-annotate loop.
-- **End-to-end deep learning workflow**: go from raw images to production-ready models in one environment — annotate,
-  train, optimize, and run inference without stitching together separate tools.
+- **Interactive end-to-end model training**: Geti™ enables users to start building deep-learning computer vision models
+  with as few as 10-20 images and take them to production in one environment — annotate, train, optimize, run
+  inference, and improve accuracy in a rapid train-predict-annotate loop.
 - **State-of-the-art model catalog**: train and fine-tune modern architectures such as RF-DETR, DINOv3 DETR, YOLO26,
   YOLOX, D-FINE, and Mask R-CNN — see the [full list below](#supported-tasks-and-models).
 - **Multiple computer vision tasks**: image classification, object detection, and instance segmentation from the no-code
