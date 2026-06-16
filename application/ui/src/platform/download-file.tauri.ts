@@ -18,7 +18,6 @@ const saveDownload = async (url: string, name?: string, startedMessage?: string)
             filters: [{ name: 'All Files', extensions: ['*'] }],
         });
 
-
         if (selectedPath === null) {
             return;
         }
