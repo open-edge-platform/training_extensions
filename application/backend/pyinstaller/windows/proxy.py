@@ -150,6 +150,63 @@ def _autoproxy_resolve(url: str, auto_detect: bool, config_url: str | None) -> s
         WinHttpCloseHandle(hSession)
 
 
+def _normalize_proxy_url(value: str) -> str:
+    """Ensure a proxy endpoint carries a scheme so requests/urllib3 can parse it.
+
+    A bare host:port is prefixed with http:// (proxy endpoints are reached over HTTP,
+    even when used for HTTPS traffic via CONNECT). Values that already include a scheme are
+    returned unchanged.
+    """
+    value = value.strip()
+    if "://" in value:
+        return value
+    return f"http://{value}"
+
+
+def _parse_windows_proxy(proxy: str) -> dict[str, str]:
+    """Convert a WinHTTP proxy string into per-scheme proxy URLs.
+
+    WinHTTP/IE can return either a single proxy that applies to all protocols
+    ("host:port") or a per-protocol list ("http=host:port;https=host:port;...").
+    Entries may be separated by semicolons or whitespace. This returns a mapping suitable
+    for setting HTTP_PROXY / HTTPS_PROXY.
+
+    Only the http and https schemes are honoured; ftp/socks entries are
+    ignored because they are not used for weight downloads and Python cannot consume them
+    via the standard proxy environment variables.
+
+    Args:
+        proxy: The raw proxy string returned by WinHTTP.
+
+    Returns:
+        A dict with optional "http" and "https" keys mapped to normalized proxy URLs.
+    """
+    result: dict[str, str] = {}
+    default: str | None = None
+
+    # Entries are separated by ';' or whitespace per the WinHTTP format.
+    for raw_entry in proxy.replace(";", " ").split():
+        entry = raw_entry.strip()
+        if not entry:
+            continue
+        if "=" in entry:
+            scheme, _, endpoint = entry.partition("=")
+            scheme = scheme.strip().lower()
+            endpoint = endpoint.strip()
+            if scheme in ("http", "https") and endpoint:
+                result[scheme] = _normalize_proxy_url(endpoint)
+        elif default is None:
+            # A scheme-less entry applies to every protocol.
+            default = _normalize_proxy_url(entry)
+
+    # Fall back to the catch-all proxy for any scheme not explicitly configured.
+    if default is not None:
+        result.setdefault("http", default)
+        result.setdefault("https", default)
+
+    return result
+
+
 def _detect_proxy(url: str) -> str | None:
     """Detect the proxy for ``url``.
 
@@ -192,5 +249,17 @@ else:
     # Avoid printing the proxy value itself: it can embed credentials.
     print("Setup Hook: Proxy detected" if proxy else "Setup Hook: No proxy detected")
     if proxy:
-        os.environ["HTTP_PROXY"] = proxy
-        os.environ["HTTPS_PROXY"] = proxy
+        # WinHTTP/IE may return a per-protocol list (e.g. "http=host:912;https=host:912;...")
+        # which requests/urllib3 cannot parse. Normalize it into per-scheme proxy URLs so the
+        # standard HTTP(S)_PROXY environment variables hold a single, parseable URL each.
+        parsed = _parse_windows_proxy(proxy)
+        http_proxy = parsed.get("http")
+        https_proxy = parsed.get("https")
+        if http_proxy:
+            os.environ["HTTP_PROXY"] = http_proxy
+            os.environ["http_proxy"] = http_proxy
+        if https_proxy:
+            os.environ["HTTPS_PROXY"] = https_proxy
+            os.environ["https_proxy"] = https_proxy
+        if not (http_proxy or https_proxy):
+            print("Setup Hook: Proxy detected but no usable http/https endpoint could be parsed")
