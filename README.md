@@ -195,6 +195,9 @@ docker pull ghcr.io/open-edge-platform/geti-xpu    # modern Intel® CPU/GPU (rec
 docker pull ghcr.io/open-edge-platform/geti-cuda   # NVIDIA® CUDA platforms
 docker pull ghcr.io/open-edge-platform/geti-cpu    # CPU-only (most lightweight)
 
+# Retag the pulled image as `geti-{cpu,xpu,cuda}:latest` for using with `just run-image`
+docker tag ghcr.io/open-edge-platform/geti-cpu:latest geti-cpu:latest
+
 just run-image --accelerator xpu                   # launch the application
 ```
 
