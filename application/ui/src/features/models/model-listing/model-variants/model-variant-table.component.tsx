@@ -100,7 +100,7 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
 
     const handleDownloadModel = (modelVariantId: string) => {
         const url = `${API_BASE_URL}/api/projects/${projectId}/models/${model.id}/variants/${modelVariantId}/binary`;
-        downloadFile(url, undefined, 'Model download started');
+        downloadFile(url, `${model.name}_${format}.zip`, 'Model download started');
     };
 
     return (

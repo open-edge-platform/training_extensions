@@ -188,7 +188,7 @@ describe('ModelVariantTable', () => {
 
         expect(downloadFile).toHaveBeenCalledWith(
             expect.stringContaining(`/api/projects/project-123/models/${model.id}/variants/ov-1/binary`),
-            undefined,
+            `${model.name}_openvino.zip`,
             'Model download started'
         );
     });
