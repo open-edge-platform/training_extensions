@@ -274,8 +274,7 @@ jobs:
             --enable-shared \
             --enable-libsvtav1 \
             --enable-libopenh264 \
-            --enable-libvpx \
-            --enable-libopus
+            --enable-libvpx
 
           make -j$(nproc)
           make install
@@ -397,7 +396,7 @@ jobs:
           import os as _os, sys as _sys
           if _sys.platform == 'win32':
               _av_dir = _os.path.dirname(_os.path.abspath(__file__))
-              _os.add_dll_directory(_av_dir)
+              _dll_dir_handle = _os.add_dll_directory(_av_dir)
           '@
           $patched = $patch + "`n" + $original
           Set-Content -Path $avInit -Value $patched -NoNewline
