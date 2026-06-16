@@ -355,7 +355,7 @@ class TestScrapeCsvMetrics:
 
 
 class TestExperimentExecutorInit:
-    @pytest.fixture()
+    @pytest.fixture
     def recipe_path(self, tmp_path: Path) -> Path:
         path = tmp_path / "recipe.yaml"
         path.write_text(_LIGHTNING_RECIPE)
