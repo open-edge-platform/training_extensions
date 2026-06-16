@@ -16,6 +16,19 @@
 
 </div>
 
+## Geti Application
+
+Geti is an end-to-end application for building and deploying computer vision AI models.
+It provides an intuitive graphical interface to upload image or video data, annotate datasets,
+train and optimize models, and run real-time inference through configurable pipelines.
+
+Main capabilities:
+
+- **No-code model lifecycle**: move from data upload and annotation to training, evaluation, and deployment in one UI.
+- **Built-in data and annotation workflows**: manage datasets, labels, and revisions with manual and AI-assisted annotation tools.
+- **Pipeline-based deployment**: connect sources (cameras or files) to trained models and route predictions to sinks such as storage, MQTT, or webhooks.
+- **Edge-oriented optimization**: export OpenVINO-optimized models for efficient inference on Intel hardware, with support for other accelerators.
+
 ## Quick start
 
 There are several ways to run Geti, choose the method that best fits your workflow:
