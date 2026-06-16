@@ -181,6 +181,11 @@ recommended for larger models.
 
 ### 1. Run Geti
 
+#### Windows app (MSIX)
+
+1. Download the `.msix` package and double-click to install.
+2. Launch Geti from the Start menu.
+
 #### Docker
 
 Pull a pre-built image for your hardware and launch it:
@@ -194,11 +199,6 @@ just run-image --accelerator xpu                   # launch the application
 ```
 
 Then open the Geti web application at [**http://localhost:7860**](http://localhost:7860).
-
-#### Windows app (MSIX)
-
-1. Download the `.msix` package and double-click to install.
-2. Launch Geti from the Start menu.
 
 For build-from-source options and advanced setup, see the [installation guide](https://docs.geti.intel.com/) and the
 [application README](application/README.md).
