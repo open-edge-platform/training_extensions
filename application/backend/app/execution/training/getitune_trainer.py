@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import json
 import os
 import shutil
 from collections.abc import Callable
@@ -418,6 +419,22 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             std=getitune_datamodule.input_std if getitune_datamodule.input_std is not None else (1.0, 1.0, 1.0),
             intensity_config=getitune_datamodule.input_intensity_config,
         ).as_dict()
+
+        # [MODEL_CONFIG] Log model configuration before instantiation
+        print("\n" + "=" * 80)
+        print("[GetiTuneTrainer.train_model] MODEL CONFIGURATION BEFORE ENGINE CREATION")
+        print("=" * 80)
+        model_summary = {
+            "class_path": model_cfg.get("class_path"),
+            "input_size": model_cfg["init_args"]["data_input_params"].get("input_size"),
+            "label_info": model_cfg["init_args"]["label_info"],
+            "num_classes": len(model_cfg["init_args"]["label_info"]),
+            "optimizer": model_cfg["init_args"].get("optimizer"),
+            "scheduler": model_cfg["init_args"].get("scheduler"),
+        }
+        print(json.dumps(model_summary, indent=2, default=str))
+        print("=" * 80 + "\n")
+
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(LightningModel, "model", required=False, fail_untyped=False)
         getitune_model: LightningModel = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
@@ -450,6 +467,64 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
         # Start training
         logger.info("Starting the training loop (model_id={})", model_id)
+
+        # [TRAINING_START] Log training configuration and dataset info before training
+        print("\n" + "=" * 80)
+        print("[GetiTuneTrainer.train_model] TRAINING START - COMPLETE CONFIGURATION")
+        print("=" * 80)
+
+        # Extract augmentations from datamodule subsets
+        train_subset_config = dataset_info.getitune_training_subset_config
+        augmentations_cpu = (
+            train_subset_config.transforms.cpu_transforms
+            if hasattr(train_subset_config.transforms, "cpu_transforms")
+            else "N/A"
+        )
+        augmentations_gpu = (
+            train_subset_config.transforms.gpu_transforms
+            if hasattr(train_subset_config.transforms, "gpu_transforms")
+            else "N/A"
+        )
+
+        training_start_config = {
+            "dataset_info": {
+                "train_size": len(dataset_info.getitune_training_dataset),
+                "val_size": len(dataset_info.getitune_validation_dataset),
+                "test_size": len(dataset_info.getitune_testing_dataset),
+                "batch_size_train": train_subset_config.batch_size,
+                "batch_size_val": dataset_info.getitune_validation_subset_config.batch_size,
+                "num_workers": train_subset_config.num_workers,
+            },
+            "device": {
+                "type": str(device.type),
+                "index": device.index,
+                "device_type_getitune": str(getitune_device_type),
+            },
+            "training_kwargs": {
+                "max_epochs": training_config["max_epochs"],
+                "precision": training_config.get("precision", "no precision specified"),
+                "devices": train_kwargs.get("devices", "default"),
+            },
+            "callbacks": [
+                {
+                    "class_path": cb.get("class_path"),
+                    "init_args_keys": list(cb.get("init_args", {}).keys()) if "init_args" in cb else [],
+                }
+                for cb in callbacks_cfg
+            ],
+            "augmentations": {
+                "cpu_transforms": str(augmentations_cpu),
+                "gpu_transforms": str(augmentations_gpu),
+            },
+            "datamodule_info": {
+                "input_size": getitune_datamodule.input_size,
+                "num_classes": len(getitune_datamodule.label_info.label_names),
+                "classes": getitune_datamodule.label_info.label_names,
+            },
+        }
+        print(json.dumps(training_start_config, indent=2, default=str))
+        print("=" * 80 + "\n")
+
         train_kwargs = {
             "max_epochs": training_config["max_epochs"],
             "callbacks": callbacks_list,
