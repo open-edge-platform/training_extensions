@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import inspect
 import logging
+from typing import TextIO
 
 from loguru import logger
 
@@ -30,14 +31,39 @@ class InterceptHandler(logging.Handler):
 
 
 class LoggerStdoutWriter:
-    """Wrapper for redirecting stdout to logger"""
+    """File-like wrapper that forwards stdout/stderr writes to loguru."""
 
-    @staticmethod
-    def write(msg: str) -> None:
-        msg = msg.rstrip("\n")
+    def __init__(self, original_stream: TextIO, level: str = "INFO") -> None:
+        self._original_stream = original_stream
+        self._level = level
+        self._buffer = ""
+
+    def write(self, msg: str) -> int:
+        for char in msg:
+            if char == "\r":
+                self._buffer = ""
+                continue
+            if char == "\n":
+                self._emit_buffer()
+                continue
+            self._buffer += char
+        return len(msg)
+
+    def flush(self) -> None:
+        self._emit_buffer()
+
+    def isatty(self) -> bool:
+        return bool(getattr(self._original_stream, "isatty", lambda: False)())
+
+    def fileno(self) -> int:
+        return self._original_stream.fileno()
+
+    @property
+    def encoding(self) -> str:
+        return getattr(self._original_stream, "encoding", "utf-8")
+
+    def _emit_buffer(self) -> None:
+        msg = self._buffer.strip()
         if msg:
-            logger.info(msg)
-
-    @staticmethod
-    def flush() -> None:
-        pass
+            logger.log(self._level, msg)
+        self._buffer = ""
