@@ -185,7 +185,7 @@ jobs:
         run: just test-integration \
           -ra \
           --showlocals \
-          --junit-xml=${{ matrix.task }}_Python-${{ matrix.python-version }}.xml \
+          --junitxml=${{ matrix.task }}_Python-${{ matrix.python-version }}.xml \
           --task ${{ matrix.task }} \
           --open-subprocess \
           --run-category-only
