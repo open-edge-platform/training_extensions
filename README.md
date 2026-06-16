@@ -238,7 +238,7 @@ from getitune.backend.lightning.engine import LightningEngine
 # Initialize and train using a bundled recipe and dataset
 engine = LightningEngine(
     model="efficientnet_b0",  # any supported architecture from the model catalog under recipe/ folder or recipe.yaml path directly
-    data="tests/assets/classification_cifar10", # path to dataset (any supported format, e.g., COCO, VOC, YOLO, Datumaro)
+    data="library/tests/assets/classification_cifar10", # path to dataset (any supported format, e.g., COCO, VOC, YOLO, Datumaro)
     task="MULTI_CLASS_CLS" # optional if not specified in recipe, otherwise required (see supported tasks in documentation)
 )
 
