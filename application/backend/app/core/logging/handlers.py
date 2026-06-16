@@ -35,18 +35,18 @@ class LoggerStdoutWriter:
 
     def __init__(self, original_stream: TextIO, level: str = "INFO") -> None:
         self._original_stream = original_stream
-        self._level = level
-        self._buffer = ""
+        self._level = logger.level(level).name
+        self._buffer: list[str] = []
 
     def write(self, msg: str) -> int:
         for char in msg:
             if char == "\r":
-                self._buffer = ""
+                self._buffer.clear()
                 continue
             if char == "\n":
                 self._emit_buffer()
                 continue
-            self._buffer += char
+            self._buffer.append(char)
         return len(msg)
 
     def flush(self) -> None:
@@ -63,7 +63,7 @@ class LoggerStdoutWriter:
         return getattr(self._original_stream, "encoding", "utf-8")
 
     def _emit_buffer(self) -> None:
-        msg = self._buffer.strip()
+        msg = "".join(self._buffer).strip()
         if msg:
             logger.log(self._level, msg)
-        self._buffer = ""
+        self._buffer.clear()

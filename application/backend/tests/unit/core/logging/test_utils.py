@@ -25,7 +25,6 @@ class TestLoggingCtx:
         assert "Metric of initial model: 0.5090429186820984" in messages
         assert "Collecting values for each data item using the initial model" in messages
         assert "Elapsed Time: 00:00:53" in messages
-        assert "Elapsed Time: 00:00:53" in messages
 
     def test_logging_ctx_keeps_only_latest_carriage_return_progress_update(self, tmp_path):
         log_path = tmp_path / "job.log"
