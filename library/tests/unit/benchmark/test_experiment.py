@@ -355,9 +355,15 @@ class TestScrapeCsvMetrics:
 
 
 class TestExperimentExecutorInit:
-    def test_defaults(self, tmp_path: Path) -> None:
+    @pytest.fixture()
+    def recipe_path(self, tmp_path: Path) -> Path:
+        path = tmp_path / "recipe.yaml"
+        path.write_text(_LIGHTNING_RECIPE)
+        return path
+
+    def test_defaults(self, recipe_path: Path, tmp_path: Path) -> None:
         executor = ExperimentExecutor(
-            recipe_path=tmp_path / "recipe.yaml",
+            recipe_path=recipe_path,
             data_path=tmp_path / "data",
             work_dir=tmp_path / "work",
         )
@@ -368,9 +374,9 @@ class TestExperimentExecutorInit:
         assert executor.scenario_overrides == {}
         assert executor.extra_train_kwargs == {}
 
-    def test_custom_args(self, tmp_path: Path) -> None:
+    def test_custom_args(self, recipe_path: Path, tmp_path: Path) -> None:
         executor = ExperimentExecutor(
-            recipe_path=tmp_path / "recipe.yaml",
+            recipe_path=recipe_path,
             data_path=tmp_path / "data",
             work_dir=tmp_path / "work",
             accelerator="cpu",
@@ -387,18 +393,18 @@ class TestExperimentExecutorInit:
         assert executor.scenario_overrides == {"lr": 0.01}
         assert executor.extra_train_kwargs == {"max_epochs": 5}
 
-    def test_find_exported_model_raises_when_missing(self, tmp_path: Path) -> None:
+    def test_find_exported_model_raises_when_missing(self, recipe_path: Path, tmp_path: Path) -> None:
         executor = ExperimentExecutor(
-            recipe_path=tmp_path / "recipe.yaml",
+            recipe_path=recipe_path,
             data_path=tmp_path / "data",
             work_dir=tmp_path / "work",
         )
         with pytest.raises(FileNotFoundError, match="Exported model not found"):
             executor._find_exported_model()
 
-    def test_find_exported_model_primary_path(self, tmp_path: Path) -> None:
+    def test_find_exported_model_primary_path(self, recipe_path: Path, tmp_path: Path) -> None:
         executor = ExperimentExecutor(
-            recipe_path=tmp_path / "recipe.yaml",
+            recipe_path=recipe_path,
             data_path=tmp_path / "data",
             work_dir=tmp_path / "work",
         )
@@ -407,9 +413,9 @@ class TestExperimentExecutorInit:
         primary.write_text("<model/>")
         assert executor._find_exported_model() == primary
 
-    def test_find_exported_model_fallback_path(self, tmp_path: Path) -> None:
+    def test_find_exported_model_fallback_path(self, recipe_path: Path, tmp_path: Path) -> None:
         executor = ExperimentExecutor(
-            recipe_path=tmp_path / "recipe.yaml",
+            recipe_path=recipe_path,
             data_path=tmp_path / "data",
             work_dir=tmp_path / "work",
         )
@@ -623,10 +629,9 @@ class TestRecipeBackend:
         assert backend == "lightning"
         assert task_type is None
 
-    def test_missing_recipe_defaults_to_lightning(self, tmp_path: Path) -> None:
-        backend, task_type = _recipe_backend(tmp_path / "missing.yaml")
-        assert backend == "lightning"
-        assert task_type is None
+    def test_missing_recipe_raises_value_error(self, tmp_path: Path) -> None:
+        with pytest.raises(ValueError, match="Could not load recipe"):
+            _recipe_backend(tmp_path / "missing.yaml")
 
 
 class TestUltralyticsTorchMetric:
