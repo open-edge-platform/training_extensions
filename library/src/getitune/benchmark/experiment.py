@@ -314,8 +314,9 @@ def _recipe_backend(recipe_path: Path) -> tuple[str, TaskType | None]:
     try:
         with recipe_path.open(encoding="utf-8") as fh:
             raw = yaml.safe_load(fh)
-    except (OSError, yaml.YAMLError):
-        return "lightning", None
+    except (OSError, yaml.YAMLError) as exc:
+        msg = f"Could not load recipe {recipe_path}: {exc}"
+        raise ValueError(msg) from exc
     if isinstance(raw, dict) and raw.get("backend") == "ultralytics":
         task_raw = raw.get("task")
         task_type = TaskType(task_raw) if task_raw else None
