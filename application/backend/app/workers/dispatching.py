@@ -62,6 +62,8 @@ class DispatchingWorker(BaseThreadWorker):
             active_sink = SinkService(event_bus=self._event_bus, db_session=db).get_active_sink()
         sink = active_sink if active_sink is not None else DisconnectedSinkConfig()
         destinations = DispatchService.get_destinations(output_configs=[sink])
+        for destination in destinations:
+            destination.connect()
         return sink, destinations
 
     def _reload_sink(self) -> None:

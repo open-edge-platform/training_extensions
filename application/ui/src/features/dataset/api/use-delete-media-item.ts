@@ -1,13 +1,13 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { toast } from '@geti/ui';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isFunction } from 'lodash-es';
 
 import { $api } from '../../../api/client';
+import { toast } from '../../../components/toast/toast.component';
 import { getQueryKey } from '../../../query-client/query-client';
 
 const toastId = 'deleting-notification';

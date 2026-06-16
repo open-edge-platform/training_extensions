@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../api/client';
+import { toast } from '../../../components/toast/toast.component';
 import { Job } from '../../../constants/shared-types';
 import { getQueryKey } from '../../../query-client/query-client';
 import { useSSE } from '../../use-sse.hook';

@@ -267,7 +267,7 @@ class TestModelEndpoints:
         elif model_format == ModelFormat.ONNX:
             (model_dir / "model.onnx").write_bytes(bin_content)
         elif model_format == ModelFormat.PYTORCH:
-            (model_dir / "model.ckpt").write_bytes(bin_content)
+            (model_dir / "model.pt").write_bytes(bin_content)
 
         fxt_model_service.get_model_binary_files.return_value = True, tuple(model_dir.glob("*"))
         fxt_model_service.get_variant.return_value = ModelVariant(
@@ -302,8 +302,8 @@ class TestModelEndpoints:
                 assert "model.onnx" in namelist
                 assert zip_file.read("model.onnx") == bin_content
             elif model_format == ModelFormat.PYTORCH:
-                assert "model.ckpt" in namelist
-                assert zip_file.read("model.ckpt") == bin_content
+                assert "model.pt" in namelist
+                assert zip_file.read("model.pt") == bin_content
 
             # Auxiliary deployment files are bundled only for the deployable formats.
             if model_format in (ModelFormat.OPENVINO, ModelFormat.ONNX):

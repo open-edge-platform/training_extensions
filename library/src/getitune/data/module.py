@@ -17,6 +17,7 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
 
 from getitune.config.data import SubsetConfig, TileConfig
+from getitune.data._coco_bbox_fix import apply_coco_bbox_fix
 from getitune.data.augmentation import CPUAugmentationPipeline
 from getitune.data.dataset.tile import TileDatasetFactory
 from getitune.data.entity.utils import detect_storage_dtype
@@ -109,6 +110,10 @@ class DataModule(LightningDataModule):
         self.subsets: dict[str, VisionDataset] = {}
         self.save_hyperparameters(ignore=["input_size"])
 
+        # Workaround: fix Datumaro COCO multi-polygon bbox expansion bug.
+        # See ``_coco_bbox_fix.py`` for details.
+        apply_coco_bbox_fix()
+
         dataset = import_dataset(self.data_root)
 
         if input_size is not None:
@@ -142,7 +147,6 @@ class DataModule(LightningDataModule):
             dataset: A ``datumaro.experimental.Dataset`` loaded via ``import_dataset``.
         """
         storage_dtype: str | None = None
-        num_channels: int | None = None
         subset_configs = [self.train_subset, self.val_subset, self.test_subset]
         subset_names = [cfg.subset_name for cfg in subset_configs]
         if len(set(subset_names)) != len(subset_names):
@@ -179,7 +183,7 @@ class DataModule(LightningDataModule):
                 continue
 
             if storage_dtype is None:
-                storage_dtype, num_channels = detect_storage_dtype(dm_subset)
+                storage_dtype = detect_storage_dtype(dm_subset)
 
             if subset_cfg.intensity.storage_dtype != storage_dtype:
                 logger.warning(
@@ -187,17 +191,6 @@ class DataModule(LightningDataModule):
                     f"with auto-detected '{storage_dtype}'",
                 )
                 subset_cfg.intensity.storage_dtype = storage_dtype
-
-            # Auto-set repeat_channels for single-channel (grayscale) images.
-            # The model backbone expects 3-channel input, so channel-repeat is
-            # needed for both the training pipeline and the exported OV model
-            # (embedded preprocessing metadata).
-            if num_channels == 1 and subset_cfg.intensity.repeat_channels < 3:
-                logger.info(
-                    f"Single-channel image detected ({num_channels}ch). "
-                    f"Auto-setting intensity.repeat_channels=3 for subset '{name}'.",
-                )
-                subset_cfg.intensity.repeat_channels = 3
 
             subset_dataset = DatasetFactory.create(
                 task=self.task,
