@@ -33,13 +33,29 @@ Main capabilities:
 
 There are several ways to run Geti, choose the method that best fits your workflow:
 
-- **Docker (recommended)** [[instructions]](#run-with-docker) - download and run one of the pre-built Docker images, or build one yourself
 - **MSIX App (Windows)** [[instructions]](#install-as-windows-app) - install as a desktop application
+- **Docker** [[instructions]](#run-with-docker) - download and run one of the pre-built Docker images, or build one yourself
 - **Run from Source (for development)** [[instructions]](#run-from-source-for-development) - run the server and the UI as standalone components
+
+### Install as Windows app
+
+Installing Geti as a Windows app is the simplest way to run it on Windows.
+
+> [!WARNING]
+> The MSIX App for Geti 3.x has not been released publicly yet.
+> Until it is available, use [Run with Docker](#run-with-docker) or [Run from source (for development)](#run-from-source-for-development).
+
+When the MSIX package is available, install it as follows:
+
+1. Download the `.msix` package from the official Geti release.
+2. Double-click the package and click **Install** in the Windows installer dialog.
+3. Launch Geti from the **Start** menu.
+
+If Windows shows a security prompt, verify that the package is from the official Geti release before continuing.
 
 ### Run with Docker
 
-The easiest and most portable way to run Geti is through Docker.
+The easiest and most straightforward way to run Geti is through Docker.
 We provide pre-built images for Intel® XPU and NVIDIA® CUDA platforms, or you can build your own image from source.
 
 > [!WARNING]
@@ -181,11 +197,6 @@ docker run --rm -v geti-logs:/logs alpine cat /logs/workers/inference.log | jq -
 ```
 
 </details>
-
-### Install as Windows app
-
-> [!WARNING]
-> The MSIX App for Geti 3.0 has not been released yet.
 
 ### Run from source (for development)
 
