@@ -216,30 +216,81 @@ Once Geti is running, build your first model directly in the web UI:
 
 See [Training your first model](https://docs.geti.intel.com/) for the full walkthrough.
 
-### Use the Python API (`getitune`)
+### Use Geti Library Python API (`getitune`)
 
 Prefer to work programmatically? Geti's training engine is published on PyPI and can train, optimize, and deploy models
 from Python. It requires **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, and **NumPy ≥ 2.0**.
 
+`getitune` is a low-code transfer learning framework that supports multiple computer vision tasks (classification,
+object detection, instance segmentation, semantic segmentation, rotated detection, and keypoint detection) through a
+recipe-based configuration system. Each recipe is a YAML file that bundles the model architecture, data pipeline, and
+training configuration into a single entry point.
+
 ```bash
-pip install "getitune[cpu]"    # or [xpu] for Intel® GPU, [cuda] for NVIDIA® GPU
+uv pip install "getitune[xpu]"    # [xpu] for Intel® GPUs, [cpu] for CPU-only, [cuda] for NVIDIA® GPU
 ```
+
+#### Quick Start: Train and Export
 
 ```python
-from getitune.engine import create_engine
+from getitune.backend.lightning.engine import LightningEngine
 
 # Initialize and train using a bundled recipe and dataset
-engine = create_engine(
-    data="tests/assets/classification_cifar10",
-    model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+engine = LightningEngine(
+    model="efficientnet_b0",  # any supported architecture from the model catalog under recipe/ folder or recipe.yaml path directly
+    data="tests/assets/classification_cifar10", # path to dataset (any supported format, e.g., COCO, VOC, YOLO, Datumaro)
+    task="MULTI_CLASS_CLS" # optional if not specified in recipe, otherwise required (see supported tasks in documentation)
 )
-engine.train()
-engine.test()
-exported_path = engine.export()  # writes OpenVINO IR
+
+if __name__ == "__main__": # to avoid issues with multiprocessing
+  engine.train(max_epochs=80, precision="bf16")
+  engine.test()
+  exported_path = engine.export()  # writes OpenVINO IR
 ```
 
-See the [library README](library/README.md) for the full list of recipes, advanced configuration, dataset support, and
-inference/optimization examples.
+#### Validate and Optimize with OVEngine
+
+After exporting to OpenVINO™ IR, use `OVEngine` to validate accuracy and apply post-training quantization for faster
+inference on edge devices:
+
+```python
+from getitune.backend.openvino.engine import OVEngine
+
+# Create OVEngine from exported model
+ov_engine = OVEngine(
+    model=exported_path,  # .xml file from engine.export()
+    data=engine.datamodule,
+)
+
+# Validate OpenVINO FP32 model accuracy
+metrics = ov_engine.test()
+# Run inference with FP32 model on test set
+predictions = ov_engine.predict()
+
+# Apply INT8 quantization for faster inference (accuracy-aware)
+optimized_path = ov_engine.optimize()
+metrics_int8 = ov_engine.test()
+# Run inference with optimized model on test set
+predictions_int8 = ov_engine.predict()
+
+# Run inference with OpenVINO model on list of numpy images
+images = [...]  # list of NumPy image arrays
+predictions = ov_engine.predict(images)
+```
+
+#### Supported Dataset Formats
+
+Getitune auto-detects dataset formats via [Datumaro](https://github.com/open-edge-platform/datumaro):
+
+- **COCO**: `annotations/` directory with JSON files
+- **YOLO**: `data.yaml` file (Ultralytics layout)
+- **Pascal VOC**: `JPEGImages/`, `Annotations/`, `ImageSets/` directories
+- **Datumaro (native)**: `metadata.json` + `data.parquet`
+
+Zip archives are also accepted and automatically extracted on import.
+
+See the [library README](library/README.md) for the full list of recipes, model architectures, advanced configuration
+options (custom optimizers, schedulers, augmentations), and more examples.
 
 ## Migrating from Geti 2.x
 
@@ -253,7 +304,7 @@ For complete user and developer documentation, visit [**docs.geti.intel.com**](h
 | Component                  | README                                          | Documentation                                                                            |
 | -------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | **Geti application**       | [application/README.md](application/README.md)  | [docs.geti.intel.com](https://docs.geti.intel.com/)                                       |
-| **Python API (getitune)**  | [library/README.md](library/README.md)          | [Docs](https://open-edge-platform.github.io/training_extensions/latest/index.html)       |
+| **Geti Library (getitune)**  | [library/README.md](library/README.md)          | [Docs](https://open-edge-platform.github.io/training_extensions/latest/index.html)       |
 
 ## Community
 

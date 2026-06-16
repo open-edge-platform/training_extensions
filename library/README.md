@@ -45,9 +45,9 @@ Each supported task ships with curated "recipes": YAML files that bundle the mod
 ### Key Features
 
 - **Multi-task support**: classification, object detection, rotated detection, instance segmentation, semantic segmentation, and keypoint detection, see the [full model list below](#supported-tasks--models).
+- **Intel Hardware acceleration**: Native Intel GPU (XPU) support.
 - **Tiling** for large images across detection and segmentation tasks.
 - **Multiple backends**: train with PyTorch Lightning, export and run inference with ONNX and OpenVINO™.
-- **Hardware acceleration**: Intel GPU (XPU) and NVIDIA CUDA support.
 - [Datumaro](https://github.com/open-edge-platform/datumaro/tree/develop/src/datumaro/experimental) **data frontend** with automatic format detection (COCO, YOLO, VOC, native).
 - **Distributed training** across multiple GPUs.
 - **Mixed-precision training** to reduce memory and increase batch size.
@@ -83,10 +83,7 @@ Requirements: **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, 
 
 ```bash
 # With uv (recommended)
-uv pip install "getitune[cpu]"
-
-# Or with pip
-pip install "getitune[cpu]"
+uv pip install getitune
 ```
 
 <details>
@@ -96,14 +93,14 @@ pip install "getitune[cpu]"
 
 | Extra    | PyTorch wheel                                                          | Use when                             |
 | -------- | ---------------------------------------------------------------------- | ------------------------------------ |
-| `[cpu]`  | `torch==2.10.0+cpu` (Linux/Windows) or default `torch==2.10.0` (macOS) | No GPU, or running on Apple silicon. |
 | `[xpu]`  | `torch==2.10.0+xpu` + `triton-xpu`                                     | Intel discrete or integrated GPUs.   |
 | `[cuda]` | `torch==2.10.0+cu128`                                                  | NVIDIA GPUs with CUDA 12.8 drivers.  |
+| `[cpu]`  | `torch==2.10.0+cpu` (Linux/Windows) or default `torch==2.10.0` (macOS) | No GPU, or running on Apple silicon. |
 
 ```bash
-pip install "getitune[cpu]"   # CPU-only
-pip install "getitune[xpu]"   # Intel GPU (XPU)
-pip install "getitune[cuda]"  # NVIDIA GPU (CUDA 12.8)
+uv pip install "getitune[xpu]"   # Intel GPU (XPU)
+uv pip install "getitune[cuda]"  # NVIDIA GPU (CUDA 12.8)
+uv pip install "getitune[cpu]"   # CPU-only
 ```
 
 > **macOS note**: PyTorch's `+cpu` wheel is only published for Linux and Windows. The `[cpu]` extra resolves this automatically and installs the default `torch==2.10.0` wheel on macOS.
@@ -118,11 +115,7 @@ git clone https://github.com/open-edge-platform/training_extensions.git
 cd training_extensions/library
 
 # Recommended: use uv to honor the lockfile
-uv sync --extra cpu          # or --extra xpu / --extra cuda
-
-# Or with pip in a virtual environment
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[cpu]"      # remove -e for a non-editable install
+uv sync --extra xpu          # or --extra cpu / --extra cuda
 ```
 
 </details>
@@ -131,43 +124,67 @@ pip install -e ".[cpu]"      # remove -e for a non-editable install
 
 ## Quick Start
 
-### Training
+### Training and Exporting
 
-Getitune supports an API-based training approach:
+Getitune supports an API-based training approach. To run training with data config and lightning backend:
 
 ```python
-from getitune.engine import create_engine
+from getitune.backend.lightning.engine import LightningEngine
 
 # Initialize and train using the bundled test dataset
-engine = create_engine(
-    data="tests/assets/classification_cifar10",
-    model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+engine = LightningEngine(
+    model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml", # path to recipe YAML / model class instance / model name (e.g., "efficientnet_b0")
+    data_root="tests/assets/classification_cifar10", # path to dataset (any supported format, e.g., COCO, VOC, YOLO, Datumaro)
 )
-engine.train()
-engine.test()
-exported_path = engine.export()  # writes OpenVINO IR
+
 ```
 
----
-
-### Inference
-
-Getitune provides inference via PyTorch and OpenVINO backends:
+It is also possible to create an engine with model name and task type. Getitune will look for a matching recipe in the bundled recipes and use it to set up the training configuration:
 
 ```python
-from getitune.engine import create_engine
+engine = LightningEngine(
+    model="efficientnet_b0", # model name (e.g., "efficientnet_b0")
+    task="MULTI_CLASS_CLS", # task type (e.g., "MULTI_CLASS_CLS")
+    data_root="tests/assets/classification_cifar10", # path to dataset (any supported format, e.g., COCO, VOC, YOLO, Datumaro)
+)
+```
+Run training, test, predict and export the model to OpenVINO IR format:
+```python
+if __name__ == "__main__": # to avoid issues with multiprocessing
+  engine.train()
+  metrics = engine.test() # validate on test set
+  predictions = engine.predict() # predict on test set
+  exported_ov_path = engine.export()  # writes OpenVINO IR
+```
+Geti Library also supports export to ONNX format, which can be enabled by passing export format when calling `export()`. To specify export precision, use the `export_precision` argument. By default, models are exported in FP32 precision.
 
-# PyTorch inference
-engine = create_engine(data="/path/to/dataset", model="path/to/recipe.yaml")
-predictions = engine.predict()
+```python
+from getitune.types.export import ExportFormat, ExportPrecision
 
-# OpenVINO inference and optimization
-ov_engine = create_engine(data="/path/to/dataset", model="path/to/exported_model.xml")
-ov_engine.test()
-ov_engine.optimize()  # post-training quantization via NNCF
+exported_onnx_path = engine.export(export_format=ExportFormat.ONNX, export_precision=ExportPrecision.FP16)  # writes ONNX model in FP16 precision
 ```
 
-> **Note:** For advanced inference options including OpenVINO optimization, check the [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html).
+### Inference and Optimization
+
+Getitune provides inference via PyTorch and OpenVINO / ONNX backends:
+
+```python
+from getitune.backend.openvino.engine import OVEngine
+
+# PyTorch inference
+engine = OVEngine(data="/path/to/dataset", model=exported_ov_path) # can also pass onnx model here
+metrics = engine.test() # test OpenVINO model accuracy
+predictions = engine.predict() # predict on test set
+```
+OpenVINO backend provides optimization capabilities like post-training quantization via [NNCF](https://github.com/openvinotoolkit/nncf). Post-training quantization is supported only for OpenVINO IR models.
+
+```python
+ov_engine = OVEngine(data="/path/to/dataset", model="path/to/exported_model.xml")
+ov_engine.optimize()
+ov_engine.test() # test optimized model accuracy
+predictions = ov_engine.predict() # predict with optimized model
+```
+
 
 ---
 
@@ -188,7 +205,7 @@ Zip archives are also accepted, Datumaro extracts them on import.
 # Works the same regardless of format, just point to the dataset root
 engine = create_engine(
     data="/path/to/coco_or_yolo_or_voc_dataset",
-    model="src/getitune/recipe/detection/yolox_s.yaml",
+    model=model,  # a model class instance, or an exported OpenVINO/ONNX model path
 )
 engine.train()
 ```
@@ -220,12 +237,12 @@ from torch.optim import AdamW
 from getitune.models import EfficientNet
 
 model = EfficientNet(
-    label_info=datamodule.label_info,
+    label_info=datamodule.label_info, # or simply num_classes, e.g., int value
     model_name="efficientnet_b0",
     optimizer=lambda params: AdamW(params, lr=0.001, weight_decay=0.01),
 )
 
-engine = create_engine(data=datamodule, model=model)
+engine = LightningEngine(data=datamodule, model=model)
 engine.train(max_epochs=100)
 ```
 
@@ -263,6 +280,10 @@ data: src/getitune/recipe/_base_/data/classification.yaml
 overrides:
   max_epochs: 100
 ```
+</details>
+
+<details>
+<summary><strong>Override augmentations and datamodule</strong></summary>
 
 For augmentations, override the data config. Augmentations run on CPU (`augmentations_cpu`) and GPU (`augmentations_gpu`) separately:
 
@@ -301,47 +322,55 @@ train_subset:
         std: [0.229, 0.224, 0.225]
 ```
 
-Then reference your custom data config from your recipe with `data: my_data.yaml`, or build a `DataModule` explicitly (see below).
-
-</details>
-
-<details>
-<summary><strong>Build a DataModule explicitly</strong></summary>
+Augmentations can be overridden using API as well when creating a `DataModule` instance and passing it to the engine:
 
 ```python
-from getitune.data.module import DataModule
-from getitune.types.task import TaskType
+from getitune.data.datamodule import DataModule
+from getitune.config.data import SubsetConfig
+import kornia.augmentation as K
+from torchvision.transforms import v2
 
 datamodule = DataModule(
-    task=TaskType.DETECTION,
-    data_root="/path/to/coco_dataset",
-    input_size=(640, 640),
+    task = "MULTI_CLASS_CLS",
+    data_root = "library/tests/assets/classification_cifar10",
+    train_subset = SubsetConfig(
+        augmentations_cpu=[
+            v2.Resize((256, 256)),
+        ],
+        augmentations_gpu=[
+            K.RandomErasing(p=0.5),
+            K.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+        ],
+        batch_size=32,
+        num_workers=8
+    ),
+    val_subset = SubsetConfig(
+        subset_name="val",
+        augmentations_cpu=[
+            v2.Resize((256, 256)),
+        ],
+        batch_size=32,
+        num_workers=8
+    ),
+    test_subset = SubsetConfig(
+        subset_name="test",
+        augmentations_cpu=[
+            v2.Resize((256, 256)),
+        ],
+        batch_size=32,
+        num_workers=8
+    ),
 )
 
-engine = create_engine(
-    data=datamodule,
-    model="src/getitune/recipe/detection/yolox_s.yaml",
-)
-engine.train()
-```
-
-</details>
-
-<details>
-<summary><strong>Instantiate a model class directly</strong></summary>
-
-```python
-from getitune.models import ATSS
-
-model = ATSS(label_info=datamodule.label_info)
-engine = create_engine(data=datamodule, model=model)
+model = EfficientNet(label_info=datamodule.label_info, model_name="efficientnet_b0")
+engine = LightningEngine(data=datamodule, model=model)
 engine.train()
 ```
 
 Available model classes:
 
-- **Detection:** `ATSS`, `SSD`, `YOLOX`, `RTDETR`, `DFine`, `DEIMDFine`, `DEIMV2`
-- **Instance segmentation:** `MaskRCNN`, `MaskRCNNTV`, `RTMDetInst`
+- **Detection:** `ATSS`, `SSD`, `YOLOX`, `RTDETR`, `DFine`, `DEIMDFine`, `DEIMV2`, `RFDETR`
+- **Instance segmentation:** `MaskRCNN`, `MaskRCNNTV`, `RTMDetInst`, `RFDETRSeg`
 - **Semantic segmentation:** `DinoV2Seg`, `LiteHRNet`, `SegNext`
 - **Classification:** `EfficientNet`, `MobileNetV3`, `VisionTransformer`, `TimmModel`, `TVModel`
 - **Keypoint:** `RTMPose`
