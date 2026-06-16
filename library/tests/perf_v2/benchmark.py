@@ -261,7 +261,7 @@ class Benchmark:
         if dataset_info.extra_overrides:
             kwargs.update(dataset_info.extra_overrides.get("export", {}))
 
-        ckpt_path = sub_work_dir / "train" / "best_checkpoint.pt"
+        ckpt_path = sub_work_dir / "train" / "best_checkpoint.ckpt"
         if not ckpt_path.exists():
             msg = f"Checkpoint file not found: {ckpt_path}"
             raise FileNotFoundError(msg)
@@ -406,7 +406,7 @@ class Benchmark:
                 sub_work_dir=sub_work_dir,
                 tags=tags,
                 criteria=criteria,
-                checkpoint=sub_work_dir / "train" / "best_checkpoint.pt",
+                checkpoint=sub_work_dir / "train" / "best_checkpoint.ckpt",
                 what2test=RunTestType.TORCH,
             )
 

@@ -54,7 +54,8 @@ def _find_project_label(
     label_name: str | None,
     predicted_class_index: int | None = None,
 ) -> Label | None:
-    """Find a project label matching the predicted label using a three-stage fallback strategy.
+    """
+    Find a project label matching the predicted label using a three-stage fallback strategy.
 
     Resolution order:
     1. **Exact name match** - performs an O(1) lookup of ``label_name`` in ``name_map``.

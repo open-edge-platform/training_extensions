@@ -8,7 +8,6 @@ import {
     distributeByLargestRemainder,
     getAllModelsWithOpenVINOVariants,
     getModelIdentifierPayload,
-    isUltralyticsModel,
     SelectableModel,
 } from './utils';
 
@@ -150,17 +149,5 @@ describe('getModelIdentifierPayload', () => {
         const model: SelectableModel = { modelVariantId: 'v-ov', name: 'My Model [FP16]', modelId: 'model-1' };
 
         expect(getModelIdentifierPayload(model)).toEqual({ model_id: 'model-1', model_variant_id: 'v-ov' });
-    });
-});
-
-describe('isUltralyticsModel', () => {
-    it('returns true for ultralytics model identifier', () => {
-        expect(isUltralyticsModel('object-detection-yolo26-m')).toBe(true);
-        expect(isUltralyticsModel('OBJECT-DETECTION-YOLO26-M')).toBe(true);
-    });
-
-    it('returns false for non ultralytics model identifier', () => {
-        expect(isUltralyticsModel('object-detection-yolox-l')).toBe(false);
-        expect(isUltralyticsModel('OBJECT-DETECTION-YOLOX-L')).toBe(false);
     });
 });

@@ -4,9 +4,7 @@
 import { HttpResponse } from 'msw';
 
 import { getMockedProject } from '../../mocks/mock-project';
-import type { ProjectCreate } from '../../src/constants/shared-types';
 import { expect, http, test } from '../fixtures';
-import { stepCreateProject } from '../workflows/workflow-steps';
 import { ProjectPage } from './project-page';
 
 test.describe('Project', () => {
@@ -34,35 +32,33 @@ test.describe('Project', () => {
 
     test('creates a project', async ({ page, network }) => {
         const projectPage = new ProjectPage(page);
-        const projectName = `new-project-${Date.now()}`;
+
+        await projectPage.gotoCreate();
+
+        await projectPage.fillProjectForm({
+            name: 'New Project',
+            task: 'instance_segmentation',
+            labelNames: ['Person', 'Animal'],
+        });
 
         network.use(
-            http.post('/api/projects', async ({ request, response }) => {
-                const body: ProjectCreate = await request.json();
-
+            http.post('/api/projects', ({ response }) => {
                 return response(201).json(
                     getMockedProject({
                         id: 'new project id',
-                        name: body.name,
+                        name: 'New Project',
                         task: {
-                            task_type: body.task.task_type,
+                            task_type: 'instance_segmentation',
                             exclusive_labels: false,
-                            labels: (body.task.labels ?? []).map((label, index) => ({
-                                id: (index + 1).toString(),
-                                color: index % 2 === 0 ? 'red' : 'blue',
-                                name: label.name,
-                            })),
+                            labels: [
+                                { id: '1', color: 'red', name: 'Person' },
+                                { id: '2', color: 'blue', name: 'Animal' },
+                            ],
                         },
                     })
                 );
             })
         );
-
-        await stepCreateProject(page, {
-            projectName,
-            task: 'instance_segmentation',
-            labels: ['Person', 'Animal'],
-        });
 
         network.use(
             http.get('/api/projects', () => {
@@ -72,7 +68,7 @@ test.describe('Project', () => {
                     getMockedProject({ id: 'id-3', name: 'Project 3' }),
                     getMockedProject({
                         id: 'new project id',
-                        name: projectName,
+                        name: 'New Project',
                         task: {
                             task_type: 'instance_segmentation',
                             exclusive_labels: false,
@@ -86,10 +82,18 @@ test.describe('Project', () => {
             })
         );
 
+        await expect(page.getByText('Person')).toBeVisible();
+        await expect(page.getByText('Animal')).toBeVisible();
+
+        await projectPage.getCreateProjectButton().click();
+
+        // Correctly navigated to dataset page
+        await page.waitForURL(/dataset/);
+
         // Go back to project list and confirm the project was created
         await projectPage.gotoList();
 
-        await expect(page.getByText(projectName, { exact: true })).toBeVisible();
+        await expect(page.getByText('New Project', { exact: true })).toBeVisible();
     });
 
     test('disables create button for single-label classification based if there are no at least two labels', async ({

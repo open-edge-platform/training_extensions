@@ -14,7 +14,6 @@ from pydantic import ValidationError
 
 from app.api.dependencies import get_source, get_source_update_service
 from app.api.schemas.source import SourceCreate, SourceCreateAdapter, SourceView, SourceViewAdapter
-from app.api.schemas.test_result import TestResult
 from app.models import Source
 from app.services import (
     ResourceInUseError,
@@ -55,7 +54,6 @@ CREATE_SOURCE_BODY_EXAMPLES = {
             "source_type": "video_file",
             "name": "Camera recording 123",
             "video_path": "/path/to/video.mp4",
-            "loop": False,
         },
     ),
     "images_folder": Example(
@@ -268,21 +266,3 @@ def delete_source(
         source_update_service.delete_source(source)
     except ResourceInUseError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
-
-@router.post(
-    "/{source_id}:test",
-    response_model=TestResult,
-    responses={
-        status.HTTP_200_OK: {"description": "Source connectivity test result", "model": TestResult},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
-    },
-)
-def test_source(
-    source: Annotated[Source, Depends(get_source)],
-    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
-) -> TestResult:
-    """Test connectivity to a source"""
-    result = source_update_service.test_source(source)
-    return TestResult.model_validate(result, from_attributes=True)

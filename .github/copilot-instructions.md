@@ -33,7 +33,7 @@ The library is consumed by the backend (`getitune[cpu|xpu|cuda]` extras).
 - Code must pass pre-commit checks (see `.pre-commit-config.yaml`). Run them
   locally with `prek`.
 - Conventional Commits: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `ci:`.
-- **New source files require a copyright + SPDX header** (current year, `#` for Python/shell, `//` for TS/JS/Rust):
+- **New source files require a copyright + SPDX header** (current year, `#` for Python/YAML/shell, `//` for TS/JS/Rust):
 
   ```
   # Copyright (C) 2026 Intel Corporation

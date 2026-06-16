@@ -267,7 +267,6 @@ class OVEngine(Engine):
             task=model.task,
             input_size=model.input_size,
             keep_aspect_ratio=model.keep_aspect_ratio,
-            center_padding=model.center_padding,
             pad_value=model.pad_value,
         )
 
@@ -369,7 +368,6 @@ class OVEngine(Engine):
                     task=model.task,
                     input_size=model.input_size,
                     keep_aspect_ratio=model.keep_aspect_ratio,
-                    center_padding=model.center_padding,
                     pad_value=model.pad_value,
                 )
                 dataloader = datamodule.test_dataloader()
@@ -448,7 +446,6 @@ class OVEngine(Engine):
             subset="train",
             input_size=model.input_size,
             keep_aspect_ratio=model.keep_aspect_ratio,
-            center_padding=model.center_padding,
             pad_value=model.pad_value,
         )
 
@@ -552,8 +549,3 @@ class OVEngine(Engine):
             msg = "Please include the `data_root` or `datamodule` when creating the Engine."
             raise RuntimeError(msg)
         return self._datamodule
-
-    @property
-    def best_checkpoint(self) -> Path | None:
-        """OVEngine does not produce checkpoints."""
-        return None

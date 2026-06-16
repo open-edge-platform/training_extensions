@@ -1,10 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Key } from '@geti/ui';
+import { Key, toast } from '@geti/ui';
 import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
 
-import { toast } from '../../../../components/toast/toast.component';
 import { useDisablePipeline, useEnablePipeline, useProjectPipeline } from '../../../../hooks/api/pipeline.hook';
 
 const PROJECT_ACTIONS = { rename: 'Rename', delete: 'Delete' };

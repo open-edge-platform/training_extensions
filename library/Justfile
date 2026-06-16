@@ -18,7 +18,7 @@ _ensure_uv:
 [arg("device", short="d", long="device")]
 venv device="cpu": _ensure_uv
     uv lock --check
-    uv sync --frozen --extra {{ device }} --extra ultralytics
+    uv sync --frozen --extra {{ device }}
 
 # Generate or update the uv lock file
 venv-lock: _ensure_uv

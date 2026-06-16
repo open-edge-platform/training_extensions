@@ -21,7 +21,6 @@ class BaseOpenCVStream(VideoStream, ABC):
         source: str | int,
         source_type: SourceType,
         codec: str | None = None,
-        timeout: int | None = None,
         api_preference: int = cv2.CAP_ANY,
         **metadata,
     ) -> None:
@@ -31,14 +30,12 @@ class BaseOpenCVStream(VideoStream, ABC):
             source: Video source (device ID, file path, or URL)
             source_type: Type of the video source
             codec: Video codec
-            timeout: Timeout in milliseconds for opening/reading the stream. Defaults to None.
             api_preference: OpenCV backend to use (e.g. cv2.CAP_V4L2). Defaults to cv2.CAP_ANY.
             **metadata: Additional metadata for the stream
         """
         self.source = source
         self.source_type = source_type
         self.codec = codec
-        self.timeout = timeout
         self.api_preference = api_preference
         self.metadata = metadata
         self.cap: cv2.VideoCapture
@@ -51,9 +48,6 @@ class BaseOpenCVStream(VideoStream, ABC):
             raise RuntimeError(f"Could not open video source: {self.source}")
         if self.codec:
             self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*self.codec))  # type: ignore[attr-defined]
-        if self.timeout:
-            self.cap.set(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, self.timeout)
-            self.cap.set(cv2.CAP_PROP_READ_TIMEOUT_MSEC, self.timeout)
 
     def _read_frame(self) -> np.ndarray:
         """Read a frame from the capture device."""
@@ -73,7 +67,7 @@ class BaseOpenCVStream(VideoStream, ABC):
         """Get metadata specific to this source."""
         return {"source_type": self.source_type.value, **self.metadata}
 
-    def get_data(self) -> StreamData | None:
+    def get_data(self) -> StreamData:
         """Get the latest frame from the video stream."""
         frame = self._read_frame()
         return StreamData(

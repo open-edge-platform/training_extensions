@@ -163,20 +163,20 @@ describe('useDatasetFiltersSearchParams', () => {
 
         it('returns startDate from search param', () => {
             const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-                route: `/projects/123?${START_DATE_PARAM}=2026-01-01T22:00:00.000Z`,
+                route: `/projects/123?${START_DATE_PARAM}=2026-01-01`,
                 path: '/projects/:projectId',
             });
 
-            expect(result.current.startDate).toBe('2026-01-01T22:00:00.000Z');
+            expect(result.current.startDate).toBe('2026-01-01');
         });
 
         it('returns endDate from search param', () => {
             const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-                route: `/projects/123?${END_DATE_PARAM}=2026-12-31T10:00:00.000Z`,
+                route: `/projects/123?${END_DATE_PARAM}=2026-12-31`,
                 path: '/projects/:projectId',
             });
 
-            expect(result.current.endDate).toBe('2026-12-31T10:00:00.000Z');
+            expect(result.current.endDate).toBe('2026-12-31');
         });
 
         it('sets startDate in the search params', () => {
@@ -186,10 +186,10 @@ describe('useDatasetFiltersSearchParams', () => {
             });
 
             act(() => {
-                result.current.setStartDate('2026-03-15T22:00:00.000Z');
+                result.current.setStartDate('2026-03-15');
             });
 
-            expect(result.current.startDate).toBe('2026-03-15T22:00:00.000Z');
+            expect(result.current.startDate).toBe('2026-03-15');
         });
 
         it('sets endDate in the search params', () => {
@@ -199,19 +199,19 @@ describe('useDatasetFiltersSearchParams', () => {
             });
 
             act(() => {
-                result.current.setEndDate('2026-06-30T10:00:00.000Z');
+                result.current.setEndDate('2026-06-30');
             });
 
-            expect(result.current.endDate).toBe('2026-06-30T10:00:00.000Z');
+            expect(result.current.endDate).toBe('2026-06-30');
         });
 
         it('clears startDate when set to null', () => {
             const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-                route: `/projects/123?${START_DATE_PARAM}=2026-01-01T22:00:00.000Z`,
+                route: `/projects/123?${START_DATE_PARAM}=2026-01-01`,
                 path: '/projects/:projectId',
             });
 
-            expect(result.current.startDate).toBe('2026-01-01T22:00:00.000Z');
+            expect(result.current.startDate).toBe('2026-01-01');
 
             act(() => {
                 result.current.setStartDate(null);
@@ -222,11 +222,11 @@ describe('useDatasetFiltersSearchParams', () => {
 
         it('clears endDate when set to null', () => {
             const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-                route: `/projects/123?${END_DATE_PARAM}=2026-12-31T10:00:00.000Z`,
+                route: `/projects/123?${END_DATE_PARAM}=2026-12-31`,
                 path: '/projects/:projectId',
             });
 
-            expect(result.current.endDate).toBe('2026-12-31T10:00:00.000Z');
+            expect(result.current.endDate).toBe('2026-12-31');
 
             act(() => {
                 result.current.setEndDate(null);
@@ -237,21 +237,12 @@ describe('useDatasetFiltersSearchParams', () => {
 
         it('returns both startDate and endDate when both params are present', () => {
             const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-                route: `/projects/123?${START_DATE_PARAM}=2026-01-01T22:00:00.000Z&${END_DATE_PARAM}=2026-12-31T10:00:00.000Z`,
+                route: `/projects/123?${START_DATE_PARAM}=2026-01-01&${END_DATE_PARAM}=2026-12-31`,
                 path: '/projects/:projectId',
             });
 
-            expect(result.current.startDate).toBe('2026-01-01T22:00:00.000Z');
-            expect(result.current.endDate).toBe('2026-12-31T10:00:00.000Z');
-        });
-
-        it('returns null startDate when the param is not a valid absolute timestamp', () => {
-            const { result } = renderHook(() => useDatasetFiltersSearchParams(), {
-                route: `/projects/123?${START_DATE_PARAM}=2026-01-01`,
-                path: '/projects/:projectId',
-            });
-
-            expect(result.current.startDate).toBeNull();
+            expect(result.current.startDate).toBe('2026-01-01');
+            expect(result.current.endDate).toBe('2026-12-31');
         });
     });
 });

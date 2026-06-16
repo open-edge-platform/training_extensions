@@ -14,7 +14,7 @@ from app.api.dependencies import get_sink, get_sink_service
 from app.api.schemas.sink import FolderSinkConfigCreate, FolderSinkConfigView, MqttSinkConfigView
 from app.main import app
 from app.models import OutputFormat, SinkType
-from app.models.sink import FolderConfig, MqttConfig, Sink, SinkTestResult
+from app.models.sink import FolderConfig, MqttConfig, Sink
 from app.services import (
     ResourceInUseError,
     ResourceNotFoundError,
@@ -266,40 +266,3 @@ class TestSinkEndpoints:
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_sink_service.create_sink.assert_not_called()
-
-    def test_test_sink_reachable(self, fxt_folder_sink_view, fxt_get_sink, fxt_sink_service, fxt_client):
-        sink_id = str(fxt_folder_sink_view.id)
-        fxt_sink_service.test_sink.return_value = SinkTestResult.success(5.2)
-
-        response = fxt_client.post(f"/api/sinks/{sink_id}:test")
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["reachable"] is True
-        assert response.json()["latency_ms"] == 5.2
-        assert response.json()["error"] is None
-        fxt_sink_service.test_sink.assert_called_once_with(fxt_get_sink)
-
-    def test_test_sink_not_reachable(self, fxt_folder_sink_view, fxt_get_sink, fxt_sink_service, fxt_client):
-        sink_id = str(fxt_folder_sink_view.id)
-        fxt_sink_service.test_sink.return_value = SinkTestResult.failure("Directory not found: /test/path")
-
-        response = fxt_client.post(f"/api/sinks/{sink_id}:test")
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["reachable"] is False
-        assert response.json()["error"] == "Directory not found: /test/path"
-        assert response.json()["latency_ms"] is None
-        fxt_sink_service.test_sink.assert_called_once_with(fxt_get_sink)
-
-    def test_test_sink_not_found(self, fxt_sink_service, fxt_client):
-        sink_id = str(uuid4())
-        fxt_sink_service.get_by_id.side_effect = ResourceNotFoundError(ResourceType.SINK, sink_id)
-
-        response = fxt_client.post(f"/api/sinks/{sink_id}:test")
-
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-
-    def test_test_sink_invalid_id(self, fxt_sink_service, fxt_client):
-        response = fxt_client.post("/api/sinks/invalid-id:test")
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST

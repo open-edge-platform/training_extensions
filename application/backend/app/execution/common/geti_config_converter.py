@@ -10,9 +10,7 @@ from pathlib import Path
 from typing import Any, ClassVar
 from warnings import warn
 
-import yaml
 from getitune.backend.lightning.cli.utils import get_getitune_root_path
-from getitune.backend.ultralytics.tools.configurator import Configurator as UltralyticsConfigurator
 from getitune.tools.auto_configurator import AutoConfigurator
 from loguru import logger
 
@@ -142,21 +140,6 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "object-detection-yolo26-n": {
-        "recipe_path": RECIPE_PATH / "detection" / "yolo26_n.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-yolo26-s": {
-        "recipe_path": RECIPE_PATH / "detection" / "yolo26_s.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-yolo26-m": {
-        "recipe_path": RECIPE_PATH / "detection" / "yolo26_m.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
     # INSTANCE_SEGMENTATION
     "instance-segmentation-mask-rcnn-swin-t": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
@@ -198,21 +181,6 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACCURACY,
         "default": False,
     },
-    "instance-segmentation-yolo26-n": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_n_seg.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "instance-segmentation-yolo26-s": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_s_seg.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "instance-segmentation-yolo26-m": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_m_seg.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
 }
 
 
@@ -239,15 +207,6 @@ class TransformsUpdater:
 
     # Geti name -> (class_path, stage)
     # class_paths is a list to match multiple possible implementations in configs
-    # (e.g. kornia GPU variant and torchvision CPU variant).
-    #
-    # For augmentations with both kornia and torchvision variants the first
-    # entry is the kornia (GPU) default; the second is the torchvision (CPU)
-    # fallback used by Ultralytics recipes which run all augmentations on CPU.
-    #
-    # ``param_rename`` maps *class_path* -> {manifest_name: class_arg_name}
-    # for class paths that need parameter renaming beyond the global
-    # ``PARAM_RENAME`` table.
     AUGMENTATION_REGISTRY: ClassVar[dict[str, dict]] = {
         "random_resize_crop": {
             "class_paths": [
@@ -260,17 +219,11 @@ class TransformsUpdater:
             "stage": "gpu",
         },
         "random_horizontal_flip": {
-            "class_paths": [
-                "kornia.augmentation.RandomHorizontalFlip",
-                "torchvision.transforms.v2.RandomHorizontalFlip",
-            ],
+            "class_paths": ["kornia.augmentation.RandomHorizontalFlip"],
             "stage": "gpu",
         },
         "random_vertical_flip": {
-            "class_paths": [
-                "kornia.augmentation.RandomVerticalFlip",
-                "torchvision.transforms.v2.RandomVerticalFlip",
-            ],
+            "class_paths": ["kornia.augmentation.RandomVerticalFlip"],
             "stage": "gpu",
         },
         "gaussian_blur": {
@@ -280,19 +233,12 @@ class TransformsUpdater:
         "gaussian_noise": {
             "class_paths": ["kornia.augmentation.RandomGaussianNoise"],
             "stage": "gpu",
-            "param_rename": {
-                "kornia.augmentation.RandomGaussianNoise": {"sigma": "std"},
-            },
+            # kornia.augmentation.RandomGaussianNoise uses ``std``; manifests use ``sigma``
+            "param_rename": {"sigma": "std"},
         },
         "color_jitter": {
-            "class_paths": [
-                "kornia.augmentation.ColorJiggle",
-                "torchvision.transforms.v2.ColorJitter",
-            ],
+            "class_paths": ["kornia.augmentation.ColorJiggle"],
             "stage": "gpu",
-            "drop_params": {
-                "torchvision.transforms.v2.ColorJitter": {"p"},
-            },
         },
         "iou_random_crop": {
             "class_paths": ["getitune.data.augmentation.transforms.RandomIoUCrop"],
@@ -309,30 +255,19 @@ class TransformsUpdater:
         "mosaic": {
             "class_paths": ["getitune.data.augmentation.transforms.CachedMosaic"],
             "stage": "cpu",
+            "scalar_params": {"translate", "scale"},
         },
         "random_erasing": {
-            "class_paths": [
-                "kornia.augmentation.RandomErasing",
-                "torchvision.transforms.v2.RandomErasing",
-            ],
+            "class_paths": ["kornia.augmentation.RandomErasing"],
             "stage": "gpu",
         },
         "random_grayscale": {
-            "class_paths": [
-                "kornia.augmentation.RandomGrayscale",
-                "torchvision.transforms.v2.RandomGrayscale",
-            ],
+            "class_paths": ["kornia.augmentation.RandomGrayscale"],
             "stage": "gpu",
         },
         "random_sharpness": {
-            "class_paths": [
-                "kornia.augmentation.RandomSharpness",
-                "torchvision.transforms.v2.RandomAdjustSharpness",
-            ],
+            "class_paths": ["kornia.augmentation.RandomSharpness"],
             "stage": "gpu",
-            "param_rename": {
-                "torchvision.transforms.v2.RandomAdjustSharpness": {"sharpness": "sharpness_factor"},
-            },
         },
     }
 
@@ -348,7 +283,7 @@ class TransformsUpdater:
     }
 
     @classmethod
-    def update(cls, augmentation_params: dict, config: dict) -> None:  # noqa: C901
+    def update(cls, augmentation_params: dict, config: dict) -> None:  # noqa: C901, PLR0912
         """Update augmentations in the config based on Geti model template.
 
         For each augmentation in augmentation_params:
@@ -359,12 +294,6 @@ class TransformsUpdater:
 
         Special case: disabling random_resize_crop replaces it with plain Resize.
 
-        Backend routing:
-        - Ultralytics recipes run all augmentations on CPU.  When a new
-          augmentation is added the torchvision / getitune CPU variant is
-          preferred and placed in ``augmentations_cpu``.
-        - Lightning recipes use the registry default (typically kornia on GPU).
-
         Args:
             augmentation_params: Dict mapping Geti aug names to their parameter dicts.
             config: The full getitune config dictionary.
@@ -374,7 +303,6 @@ class TransformsUpdater:
 
         tiling = config["data"].get("tile_config", {}).get("enable_tiler", False)
         train_subset = config["data"]["train_subset"]
-        is_ultralytics = config.get("backend") == "ultralytics"
 
         for aug_name, aug_value in augmentation_params.items():
             if aug_name not in cls.AUGMENTATION_REGISTRY:
@@ -385,156 +313,72 @@ class TransformsUpdater:
                 raise ValueError(msg)
 
             registry_entry = cls.AUGMENTATION_REGISTRY[aug_name]
+            # Work on a copy so we don't mutate the original
             params = dict(aug_value)
             enable = params.pop("enable", True)
+            stage_key = f"augmentations_{registry_entry['stage']}"
 
-            aug_list, existing_idx = cls._locate_augmentation(
-                train_subset, registry_entry["class_paths"], registry_entry["stage"]
-            )
+            # Ensure the stage list exists
+            if stage_key not in train_subset:
+                train_subset[stage_key] = []
+
+            aug_list = train_subset[stage_key]
+            existing_idx = cls._find_augmentation(aug_list, registry_entry["class_paths"])
 
             if enable:
+                init_args = cls._remap_params(
+                    params,
+                    registry_entry.get("param_rename"),
+                    registry_entry.get("scalar_params"),
+                )
+
                 if existing_idx is not None:
                     # Update existing augmentation parameters
                     aug_config = aug_list[existing_idx]
-                    class_path = aug_config.get("class_path", "")
-                    per_aug_rename = cls._get_param_rename(registry_entry, class_path)
-                    init_args = cls._remap_params(params, per_aug_rename, aug_name=aug_name)
-                    cls._drop_unsupported_params(init_args, registry_entry, class_path)
-                    aug_config.setdefault("init_args", {}).update(init_args)
+                    if "init_args" not in aug_config:
+                        aug_config["init_args"] = {}
+                    aug_config["init_args"].update(init_args)
                     aug_config.pop("enable", None)
                 else:
-                    # Add new augmentation
-                    class_path, target_stage = cls._choose_variant(registry_entry, is_ultralytics)
-                    per_aug_rename = cls._get_param_rename(registry_entry, class_path)
-                    init_args = cls._remap_params(params, per_aug_rename, aug_name=aug_name)
-                    cls._drop_unsupported_params(init_args, registry_entry, class_path)
-
-                    target_list = train_subset.setdefault(f"augmentations_{target_stage}", [])
-                    new_aug: dict[str, Any] = {"class_path": class_path}
+                    # Add new augmentation with template params
+                    new_aug: dict[str, Any] = {"class_path": registry_entry["class_paths"][0]}
                     if init_args:
                         new_aug["init_args"] = init_args
-                    target_list.insert(cls._get_insert_position(target_list, target_stage), new_aug)
+                    insert_idx = cls._get_insert_position(aug_list, registry_entry["stage"])
+                    aug_list.insert(insert_idx, new_aug)
             elif existing_idx is not None:
                 if aug_name == "random_resize_crop":
+                    # Replace crop with simple Resize to keep the pipeline valid
                     aug_list[existing_idx] = {
                         "class_path": "getitune.data.augmentation.transforms.Resize",
                         "init_args": {"size": "$(input_size)"},
                     }
-                elif aug_name == "mosaic":
-                    # CachedMosaic includes a built-in letterbox resize; replace
-                    # with a plain Resize so the pipeline still produces
-                    # correctly sized images when mosaic is disabled.
-                    aug_list[existing_idx] = {
-                        "class_path": "getitune.data.augmentation.transforms.Resize",
-                        "init_args": {
-                            "size": "$(input_size)",
-                            "keep_aspect_ratio": True,
-                            "center_padding": True,
-                        },
-                    }
                 else:
                     aug_list.pop(existing_idx)
-
-    @classmethod
-    def _locate_augmentation(
-        cls,
-        train_subset: dict,
-        class_paths: list[str],
-        primary_stage: str,
-    ) -> tuple[list[dict], int] | tuple[list[dict], None]:
-        """Find an augmentation in either stage list, preferring the primary stage.
-
-        Searches the primary stage list first (e.g. ``augmentations_gpu`` for
-        kornia-default augmentations), then falls back to the alternate stage
-        (e.g. ``augmentations_cpu`` where Ultralytics recipes place torchvision
-        variants of the same augmentation).
-
-        Returns:
-            Tuple of ``(aug_list, index)`` if found.
-            If not found, returns ``(primary_list, None)`` so callers always
-            have a valid list reference for insertions.
-        """
-        alt_stage = "cpu" if primary_stage == "gpu" else "gpu"
-        for stage in (primary_stage, alt_stage):
-            key = f"augmentations_{stage}"
-            if key in train_subset:
-                idx = cls._find_augmentation(train_subset[key], class_paths)
-                if idx is not None:
-                    return train_subset[key], idx
-        # Ensure primary list exists for potential insertion
-        primary_list = train_subset.setdefault(f"augmentations_{primary_stage}", [])
-        return primary_list, None
-
-    @classmethod
-    def _choose_variant(cls, registry_entry: dict, is_ultralytics: bool) -> tuple[str, str]:
-        """Choose class_path and target stage for a new augmentation.
-
-        For Ultralytics backends, prefers torchvision / getitune CPU variants.
-        For other backends, uses the registry default (typically kornia GPU).
-
-        Returns:
-            Tuple of ``(class_path, stage)``.
-        """
-        if is_ultralytics:
-            for cp in registry_entry["class_paths"]:
-                if cp.startswith(("torchvision.", "getitune.")):
-                    return cp, "cpu"
-        return registry_entry["class_paths"][0], registry_entry["stage"]
-
-    @classmethod
-    def _get_param_rename(cls, registry_entry: dict, class_path: str) -> dict[str, str] | None:
-        """Get per-variant parameter rename map for the chosen class path.
-
-        The ``param_rename`` field maps *specific class paths* to their rename
-        dictionaries.  Only class paths that need renaming beyond the global
-        ``PARAM_RENAME`` table are listed.
-        """
-        param_rename = registry_entry.get("param_rename")
-        if not param_rename:
-            return None
-        return param_rename.get(class_path)
-
-    @classmethod
-    def _drop_unsupported_params(cls, init_args: dict, registry_entry: dict, class_path: str) -> None:
-        """Remove parameters that the target class does not accept.
-
-        Some torchvision transforms lack parameters that their kornia
-        counterparts support (e.g. ``ColorJitter`` has no ``p``).  The
-        ``drop_params`` registry field lists parameter names to strip
-        per class path.
-        """
-        drop_params = registry_entry.get("drop_params")
-        if not drop_params:
-            return
-        to_drop = drop_params.get(class_path)
-        if not to_drop:
-            return
-        for key in to_drop:
-            init_args.pop(key, None)
 
     @classmethod
     def _remap_params(
         cls,
         params: dict,
         per_aug_rename: dict[str, str] | None = None,
-        *,
-        aug_name: str = "",
+        scalar_params: set[str] | None = None,
     ) -> dict:
         """Rename Geti parameter names to kornia/torchvision names and adjust values.
 
         1. Rename keys via PARAM_RENAME (probability->p, max_translate_ratio->translate, etc.)
            plus any per-augmentation overrides supplied via per_aug_rename.
         2. Adjust values where kornia expects a different format than a single scalar.
-           These adjustments are scoped to the augmentation that needs them so that
-           parameters with the same name on other augmentations (e.g. ``translate``
-           on CachedMosaic) are not accidentally transformed.
+           Keys listed in ``scalar_params`` are exempt from list conversion (e.g.
+           CachedMosaic expects scalar ``translate`` and ``scale``, not lists).
 
         Args:
             params: Raw Geti parameter dict for the augmentation.
             per_aug_rename: Optional extra rename map applied after PARAM_RENAME.  Use this
                 when a kornia class uses a different argument name than the global default
                 (e.g. RandomGaussianNoise uses ``std`` while the manifest stores ``sigma``).
-            aug_name: Geti augmentation name (used to scope value adjustments).
+            scalar_params: Set of parameter names that must remain scalar (not converted
+                to lists).  Used for transforms like CachedMosaic whose ``translate``
+                and ``scale`` args are plain floats.
         """
         # Step 1: rename keys (global renames + per-augmentation overrides)
         rename_map = {**cls.PARAM_RENAME, **(per_aug_rename or {})}
@@ -544,15 +388,16 @@ class TransformsUpdater:
                 continue
             init_args[rename_map.get(key, key)] = value
 
-        # Step 2: per-augmentation value adjustments
-        if aug_name == "random_affine":
-            if "translate" in init_args and not isinstance(init_args["translate"], list):
-                v = init_args["translate"]
-                init_args["translate"] = [v, v]
-            if "shear" in init_args and not isinstance(init_args["shear"], list):
-                v = init_args["shear"]
-                init_args["shear"] = [-v, v]
-        if aug_name == "gaussian_blur" and "kernel_size" in init_args and isinstance(init_args["kernel_size"], int):
+        # Step 2: adjust values to match kornia expected formats
+        # Skip list conversion for params marked as scalar
+        _skip = scalar_params or set()
+        if "translate" in init_args and "translate" not in _skip and not isinstance(init_args["translate"], list):
+            v = init_args["translate"]
+            init_args["translate"] = [v, v]
+        if "shear" in init_args and not isinstance(init_args["shear"], list):
+            v = init_args["shear"]
+            init_args["shear"] = [-v, v]
+        if "kernel_size" in init_args and isinstance(init_args["kernel_size"], int):
             v = init_args["kernel_size"]
             init_args["kernel_size"] = [v, v]
 
@@ -857,26 +702,7 @@ class GetiConfigConverter:
         hyper_parameters = config["hyper_parameters"]
 
         model_config_path: Path = TEMPLATE_ID_MAPPING[config["model_manifest_id"]]["recipe_path"]  # type: ignore[assignment]
-
-        if not model_config_path.exists():
-            msg = f"Recipe file not found: {model_config_path}"
-            raise FileNotFoundError(msg)
-
-        if GetiConfigConverter._is_ultralytics_recipe(model_config_path):
-            config_dict = UltralyticsConfigurator.convert(model_config_path, hyper_parameters)
-            # Apply the standard augmentation / tiling updates to the data section.
-            # This is the same TransformsUpdater path that Lightning recipes use,
-            # so all augmentations are supported identically across backends.
-            if hyper_parameters:
-                GetiConfigConverter._update_data_transforms(config_dict, hyper_parameters)
-            # Apply task-level parameters (e.g. intensity mapping) to the Ultralytics config.
-            task_level_params = config.get("task_level_parameters", {})
-            intensity_mapping = task_level_params.get("dataset_preparation", {}).get("intensity_mapping")
-            if intensity_mapping:
-                GetiConfigConverter._update_intensity_mapping(config_dict, intensity_mapping)
-            return config_dict
-
-        # Lightning-specific: resolve tile recipe variant and sub-task type.
+        # override necessary parameters for config
         tile_enabled = hyper_parameters and hyper_parameters.get("dataset_preparation", {}).get("augmentation", {}).get(
             "tiling",
             {},
@@ -887,7 +713,8 @@ class GetiConfigConverter:
         # classification task type can't be deducted from template name, try to extract from config
         if (sub_task_type := config["sub_task_type"]) and "_cls" in model_config_path.parent.name:
             model_config_path = RECIPE_PATH / "classification" / sub_task_type.lower() / model_config_path.name
-
+        if model_config_path.suffix != ".yaml":
+            model_config_path = model_config_path / ".yaml"
         default_config = AutoConfigurator(model=model_config_path).config
         if hyper_parameters:
             GetiConfigConverter._update_params(default_config, hyper_parameters)
@@ -900,13 +727,6 @@ class GetiConfigConverter:
 
         GetiConfigConverter._remove_unused_key(default_config)
         return default_config
-
-    @staticmethod
-    def _is_ultralytics_recipe(recipe_path: Path) -> bool:
-        """Return whether a recipe declares the Ultralytics backend."""
-        with recipe_path.open() as f:
-            recipe = yaml.safe_load(f)
-        return isinstance(recipe, dict) and recipe.get("backend") == "ultralytics"
 
     @staticmethod
     def _get_params(hyperparameters: dict) -> dict:
@@ -1028,24 +848,3 @@ class GetiConfigConverter:
         """
         config.pop("config")  # Remove config key that for CLI
         config["data"].pop("__path__", None)  # Remove __path__ key that for CLI overriding
-
-    @staticmethod
-    def _update_data_transforms(config: dict, param_dict: dict) -> None:
-        """Apply augmentation and tiling updates to the ``data`` section of *config*.
-
-        This is the shared path used by **all** backends — the same
-        ``TransformsUpdater`` logic that Lightning uses also runs for
-        Ultralytics configs, so every augmentation in the getitune pipeline
-        is supported identically.
-        """
-        augmentation_params = param_dict.get("dataset_preparation", {}).get("augmentation", {})
-        if not augmentation_params:
-            return
-
-        # Work on a copy so we don't mutate the caller's dict.
-        augmentation_params = dict(augmentation_params)
-        tiling = augmentation_params.pop("tiling", None)
-        augmentation_params.pop("deim_framework", None)  # Not applicable for Ultralytics
-
-        TransformsUpdater.update_tiling(tiling, config)
-        TransformsUpdater.update(augmentation_params, config)

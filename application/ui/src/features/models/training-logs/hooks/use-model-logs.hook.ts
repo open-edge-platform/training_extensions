@@ -1,11 +1,11 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { toast } from '@geti/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { fetchClient } from '../../../../api/client';
-import { toast } from '../../../../components/toast/toast.component';
 import { getQueryKey } from '../../../../query-client/query-client';
 import { downloadFile } from '../../../../shared/util';
 import { type LogEntry } from '../log-types';

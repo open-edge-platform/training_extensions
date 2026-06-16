@@ -9,7 +9,6 @@ export const getVideoFileInitialConfig = (existingNames: string[] = []): VideoFi
     name: getUniqueName('Video file source', existingNames),
     source_type: 'video_file',
     video_path: '',
-    loop: false,
 });
 
 export const videoFileBodyFormatter = (formData: FormData): VideoFileSourceConfig => ({
@@ -17,5 +16,4 @@ export const videoFileBodyFormatter = (formData: FormData): VideoFileSourceConfi
     name: String(formData.get('name')),
     source_type: 'video_file',
     video_path: String(formData.get('video_path')),
-    loop: formData.get('loop') === 'on' ? true : false,
 });

@@ -87,6 +87,7 @@ class TestEngine:
         mock_trainer_fit = mock_trainer.return_value.fit
 
         mock_chkpt_load = mocker.patch.object(fxt_engine, "_load_model_checkpoint", return_value={})
+        mock_load_state_dict_incrementally = mocker.patch.object(fxt_engine.model, "load_state_dict_incrementally")
 
         trained_checkpoint = Path(tmpdir) / "best.ckpt"
         trained_checkpoint.touch()
@@ -100,6 +101,7 @@ class TestEngine:
             assert "ckpt_path" not in mock_trainer_fit.call_args.kwargs
 
             mock_chkpt_load.assert_called_once()
+            mock_load_state_dict_incrementally.assert_called_once()
 
     def test_test(self, fxt_engine, mocker: MockerFixture) -> None:
         checkpoint = "path/to/checkpoint.ckpt"

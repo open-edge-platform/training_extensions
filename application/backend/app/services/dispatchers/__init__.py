@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from .base import DispatchError, UnavailableDispatcherError
+from .base import DispatchError
 from .filesystem import FolderDispatcher
 from .mqtt import MqttDispatcher
 from .webhook import WebhookDispatcher
@@ -13,6 +13,5 @@ __all__ = [
     "Dispatcher",
     "FolderDispatcher",
     "MqttDispatcher",
-    "UnavailableDispatcherError",
     "WebhookDispatcher",
 ]

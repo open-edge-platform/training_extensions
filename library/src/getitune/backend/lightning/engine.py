@@ -168,7 +168,8 @@ class LightningEngine(Engine):
             if not isinstance(self.checkpoint, (Path, str)) and not Path(self.checkpoint).exists():
                 msg = f"Checkpoint {self.checkpoint} does not exist."
                 raise FileNotFoundError(msg)
-            self._load_model_checkpoint(self.checkpoint, map_location="cpu")
+            chkpt = self._load_model_checkpoint(self.checkpoint, map_location="cpu")
+            self._model.load_state_dict_incrementally(chkpt)
 
     # ------------------------------------------------------------------------ #
     # General getitune Entry Points
@@ -257,6 +258,7 @@ class LightningEngine(Engine):
                 ...     --resume True
                 ```
         """
+        checkpoint = checkpoint if checkpoint is not None else self.checkpoint
         if adaptive_bs != "None":
             adapt_batch_size(engine=self, **locals(), not_increase=(adaptive_bs != "Full"))
 
@@ -292,7 +294,12 @@ class LightningEngine(Engine):
             # load the entire model state from the checkpoint using the pl.Trainer's API.
             fit_kwargs["ckpt_path"] = checkpoint
         elif not resume and checkpoint:
-            self._load_model_checkpoint(checkpoint, map_location="cpu")
+            # NOTE: If `resume` is not enabled but `checkpoint` is provided,
+            # load the model state from the checkpoint incrementally.
+            # This means only the model weights are loaded. If there is a mismatch in label_info,
+            # perform incremental weight loading for the model's classification layer.
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            self.model.load_state_dict_incrementally(ckpt)
 
         with override_metric_callable(model=self.model, new_metric_callable=metric) as model:
             # Setup DataAugSwitch for datasets before training starts
@@ -309,7 +316,7 @@ class LightningEngine(Engine):
             msg = "self.checkpoint should be Path or str at this time."
             raise TypeError(msg)
 
-        best_checkpoint_symlink = Path(self.work_dir) / "best_checkpoint.pt"
+        best_checkpoint_symlink = Path(self.work_dir) / "best_checkpoint.ckpt"
         if best_checkpoint_symlink.is_symlink() and best_checkpoint_symlink.exists():
             best_checkpoint_symlink.unlink()
         try:
@@ -887,19 +894,6 @@ class LightningEngine(Engine):
         self._cache.is_trainer_args_identical = False
 
     @property
-    def best_checkpoint(self) -> Path | None:
-        """Path to the best model checkpoint after training.
-
-        Returns the checkpoint recorded by the Lightning checkpoint callback,
-        or ``None`` if training has not been run.
-        """
-        if self.checkpoint is not None:
-            ckpt_path = Path(self.checkpoint)
-            if ckpt_path.exists():
-                return ckpt_path
-        return None
-
-    @property
     def device(self) -> DeviceConfig:
         """Device engine uses."""
         return self._device
@@ -1195,11 +1189,10 @@ class LightningEngine(Engine):
             return False
 
         # Set DataAugSwitch for the training dataset
-        train_key = self.datamodule.train_subset.subset_name
         if (
             hasattr(self.datamodule, "subsets")
-            and train_key in self.datamodule.subsets
-            and set_data_aug_switch_if_supported(self.datamodule.subsets[train_key])
+            and "train" in self.datamodule.subsets
+            and set_data_aug_switch_if_supported(self.datamodule.subsets["train"])
         ):
             msg = "DataAugSwitch set for train_dataset"
             logging.info(msg)
@@ -1239,8 +1232,9 @@ class LightningEngine(Engine):
         """Check if the engine is supported for the given model and data."""
         return bool(isinstance(model, LightningModel) and isinstance(data, DataModule))
 
-    def _load_model_checkpoint(self, checkpoint: PathLike, map_location: str = "cpu") -> dict[str, Any]:
-        """Load model checkpoint from the given path and apply weights to the model.
+    @staticmethod
+    def _load_model_checkpoint(checkpoint: PathLike, map_location: str | None = None) -> dict[str, Any]:
+        """Load model checkpoint from the given path.
 
         Args:
             checkpoint (PathLike): Path to the checkpoint file.
@@ -1262,13 +1256,6 @@ class LightningEngine(Engine):
         except Exception as e:
             msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
             raise RuntimeError(e) from None
-
-        if "hyper_parameters" in ckpt and "label_info" in ckpt.get("hyper_parameters", {}):
-            self._model.load_state_dict_incrementally(ckpt)
-        else:
-            from getitune.backend.lightning.models.utils.utils import load_checkpoint
-
-            load_checkpoint(self._model.model, str(checkpoint), map_location=map_location, strict=False)
 
         return ckpt
 

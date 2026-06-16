@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID
 
-import yaml
 from datumaro.experimental.fields import Subset
 from getitune.backend.openvino.engine import OVEngine
 from getitune.config.data import SamplerConfig, SubsetConfig
@@ -57,12 +56,8 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         self._db_session_factory = quantization_deps.db_session_factory
 
     @step("Validate Model", 5)
-    def validate_model(self, params: QuantizationJobParams) -> tuple[ModelRevision, ModelVariant]:
-        """Verify the source model is valid for quantization.
-
-        Returns:
-            Tuple of (model, openvino_fp16_variant).
-        """
+    def validate_model(self, params: QuantizationJobParams) -> ModelRevision:
+        """Verify the source model is valid for quantization."""
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
             model = self._model_service.get_model(project_id=params.project_id, model_id=params.model_id)
@@ -87,18 +82,8 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         if not ov_model_xml_path.exists():
             raise FileNotFoundError(f"OpenVINO model files not found at {ov_model_xml_path}")
 
-        # Validate metadata.yaml structure if it exists (optional — Lightning models don't produce it)
-        metadata_path = ov_model_xml_path.parent / "metadata.yaml"
-        if metadata_path.exists():
-            with open(metadata_path) as f:
-                metadata = yaml.safe_load(f)
-            if not isinstance(metadata, dict):
-                raise ValueError(f"metadata.yaml is malformed (not a dict) at {metadata_path}")
-            if "args" not in metadata or not isinstance(metadata["args"], dict):
-                raise ValueError(f"metadata.yaml is missing 'args' dict at {metadata_path}")
-
         logger.info("Model {} validated for quantization (architecture={})", model.id, model.architecture)
-        return model, openvino_variant
+        return model
 
     @step("Prepare Calibration Dataset", 20)
     def prepare_calibration_dataset(
@@ -276,7 +261,6 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         params: QuantizationJobParams,
         quantized_model_path: Path,
         model_variant_id: UUID,
-        source_variant_id: UUID,
     ) -> None:
         """Store quantized model files.
 
@@ -292,25 +276,11 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         bin_path = quantized_model_path.with_suffix(".bin")
         if bin_path.exists():
             shutil.copyfile(bin_path, variant_dir / "model.bin")
-
-        # Copy metadata.yaml from the source FP16 variant and update for INT8
-        source_variant_dir = model_dir / "variants" / str(source_variant_id)
-        source_metadata_path = source_variant_dir / "metadata.yaml"
-        if source_metadata_path.exists():
-            with open(source_metadata_path) as f:
-                metadata = yaml.safe_load(f)
-            metadata["args"]["int8"] = True
-            metadata["args"]["half"] = False
-            dest_metadata_path = variant_dir / "metadata.yaml"
-            with open(dest_metadata_path, "w") as f:
-                yaml.dump(metadata, f, default_flow_style=False, sort_keys=False)
-            logger.info("Wrote INT8 metadata.yaml to {}", dest_metadata_path)
-
         logger.info("Stored quantized model variant at {}", variant_dir)
 
     def execute(self, params: QuantizationJobParams) -> None:
         """Execute the full quantization pipeline."""
-        model, openvino_fp16_variant = self.validate_model(params=params)
+        model = self.validate_model(params=params)
 
         with self._db_session_factory() as db:
             self._project_service.set_db_session(db)
@@ -355,7 +325,6 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
             params=params,
             quantized_model_path=quantized_model_path,
             model_variant_id=variant.id,
-            source_variant_id=openvino_fp16_variant.id,
         )
 
     def _base_model_path(self, project_id: UUID, model_id: UUID) -> Path:

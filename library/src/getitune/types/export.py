@@ -118,7 +118,7 @@ class TaskLevelExportParameters:
         for lbl in self.label_info.label_names:
             all_labels += lbl.replace(" ", "_") + " "
         for lbl_id in self.label_info.label_ids:
-            all_label_ids += str(lbl_id) + " "
+            all_label_ids += lbl_id + " "
 
         metadata = {
             # Common

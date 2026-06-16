@@ -95,17 +95,21 @@ class OVInstanceSegmentationModel(OVModel):
         and updates the hyperparameters accordingly.
         """
         if self._is_onnx:
-            # For ONNX models, the adapter parses metadata_props into a flat dict.
-            metadata = model_adapter.onnx_metadata.get("model_info", {})
-            best_confidence_threshold = metadata.get("confidence_threshold", None)
-            self.hparams["best_confidence_threshold"] = (
-                float(best_confidence_threshold) if best_confidence_threshold is not None else None
-            )
+            # For ONNX models, the adapter parses metadata_props into rt_info.
+            best_confidence_threshold = model_adapter.get_rt_info(["model_info", "confidence_threshold"]).astype(str)
+            self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
         elif model_adapter.model.has_rt_info(["model_info", "confidence_threshold"]):
             best_confidence_threshold = model_adapter.model.get_rt_info(["model_info", "confidence_threshold"]).value
-            self.hparams["best_confidence_threshold"] = (
-                float(best_confidence_threshold) if best_confidence_threshold is not None else None
+            self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
+        else:
+            msg = (
+                "Cannot get best_confidence_threshold from model metadata. "
+                "Please check whether this model is trained by getitune or not. "
+                "Without this information, it can produce a wrong F1 metric score. "
+                "At this time, it will be set as the default value = None."
             )
+            log.warning(msg)
+            self.hparams["best_confidence_threshold"] = None
 
     def _customize_outputs(
         self,
@@ -152,16 +156,14 @@ class OVInstanceSegmentationModel(OVModel):
             )
             scores.append(torch.tensor(output.scores.reshape(-1)))
 
+            # Rescale masks from model input coords to original image coords.
             raw_masks = torch.tensor(output.masks)
-            if raw_masks.shape[-2:] == (ori_h, ori_w):
-                rescaled_masks = raw_masks
-            else:
-                rescaled_masks = rescale_masks_to_original(
-                    raw_masks,
-                    img_shape=(img_h, img_w),
-                    ori_shape=(ori_h, ori_w),
-                    padding=img_info.padding,
-                )
+            rescaled_masks = rescale_masks_to_original(
+                raw_masks,
+                img_shape=(img_h, img_w),
+                ori_shape=(ori_h, ori_w),
+                padding=img_info.padding,
+            )
             masks.append(rescaled_masks)
 
             labels.append(torch.tensor(output.labels.reshape(-1) - 1, dtype=torch.long))

@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import time
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
@@ -8,12 +7,11 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import ProjectDB, SinkDB
 from app.models import OutputFormat, Sink, SinkAdapter, SinkType
-from app.models.sink import SinkConfig, SinkTestResult
+from app.models.sink import SinkConfig
 from app.repositories import SinkRepository
 from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 from app.repositories.pipeline_repo import PipelineRepository
 
-from . import DispatchService
 from .base import (
     ResourceInUseError,
     ResourceNotFoundError,
@@ -128,19 +126,3 @@ class SinkService:
     def get_active_sink_id(self) -> UUID | None:
         id = SinkRepository(self._db_session).get_active_sink_id()
         return UUID(id) if id else None
-
-    _TEST_TIMEOUT_SECONDS = 5
-
-    def test_sink(self, sink: Sink) -> SinkTestResult:
-        """Perform a connectivity check on the sink."""
-        try:
-            destination = DispatchService.get_destination(sink)
-            if destination is None:
-                return SinkTestResult.failure("Disconnected sink")
-            start = time.monotonic()
-            destination.test()
-
-            elapsed_ms = (time.monotonic() - start) * 1000
-            return SinkTestResult.success(latency_ms=round(elapsed_ms, 1))
-        except Exception as e:
-            return SinkTestResult.failure(str(e))

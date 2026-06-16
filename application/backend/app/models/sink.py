@@ -114,17 +114,3 @@ Sink = Annotated[
 ]
 
 SinkAdapter: TypeAdapter[Sink] = TypeAdapter(Sink)
-
-
-class SinkTestResult(BaseModel):
-    reachable: bool
-    error: str | None
-    latency_ms: float | None
-
-    @staticmethod
-    def success(latency_ms: float) -> "SinkTestResult":
-        return SinkTestResult(reachable=True, error=None, latency_ms=latency_ms)
-
-    @staticmethod
-    def failure(error: str | None) -> "SinkTestResult":
-        return SinkTestResult(reachable=False, error=error, latency_ms=None)

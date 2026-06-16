@@ -40,10 +40,9 @@ dependencies = [
     "pytorchcv==0.0.74",
     "timm==1.0.3",
     "openvino~=2026.2.0",
-    "openvino-model-api~=0.4.5",
+    "openvino-model-api==0.4.3",
     "onnx==1.21.0",
     "onnxruntime==1.26.0",
-    "onnxslim~=0.1.71",
     "onnxscript==0.6.2",
     "nncf~=3.0",
     "numpy>=2.0",
@@ -108,9 +107,6 @@ xpu = [
     "torch==2.10.0+xpu",
     "triton-xpu==3.6.0",
     "torchvision==0.25.0+xpu"
-]
-ultralytics = [
-    "ultralytics~=8.4.41",
 ]
 
 docs = [
@@ -436,7 +432,6 @@ markers = [
     "gpu",  # mark tests which require NVIDIA GPU
     "cpu",
     "xpu",  # mark tests which require Intel dGPU,
-    "network",  # mark tests that perform real network I/O; skipped by default unless --run-network is passed
 ]
 python_files = "tests/**/*.py"
 

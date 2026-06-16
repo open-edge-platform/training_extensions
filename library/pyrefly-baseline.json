@@ -193,9 +193,9 @@
       "severity": "error"
     },
     {
-      "line": 684,
+      "line": 672,
       "column": 39,
-      "stop_line": 684,
+      "stop_line": 672,
       "stop_column": 48,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -205,9 +205,9 @@
       "severity": "error"
     },
     {
-      "line": 691,
+      "line": 679,
       "column": 30,
-      "stop_line": 691,
+      "stop_line": 679,
       "stop_column": 53,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -217,9 +217,9 @@
       "severity": "error"
     },
     {
-      "line": 691,
+      "line": 679,
       "column": 66,
-      "stop_line": 691,
+      "stop_line": 679,
       "stop_column": 80,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -229,9 +229,9 @@
       "severity": "error"
     },
     {
-      "line": 965,
+      "line": 940,
       "column": 13,
-      "stop_line": 965,
+      "stop_line": 940,
       "stop_column": 31,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -241,9 +241,9 @@
       "severity": "error"
     },
     {
-      "line": 1015,
+      "line": 990,
       "column": 36,
-      "stop_line": 1015,
+      "stop_line": 990,
       "stop_column": 49,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -253,9 +253,9 @@
       "severity": "error"
     },
     {
-      "line": 1017,
+      "line": 992,
       "column": 30,
-      "stop_line": 1017,
+      "stop_line": 992,
       "stop_column": 43,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -265,9 +265,9 @@
       "severity": "error"
     },
     {
-      "line": 1024,
+      "line": 999,
       "column": 16,
-      "stop_line": 1024,
+      "stop_line": 999,
       "stop_column": 22,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -277,9 +277,9 @@
       "severity": "error"
     },
     {
-      "line": 1033,
+      "line": 1008,
       "column": 27,
-      "stop_line": 1033,
+      "stop_line": 1008,
       "stop_column": 35,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -289,9 +289,9 @@
       "severity": "error"
     },
     {
-      "line": 1036,
+      "line": 1011,
       "column": 29,
-      "stop_line": 1036,
+      "stop_line": 1011,
       "stop_column": 44,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -301,9 +301,9 @@
       "severity": "error"
     },
     {
-      "line": 1038,
+      "line": 1013,
       "column": 29,
-      "stop_line": 1038,
+      "stop_line": 1013,
       "stop_column": 45,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -313,9 +313,9 @@
       "severity": "error"
     },
     {
-      "line": 1040,
+      "line": 1015,
       "column": 29,
-      "stop_line": 1040,
+      "stop_line": 1015,
       "stop_column": 43,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -325,9 +325,9 @@
       "severity": "error"
     },
     {
-      "line": 1042,
+      "line": 1017,
       "column": 29,
-      "stop_line": 1042,
+      "stop_line": 1017,
       "stop_column": 54,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -337,9 +337,9 @@
       "severity": "error"
     },
     {
-      "line": 1044,
+      "line": 1019,
       "column": 29,
-      "stop_line": 1044,
+      "stop_line": 1019,
       "stop_column": 44,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -349,9 +349,9 @@
       "severity": "error"
     },
     {
-      "line": 1047,
+      "line": 1022,
       "column": 29,
-      "stop_line": 1047,
+      "stop_line": 1022,
       "stop_column": 42,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -361,9 +361,9 @@
       "severity": "error"
     },
     {
-      "line": 1054,
+      "line": 1029,
       "column": 29,
-      "stop_line": 1054,
+      "stop_line": 1029,
       "stop_column": 52,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -373,9 +373,9 @@
       "severity": "error"
     },
     {
-      "line": 1063,
+      "line": 1038,
       "column": 29,
-      "stop_line": 1063,
+      "stop_line": 1038,
       "stop_column": 42,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -385,9 +385,9 @@
       "severity": "error"
     },
     {
-      "line": 1067,
+      "line": 1042,
       "column": 29,
-      "stop_line": 1067,
+      "stop_line": 1042,
       "stop_column": 52,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
@@ -397,15 +397,27 @@
       "severity": "error"
     },
     {
-      "line": 1197,
+      "line": 1172,
       "column": 45,
-      "stop_line": 1197,
+      "stop_line": 1172,
       "stop_column": 60,
       "path": "src/getitune/backend/lightning/engine.py",
       "code": -2,
       "name": "bad-argument-type",
       "description": "Argument `DataAugSwitch | None` is not assignable to parameter `data_aug_switch` with type `DataAugSwitch` in function `getitune.data.dataset.mixins.DataAugSwitchMixin.set_data_aug_switch`",
       "concise_description": "Argument `DataAugSwitch | None` is not assignable to parameter `data_aug_switch` with type `DataAugSwitch` in function `getitune.data.dataset.mixins.DataAugSwitchMixin.set_data_aug_switch`",
+      "severity": "error"
+    },
+    {
+      "line": 147,
+      "column": 34,
+      "stop_line": 147,
+      "stop_column": 46,
+      "path": "src/getitune/backend/lightning/exporter/native.py",
+      "code": -2,
+      "name": "bad-argument-type",
+      "description": "Argument `Tensor` is not assignable to parameter `args` with type `tuple[Any, ...]` in function `torch.onnx.export`",
+      "concise_description": "Argument `Tensor` is not assignable to parameter `args` with type `tuple[Any, ...]` in function `torch.onnx.export`",
       "severity": "error"
     },
     {
@@ -4525,9 +4537,9 @@
       "severity": "error"
     },
     {
-      "line": 100,
+      "line": 98,
       "column": 40,
-      "stop_line": 100,
+      "stop_line": 98,
       "stop_column": 57,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4537,9 +4549,9 @@
       "severity": "error"
     },
     {
-      "line": 101,
+      "line": 99,
       "column": 33,
-      "stop_line": 101,
+      "stop_line": 99,
       "stop_column": 54,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4549,9 +4561,9 @@
       "severity": "error"
     },
     {
-      "line": 179,
+      "line": 177,
       "column": 47,
-      "stop_line": 179,
+      "stop_line": 177,
       "stop_column": 65,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4561,9 +4573,9 @@
       "severity": "error"
     },
     {
-      "line": 179,
+      "line": 177,
       "column": 47,
-      "stop_line": 179,
+      "stop_line": 177,
       "stop_column": 65,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4573,9 +4585,9 @@
       "severity": "error"
     },
     {
-      "line": 179,
+      "line": 177,
       "column": 67,
-      "stop_line": 179,
+      "stop_line": 177,
       "stop_column": 71,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4585,9 +4597,9 @@
       "severity": "error"
     },
     {
-      "line": 179,
+      "line": 177,
       "column": 67,
-      "stop_line": 179,
+      "stop_line": 177,
       "stop_column": 71,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4597,9 +4609,9 @@
       "severity": "error"
     },
     {
-      "line": 183,
+      "line": 181,
       "column": 26,
-      "stop_line": 183,
+      "stop_line": 181,
       "stop_column": 32,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4609,9 +4621,9 @@
       "severity": "error"
     },
     {
-      "line": 187,
+      "line": 185,
       "column": 9,
-      "stop_line": 187,
+      "stop_line": 185,
       "stop_column": 26,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4621,9 +4633,9 @@
       "severity": "error"
     },
     {
-      "line": 209,
+      "line": 207,
       "column": 33,
-      "stop_line": 209,
+      "stop_line": 207,
       "stop_column": 39,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4633,9 +4645,9 @@
       "severity": "error"
     },
     {
-      "line": 291,
+      "line": 289,
       "column": 31,
-      "stop_line": 291,
+      "stop_line": 289,
       "stop_column": 37,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4645,9 +4657,9 @@
       "severity": "error"
     },
     {
-      "line": 298,
+      "line": 296,
       "column": 20,
-      "stop_line": 298,
+      "stop_line": 296,
       "stop_column": 73,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4657,9 +4669,9 @@
       "severity": "error"
     },
     {
-      "line": 299,
+      "line": 297,
       "column": 20,
-      "stop_line": 299,
+      "stop_line": 297,
       "stop_column": 73,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4669,9 +4681,9 @@
       "severity": "error"
     },
     {
-      "line": 300,
+      "line": 298,
       "column": 20,
-      "stop_line": 300,
+      "stop_line": 298,
       "stop_column": 72,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4681,9 +4693,9 @@
       "severity": "error"
     },
     {
-      "line": 303,
+      "line": 301,
       "column": 40,
-      "stop_line": 303,
+      "stop_line": 301,
       "stop_column": 99,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4693,9 +4705,9 @@
       "severity": "error"
     },
     {
-      "line": 304,
+      "line": 302,
       "column": 42,
-      "stop_line": 304,
+      "stop_line": 302,
       "stop_column": 103,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4705,9 +4717,9 @@
       "severity": "error"
     },
     {
-      "line": 308,
+      "line": 306,
       "column": 9,
-      "stop_line": 308,
+      "stop_line": 306,
       "stop_column": 28,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4717,21 +4729,9 @@
       "severity": "error"
     },
     {
-      "line": 321,
-      "column": 40,
-      "stop_line": 321,
-      "stop_column": 57,
-      "path": "src/getitune/backend/lightning/models/detection/base.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `Module | Tensor` is not assignable to parameter `obj` with type `(...) -> Any` in function `inspect.signature`",
-      "concise_description": "Argument `Module | Tensor` is not assignable to parameter `obj` with type `(...) -> Any` in function `inspect.signature`",
-      "severity": "error"
-    },
-    {
-      "line": 327,
+      "line": 316,
       "column": 16,
-      "stop_line": 327,
+      "stop_line": 316,
       "stop_column": 33,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4741,9 +4741,9 @@
       "severity": "error"
     },
     {
-      "line": 374,
+      "line": 352,
       "column": 9,
-      "stop_line": 374,
+      "stop_line": 352,
       "stop_column": 27,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4753,9 +4753,9 @@
       "severity": "error"
     },
     {
-      "line": 437,
+      "line": 415,
       "column": 27,
-      "stop_line": 437,
+      "stop_line": 415,
       "stop_column": 80,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4765,9 +4765,9 @@
       "severity": "error"
     },
     {
-      "line": 447,
+      "line": 425,
       "column": 40,
-      "stop_line": 447,
+      "stop_line": 425,
       "stop_column": 57,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4777,9 +4777,9 @@
       "severity": "error"
     },
     {
-      "line": 448,
+      "line": 426,
       "column": 33,
-      "stop_line": 448,
+      "stop_line": 426,
       "stop_column": 54,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4789,9 +4789,9 @@
       "severity": "error"
     },
     {
-      "line": 452,
+      "line": 430,
       "column": 45,
-      "stop_line": 452,
+      "stop_line": 430,
       "stop_column": 55,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4801,9 +4801,9 @@
       "severity": "error"
     },
     {
-      "line": 454,
+      "line": 432,
       "column": 50,
-      "stop_line": 454,
+      "stop_line": 432,
       "stop_column": 60,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4813,9 +4813,9 @@
       "severity": "error"
     },
     {
-      "line": 457,
+      "line": 435,
       "column": 13,
-      "stop_line": 459,
+      "stop_line": 437,
       "stop_column": 40,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4825,9 +4825,9 @@
       "severity": "error"
     },
     {
-      "line": 473,
+      "line": 451,
       "column": 26,
-      "stop_line": 473,
+      "stop_line": 451,
       "stop_column": 48,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4837,9 +4837,9 @@
       "severity": "error"
     },
     {
-      "line": 474,
+      "line": 452,
       "column": 24,
-      "stop_line": 474,
+      "stop_line": 452,
       "stop_column": 39,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4849,9 +4849,9 @@
       "severity": "error"
     },
     {
-      "line": 477,
+      "line": 455,
       "column": 27,
-      "stop_line": 477,
+      "stop_line": 455,
       "stop_column": 49,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4861,9 +4861,9 @@
       "severity": "error"
     },
     {
-      "line": 526,
+      "line": 504,
       "column": 33,
-      "stop_line": 526,
+      "stop_line": 504,
       "stop_column": 54,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4873,9 +4873,9 @@
       "severity": "error"
     },
     {
-      "line": 545,
+      "line": 523,
       "column": 39,
-      "stop_line": 545,
+      "stop_line": 523,
       "stop_column": 43,
       "path": "src/getitune/backend/lightning/models/detection/base.py",
       "code": -2,
@@ -4993,9 +4993,9 @@
       "severity": "error"
     },
     {
-      "line": 222,
+      "line": 221,
       "column": 30,
-      "stop_line": 222,
+      "stop_line": 221,
       "stop_column": 52,
       "path": "src/getitune/backend/lightning/models/detection/detectors/single_stage_detector.py",
       "code": -2,
@@ -5005,9 +5005,9 @@
       "severity": "error"
     },
     {
-      "line": 237,
+      "line": 234,
       "column": 28,
-      "stop_line": 237,
+      "stop_line": 234,
       "stop_column": 43,
       "path": "src/getitune/backend/lightning/models/detection/detectors/single_stage_detector.py",
       "code": -2,
@@ -5017,9 +5017,9 @@
       "severity": "error"
     },
     {
-      "line": 238,
+      "line": 235,
       "column": 30,
-      "stop_line": 238,
+      "stop_line": 235,
       "stop_column": 51,
       "path": "src/getitune/backend/lightning/models/detection/detectors/single_stage_detector.py",
       "code": -2,
@@ -5029,9 +5029,9 @@
       "severity": "error"
     },
     {
-      "line": 246,
+      "line": 243,
       "column": 16,
-      "stop_line": 246,
+      "stop_line": 243,
       "stop_column": 37,
       "path": "src/getitune/backend/lightning/models/detection/detectors/single_stage_detector.py",
       "code": -2,
@@ -5041,9 +5041,9 @@
       "severity": "error"
     },
     {
-      "line": 290,
+      "line": 287,
       "column": 46,
-      "stop_line": 290,
+      "stop_line": 287,
       "stop_column": 76,
       "path": "src/getitune/backend/lightning/models/detection/detectors/single_stage_detector.py",
       "code": -2,
@@ -5053,9 +5053,9 @@
       "severity": "error"
     },
     {
-      "line": 295,
+      "line": 292,
       "column": 47,
-      "stop_line": 295,
+      "stop_line": 292,
       "stop_column": 70,
       "path": "src/getitune/backend/lightning/models/detection/detectors/single_stage_detector.py",
       "code": -2,
@@ -5065,9 +5065,9 @@
       "severity": "error"
     },
     {
-      "line": 302,
+      "line": 299,
       "column": 47,
-      "stop_line": 302,
+      "stop_line": 299,
       "stop_column": 70,
       "path": "src/getitune/backend/lightning/models/detection/detectors/single_stage_detector.py",
       "code": -2,
@@ -5389,9 +5389,9 @@
       "severity": "error"
     },
     {
-      "line": 477,
+      "line": 461,
       "column": 23,
-      "stop_line": 477,
+      "stop_line": 461,
       "stop_column": 55,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5401,9 +5401,9 @@
       "severity": "error"
     },
     {
-      "line": 498,
+      "line": 482,
       "column": 15,
-      "stop_line": 498,
+      "stop_line": 482,
       "stop_column": 35,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5413,9 +5413,9 @@
       "severity": "error"
     },
     {
-      "line": 499,
+      "line": 483,
       "column": 20,
-      "stop_line": 499,
+      "stop_line": 483,
       "stop_column": 27,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5425,9 +5425,9 @@
       "severity": "error"
     },
     {
-      "line": 505,
+      "line": 489,
       "column": 13,
-      "stop_line": 505,
+      "stop_line": 489,
       "stop_column": 56,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5437,9 +5437,9 @@
       "severity": "error"
     },
     {
-      "line": 511,
+      "line": 495,
       "column": 59,
-      "stop_line": 511,
+      "stop_line": 495,
       "stop_column": 98,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5449,9 +5449,9 @@
       "severity": "error"
     },
     {
-      "line": 518,
+      "line": 502,
       "column": 19,
-      "stop_line": 518,
+      "stop_line": 502,
       "stop_column": 46,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5461,9 +5461,9 @@
       "severity": "error"
     },
     {
-      "line": 529,
+      "line": 513,
       "column": 17,
-      "stop_line": 529,
+      "stop_line": 513,
       "stop_column": 49,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5473,9 +5473,9 @@
       "severity": "error"
     },
     {
-      "line": 530,
+      "line": 514,
       "column": 21,
-      "stop_line": 530,
+      "stop_line": 514,
       "stop_column": 30,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5485,9 +5485,9 @@
       "severity": "error"
     },
     {
-      "line": 543,
+      "line": 527,
       "column": 17,
-      "stop_line": 543,
+      "stop_line": 527,
       "stop_column": 35,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5497,9 +5497,9 @@
       "severity": "error"
     },
     {
-      "line": 547,
+      "line": 531,
       "column": 33,
-      "stop_line": 547,
+      "stop_line": 531,
       "stop_column": 59,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5509,9 +5509,9 @@
       "severity": "error"
     },
     {
-      "line": 549,
+      "line": 533,
       "column": 24,
-      "stop_line": 549,
+      "stop_line": 533,
       "stop_column": 53,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5521,9 +5521,9 @@
       "severity": "error"
     },
     {
-      "line": 552,
+      "line": 536,
       "column": 44,
-      "stop_line": 552,
+      "stop_line": 536,
       "stop_column": 71,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5533,9 +5533,9 @@
       "severity": "error"
     },
     {
-      "line": 552,
+      "line": 536,
       "column": 45,
-      "stop_line": 552,
+      "stop_line": 536,
       "stop_column": 63,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5545,9 +5545,9 @@
       "severity": "error"
     },
     {
-      "line": 558,
+      "line": 542,
       "column": 43,
-      "stop_line": 558,
+      "stop_line": 542,
       "stop_column": 62,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5557,9 +5557,9 @@
       "severity": "error"
     },
     {
-      "line": 567,
+      "line": 548,
       "column": 27,
-      "stop_line": 567,
+      "stop_line": 548,
       "stop_column": 37,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5569,9 +5569,9 @@
       "severity": "error"
     },
     {
-      "line": 568,
+      "line": 549,
       "column": 29,
-      "stop_line": 568,
+      "stop_line": 549,
       "stop_column": 45,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -5581,9 +5581,9 @@
       "severity": "error"
     },
     {
-      "line": 570,
+      "line": 551,
       "column": 24,
-      "stop_line": 570,
+      "stop_line": 551,
       "stop_column": 42,
       "path": "src/getitune/backend/lightning/models/detection/heads/base_head.py",
       "code": -2,
@@ -6961,6 +6961,42 @@
       "severity": "error"
     },
     {
+      "line": 362,
+      "column": 22,
+      "stop_line": 362,
+      "stop_column": 68,
+      "path": "src/getitune/backend/lightning/models/detection/heads/yolox_head.py",
+      "code": -2,
+      "name": "bad-assignment",
+      "description": "`Tensor` is not assignable to variable `cls_scores` with type `list[Tensor]`",
+      "concise_description": "`Tensor` is not assignable to variable `cls_scores` with type `list[Tensor]`",
+      "severity": "error"
+    },
+    {
+      "line": 371,
+      "column": 20,
+      "stop_line": 371,
+      "stop_column": 34,
+      "path": "src/getitune/backend/lightning/models/detection/heads/yolox_head.py",
+      "code": -2,
+      "name": "bad-return",
+      "description": "Returned type `tuple[Tensor, list[Tensor]]` is not assignable to declared return type `tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]`",
+      "concise_description": "Returned type `tuple[Tensor, list[Tensor]]` is not assignable to declared return type `tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]`",
+      "severity": "error"
+    },
+    {
+      "line": 374,
+      "column": 13,
+      "stop_line": 374,
+      "stop_column": 19,
+      "path": "src/getitune/backend/lightning/models/detection/heads/yolox_head.py",
+      "code": -2,
+      "name": "bad-argument-type",
+      "description": "Argument `list[Tensor]` is not assignable to parameter `scores` with type `Tensor` in function `getitune.backend.lightning.models.common.utils.nms.multiclass_nms`",
+      "concise_description": "Argument `list[Tensor]` is not assignable to parameter `scores` with type `Tensor` in function `getitune.backend.lightning.models.common.utils.nms.multiclass_nms`",
+      "severity": "error"
+    },
+    {
       "line": 507,
       "column": 32,
       "stop_line": 507,
@@ -7957,9 +7993,9 @@
       "severity": "error"
     },
     {
-      "line": 172,
+      "line": 171,
       "column": 9,
-      "stop_line": 172,
+      "stop_line": 171,
       "stop_column": 27,
       "path": "src/getitune/backend/lightning/models/detection/rtdetr.py",
       "code": -2,
@@ -7969,9 +8005,9 @@
       "severity": "error"
     },
     {
-      "line": 184,
+      "line": 183,
       "column": 33,
-      "stop_line": 184,
+      "stop_line": 183,
       "stop_column": 39,
       "path": "src/getitune/backend/lightning/models/detection/rtdetr.py",
       "code": -2,
@@ -7981,9 +8017,9 @@
       "severity": "error"
     },
     {
-      "line": 193,
+      "line": 192,
       "column": 34,
-      "stop_line": 193,
+      "stop_line": 192,
       "stop_column": 56,
       "path": "src/getitune/backend/lightning/models/detection/rtdetr.py",
       "code": -2,
@@ -7993,9 +8029,9 @@
       "severity": "error"
     },
     {
-      "line": 238,
+      "line": 237,
       "column": 47,
-      "stop_line": 238,
+      "stop_line": 237,
       "stop_column": 81,
       "path": "src/getitune/backend/lightning/models/detection/rtdetr.py",
       "code": -2,
@@ -8005,9 +8041,9 @@
       "severity": "error"
     },
     {
-      "line": 272,
+      "line": 271,
       "column": 20,
-      "stop_line": 272,
+      "stop_line": 271,
       "stop_column": 38,
       "path": "src/getitune/backend/lightning/models/detection/rtdetr.py",
       "code": -2,
@@ -8017,9 +8053,9 @@
       "severity": "error"
     },
     {
-      "line": 278,
+      "line": 277,
       "column": 19,
-      "stop_line": 278,
+      "stop_line": 277,
       "stop_column": 22,
       "path": "src/getitune/backend/lightning/models/detection/rtdetr.py",
       "code": -2,
@@ -8173,9 +8209,9 @@
       "severity": "error"
     },
     {
-      "line": 201,
+      "line": 187,
       "column": 30,
-      "stop_line": 201,
+      "stop_line": 187,
       "stop_column": 54,
       "path": "src/getitune/backend/lightning/models/detection/yolox.py",
       "code": -2,
@@ -8185,9 +8221,9 @@
       "severity": "error"
     },
     {
-      "line": 203,
+      "line": 189,
       "column": 13,
-      "stop_line": 203,
+      "stop_line": 189,
       "stop_column": 37,
       "path": "src/getitune/backend/lightning/models/detection/yolox.py",
       "code": -2,
@@ -8197,9 +8233,9 @@
       "severity": "error"
     },
     {
-      "line": 203,
+      "line": 189,
       "column": 48,
-      "stop_line": 203,
+      "stop_line": 189,
       "stop_column": 72,
       "path": "src/getitune/backend/lightning/models/detection/yolox.py",
       "code": -2,
@@ -8209,9 +8245,9 @@
       "severity": "error"
     },
     {
-      "line": 206,
+      "line": 192,
       "column": 13,
-      "stop_line": 206,
+      "stop_line": 192,
       "stop_column": 37,
       "path": "src/getitune/backend/lightning/models/detection/yolox.py",
       "code": -2,
@@ -8593,9 +8629,9 @@
       "severity": "error"
     },
     {
-      "line": 354,
+      "line": 353,
       "column": 9,
-      "stop_line": 354,
+      "stop_line": 353,
       "stop_column": 27,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8605,9 +8641,9 @@
       "severity": "error"
     },
     {
-      "line": 409,
+      "line": 408,
       "column": 39,
-      "stop_line": 409,
+      "stop_line": 408,
       "stop_column": 81,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8617,15 +8653,27 @@
       "severity": "error"
     },
     {
-      "line": 409,
+      "line": 408,
       "column": 40,
-      "stop_line": 409,
+      "stop_line": 408,
       "stop_column": 80,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
       "name": "unsupported-operation",
       "description": "`>` is not supported between `None` and `float`\n  Argument `None` is not assignable to parameter `value` with type `float` in function `float.__lt__`",
       "concise_description": "`>` is not supported between `None` and `float`",
+      "severity": "error"
+    },
+    {
+      "line": 409,
+      "column": 27,
+      "stop_line": 409,
+      "stop_column": 48,
+      "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
+      "code": -2,
+      "name": "unsupported-operation",
+      "description": "`None` is not subscriptable",
+      "concise_description": "`None` is not subscriptable",
       "severity": "error"
     },
     {
@@ -8653,21 +8701,9 @@
       "severity": "error"
     },
     {
-      "line": 412,
-      "column": 27,
-      "stop_line": 412,
-      "stop_column": 48,
-      "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
-      "code": -2,
-      "name": "unsupported-operation",
-      "description": "`None` is not subscriptable",
-      "concise_description": "`None` is not subscriptable",
-      "severity": "error"
-    },
-    {
-      "line": 420,
+      "line": 419,
       "column": 26,
-      "stop_line": 420,
+      "stop_line": 419,
       "stop_column": 32,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8677,9 +8713,9 @@
       "severity": "error"
     },
     {
-      "line": 422,
+      "line": 421,
       "column": 25,
-      "stop_line": 422,
+      "stop_line": 421,
       "stop_column": 30,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8689,9 +8725,9 @@
       "severity": "error"
     },
     {
-      "line": 451,
+      "line": 450,
       "column": 30,
-      "stop_line": 451,
+      "stop_line": 450,
       "stop_column": 41,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8701,9 +8737,9 @@
       "severity": "error"
     },
     {
-      "line": 452,
+      "line": 451,
       "column": 60,
-      "stop_line": 452,
+      "stop_line": 451,
       "stop_column": 70,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8713,9 +8749,9 @@
       "severity": "error"
     },
     {
-      "line": 469,
+      "line": 468,
       "column": 30,
-      "stop_line": 469,
+      "stop_line": 468,
       "stop_column": 41,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8725,9 +8761,9 @@
       "severity": "error"
     },
     {
-      "line": 480,
+      "line": 479,
       "column": 27,
-      "stop_line": 480,
+      "stop_line": 479,
       "stop_column": 80,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8737,9 +8773,9 @@
       "severity": "error"
     },
     {
-      "line": 488,
+      "line": 487,
       "column": 40,
-      "stop_line": 488,
+      "stop_line": 487,
       "stop_column": 57,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8749,9 +8785,9 @@
       "severity": "error"
     },
     {
-      "line": 489,
+      "line": 488,
       "column": 33,
-      "stop_line": 489,
+      "stop_line": 488,
       "stop_column": 54,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8761,9 +8797,9 @@
       "severity": "error"
     },
     {
-      "line": 492,
+      "line": 491,
       "column": 44,
-      "stop_line": 492,
+      "stop_line": 491,
       "stop_column": 54,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8773,9 +8809,9 @@
       "severity": "error"
     },
     {
-      "line": 494,
+      "line": 493,
       "column": 49,
-      "stop_line": 494,
+      "stop_line": 493,
       "stop_column": 59,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8785,9 +8821,9 @@
       "severity": "error"
     },
     {
-      "line": 498,
+      "line": 497,
       "column": 13,
-      "stop_line": 500,
+      "stop_line": 499,
       "stop_column": 40,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8797,9 +8833,9 @@
       "severity": "error"
     },
     {
-      "line": 514,
+      "line": 513,
       "column": 26,
-      "stop_line": 514,
+      "stop_line": 513,
       "stop_column": 48,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8809,9 +8845,9 @@
       "severity": "error"
     },
     {
-      "line": 515,
+      "line": 514,
       "column": 23,
-      "stop_line": 515,
+      "stop_line": 514,
       "stop_column": 49,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8821,10 +8857,22 @@
       "severity": "error"
     },
     {
-      "line": 523,
+      "line": 522,
       "column": 28,
-      "stop_line": 523,
+      "stop_line": 522,
       "stop_column": 43,
+      "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
+      "code": -2,
+      "name": "not-callable",
+      "description": "Expected a callable, got `Tensor`",
+      "concise_description": "Expected a callable, got `Tensor`",
+      "severity": "error"
+    },
+    {
+      "line": 555,
+      "column": 28,
+      "stop_line": 555,
+      "stop_column": 42,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
       "name": "not-callable",
@@ -8834,20 +8882,8 @@
     },
     {
       "line": 556,
-      "column": 28,
-      "stop_line": 556,
-      "stop_column": 42,
-      "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
-      "code": -2,
-      "name": "not-callable",
-      "description": "Expected a callable, got `Tensor`",
-      "concise_description": "Expected a callable, got `Tensor`",
-      "severity": "error"
-    },
-    {
-      "line": 557,
       "column": 29,
-      "stop_line": 557,
+      "stop_line": 556,
       "stop_column": 49,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8857,9 +8893,9 @@
       "severity": "error"
     },
     {
-      "line": 566,
+      "line": 565,
       "column": 20,
-      "stop_line": 566,
+      "stop_line": 565,
       "stop_column": 42,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8869,9 +8905,9 @@
       "severity": "error"
     },
     {
-      "line": 569,
+      "line": 568,
       "column": 20,
-      "stop_line": 569,
+      "stop_line": 568,
       "stop_column": 48,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8881,9 +8917,9 @@
       "severity": "error"
     },
     {
-      "line": 570,
+      "line": 569,
       "column": 28,
-      "stop_line": 570,
+      "stop_line": 569,
       "stop_column": 55,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8893,9 +8929,9 @@
       "severity": "error"
     },
     {
-      "line": 571,
+      "line": 570,
       "column": 16,
-      "stop_line": 571,
+      "stop_line": 570,
       "stop_column": 43,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8905,9 +8941,9 @@
       "severity": "error"
     },
     {
-      "line": 595,
+      "line": 594,
       "column": 33,
-      "stop_line": 595,
+      "stop_line": 594,
       "stop_column": 54,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -8917,9 +8953,9 @@
       "severity": "error"
     },
     {
-      "line": 614,
+      "line": 613,
       "column": 39,
-      "stop_line": 614,
+      "stop_line": 613,
       "stop_column": 43,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/base.py",
       "code": -2,
@@ -10436,14 +10472,14 @@
       "path": "src/getitune/backend/lightning/models/instance_segmentation/heads/rtmdet_inst_head.py",
       "code": -2,
       "name": "bad-override",
-      "description": "Class member `RTMDetInstSepBNHead.export_by_feat` overrides parent class `RTMDetInstHead` in an inconsistent manner\n  `RTMDetInstSepBNHead.export_by_feat` has type `BoundMethod[RTMDetInstSepBNHead, (self: RTMDetInstSepBNHead, cls_scores: list[Tensor], bbox_preds: list[Tensor], kernel_preds: list[Tensor], mask_feat: Tensor, batch_img_metas: list[dict[Unknown, Unknown]] | None = None, cfg: dict[Unknown, Unknown] | None = None, rescale: bool = False, with_nms: bool = True) -> tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]]`, which is not assignable to `BoundMethod[RTMDetInstSepBNHead, (self: RTMDetInstSepBNHead, cls_scores: list[Tensor], bbox_preds: list[Tensor], score_factors: list[Tensor] | None = None, batch_img_metas: list[dict[Unknown, Unknown]] | None = None, cfg: dict[Unknown, Unknown] | None = None, rescale: bool = False, with_nms: bool = True) -> tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]]`, the type of `RTMDetInstHead.export_by_feat`",
+      "description": "Class member `RTMDetInstSepBNHead.export_by_feat` overrides parent class `RTMDetInstHead` in an inconsistent manner\n  `RTMDetInstSepBNHead.export_by_feat` has type `BoundMethod[RTMDetInstSepBNHead, (self: RTMDetInstSepBNHead, cls_scores: list[Tensor], bbox_preds: list[Tensor], kernel_preds: list[Tensor], mask_feat: Tensor, batch_img_metas: list[dict[Unknown, Unknown]] | None = None, cfg: dict[Unknown, Unknown] | None = None, rescale: bool = False) -> tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]]`, which is not assignable to `BoundMethod[RTMDetInstSepBNHead, (self: RTMDetInstSepBNHead, cls_scores: list[Tensor], bbox_preds: list[Tensor], score_factors: list[Tensor] | None = None, batch_img_metas: list[dict[Unknown, Unknown]] | None = None, cfg: dict[Unknown, Unknown] | None = None, rescale: bool = False, with_nms: bool = True) -> tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]]`, the type of `RTMDetInstHead.export_by_feat`",
       "concise_description": "Class member `RTMDetInstSepBNHead.export_by_feat` overrides parent class `RTMDetInstHead` in an inconsistent manner",
       "severity": "error"
     },
     {
-      "line": 1465,
+      "line": 1464,
       "column": 9,
-      "stop_line": 1465,
+      "stop_line": 1464,
       "stop_column": 27,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/heads/rtmdet_inst_head.py",
       "code": -2,
@@ -10453,9 +10489,9 @@
       "severity": "error"
     },
     {
-      "line": 1510,
+      "line": 1509,
       "column": 17,
-      "stop_line": 1510,
+      "stop_line": 1509,
       "stop_column": 62,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/heads/rtmdet_inst_head.py",
       "code": -2,
@@ -10801,9 +10837,9 @@
       "severity": "error"
     },
     {
-      "line": 326,
+      "line": 316,
       "column": 35,
-      "stop_line": 326,
+      "stop_line": 316,
       "stop_column": 44,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/maskrcnn_tv.py",
       "code": -2,
@@ -10813,9 +10849,9 @@
       "severity": "error"
     },
     {
-      "line": 326,
+      "line": 316,
       "column": 56,
-      "stop_line": 326,
+      "stop_line": 316,
       "stop_column": 65,
       "path": "src/getitune/backend/lightning/models/instance_segmentation/maskrcnn_tv.py",
       "code": -2,
@@ -14329,9 +14365,9 @@
       "severity": "error"
     },
     {
-      "line": 323,
+      "line": 316,
       "column": 28,
-      "stop_line": 323,
+      "stop_line": 316,
       "stop_column": 41,
       "path": "src/getitune/backend/openvino/engine.py",
       "code": -2,
@@ -14341,9 +14377,9 @@
       "severity": "error"
     },
     {
-      "line": 324,
+      "line": 317,
       "column": 28,
-      "stop_line": 324,
+      "stop_line": 317,
       "stop_column": 33,
       "path": "src/getitune/backend/openvino/engine.py",
       "code": -2,
@@ -14353,9 +14389,9 @@
       "severity": "error"
     },
     {
-      "line": 329,
+      "line": 322,
       "column": 44,
-      "stop_line": 329,
+      "stop_line": 322,
       "stop_column": 52,
       "path": "src/getitune/backend/openvino/engine.py",
       "code": -2,
@@ -14365,9 +14401,9 @@
       "severity": "error"
     },
     {
-      "line": 398,
+      "line": 389,
       "column": 34,
-      "stop_line": 398,
+      "stop_line": 389,
       "stop_column": 87,
       "path": "src/getitune/backend/openvino/engine.py",
       "code": -2,
@@ -14377,9 +14413,9 @@
       "severity": "error"
     },
     {
-      "line": 413,
+      "line": 404,
       "column": 16,
-      "stop_line": 413,
+      "stop_line": 404,
       "stop_column": 30,
       "path": "src/getitune/backend/openvino/engine.py",
       "code": -2,
@@ -14389,9 +14425,9 @@
       "severity": "error"
     },
     {
-      "line": 219,
+      "line": 238,
       "column": 13,
-      "stop_line": 219,
+      "stop_line": 238,
       "stop_column": 28,
       "path": "src/getitune/backend/openvino/models/base.py",
       "code": -2,
@@ -14401,9 +14437,9 @@
       "severity": "error"
     },
     {
-      "line": 287,
+      "line": 294,
       "column": 40,
-      "stop_line": 287,
+      "stop_line": 294,
       "stop_column": 47,
       "path": "src/getitune/backend/openvino/models/base.py",
       "code": -2,
@@ -14413,9 +14449,9 @@
       "severity": "error"
     },
     {
-      "line": 354,
+      "line": 336,
       "column": 60,
-      "stop_line": 354,
+      "stop_line": 336,
       "stop_column": 68,
       "path": "src/getitune/backend/openvino/models/base.py",
       "code": -2,
@@ -14425,9 +14461,9 @@
       "severity": "error"
     },
     {
-      "line": 470,
+      "line": 452,
       "column": 56,
-      "stop_line": 470,
+      "stop_line": 452,
       "stop_column": 64,
       "path": "src/getitune/backend/openvino/models/base.py",
       "code": -2,
@@ -14437,9 +14473,9 @@
       "severity": "error"
     },
     {
-      "line": 500,
+      "line": 482,
       "column": 41,
-      "stop_line": 500,
+      "stop_line": 482,
       "stop_column": 57,
       "path": "src/getitune/backend/openvino/models/base.py",
       "code": -2,
@@ -14449,9 +14485,9 @@
       "severity": "error"
     },
     {
-      "line": 503,
+      "line": 485,
       "column": 41,
-      "stop_line": 503,
+      "stop_line": 485,
       "stop_column": 57,
       "path": "src/getitune/backend/openvino/models/base.py",
       "code": -2,
@@ -14461,9 +14497,9 @@
       "severity": "error"
     },
     {
-      "line": 648,
+      "line": 630,
       "column": 27,
-      "stop_line": 648,
+      "stop_line": 630,
       "stop_column": 80,
       "path": "src/getitune/backend/openvino/models/base.py",
       "code": -2,
@@ -14473,9 +14509,9 @@
       "severity": "error"
     },
     {
-      "line": 115,
+      "line": 113,
       "column": 22,
-      "stop_line": 115,
+      "stop_line": 113,
       "stop_column": 79,
       "path": "src/getitune/backend/openvino/models/detection.py",
       "code": -2,
@@ -14485,9 +14521,9 @@
       "severity": "error"
     },
     {
-      "line": 117,
+      "line": 115,
       "column": 45,
-      "stop_line": 117,
+      "stop_line": 115,
       "stop_column": 65,
       "path": "src/getitune/backend/openvino/models/detection.py",
       "code": -2,
@@ -14497,9 +14533,9 @@
       "severity": "error"
     },
     {
-      "line": 118,
+      "line": 116,
       "column": 31,
-      "stop_line": 118,
+      "stop_line": 116,
       "stop_column": 55,
       "path": "src/getitune/backend/openvino/models/detection.py",
       "code": -2,
@@ -14509,9 +14545,9 @@
       "severity": "error"
     },
     {
-      "line": 144,
+      "line": 142,
       "column": 9,
-      "stop_line": 144,
+      "stop_line": 142,
       "stop_column": 27,
       "path": "src/getitune/backend/openvino/models/detection.py",
       "code": -2,
@@ -14521,9 +14557,9 @@
       "severity": "error"
     },
     {
-      "line": 177,
+      "line": 175,
       "column": 18,
-      "stop_line": 177,
+      "stop_line": 175,
       "stop_column": 43,
       "path": "src/getitune/backend/openvino/models/detection.py",
       "code": -2,
@@ -14533,21 +14569,21 @@
       "severity": "error"
     },
     {
-      "line": 202,
+      "line": 216,
       "column": 41,
-      "stop_line": 207,
+      "stop_line": 221,
       "stop_column": 18,
       "path": "src/getitune/backend/openvino/models/detection.py",
       "code": -2,
       "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor, format=Literal['XYXY'], canvas_size=tuple[int, int], dtype=dtype)\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor, format=Literal['XYXY'], canvas_size=tuple[int, int], dtype=dtype)",
+      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor, format=Literal['XYXY'], canvas_size=tuple[Unknown, Unknown], dtype=dtype)\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
+      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor, format=Literal['XYXY'], canvas_size=tuple[Unknown, Unknown], dtype=dtype)",
       "severity": "error"
     },
     {
-      "line": 212,
+      "line": 226,
       "column": 24,
-      "stop_line": 212,
+      "stop_line": 226,
       "stop_column": 52,
       "path": "src/getitune/backend/openvino/models/detection.py",
       "code": -2,
@@ -14557,9 +14593,9 @@
       "severity": "error"
     },
     {
-      "line": 214,
+      "line": 228,
       "column": 33,
-      "stop_line": 214,
+      "stop_line": 228,
       "stop_column": 52,
       "path": "src/getitune/backend/openvino/models/detection.py",
       "code": -2,
@@ -14629,9 +14665,9 @@
       "severity": "error"
     },
     {
-      "line": 86,
+      "line": 80,
       "column": 22,
-      "stop_line": 86,
+      "stop_line": 80,
       "stop_column": 90,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14641,9 +14677,9 @@
       "severity": "error"
     },
     {
-      "line": 88,
+      "line": 82,
       "column": 45,
-      "stop_line": 88,
+      "stop_line": 82,
       "stop_column": 65,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14653,9 +14689,9 @@
       "severity": "error"
     },
     {
-      "line": 89,
+      "line": 83,
       "column": 31,
-      "stop_line": 89,
+      "stop_line": 83,
       "stop_column": 55,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14665,9 +14701,9 @@
       "severity": "error"
     },
     {
-      "line": 118,
+      "line": 112,
       "column": 9,
-      "stop_line": 118,
+      "stop_line": 112,
       "stop_column": 27,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14677,21 +14713,21 @@
       "severity": "error"
     },
     {
-      "line": 154,
+      "line": 161,
       "column": 41,
-      "stop_line": 159,
+      "stop_line": 166,
       "stop_column": 18,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
       "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor, format=Literal['XYXY'], canvas_size=tuple[int, int], dtype=dtype)\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor, format=Literal['XYXY'], canvas_size=tuple[int, int], dtype=dtype)",
+      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor, format=Literal['XYXY'], canvas_size=tuple[Unknown, Unknown], dtype=dtype)\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
+      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor, format=Literal['XYXY'], canvas_size=tuple[Unknown, Unknown], dtype=dtype)",
       "severity": "error"
     },
     {
-      "line": 169,
+      "line": 176,
       "column": 41,
-      "stop_line": 169,
+      "stop_line": 176,
       "stop_column": 57,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14701,9 +14737,9 @@
       "severity": "error"
     },
     {
-      "line": 180,
+      "line": 187,
       "column": 23,
-      "stop_line": 180,
+      "stop_line": 187,
       "stop_column": 81,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14713,9 +14749,9 @@
       "severity": "error"
     },
     {
-      "line": 191,
+      "line": 198,
       "column": 19,
-      "stop_line": 191,
+      "stop_line": 198,
       "stop_column": 77,
       "path": "src/getitune/backend/openvino/models/instance_segmentation.py",
       "code": -2,
@@ -14929,18 +14965,6 @@
       "severity": "error"
     },
     {
-      "line": 140,
-      "column": 45,
-      "stop_line": 140,
-      "stop_column": 54,
-      "path": "src/getitune/backend/ultralytics/trainers/base.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `GetiTuneDataBridgeMixin` has no attribute `args`",
-      "concise_description": "Object of class `GetiTuneDataBridgeMixin` has no attribute `args`",
-      "severity": "error"
-    },
-    {
       "line": 177,
       "column": 18,
       "stop_line": 177,
@@ -15025,129 +15049,9 @@
       "severity": "error"
     },
     {
-      "line": 56,
-      "column": 16,
-      "stop_line": 56,
-      "stop_column": 29,
-      "path": "src/getitune/data/augmentation/transforms.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `BaseSample` has no attribute `bboxes`",
-      "concise_description": "Object of class `BaseSample` has no attribute `bboxes`",
-      "severity": "error"
-    },
-    {
-      "line": 57,
-      "column": 15,
-      "stop_line": 57,
-      "stop_column": 27,
-      "path": "src/getitune/data/augmentation/transforms.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `BaseSample` has no attribute `label`",
-      "concise_description": "Object of class `BaseSample` has no attribute `label`",
-      "severity": "error"
-    },
-    {
-      "line": 472,
-      "column": 24,
-      "stop_line": 472,
-      "stop_column": 37,
-      "path": "src/getitune/data/augmentation/transforms.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `BaseSample` has no attribute `bboxes`",
-      "concise_description": "Object of class `BaseSample` has no attribute `bboxes`",
-      "severity": "error"
-    },
-    {
-      "line": 476,
-      "column": 31,
-      "stop_line": 476,
-      "stop_column": 43,
-      "path": "src/getitune/data/augmentation/transforms.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `BaseSample` has no attribute `label`",
-      "concise_description": "Object of class `BaseSample` has no attribute `label`",
-      "severity": "error"
-    },
-    {
-      "line": 479,
-      "column": 27,
-      "stop_line": 479,
-      "stop_column": 39,
-      "path": "src/getitune/data/augmentation/transforms.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `BaseSample` has no attribute `masks`",
-      "concise_description": "Object of class `BaseSample` has no attribute `masks`",
-      "severity": "error"
-    },
-    {
-      "line": 515,
-      "column": 24,
-      "stop_line": 515,
-      "stop_column": 37,
-      "path": "src/getitune/data/augmentation/transforms.py",
-      "code": -2,
-      "name": "unbound-name",
-      "description": "`all_masks_cat` may be uninitialized",
-      "concise_description": "`all_masks_cat` may be uninitialized",
-      "severity": "error"
-    },
-    {
-      "line": 663,
-      "column": 34,
-      "stop_line": 663,
-      "stop_column": 40,
-      "path": "src/getitune/data/augmentation/transforms.py",
-      "code": -2,
-      "name": "unbound-name",
-      "description": "`dst_y1` may be uninitialized",
-      "concise_description": "`dst_y1` may be uninitialized",
-      "severity": "error"
-    },
-    {
-      "line": 663,
-      "column": 41,
-      "stop_line": 663,
-      "stop_column": 47,
-      "path": "src/getitune/data/augmentation/transforms.py",
-      "code": -2,
-      "name": "unbound-name",
-      "description": "`dst_y2` may be uninitialized",
-      "concise_description": "`dst_y2` may be uninitialized",
-      "severity": "error"
-    },
-    {
-      "line": 663,
-      "column": 49,
-      "stop_line": 663,
-      "stop_column": 55,
-      "path": "src/getitune/data/augmentation/transforms.py",
-      "code": -2,
-      "name": "unbound-name",
-      "description": "`dst_x1` may be uninitialized",
-      "concise_description": "`dst_x1` may be uninitialized",
-      "severity": "error"
-    },
-    {
-      "line": 663,
-      "column": 56,
-      "stop_line": 663,
-      "stop_column": 62,
-      "path": "src/getitune/data/augmentation/transforms.py",
-      "code": -2,
-      "name": "unbound-name",
-      "description": "`dst_x2` may be uninitialized",
-      "concise_description": "`dst_x2` may be uninitialized",
-      "severity": "error"
-    },
-    {
-      "line": 230,
+      "line": 213,
       "column": 21,
-      "stop_line": 230,
+      "stop_line": 213,
       "stop_column": 61,
       "path": "src/getitune/data/dataset/base.py",
       "code": -2,
@@ -15865,9 +15769,9 @@
       "severity": "error"
     },
     {
-      "line": 389,
+      "line": 384,
       "column": 33,
-      "stop_line": 389,
+      "stop_line": 384,
       "stop_column": 55,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -15877,9 +15781,9 @@
       "severity": "error"
     },
     {
-      "line": 391,
+      "line": 386,
       "column": 17,
-      "stop_line": 391,
+      "stop_line": 386,
       "stop_column": 49,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -15889,9 +15793,9 @@
       "severity": "error"
     },
     {
-      "line": 391,
+      "line": 386,
       "column": 17,
-      "stop_line": 391,
+      "stop_line": 386,
       "stop_column": 49,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -15901,9 +15805,9 @@
       "severity": "error"
     },
     {
-      "line": 391,
+      "line": 386,
       "column": 17,
-      "stop_line": 391,
+      "stop_line": 386,
       "stop_column": 49,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -15913,9 +15817,9 @@
       "severity": "error"
     },
     {
-      "line": 393,
+      "line": 388,
       "column": 17,
-      "stop_line": 393,
+      "stop_line": 388,
       "stop_column": 49,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -15925,9 +15829,9 @@
       "severity": "error"
     },
     {
-      "line": 393,
+      "line": 388,
       "column": 17,
-      "stop_line": 393,
+      "stop_line": 388,
       "stop_column": 49,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -15937,9 +15841,9 @@
       "severity": "error"
     },
     {
-      "line": 393,
+      "line": 388,
       "column": 17,
-      "stop_line": 393,
+      "stop_line": 388,
       "stop_column": 49,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -15949,9 +15853,9 @@
       "severity": "error"
     },
     {
-      "line": 393,
+      "line": 388,
       "column": 68,
-      "stop_line": 393,
+      "stop_line": 388,
       "stop_column": 80,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -15961,9 +15865,9 @@
       "severity": "error"
     },
     {
-      "line": 395,
+      "line": 390,
       "column": 16,
-      "stop_line": 395,
+      "stop_line": 390,
       "stop_column": 48,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -15973,9 +15877,9 @@
       "severity": "error"
     },
     {
-      "line": 395,
+      "line": 390,
       "column": 16,
-      "stop_line": 395,
+      "stop_line": 390,
       "stop_column": 48,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -15985,9 +15889,9 @@
       "severity": "error"
     },
     {
-      "line": 395,
+      "line": 390,
       "column": 16,
-      "stop_line": 395,
+      "stop_line": 390,
       "stop_column": 48,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -15997,9 +15901,9 @@
       "severity": "error"
     },
     {
-      "line": 398,
+      "line": 393,
       "column": 49,
-      "stop_line": 398,
+      "stop_line": 393,
       "stop_column": 67,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -16009,9 +15913,9 @@
       "severity": "error"
     },
     {
-      "line": 513,
+      "line": 508,
       "column": 16,
-      "stop_line": 513,
+      "stop_line": 508,
       "stop_column": 18,
       "path": "src/getitune/data/module.py",
       "code": -2,
@@ -16186,6 +16090,18 @@
       "name": "missing-attribute",
       "description": "Object of class `bool` has no attribute `float`",
       "concise_description": "Object of class `bool` has no attribute `float`",
+      "severity": "error"
+    },
+    {
+      "line": 37,
+      "column": 38,
+      "stop_line": 37,
+      "stop_column": 51,
+      "path": "src/getitune/engine/__init__.py",
+      "code": -2,
+      "name": "bad-argument-type",
+      "description": "Argument `type[Engine]` is not assignable to parameter `object` with type `type[LightningEngine] | type[OVEngine]` in function `list.append`",
+      "concise_description": "Argument `type[Engine]` is not assignable to parameter `object` with type `type[LightningEngine] | type[OVEngine]` in function `list.append`",
       "severity": "error"
     },
     {
@@ -16798,30 +16714,6 @@
       "name": "bad-argument-type",
       "description": "Argument `list[list[str]]` is not assignable to parameter `all_groups` with type `list[tuple[str, ...]]` in function `getitune.types.label.HLabelInfo.__init__`",
       "concise_description": "Argument `list[list[str]]` is not assignable to parameter `all_groups` with type `list[tuple[str, ...]]` in function `getitune.types.label.HLabelInfo.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 88,
-      "column": 20,
-      "stop_line": 88,
-      "stop_column": 52,
-      "path": "tests/integration/api/test_ultralytics_engine.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `tuple[@_, ...]` is not assignable to parameter `input_size` with type `tuple[int, int] | None` in function `getitune.data.module.DataModule.__init__`",
-      "concise_description": "Argument `tuple[@_, ...]` is not assignable to parameter `input_size` with type `tuple[int, int] | None` in function `getitune.data.module.DataModule.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 172,
-      "column": 17,
-      "stop_line": 172,
-      "stop_column": 40,
-      "path": "tests/integration/api/test_ultralytics_engine.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Engine` has no attribute `optimize`",
-      "concise_description": "Object of class `Engine` has no attribute `optimize`",
       "severity": "error"
     },
     {
@@ -17773,9 +17665,9 @@
       "severity": "error"
     },
     {
-      "line": 21,
+      "line": 28,
       "column": 109,
-      "stop_line": 21,
+      "stop_line": 28,
       "stop_column": 117,
       "path": "tests/unit/backend/lightning/models/detection/heads/test_yolox_head.py",
       "code": -2,
@@ -17785,21 +17677,9 @@
       "severity": "error"
     },
     {
-      "line": 45,
-      "column": 109,
-      "stop_line": 45,
-      "stop_column": 117,
-      "path": "tests/unit/backend/lightning/models/detection/heads/test_yolox_head.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `DictConfig` is not assignable to parameter `test_cfg` with type `dict[Unknown, Unknown] | None` in function `getitune.backend.lightning.models.detection.heads.yolox_head.YOLOXHeadModule.__init__`",
-      "concise_description": "Argument `DictConfig` is not assignable to parameter `test_cfg` with type `dict[Unknown, Unknown] | None` in function `getitune.backend.lightning.models.detection.heads.yolox_head.YOLOXHeadModule.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 47,
+      "line": 30,
       "column": 61,
-      "stop_line": 47,
+      "stop_line": 30,
       "stop_column": 65,
       "path": "tests/unit/backend/lightning/models/detection/heads/test_yolox_head.py",
       "code": -2,
@@ -17809,9 +17689,9 @@
       "severity": "error"
     },
     {
-      "line": 48,
+      "line": 31,
       "column": 83,
-      "stop_line": 48,
+      "stop_line": 31,
       "stop_column": 91,
       "path": "tests/unit/backend/lightning/models/detection/heads/test_yolox_head.py",
       "code": -2,
@@ -17821,9 +17701,9 @@
       "severity": "error"
     },
     {
-      "line": 54,
+      "line": 37,
       "column": 17,
-      "stop_line": 54,
+      "stop_line": 37,
       "stop_column": 25,
       "path": "tests/unit/backend/lightning/models/detection/heads/test_yolox_head.py",
       "code": -2,
@@ -17833,45 +17713,9 @@
       "severity": "error"
     },
     {
-      "line": 63,
-      "column": 109,
-      "stop_line": 63,
-      "stop_column": 117,
-      "path": "tests/unit/backend/lightning/models/detection/heads/test_yolox_head.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `DictConfig` is not assignable to parameter `test_cfg` with type `dict[Unknown, Unknown] | None` in function `getitune.backend.lightning.models.detection.heads.yolox_head.YOLOXHeadModule.__init__`",
-      "concise_description": "Argument `DictConfig` is not assignable to parameter `test_cfg` with type `dict[Unknown, Unknown] | None` in function `getitune.backend.lightning.models.detection.heads.yolox_head.YOLOXHeadModule.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 65,
-      "column": 61,
-      "stop_line": 65,
-      "stop_column": 65,
-      "path": "tests/unit/backend/lightning/models/detection/heads/test_yolox_head.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[Tensor]` is not assignable to parameter `x` with type `tuple[Tensor]` in function `getitune.backend.lightning.models.detection.heads.yolox_head.YOLOXHeadModule.forward`",
-      "concise_description": "Argument `list[Tensor]` is not assignable to parameter `x` with type `tuple[Tensor]` in function `getitune.backend.lightning.models.detection.heads.yolox_head.YOLOXHeadModule.forward`",
-      "severity": "error"
-    },
-    {
-      "line": 72,
-      "column": 17,
-      "stop_line": 72,
-      "stop_column": 25,
-      "path": "tests/unit/backend/lightning/models/detection/heads/test_yolox_head.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `DictConfig` is not assignable to parameter `cfg` with type `dict[Unknown, Unknown] | None` in function `getitune.backend.lightning.models.detection.heads.yolox_head.YOLOXHeadModule.export_by_feat`",
-      "concise_description": "Argument `DictConfig` is not assignable to parameter `cfg` with type `dict[Unknown, Unknown] | None` in function `getitune.backend.lightning.models.detection.heads.yolox_head.YOLOXHeadModule.export_by_feat`",
-      "severity": "error"
-    },
-    {
-      "line": 102,
+      "line": 55,
       "column": 27,
-      "stop_line": 102,
+      "stop_line": 55,
       "stop_column": 59,
       "path": "tests/unit/backend/lightning/models/detection/heads/test_yolox_head.py",
       "code": -2,
@@ -17881,9 +17725,9 @@
       "severity": "error"
     },
     {
-      "line": 113,
+      "line": 66,
       "column": 47,
-      "stop_line": 113,
+      "stop_line": 66,
       "stop_column": 51,
       "path": "tests/unit/backend/lightning/models/detection/heads/test_yolox_head.py",
       "code": -2,
@@ -17893,9 +17737,9 @@
       "severity": "error"
     },
     {
-      "line": 132,
+      "line": 85,
       "column": 27,
-      "stop_line": 132,
+      "stop_line": 85,
       "stop_column": 59,
       "path": "tests/unit/backend/lightning/models/detection/heads/test_yolox_head.py",
       "code": -2,
@@ -20329,894 +20173,6 @@
       "severity": "error"
     },
     {
-      "line": 23,
-      "column": 17,
-      "stop_line": 23,
-      "stop_column": 28,
-      "path": "tests/unit/backend/native/callbacks/test_gpu_mem_monitor.py",
-      "code": -2,
-      "name": "bad-override",
-      "description": "Class member `DebugLogger.log_metrics` overrides parent class `CSVLogger` in an inconsistent manner\n  `DebugLogger.log_metrics` has type `BoundMethod[TestGPUMemMonitor.test_gpu_monitor.DebugLogger, (self: TestGPUMemMonitor.test_gpu_monitor.DebugLogger, metrics: dict[str, float], step: int | None = None) -> None]`, which is not assignable to `BoundMethod[TestGPUMemMonitor.test_gpu_monitor.DebugLogger, (self: TestGPUMemMonitor.test_gpu_monitor.DebugLogger, metrics: dict[str, Tensor | float], step: int | None = None) -> None]`, the type of `CSVLogger.log_metrics`",
-      "concise_description": "Class member `DebugLogger.log_metrics` overrides parent class `CSVLogger` in an inconsistent manner",
-      "severity": "error"
-    },
-    {
-      "line": 24,
-      "column": 23,
-      "stop_line": 24,
-      "stop_column": 53,
-      "path": "tests/unit/backend/native/models/classification/backbones/test_timm.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `str | None` is not assignable to parameter `*args` with type `PathLike[str] | str` in function `pathlib.Path.__new__`",
-      "concise_description": "Argument `str | None` is not assignable to parameter `*args` with type `PathLike[str] | str` in function `pathlib.Path.__new__`",
-      "severity": "error"
-    },
-    {
-      "line": 48,
-      "column": 20,
-      "stop_line": 52,
-      "stop_column": 10,
-      "path": "tests/unit/backend/native/models/classification/conftest.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[list[str]]` is not assignable to parameter `all_groups` with type `list[tuple[str, ...]]` in function `getitune.types.label.HLabelInfo.__init__`",
-      "concise_description": "Argument `list[list[str]]` is not assignable to parameter `all_groups` with type `list[tuple[str, ...]]` in function `getitune.types.label.HLabelInfo.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 109,
-      "column": 20,
-      "stop_line": 116,
-      "stop_column": 10,
-      "path": "tests/unit/backend/native/models/classification/conftest.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[list[str]]` is not assignable to parameter `all_groups` with type `list[tuple[str, ...]]` in function `getitune.types.label.HLabelInfo.__init__`",
-      "concise_description": "Argument `list[list[str]]` is not assignable to parameter `all_groups` with type `list[tuple[str, ...]]` in function `getitune.types.label.HLabelInfo.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 179,
-      "column": 20,
-      "stop_line": 183,
-      "stop_column": 10,
-      "path": "tests/unit/backend/native/models/classification/conftest.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[list[str]]` is not assignable to parameter `all_groups` with type `list[tuple[str, ...]]` in function `getitune.types.label.HLabelInfo.__init__`",
-      "concise_description": "Argument `list[list[str]]` is not assignable to parameter `all_groups` with type `list[tuple[str, ...]]` in function `getitune.types.label.HLabelInfo.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 217,
-      "column": 33,
-      "stop_line": 217,
-      "stop_column": 53,
-      "path": "tests/unit/backend/native/models/classification/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor)\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None [closest match]\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor)",
-      "severity": "error"
-    },
-    {
-      "line": 218,
-      "column": 27,
-      "stop_line": 218,
-      "stop_column": 82,
-      "path": "tests/unit/backend/native/models/classification/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=int, img_shape=tuple[Literal[224], Literal[224]], ori_shape=tuple[Literal[224], Literal[224]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=int, img_shape=tuple[Literal[224], Literal[224]], ori_shape=tuple[Literal[224], Literal[224]])",
-      "severity": "error"
-    },
-    {
-      "line": 31,
-      "column": 27,
-      "stop_line": 31,
-      "stop_column": 38,
-      "path": "tests/unit/backend/native/models/classification/heads/test_hlabel_cls_head.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `tuple[Literal[24], Literal[24], Literal[3]]` is not assignable to parameter `ori_shape` with type `tuple[int, int]` in function `getitune.data.entity.base.ImageInfo.__new__`",
-      "concise_description": "Argument `tuple[Literal[24], Literal[24], Literal[3]]` is not assignable to parameter `ori_shape` with type `tuple[int, int]` in function `getitune.data.entity.base.ImageInfo.__new__`",
-      "severity": "error"
-    },
-    {
-      "line": 32,
-      "column": 27,
-      "stop_line": 32,
-      "stop_column": 38,
-      "path": "tests/unit/backend/native/models/classification/heads/test_hlabel_cls_head.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `tuple[Literal[24], Literal[24], Literal[3]]` is not assignable to parameter `img_shape` with type `tuple[int, int]` in function `getitune.data.entity.base.ImageInfo.__new__`",
-      "concise_description": "Argument `tuple[Literal[24], Literal[24], Literal[3]]` is not assignable to parameter `img_shape` with type `tuple[int, int]` in function `getitune.data.entity.base.ImageInfo.__new__`",
-      "severity": "error"
-    },
-    {
-      "line": 38,
-      "column": 22,
-      "stop_line": 44,
-      "stop_column": 14,
-      "path": "tests/unit/backend/native/models/classification/heads/test_multilabel_cls_head.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=int, scale_factor=tuple[float, float], ori_shape=tuple[Literal[281], Literal[500]], img_shape=tuple[Literal[224], Literal[224]], ignored_labels=list[@_])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=int, scale_factor=tuple[float, float], ori_shape=tuple[Literal[281], Literal[500]], img_shape=tuple[Literal[224], Literal[224]], ignored_labels=list[@_])",
-      "severity": "error"
-    },
-    {
-      "line": 55,
-      "column": 22,
-      "stop_line": 61,
-      "stop_column": 14,
-      "path": "tests/unit/backend/native/models/classification/heads/test_multilabel_cls_head.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=int, scale_factor=tuple[float, float], ori_shape=tuple[Literal[281], Literal[500]], img_shape=tuple[Literal[224], Literal[224]], ignored_labels=list[int])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=int, scale_factor=tuple[float, float], ori_shape=tuple[Literal[281], Literal[500]], img_shape=tuple[Literal[224], Literal[224]], ignored_labels=list[int])",
-      "severity": "error"
-    },
-    {
-      "line": 112,
-      "column": 20,
-      "stop_line": 112,
-      "stop_column": 43,
-      "path": "tests/unit/backend/native/models/classification/test_torchvision_model.py",
-      "code": -2,
-      "name": "unsupported-operation",
-      "description": "`None` is not subscriptable",
-      "concise_description": "`None` is not subscriptable",
-      "severity": "error"
-    },
-    {
-      "line": 113,
-      "column": 20,
-      "stop_line": 113,
-      "stop_column": 43,
-      "path": "tests/unit/backend/native/models/classification/test_torchvision_model.py",
-      "code": -2,
-      "name": "unsupported-operation",
-      "description": "`None` is not subscriptable",
-      "concise_description": "`None` is not subscriptable",
-      "severity": "error"
-    },
-    {
-      "line": 12,
-      "column": 18,
-      "stop_line": 12,
-      "stop_column": 92,
-      "path": "tests/unit/backend/native/models/classification/utils/test_ignored_labels.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (ignored_labels=list[int], img_idx=Literal[0], img_shape=tuple[Literal[32], Literal[32]], ori_shape=tuple[Literal[32], Literal[32]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (ignored_labels=list[int], img_idx=Literal[0], img_shape=tuple[Literal[32], Literal[32]], ori_shape=tuple[Literal[32], Literal[32]])",
-      "severity": "error"
-    },
-    {
-      "line": 13,
-      "column": 18,
-      "stop_line": 13,
-      "stop_column": 95,
-      "path": "tests/unit/backend/native/models/classification/utils/test_ignored_labels.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (ignored_labels=list[int], img_idx=Literal[1], img_shape=tuple[Literal[32], Literal[32]], ori_shape=tuple[Literal[32], Literal[32]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (ignored_labels=list[int], img_idx=Literal[1], img_shape=tuple[Literal[32], Literal[32]], ori_shape=tuple[Literal[32], Literal[32]])",
-      "severity": "error"
-    },
-    {
-      "line": 14,
-      "column": 18,
-      "stop_line": 14,
-      "stop_column": 89,
-      "path": "tests/unit/backend/native/models/classification/utils/test_ignored_labels.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (ignored_labels=list[int], img_idx=Literal[2], img_shape=tuple[Literal[32], Literal[32]], ori_shape=tuple[Literal[32], Literal[32]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (ignored_labels=list[int], img_idx=Literal[2], img_shape=tuple[Literal[32], Literal[32]], ori_shape=tuple[Literal[32], Literal[32]])",
-      "severity": "error"
-    },
-    {
-      "line": 21,
-      "column": 24,
-      "stop_line": 21,
-      "stop_column": 43,
-      "path": "tests/unit/backend/native/models/common/test_iou2d_calculator.py",
-      "code": -2,
-      "name": "bad-assignment",
-      "description": "`signedinteger[_64Bit]` is not assignable to variable `num_bbox` with type `int | None`",
-      "concise_description": "`signedinteger[_64Bit]` is not assignable to variable `num_bbox` with type `int | None`",
-      "severity": "error"
-    },
-    {
-      "line": 22,
-      "column": 26,
-      "stop_line": 22,
-      "stop_column": 41,
-      "path": "tests/unit/backend/native/models/common/test_iou2d_calculator.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C._VariableFunctions.rand` called with arguments: (tuple[int | None, Literal[2]])\n  Possible overloads:\n  (size: Sequence[SymInt | int], *, generator: Generator | None, names: Sequence[EllipsisType | str | None] | None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (*size: SymInt | int, *, generator: Generator | None, names: Sequence[EllipsisType | str | None] | None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (size: Sequence[SymInt | int], *, generator: Generator | None, out: Tensor | None = None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (*size: SymInt | int, *, generator: Generator | None, out: Tensor | None = None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (size: Sequence[SymInt | int], *, out: Tensor | None = None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor [closest match]\n  (*size: SymInt | int, *, out: Tensor | None = None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (size: Sequence[SymInt | int], *, names: Sequence[EllipsisType | str | None] | None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (*size: SymInt | int, *, names: Sequence[EllipsisType | str | None] | None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor",
-      "concise_description": "No matching overload found for function `torch._C._VariableFunctions.rand` called with arguments: (tuple[int | None, Literal[2]])",
-      "severity": "error"
-    },
-    {
-      "line": 23,
-      "column": 36,
-      "stop_line": 23,
-      "stop_column": 51,
-      "path": "tests/unit/backend/native/models/common/test_iou2d_calculator.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C._VariableFunctions.rand` called with arguments: (tuple[int | None, Literal[2]])\n  Possible overloads:\n  (size: Sequence[SymInt | int], *, generator: Generator | None, names: Sequence[EllipsisType | str | None] | None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (*size: SymInt | int, *, generator: Generator | None, names: Sequence[EllipsisType | str | None] | None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (size: Sequence[SymInt | int], *, generator: Generator | None, out: Tensor | None = None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (*size: SymInt | int, *, generator: Generator | None, out: Tensor | None = None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (size: Sequence[SymInt | int], *, out: Tensor | None = None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor [closest match]\n  (*size: SymInt | int, *, out: Tensor | None = None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (size: Sequence[SymInt | int], *, names: Sequence[EllipsisType | str | None] | None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (*size: SymInt | int, *, names: Sequence[EllipsisType | str | None] | None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor",
-      "concise_description": "No matching overload found for function `torch._C._VariableFunctions.rand` called with arguments: (tuple[int | None, Literal[2]])",
-      "severity": "error"
-    },
-    {
-      "line": 27,
-      "column": 16,
-      "stop_line": 27,
-      "stop_column": 32,
-      "path": "tests/unit/backend/native/models/common/test_iou2d_calculator.py",
-      "code": -2,
-      "name": "bad-return",
-      "description": "Returned type `tuple[Tensor, int | None]` is not assignable to declared return type `tuple[Tensor, int]`",
-      "concise_description": "Returned type `tuple[Tensor, int | None]` is not assignable to declared return type `tuple[Tensor, int]`",
-      "severity": "error"
-    },
-    {
-      "line": 467,
-      "column": 9,
-      "stop_line": 467,
-      "stop_column": 22,
-      "path": "tests/unit/backend/native/models/detection/backbones/test_vit_tiny.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `int` has no attribute `backward`",
-      "concise_description": "Object of class `int` has no attribute `backward`",
-      "severity": "error"
-    },
-    {
-      "line": 479,
-      "column": 9,
-      "stop_line": 479,
-      "stop_column": 22,
-      "path": "tests/unit/backend/native/models/detection/backbones/test_vit_tiny.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `int` has no attribute `backward`",
-      "concise_description": "Object of class `int` has no attribute `backward`",
-      "severity": "error"
-    },
-    {
-      "line": 20,
-      "column": 33,
-      "stop_line": 24,
-      "stop_column": 10,
-      "path": "tests/unit/backend/native/models/detection/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Tensor, format=Literal[BoundingBoxFormat.XYXY], canvas_size=tuple[Literal[640], Literal[640]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None [closest match]\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Tensor, format=Literal[BoundingBoxFormat.XYXY], canvas_size=tuple[Literal[640], Literal[640]])",
-      "severity": "error"
-    },
-    {
-      "line": 25,
-      "column": 33,
-      "stop_line": 29,
-      "stop_column": 10,
-      "path": "tests/unit/backend/native/models/detection/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Tensor, format=Literal[BoundingBoxFormat.XYXY], canvas_size=tuple[Literal[640], Literal[640]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None [closest match]\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Tensor, format=Literal[BoundingBoxFormat.XYXY], canvas_size=tuple[Literal[640], Literal[640]])",
-      "severity": "error"
-    },
-    {
-      "line": 38,
-      "column": 18,
-      "stop_line": 38,
-      "stop_column": 73,
-      "path": "tests/unit/backend/native/models/detection/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[640], Literal[640]], ori_shape=tuple[Literal[640], Literal[640]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[640], Literal[640]], ori_shape=tuple[Literal[640], Literal[640]])",
-      "severity": "error"
-    },
-    {
-      "line": 39,
-      "column": 18,
-      "stop_line": 39,
-      "stop_column": 73,
-      "path": "tests/unit/backend/native/models/detection/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[1], img_shape=tuple[Literal[640], Literal[640]], ori_shape=tuple[Literal[640], Literal[640]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[1], img_shape=tuple[Literal[640], Literal[640]], ori_shape=tuple[Literal[640], Literal[640]])",
-      "severity": "error"
-    },
-    {
-      "line": 84,
-      "column": 37,
-      "stop_line": 84,
-      "stop_column": 59,
-      "path": "tests/unit/backend/native/models/detection/detectors/test_detr.py",
-      "code": -2,
-      "name": "implicit-import",
-      "description": "Module `torchvision.tv_tensors` exists, but was not imported explicitly. You are relying on other modules to load it.",
-      "concise_description": "Module `torchvision.tv_tensors` exists, but was not imported explicitly. You are relying on other modules to load it.",
-      "severity": "error"
-    },
-    {
-      "line": 53,
-      "column": 32,
-      "stop_line": 53,
-      "stop_column": 83,
-      "path": "tests/unit/backend/native/models/detection/detectors/test_single_stage_detector.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[32], Literal[32]], ori_shape=tuple[Literal[32], Literal[32]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[32], Literal[32]], ori_shape=tuple[Literal[32], Literal[32]])",
-      "severity": "error"
-    },
-    {
-      "line": 39,
-      "column": 16,
-      "stop_line": 88,
-      "stop_column": 10,
-      "path": "tests/unit/backend/native/models/detection/losses/test_deim_loss.py",
-      "code": -2,
-      "name": "bad-return",
-      "description": "Returned type `dict[str, Tensor | dict[str, Tensor] | list[@_]]` is not assignable to declared return type `dict[str, Tensor]`",
-      "concise_description": "Returned type `dict[str, Tensor | dict[str, Tensor] | list[@_]]` is not assignable to declared return type `dict[str, Tensor]`",
-      "severity": "error"
-    },
-    {
-      "line": 328,
-      "column": 9,
-      "stop_line": 328,
-      "stop_column": 22,
-      "path": "tests/unit/backend/native/models/detection/necks/test_hybrid_encoder.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `int` has no attribute `backward`",
-      "concise_description": "Object of class `int` has no attribute `backward`",
-      "severity": "error"
-    },
-    {
-      "line": 47,
-      "column": 16,
-      "stop_line": 47,
-      "stop_column": 40,
-      "path": "tests/unit/backend/native/models/detection/test_base.py",
-      "code": -2,
-      "name": "bad-return",
-      "description": "Returned type `DictConfig | ListConfig` is not assignable to declared return type `DictConfig`",
-      "concise_description": "Returned type `DictConfig | ListConfig` is not assignable to declared return type `DictConfig`",
-      "severity": "error"
-    },
-    {
-      "line": 36,
-      "column": 26,
-      "stop_line": 36,
-      "stop_column": 81,
-      "path": "tests/unit/backend/native/models/detection/test_rtdetr.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[320], Literal[320]], ori_shape=tuple[Literal[320], Literal[320]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[320], Literal[320]], ori_shape=tuple[Literal[320], Literal[320]])",
-      "severity": "error"
-    },
-    {
-      "line": 37,
-      "column": 26,
-      "stop_line": 37,
-      "stop_column": 81,
-      "path": "tests/unit/backend/native/models/detection/test_rtdetr.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[1], img_shape=tuple[Literal[320], Literal[320]], ori_shape=tuple[Literal[320], Literal[320]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[1], img_shape=tuple[Literal[320], Literal[320]], ori_shape=tuple[Literal[320], Literal[320]])",
-      "severity": "error"
-    },
-    {
-      "line": 20,
-      "column": 33,
-      "stop_line": 24,
-      "stop_column": 10,
-      "path": "tests/unit/backend/native/models/instance_segmentation/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Tensor, format=Literal[BoundingBoxFormat.XYXY], canvas_size=tuple[Literal[640], Literal[640]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None [closest match]\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Tensor, format=Literal[BoundingBoxFormat.XYXY], canvas_size=tuple[Literal[640], Literal[640]])",
-      "severity": "error"
-    },
-    {
-      "line": 25,
-      "column": 33,
-      "stop_line": 29,
-      "stop_column": 10,
-      "path": "tests/unit/backend/native/models/instance_segmentation/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Tensor, format=Literal[BoundingBoxFormat.XYXY], canvas_size=tuple[Literal[640], Literal[640]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None [closest match]\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Tensor, format=Literal[BoundingBoxFormat.XYXY], canvas_size=tuple[Literal[640], Literal[640]])",
-      "severity": "error"
-    },
-    {
-      "line": 44,
-      "column": 18,
-      "stop_line": 44,
-      "stop_column": 73,
-      "path": "tests/unit/backend/native/models/instance_segmentation/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[640], Literal[640]], ori_shape=tuple[Literal[640], Literal[640]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[640], Literal[640]], ori_shape=tuple[Literal[640], Literal[640]])",
-      "severity": "error"
-    },
-    {
-      "line": 45,
-      "column": 18,
-      "stop_line": 45,
-      "stop_column": 73,
-      "path": "tests/unit/backend/native/models/instance_segmentation/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[1], img_shape=tuple[Literal[640], Literal[640]], ori_shape=tuple[Literal[640], Literal[640]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[1], img_shape=tuple[Literal[640], Literal[640]], ori_shape=tuple[Literal[640], Literal[640]])",
-      "severity": "error"
-    },
-    {
-      "line": 129,
-      "column": 9,
-      "stop_line": 129,
-      "stop_column": 20,
-      "path": "tests/unit/backend/native/models/instance_segmentation/heads/test_rtmdet_inst_head.py",
-      "code": -2,
-      "name": "unsupported-operation",
-      "description": "Cannot set item in `list[ndarray[tuple[int], dtype[Any]]]`\n  No matching overload found for function `list.__setitem__` called with arguments: (Literal[0], ndarray[tuple[int, ...], dtype[Any]])\n  Possible overloads:\n  (key: SupportsIndex, value: ndarray[tuple[int], dtype[Any]], /) -> None [closest match]\n  (key: slice[Any, Any, Any], value: Iterable[ndarray[tuple[int], dtype[Any]]], /) -> None",
-      "concise_description": "Cannot set item in `list[ndarray[tuple[int], dtype[Any]]]`",
-      "severity": "error"
-    },
-    {
-      "line": 130,
-      "column": 9,
-      "stop_line": 130,
-      "stop_column": 20,
-      "path": "tests/unit/backend/native/models/instance_segmentation/heads/test_rtmdet_inst_head.py",
-      "code": -2,
-      "name": "unsupported-operation",
-      "description": "Cannot set item in `list[ndarray[tuple[int], dtype[Any]]]`\n  No matching overload found for function `list.__setitem__` called with arguments: (Literal[1], ndarray[tuple[int, ...], dtype[Any]])\n  Possible overloads:\n  (key: SupportsIndex, value: ndarray[tuple[int], dtype[Any]], /) -> None [closest match]\n  (key: slice[Any, Any, Any], value: Iterable[ndarray[tuple[int], dtype[Any]]], /) -> None",
-      "concise_description": "Cannot set item in `list[ndarray[tuple[int], dtype[Any]]]`",
-      "severity": "error"
-    },
-    {
-      "line": 135,
-      "column": 26,
-      "stop_line": 135,
-      "stop_column": 73,
-      "path": "tests/unit/backend/native/models/instance_segmentation/heads/test_rtmdet_inst_head.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Literal[0], img_shape=tuple[Literal[640], Literal[640]], ori_shape=tuple[Literal[640], Literal[640]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None [closest match]\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Literal[0], img_shape=tuple[Literal[640], Literal[640]], ori_shape=tuple[Literal[640], Literal[640]])",
-      "severity": "error"
-    },
-    {
-      "line": 136,
-      "column": 26,
-      "stop_line": 136,
-      "stop_column": 73,
-      "path": "tests/unit/backend/native/models/instance_segmentation/heads/test_rtmdet_inst_head.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Literal[1], img_shape=tuple[Literal[640], Literal[640]], ori_shape=tuple[Literal[640], Literal[640]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None [closest match]\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Literal[1], img_shape=tuple[Literal[640], Literal[640]], ori_shape=tuple[Literal[640], Literal[640]])",
-      "severity": "error"
-    },
-    {
-      "line": 31,
-      "column": 22,
-      "stop_line": 36,
-      "stop_column": 14,
-      "path": "tests/unit/backend/native/models/instance_segmentation/test_roi_head.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[480], Literal[480]], ori_shape=tuple[Literal[480], Literal[480]], ignored_labels=list[@_])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[480], Literal[480]], ori_shape=tuple[Literal[480], Literal[480]], ignored_labels=list[@_])",
-      "severity": "error"
-    },
-    {
-      "line": 49,
-      "column": 22,
-      "stop_line": 54,
-      "stop_column": 14,
-      "path": "tests/unit/backend/native/models/instance_segmentation/test_roi_head.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[480], Literal[480]], ori_shape=tuple[Literal[480], Literal[480]], ignored_labels=list[int])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[480], Literal[480]], ori_shape=tuple[Literal[480], Literal[480]], ignored_labels=list[int])",
-      "severity": "error"
-    },
-    {
-      "line": 18,
-      "column": 33,
-      "stop_line": 18,
-      "stop_column": 53,
-      "path": "tests/unit/backend/native/models/keypoint_detection/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor)\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None [closest match]\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor)",
-      "severity": "error"
-    },
-    {
-      "line": 19,
-      "column": 27,
-      "stop_line": 19,
-      "stop_column": 82,
-      "path": "tests/unit/backend/native/models/keypoint_detection/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=int, img_shape=tuple[Literal[192], Literal[256]], ori_shape=tuple[Literal[192], Literal[256]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=int, img_shape=tuple[Literal[192], Literal[256]], ori_shape=tuple[Literal[192], Literal[256]])",
-      "severity": "error"
-    },
-    {
-      "line": 20,
-      "column": 38,
-      "stop_line": 25,
-      "stop_column": 6,
-      "path": "tests/unit/backend/native/models/keypoint_detection/conftest.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (list[list[int]], format=Literal[BoundingBoxFormat.XYXY], canvas_size=tuple[Literal[192], Literal[256]], dtype=dtype)\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (list[list[int]], format=Literal[BoundingBoxFormat.XYXY], canvas_size=tuple[Literal[192], Literal[256]], dtype=dtype)",
-      "severity": "error"
-    },
-    {
-      "line": 26,
-      "column": 31,
-      "stop_line": 26,
-      "stop_column": 86,
-      "path": "tests/unit/backend/native/models/keypoint_detection/heads/test_rtmcc_head.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=int, img_shape=tuple[Literal[192], Literal[256]], ori_shape=tuple[Literal[192], Literal[256]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=int, img_shape=tuple[Literal[192], Literal[256]], ori_shape=tuple[Literal[192], Literal[256]])",
-      "severity": "error"
-    },
-    {
-      "line": 31,
-      "column": 36,
-      "stop_line": 31,
-      "stop_column": 81,
-      "path": "tests/unit/backend/native/models/keypoint_detection/heads/test_rtmcc_head.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor)\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None [closest match]\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor)",
-      "severity": "error"
-    },
-    {
-      "line": 49,
-      "column": 13,
-      "stop_line": 49,
-      "stop_column": 24,
-      "path": "tests/unit/backend/native/models/modules/test_base_module.py",
-      "code": -2,
-      "name": "not-callable",
-      "description": "Expected a callable, got `None`",
-      "concise_description": "Expected a callable, got `None`",
-      "severity": "error"
-    },
-    {
-      "line": 50,
-      "column": 16,
-      "stop_line": 50,
-      "stop_column": 27,
-      "path": "tests/unit/backend/native/models/modules/test_base_module.py",
-      "code": -2,
-      "name": "not-callable",
-      "description": "Expected a callable, got `None`",
-      "concise_description": "Expected a callable, got `None`",
-      "severity": "error"
-    },
-    {
-      "line": 213,
-      "column": 9,
-      "stop_line": 213,
-      "stop_column": 33,
-      "path": "tests/unit/backend/native/models/modules/test_base_module.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `NoneType` has no attribute `is_init`",
-      "concise_description": "Object of class `NoneType` has no attribute `is_init`",
-      "severity": "error"
-    },
-    {
-      "line": 214,
-      "column": 29,
-      "stop_line": 214,
-      "stop_column": 33,
-      "path": "tests/unit/backend/native/models/modules/test_base_module.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `Literal[True]` is not assignable to parameter `value` with type `Module | Tensor` in function `torch.nn.modules.module.Module.__setattr__`",
-      "concise_description": "Argument `Literal[True]` is not assignable to parameter `value` with type `Module | Tensor` in function `torch.nn.modules.module.Module.__setattr__`",
-      "severity": "error"
-    },
-    {
-      "line": 216,
-      "column": 9,
-      "stop_line": 216,
-      "stop_column": 38,
-      "path": "tests/unit/backend/native/models/modules/test_base_module.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `NoneType` has no attribute `init_weights`",
-      "concise_description": "Object of class `NoneType` has no attribute `init_weights`",
-      "severity": "error"
-    },
-    {
-      "line": 217,
-      "column": 9,
-      "stop_line": 217,
-      "stop_column": 38,
-      "path": "tests/unit/backend/native/models/modules/test_base_module.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `NoneType` has no attribute `init_weights`",
-      "concise_description": "Object of class `NoneType` has no attribute `init_weights`",
-      "severity": "error"
-    },
-    {
-      "line": 218,
-      "column": 9,
-      "stop_line": 218,
-      "stop_column": 38,
-      "path": "tests/unit/backend/native/models/modules/test_base_module.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `NoneType` has no attribute `init_weights`",
-      "concise_description": "Object of class `NoneType` has no attribute `init_weights`",
-      "severity": "error"
-    },
-    {
-      "line": 219,
-      "column": 9,
-      "stop_line": 219,
-      "stop_column": 38,
-      "path": "tests/unit/backend/native/models/modules/test_base_module.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `NoneType` has no attribute `init_weights`",
-      "concise_description": "Object of class `NoneType` has no attribute `init_weights`",
-      "severity": "error"
-    },
-    {
-      "line": 220,
-      "column": 9,
-      "stop_line": 220,
-      "stop_column": 49,
-      "path": "tests/unit/backend/native/models/modules/test_base_module.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Tensor` has no attribute `assert_not_called`",
-      "concise_description": "Object of class `Tensor` has no attribute `assert_not_called`",
-      "severity": "error"
-    },
-    {
-      "line": 123,
-      "column": 12,
-      "stop_line": 123,
-      "stop_column": 34,
-      "path": "tests/unit/backend/native/models/modules/test_conv_module.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `str` has no attribute `args`",
-      "concise_description": "Object of class `str` has no attribute `args`",
-      "severity": "error"
-    },
-    {
-      "line": 129,
-      "column": 12,
-      "stop_line": 129,
-      "stop_column": 34,
-      "path": "tests/unit/backend/native/models/modules/test_conv_module.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `str` has no attribute `args`",
-      "concise_description": "Object of class `str` has no attribute `args`",
-      "severity": "error"
-    },
-    {
-      "line": 27,
-      "column": 40,
-      "stop_line": 27,
-      "stop_column": 87,
-      "path": "tests/unit/backend/native/models/segmentation/heads/test_class_incremental.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Literal[0], tuple[Literal[128], Literal[128]], tuple[Literal[128], Literal[128]], ignored_labels=list[int])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None [closest match]\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (Literal[0], tuple[Literal[128], Literal[128]], tuple[Literal[128], Literal[128]], ignored_labels=list[int])",
-      "severity": "error"
-    },
-    {
-      "line": 16,
-      "column": 35,
-      "stop_line": 16,
-      "stop_column": 36,
-      "path": "tests/unit/backend/native/models/segmentation/segmentors/test_base_model.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `Literal[3]` is not assignable to parameter `value` with type `Module | Tensor` in function `torch.nn.modules.module.Module.__setattr__`",
-      "concise_description": "Argument `Literal[3]` is not assignable to parameter `value` with type `Module | Tensor` in function `torch.nn.modules.module.Module.__setattr__`",
-      "severity": "error"
-    },
-    {
-      "line": 33,
-      "column": 31,
-      "stop_line": 33,
-      "stop_column": 86,
-      "path": "tests/unit/backend/native/models/segmentation/segmentors/test_base_model.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_shape=tuple[Literal[256], Literal[256]], img_idx=Literal[0], ori_shape=tuple[Literal[256], Literal[256]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_shape=tuple[Literal[256], Literal[256]], img_idx=Literal[0], ori_shape=tuple[Literal[256], Literal[256]])",
-      "severity": "error"
-    },
-    {
-      "line": 55,
-      "column": 31,
-      "stop_line": 55,
-      "stop_column": 86,
-      "path": "tests/unit/backend/native/models/segmentation/segmentors/test_base_model.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_shape=tuple[Literal[256], Literal[256]], img_idx=Literal[0], ori_shape=tuple[Literal[256], Literal[256]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_shape=tuple[Literal[256], Literal[256]], img_idx=Literal[0], ori_shape=tuple[Literal[256], Literal[256]])",
-      "severity": "error"
-    },
-    {
-      "line": 62,
-      "column": 31,
-      "stop_line": 62,
-      "stop_column": 109,
-      "path": "tests/unit/backend/native/models/segmentation/segmentors/test_base_model.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_shape=tuple[Literal[256], Literal[256]], img_idx=Literal[0], ignored_labels=list[int], ori_shape=tuple[Literal[256], Literal[256]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_shape=tuple[Literal[256], Literal[256]], img_idx=Literal[0], ignored_labels=list[int], ori_shape=tuple[Literal[256], Literal[256]])",
-      "severity": "error"
-    },
-    {
-      "line": 144,
-      "column": 47,
-      "stop_line": 144,
-      "stop_column": 50,
-      "path": "tests/unit/backend/native/models/test_base.py",
-      "code": -2,
-      "name": "bad-typed-dict-key",
-      "description": "`Literal[255]` is not assignable to TypedDict key `ignore_index` with type `list[list[str]] | list[str]`",
-      "concise_description": "`Literal[255]` is not assignable to TypedDict key `ignore_index` with type `list[list[str]] | list[str]`",
-      "severity": "error"
-    },
-    {
-      "line": 26,
-      "column": 23,
-      "stop_line": 26,
-      "stop_column": 89,
-      "path": "tests/unit/backend/native/tools/explain/test_saliency_map_processing.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=int, img_shape=tuple[Literal[224], Literal[224]], ori_shape=tuple[Literal[224], Literal[224]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=int, img_shape=tuple[Literal[224], Literal[224]], ori_shape=tuple[Literal[224], Literal[224]])",
-      "severity": "error"
-    },
-    {
-      "line": 31,
-      "column": 16,
-      "stop_line": 31,
-      "stop_column": 36,
-      "path": "tests/unit/backend/native/tools/explain/test_xai_algorithms.py",
-      "code": -2,
-      "name": "bad-return",
-      "description": "Returned type `Tensor` is not assignable to declared return type `None`",
-      "concise_description": "Returned type `Tensor` is not assignable to declared return type `None`",
-      "severity": "error"
-    },
-    {
-      "line": 51,
-      "column": 16,
-      "stop_line": 51,
-      "stop_column": 37,
-      "path": "tests/unit/backend/native/tools/explain/test_xai_algorithms.py",
-      "code": -2,
-      "name": "bad-return",
-      "description": "Returned type `Tensor` is not assignable to declared return type `None`",
-      "concise_description": "Returned type `Tensor` is not assignable to declared return type `None`",
-      "severity": "error"
-    },
-    {
-      "line": 99,
-      "column": 29,
-      "stop_line": 99,
-      "stop_column": 80,
-      "path": "tests/unit/backend/native/tools/explain/test_xai_algorithms.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[10], Literal[10]], ori_shape=tuple[Literal[10], Literal[10]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[10], Literal[10]], ori_shape=tuple[Literal[10], Literal[10]])",
-      "severity": "error"
-    },
-    {
-      "line": 102,
-      "column": 39,
-      "stop_line": 106,
-      "stop_column": 14,
-      "path": "tests/unit/backend/native/tools/explain/test_xai_algorithms.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor, format=Literal['xywh'], canvas_size=tuple[Literal[10], Literal[10]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
-      "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor, format=Literal['xywh'], canvas_size=tuple[Literal[10], Literal[10]])",
-      "severity": "error"
-    },
-    {
-      "line": 96,
-      "column": 12,
-      "stop_line": 96,
-      "stop_column": 31,
-      "path": "tests/unit/backend/native/utils/test_instantiators.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Sampler` has no attribute `num_samples`",
-      "concise_description": "Object of class `Sampler` has no attribute `num_samples`",
-      "severity": "error"
-    },
-    {
-      "line": 97,
-      "column": 12,
-      "stop_line": 97,
-      "stop_column": 31,
-      "path": "tests/unit/backend/native/utils/test_instantiators.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Sampler` has no attribute `replacement`",
-      "concise_description": "Object of class `Sampler` has no attribute `replacement`",
-      "severity": "error"
-    },
-    {
-      "line": 19,
-      "column": 29,
-      "stop_line": 19,
-      "stop_column": 57,
-      "path": "tests/unit/backend/native/utils/test_mask_utils.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `torch._C._VariableFunctions.randint` called with arguments: (low=Literal[0], high=Literal[2], size=tuple[Tensor, Tensor])\n  Possible overloads:\n  (low: int, high: int, size: _size, *, generator: Generator | None = None, dtype: dtype | None = None, device: device | int | str | None = None, requires_grad: bool = False, pin_memory: bool = False) -> Tensor [closest match]\n  (high: int, size: _size, *, generator: Generator | None = None, dtype: dtype | None = None, device: device | int | str | None = None, requires_grad: bool = False, pin_memory: bool = False) -> Tensor\n  (high: SymInt | int, size: Sequence[SymInt | int], *, generator: Generator | None, out: Tensor | None = None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (high: SymInt | int, size: Sequence[SymInt | int], *, out: Tensor | None = None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (low: SymInt | int, high: SymInt | int, size: Sequence[SymInt | int], *, generator: Generator | None, out: Tensor | None = None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor\n  (low: SymInt | int, high: SymInt | int, size: Sequence[SymInt | int], *, out: Tensor | None = None, dtype: dtype | None = None, layout: layout | None = None, device: device | int | str | None = None, pin_memory: bool | None = False, requires_grad: bool | None = False) -> Tensor",
-      "concise_description": "No matching overload found for function `torch._C._VariableFunctions.randint` called with arguments: (low=Literal[0], high=Literal[2], size=tuple[Tensor, Tensor])",
-      "severity": "error"
-    },
-    {
-      "line": 21,
-      "column": 43,
-      "stop_line": 21,
-      "stop_column": 74,
-      "path": "tests/unit/backend/native/utils/test_mask_utils.py",
-      "code": -2,
-      "name": "no-matching-overload",
-      "description": "No matching overload found for function `pycocotools.mask.frPyObjects` called with arguments: (dict[Unknown, Unknown], *Unknown)\n  Possible overloads:\n  (pyobj: list[list[int]] | list[_EncodedRLE] | ndarray[tuple[int, ...], dtype[unsignedinteger[_32Bit]]], h: int, w: int) -> list[_EncodedRLE] [closest match]\n  (pyobj: list[int] | _EncodedRLE, h: int, w: int) -> _EncodedRLE",
-      "concise_description": "No matching overload found for function `pycocotools.mask.frPyObjects` called with arguments: (dict[Unknown, Unknown], *Unknown)",
-      "severity": "error"
-    },
-    {
       "line": 17,
       "column": 24,
       "stop_line": 17,
@@ -21274,462 +20230,6 @@
       "name": "no-matching-overload",
       "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor, format=Literal['XYXY'], canvas_size=tuple[Literal[480], Literal[854]])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
       "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (data=Tensor, format=Literal['XYXY'], canvas_size=tuple[Literal[480], Literal[854]])",
-      "severity": "error"
-    },
-    {
-      "line": 498,
-      "column": 9,
-      "stop_line": 498,
-      "stop_column": 23,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "read-only",
-      "description": "Attribute `params` of class `YOLO11Seg` is a read-only descriptor with no `__set__` and cannot be set",
-      "concise_description": "Attribute `params` of class `YOLO11Seg` is a read-only descriptor with no `__set__` and cannot be set",
-      "severity": "error"
-    },
-    {
-      "line": 499,
-      "column": 9,
-      "stop_line": 499,
-      "stop_column": 44,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterDescriptor` has no attribute `confidence_threshold`",
-      "concise_description": "Object of class `ParameterDescriptor` has no attribute `confidence_threshold`",
-      "severity": "error"
-    },
-    {
-      "line": 499,
-      "column": 9,
-      "stop_line": 499,
-      "stop_column": 44,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterView` has no attribute `confidence_threshold`",
-      "concise_description": "Object of class `ParameterView` has no attribute `confidence_threshold`",
-      "severity": "error"
-    },
-    {
-      "line": 500,
-      "column": 9,
-      "stop_line": 500,
-      "stop_column": 35,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterDescriptor` has no attribute `resize_type`",
-      "concise_description": "Object of class `ParameterDescriptor` has no attribute `resize_type`",
-      "severity": "error"
-    },
-    {
-      "line": 500,
-      "column": 9,
-      "stop_line": 500,
-      "stop_column": 35,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterView` has no attribute `resize_type`",
-      "concise_description": "Object of class `ParameterView` has no attribute `resize_type`",
-      "severity": "error"
-    },
-    {
-      "line": 531,
-      "column": 9,
-      "stop_line": 531,
-      "stop_column": 23,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "read-only",
-      "description": "Attribute `params` of class `YOLO11Seg` is a read-only descriptor with no `__set__` and cannot be set",
-      "concise_description": "Attribute `params` of class `YOLO11Seg` is a read-only descriptor with no `__set__` and cannot be set",
-      "severity": "error"
-    },
-    {
-      "line": 532,
-      "column": 9,
-      "stop_line": 532,
-      "stop_column": 44,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterDescriptor` has no attribute `confidence_threshold`",
-      "concise_description": "Object of class `ParameterDescriptor` has no attribute `confidence_threshold`",
-      "severity": "error"
-    },
-    {
-      "line": 532,
-      "column": 9,
-      "stop_line": 532,
-      "stop_column": 44,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterView` has no attribute `confidence_threshold`",
-      "concise_description": "Object of class `ParameterView` has no attribute `confidence_threshold`",
-      "severity": "error"
-    },
-    {
-      "line": 533,
-      "column": 9,
-      "stop_line": 533,
-      "stop_column": 35,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterDescriptor` has no attribute `resize_type`",
-      "concise_description": "Object of class `ParameterDescriptor` has no attribute `resize_type`",
-      "severity": "error"
-    },
-    {
-      "line": 533,
-      "column": 9,
-      "stop_line": 533,
-      "stop_column": 35,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterView` has no attribute `resize_type`",
-      "concise_description": "Object of class `ParameterView` has no attribute `resize_type`",
-      "severity": "error"
-    },
-    {
-      "line": 534,
-      "column": 9,
-      "stop_line": 534,
-      "stop_column": 37,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterDescriptor` has no attribute `iou_threshold`",
-      "concise_description": "Object of class `ParameterDescriptor` has no attribute `iou_threshold`",
-      "severity": "error"
-    },
-    {
-      "line": 534,
-      "column": 9,
-      "stop_line": 534,
-      "stop_column": 37,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterView` has no attribute `iou_threshold`",
-      "concise_description": "Object of class `ParameterView` has no attribute `iou_threshold`",
-      "severity": "error"
-    },
-    {
-      "line": 535,
-      "column": 9,
-      "stop_line": 535,
-      "stop_column": 35,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterDescriptor` has no attribute `nms_execute`",
-      "concise_description": "Object of class `ParameterDescriptor` has no attribute `nms_execute`",
-      "severity": "error"
-    },
-    {
-      "line": 535,
-      "column": 9,
-      "stop_line": 535,
-      "stop_column": 35,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterView` has no attribute `nms_execute`",
-      "concise_description": "Object of class `ParameterView` has no attribute `nms_execute`",
-      "severity": "error"
-    },
-    {
-      "line": 536,
-      "column": 9,
-      "stop_line": 536,
-      "stop_column": 43,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterDescriptor` has no attribute `nms_max_predictions`",
-      "concise_description": "Object of class `ParameterDescriptor` has no attribute `nms_max_predictions`",
-      "severity": "error"
-    },
-    {
-      "line": 536,
-      "column": 9,
-      "stop_line": 536,
-      "stop_column": 43,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterView` has no attribute `nms_max_predictions`",
-      "concise_description": "Object of class `ParameterView` has no attribute `nms_max_predictions`",
-      "severity": "error"
-    },
-    {
-      "line": 539,
-      "column": 9,
-      "stop_line": 539,
-      "stop_column": 23,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `YOLO11Seg` has no attribute `labels`",
-      "concise_description": "Object of class `YOLO11Seg` has no attribute `labels`",
-      "severity": "error"
-    },
-    {
-      "line": 540,
-      "column": 34,
-      "stop_line": 540,
-      "stop_column": 56,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "bad-assignment",
-      "description": "`(i: Unknown) -> str` is not assignable to attribute `get_label_name` with type `BoundMethod[YOLO11Seg, (self: YOLO11Seg, label_id: int) -> str]`\n  Positional parameter name mismatch: got `i`, want `label_id`",
-      "concise_description": "`(i: Unknown) -> str` is not assignable to attribute `get_label_name` with type `BoundMethod[YOLO11Seg, (self: YOLO11Seg, label_id: int) -> str]`",
-      "severity": "error"
-    },
-    {
-      "line": 580,
-      "column": 9,
-      "stop_line": 580,
-      "stop_column": 23,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "read-only",
-      "description": "Attribute `params` of class `YOLO11Seg` is a read-only descriptor with no `__set__` and cannot be set",
-      "concise_description": "Attribute `params` of class `YOLO11Seg` is a read-only descriptor with no `__set__` and cannot be set",
-      "severity": "error"
-    },
-    {
-      "line": 581,
-      "column": 9,
-      "stop_line": 581,
-      "stop_column": 44,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterDescriptor` has no attribute `confidence_threshold`",
-      "concise_description": "Object of class `ParameterDescriptor` has no attribute `confidence_threshold`",
-      "severity": "error"
-    },
-    {
-      "line": 581,
-      "column": 9,
-      "stop_line": 581,
-      "stop_column": 44,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterView` has no attribute `confidence_threshold`",
-      "concise_description": "Object of class `ParameterView` has no attribute `confidence_threshold`",
-      "severity": "error"
-    },
-    {
-      "line": 582,
-      "column": 9,
-      "stop_line": 582,
-      "stop_column": 35,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterDescriptor` has no attribute `resize_type`",
-      "concise_description": "Object of class `ParameterDescriptor` has no attribute `resize_type`",
-      "severity": "error"
-    },
-    {
-      "line": 582,
-      "column": 9,
-      "stop_line": 582,
-      "stop_column": 35,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterView` has no attribute `resize_type`",
-      "concise_description": "Object of class `ParameterView` has no attribute `resize_type`",
-      "severity": "error"
-    },
-    {
-      "line": 583,
-      "column": 9,
-      "stop_line": 583,
-      "stop_column": 37,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterDescriptor` has no attribute `iou_threshold`",
-      "concise_description": "Object of class `ParameterDescriptor` has no attribute `iou_threshold`",
-      "severity": "error"
-    },
-    {
-      "line": 583,
-      "column": 9,
-      "stop_line": 583,
-      "stop_column": 37,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterView` has no attribute `iou_threshold`",
-      "concise_description": "Object of class `ParameterView` has no attribute `iou_threshold`",
-      "severity": "error"
-    },
-    {
-      "line": 584,
-      "column": 9,
-      "stop_line": 584,
-      "stop_column": 35,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterDescriptor` has no attribute `nms_execute`",
-      "concise_description": "Object of class `ParameterDescriptor` has no attribute `nms_execute`",
-      "severity": "error"
-    },
-    {
-      "line": 584,
-      "column": 9,
-      "stop_line": 584,
-      "stop_column": 35,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterView` has no attribute `nms_execute`",
-      "concise_description": "Object of class `ParameterView` has no attribute `nms_execute`",
-      "severity": "error"
-    },
-    {
-      "line": 585,
-      "column": 9,
-      "stop_line": 585,
-      "stop_column": 43,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterDescriptor` has no attribute `nms_max_predictions`",
-      "concise_description": "Object of class `ParameterDescriptor` has no attribute `nms_max_predictions`",
-      "severity": "error"
-    },
-    {
-      "line": 585,
-      "column": 9,
-      "stop_line": 585,
-      "stop_column": 43,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ParameterView` has no attribute `nms_max_predictions`",
-      "concise_description": "Object of class `ParameterView` has no attribute `nms_max_predictions`",
-      "severity": "error"
-    },
-    {
-      "line": 588,
-      "column": 9,
-      "stop_line": 588,
-      "stop_column": 23,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `YOLO11Seg` has no attribute `labels`",
-      "concise_description": "Object of class `YOLO11Seg` has no attribute `labels`",
-      "severity": "error"
-    },
-    {
-      "line": 589,
-      "column": 34,
-      "stop_line": 589,
-      "stop_column": 56,
-      "path": "tests/unit/backend/ultralytics/test_exporter.py",
-      "code": -2,
-      "name": "bad-assignment",
-      "description": "`(i: Unknown) -> str` is not assignable to attribute `get_label_name` with type `BoundMethod[YOLO11Seg, (self: YOLO11Seg, label_id: int) -> str]`\n  Positional parameter name mismatch: got `i`, want `label_id`",
-      "concise_description": "`(i: Unknown) -> str` is not assignable to attribute `get_label_name` with type `BoundMethod[YOLO11Seg, (self: YOLO11Seg, label_id: int) -> str]`",
-      "severity": "error"
-    },
-    {
-      "line": 186,
-      "column": 32,
-      "stop_line": 186,
-      "stop_column": 80,
-      "path": "tests/unit/backend/ultralytics/test_trainers.py",
-      "code": -2,
-      "name": "bad-assignment",
-      "description": "`(event: str, fn: Unknown) -> None` is not assignable to attribute `add_callback` with type `BoundMethod[DetectionTrainer, (self: DetectionTrainer, event: str, callback: Unknown) -> None]`\n  Positional parameter name mismatch: got `fn`, want `callback`",
-      "concise_description": "`(event: str, fn: Unknown) -> None` is not assignable to attribute `add_callback` with type `BoundMethod[DetectionTrainer, (self: DetectionTrainer, event: str, callback: Unknown) -> None]`",
-      "severity": "error"
-    },
-    {
-      "line": 203,
-      "column": 36,
-      "stop_line": 203,
-      "stop_column": 40,
-      "path": "tests/unit/backend/ultralytics/test_trainers.py",
-      "code": -2,
-      "name": "unnecessary-comparison",
-      "description": "Identity comparison `False is True` is always False",
-      "concise_description": "Identity comparison `False is True` is always False",
-      "severity": "warn"
-    },
-    {
-      "line": 204,
-      "column": 37,
-      "stop_line": 204,
-      "stop_column": 41,
-      "path": "tests/unit/backend/ultralytics/test_trainers.py",
-      "code": -2,
-      "name": "unnecessary-comparison",
-      "description": "Identity comparison `False is True` is always False",
-      "concise_description": "Identity comparison `False is True` is always False",
-      "severity": "warn"
-    },
-    {
-      "line": 228,
-      "column": 32,
-      "stop_line": 228,
-      "stop_column": 80,
-      "path": "tests/unit/backend/ultralytics/test_trainers.py",
-      "code": -2,
-      "name": "bad-assignment",
-      "description": "`(event: str, fn: Unknown) -> None` is not assignable to attribute `add_callback` with type `BoundMethod[DetectionTrainer, (self: DetectionTrainer, event: str, callback: Unknown) -> None]`\n  Positional parameter name mismatch: got `fn`, want `callback`",
-      "concise_description": "`(event: str, fn: Unknown) -> None` is not assignable to attribute `add_callback` with type `BoundMethod[DetectionTrainer, (self: DetectionTrainer, event: str, callback: Unknown) -> None]`",
-      "severity": "error"
-    },
-    {
-      "line": 267,
-      "column": 32,
-      "stop_line": 267,
-      "stop_column": 80,
-      "path": "tests/unit/backend/ultralytics/test_trainers.py",
-      "code": -2,
-      "name": "bad-assignment",
-      "description": "`(event: str, fn: Unknown) -> None` is not assignable to attribute `add_callback` with type `BoundMethod[DetectionTrainer, (self: DetectionTrainer, event: str, callback: Unknown) -> None]`\n  Positional parameter name mismatch: got `fn`, want `callback`",
-      "concise_description": "`(event: str, fn: Unknown) -> None` is not assignable to attribute `add_callback` with type `BoundMethod[DetectionTrainer, (self: DetectionTrainer, event: str, callback: Unknown) -> None]`",
-      "severity": "error"
-    },
-    {
-      "line": 292,
-      "column": 32,
-      "stop_line": 292,
-      "stop_column": 80,
-      "path": "tests/unit/backend/ultralytics/test_trainers.py",
-      "code": -2,
-      "name": "bad-assignment",
-      "description": "`(event: str, fn: Unknown) -> None` is not assignable to attribute `add_callback` with type `BoundMethod[DetectionTrainer, (self: DetectionTrainer, event: str, callback: Unknown) -> None]`\n  Positional parameter name mismatch: got `fn`, want `callback`",
-      "concise_description": "`(event: str, fn: Unknown) -> None` is not assignable to attribute `add_callback` with type `BoundMethod[DetectionTrainer, (self: DetectionTrainer, event: str, callback: Unknown) -> None]`",
-      "severity": "error"
-    },
-    {
-      "line": 347,
-      "column": 32,
-      "stop_line": 347,
-      "stop_column": 80,
-      "path": "tests/unit/backend/ultralytics/test_trainers.py",
-      "code": -2,
-      "name": "bad-assignment",
-      "description": "`(event: str, fn: Unknown) -> None` is not assignable to attribute `add_callback` with type `BoundMethod[DetectionTrainer, (self: DetectionTrainer, event: str, callback: Unknown) -> None]`\n  Positional parameter name mismatch: got `fn`, want `callback`",
-      "concise_description": "`(event: str, fn: Unknown) -> None` is not assignable to attribute `add_callback` with type `BoundMethod[DetectionTrainer, (self: DetectionTrainer, event: str, callback: Unknown) -> None]`",
       "severity": "error"
     },
     {
@@ -21793,9 +20293,9 @@
       "severity": "error"
     },
     {
-      "line": 265,
+      "line": 264,
       "column": 30,
-      "stop_line": 265,
+      "stop_line": 264,
       "stop_column": 42,
       "path": "tests/unit/data/dataset/test_base.py",
       "code": -2,
@@ -21805,9 +20305,9 @@
       "severity": "error"
     },
     {
-      "line": 307,
+      "line": 306,
       "column": 20,
-      "stop_line": 307,
+      "stop_line": 306,
       "stop_column": 56,
       "path": "tests/unit/data/dataset/test_base.py",
       "code": -2,

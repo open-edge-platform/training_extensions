@@ -1,10 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { AlertDialog, DialogContainer } from '@geti/ui';
+import { AlertDialog, DialogContainer, toast } from '@geti/ui';
 import { useDeleteProject } from 'hooks/api/project.hook';
-
-import { toast } from '../toast/toast.component';
 
 type DeleteProjectDialogProps = {
     isOpen: boolean;

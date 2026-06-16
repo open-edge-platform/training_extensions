@@ -39,10 +39,6 @@ class Resize(tvt_v2.Transform):
             by resizing to fit within the target size and padding to reach exact target dimensions.
             Padding is applied to bottom-right only (matching YOLOX/DFine post-processing
             which assumes no left/top offset). Defaults to False.
-        center_padding (bool): If True and ``keep_aspect_ratio`` is True, distribute
-            padding equally on both sides (centered letterbox, matching Ultralytics
-            LetterBox). If False, padding is applied to bottom-right only.
-            Defaults to False.
         pad_value (int or tuple): Padding value for image. Defaults to 0.
         interpolation: Interpolation mode for images. Defaults to InterpolationMode.BILINEAR.
         antialias: Whether to apply antialiasing. Defaults to True.
@@ -53,7 +49,6 @@ class Resize(tvt_v2.Transform):
         size: int | tuple[int, int],
         resize_targets: bool = True,
         keep_aspect_ratio: bool = False,
-        center_padding: bool = False,
         pad_value: int | tuple[int, int, int] = 0,
         interpolation: F.InterpolationMode = F.InterpolationMode.BILINEAR,
         antialias: bool = True,
@@ -62,7 +57,6 @@ class Resize(tvt_v2.Transform):
         self.size = (size, size) if isinstance(size, int) else tuple(size)
         self.resize_targets = resize_targets
         self.keep_aspect_ratio = keep_aspect_ratio
-        self.center_padding = center_padding
         self.pad_value = pad_value
         self.interpolation = interpolation
         self.antialias = antialias
@@ -88,23 +82,14 @@ class Resize(tvt_v2.Transform):
         new_w = round(orig_w * scale)
         new_h = round(orig_h * scale)
 
-        # Compute padding to reach target size
+        # Compute padding to reach target size (bottom-right only)
         pad_w = target_w - new_w
         pad_h = target_h - new_h
 
-        if self.center_padding:
-            # Centered letterbox (matching Ultralytics LetterBox): equal on both sides.
-            pad_left = pad_w // 2
-            pad_right = pad_w - pad_left
-            pad_top = pad_h // 2
-            pad_bottom = pad_h - pad_top
-        else:
-            # Bottom-right padding only (matching DFine/YOLOX post-processing
-            # which assumes no left/top offset).
-            pad_left = 0
-            pad_right = pad_w
-            pad_top = 0
-            pad_bottom = pad_h
+        pad_left = 0
+        pad_right = pad_w
+        pad_top = 0
+        pad_bottom = pad_h
 
         return new_h, new_w, pad_left, pad_top, pad_right, pad_bottom
 
@@ -282,9 +267,6 @@ class CachedMosaic(CacheableMixin, tvt_v2.Transform):
         translate: Translate fraction for random perspective crop.  The crop
             centre shifts by up to ``± translate * img_scale`` pixels.
             Defaults to 0.1.
-        area_thr: Minimum visible-area ratio for keeping a bbox after the
-            perspective crop.  Lower values keep more small / partially
-            occluded instances.  Defaults to 0.1.
     """
 
     def __init__(
@@ -298,7 +280,6 @@ class CachedMosaic(CacheableMixin, tvt_v2.Transform):
         random_pop: bool = True,
         scale: float = 0.5,
         translate: float = 0.1,
-        area_thr: float = 0.1,
     ) -> None:
         super().__init__()
 
@@ -321,7 +302,6 @@ class CachedMosaic(CacheableMixin, tvt_v2.Transform):
         self.random_pop = random_pop
         self.scale = scale
         self.translate = translate
-        self.area_thr = area_thr
         self._init_cache()
 
     def _resize_keep_ratio(self, img: torch.Tensor, target_h: int, target_w: int) -> tuple[torch.Tensor, float]:
@@ -636,7 +616,7 @@ class CachedMosaic(CacheableMixin, tvt_v2.Transform):
             eps = 1e-16
             area_ratio = (new_w * new_h) / (scaled_orig_w * scaled_orig_h + eps)
             ar = torch.maximum(new_w / (new_h + eps), new_h / (new_w + eps))
-            valid = (new_w > 2) & (new_h > 2) & (area_ratio > self.area_thr) & (ar < 100)
+            valid = (new_w > 2) & (new_h > 2) & (area_ratio > 0.1) & (ar < 100)
 
             new_bboxes = new_bboxes[valid]
             labels = labels[valid]
@@ -738,8 +718,7 @@ class CachedMosaic(CacheableMixin, tvt_v2.Transform):
             f"max_cached_images={self.max_cached_images}, "
             f"random_pop={self.random_pop}, "
             f"scale={self.scale}, "
-            f"translate={self.translate}, "
-            f"area_thr={self.area_thr})"
+            f"translate={self.translate})"
         )
 
 
@@ -949,85 +928,6 @@ class CachedMixUp(CacheableMixin, tvt_v2.Transform):
             f"max_cached_images={self.max_cached_images}, "
             f"random_pop={self.random_pop}, "
             f"prob={self.prob})"
-        )
-
-
-class FilterBoundingBoxes(tvt_v2.Transform):
-    """Filter bounding boxes by size, aspect ratio, and area.
-
-    Removes degenerate or severely distorted bounding boxes after geometric
-    transforms (affine, crop, mosaic).  Matches the filtering behaviour of
-    Ultralytics ``box_candidates`` without requiring access to pre-transform
-    box dimensions.
-
-    Args:
-        min_wh: Minimum width AND height in pixels.  Boxes smaller than this
-            in either dimension are removed.  Defaults to 2.
-        max_aspect_ratio: Maximum aspect ratio ``max(w/h, h/w)``.  Boxes more
-            extreme than this are removed.  Defaults to 20.
-        min_area: Minimum box area in pixels (w * h).  Boxes smaller than this
-            are removed.  Defaults to 4.
-    """
-
-    def __init__(
-        self,
-        min_wh: int = 2,
-        max_aspect_ratio: float = 20.0,
-        min_area: float = 4.0,
-    ) -> None:
-        super().__init__()
-        self.min_wh = min_wh
-        self.max_aspect_ratio = max_aspect_ratio
-        self.min_area = min_area
-
-    @typing.no_type_check
-    def forward(self, *_inputs: BaseSample) -> BaseSample:
-        """Filter bounding boxes and corresponding labels/masks."""
-        assert len(_inputs) == 1, "Only single sample input is supported"  # noqa: S101
-        inputs = _inputs[0]
-
-        bboxes = inputs.bboxes
-        if bboxes is None or bboxes.numel() == 0:
-            return inputs
-
-        # Compute box dimensions (XYXY format)
-        bboxes_f = bboxes.float()
-        w = bboxes_f[:, 2] - bboxes_f[:, 0]
-        h = bboxes_f[:, 3] - bboxes_f[:, 1]
-        eps = 1e-6
-
-        # Filter criteria (matching upstream box_candidates logic)
-        valid_wh = (w >= self.min_wh) & (h >= self.min_wh)
-        valid_area = (w * h) >= self.min_area
-        aspect_ratio = torch.maximum(w / (h + eps), h / (w + eps))
-        valid_ar = aspect_ratio < self.max_aspect_ratio
-
-        valid = valid_wh & valid_area & valid_ar
-
-        if valid.all():
-            return inputs
-
-        # Apply filter
-        canvas_size = bboxes.canvas_size
-        inputs.bboxes = tv_tensors.BoundingBoxes(
-            bboxes[valid],
-            format="XYXY",
-            canvas_size=canvas_size,
-        )
-        inputs.label = inputs.label[valid]
-
-        # Filter masks if present
-        if hasattr(inputs, "masks") and inputs.masks is not None and len(inputs.masks) > 0:
-            inputs.masks = tv_tensors.Mask(inputs.masks[valid])
-
-        return inputs
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}("
-            f"min_wh={self.min_wh}, "
-            f"max_aspect_ratio={self.max_aspect_ratio}, "
-            f"min_area={self.min_area})"
         )
 
 

@@ -83,7 +83,6 @@ class IPCameraSourceConfig(BaseSourceConfig):
 
 class VideoFileConfig(SourceConfig):
     video_path: str
-    loop: bool = False
 
 
 class VideoFileSourceConfig(BaseSourceConfig):
@@ -111,17 +110,3 @@ Source = Annotated[
 ]
 
 SourceAdapter: TypeAdapter[Source] = TypeAdapter(Source)
-
-
-class SourceTestResult(BaseModel):
-    reachable: bool
-    error: str | None
-    latency_ms: float | None
-
-    @staticmethod
-    def success(latency_ms: float) -> "SourceTestResult":
-        return SourceTestResult(reachable=True, error=None, latency_ms=latency_ms)
-
-    @staticmethod
-    def failure(error: str | None) -> "SourceTestResult":
-        return SourceTestResult(reachable=False, error=error, latency_ms=None)

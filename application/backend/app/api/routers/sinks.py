@@ -14,7 +14,6 @@ from pydantic import ValidationError
 
 from app.api.dependencies import get_sink, get_sink_service
 from app.api.schemas.sink import SinkCreate, SinkCreateAdapter, SinkView, SinkViewAdapter
-from app.api.schemas.test_result import TestResult
 from app.models import Sink
 from app.services import (
     ResourceInUseError,
@@ -257,21 +256,3 @@ def delete_sink(
         sink_service.delete_sink(sink)
     except ResourceInUseError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
-
-@router.post(
-    "/{sink_id}:test",
-    response_model=TestResult,
-    responses={
-        status.HTTP_200_OK: {"description": "Sink connectivity test result", "model": TestResult},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid sink ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Sink not found"},
-    },
-)
-def test_sink(
-    sink: Annotated[Sink, Depends(get_sink)],
-    sink_service: Annotated[SinkService, Depends(get_sink_service)],
-) -> TestResult:
-    """Test connectivity to a sink"""
-    result = sink_service.test_sink(sink)
-    return TestResult.model_validate(result, from_attributes=True)

@@ -7,8 +7,6 @@ import { Content, ContextualHelp, Divider, Flex, Heading, Radio, Text } from '@g
 import { clsx } from 'clsx';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../../constants/shared-types';
-import { UltralyticsLicense } from '../../../components/ultralytics-license.component';
-import { isUltralyticsModel } from '../../../utils';
 import { getAccuracyMetric } from '../utils';
 
 import classes from './model-architecture-card.module.scss';
@@ -30,27 +28,13 @@ const ModelArchitectureDivider = () => {
     return <Divider size={'S'} />;
 };
 
-const License = () => {
-    const { modelArchitecture } = useModelArchitecture();
-
-    return (
-        <li>
-            {isUltralyticsModel(modelArchitecture.id) ? (
-                <UltralyticsLicense />
-            ) : (
-                `License: ${modelArchitecture.license}`
-            )}
-        </li>
-    );
-};
-
 const ModelArchitectureParameters = () => {
     const { modelArchitecture } = useModelArchitecture();
 
     return (
         <ul className={classes.modelArchitectureParameters}>
             <li>Number of parameters: {modelArchitecture.stats.trainable_parameters} million</li>
-            <License />
+            <li>License: {modelArchitecture.license}</li>
         </ul>
     );
 };
@@ -68,7 +52,7 @@ const ModelArchitectureDetailedParameters = () => {
                     {accuracyMetric.label}: {accuracyMetric.value}%
                 </li>
             )}
-            <License />
+            <li>License: {modelArchitecture.license}</li>
         </ul>
     );
 };

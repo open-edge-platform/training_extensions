@@ -371,20 +371,19 @@ class Mosaic(BaseAugmentationParameter):
         default=0.5,
         title="Scale",
         description=(
-            "Scale factor for the random perspective crop applied after mosaic assembly. "
-            "The random scale is sampled from [1 - scale, 1 + scale]. "
-            "Higher values produce more aggressive zoom variation."
+            "Scale factor for random perspective crop applied after mosaic assembly. "
+            "The random scale is sampled from [1-scale, 1+scale]. "
+            "Higher values produce more zoom variation."
         ),
     )
     translate: float = Field(
         ge=0.0,
-        le=1.0,
+        le=0.5,
         default=0.1,
         title="Translate",
         description=(
-            "Translate fraction for the random perspective crop. "
-            "The crop centre shifts by up to +/- translate * image_size pixels. "
-            "Higher values allow more positional variation."
+            "Translation fraction for random perspective crop. "
+            "The crop center shifts by ±translate * image_size pixels."
         ),
     )
 
