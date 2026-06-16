@@ -1,6 +1,6 @@
 <div align="center">
 
-# Geti Library - getitune
+<img src="../assets/geti-tune-header.png" alt="Geti Library">
 
 **A low-code transfer learning framework for training, evaluating, optimizing, and deploying computer vision models**
 
@@ -34,7 +34,7 @@
 
 </div>
 
-## Introduction
+# Geti Library - getitune
 
 The Geti™ library (`getitune`) is a low-code transfer learning framework for Computer Vision.
 Its API and CLI let you train, evaluate, optimize, and deploy models quickly, even without deep expertise in deep learning.
