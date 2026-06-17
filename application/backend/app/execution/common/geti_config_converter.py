@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import json
 from enum import Enum
 from pathlib import Path
 from typing import Any, ClassVar
@@ -301,6 +302,12 @@ class TransformsUpdater:
         if not augmentation_params:
             return
 
+        # [INPUT] Log input augmentations
+        print("\n" + "-" * 80)
+        print("[TransformsUpdater.update] INPUT AUGMENTATIONS")
+        print("-" * 80)
+        print(json.dumps(augmentation_params, indent=2, default=str))
+
         tiling = config["data"].get("tile_config", {}).get("enable_tiler", False)
         train_subset = config["data"]["train_subset"]
 
@@ -339,6 +346,7 @@ class TransformsUpdater:
                         aug_config["init_args"] = {}
                     aug_config["init_args"].update(init_args)
                     aug_config.pop("enable", None)
+                    print(f"  [UPDATED] {aug_name} -> {registry_entry['class_paths'][0]}")
                 else:
                     # Add new augmentation with template params
                     new_aug: dict[str, Any] = {"class_path": registry_entry["class_paths"][0]}
@@ -346,6 +354,9 @@ class TransformsUpdater:
                         new_aug["init_args"] = init_args
                     insert_idx = cls._get_insert_position(aug_list, registry_entry["stage"])
                     aug_list.insert(insert_idx, new_aug)
+                    print(
+                        f"  [ADDED] {aug_name} -> {registry_entry['class_paths'][0]} (stage: {registry_entry['stage']})"
+                    )
             elif existing_idx is not None:
                 if aug_name == "random_resize_crop":
                     # Replace crop with simple Resize to keep the pipeline valid
@@ -353,8 +364,21 @@ class TransformsUpdater:
                         "class_path": "getitune.data.augmentation.transforms.Resize",
                         "init_args": {"size": "$(input_size)"},
                     }
+                    print(f"  [REPLACED] {aug_name} -> Resize")
                 else:
                     aug_list.pop(existing_idx)
+                    print(f"  [REMOVED] {aug_name}")
+
+        # [OUTPUT] Log output augmentations
+        print("\n" + "-" * 80)
+        print("[TransformsUpdater.update] OUTPUT AUGMENTATIONS (after update)")
+        print("-" * 80)
+        output_augs = {
+            "augmentations_cpu": train_subset.get("augmentations_cpu", []),
+            "augmentations_gpu": train_subset.get("augmentations_gpu", []),
+        }
+        print(json.dumps(output_augs, indent=2, default=str))
+        print("-" * 80 + "\n")
 
     @classmethod
     def _remap_params(
@@ -383,10 +407,17 @@ class TransformsUpdater:
         # Step 1: rename keys (global renames + per-augmentation overrides)
         rename_map = {**cls.PARAM_RENAME, **(per_aug_rename or {})}
         init_args: dict[str, Any] = {}
+
+        # [MAPPING] Log parameter remapping
+        print("    [PARAM_REMAP] Input params:", params)
+
         for key, value in params.items():
             if value is None:
                 continue
-            init_args[rename_map.get(key, key)] = value
+            new_key = rename_map.get(key, key)
+            if new_key != key:
+                print(f"      {key} -> {new_key}")
+            init_args[new_key] = value
 
         # Step 2: adjust values to match kornia expected formats
         # Skip list conversion for params marked as scalar
@@ -394,13 +425,17 @@ class TransformsUpdater:
         if "translate" in init_args and "translate" not in _skip and not isinstance(init_args["translate"], list):
             v = init_args["translate"]
             init_args["translate"] = [v, v]
+            print(f"      translate adjusted to list: {[v, v]}")
         if "shear" in init_args and not isinstance(init_args["shear"], list):
             v = init_args["shear"]
             init_args["shear"] = [-v, v]
+            print(f"      shear adjusted to list: {[-v, v]}")
         if "kernel_size" in init_args and isinstance(init_args["kernel_size"], int):
             v = init_args["kernel_size"]
             init_args["kernel_size"] = [v, v]
+            print(f"      kernel_size adjusted to list: {[v, v]}")
 
+        print("    [PARAM_REMAP] Output params:", init_args)
         return init_args
 
     @staticmethod
@@ -469,6 +504,12 @@ class HyperparametersUpdater:
             hyperparameters: Dict of hyperparameter updates.
             config: The full getitune config dictionary.
         """
+        # [INPUT] Log input hyperparameters
+        print("\n" + "-" * 80)
+        print("[HyperparametersUpdater.update] INPUT HYPERPARAMETERS")
+        print("-" * 80)
+        print(json.dumps(hyperparameters, indent=2, default=str))
+
         for key, value in hyperparameters.items():
             if key == "learning_rate":
                 HyperparametersUpdater._update_learning_rate(value, config)
@@ -490,6 +531,39 @@ class HyperparametersUpdater:
                 HyperparametersUpdater._update_gradient_clip(value, config)
             else:
                 logger.warning("Unknown hyperparameter '%s' - skipping update", key)
+
+        # [OUTPUT] Log output hyperparameters
+        print("\n" + "-" * 80)
+        print("[HyperparametersUpdater.update] OUTPUT HYPERPARAMETERS (after update)")
+        print("-" * 80)
+        output_hyperparams = {
+            "max_epochs": config.get("max_epochs"),
+            "optimizer_lr": config.get("model", {})
+            .get("init_args", {})
+            .get("optimizer", {})
+            .get("init_args", {})
+            .get("lr"),
+            "optimizer_weight_decay": config.get("model", {})
+            .get("init_args", {})
+            .get("optimizer", {})
+            .get("init_args", {})
+            .get("weight_decay"),
+            "batch_size_train": config.get("data", {}).get("train_subset", {}).get("batch_size"),
+            "batch_size_val": config.get("data", {}).get("val_subset", {}).get("batch_size"),
+            "input_size": config.get("data", {}).get("input_size"),
+            "gradient_clip_val": config.get("engine", {}).get("gradient_clip_val"),
+            "accumulate_grad_batches": config.get("engine", {}).get("accumulate_grad_batches"),
+            "early_stopping_patience": next(
+                (
+                    cb.get("init_args", {}).get("patience")
+                    for cb in config.get("callbacks", [])
+                    if "EarlyStoppingWithWarmup" in cb.get("class_path", "")
+                ),
+                None,
+            ),
+        }
+        print(json.dumps(output_hyperparams, indent=2, default=str))
+        print("-" * 80 + "\n")
 
     @staticmethod
     def _update_learning_rate(param_value: float | None, config: dict) -> None:
@@ -699,6 +773,22 @@ class GetiConfigConverter:
             dict: The default configuration dictionary.
 
         """
+        # [INPUT] Log input configuration
+        print("\n" + "=" * 80)
+        print("[GetiConfigConverter.convert] INPUT GETI CONFIG")
+        print("=" * 80)
+        print(
+            json.dumps(
+                {
+                    "model_manifest_id": config.get("model_manifest_id"),
+                    "sub_task_type": config.get("sub_task_type"),
+                    "hyper_parameters": config.get("hyper_parameters"),
+                },
+                indent=2,
+                default=str,
+            )
+        )
+
         hyper_parameters = config["hyper_parameters"]
 
         model_config_path: Path = TEMPLATE_ID_MAPPING[config["model_manifest_id"]]["recipe_path"]  # type: ignore[assignment]
@@ -715,6 +805,10 @@ class GetiConfigConverter:
             model_config_path = RECIPE_PATH / "classification" / sub_task_type.lower() / model_config_path.name
         if model_config_path.suffix != ".yaml":
             model_config_path = model_config_path / ".yaml"
+
+        # Log model template being loaded
+        print(f"\n[GetiConfigConverter.convert] Loading model template: {model_config_path}")
+
         default_config = AutoConfigurator(model=model_config_path).config
         if hyper_parameters:
             GetiConfigConverter._update_params(default_config, hyper_parameters)
@@ -726,6 +820,35 @@ class GetiConfigConverter:
             GetiConfigConverter._update_intensity_mapping(default_config, intensity_mapping)
 
         GetiConfigConverter._remove_unused_key(default_config)
+
+        # [OUTPUT] Log output configuration
+        print("\n" + "=" * 80)
+        print("[GetiConfigConverter.convert] OUTPUT RECIPE (after conversion)")
+        print("=" * 80)
+        output_summary = {
+            "max_epochs": default_config.get("max_epochs"),
+            "model_config": {
+                "class_path": default_config.get("model", {}).get("class_path"),
+                "optimizer": default_config.get("model", {}).get("init_args", {}).get("optimizer"),
+                "scheduler": default_config.get("model", {}).get("init_args", {}).get("scheduler"),
+            },
+            "data": {
+                "input_size": default_config.get("data", {}).get("input_size"),
+                "train_subset": {
+                    "batch_size": default_config.get("data", {}).get("train_subset", {}).get("batch_size"),
+                    "augmentations_cpu": default_config.get("data", {})
+                    .get("train_subset", {})
+                    .get("augmentations_cpu"),
+                    "augmentations_gpu": default_config.get("data", {})
+                    .get("train_subset", {})
+                    .get("augmentations_gpu"),
+                },
+            },
+            "engine": default_config.get("engine"),
+        }
+        print(json.dumps(output_summary, indent=2, default=str))
+        print("=" * 80 + "\n")
+
         return default_config
 
     @staticmethod
