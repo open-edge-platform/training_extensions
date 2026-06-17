@@ -170,6 +170,10 @@ Would you like to see a specific model added to the list? Let us know by opening
 > - [Anomalib (Studio)](https://github.com/open-edge-platform/anomalib) → anomaly detection
 > - [Physical AI Studio](https://github.com/open-edge-platform/physical-ai-studio) → robot learning, VLA (Vision-Language-Action)
 > - [Instant Learn](https://github.com/open-edge-platform/instant-learn) → visual prompting
+> - [OpenVINO™](https://github.com/openvinotoolkit/openvino) - Software toolkit for optimizing and deploying deep learning models.
+> - [Model API](https://github.com/open-edge-platform/model_api) - wrapper that simplifies model loading, execution, and data processing for easy inference
+
+
 
 ## Quick Start
 
