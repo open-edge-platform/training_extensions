@@ -19,6 +19,9 @@ from torchvision import tv_tensors
 from torchvision.ops import box_convert
 
 from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
+from getitune.backend.lightning.models.detection.layers._rfdetr_export_patch import (
+    patched_rfdetr_transformer_for_export,
+)
 from getitune.backend.lightning.models.detection.utils import limit_batch_objects
 from getitune.backend.lightning.models.utils.utils import load_checkpoint
 from getitune.data.entity.base import BatchLoss
@@ -325,7 +328,8 @@ class RFDETRMixin:
         lwdetr = self.model.lwdetr  # pyrefly: ignore[missing-attribute]
         lwdetr.export()  # pyrefly: ignore[missing-attribute]
         try:
-            return super().export(output_dir, base_name, export_format, precision)  # type: ignore[misc]
+            with patched_rfdetr_transformer_for_export():
+                return super().export(output_dir, base_name, export_format, precision)  # type: ignore[misc]
         except Exception:
             self._restore_forward_methods(lwdetr)
             raise
