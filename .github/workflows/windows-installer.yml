@@ -217,21 +217,21 @@ jobs:
           cp -r ${{ env.UI_SRC_TAURI_PATH }}\msix\* $env:UI_MSIX_BUNDLE_PATH
           & "${{ env.MAKEAPP_PATH }}" pack /d $env:UI_MSIX_BUNDLE_PATH /p $env:MSIX_FILE_PATH
 
-      - name: Sign MSIX package
-        env:
-          MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
-          MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
-        run: |
-          $bytes = [System.Convert]::FromBase64String($env:MSIX_SIGN_CERTIFICATE)
-          [System.IO.File]::WriteAllBytes("sign.pfx", $bytes)
-          try {
-            & "${{ env.SIGNTOOL_PATH }}" sign /fd SHA256 /a /f "sign.pfx" /p "$env:MSIX_SIGN_CERTIFICATE_PASSWORD" $env:MSIX_FILE_PATH
-          }
-          finally {
-            if (Test-Path "sign.pfx") {
-              Remove-Item "sign.pfx" -Force
-            }
-          }
+#      - name: Sign MSIX package
+#        env:
+#          MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
+#          MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
+#        run: |
+#          $bytes = [System.Convert]::FromBase64String($env:MSIX_SIGN_CERTIFICATE)
+#          [System.IO.File]::WriteAllBytes("sign.pfx", $bytes)
+#          try {
+#            & "${{ env.SIGNTOOL_PATH }}" sign /fd SHA256 /a /f "sign.pfx" /p "$env:MSIX_SIGN_CERTIFICATE_PASSWORD" $env:MSIX_FILE_PATH
+#          }
+#          finally {
+#            if (Test-Path "sign.pfx") {
+#              Remove-Item "sign.pfx" -Force
+#            }
+#          }
 
       - name: Upload MSIX package
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
