@@ -949,7 +949,6 @@ lint = [
 
 [[package]]
 name = "getitune"
-version = "0.1.0"
 source = { editable = "../../library" }
 dependencies = [
     { name = "certifi", marker = "(extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-8-getitune-cpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-8-getitune-cuda') or (extra == 'extra-4-geti-xpu' and extra == 'extra-8-getitune-xpu') or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-cuda') or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-xpu') or (extra == 'extra-8-getitune-cuda' and extra == 'extra-8-getitune-xpu')" },

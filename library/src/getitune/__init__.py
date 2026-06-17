@@ -3,10 +3,18 @@
 
 """getitune - Train, Evaluate, Optimize, Deploy Computer Vision Models."""
 
-__version__ = "0.1.0"
+from pathlib import Path
+
+try:
+    from importlib.metadata import version
+
+    __version__ = version("getitune")
+except Exception:
+    # Fallback: read VERSION file when working from source (not installed)
+    version_file = Path(__file__).parent.parent.parent / "VERSION"
+    __version__ = version_file.read_text().strip() if version_file.exists() else "0.0.0"
 
 import os
-from pathlib import Path
 
 from getitune.types import *  # noqa: F403
 
