@@ -193,7 +193,13 @@ function Install-Nvm {
     $nvmZipPath = Join-Path $BUILD_TOOLS_DIR "nvm-noinstall.zip"
 
     Write-Host "Downloading nvm-windows $nvmVersion..."
-    Invoke-WebRequest -Uri $nvmZipUrl -OutFile $nvmZipPath -UseBasicParsing
+    $iwrParams = @{ Uri = $nvmZipUrl; OutFile = $nvmZipPath }
+    # -UseBasicParsing is required in Windows PowerShell 5.1 to avoid IE engine dependency.
+    # In PowerShell 7+ basic parsing is the default and the parameter is accepted but ignored.
+    if ($PSVersionTable.PSVersion.Major -le 5) {
+        $iwrParams["UseBasicParsing"] = $true
+    }
+    Invoke-WebRequest @iwrParams
 
     Expand-Archive -Path $nvmZipPath -DestinationPath $NVM_DIR -Force
     Remove-Item $nvmZipPath -Force
@@ -204,7 +210,7 @@ function Install-Nvm {
 root: $NVM_DIR
 path: $nodeDir
 "@
-    Set-Content -Path (Join-Path $NVM_DIR "settings.txt") -Value $settingsContent
+    Set-Content -Path (Join-Path $NVM_DIR "settings.txt") -Value $settingsContent -Encoding ASCII
 
     Write-Step "nvm-windows installation complete."
 }
@@ -463,7 +469,7 @@ set STATIC_FILES_DIR=html
 "$uvExe" run app/main.py %*
 popd
 "@
-    Set-Content -Path $cmdPath -Value $cmdContent
+    Set-Content -Path $cmdPath -Value $cmdContent -Encoding ASCII
 
     # Create a geti.ps1 PowerShell wrapper
     $ps1Path = Join-Path $WorkDir "geti.ps1"
@@ -496,7 +502,7 @@ try {
     # Remove old marker block if present
     if ($profileContent -and $profileContent -match [regex]::Escape($beginMarker)) {
         $profileContent = $profileContent -replace "(?s)\r?\n?$([regex]::Escape($beginMarker)).*?$([regex]::Escape($endMarker))\r?\n?", ""
-        Set-Content -Path $PROFILE -Value $profileContent -NoNewline
+        Set-Content -Path $PROFILE -Value $profileContent -NoNewline -Encoding UTF8
     }
 
     $functionBlock = @"
@@ -505,7 +511,7 @@ $beginMarker
 function geti { Push-Location "$backendDir"; try { `$env:STATIC_FILES_DIR = "html"; & "$uvExe" run app/main.py @args } finally { Pop-Location } }
 $endMarker
 "@
-    Add-Content -Path $PROFILE -Value $functionBlock
+    Add-Content -Path $PROFILE -Value $functionBlock -Encoding UTF8
 
     Write-Step "Function 'geti' written to $PROFILE"
     Write-Host "Run '. `$PROFILE' to activate it in the current session."
