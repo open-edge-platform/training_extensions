@@ -68,6 +68,8 @@ jobs:
       - name: Publish package distributions to PyPI
         if: ${{ steps.check-tag.outputs.match != '' }}
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+        with:
+          packages-dir: library/dist
 
       - name: Publish package distributions to TestPyPI
         if: ${{ steps.check-tag.outputs.match == '' }}
