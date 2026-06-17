@@ -8,9 +8,9 @@ from __future__ import annotations
 import typing
 from typing import TYPE_CHECKING, Any, cast
 
+import kornia.augmentation as K  # noqa: N812
 import torch
 import torchvision.transforms.v2 as tvt_v2
-import kornia.augmentation as K  # noqa: N812
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
@@ -1088,7 +1088,7 @@ class MaskSafeRandomErasing(K.RandomErasing):
 
     def apply_transform_mask(
         self,
-        input: torch.Tensor,
+        input: torch.Tensor,  # noqa: A002  # matches parent class kornia signature
         params: dict[str, torch.Tensor],
         flags: dict[str, Any],
         transform: torch.Tensor | None = None,
