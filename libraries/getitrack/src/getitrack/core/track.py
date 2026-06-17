@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from getitrack.core.detection import TrackState
+from getitrack.logger import LOGGER
 
 if TYPE_CHECKING:
     import numpy as np
@@ -59,6 +60,7 @@ class Track:
 
     def mark_hit(self, bbox: np.ndarray, score: float, lifecycle: LifecycleConfig) -> None:
         """Record an observed detection on this frame and update state."""
+        prev_state = self.state
         self.bbox = bbox
         self.score = float(score)
         self.hits += 1
@@ -66,18 +68,28 @@ class Track:
         self.time_since_update = 0
         if (self.state == TrackState.TENTATIVE and self.hits >= lifecycle.min_hits) or (self.state == TrackState.LOST):
             self.state = TrackState.ACTIVE
+        if self.state != prev_state:
+            LOGGER.debug("track %d: %s -> %s on hit (hits=%d)", self.track_id, prev_state, self.state, self.hits)
 
     def mark_miss(self, lifecycle: LifecycleConfig) -> None:
         """Record a missed observation on this frame and advance state."""
+        prev_state = self.state
         self.age += 1
         self.time_since_update += 1
         if self.state == TrackState.TENTATIVE and self.time_since_update > lifecycle.tentative_max_age:
             self.state = TrackState.REMOVED
-            return
         if self.state == TrackState.ACTIVE:
             self.state = TrackState.LOST
         if self.state == TrackState.LOST and self.time_since_update > lifecycle.max_age:
             self.state = TrackState.REMOVED
+        if self.state != prev_state:
+            LOGGER.debug(
+                "track %d: %s -> %s on miss (time_since_update=%d)",
+                self.track_id,
+                prev_state,
+                self.state,
+                self.time_since_update,
+            )
 
     @property
     def should_remove(self) -> bool:
