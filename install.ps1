@@ -148,8 +148,7 @@ function Install-Uv {
 
     Write-Step "Installing uv $uvVersion to: $UV_DIR"
     if (-not (Confirm-Prompt "Would you like to install uv now?")) {
-        Write-ErrorMessage "uv installation skipped. Cannot continue without uv."
-        exit 1
+        throw "uv installation skipped. Cannot continue without uv."
     }
 
     if (-not (Test-Path $UV_DIR)) {
@@ -166,6 +165,11 @@ function Install-Uv {
     }
 
     Remove-Item Env:\UV_INSTALL_DIR -ErrorAction SilentlyContinue
+
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $uvExe)) {
+        throw "uv installation failed. Expected binary at $uvExe."
+    }
+
     Write-Step "uv installation complete."
 }
 
@@ -179,8 +183,7 @@ function Install-Nvm {
 
     Write-Step "Installing nvm-windows to: $NVM_DIR"
     if (-not (Confirm-Prompt "Would you like to install nvm-windows now?")) {
-        Write-ErrorMessage "nvm installation skipped. Cannot continue without nvm."
-        exit 1
+        throw "nvm installation skipped. Cannot continue without nvm."
     }
 
     if (-not (Test-Path $NVM_DIR)) {
@@ -227,6 +230,9 @@ function Install-Npm {
     $npmBin = Join-Path $nodeVersionDir "npm.cmd"
 
     if (Test-Path $nodeBin) {
+        if (-not (Test-Path $npmBin)) {
+            throw "node.exe found at $nodeBin but npm.cmd is missing at $npmBin. Remove $nodeVersionDir and re-run the installer."
+        }
         $script:NPM_BIN = $npmBin
         $env:PATH = "$nodeVersionDir;$env:PATH"
         $installedNpmVersion = & $npmBin --version 2>$null
@@ -243,8 +249,7 @@ function Install-Npm {
     Write-Step "Required node $requiredNodeVersion not found. Installing..."
 
     if (-not (Confirm-Prompt "Would you like to install node/npm now?")) {
-        Write-ErrorMessage "node/npm installation skipped. Cannot continue without node/npm."
-        exit 1
+        throw "node/npm installation skipped. Cannot continue without node/npm."
     }
 
     # Set NVM_HOME for nvm.exe to work properly
@@ -261,11 +266,13 @@ function Install-Npm {
 
     $script:NPM_BIN = $npmBin
 
-    if (Test-Path $npmBin) {
-        $installedNpmVersion = & $npmBin --version 2>$null
-        if ($installedNpmVersion -and ([version]$installedNpmVersion -lt [version]$requiredNpmVersion)) {
-            Invoke-Cmd -Command $npmBin -Arguments @("install", "-g", "npm@$requiredNpmVersion")
-        }
+    if (-not (Test-Path $npmBin)) {
+        throw "node installation succeeded but npm.cmd not found at $npmBin. Installation may be corrupt."
+    }
+
+    $installedNpmVersion = & $npmBin --version 2>$null
+    if ($installedNpmVersion -and ([version]$installedNpmVersion -lt [version]$requiredNpmVersion)) {
+        Invoke-Cmd -Command $npmBin -Arguments @("install", "-g", "npm@$requiredNpmVersion")
     }
 
     Write-Step "node/npm installation complete."
@@ -355,9 +362,10 @@ function Invoke-EnsureSourceCode {
             }
 
             if ($currentSha -ne $expectedSha) {
-                Write-Step "Switching to $GIT_BRANCH..."
+                Write-Step "Updating to $GIT_BRANCH..."
                 & git -c advice.detachedHead=false -C $WorkDir checkout $GIT_BRANCH 2>&1 | Out-Null
-                if ($LASTEXITCODE -ne 0) { throw "git checkout failed (exit code $LASTEXITCODE)" }
+                & git -C $WorkDir reset --hard "origin/$GIT_BRANCH" 2>&1 | Out-Null
+                if ($LASTEXITCODE -ne 0) { throw "git reset failed (exit code $LASTEXITCODE)" }
             }
         }
     } finally {
@@ -411,9 +419,14 @@ function Build-Backend {
         if ($LASTEXITCODE -ne 0) { throw "uv sync failed" }
 
         Write-Step "Generating OpenAPI specification..."
+        $prevPythonPath = $env:PYTHONPATH
         $env:PYTHONPATH = "."
-        & $uvExe run --no-sync app/cli.py gen-api --target-path openapi.json
-        if ($LASTEXITCODE -ne 0) { throw "OpenAPI generation failed" }
+        try {
+            & $uvExe run --no-sync app/cli.py gen-api --target-path openapi.json
+            if ($LASTEXITCODE -ne 0) { throw "OpenAPI generation failed" }
+        } finally {
+            $env:PYTHONPATH = $prevPythonPath
+        }
 
         $uiApiDir = Join-Path $WorkDir "application\ui\src\api"
         Copy-Item -Path "openapi.json" -Destination (Join-Path $uiApiDir "openapi-spec.json") -Force
@@ -486,7 +499,14 @@ try {
 "@
     Set-Content -Path $ps1Path -Value $ps1Content
 
-    # Add to PowerShell profile
+    # Add to PowerShell profile (opt-in: requires confirmation or -Yes)
+    if (-not (Confirm-Prompt "Would you like to add the 'geti' function to your PowerShell profile?")) {
+        Write-Host "Profile modification skipped."
+        Write-Host "You can run geti manually via: $ps1Path"
+        Write-Host "Or via batch file: $cmdPath"
+        return
+    }
+
     $profileDir = Split-Path $PROFILE -Parent
     if (-not (Test-Path $profileDir)) {
         New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
