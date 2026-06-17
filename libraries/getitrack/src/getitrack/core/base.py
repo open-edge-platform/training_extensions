@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 
-from getitrack.logger import LOGGER, enable_console_output
+from getitrack.logger import LOGGER, enable_logging
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -59,7 +59,7 @@ class BaseTracker(ABC):
         self._next_id: int = 1
         self._frame_id: int | None = None
         if config.verbose:
-            enable_console_output()
+            enable_logging()
 
     def update(self, detections: Detections) -> TrackedDetections:
         """Process one frame's detections and return the tracker output.
@@ -105,7 +105,7 @@ class BaseTracker(ABC):
             )
         )
         LOGGER.info(
-            "frame %4d: %d detections (%d high-score), %d tracks [id:class:score %s]",
+            "frame {:4}: {} detections ({} high-score), {} tracks [id:class:score {}]",
             detections.frame_id,
             len(detections),
             n_high,

@@ -1,37 +1,19 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Package-wide logger.
+"""Package-wide loguru logger.
 
-Import `LOGGER` instead of ``print`` or per-module loggers::
-
-    from getitrack.logger import LOGGER
-    LOGGER.info("...")
-
-Libraries must not configure the root logger, so output stays invisible
-until either the application configures logging or `enable_console_output`
-runs (the tracker calls it automatically when ``verbose`` is enabled).
+Logging is disabled for ``getitrack`` by default (see
+``getitrack/__init__.py``); the library stays silent until the application
+calls ``logger.enable("getitrack")`` or a tracker runs with ``verbose``.
 """
 
 from __future__ import annotations
 
-import logging
+from loguru import logger
 
-LOGGER = logging.getLogger("getitrack")
+LOGGER = logger
 
 
-def enable_console_output() -> None:
-    """Make INFO-level getitrack logs visible when nothing configured logging.
-
-    Attaches a plain stream handler to the ``getitrack`` logger, and only
-    when the application has not configured logging itself. Applications
-    that did configure logging keep full control over the output.
-    """
-    if logging.getLogger().handlers:
-        return  # the application configured logging; respect it
-    if LOGGER.handlers:
-        return  # already enabled
-    handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter("%(message)s"))
-    LOGGER.addHandler(handler)
-    LOGGER.setLevel(logging.INFO)
-    LOGGER.propagate = False
+def enable_logging() -> None:
+    """Lift the default suppression of getitrack log records."""
+    logger.enable("getitrack")

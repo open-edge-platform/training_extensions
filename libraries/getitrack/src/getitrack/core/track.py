@@ -77,7 +77,7 @@ class Track:
             case _:
                 assert_never(self.state)
         if self.state != prev_state:
-            LOGGER.debug("track %d: %s -> %s on hit (hits=%d)", self.track_id, prev_state, self.state, self.hits)
+            LOGGER.debug("track {}: {} -> {} on hit (hits={})", self.track_id, prev_state, self.state, self.hits)
 
     def mark_miss(self, lifecycle: LifecycleConfig) -> None:
         """Record a missed observation on this frame and advance state."""
@@ -99,7 +99,7 @@ class Track:
                 assert_never(self.state)
         if self.state != prev_state:
             LOGGER.debug(
-                "track %d: %s -> %s on miss (time_since_update=%d)",
+                "track {}: {} -> {} on miss (time_since_update={})",
                 self.track_id,
                 prev_state,
                 self.state,

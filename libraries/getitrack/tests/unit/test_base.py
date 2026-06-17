@@ -4,12 +4,12 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Iterator
 from pathlib import Path
 
 import numpy as np
 import pytest
+from loguru import logger
 
 from getitrack.config import AlgorithmType, TrackerConfig
 from getitrack.core.base import ALGORITHM_REGISTRY, BaseTracker, register_algorithm
@@ -34,12 +34,18 @@ class _Recording(BaseTracker):
 
 @pytest.fixture(autouse=True)
 def _clean_registry() -> Iterator[None]:
-    """Snapshot and restore the registry around each test."""
+    """Snapshot and restore the registry around each test.
+
+    Also restores loguru's default-disabled state for ``getitrack``, since
+    a ``verbose`` tracker enables it process-wide.
+    """
     snapshot = dict(ALGORITHM_REGISTRY)
     ALGORITHM_REGISTRY.clear()
+    logger.disable("getitrack")
     yield
     ALGORITHM_REGISTRY.clear()
     ALGORITHM_REGISTRY.update(snapshot)
+    logger.disable("getitrack")
 
 
 def _register_dummy(name: str = "bytetrack") -> type[BaseTracker]:
@@ -169,56 +175,42 @@ class TestVerboseLogging:
             frame_id=4,
         )
 
-    def test_verbose_logs_frame_summary(self, caplog):
+    def _capture(self, level: str = "INFO") -> tuple[list[str], int]:
+        messages: list[str] = []
+        sink_id = logger.add(messages.append, level=level, format="{message}")
+        return messages, sink_id
+
+    def test_verbose_logs_frame_summary(self):
         _register_dummy("bytetrack")
-        t = BaseTracker.from_config(TrackerConfig(verbose=True))
-        with caplog.at_level("INFO", logger="getitrack"):
-            t.update(self._dets())
-        assert len(caplog.records) == 1
-        msg = caplog.records[0].getMessage()
+        messages, sink_id = self._capture()
+        try:
+            BaseTracker.from_config(TrackerConfig(verbose=True)).update(self._dets())
+        finally:
+            logger.remove(sink_id)
+        assert len(messages) == 1
+        msg = messages[0]
         assert "frame    4" in msg
         assert "2 detections (1 high-score)" in msg
         assert "1:3:0.90, 2:8:0.30" in msg
 
-    def test_default_is_silent(self, caplog):
+    def test_default_is_silent(self):
         _register_dummy("bytetrack")
-        t = BaseTracker.from_config(TrackerConfig())
-        with caplog.at_level("INFO", logger="getitrack"):
-            t.update(self._dets())
-        assert not caplog.records
+        messages, sink_id = self._capture(level="DEBUG")
+        try:
+            BaseTracker.from_config(TrackerConfig()).update(self._dets())
+        finally:
+            logger.remove(sink_id)
+        assert not messages
 
-
-class TestVerboseHandler:
-    def _clean(self) -> None:
-        pkg = logging.getLogger("getitrack")
-        for h in list(pkg.handlers):
-            pkg.removeHandler(h)
-        pkg.propagate = True
-        pkg.setLevel(logging.NOTSET)
-
-    def test_attaches_handler_when_logging_unconfigured(self, monkeypatch):
-        self._clean()
-        monkeypatch.setattr(logging.getLogger(), "handlers", [])
+    def test_verbose_enables_package_logging(self):
         _register_dummy("bytetrack")
-        BaseTracker.from_config(TrackerConfig(verbose=True))
-        pkg = logging.getLogger("getitrack")
-        assert len(pkg.handlers) == 1
-        assert pkg.level == logging.INFO
-        assert pkg.propagate is False
-        self._clean()
-
-    def test_respects_application_logging_config(self, monkeypatch):
-        self._clean()
-        monkeypatch.setattr(logging.getLogger(), "handlers", [logging.NullHandler()])
-        _register_dummy("bytetrack")
-        BaseTracker.from_config(TrackerConfig(verbose=True))
-        assert not logging.getLogger("getitrack").handlers
-        self._clean()
-
-    def test_no_handler_when_not_verbose(self, monkeypatch):
-        self._clean()
-        monkeypatch.setattr(logging.getLogger(), "handlers", [])
-        _register_dummy("bytetrack")
-        BaseTracker.from_config(TrackerConfig())
-        assert not logging.getLogger("getitrack").handlers
-        self._clean()
+        messages, sink_id = self._capture()
+        try:
+            # A non-verbose tracker stays suppressed even with a sink attached.
+            BaseTracker.from_config(TrackerConfig()).update(self._dets())
+            assert not messages
+            # A verbose tracker lifts the package-level suppression.
+            BaseTracker.from_config(TrackerConfig(verbose=True)).update(self._dets())
+            assert len(messages) == 1
+        finally:
+            logger.remove(sink_id)
