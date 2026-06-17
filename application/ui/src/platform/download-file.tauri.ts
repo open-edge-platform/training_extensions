@@ -7,18 +7,15 @@ import { writeFile } from '@tauri-apps/plugin-fs';
 import { toast } from '../components/toast/toast.component';
 
 export const downloadFile = (url: string, name?: string, startedMessage?: string): void => {
-    void saveDownload(url, name, startedMessage).catch((error: unknown) => {
-        console.error('[tauri downloadFile] failed', error);
-    });
+    void saveDownload(url, name, startedMessage);
 };
 
 const saveDownload = async (url: string, name?: string, startedMessage?: string): Promise<void> => {
-    const shouldRevokeObjectUrl = url.startsWith('blob:');
-
     try {
         const filename = name ?? getFallbackFilename(url);
         const selectedPath = await save({
             defaultPath: filename,
+            filters: [{ name: 'All Files', extensions: ['*'] }],
         });
 
         if (selectedPath === null) {
@@ -36,10 +33,9 @@ const saveDownload = async (url: string, name?: string, startedMessage?: string)
 
         const fileData = new Uint8Array(await response.arrayBuffer());
         await writeFile(selectedPath, fileData);
-    } finally {
-        if (shouldRevokeObjectUrl) {
-            URL.revokeObjectURL(url);
-        }
+    } catch (error: unknown) {
+        console.error('[tauri downloadFile] failed', error);
+        toast({ type: 'error', message: 'Failed to download file' });
     }
 };
 

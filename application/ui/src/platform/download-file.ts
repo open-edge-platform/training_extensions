@@ -16,8 +16,4 @@ export const downloadFile = (url: string, name?: string, startedMessage?: string
     if (startedMessage !== undefined) {
         toast({ type: 'info', message: startedMessage });
     }
-
-    if (url.startsWith('blob:')) {
-        URL.revokeObjectURL(url);
-    }
 };
