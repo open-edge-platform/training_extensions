@@ -95,6 +95,27 @@ override-dependencies = [
     "idna>=3.15",
 ]
 
+# getitune depends on rfdetr==1.4.3 which declares torch<=2.8.0. We relax that
+# bound here so the resolver doesn't reject torch 2.10 (pulled in via getitune[xpu]).
+[[tool.uv.dependency-metadata]]
+name = "rfdetr"
+version = "1.4.3"
+requires-dist = [
+    "requests",
+    "pycocotools",
+    "torch>=1.13.0",
+    "torchvision>=0.14.0",
+    "scipy",
+    "tqdm",
+    "transformers>4.0.0, <5.0.0",
+    "peft",
+    "rf100vl",
+    "pydantic",
+    "supervision",
+    "matplotlib",
+    "roboflow",
+]
+
 [tool.hatch.version]
 path = "../VERSION"
 pattern = "(?P<version>.+)"
