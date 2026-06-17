@@ -13,7 +13,7 @@ import type { AnnotationDTO, DatasetSubset, Label, Media } from '../../constants
 import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
 import { isVideoFrame } from '../media-item-utils';
-import type { Annotation, Shape } from '../types';
+import type { Annotation, AnnotationLabelRef, Shape } from '../types';
 import { isNonEmptyArray } from '../util';
 import { mapLocalAnnotationsToServer, mapServerAnnotationsToLocal } from './annotation-mappers';
 import type { AnnotatorMode } from './annotator-mode';
@@ -24,10 +24,10 @@ type AnnotationsContextValue = {
     annotations: Annotation[];
     canSubmit: boolean;
     hasInvalidAnnotation: boolean;
-    addAnnotations: (shapes: Shape[], labels: Label[]) => string[];
+    addAnnotations: (shapes: Shape[], labels: AnnotationLabelRef[]) => string[];
     addAnnotationWithEmptyLabel: (label: Label) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
-    updateAnnotations: (updatedAnnotations: Annotation[], labels?: Label[]) => void;
+    updateAnnotations: (updatedAnnotations: Annotation[], labels?: AnnotationLabelRef[]) => void;
     submitAnnotations: (subset: DatasetSubset) => Promise<void>;
     submitPredictions: (subset: DatasetSubset) => Promise<void>;
     resetAnnotations: () => void;
@@ -53,30 +53,6 @@ export type AnnotationActionsProviderProps = {
 
 const filterOutAnnotationWithEmptyLabel = (annotations: Annotation[]): Annotation[] => {
     return annotations.filter((annotation) => annotation.labels.some((label) => label.id !== EMPTY_LABEL_ID));
-};
-
-export const syncAnnotationLabelsWithProjectLabels = (
-    annotations: Annotation[],
-    projectLabels: Label[]
-): Annotation[] => {
-    const labelMap = new Map(projectLabels.map((label) => [label.id, label]));
-
-    return annotations.map((annotation) => ({
-        ...annotation,
-        labels: annotation.labels.flatMap((annotationLabel) => {
-            const projectLabel = labelMap.get(annotationLabel.id);
-
-            if (projectLabel === undefined) {
-                return [];
-            }
-
-            if (annotationLabel.probability === undefined) {
-                return [projectLabel];
-            }
-
-            return [{ ...projectLabel, probability: annotationLabel.probability }];
-        }),
-    }));
 };
 
 export const AnnotationActionsProvider = ({
@@ -116,12 +92,12 @@ export const AnnotationActionsProvider = ({
     const projectLabels = useProjectLabelsWithEmptyLabel();
 
     const predictions = useMemo(() => {
-        return mapServerAnnotationsToLocal(initialPredictionsDTO, projectLabels);
-    }, [initialPredictionsDTO, projectLabels]);
+        return mapServerAnnotationsToLocal(initialPredictionsDTO);
+    }, [initialPredictionsDTO]);
 
     const initialAnnotations = useMemo(() => {
-        return mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
-    }, [initialAnnotationsDTO, projectLabels]);
+        return mapServerAnnotationsToLocal(initialAnnotationsDTO);
+    }, [initialAnnotationsDTO]);
 
     const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(initialAnnotations);
 
@@ -137,7 +113,7 @@ export const AnnotationActionsProvider = ({
         prevInitialAnnotationsDTORef.current = initialAnnotationsDTO;
     }
 
-    const updateAnnotations = (updatedAnnotations: Annotation[], labels?: Label[]) => {
+    const updateAnnotations = (updatedAnnotations: Annotation[], labels?: AnnotationLabelRef[]) => {
         if (labels !== undefined) {
             const idsToUpdate = new Set(updatedAnnotations.map((a) => a.id));
 
@@ -155,7 +131,7 @@ export const AnnotationActionsProvider = ({
         }
     };
 
-    const addAnnotations = (shapes: Shape[], labels: Label[]): string[] => {
+    const addAnnotations = (shapes: Shape[], labels: AnnotationLabelRef[]): string[] => {
         const newAnnotations = shapes.map((shape) => ({
             shape,
             id: uuid(),
@@ -173,7 +149,7 @@ export const AnnotationActionsProvider = ({
 
     const addAnnotationWithEmptyLabel = (emptyLabel: Label) => {
         deleteAllAnnotations();
-        addAnnotations([{ type: 'full_image' }], [emptyLabel]);
+        addAnnotations([{ type: 'full_image' }], [{ id: emptyLabel.id }]);
     };
 
     const deleteAnnotations = (annotationIds: string[]) => {
@@ -200,31 +176,24 @@ export const AnnotationActionsProvider = ({
                 }
             });
 
-        undoRedoActions.reset(mapServerAnnotationsToLocal(annotationsDTO, projectLabels));
+        undoRedoActions.reset(mapServerAnnotationsToLocal(annotationsDTO));
     };
 
     const submitPredictions = async (subset: DatasetSubset) => {
-        const serverFormattedAnnotationsWithoutConfidences = mapLocalAnnotationsToServer(predictions)
+        const validLabelIds = new Set(projectLabels.map((l) => l.id));
+        const serverFormattedAnnotationsWithoutConfidences = mapLocalAnnotationsToServer(predictions, validLabelIds)
             .map(({ confidences, ...restOfAnnotation }) => restOfAnnotation)
             .filter((annotation) => isNonEmptyArray(annotation.labels) && annotation.labels.every(isNonEmptyLabel));
 
         await saveAnnotations(serverFormattedAnnotationsWithoutConfidences, subset);
     };
 
-    const syncedAnnotations = useMemo(
-        () => syncAnnotationLabelsWithProjectLabels(annotations, projectLabels),
-        [annotations, projectLabels]
-    );
-    const syncedPredictions = useMemo(
-        () => syncAnnotationLabelsWithProjectLabels(predictions, projectLabels),
-        [predictions, projectLabels]
-    );
-
-    const annotationsToRender = mode === 'annotation' ? syncedAnnotations : syncedPredictions;
+    const annotationsToRender = mode === 'annotation' ? annotations : predictions;
 
     const submitAnnotations = async (subset: DatasetSubset) => {
-        const filteredAnnotations = filterOutAnnotationWithEmptyLabel(syncedAnnotations);
-        const serverAnnotations = mapLocalAnnotationsToServer(filteredAnnotations);
+        const validLabelIds = new Set(projectLabels.map((l) => l.id));
+        const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
+        const serverAnnotations = mapLocalAnnotationsToServer(filteredAnnotations, validLabelIds);
 
         await saveAnnotations(serverAnnotations, subset);
     };
@@ -237,12 +206,12 @@ export const AnnotationActionsProvider = ({
     }, [annotations, initialAnnotationsDTO]);
 
     const hasEmptyLabelSelection = useMemo(() => {
-        return syncedAnnotations.some((annotation) => annotation.labels.some((label) => label.id === EMPTY_LABEL_ID));
-    }, [syncedAnnotations]);
+        return annotations.some((annotation) => annotation.labels.some((label) => label.id === EMPTY_LABEL_ID));
+    }, [annotations]);
 
     const hasInvalidAnnotation = useMemo(() => {
-        return syncedAnnotations.some((annotation) => annotation.labels.length === 0);
-    }, [syncedAnnotations]);
+        return annotations.some((annotation) => annotation.labels.length === 0);
+    }, [annotations]);
 
     const canSubmit =
         mode === 'prediction'
