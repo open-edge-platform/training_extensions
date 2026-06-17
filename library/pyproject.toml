@@ -439,11 +439,6 @@ notice-rgx = """
 "src/getitune/**/*.py" = [
     "ERA001",
 ]
-"src/getitune/backend/lightning/models/detection/layers/_rfdetr_export_patch.py" = [
-    "N806",     # Vendored rfdetr code uses trailing-underscore variable names
-    "PLW2901",  # Vendored rfdetr code reuses for-loop variables
-    "S101",     # Vendored rfdetr code uses assert
-]
 # See https://github.com/openvinotoolkit/training_extensions/actions/runs/7109500350/job/19354528819?pr=2700
 "src/getitune/core/config/**/*.py" = [
     "UP007"

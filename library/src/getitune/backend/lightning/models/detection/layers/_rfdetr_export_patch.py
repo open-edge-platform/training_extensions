@@ -53,33 +53,35 @@ def _patched_gen_encoder_output_proposals(
     Returns:
         output_memory, output_proposals
     """
-    N_, S_, C_ = memory.shape
+    n_batch, s_spatial, c_dim = memory.shape
     proposals = []
     _cur = 0
-    for _lvl, (H_, W_) in enumerate(spatial_shapes_list):
+    for _lvl, (h_spatial, w_spatial) in enumerate(spatial_shapes_list):
         if memory_padding_mask is not None:
-            mask_flatten_ = memory_padding_mask[:, _cur : (_cur + H_ * W_)].view(N_, H_, W_, 1)
-            valid_H = torch.sum(~mask_flatten_[:, :, 0, 0], 1)
-            valid_W = torch.sum(~mask_flatten_[:, 0, :, 0], 1)
+            mask_flatten_ = memory_padding_mask[:, _cur : (_cur + h_spatial * w_spatial)].view(
+                n_batch, h_spatial, w_spatial, 1
+            )
+            valid_h = torch.sum(~mask_flatten_[:, :, 0, 0], 1)
+            valid_w = torch.sum(~mask_flatten_[:, 0, :, 0], 1)
         else:
-            valid_H = torch.full((N_,), H_, dtype=torch.float32, device=memory.device)
-            valid_W = torch.full((N_,), W_, dtype=torch.float32, device=memory.device)
+            valid_h = torch.full((n_batch,), h_spatial, dtype=torch.float32, device=memory.device)
+            valid_w = torch.full((n_batch,), w_spatial, dtype=torch.float32, device=memory.device)
 
         grid_y, grid_x = torch.meshgrid(
-            torch.linspace(0, H_ - 1, H_, dtype=torch.float32, device=memory.device),
-            torch.linspace(0, W_ - 1, W_, dtype=torch.float32, device=memory.device),
+            torch.linspace(0, h_spatial - 1, h_spatial, dtype=torch.float32, device=memory.device),
+            torch.linspace(0, w_spatial - 1, w_spatial, dtype=torch.float32, device=memory.device),
             indexing="ij",
         )
         grid = torch.cat([grid_x.unsqueeze(-1), grid_y.unsqueeze(-1)], -1)
 
-        scale = torch.cat([valid_W.unsqueeze(-1), valid_H.unsqueeze(-1)], 1).view(N_, 1, 1, 2)
-        grid = (grid.unsqueeze(0).expand(N_, -1, -1, -1) + 0.5) / scale
+        scale = torch.cat([valid_w.unsqueeze(-1), valid_h.unsqueeze(-1)], 1).view(n_batch, 1, 1, 2)
+        grid = (grid.unsqueeze(0).expand(n_batch, -1, -1, -1) + 0.5) / scale
 
         wh = torch.ones_like(grid) * 0.05 * (2.0**_lvl)
 
-        proposal = torch.cat((grid, wh), -1).view(N_, -1, 4)
+        proposal = torch.cat((grid, wh), -1).view(n_batch, -1, 4)
         proposals.append(proposal)
-        _cur += H_ * W_
+        _cur += h_spatial * w_spatial
 
     output_proposals = torch.cat(proposals, 1)
     output_proposals_valid = ((output_proposals > 0.01) & (output_proposals < 0.99)).all(-1, keepdim=True)
@@ -129,18 +131,19 @@ def _patched_transformer_forward(
     lvl_pos_embed_flatten: list[Tensor] = []
     spatial_shapes: list[tuple[int, int]] = []
     valid_ratios: list[Tensor] | None = [] if masks is not None else None
-    for lvl, (src, pos_embed) in enumerate(zip(srcs, pos_embeds)):
+    for _lvl, (src, pos_embed) in enumerate(zip(srcs, pos_embeds)):
         bs, c, h, w = src.shape
         spatial_shape = (h, w)
         spatial_shapes.append(spatial_shape)
 
-        src = src.flatten(2).transpose(1, 2)
-        pos_embed = pos_embed.flatten(2).transpose(1, 2)
-        lvl_pos_embed_flatten.append(pos_embed)
-        src_flatten.append(src)
+        src_flat = src.flatten(2).transpose(1, 2)
+        pos_embed_flat = pos_embed.flatten(2).transpose(1, 2)
+        lvl_pos_embed_flatten.append(pos_embed_flat)
+        src_flatten.append(src_flat)
         if masks is not None:
-            assert mask_flatten is not None
-            mask = masks[lvl].flatten(1)
+            if mask_flatten is None:
+                raise RuntimeError  # unreachable — kept to satisfy type-checker
+            mask = masks[_lvl].flatten(1)
             mask_flatten.append(mask)
     memory = torch.cat(src_flatten, 1)
     if masks is not None:
