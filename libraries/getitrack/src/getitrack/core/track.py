@@ -18,7 +18,7 @@ State transitions::
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, assert_never
 
 from getitrack.core.detection import TrackState
 from getitrack.logger import LOGGER
@@ -66,8 +66,16 @@ class Track:
         self.hits += 1
         self.age += 1
         self.time_since_update = 0
-        if (self.state == TrackState.TENTATIVE and self.hits >= lifecycle.min_hits) or (self.state == TrackState.LOST):
-            self.state = TrackState.ACTIVE
+        match self.state:
+            case TrackState.TENTATIVE:
+                if self.hits >= lifecycle.min_hits:
+                    self.state = TrackState.ACTIVE
+            case TrackState.LOST:
+                self.state = TrackState.ACTIVE
+            case TrackState.ACTIVE | TrackState.REMOVED:
+                pass
+            case _:
+                assert_never(self.state)
         if self.state != prev_state:
             LOGGER.debug("track %d: %s -> %s on hit (hits=%d)", self.track_id, prev_state, self.state, self.hits)
 
@@ -76,12 +84,19 @@ class Track:
         prev_state = self.state
         self.age += 1
         self.time_since_update += 1
-        if self.state == TrackState.TENTATIVE and self.time_since_update > lifecycle.tentative_max_age:
-            self.state = TrackState.REMOVED
-        if self.state == TrackState.ACTIVE:
-            self.state = TrackState.LOST
-        if self.state == TrackState.LOST and self.time_since_update > lifecycle.max_age:
-            self.state = TrackState.REMOVED
+        match self.state:
+            case TrackState.TENTATIVE:
+                if self.time_since_update > lifecycle.tentative_max_age:
+                    self.state = TrackState.REMOVED
+            case TrackState.ACTIVE:
+                self.state = TrackState.LOST
+            case TrackState.LOST:
+                if self.time_since_update > lifecycle.max_age:
+                    self.state = TrackState.REMOVED
+            case TrackState.REMOVED:
+                pass
+            case _:
+                assert_never(self.state)
         if self.state != prev_state:
             LOGGER.debug(
                 "track %d: %s -> %s on miss (time_since_update=%d)",
