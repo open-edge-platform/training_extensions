@@ -185,10 +185,15 @@ recommended for larger models.
 
 ### 1. Run Geti
 
-#### Windows app (MSIX)
+#### Windows Application
+Run Geti as a native Windows application, with prebuilt images for Intel® XPU, NVIDIA® CUDA, and CPU-only environments.
 
-1. Download the `.msix` package and double-click to install.
-2. Launch Geti from the Start menu.
+Download the Windows Installer:
+- [Download CPU-only version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cpu-3.0.0.msix)
+- [Download Intel® XPU version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-xpu-3.0.0.msix)
+- [Download Nvidia® CUDA version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cuda-3.0.0.msix)
+
+Install Geti Windows application and launch it from the Start menu
 
 #### Docker
 
