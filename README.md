@@ -210,6 +210,14 @@ Then open the Geti web application at [**http://localhost:7860**](http://localho
 For build-from-source options and advanced setup, see the [installation guide](https://docs.geti.intel.com/) and the
 [application README](application/README.md).
 
+
+#### Install natively with Ultralytics YOLO26 models (the latest NMS‑free, edge‑optimized models (Nano / Small / Medium) for object detection and instance segmentation. The integration covers the full model lifecycle: training, inference, quantization, and OpenVINO™ model export.
+
+Linux, WSL (In order to run a script you need to have curl & git installed):
+```bash
+curl -fsSL https://github.com/open-edge-platform/training_extensions/blob/develop/install.sh | bash 
+```
+
 ### 2. Train your first model
 
 Once Geti is running, build your first model directly in the web UI:

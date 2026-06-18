@@ -22,6 +22,11 @@ Geti is an end-to-end application for building and deploying computer vision AI 
 It provides an intuitive graphical interface to upload image or video data, annotate datasets,
 train and optimize models, and run real-time inference through configurable pipelines.
 
+<p align="center">
+  <img src="../assets/application.gif" alt="Application demo" width="100%">
+</p>
+
+
 Main capabilities:
 
 - **No-code model lifecycle**: move from data upload and annotation to training, evaluation, and deployment in one UI.
