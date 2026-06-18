@@ -436,6 +436,15 @@ main() {
     build_frontend
     deploy_frontend
     register_shell_cmd
+    run_app
+}
+
+run_app() {
+    echo ""
+    echo "Installation complete! Starting Intel Geti..."
+    echo ""
+    cd "$WORK_DIR/application/backend"
+    STATIC_FILES_DIR=html "$UV_DIR/uv" run app/main.py
 }
 
 main "$@"

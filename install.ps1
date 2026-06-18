@@ -563,10 +563,24 @@ function Main {
     Build-Frontend
     Deploy-Frontend
     Register-ShellCommand
+    Start-App
+}
 
+function Start-App {
     Write-Host ""
-    Write-Step "Installation complete!"
+    Write-Step "Installation complete! Starting Intel Geti..."
     Write-Host ""
+
+    $uvExe = Join-Path $UV_DIR "uv.exe"
+    $backendDir = Join-Path $WorkDir "application\backend"
+
+    Push-Location $backendDir
+    try {
+        $env:STATIC_FILES_DIR = "html"
+        & $uvExe run app/main.py
+    } finally {
+        Pop-Location
+    }
 }
 
 try {
