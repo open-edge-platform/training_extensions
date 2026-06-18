@@ -364,7 +364,7 @@ function Invoke-EnsureSourceCode {
             if ($currentSha -ne $expectedSha) {
                 Write-Step "Updating to $GIT_BRANCH..."
                 & git -c advice.detachedHead=false -C $WorkDir checkout $GIT_BRANCH 2>&1 | Out-Null
-                & git -C $WorkDir reset --hard "origin/$GIT_BRANCH" 2>&1 | Out-Null
+                & git -C $WorkDir reset --hard $expectedSha 2>&1 | Out-Null
                 if ($LASTEXITCODE -ne 0) { throw "git reset failed (exit code $LASTEXITCODE)" }
             }
         }
