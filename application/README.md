@@ -44,15 +44,13 @@ There are several ways to run Geti, choose the method that best fits your workfl
 
 ### Install as Windows app
 
-Installing Geti as a Windows app is the simplest way to run it on Windows.
-
-> [!WARNING]
-> The MSIX App for Geti 3.x has not been released publicly yet.
-> Until it is available, use [Run with Docker](#run-with-docker) or [Run from source (for development)](#run-from-source-for-development).
-
-When the MSIX package is available, install it as follows:
+Installing Geti as a Windows app is the simplest way to run it on Windows:
 
 1. Download the `.msix` package from the official Geti release.
+- [Download CPU-only version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cpu-3.0.0.msix)
+- [Download Intel® XPU version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-xpu-3.0.0.msix)
+- [Download Nvidia® CUDA version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cuda-3.0.0.msix)
+
 2. Double-click the package and click **Install** in the Windows installer dialog.
 3. Launch Geti from the **Start** menu.
 
@@ -63,9 +61,6 @@ If Windows shows a security prompt, verify that the package is from the official
 The easiest and most straightforward way to run Geti is through Docker.
 We provide pre-built images for Intel® XPU and NVIDIA® CUDA platforms, or you can build your own image from source.
 
-> [!WARNING]
-> The official Docker images for Geti 3.x have not been released publicly yet.
-> The only way to run Geti at the moment is to build the image from source (see below).
 
 <details>
 <summary><strong>Prerequisites</strong></summary>
