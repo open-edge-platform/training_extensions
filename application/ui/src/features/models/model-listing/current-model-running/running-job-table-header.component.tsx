@@ -3,11 +3,16 @@
 
 import { dimensionValue, Grid } from '@geti/ui';
 
+import { GroupByMode } from '../types';
 import { ColumnHeader } from '../components/column-header.component';
 
 const RUNNING_JOB_GRID_COLUMNS = ['2fr 1fr minmax(auto, 80px)'];
 
-export const RunningJobTableHeader = () => {
+type RunningJobTableHeaderProps = {
+    groupBy: GroupByMode;
+};
+
+export const RunningJobTableHeader = ({ groupBy }: RunningJobTableHeaderProps) => {
     return (
         <Grid
             columns={RUNNING_JOB_GRID_COLUMNS}
@@ -21,7 +26,7 @@ export const RunningJobTableHeader = () => {
             }}
         >
             <ColumnHeader label={'Model Name'} />
-            <ColumnHeader label={'Architecture'} />
+            <ColumnHeader label={groupBy === 'architecture' ? 'Dataset' : 'Architecture'} />
             <div />
         </Grid>
     );

@@ -43,7 +43,7 @@ export const CurrentModelRunning = ({ groupBy, datasetRevisions }: CurrentModelR
             </Heading>
 
             <View backgroundColor={'gray-75'}>
-                <RunningJobTableHeader />
+                <RunningJobTableHeader groupBy={groupBy} />
 
                 <View>
                     {activeRunningJobs.map((job) => (
