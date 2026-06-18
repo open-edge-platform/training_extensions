@@ -51,7 +51,7 @@ export const AnnotationLabels = ({
         [onRemove]
     );
 
-    const resolvedLabels = labels.map(resolveAnnotationLabel).filter((label): label is AnnotationLabel => label !== undefined);
+    const resolvedLabels = labels.map(resolveAnnotationLabel).filter((label) => label !== undefined);
     const displayLabels = resolvedLabels.length ? resolvedLabels : [placeholderLabel];
 
     // Need to round up to preveent sub-pixel render issues when zoomed in
