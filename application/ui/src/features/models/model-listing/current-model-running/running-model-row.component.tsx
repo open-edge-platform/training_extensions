@@ -17,6 +17,7 @@ import { ArchitectureColumn } from '../components/model-row/architecture-column.
 import { DatasetColumn } from '../components/model-row/dataset-revision-column.component';
 import { GroupByMode } from '../types';
 import { BottomProgressBar } from './bottom-progress-bar.component';
+import { RUNNING_JOB_GRID_COLUMNS } from './running-job-table-header.component';
 
 import classes from './current-model-running.module.scss';
 
@@ -127,7 +128,7 @@ export const RunningModelRow = ({
     return (
         <BottomProgressBar progress={job.progress}>
             <Grid
-                columns={['2fr 1fr minmax(auto, 80px)']}
+                columns={RUNNING_JOB_GRID_COLUMNS}
                 alignItems={'center'}
                 width={'100%'}
                 columnGap={'size-200'}

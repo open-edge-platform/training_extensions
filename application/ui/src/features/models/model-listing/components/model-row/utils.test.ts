@@ -327,4 +327,3 @@ describe('getPerformanceColumnLabel', () => {
         expect(getPerformanceColumnLabel(undefined, 'classification')).toBe('Accuracy');
     });
 });
-

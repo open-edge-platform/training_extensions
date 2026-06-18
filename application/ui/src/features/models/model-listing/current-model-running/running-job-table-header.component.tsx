@@ -3,10 +3,10 @@
 
 import { dimensionValue, Grid } from '@geti/ui';
 
-import { GroupByMode } from '../types';
 import { ColumnHeader } from '../components/column-header.component';
+import { GroupByMode } from '../types';
 
-const RUNNING_JOB_GRID_COLUMNS = ['2fr 1fr minmax(auto, 80px)'];
+export const RUNNING_JOB_GRID_COLUMNS = ['2fr 2fr minmax(auto, var(--spectrum-global-dimension-size-1000))'];
 
 type RunningJobTableHeaderProps = {
     groupBy: GroupByMode;
