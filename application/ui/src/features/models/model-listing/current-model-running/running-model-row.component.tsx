@@ -104,7 +104,9 @@ export const RunningModelRow = ({
     const device = isTrainJob(job) ? job.metadata.device.name : null;
 
     const modelArchitectureId =
-        'model' in job.metadata && 'architecture' in job.metadata.model && job.metadata.model.architecture;
+        'model' in job.metadata && 'architecture' in job.metadata.model
+            ? job.metadata.model.architecture
+            : trainingModel?.architecture;
     const modelName = trainingModel?.name;
 
     const modelArchitecture = modelArchitectures.find(({ id }) => id === modelArchitectureId);
