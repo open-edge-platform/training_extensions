@@ -410,7 +410,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         )
         print("\n[GetiTuneTrainer.train_model] Check Tiling!!!:")
         print(getitune_datamodule.tile_config)
-        print(getitune_datamodule.subsets, type(getitune_datamodule.subsets.get("training", None)), type(getitune_datamodule.subsets.get("train", None)), dataset_info.getitune_training_dataset, type(dataset_info.getitune_training_dataset), dataset_info.getitune_training_dataset.get("tile_config", {}))
+        print(getitune_datamodule.subsets, type(getitune_datamodule.subsets.get("training", None)), type(getitune_datamodule.subsets.get("train", None)), dataset_info.getitune_training_dataset, type(dataset_info.getitune_training_dataset), dir(dataset_info.getitune_training_dataset))
 
         # Create the LightningModel according to the training configuration
         logger.info("Instantiating the LightningModel for training (model_id={})", model_id)
