@@ -2,11 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import secrets
+import types
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from pathlib import Path
+from typing import Union, get_args, get_origin
 from uuid import uuid4
 
+import numpy as np
 import polars as pl
 from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
@@ -129,14 +132,42 @@ class ImportDatasetAsNewProject(BaseDatasetImport[ImportDatasetAsNewProjectJobPa
 
     def execute(self, params: ImportDatasetAsNewProjectJobParams) -> None:
         dataset = self.import_dataset(params=params)
-        multilabel = self._is_multilabel_dataset(dataset=dataset)
-        project = self.create_project(params=params, exclusive_labels=not multilabel)
+        has_array_label = self._has_array_label(dataset=dataset)
+        project = self.create_project(params=params, exclusive_labels=not has_array_label)
         self.update_metadata({"project_id": project.id})
         dataset = self.prepare_dataset(dataset=dataset, params=params, task=project.task)
         self.create_items(dataset=dataset, project=project, include_unannotated=params.include_unannotated)
 
     @staticmethod
-    def _is_multilabel_dataset(dataset: Dataset) -> bool:
-        if "label" in dataset.schema.attributes:
-            return getattr(dataset.schema.attributes["label"].field, "multi_label", False)
+    def _has_array_label(dataset: Dataset) -> bool:
+        """
+        Check if the dataset's 'label' attribute is represented as a NumPy array.
+
+        This method inspects the schema definition of the 'label' attribute to check if its type is or contains
+        `np.ndarray` (such as `np.ndarray | None`).
+
+        The result impacts how the project is created: if the dataset has array labels, the newly created project will
+        configure its task with non-exclusive labels (i.e., a multi-label classification project).
+
+        Args:
+            dataset: The Datumaro dataset to analyze.
+
+        Returns:
+            True if the dataset's 'label' attribute schema type contains `np.ndarray`,
+            False otherwise.
+        """
+        if "label" not in dataset.schema.attributes:
+            return False
+
+        label_type = dataset.schema.attributes["label"].type
+
+        # 1. Direct match with numpy.ndarray
+        if label_type is np.ndarray:
+            return True
+
+        # 2. Check within Union types (such as np.ndarray | None)
+        origin = get_origin(label_type)
+        if origin in (Union, types.UnionType):
+            return any(arg is np.ndarray for arg in get_args(label_type))
+
         return False
