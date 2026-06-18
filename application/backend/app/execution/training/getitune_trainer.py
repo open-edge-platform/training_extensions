@@ -408,6 +408,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             val_subset=dataset_info.getitune_validation_subset_config,
             test_subset=dataset_info.getitune_testing_subset_config,
         )
+        print("\n[GetiTuneTrainer.train_model] Check Tiling!!!:")
+        print(getitune_datamodule.tile_config)
+        print(getitune_datamodule.subsets, type(getitune_datamodule.subsets.get("training", None)), type(getitune_datamodule.subsets.get("train", None)))
 
         # Create the LightningModel according to the training configuration
         logger.info("Instantiating the LightningModel for training (model_id={})", model_id)

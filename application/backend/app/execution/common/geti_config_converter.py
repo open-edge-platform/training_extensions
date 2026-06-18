@@ -834,6 +834,7 @@ class GetiConfigConverter:
             },
             "data": {
                 "input_size": default_config.get("data", {}).get("input_size"),
+                "tile_config": default_config.get("data", {}).get("tile_config"),
                 "train_subset": {
                     "batch_size": default_config.get("data", {}).get("train_subset", {}).get("batch_size"),
                     "augmentations_cpu": default_config.get("data", {})
@@ -877,8 +878,9 @@ class GetiConfigConverter:
         training_parameters = param_dict.get("training", {})
 
         # Update tiling (always applied regardless of DEIM state)
+        print("\n[GetiConfigConverter._update_params] Updating tiling parameters...", tiling)
         TransformsUpdater.update_tiling(tiling, config)
-
+        print("\n[GetiConfigConverter._update_params] Tiling parameters updated.", config["data"].get("tile_config", {}))
         # When DEIM is enabled, the AugmentationSchedulerCallback owns the pipeline;
         # user augmentation overrides must be ignored.
         deim_enabled = deim_framework is True
