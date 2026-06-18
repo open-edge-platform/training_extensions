@@ -2,8 +2,10 @@ name: Build and upload to PyPI
 
 on:
   workflow_dispatch: # run on request (no need for PR)
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'lib/v[0-9]+\.[0-9]+\.[0-9]+rc[0-9]+'   # RC: lib/v0.1.0rc1
+      - 'lib/v[0-9]+\.[0-9]+\.[0-9]+'             # Release: lib/v0.1.0, lib/v0.1.2
 
 permissions: {} # No permissions by default
 
@@ -51,7 +53,7 @@ jobs:
         uses: actions-ecosystem/action-regex-match@9e6c4fb3d5e898f505be7a1fb6e7b0a278f6665b # v2.0.2
         with:
           text: ${{ github.ref }}
-          regex: '^refs/tags/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+rc[0-9]+|rc[0-9]+)?$'
+          regex: '^refs/tags/lib/v[0-9]+\.[0-9]+\.[0-9]+$'
 
       - name: Upload package distributions to GitHub
         if: ${{ steps.check-tag.outputs.match != '' }}
@@ -66,6 +68,8 @@ jobs:
       - name: Publish package distributions to PyPI
         if: ${{ steps.check-tag.outputs.match != '' }}
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+        with:
+          packages-dir: library/dist
 
       - name: Publish package distributions to TestPyPI
         if: ${{ steps.check-tag.outputs.match == '' }}
