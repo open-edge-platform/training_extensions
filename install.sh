@@ -31,7 +31,7 @@ Install Intel Geti application and its dependencies.
 Options:
   -v, --verbose     Show detailed output from all commands
   -y, --yes         Assume yes to all prompts (non-interactive mode)
-  -w, --work-dir    Set the working directory (default: \$HOME/geti)
+  -w, --work-dir    Set the working directory (default: \$PWD/geti)
   -h, --help        Show this help message and exit
 EOF
 }
@@ -39,7 +39,7 @@ EOF
 parse_args() {
     VERBOSE=""
     ASSUME_YES=""
-    WORK_DIR="$HOME/geti"
+    WORK_DIR="$(pwd)/geti"
 
     while [[ $# -gt 0 ]]; do
         case "$1" in

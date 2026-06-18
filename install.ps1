@@ -16,7 +16,7 @@
     Assume yes to all prompts (non-interactive mode).
 
 .PARAMETER WorkDir
-    Set the working directory (default: $env:USERPROFILE\geti).
+    Set the working directory (default: .\geti).
 
 .EXAMPLE
     .\install.ps1
@@ -30,7 +30,7 @@ param(
     [switch]$Yes,
 
     [Alias("w")]
-    [string]$WorkDir = "$env:USERPROFILE\geti"
+    [string]$WorkDir = "$(Get-Location)\geti"
 )
 
 $ErrorActionPreference = "Stop"
