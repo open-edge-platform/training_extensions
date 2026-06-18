@@ -180,7 +180,7 @@ export const AnnotationActionsProvider = ({
     };
 
     const submitPredictions = async (subset: DatasetSubset) => {
-        const validLabelIds = new Set(projectLabels.map((l) => l.id));
+        const validLabelIds = new Set(projectLabels.map((label) => label.id));
         const serverFormattedAnnotationsWithoutConfidences = mapLocalAnnotationsToServer(predictions, validLabelIds)
             .map(({ confidences, ...restOfAnnotation }) => restOfAnnotation)
             .filter((annotation) => isNonEmptyArray(annotation.labels) && annotation.labels.every(isNonEmptyLabel));
@@ -191,7 +191,7 @@ export const AnnotationActionsProvider = ({
     const annotationsToRender = mode === 'annotation' ? annotations : predictions;
 
     const submitAnnotations = async (subset: DatasetSubset) => {
-        const validLabelIds = new Set(projectLabels.map((l) => l.id));
+        const validLabelIds = new Set(projectLabels.map((label) => label.id));
         const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
         const serverAnnotations = mapLocalAnnotationsToServer(filteredAnnotations, validLabelIds);
 
