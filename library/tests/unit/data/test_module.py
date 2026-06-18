@@ -75,7 +75,7 @@ class TestDataModule:
 
     @pytest.fixture
     def mock_detect_image_dtype(self, mocker) -> MagicMock:
-        return mocker.patch("getitune.data.module.detect_storage_dtype", return_value="uint8")
+        return mocker.patch("getitune.data.module.detect_storage_dtype", return_value=("uint8", 3))
 
     @pytest.fixture
     def mock_dataset_factory(self, mocker) -> MagicMock:

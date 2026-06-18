@@ -292,3 +292,8 @@ Thank you! We appreciate your support!
 
 Geti™ is licensed under the [Apache License Version 2.0](LICENSE). By contributing to the project, you agree to the
 license and copyright terms therein and release your contribution under these terms.
+Stay tuned for further updates soon!
+
+## Disclaimers
+
+FFmpeg is an open source project licensed under LGPL and GPL. See [https://www.ffmpeg.org/legal.html](https://www.ffmpeg.org/legal.html). You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.

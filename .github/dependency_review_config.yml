@@ -1,0 +1,32 @@
+fail-on-severity: "low"
+comment-summary-in-pr: on-failure
+deny-licenses:
+  - GPL-1.0-only
+  - GPL-1.0-or-later
+  - GPL-2.0-only
+  - GPL-2.0-or-later
+  - GPL-2.0
+  - GPL-3.0-only
+  - GPL-3.0-or-later
+  - GPL-3.0
+  - AGPL-1.0-only
+  - AGPL-1.0-or-later
+  - AGPL-1.0
+  - AGPL-3.0-only
+  - AGPL-3.0-or-later
+  - AGPL-3.0
+license-check: true
+vulnerability-check: true
+allow-dependencies-licenses:
+  # typing-extensions distribution license is PSF-2.0, as declared in the PyPI,
+  # see https://pypi.org/pypi/typing-extensions/json
+  # The GPL-1.0-or-later entry in the SBOM is a scanner false positive
+  - pkg:pypi/typing-extensions
+  # gitdb distribution license is BSD License, as declared in the PyPI,
+  # see https://pypi.org/pypi/gitdb/json
+  # The GPL-1.0-or-later entry in the SBOM is a scanner false positive
+  - pkg:pypi/gitdb
+  # lxml distribution license is BSD-3-Clause, as declared in the PyPI,
+  # see https://pypi.org/pypi/lxml/json
+  # The GPL-1.0-or-later entry in the SBOM is a scanner false positive
+  - pkg:pypi/lxml
