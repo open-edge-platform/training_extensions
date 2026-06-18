@@ -355,17 +355,24 @@ function Invoke-EnsureSourceCode {
             }
 
             $currentSha = (& git -C $WorkDir rev-parse HEAD 2>$null)
-            & git -C $WorkDir fetch origin $GIT_BRANCH --tags 2>&1 | Out-Null
-            $expectedSha = (& git -C $WorkDir rev-parse "origin/$GIT_BRANCH" 2>$null)
-            if (-not $expectedSha) {
-                $expectedSha = (& git -C $WorkDir rev-parse $GIT_BRANCH 2>$null)
+            & git -C $WorkDir fetch origin "refs/tags/${GIT_BRANCH}:refs/tags/${GIT_BRANCH}" --force 2>&1 | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+                # Fallback: try fetching as a branch
+                & git -C $WorkDir fetch origin $GIT_BRANCH --tags 2>&1 | Out-Null
+            }
+            # Resolve the expected SHA: try as tag first, then as remote branch
+            $expectedSha = (& git -C $WorkDir rev-parse "refs/tags/$GIT_BRANCH" 2>$null) | Select-Object -First 1
+            if (-not $expectedSha -or $expectedSha -notmatch '^[0-9a-f]{40}$') {
+                $expectedSha = (& git -C $WorkDir rev-parse "origin/$GIT_BRANCH" 2>$null) | Select-Object -First 1
+            }
+            if (-not $expectedSha -or $expectedSha -notmatch '^[0-9a-f]{40}$') {
+                throw "Could not resolve ref '$GIT_BRANCH'. Ensure it exists on the remote."
             }
 
             if ($currentSha -ne $expectedSha) {
                 Write-Step "Updating to $GIT_BRANCH..."
-                & git -c advice.detachedHead=false -C $WorkDir checkout $GIT_BRANCH 2>&1 | Out-Null
-                & git -C $WorkDir reset --hard $expectedSha 2>&1 | Out-Null
-                if ($LASTEXITCODE -ne 0) { throw "git reset failed (exit code $LASTEXITCODE)" }
+                & git -c advice.detachedHead=false -C $WorkDir checkout --force $GIT_BRANCH 2>&1 | Out-Null
+                if ($LASTEXITCODE -ne 0) { throw "git checkout failed (exit code $LASTEXITCODE)" }
             }
         }
     } finally {

@@ -318,11 +318,21 @@ ensure_source_code() {
         fi
         local current_sha expected_sha
         current_sha=$(git -C "$WORK_DIR" rev-parse HEAD 2>/dev/null)
-        git -C "$WORK_DIR" fetch origin "$GIT_BRANCH" --tags 2>/dev/null || true
-        expected_sha=$(git -C "$WORK_DIR" rev-parse "origin/$GIT_BRANCH" 2>/dev/null || git -C "$WORK_DIR" rev-parse "$GIT_BRANCH" 2>/dev/null || true)
+        # Fetch: try as tag first, then as branch
+        git -C "$WORK_DIR" fetch origin "refs/tags/${GIT_BRANCH}:refs/tags/${GIT_BRANCH}" --force 2>/dev/null \
+            || git -C "$WORK_DIR" fetch origin "$GIT_BRANCH" --tags 2>/dev/null \
+            || true
+        # Resolve: try as tag first, then as remote branch
+        expected_sha=$(git -C "$WORK_DIR" rev-parse "refs/tags/$GIT_BRANCH" 2>/dev/null) \
+            || expected_sha=$(git -C "$WORK_DIR" rev-parse "origin/$GIT_BRANCH" 2>/dev/null) \
+            || true
+        if [ -z "$expected_sha" ] || ! echo "$expected_sha" | grep -qE '^[0-9a-f]{40}$'; then
+            echo "Error: Could not resolve ref '$GIT_BRANCH'. Ensure it exists on the remote."
+            exit 1
+        fi
         if [ "$current_sha" != "$expected_sha" ]; then
             echo "Switching to $GIT_BRANCH..."
-            git -c advice.detachedHead=false -C "$WORK_DIR" checkout "$GIT_BRANCH"
+            git -c advice.detachedHead=false -C "$WORK_DIR" checkout --force "$GIT_BRANCH"
         fi
     fi
 }
