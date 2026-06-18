@@ -40,7 +40,14 @@ export const mapLocalAnnotationsToServer = (
         return {
             labels: filteredLabels.map(({ id }) => ({ id })),
             shape: annotation.shape,
-            ...(hasProbabilities && { confidences: filteredLabels.map((ref) => ref.probability ?? 0) }),
+            ...(hasProbabilities && {
+                confidences: filteredLabels
+                    .filter(
+                        (labelRef): labelRef is Required<AnnotationLabelRef> =>
+                            labelRef.probability !== undefined
+                    )
+                    .map((ref) => ref.probability),
+            }),
         };
     });
 };
