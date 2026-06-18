@@ -42,11 +42,8 @@ export const mapLocalAnnotationsToServer = (
             shape: annotation.shape,
             ...(hasProbabilities && {
                 confidences: filteredLabels
-                    .filter(
-                        (labelRef): labelRef is Required<AnnotationLabelRef> =>
-                            labelRef.probability !== undefined
-                    )
-                    .map((ref) => ref.probability),
+                    .filter((labelRef): labelRef is Required<AnnotationLabelRef> => labelRef.probability !== undefined)
+                    .map((labelRef) => labelRef.probability),
             }),
         };
     });
