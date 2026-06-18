@@ -315,7 +315,7 @@ function Find-NvidiaGpus {
 function Find-IntelGpus {
     # Try WMI/CIM
     try {
-        $gpus = Get-CimInstance -ClassName Win32_VideoController | Where-Object { $_.Name -match "Intel" -and $_.Name -match "Arc|Iris|UHD|HD Graphics" }
+        $gpus = Get-CimInstance -ClassName Win32_VideoController | Where-Object { $_.Name -match "Intel" -and $_.Name -match "Arc" }
         if ($gpus) {
             $gpuCount = @($gpus).Count
             Write-Step "Detected $gpuCount Intel GPU(s):"
