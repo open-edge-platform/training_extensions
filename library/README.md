@@ -95,20 +95,20 @@ pip install getitune
 
 | Extra    | PyTorch wheel                                  | Use when                             |
 | -------- | ---------------------------------------------- | ------------------------------------ |
-| `[cuda]` | `torch==2.10.0+cu128`                          | NVIDIA GPUs with CUDA 12.8 drivers.  |
 | `[xpu]`  | `torch==2.10.0+xpu` + `triton-xpu`             | Intel discrete or integrated GPUs.   |
+| `[cuda]` | `torch==2.10.0+cu128`                          | NVIDIA GPUs with CUDA 12.8 drivers.  |
 | `[cpu]`  | `torch==2.10.0+cpu` (Linux/Windows) or default | No GPU, or running on Apple silicon. |
 
 Since PyTorch distributes GPU wheels separately, you must include the PyTorch index:
 
 ```bash
-# NVIDIA GPU (CUDA 12.8)
-uv pip install "getitune[cuda]" \
-  --extra-index-url https://download.pytorch.org/whl/cu128
-
 # Intel GPU (XPU)
 uv pip install "getitune[xpu]" \
   --extra-index-url https://download.pytorch.org/whl/xpu
+
+# NVIDIA GPU (CUDA 12.8)
+uv pip install "getitune[cuda]" \
+  --extra-index-url https://download.pytorch.org/whl/cu128
 
 # CPU-only (no extra index needed)
 uv pip install "getitune[cpu]"
