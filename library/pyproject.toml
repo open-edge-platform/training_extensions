@@ -50,11 +50,7 @@ dependencies = [
     "tensorboard==2.20.0",
     "tensorboardx==2.6.4",
     "kornia~=0.8.2",
-    # NOTE: rf-detr is consumed from a specific commit that includes export fixes
-    # for torch>=2.10 and dynamo export support. Once the upstream roboflow/rf-detr
-    # repository publishes a tagged release with these changes, migrate to the
-    # official version pin.
-    "rfdetr @ git+https://github.com/kprokofi/rf-detr.git@bf69fe2d11ee6b7e0698e4a27af2081134f9b483",
+    "rfdetr==1.4.3",
     "certifi>=2026",
     "roboflow~=1.2",
 ]
@@ -175,6 +171,27 @@ torchvision = [
     { index = "torch-cpu", extra = "cpu", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
     { index = "torch-xpu", extra = "xpu"},
     { index = "torch-cuda", extra = "cuda"},
+]
+
+# rfdetr 1.4.3 declares torch<=2.8.0; override removes the bound since
+# we provide a fix for the export issue that motivated the upper bound and have verified that 2.10 works fine.
+[[tool.uv.dependency-metadata]]
+name = "rfdetr"
+version = "1.4.3"
+requires-dist = [
+    "requests",
+    "pycocotools",
+    "torch>=1.13.0",
+    "torchvision>=0.14.0",
+    "scipy",
+    "tqdm",
+    "transformers>4.0.0, <5.0.0",
+    "peft",
+    "rf100vl",
+    "pydantic",
+    "supervision",
+    "matplotlib",
+    "roboflow",
 ]
 
 [[tool.uv.index]]
@@ -441,4 +458,5 @@ python_files = "tests/**/*.py"
 [tool.pyrefly]
 python-version = "3.11.0"
 project-includes = ["src/getitune/**/*.py*", "tests/**/*.py*"]
+project-excludes = ["src/getitune/backend/lightning/models/detection/layers/_rfdetr_export_patch.py*"]
 ignore-missing-imports = ["*"]
