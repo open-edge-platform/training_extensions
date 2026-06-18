@@ -77,38 +77,46 @@ Each task directory also ships an `openvino_model.yaml` recipe for running and o
 
 Requirements: **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, **NumPy ≥ 2.0**.
 
-> **Note:** `getitune` is not yet published to PyPI. Until the first release lands, install from source.
+`getitune` is published on [PyPI](https://pypi.org/project/getitune/).
 
-## Quick Install
+### Quick Install
 
 ```bash
-# With uv (recommended)
+# CPU-only (default, works on all platforms)
 uv pip install getitune
+
+# Or with pip
+pip install getitune
 ```
 
-<details>
-<summary><strong> Advanced Installation: Specify Hardware Backend</strong></summary>
+### Advanced Installation: Specify Hardware Backend
 
 `getitune` ships three mutually exclusive extras that select the right PyTorch wheel for your hardware:
 
-| Extra    | PyTorch wheel                                                          | Use when                             |
-| -------- | ---------------------------------------------------------------------- | ------------------------------------ |
-| `[xpu]`  | `torch==2.10.0+xpu` + `triton-xpu`                                     | Intel discrete or integrated GPUs.   |
-| `[cuda]` | `torch==2.10.0+cu128`                                                  | NVIDIA GPUs with CUDA 12.8 drivers.  |
-| `[cpu]`  | `torch==2.10.0+cpu` (Linux/Windows) or default `torch==2.10.0` (macOS) | No GPU, or running on Apple silicon. |
+| Extra    | PyTorch wheel                                  | Use when                             |
+| -------- | ---------------------------------------------- | ------------------------------------ |
+| `[xpu]`  | `torch==2.10.0+xpu` + `triton-xpu`             | Intel discrete or integrated GPUs.   |
+| `[cuda]` | `torch==2.10.0+cu128`                          | NVIDIA GPUs with CUDA 12.8 drivers.  |
+| `[cpu]`  | `torch==2.10.0+cpu` (Linux/Windows) or default | No GPU, or running on Apple silicon. |
+
+Since PyTorch distributes GPU wheels separately, you must include the PyTorch index:
 
 ```bash
-uv pip install "getitune[xpu]"   # Intel GPU (XPU)
-uv pip install "getitune[cuda]"  # NVIDIA GPU (CUDA 12.8)
-uv pip install "getitune[cpu]"   # CPU-only
+# Intel GPU (XPU)
+uv pip install "getitune[xpu]" \
+  --extra-index-url https://download.pytorch.org/whl/xpu
+
+# NVIDIA GPU (CUDA 12.8)
+uv pip install "getitune[cuda]" \
+  --extra-index-url https://download.pytorch.org/whl/cu128
+
+# CPU-only (no extra index needed)
+uv pip install "getitune[cpu]"
 ```
 
 > **macOS note**: PyTorch's `+cpu` wheel is only published for Linux and Windows. The `[cpu]` extra resolves this automatically and installs the default `torch==2.10.0` wheel on macOS.
 
-</details>
-
-<details>
-<summary><strong> Advanced Installation: Install from Source</strong></summary>
+### Install from Source
 
 ```bash
 git clone https://github.com/open-edge-platform/training_extensions.git
@@ -117,8 +125,6 @@ cd training_extensions/library
 # Recommended: use uv to honor the lockfile
 uv sync --extra xpu          # or --extra cpu / --extra cuda
 ```
-
-</details>
 
 ---
 
