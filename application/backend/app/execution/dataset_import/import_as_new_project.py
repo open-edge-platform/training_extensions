@@ -161,13 +161,11 @@ class ImportDatasetAsNewProject(BaseDatasetImport[ImportDatasetAsNewProjectJobPa
 
         label_type = dataset.schema.attributes["label"].type
 
-        # 1. Direct match with numpy.ndarray
-        if label_type is np.ndarray:
-            return True
+        def _is_numpy_array_type(tp: object) -> bool:
+            return tp is np.ndarray or get_origin(tp) is np.ndarray
 
-        # 2. Check within Union types (such as np.ndarray | None)
         origin = get_origin(label_type)
         if origin in (Union, types.UnionType):
-            return any(arg is np.ndarray for arg in get_args(label_type))
+            return any(_is_numpy_array_type(arg) for arg in get_args(label_type))
 
-        return False
+        return _is_numpy_array_type(label_type)

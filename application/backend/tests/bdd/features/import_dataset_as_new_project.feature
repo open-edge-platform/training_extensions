@@ -6,7 +6,7 @@ Feature: Import Dataset As New Project
   So that I can create new projects from external datasets
 
   @import_as_new_project @detection
-  Scenario Outline: Import detection dataset as a new project
+  Scenario Outline: Import dataset as a new detection project
     Given A <dataset_type> dataset with labels ["Chardonnay", "Sauvignon Blanc", "Cabernet Franc"] exists
     And the dataset contains the following image distribution:
       | Label           | Training | Validation |
@@ -51,7 +51,7 @@ Feature: Import Dataset As New Project
       | cat   | 5         |
 
   @import_as_new_project @multilabel
-  Scenario Outline: Import multilabel classification dataset as a new project
+  Scenario Outline: Import dataset as a new multilabel project
     Given A <dataset_type> dataset with labels ["cat", "dog"] exists
     And the dataset contains the following image distribution:
       | Label | Training |
@@ -77,7 +77,7 @@ Feature: Import Dataset As New Project
         | instance_segmentation |
 
   @import_as_new_project @segmentation
-  Scenario Outline: Import segmentation dataset as a new project
+  Scenario Outline: Import dataset as a new instance_segmentation project
     Given A <dataset_type> dataset with labels ["car", "person"] exists
     And the dataset contains the following image distribution:
       | Label  | Training | Testing |
