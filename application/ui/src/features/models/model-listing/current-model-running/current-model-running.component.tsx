@@ -7,8 +7,8 @@ import { isEmpty, isNil } from 'lodash-es';
 
 import { type DatasetRevision } from '../../../../constants/shared-types';
 import { useGetTaskModelArchitectures } from '../../hooks/api/use-get-model-architectures.hook';
-import { ModelsTableHeader } from '../components/models-table-header.component';
 import { GroupByMode } from '../types';
+import { RunningJobTableHeader } from './running-job-table-header.component';
 import { RunningModelRow } from './running-model-row.component';
 
 type CurrentModelRunningProps = {
@@ -43,7 +43,7 @@ export const CurrentModelRunning = ({ groupBy, datasetRevisions }: CurrentModelR
             </Heading>
 
             <View backgroundColor={'gray-75'}>
-                <ModelsTableHeader />
+                <RunningJobTableHeader />
 
                 <View>
                     {activeRunningJobs.map((job) => (

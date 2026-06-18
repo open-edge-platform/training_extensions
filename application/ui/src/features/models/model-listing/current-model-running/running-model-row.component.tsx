@@ -15,7 +15,6 @@ import { useGetModel } from '../../hooks/api/use-get-model.hook';
 import { TrainingLogsDialog } from '../../training-logs/training-logs-dialog.component';
 import { ArchitectureColumn } from '../components/model-row/architecture-column.component';
 import { DatasetColumn } from '../components/model-row/dataset-revision-column.component';
-import { GRID_COLUMNS } from '../constants';
 import { GroupByMode } from '../types';
 import { BottomProgressBar } from './bottom-progress-bar.component';
 
@@ -128,7 +127,7 @@ export const RunningModelRow = ({
     return (
         <BottomProgressBar progress={job.progress}>
             <Grid
-                columns={GRID_COLUMNS}
+                columns={['2fr 1fr minmax(auto, 80px)']}
                 alignItems={'center'}
                 width={'100%'}
                 columnGap={'size-200'}
@@ -148,8 +147,6 @@ export const RunningModelRow = ({
                     {device && <Text UNSAFE_className={classes.metaText}>{`Device: ${device}`}</Text>}
                 </Flex>
 
-                <Text UNSAFE_className={classes.smallText}>...</Text>
-
                 <Flex alignItems={'start'} direction={'column'} gap={'size-100'}>
                     {groupBy === 'architecture' ? (
                         <DatasetColumn datasetRevision={datasetRevision} labelsCount={labelsCount} />
@@ -157,10 +154,6 @@ export const RunningModelRow = ({
                         <ArchitectureColumn architecture={modelArchitecture} />
                     )}
                 </Flex>
-
-                <Text UNSAFE_className={classes.smallText}>...</Text>
-
-                <Text UNSAFE_className={classes.smallText}>...</Text>
 
                 <Flex gap={'size-100'} direction={'column'} alignItems={'center'}>
                     <ViewLogsButton jobId={job.job_id} />
