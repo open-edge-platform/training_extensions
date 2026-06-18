@@ -34,13 +34,6 @@ Main capabilities:
 - **Pipeline-based deployment**: connect sources (cameras or files) to trained models and route predictions to sinks such as storage, MQTT, or webhooks.
 - **Edge-oriented optimization**: export OpenVINO-optimized models for efficient inference on Intel hardware, with support for other accelerators.
 
-## Quick start
-
-There are several ways to run Geti, choose the method that best fits your workflow:
-
-- **MSIX App (Windows)** [[instructions]](#install-as-windows-app) - install as a desktop application
-- **Docker** [[instructions]](#run-with-docker) - download and run one of the pre-built Docker images, or build one yourself
-- **Run from Source (for development)** [[instructions]](#run-from-source-for-development) - run the server and the UI as standalone components
 
 ### Install as Windows app
 
