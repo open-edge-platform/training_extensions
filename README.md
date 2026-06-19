@@ -35,19 +35,19 @@ Geti™ is an end-to-end Vision AI application that takes you from raw images to
 > but also to receive better support from Intel and the Geti™ community.
 > For upgrade from Geti™ v2 to v3, please follow the [upgrade guidance](https://docs.geti.intel.com/docs/user-guide/getting-started/installation/migration-from-geti-2x).
 
-# Quick Start
+## Quick start with Geti™
 
 Get Geti running and train your first model in a few minutes. For full instructions and all options, see the
 [official documentation](https://docs.geti.intel.com/) and the [application README](application/README.md).
 
-**Minimum recommended setup:** 8 CPU threads, 16 GB RAM, 40 GB free disk. A GPU (Intel® XPU or NVIDIA® CUDA) is
-recommended for larger models.
+**Minimum recommended setup**
 
-| Component | Minimum requirement |
-| --------- | ------------------- |
-| CPU       | 8 threads           |
-| RAM       | 16 GB               |
-| Disk      | 40 GB free          |
+| Component | Requirement                                             |
+| --------- | ------------------------------------------------------- |
+| CPU       | 8 threads                                               |
+| RAM       | 16 GB                                                   |
+| Disk      | 40 GB free                                              |
+| GPU       | Optional — Intel® XPU or NVIDIA® CUDA for larger models |
 
 ## 1. Run Geti
 
@@ -63,7 +63,7 @@ Download the Windows Installer:
 
 Install Geti Windows application and launch it from the Start menu.
 
-### Docker
+### Container image
 
 Pull a pre-built image for your hardware and launch it:
 
@@ -83,7 +83,9 @@ Then open the Geti web application at [**http://localhost:7860**](http://localho
 For build-from-source options and advanced setup, see the [installation guide](https://docs.geti.intel.com/) and the
 [application README](application/README.md).
 
-### Install natively with Ultralytics YOLO26 models (the latest NMS‑free, edge‑optimized models (Nano / Small / Medium) for object detection and instance segmentation. The integration covers the full model lifecycle: training, inference, quantization, and OpenVINO™ model export)
+### Install from souurce code
+
+natively with Ultralytics YOLO26 models (the latest NMS‑free, edge‑optimized models (Nano / Small / Medium) for object detection and instance segmentation. The integration covers the full model lifecycle: training, inference, quantization, and OpenVINO™ model export)
 
 Linux, WSL (in order to run the script you need to have curl & git installed):
 
@@ -104,14 +106,25 @@ Once Geti is running, build your first model directly in the web UI:
 
 See [Training your first model](https://docs.geti.intel.com/) for the full walkthrough.
 
-### Use the Python API (`getitune`)
+## Quick start with `getitune`
 
-Prefer to work programmatically? Geti's training engine is published on PyPI and can train, optimize, and deploy models
-from Python. It requires **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, and **NumPy ≥ 2.0**.
+The Geti™ training engine is published on PyPI and can train, optimize, and deploy models.
+
+To install `getitune`:
 
 ```bash
-pip install "getitune[cpu]"    # or [xpu] for Intel® GPU, [cuda] for NVIDIA® GPU
+# With uv (recommended)
+uv pip install "getitune"
+
+# Or with pip
+pip install "getitune"
 ```
+
+> [!NOTE]
+> For advanced installation options, including hardware-specific PyTorch wheels,
+> see the [`getitune` README](library/README.md).
+
+Provide `getitune` with a dataset and fine-tune a model:
 
 ```python
 from getitune.engine import create_engine
@@ -126,8 +139,9 @@ engine.test()
 exported_path = engine.export()  # writes OpenVINO IR
 ```
 
-See the [library README](library/README.md) for the full list of recipes, advanced configuration, dataset support, and
-inference/optimization examples.
+> [!NOTE]
+> See the [`getitune` README](library/README.md) for the full list of recipes, advanced configuration, dataset support
+> and inference/optimization examples.
 
 ## Key Features
 
