@@ -125,9 +125,6 @@ See the [library README](library/README.md) for the full list of recipes, advanc
 inference/optimization examples.
 
 
-
-
-
 ## Key Features
 
 <details>
@@ -147,7 +144,7 @@ Train and fine-tune modern architectures such as RF-DETR, DINOv3 DETR, YOLO26, Y
 <table>
   <thead>
     <tr>
-      <th width="25%">Computer Vision Task</th>
+      <th width="30%">Computer Vision Task</th>
       <th>Model Architecture</th>
       <th>Paper</th>
     </tr>
