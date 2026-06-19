@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import shutil
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, BinaryIO
 from uuid import UUID, uuid4
+
+from anyio import to_thread
 
 from app.models import AnnotationType, DatasetFormat, StagedDataset
 from app.models.dataset import DatasetMetadata
@@ -134,17 +135,18 @@ class StagedDatasetService:
     def __init__(self, staged_datasets_dir: Path) -> None:
         self._staged_datasets_dir = staged_datasets_dir
 
-    async def upload(self, filename: str, chunk_reader: Callable[[], Awaitable[bytes]]) -> StagedDataset:
+    async def upload(self, filename: str, file_obj: BinaryIO) -> StagedDataset:
         """
-        Store an uploaded dataset archive into a new staged dataset directory.
+        Store an uploaded dataset archive using high-speed threaded block copies.
 
         A new UUID is generated, a subdirectory with that UUID is created under the configured staging root,
-        and the incoming byte stream is written to a file with the given filename.
+        and the incoming file stream is written to a file with the given filename. The file copy operation is
+        offloaded to a worker thread using AnyIO to prevent blocking the main asynchronous event loop.
 
         Args:
             filename: Target filename of the uploaded archive within the staged dataset directory.
-            chunk_reader: Async callable that returns the next chunk of bytes from the upload stream.
-                Must return an empty `bytes` object to signal end of stream.
+            file_obj: A readable binary stream (such as SpooledTemporaryFile)
+                containing the dataset payload.
 
         Returns:
             A `StagedDataset` object containing the dataset identifier, the total number of bytes written,
@@ -155,14 +157,14 @@ class StagedDatasetService:
         target_dir.mkdir(parents=True, exist_ok=True)
         target_path = target_dir / filename
 
-        size = 0
-        with target_path.open("wb") as out_f:
-            while True:
-                chunk = await chunk_reader()
-                if not chunk:
-                    break
-                size += len(chunk)
-                out_f.write(chunk)
+        # Run the blocking write operation in a worker thread.
+        def _perform_copy() -> int:
+            file_obj.seek(0)
+            with target_path.open("wb") as out_f:
+                shutil.copyfileobj(file_obj, out_f, length=1024 * 1024)
+            return target_path.stat().st_size
+
+        size = await to_thread.run_sync(_perform_copy)
 
         return StagedDataset(
             compressed=True,
