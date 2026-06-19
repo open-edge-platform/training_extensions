@@ -1,4 +1,4 @@
-# Contributing to getitune
+# Contributing to Geti™
 
 We welcome your input! 👐
 
@@ -12,15 +12,15 @@ We want to make it as simple and straightforward as possible to contribute to th
 
 ## Bug Report
 
-We use GitHub issues to track the bugs. Report a bug by using our Bug Report Template in [Issues](https://github.com/open-edge-platform/training_extensions/issues/new?template=bug_report.md).
+We use GitHub issues to track the bugs. Report a bug by using our Bug Report Template in [Issues](https://github.com/open-edge-platform/geti/issues/new?template=bug_report.md).
 
 ## Discussion
 
-We enabled [GitHub Discussions](https://github.com/open-edge-platform/training_extensions/discussions) in getitune to welcome the community to ask questions and/or propose ideas/solutions. This will not only provide a medium for the community to discuss getitune but also help us de-clutter [Issues](https://github.com/open-edge-platform/training_extensions/issues/).
+We enabled [GitHub Discussions](https://github.com/open-edge-platform/geti/discussions) in getitune to welcome the community to ask questions and/or propose ideas/solutions. This will not only provide a medium for the community to discuss Geti™ but also help us de-clutter [Issues](https://github.com/open-edge-platform/geti/issues/).
 
 ## Feature Request
 
-We utilize GitHub issues to track the feature requests as well. If you are certain regarding the feature you are interested and have a solid proposal, you could then create the feature request by using our [Feature Request Template](https://github.com/open-edge-platform/training_extensions/issues/new?template=feature_request.md) in Issues. If it's still in the idea phase, you could discuss it with the community in our [Discussion](https://github.com/open-edge-platform/training_extensions/discussions/categories/ideas).
+We utilize GitHub issues to track the feature requests as well. If you are certain regarding the feature you are interested and have a solid proposal, you could then create the feature request by using our [Feature Request Template](https://github.com/open-edge-platform/geti/issues/new?template=feature_request.md) in Issues. If it's still in the idea phase, you could discuss it with the community in our [Discussion](https://github.com/open-edge-platform/geti/discussions/categories/ideas).
 
 ## Development & PRs
 
