@@ -9,6 +9,7 @@ import { isFunction } from 'lodash-es';
 import { $api } from '../../../api/client';
 import { toast } from '../../../components/toast/toast.component';
 import { getQueryKey } from '../../../query-client/query-client';
+import { pluralizeItems } from '../../../shared/util';
 
 const toastId = 'deleting-notification';
 
@@ -67,7 +68,7 @@ export const useDeleteMediaItem = () => {
         toast({
             id: toastId,
             type: 'success',
-            message: `${deletedIds.length} item(s) deleted successfully`,
+            message: `${deletedIds.length} ${pluralizeItems(deletedIds.length)} deleted successfully`,
             duration: 3000,
         });
     };
