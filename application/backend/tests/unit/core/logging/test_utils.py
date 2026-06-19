@@ -8,7 +8,7 @@ from app.core.logging import LogConfig, logging_ctx
 
 
 def _read_messages(log_path) -> list[str]:
-    return [json.loads(line)["record"]["message"] for line in log_path.read_text().splitlines()]
+    return [json.loads(line)["record"]["message"] for line in log_path.read_text(encoding="utf-8").splitlines()]
 
 
 class TestLoggingCtx:
