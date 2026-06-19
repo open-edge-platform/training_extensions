@@ -87,7 +87,7 @@ export const Header = () => {
                         <Item key='dataset'>Sort: Dataset</Item>
                     )}
                     <Item key='size'>Sort: Size</Item>
-                    <Item key='score'>Sort: {performanceMetricName}</Item>
+                    <Item key='score'>{`Sort: ${performanceMetricName}`}</Item>
                 </Picker>
             </Flex>
 

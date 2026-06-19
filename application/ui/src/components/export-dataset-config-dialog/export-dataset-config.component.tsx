@@ -52,6 +52,8 @@ type ExportDatasetConfigProps = {
 };
 
 const FORM_ID = 'export-dataset-form';
+const EXPORT_FORMATS_LINK =
+    'https://docs.geti.intel.com/docs/user-guide/geti-fundamentals/datasets/dataset-export-import#supported-formats';
 
 export const ExportDatasetConfig = ({
     name = 'dataset',
@@ -76,7 +78,7 @@ export const ExportDatasetConfig = ({
     return (
         <DialogContainer onDismiss={dialogState.close}>
             {dialogState.isOpen && (
-                <Dialog size='L'>
+                <Dialog size='L' width={{ base: '70vw' }}>
                     <Heading>Export {name}</Heading>
                     <Divider />
                     <Content UNSAFE_className={classes.container}>
@@ -117,9 +119,12 @@ export const ExportDatasetConfig = ({
 
                             {isNonGetiFormatSelected && <WarningMessage />}
 
-                            {/* TODO: pending link url
-                            https://github.com/open-edge-platform/training_extensions/issues/5512 */}
-                            <Link href='/' target='_blank' rel='noopener noreferrer' UNSAFE_className={classes.link}>
+                            <Link
+                                href={EXPORT_FORMATS_LINK}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                UNSAFE_className={classes.link}
+                            >
                                 Learn more about export formats
                                 <LinkOut size='XS' />
                             </Link>
