@@ -73,7 +73,7 @@ class LoggerStdoutWriter:
         return getattr(self._original_stream, "encoding", "utf-8")
 
     def _emit_buffer(self) -> None:
-        msg = "".join(self._buffer).strip()
+        msg = "".join(self._buffer).rstrip()
         if msg:
             logger.log(self._level, msg)
         self._buffer.clear()
