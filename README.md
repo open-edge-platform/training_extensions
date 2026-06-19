@@ -8,7 +8,6 @@
 [`getitune` documentation](https://open-edge-platform.github.io/geti/latest/index.html)
 
 [![Container build](https://github.com/open-edge-platform/geti/actions/workflows/build.yaml/badge.svg)](https://github.com/open-edge-platform/geti/actions/workflows/build.yaml)
-[![Daily checks](https://github.com/open-edge-platform/geti/actions/workflows/daily.yml/badge.svg)](https://github.com/open-edge-platform/geti/actions/workflows/daily.yml)
 [![Codecov](https://codecov.io/gh/open-edge-platform/geti/branch/develop/graph/badge.svg?token=9HVFNMPFGD)](https://codecov.io/gh/open-edge-platform/geti)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/open-edge-platform/geti/badge)](https://securityscorecards.dev/viewer/?uri=github.com/open-edge-platform/geti)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -17,8 +16,7 @@
 
 </div>
 
-Geti™ is an end-to-end Vision AI application that takes you from raw images to a deployed computer vision model - annotate, train,
-optimize and run inference - all in one place, all on your own hardware. Geti™ runs locally as a single container or a native Windows app. Geti™ is optimized for Intel® hardware with OpenVINO™ for fast inference across the full Intel® XPU portfolio.
+Geti™ is an end-to-end Vision AI application that takes you from raw images to a deployed computer vision model. Geti™ runs locally as a single container or a native Windows app and is optimized for fast inference across the full Intel® XPU portfolio.
 
 <p align="center">
  <img src="assets/model-lifecycle-infinity-light.png" width="600" alt="Geti™ - Learning Cycle"/>
@@ -127,46 +125,29 @@ See the [library README](library/README.md) for the full list of recipes, advanc
 inference/optimization examples.
 
 
+
+
+
 ## Key Features
 
-- **Interactive end-to-end model training**: Geti™ enables users to start building deep-learning computer vision models
-  with as few as 10-20 images and take them to production in one environment — annotate, train, optimize, run
-  inference, and improve accuracy in a rapid train-predict-annotate loop.
-- **State-of-the-art model catalog**: train and fine-tune modern architectures such as RF-DETR, DINOv3 DETR, YOLO26,
-  YOLOX, D-FINE, and Mask R-CNN — see the [full list below](#supported-tasks-and-models).
-- **Multiple computer vision tasks**: image classification, object detection, and instance segmentation from the no-code
-  web interface, with even more tasks available through the Python API (`getitune`).
-- **Smart annotations**: manual and semi-automated labeling powered by models like SAM (Segment Anything Model), plus
-  bulk labeling to dramatically speed up dataset creation.
-- **Dataset & model versioning**: track how datasets and models evolve, link models to a specific dataset revision, view
-  exact training hyperparameters, and fine-tune from any previous version.
-- **Runs locally, on the edge**: fine-tune models and run inference directly on edge and client hardware — including
-  Intel® Panther Lake and Arc™ Battlemage (B-series) GPUs — with no Kubernetes cluster or data-center GPU required.
-  Minimum recommended setup: **8 CPU threads, 16 GB RAM, 40 GB free disk**.
-- **Hardware acceleration**: optimized for modern Intel® hardware (Arc™ GPUs, Core™ Ultra processors). Every model is
-  automatically exported with [OpenVINO™](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html)
-  for deployment across the full Intel® XPU portfolio; NVIDIA® CUDA and CPU-only execution are also supported.
-- **Dataset import & export**: COCO, Pascal VOC, and YOLO formats plus a Geti-optimized native format, with label
-  filtering to selectively include or exclude labels on import/export.
-- **Model optimization**: built-in quantization with accuracy-aware INT8 optimization to balance inference speed and
-  accuracy on resource-constrained edge devices.
-- **Integrated deployment & inference**: build custom pipelines (source → model → sink) to deploy models inside Geti and
-  monitor real-time predictions on video streams. Sources include USB/IP cameras and video files; optional sinks include
-  folder, MQTT, and webhook. Complete pipelines can be exported as OpenVINO™-optimized bundles for edge deployment.
+<details>
+<summary>🔄 Interactive end-to-end model training</summary>
 
-## Supported tasks and models
+Geti™ enables users to start building deep-learning computer vision models with as few as 10-20 images and take them to production in one environment — annotate, train, optimize, run inference, and improve accuracy in a rapid train-predict-annotate loop.
 
-Below is a list of tasks and model architectures supported by Geti™. Some tasks are available directly from the no-code
-web interface, while others are accessible through the Python API (`getitune`) — both are part of the same Geti
-application.
-Would you like to see a specific model added to the list? Let us know by opening a [GitHub issue](https://github.com/open-edge-platform/geti/issues)!
+</details>
+
+<details>
+<summary>🏆 State-of-the-art model catalog</summary>
+
+Train and fine-tune modern architectures such as RF-DETR, DINOv3 DETR, YOLO26, YOLOX, D-FINE, and Mask R-CNN. Would you like to see a specific model added? Let us know by opening a [GitHub issue](https://github.com/open-edge-platform/geti/issues)!
 
 <!-- markdownlint-disable MD060 -->
 
 <table>
   <thead>
     <tr>
-      <th>Computer Vision Task</th>
+      <th style="width:25%">Computer Vision Task</th>
       <th>Model Architecture</th>
       <th>Paper</th>
     </tr>
@@ -252,8 +233,63 @@ Would you like to see a specific model added to the list? Let us know by opening
 
 <!-- markdownlint-enable MD060 -->
 
-<!-- markdownlint-enable MD060 -->
+</details>
 
+<details>
+<summary>🎨 Multiple computer vision tasks</summary>
+
+Image classification, object detection, and instance segmentation from the no-code web interface, with even more tasks available through the Python API (`getitune`).
+
+</details>
+
+<details>
+<summary>🧠 Smart annotations</summary>
+
+Manual and semi-automated labeling powered by models like SAM (Segment Anything Model), plus bulk labeling to dramatically speed up dataset creation.
+
+</details>
+
+<details>
+<summary>📦 Dataset & model versioning</summary>
+
+Track how datasets and models evolve, link models to a specific dataset revision, view exact training hyperparameters, and fine-tune from any previous version.
+
+</details>
+
+<details>
+<summary>🏔️ Runs locally, on the edge</summary>
+
+Fine-tune models and run inference directly on edge and client hardware — including Intel® Panther Lake and Arc™ Battlemage (B-series) GPUs — with no Kubernetes cluster or data-center GPU required. Minimum recommended setup: **8 CPU threads, 16 GB RAM, 40 GB free disk**.
+
+</details>
+
+<details>
+<summary>⚡ Hardware acceleration</summary>
+
+Optimized for modern Intel® hardware (Arc™ GPUs, Core™ Ultra processors). Every model is automatically exported with [OpenVINO™](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html) for deployment across the full Intel® XPU portfolio; NVIDIA® CUDA and CPU-only execution are also supported.
+
+</details>
+
+<details>
+<summary>💾 Dataset import & export</summary>
+
+COCO, Pascal VOC, and YOLO formats plus a Geti-optimized native format, with label filtering to selectively include or exclude labels on import/export.
+
+</details>
+
+<details>
+<summary>🔧 Model optimization</summary>
+
+Built-in quantization with accuracy-aware INT8 optimization to balance inference speed and accuracy on resource-constrained edge devices.
+
+</details>
+
+<details>
+<summary>🚀 Integrated deployment & inference</summary>
+
+Build custom pipelines (source → model → sink) to deploy models inside Geti and monitor real-time predictions on video streams. Sources include USB/IP cameras and video files; optional sinks include folder, MQTT, and webhook. Complete pipelines can be exported as OpenVINO™-optimized bundles for edge deployment.
+
+</details>
 
 ## Ecosystem
 
