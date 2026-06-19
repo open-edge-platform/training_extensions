@@ -35,6 +35,15 @@ from getitune.backend.openvino.models import (
     OVSegmentationModel,
 )
 
+try:
+    from getitune.backend.ultralytics.models import (
+        UltralyticsDetectionModel,
+        UltralyticsInstSegModel,
+    )
+except ImportError:
+    UltralyticsDetectionModel = None  # type: ignore[assignment]
+    UltralyticsInstSegModel = None  # type: ignore[assignment]
+
 __all__ = [
     # detection
     "ATSS",
@@ -69,3 +78,11 @@ __all__ = [
     "TimmModel",
     "VisionTransformer",
 ]
+
+if UltralyticsDetectionModel is not None:
+    __all__.extend(
+        [
+            "UltralyticsDetectionModel",
+            "UltralyticsInstSegModel",
+        ]
+    )

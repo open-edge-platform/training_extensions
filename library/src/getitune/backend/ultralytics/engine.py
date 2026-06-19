@@ -13,10 +13,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Sequence
 
 import torch
+import yaml
 from torchvision import tv_tensors
 from ultralytics.utils.metrics import ClassifyMetrics, DetMetrics, SegmentMetrics
 
 from getitune.backend.ultralytics.data.geometry import scale_boxes_to_letterbox, scale_masks_to_letterbox
+from getitune.backend.ultralytics.tools.configurator import Configurator
 from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import Prediction, SampleBatch
 from getitune.data.module import DataModule
@@ -356,6 +358,70 @@ class UltralyticsEngine(Engine):
     def is_supported(model: MODEL, data: DATA) -> bool:
         """Return ``True`` when *model* is an :class:`UltralyticsModel`."""
         return bool(isinstance(model, UltralyticsModel) and isinstance(data, (DataModule, str, os.PathLike)))
+
+    @classmethod
+    def from_config(
+        cls,
+        config_path: PathLike,
+        data: DataModule | PathLike | None = None,
+        work_dir: PathLike = "./getitune-workspace",
+        device: str | None = None,
+        checkpoint: str | None = None,
+        task: str | None = None,  # noqa: ARG003 (API compatibility with Engine.from_config)
+        **kwargs,
+    ) -> UltralyticsEngine:
+        """Build an engine from an Ultralytics recipe configuration file.
+
+        Args:
+            config_path: Path to the Ultralytics recipe YAML file
+                (must contain ``backend: ultralytics``).
+            data: A pre-built :class:`~getitune.data.module.DataModule` or a
+                filesystem data-root path.  Required.
+            work_dir: Working directory for checkpoints and exports.
+                Defaults to ``"./getitune-workspace"``.
+            device: Device to use (e.g., ``"auto"``, ``"xpu"``, ``"cpu"``, ``"gpu"``).
+                Defaults to None.
+            checkpoint: Optional path to a checkpoint for pretrained or warm-start weights.
+                Defaults to None.
+            task: Task type for disambiguation when a model name matches recipes
+                under multiple tasks. Not forwarded to the engine. Defaults to None.
+            **kwargs: Backend-specific keyword arguments forwarded to
+                :class:`UltralyticsEngine` (e.g. ``train_args``, ``export_args``).
+
+        Returns:
+            A fully configured :class:`UltralyticsEngine`.
+
+        Raises:
+            ValueError: If *data* is ``None``.
+        """
+        if data is None:
+            msg = "data (a DataModule or data-root path) is required for UltralyticsEngine.from_config."
+            raise ValueError(msg)
+
+        # Read the task from the raw YAML (top-level field, no interpolation needed).
+        with Path(str(config_path)).open() as fh:
+            raw = yaml.safe_load(fh)
+        recipe_task: str | None = (raw or {}).get("task")
+
+        configurator = Configurator(data=data, model=Path(str(config_path)), task=recipe_task)
+
+        # Build (or reuse) the DataModule, then derive label_info for the model.
+        datamodule = configurator.build_datamodule()
+        label_info = datamodule.label_info
+        model = configurator.create_model(label_info)
+
+        engine_kwargs: dict[str, object] = {**kwargs}
+        if device is not None:
+            engine_kwargs["device"] = device
+        if checkpoint is not None:
+            engine_kwargs["checkpoint"] = checkpoint
+
+        return configurator.create_engine(
+            model=model,
+            data=datamodule,
+            work_dir=work_dir,
+            **engine_kwargs,
+        )
 
     @property
     def work_dir(self) -> PathLike:

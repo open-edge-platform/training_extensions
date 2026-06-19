@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 import getitune
-from getitune.backend.lightning.cli.utils import get_getitune_root_path
+from getitune.utils import get_getitune_root_path
 
 
 def test_get_getitune_root_path(mocker):

@@ -322,7 +322,7 @@ class ExperimentExecutor:
         overrides = resolve_overrides(self.scenario_overrides)
         engine = LightningEngine.from_config(
             config_path=self.recipe_path,
-            data_root=self.data_path,
+            data=self.data_path,
             work_dir=self.work_dir / "train",
             device=self.accelerator,
             **overrides,
@@ -356,7 +356,7 @@ class ExperimentExecutor:
         overrides = resolve_overrides(self.scenario_overrides)
         engine = LightningEngine.from_config(
             config_path=self.recipe_path,
-            data_root=self.data_path,
+            data=self.data_path,
             work_dir=self.work_dir / "test" / "torch",
             device=self.accelerator,
             **overrides,
@@ -390,7 +390,7 @@ class ExperimentExecutor:
         overrides = resolve_overrides(self.scenario_overrides)
         engine = LightningEngine.from_config(
             config_path=self.recipe_path,
-            data_root=self.data_path,
+            data=self.data_path,
             work_dir=self.work_dir / "export",
             device=self.accelerator,
             **overrides,
