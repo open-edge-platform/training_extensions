@@ -755,7 +755,7 @@ class LightningEngine(Engine):
         if checkpoint is not None:
             process_kwargs["engine.checkpoint"] = checkpoint
         if task is not None:
-            process_kwargs["engine.task"] = task
+            process_kwargs["engine.task"] = task.value if isinstance(task, TaskType) else task
         instantiated_config, train_kwargs = get_instantiated_classes(
             config=config_path,
             data_root=data_root,
