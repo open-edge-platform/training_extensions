@@ -9,7 +9,7 @@
 [Supported tasks and models](#supported-tasks-and-models) •
 [Quick Start](#quick-start) •
 [Documentation](#documentation) •
-[Contributing](#contributing)
+[Community](#community)
 
 [![Daily checks](https://github.com/open-edge-platform/training_extensions/actions/workflows/daily.yml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/daily.yml)
 [![Docker build](https://github.com/open-edge-platform/training_extensions/actions/workflows/build.yaml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/build.yaml)
@@ -173,8 +173,6 @@ Would you like to see a specific model added to the list? Let us know by opening
 > - [OpenVINO™](https://github.com/openvinotoolkit/openvino) - Software toolkit for optimizing and deploying deep learning models.
 > - [Model API](https://github.com/open-edge-platform/model_api) - wrapper that simplifies model loading, execution, and data processing for easy inference
 
-
-
 ## Quick Start
 
 Get Geti running and train your first model in a few minutes. For full instructions and all options, see the
@@ -186,9 +184,11 @@ recommended for larger models.
 ### 1. Run Geti
 
 #### Windows Application
+
 Run Geti as a native Windows application, with prebuilt images for Intel® XPU, NVIDIA® CUDA, and CPU-only environments.
 
 Download the Windows Installer:
+
 - [Download CPU-only version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cpu-3.0.0.msix)
 - [Download Intel® XPU version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-xpu-3.0.0.msix)
 - [Download Nvidia® CUDA version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cuda-3.0.0.msix)
@@ -215,12 +215,12 @@ Then open the Geti web application at [**http://localhost:7860**](http://localho
 For build-from-source options and advanced setup, see the [installation guide](https://docs.geti.intel.com/) and the
 [application README](application/README.md).
 
-
-#### Install natively with Ultralytics YOLO26 models (the latest NMS‑free, edge‑optimized models (Nano / Small / Medium) for object detection and instance segmentation. The integration covers the full model lifecycle: training, inference, quantization, and OpenVINO™ model export.
+#### Install natively with Ultralytics YOLO26 models (the latest NMS‑free, edge‑optimized models (Nano / Small / Medium) for object detection and instance segmentation. The integration covers the full model lifecycle: training, inference, quantization, and OpenVINO™ model export
 
 Linux, WSL (In order to run a script you need to have curl & git installed):
+
 ```bash
-curl -fsSL https://github.com/open-edge-platform/training_extensions/blob/develop/install.sh | bash 
+curl -fsSL https://raw.githubusercontent.com/open-edge-platform/training_extensions/develop/install.sh | bash
 ```
 
 ### 2. Train your first model
@@ -270,10 +270,10 @@ Geti 3.0 introduces a simplified dataset‑based workflow: datasets must be expo
 
 For complete user and developer documentation, visit [**docs.geti.intel.com**](https://docs.geti.intel.com/).
 
-| Component                  | README                                          | Documentation                                                                            |
-| -------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| **Geti application**       | [application/README.md](application/README.md)  | [docs.geti.intel.com](https://docs.geti.intel.com/)                                       |
-| **Python API (getitune)**  | [library/README.md](library/README.md)          | [Docs](https://open-edge-platform.github.io/training_extensions/latest/index.html)       |
+| Component                 | README                                         | Documentation                                                                      |
+| ------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **Geti application**      | [application/README.md](application/README.md) | [docs.geti.intel.com](https://docs.geti.intel.com/)                                |
+| **Python API (getitune)** | [library/README.md](library/README.md)         | [Docs](https://open-edge-platform.github.io/training_extensions/latest/index.html) |
 
 ## Community
 
