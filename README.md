@@ -51,7 +51,7 @@ Geti can be installed as a **Windows application**, run as a **container**, or b
 <details>
 <summary>Windows Application</summary>
 
-Download the latest Geti™ Windows installer suitable for your hardware (Intel® XPU, NVIDIA® CUDA or CPU-only) from the [releases repository](https://storage.geti.intel.com/geti/packages):
+Download the latest Geti™ Windows installer suitable for your hardware (Intel® XPU, NVIDIA® CUDA or CPU-only) from the releases repository:
 
 - [CPU-only version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cpu-3.0.0.msix)
 - [Intel® XPU version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-xpu-3.0.0.msix)
