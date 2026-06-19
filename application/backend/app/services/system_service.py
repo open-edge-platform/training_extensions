@@ -109,7 +109,7 @@ class SystemService:
     @staticmethod
     def get_inference_devices() -> list[DeviceInfo]:
         """
-        Get available compute devices for inference (CPU and integrated GPUs only).
+        Get available compute devices for inference (CPU, integrated GPUs, and Intel discrete GPUs).
 
         Unlike training (which relies on PyTorch), inference is performed via OpenVINO, so devices are listed using
         OpenVINO's `core.available_devices` API.
@@ -117,8 +117,10 @@ class SystemService:
         OpenVINO returns device names such as 'CPU', 'GPU', 'GPU.0', 'GPU.1', ... Per the OpenVINO documentation,
         when an integrated GPU is present it always takes id 0, and 'GPU' is an alias for 'GPU.0'.
 
-        Only CPU and integrated GPUs (iGPUs) are returned; discrete GPUs (dGPUs) are intentionally excluded.
-        The integrated vs. discrete distinction is made using OpenVINO's `DEVICE_TYPE` property.
+        A GPU is included as an inference device when it is either an integrated GPU (iGPU) or an Intel-branded
+        discrete GPU (dGPU), since only Intel GPUs can perform OpenVINO inference. Non-Intel discrete GPUs are
+        intentionally excluded. The integrated vs. discrete distinction is made using OpenVINO's `DEVICE_TYPE`
+        property, and the brand is determined from the `FULL_DEVICE_NAME` property.
 
         Returns:
             list[DeviceInfo]: List of available inference devices.
@@ -138,17 +140,19 @@ class SystemService:
                 if ov_device == "CPU":
                     devices.append(DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None))
                 elif ov_device.startswith("GPU"):
-                    # Only integrated GPUs (iGPUs) are supported for inference; skip discrete GPUs (dGPUs).
+                    # Accept a GPU if it is integrated, or if it is an Intel-branded discrete GPU.
                     try:
                         device_type = core.get_property(ov_device, "DEVICE_TYPE")
                     except Exception:
                         logger.exception("Failed to query DEVICE_TYPE for OpenVINO device '{}'; skipping.", ov_device)
                         continue
-                    if "integrated" not in str(device_type).lower():
-                        logger.debug("Skipping non-integrated OpenVINO GPU device: {}", ov_device)
+                    name = core.get_property(ov_device, "FULL_DEVICE_NAME")
+                    is_integrated = "integrated" in str(device_type).lower()
+                    is_intel = "intel" in str(name).lower()
+                    if not (is_integrated or is_intel):
+                        logger.debug("Skipping non-Intel discrete OpenVINO GPU device: {} ({})", ov_device, name)
                         continue
                     index = 0 if ov_device == "GPU" else int(ov_device.split(".", 1)[1])
-                    name = core.get_property(ov_device, "FULL_DEVICE_NAME")
                     try:
                         memory = int(core.get_property(ov_device, "GPU_DEVICE_TOTAL_MEM_SIZE"))
                     except Exception:
