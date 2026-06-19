@@ -33,7 +33,7 @@ Geti™ is an end-to-end Vision AI application that takes you from raw images to
 > Previous versions of Geti™ are still available in a separate [repository](https://github.com/open-edge-platform/geti_v2).
 > In general, we recommend upgrading to the latest Geti™ release whenever possible - not only to access new functionality,
 > but also to receive better support from Intel and the Geti™ community.
-> For upgrade from Geti™ v2 to v3, please follow the [upgrade guidance](https://docs.geti.intel.com/docs/user-guide/getting-started/installation/migration-from-geti-2x).
+> To upgrade from Geti™ v2 to v3, please follow the [upgrade guidance](https://docs.geti.intel.com/docs/user-guide/getting-started/installation/migration-from-geti-2x).
 
 ## Quick start with Geti™
 
@@ -273,7 +273,7 @@ Would you like to see a specific model added? Let us know by opening a [GitHub i
 <details>
 <summary>🎨 Multiple computer vision tasks</summary>
 
-Geti™ supports <a target="_blank" rel="noopener noreferrer" href="https://docs.geti.intel.com/docs/user-guide/learn-geti/computer-vision-tasks/ai-fundamentals-tasks">multiple computer vision tasks</a> that are commonly employed across various use cases - image classification, object detection and instance segmentation from the no-code web interface with even more tasks available through the `getitune` library.
+Geti™ supports <a target="_blank" rel="noopener noreferrer" href="https://docs.geti.intel.com/docs/user-guide/learn-geti/computer-vision-tasks/ai-fundamentals-tasks">multiple computer vision tasks</a> that are commonly employed across various use cases - image classification, object detection and instance segmentation from the no-code web interface, with even more tasks available through the `getitune` library.
 
 </details>
 
@@ -301,7 +301,7 @@ Track how datasets and models evolve, link models to a specific dataset revision
 - [Datumaro](https://github.com/open-edge-platform/datumaro) - Dataset Management Framework, a Python library and a CLI tool to build, analyze and manage Computer Vision datasets.
 - [OpenVINO™](https://github.com/openvinotoolkit/openvino) - Software toolkit for optimizing and deploying deep learning models.
 - [OpenVINO™ Model Server](https://github.com/openvinotoolkit/model_server) - A scalable inference server for models optimized with OpenVINO™.
-- [Model API](https://github.com/open-edge-platform/model_api) - A set of wrapper classes for particular tasks and model architectures, simplifying data preprocess and postprocess as well as routine procedures.
+- [Model API](https://github.com/open-edge-platform/model_api) - A set of wrapper classes for particular tasks and model architectures, simplifying data preprocessing and postprocessing as well as routine procedures.
 - [Physical AI Studio](https://github.com/open-edge-platform/physical-ai-studio) - An end-to-end framework for teaching robots to perform tasks through imitation learning from human demonstrations.
 
 ## Who uses Geti™?
