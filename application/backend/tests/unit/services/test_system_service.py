@@ -174,7 +174,7 @@ class TestSystemService:
             assert fxt_system_service.validate_device("cuda-0") is False
 
     def test_get_inference_devices_with_multiple_devices(self, fxt_system_service: SystemService):
-        """Test getting inference devices via OpenVINO when CPU and GPU(s) are available"""
+        """Test getting inference devices via OpenVINO: only CPU and integrated GPUs are returned"""
 
         def fake_get_property(device: str, prop: str):
             if prop == "FULL_DEVICE_NAME":
@@ -184,6 +184,9 @@ class TestSystemService:
                 }[device]
             if prop == "GPU_DEVICE_TOTAL_MEM_SIZE":
                 return {"GPU.0": 36022263808, "GPU.1": 17179869184}[device]
+            if prop == "DEVICE_TYPE":
+                # GPU.0 is an integrated GPU (iGPU), GPU.1 is a discrete GPU (dGPU)
+                return {"GPU.0": "Type.INTEGRATED", "GPU.1": "Type.DISCRETE"}[device]
             raise KeyError(prop)
 
         mock_core = MagicMock()
@@ -193,7 +196,8 @@ class TestSystemService:
         with patch("openvino.Core", return_value=mock_core):
             inference_devices = fxt_system_service.get_inference_devices()
 
-        assert len(inference_devices) == 3
+        # The discrete GPU (GPU.1) must be filtered out, leaving CPU and the integrated GPU.
+        assert len(inference_devices) == 2
         assert not any(device.type == "cuda" for device in inference_devices)
         assert inference_devices[0].type == "cpu"
         assert inference_devices[0].name == "CPU"
@@ -203,9 +207,6 @@ class TestSystemService:
         assert inference_devices[1].name == "Intel(R) Graphics [0x7d41]"
         assert inference_devices[1].memory == 36022263808
         assert inference_devices[1].index == 0
-        assert inference_devices[2].type == "xpu"
-        assert inference_devices[2].index == 1
-        assert inference_devices[2].memory == 17179869184
 
     def test_get_inference_devices_cpu_only(self, fxt_system_service: SystemService):
         """Test getting inference devices when only CPU is available via OpenVINO"""
