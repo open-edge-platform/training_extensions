@@ -7,13 +7,14 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from getitune.engine.engine import Engine
 
 if TYPE_CHECKING:
+    from getitune.types import PathLike
     from getitune.types.task import TaskType
     from getitune.types.types import DATA, MODEL
 
@@ -95,7 +96,7 @@ def _read_backend(recipe_path: Path) -> str:
 def create_engine(
     model: MODEL,
     data: DATA,
-    work_dir: str | None = None,
+    work_dir: PathLike | None = None,
     device: str | None = None,
     checkpoint: str | None = None,
     task: TaskType | str | None = None,
@@ -161,7 +162,7 @@ def create_engine(
             supported_engines.append(child_engine)
 
     # Build kwargs dict with common arguments (skip None values so defaults apply).
-    common_kwargs = {}
+    common_kwargs: dict[str, Any] = {}
     if work_dir is not None:
         common_kwargs["work_dir"] = work_dir
     if device is not None:
@@ -207,7 +208,7 @@ def create_engine(
             msg = f"Engine {engine_cls.__name__} does not implement is_supported."
             raise ValueError(msg)
         if engine_cls.is_supported(model, data):
-            return engine_cls(model=model, data=data, **common_kwargs)
+            return engine_cls(model=model, data=data, **common_kwargs)  # pyrefly: ignore[unexpected-keyword]
 
     msg = f"No engine found for model {model!r} and data {data!r}"
     raise ValueError(msg)

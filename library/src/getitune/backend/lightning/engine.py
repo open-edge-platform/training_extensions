@@ -780,12 +780,15 @@ class LightningEngine(Engine):
         # Use the caller-supplied DataModule when provided; otherwise build
         # one from the parsed configuration.
         if provided_datamodule is not None:
-            datamodule = provided_datamodule
-        elif (datamodule := instantiated_config.get("data")) is None:
-            msg = "Cannot instantiate datamodule from config."
-            raise ValueError(msg)
-        elif not isinstance(datamodule, DataModule):
-            raise TypeError(datamodule)
+            datamodule: DataModule = provided_datamodule
+        else:
+            raw_data: DataModule | Any = instantiated_config.get("data")
+            if raw_data is None:
+                msg = "Cannot instantiate datamodule from config."
+                raise ValueError(msg)
+            if not isinstance(raw_data, DataModule):
+                raise TypeError(raw_data)
+            datamodule = raw_data
 
         if (model := instantiated_config.get("model")) is None:
             msg = "Cannot instantiate model from config."

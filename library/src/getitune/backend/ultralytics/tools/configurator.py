@@ -562,7 +562,7 @@ class Configurator:
         self,
         model: UltralyticsModel,
         data: DataModule | PathLike | None = None,
-        work_dir: PathLike = "./getitune-workspace",
+        work_dir: PathLike | None = None,
         device: str | DeviceType = DeviceType.auto,
         **engine_kwargs,
     ) -> UltralyticsEngine:

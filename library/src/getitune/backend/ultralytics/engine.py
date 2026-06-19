@@ -67,7 +67,7 @@ class UltralyticsEngine(Engine):
         self,
         model: UltralyticsModel,
         data: DataModule | PathLike,
-        work_dir: PathLike = "./getitune-workspace",
+        work_dir: PathLike | None = None,
         device: str | DeviceType = "auto",
         checkpoint: PathLike | None = None,
         train_args: Mapping[str, Any] | None = None,
@@ -94,7 +94,7 @@ class UltralyticsEngine(Engine):
             raise TypeError(msg)
 
         self._model = model
-        self._work_dir = Path(work_dir).resolve()
+        self._work_dir = Path(work_dir or "./getitune-workspace").resolve()
         self._work_dir.mkdir(parents=True, exist_ok=True)
         self._device = self._resolve_device(device)
         self._kwargs = kwargs
@@ -364,7 +364,7 @@ class UltralyticsEngine(Engine):
         cls,
         config_path: PathLike,
         data: DataModule | PathLike | None = None,
-        work_dir: PathLike = "./getitune-workspace",
+        work_dir: PathLike | None = None,
         device: str | None = None,
         checkpoint: str | None = None,
         task: str | None = None,  # noqa: ARG003 (API compatibility with Engine.from_config)
@@ -410,7 +410,7 @@ class UltralyticsEngine(Engine):
         label_info = datamodule.label_info
         model = configurator.create_model(label_info)
 
-        engine_kwargs: dict[str, object] = {**kwargs}
+        engine_kwargs: dict[str, Any] = {**kwargs}
         if device is not None:
             engine_kwargs["device"] = device
         if checkpoint is not None:
@@ -607,7 +607,6 @@ class UltralyticsEngine(Engine):
         metric = FMeasure(label_info)
         device = self._device
         yolo = self._model.yolo
-        yolo.model.to(device).eval()  # pyrefly: ignore[missing-attribute]
         metric = metric.to(device)
 
         self._datamodule.setup(stage="fit")
@@ -670,7 +669,6 @@ class UltralyticsEngine(Engine):
 
         yolo = self._model.yolo
         device = self._device
-        yolo.model.to(device).eval()  # pyrefly: ignore[missing-attribute]
 
         predictions: list[Prediction] = []
         for batch in dataloader:
