@@ -31,11 +31,14 @@ for Intel® hardware with OpenVINO™ for fast inference across the full Intel®
 </p>
 
 > [!IMPORTANT]
-> Information for `otx` users: this repo (`open-edge-platform/training_extensions`) previously hosted the OpenVINO
-> Training Extensions project, namely `otx`; the development of that library now continues under the new name
+> This repo previously hosted the OpenVINO Training Extensions project, namely `otx`;
+> the development of that library now continues under the new name
 > `getitune` in the [`library`](library) folder, as the training engine of the broader Geti™ application. The package is
 > published on PyPI as [`getitune`](https://pypi.org/project/getitune/), while the old package `otx` is deprecated but
 > still available for download.
+>
+> The development of the Geti™ application now continues in this repository in the [`application`](application) folder.
+> Previous versions of Geti™ are still available in a separate [repository](https://github.com/open-edge-platform/geti_v2).
 
 ## Key Features
 
