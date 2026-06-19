@@ -35,8 +35,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$GIT_URL = "https://github.com/open-edge-platform/training_extensions.git"
-$GIT_BRANCH = "nightly-2026.06.17"
+$GIT_URL = "https://github.com/open-edge-platform/geti.git"
+$GIT_BRANCH = "nightly-2026.06.19"
 
 $BUILD_TOOLS_DIR = Join-Path $WorkDir ".build"
 $UV_DIR = Join-Path $BUILD_TOOLS_DIR "uv"
