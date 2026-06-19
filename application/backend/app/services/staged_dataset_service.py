@@ -159,10 +159,30 @@ class StagedDatasetService:
 
         # Run the blocking write operation in a worker thread.
         def _perform_copy() -> int:
-            file_obj.seek(0)
-            with target_path.open("wb") as out_f:
-                shutil.copyfileobj(file_obj, out_f, length=1024 * 1024)
-            return target_path.stat().st_size
+            # 1. Defensively reset stream pointer if allowed
+            try:
+                file_obj.seek(0)
+            except (AttributeError, OSError, ValueError):
+                pass
+
+            temp_path = target_path.with_suffix(f"{target_path.suffix}.part")
+
+            try:
+                # 2. Copy payload to partial file
+                with temp_path.open("wb") as out_f:
+                    shutil.copyfileobj(file_obj, out_f, length=1024 * 1024)
+
+                # 3. Grab size from the temp file *before* swapping (saves a tiny bit of OS overhead)
+                file_size = temp_path.stat().st_size
+
+                # 4. Atomic swap
+                temp_path.replace(target_path)
+                return file_size
+
+            except Exception:
+                # Explicit clean up if the copy itself errors out
+                temp_path.unlink(missing_ok=True)
+                raise
 
         size = await to_thread.run_sync(_perform_copy)
 
