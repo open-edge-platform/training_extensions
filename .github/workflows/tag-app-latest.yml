@@ -1,0 +1,174 @@
+name: Tag Application Images as Latest
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version to tag as latest (example: 0.1.0)"
+        required: true
+        type: string
+      dry_run:
+        description: "Dry run mode (validate only, make no changes)"
+        required: false
+        type: boolean
+        default: false
+      force:
+        description: "Force overwrite if the latest tag already exists in GHCR with a different digest"
+        required: false
+        type: boolean
+        default: false
+
+permissions: {} # No permissions by default
+
+jobs:
+  validate:
+    name: Validate inputs and release tag
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+      release_tag: ${{ steps.validate.outputs.release_tag }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate and normalize inputs
+        id: validate
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          # Accept version with or without the "app/v" prefix and normalize it.
+          VERSION="${VERSION_INPUT#app/v}"
+
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: version must match '<major>.<minor>.<patch>' (example: 0.1.0)"
+            echo "Received: ${VERSION_INPUT}"
+            exit 1
+          fi
+
+          RELEASE_TAG="app/v${VERSION}"
+
+          echo "Version:     ${VERSION}"
+          echo "Release tag: ${RELEASE_TAG}"
+
+          # Verify release tag exists in git
+          if ! git rev-parse "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "::error::Release tag ${RELEASE_TAG} does not exist in git"
+            exit 1
+          fi
+          RELEASE_SHA=$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")
+          echo "Release SHA: ${RELEASE_SHA}"
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Print summary
+        env:
+          VERSION: ${{ steps.validate.outputs.version }}
+          RELEASE_TAG: ${{ steps.validate.outputs.release_tag }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          {
+            echo "## Tag Latest Summary"
+            echo ""
+            echo "| Item | Value |"
+            echo "|------|-------|"
+            echo "| Version | ${VERSION} |"
+            echo "| Release tag | ${RELEASE_TAG} |"
+            echo "| Dry run | ${DRY_RUN} |"
+            echo "| Force overwrite | ${FORCE} |"
+            echo ""
+            if [[ "${DRY_RUN}" == "true" ]]; then
+              echo "> Dry run mode: No changes will be made."
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  tag-latest:
+    needs: validate
+    if: inputs.dry_run == false
+    name: Tag release image as latest
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    environment: production
+    permissions:
+      packages: write # Permission to push packages to GHCR
+      id-token: write # Permission to request OIDC token for signing images
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        device: [cpu, xpu, cuda]
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
+      - name: Log in to GHCR
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag application image as latest for ${{ matrix.device }}
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          DEVICE: ${{ matrix.device }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+          SOURCE_IMAGE="ghcr.io/open-edge-platform/geti-${DEVICE}:${VERSION}"
+          TARGET_IMAGE="ghcr.io/open-edge-platform/geti-${DEVICE}:latest"
+
+          echo "Pulling ${SOURCE_IMAGE}"
+          docker pull "${SOURCE_IMAGE}"
+
+          # Pre-check: verify target tag is absent or already points to the same image
+          if docker manifest inspect "${TARGET_IMAGE}" >/dev/null 2>&1; then
+            echo "Target image ${TARGET_IMAGE} already exists in GHCR."
+            docker pull "${TARGET_IMAGE}"
+            SOURCE_ID=$(docker inspect --format='{{.Id}}' "${SOURCE_IMAGE}")
+            TARGET_ID=$(docker inspect --format='{{.Id}}' "${TARGET_IMAGE}")
+            if [[ "${SOURCE_ID}" == "${TARGET_ID}" ]]; then
+              echo "::notice::${TARGET_IMAGE} already points to the same image as ${SOURCE_IMAGE}. Skipping push (idempotent re-run)."
+              exit 0
+            elif [[ "${FORCE}" == "true" ]]; then
+              echo "::warning::${TARGET_IMAGE} exists with a different digest; overwriting because force=true."
+            else
+              echo "::error::${TARGET_IMAGE} already exists in GHCR with a different digest. Set 'force: true' to overwrite."
+              exit 1
+            fi
+          fi
+
+          echo "Tagging ${TARGET_IMAGE}"
+          docker tag "${SOURCE_IMAGE}" "${TARGET_IMAGE}"
+
+          echo "Pushing ${TARGET_IMAGE}"
+          docker push "${TARGET_IMAGE}"
+
+      - name: Sign Docker image
+        uses: open-edge-platform/geti-ci/actions/sign-image@7e686c1248b3939f8ee8e04e2612da727e379d91
+        with:
+          image-uri: ghcr.io/open-edge-platform/geti-${{ matrix.device }}:latest
+
+      - name: Print summary
+        env:
+          DEVICE: ${{ matrix.device }}
+        run: |
+          {
+            echo "## Tagging Complete"
+            echo ""
+            echo "### Docker Images"
+            echo "- ghcr.io/open-edge-platform/geti-${DEVICE}:latest"
+            echo ""
+          } >> "${GITHUB_STEP_SUMMARY}"
