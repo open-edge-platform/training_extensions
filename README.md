@@ -39,63 +39,66 @@ Geti™ is an end-to-end Vision AI application that takes you from raw images to
 
 Before you begin, make sure your machine meets the following requirements:
 
-| Component | Requirement                                             |
-| --------- | ------------------------------------------------------- |
-| CPU       | 8 threads                                               |
-| RAM       | 16 GB                                                   |
-| Disk      | 40 GB free                                              |
-| GPU       | Optional — Intel® XPU or NVIDIA® GPU for larger models  |
+| Component | Requirement                                            |
+| --------- | ------------------------------------------------------ |
+| CPU       | 8 threads                                              |
+| RAM       | 16 GB                                                  |
+| Disk      | 40 GB free                                             |
+| GPU       | Optional - Intel® XPU or NVIDIA® GPU for larger models |
 
 Geti can be installed as a **Windows application**, run as a **container**, or built **from source code**. Choose the option that best suits your environment below.
 
 <details>
 <summary>Windows Application</summary>
 
-Run Geti as a native Windows application, with prebuilt images for Intel® XPU, NVIDIA® CUDA, and CPU-only environments.
+Download the latest Geti™ Windows installer suitable for your hardware (Intel® XPU, NVIDIA® CUDA or CPU-only) from the [releases repository](https://storage.geti.intel.com/geti/packages):
 
-Download the Windows Installer:
+- [CPU-only version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cpu-3.0.0.msix)
+- [Intel® XPU version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-xpu-3.0.0.msix)
+- [NVIDIA® CUDA version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cuda-3.0.0.msix)
 
-- [Download CPU-only version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cpu-3.0.0.msix)
-- [Download Intel® XPU version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-xpu-3.0.0.msix)
-- [Download NVIDIA® CUDA version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cuda-3.0.0.msix)
-
-Install Geti Windows application and launch it from the Start menu.
+Install Geti™ Windows application and launch it from the Start menu.
 
 </details>
 
 <details>
 <summary>Container image</summary>
 
-Pull a pre-built image for your hardware and launch it:
+Pull a pre-built container image for your hardware and launch it using [`just`](https://just.systems), which handles device passthrough, volumes, and WebRTC ports automatically:
 
 ```bash
+# 1. Install just
+curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+
+# 2. Clone the repository
+git clone https://github.com/open-edge-platform/geti.git
+cd geti/application
+
+# 3. Pull the image for your hardware
 docker pull ghcr.io/open-edge-platform/geti-xpu    # modern Intel® CPU/GPU (recommended)
-docker pull ghcr.io/open-edge-platform/geti-cuda   # NVIDIA® CUDA platforms
+docker pull ghcr.io/open-edge-platform/geti-cuda   # NVIDIA® GPU (CUDA)
 docker pull ghcr.io/open-edge-platform/geti-cpu    # CPU-only (most lightweight)
 
-# Retag the pulled image as `geti-{cpu,xpu,cuda}:latest` for use with `just run-image`
-docker tag ghcr.io/open-edge-platform/geti-cpu:latest geti-cpu:latest
+# 4. Retag the pulled image for use with just
+docker tag ghcr.io/open-edge-platform/geti-xpu:latest geti-xpu:latest
 
-just run-image --accelerator xpu                   # launch the application
+# 5. Launch the application
+just run-image --accelerator xpu
 ```
 
-Then open the Geti web application at [**http://localhost:7860**](http://localhost:7860).
-
-For build-from-source options and advanced setup, see the [installation guide](https://docs.geti.intel.com/) and the
-[application README](application/README.md).
+Then get access to Geti™ user interface at `http://localhost:7860`.
 
 </details>
 
 <details>
 <summary>Install from source code</summary>
-
-Install Geti natively on Linux or WSL, including support for Ultralytics YOLO26 models — the latest NMS-free, edge-optimized models (Nano / Small / Medium) for object detection and instance segmentation. The integration covers the full model lifecycle: training, inference, quantization, and OpenVINO™ model export.
-
-Requires `curl` and `git`. Run the following on Linux or WSL:
+To install the Geti™ stable development version from source code, use:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/open-edge-platform/geti/develop/install.sh | bash
 ```
+
+Installing from source gives you access to the latest features not yet available in released builds, including Ultralytics YOLO26 support.
 
 </details>
 
@@ -107,9 +110,10 @@ Once Geti is up and running, follow the intuitive UI to train your first model.
 
 > [!NOTE]
 > See the detailed step-by-step guidance on how to train your first model in
-> ["Training your first model"](https://docs.geti.intel.com/docs/user-guide/quick-start/training-your-first-model)
-> section in the Geti™ documentation.
+> ["Training your first model"](https://docs.geti.intel.com/docs/user-guide/quick-start/training-your-first-model) section in the Geti™ documentation.
 > Full instructions and all options are available in [Geti™ documentation](https://docs.geti.intel.com/).
+>
+> Detailed installation guide is available in ["Installation guide"](https://docs.geti.intel.com/docs/user-guide/getting-started/installation/installation-guide)
 
 ## Quick start with `getitune`
 
@@ -124,10 +128,6 @@ uv pip install "getitune"
 # Or with pip
 pip install "getitune"
 ```
-
-> [!NOTE]
-> For advanced installation options, including hardware-specific PyTorch wheels,
-> see the [`getitune` README](library/README.md).
 
 Provide `getitune` with a dataset and fine-tune a model:
 
@@ -145,8 +145,8 @@ exported_path = engine.export()  # writes OpenVINO IR
 ```
 
 > [!NOTE]
-> See the [`getitune` README](library/README.md) for the full list of recipes, advanced configuration, dataset support
-> and inference/optimization examples.
+> See the [`getitune` README](library/README.md) for the full list of recipes, advanced configuration, dataset support,
+> inference/optimization examples, and hardware-specific PyTorch installation options.
 
 ## Key Features
 
@@ -302,7 +302,7 @@ Track how datasets and models evolve, link models to a specific dataset revision
 - [OpenVINO™](https://github.com/openvinotoolkit/openvino) - Software toolkit for optimizing and deploying deep learning models.
 - [OpenVINO™ Model Server](https://github.com/openvinotoolkit/model_server) - A scalable inference server for models optimized with OpenVINO™.
 - [Model API](https://github.com/open-edge-platform/model_api) - A set of wrapper classes for particular tasks and model architectures, simplifying data preprocess and postprocess as well as routine procedures.
-- [Physical AI Studio](https://github.com/open-edge-platform/physical-ai-studio) - An nd-to-end framework for teaching robots to perform tasks through imitation learning from human demonstrations.
+- [Physical AI Studio](https://github.com/open-edge-platform/physical-ai-studio) - An end-to-end framework for teaching robots to perform tasks through imitation learning from human demonstrations.
 
 ## Who uses Geti™?
 
