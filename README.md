@@ -37,21 +37,19 @@ Geti™ is an end-to-end Vision AI application that takes you from raw images to
 
 ## Quick start with Geti™
 
-Get Geti running and train your first model in a few minutes. For full instructions and all options, see the
-[official documentation](https://docs.geti.intel.com/) and the [application README](application/README.md).
-
-**Minimum recommended setup**
+Before you begin, make sure your machine meets the following requirements:
 
 | Component | Requirement                                             |
 | --------- | ------------------------------------------------------- |
 | CPU       | 8 threads                                               |
 | RAM       | 16 GB                                                   |
 | Disk      | 40 GB free                                              |
-| GPU       | Optional — Intel® XPU or NVIDIA® CUDA for larger models |
+| GPU       | Optional — Intel® XPU or NVIDIA® GPU for larger models  |
 
-## 1. Run Geti
+Geti can be installed as a **Windows application**, run as a **container**, or built **from source code**. Choose the option that best suits your environment below.
 
-### Windows Application
+<details>
+<summary>Windows Application</summary>
 
 Run Geti as a native Windows application, with prebuilt images for Intel® XPU, NVIDIA® CUDA, and CPU-only environments.
 
@@ -59,11 +57,14 @@ Download the Windows Installer:
 
 - [Download CPU-only version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cpu-3.0.0.msix)
 - [Download Intel® XPU version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-xpu-3.0.0.msix)
-- [Download Nvidia® CUDA version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cuda-3.0.0.msix)
+- [Download NVIDIA® CUDA version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cuda-3.0.0.msix)
 
 Install Geti Windows application and launch it from the Start menu.
 
-### Container image
+</details>
+
+<details>
+<summary>Container image</summary>
 
 Pull a pre-built image for your hardware and launch it:
 
@@ -83,32 +84,36 @@ Then open the Geti web application at [**http://localhost:7860**](http://localho
 For build-from-source options and advanced setup, see the [installation guide](https://docs.geti.intel.com/) and the
 [application README](application/README.md).
 
-### Install from souurce code
+</details>
 
-natively with Ultralytics YOLO26 models (the latest NMS‑free, edge‑optimized models (Nano / Small / Medium) for object detection and instance segmentation. The integration covers the full model lifecycle: training, inference, quantization, and OpenVINO™ model export)
+<details>
+<summary>Install from source code</summary>
 
-Linux, WSL (in order to run the script you need to have curl & git installed):
+Install Geti natively on Linux or WSL, including support for Ultralytics YOLO26 models — the latest NMS-free, edge-optimized models (Nano / Small / Medium) for object detection and instance segmentation. The integration covers the full model lifecycle: training, inference, quantization, and OpenVINO™ model export.
+
+Requires `curl` and `git`. Run the following on Linux or WSL:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/open-edge-platform/geti/develop/install.sh | bash
 ```
 
-## 2. Train your first model
+</details>
 
-Once Geti is running, build your first model directly in the web UI:
+Once Geti is up and running, follow the intuitive UI to train your first model.
 
-1. **Create a project** — choose a task (object detection, instance segmentation, or classification) and define your labels.
-2. **Upload media** — drag in 20–50 representative images to start.
-3. **Annotate** — label your media with the built-in manual and AI-assisted tools.
-4. **Train** — pick a recommended architecture and start training; watch progress in the Jobs panel.
-5. **Deploy** — build an inference pipeline (source → model → sink) and run predictions in real time, or export an
-   OpenVINO™-optimized bundle for the edge.
+<p align="center">
+  <img src="assets/application.gif" alt="Application demo" width="80%">
+</p>
 
-See [Training your first model](https://docs.geti.intel.com/) for the full walkthrough.
+> [!NOTE]
+> See the detailed step-by-step guidance on how to train your first model in
+> ["Training your first model"](https://docs.geti.intel.com/docs/user-guide/quick-start/training-your-first-model)
+> section in the Geti™ documentation.
+> Full instructions and all options are available in [Geti™ documentation](https://docs.geti.intel.com/).
 
 ## Quick start with `getitune`
 
-The Geti™ training engine is published on PyPI and can train, optimize, and deploy models.
+The Geti™ training engine `getitune` is published on PyPI and can train, optimize, and deploy models.
 
 To install `getitune`:
 
@@ -148,11 +153,7 @@ exported_path = engine.export()  # writes OpenVINO IR
 <details>
 <summary>🔄 Interactive end-to-end model training</summary>
 
-Geti™ enables users to start building deep-learning computer vision models with as few as 10-20 images and take them to production in one environment — annotate, train, optimize, run inference, and improve accuracy in a rapid train-predict-annotate loop.
-
-<p align="center">
-  <img src="assets/application.gif" alt="Application demo" width="80%">
-</p>
+Geti™ enables users to start building deep-learning computer vision models with as few as 10-20 images and take them to production in one environment - annotate, train, optimize, run inference, and improve accuracy in a rapid train-predict-annotate loop.
 
 </details>
 
