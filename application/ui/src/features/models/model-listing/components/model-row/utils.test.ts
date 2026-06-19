@@ -5,7 +5,13 @@ import { getMockedModel } from 'mocks/mock-model';
 import { describe, expect, it } from 'vitest';
 
 import type { Metric } from '../../../../../constants/shared-types';
-import { getFirstAvailableTestingMetric, getModelEvaluations, getTestingMetric, getTestingMetrics } from './utils';
+import {
+    getFirstAvailableTestingMetric,
+    getModelEvaluations,
+    getPerformanceColumnLabel,
+    getTestingMetric,
+    getTestingMetrics,
+} from './utils';
 
 const DATASET_REVISION_ID = '3c6c6d38-1cd8-4458-b759-b9880c048b78';
 const BASE_VARIANT = {
@@ -247,5 +253,77 @@ describe('getFirstAvailableTestingMetric', () => {
             name: 'mAP',
             value: 92,
         });
+    });
+});
+
+describe('getPerformanceColumnLabel', () => {
+    it('returns metric name when models have testing metrics', () => {
+        const modelWithMetric = getMockedModel({
+            variants: [
+                {
+                    ...BASE_VARIANT,
+                    id: 'variant-1',
+                    evaluations: [
+                        {
+                            dataset_revision_id: DATASET_REVISION_ID,
+                            subset: 'testing',
+                            metrics: [{ name: 'Accuracy', value: 0.93, primary: true }],
+                        },
+                    ],
+                },
+            ],
+        });
+
+        expect(getPerformanceColumnLabel([modelWithMetric], 'classification')).toBe('Accuracy');
+    });
+
+    it('returns "Accuracy" for classification task when models have no testing metrics', () => {
+        const modelWithoutMetric = getMockedModel({ variants: [] });
+
+        expect(getPerformanceColumnLabel([modelWithoutMetric], 'classification')).toBe('Accuracy');
+    });
+
+    it('returns "mAP" for detection task when models have no testing metrics', () => {
+        const modelWithoutMetric = getMockedModel({ variants: [] });
+
+        expect(getPerformanceColumnLabel([modelWithoutMetric], 'detection')).toBe('mAP');
+    });
+
+    it('returns "mAP" for instance_segmentation task when models have no testing metrics', () => {
+        const modelWithoutMetric = getMockedModel({ variants: [] });
+
+        expect(getPerformanceColumnLabel([modelWithoutMetric], 'instance_segmentation')).toBe('mAP');
+    });
+
+    it('returns "mAP" for null task type when models have no testing metrics', () => {
+        const modelWithoutMetric = getMockedModel({ variants: [] });
+
+        expect(getPerformanceColumnLabel([modelWithoutMetric], null)).toBe('mAP');
+    });
+
+    it('returns undefined model metric name over default task type metric', () => {
+        const modelWithMAPMetric = getMockedModel({
+            variants: [
+                {
+                    ...BASE_VARIANT,
+                    id: 'variant-1',
+                    evaluations: [
+                        {
+                            dataset_revision_id: DATASET_REVISION_ID,
+                            subset: 'testing',
+                            metrics: [{ name: 'mAP', value: 0.85, primary: true }],
+                        },
+                    ],
+                },
+            ],
+        });
+
+        // Even though task is classification (which defaults to Accuracy),
+        // if model has mAP metric, it should return mAP
+        expect(getPerformanceColumnLabel([modelWithMAPMetric], 'classification')).toBe('mAP');
+    });
+
+    it('handles undefined models array', () => {
+        expect(getPerformanceColumnLabel(undefined, 'classification')).toBe('Accuracy');
     });
 });

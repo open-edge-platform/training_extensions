@@ -23,7 +23,7 @@ The Geti™ applications aim to provide a user experience and design language co
 npm install
 ```
 
-The `preinstall` script clones `@geti/config`, `@geti/ui`, and `@geti/smart-tools` from the `open-edge-platform/geti` repository at a pinned commit using [`tiged`](https://github.com/tiged/tiged) (the maintained fork of Degit). These are workspace packages installed into `packages/` and are **gitignored** — never commit that directory.
+The `preinstall` script clones `@geti/config`, `@geti/ui`, and `@geti/smart-tools` from the `open-edge-platform/geti_v2` repository at a pinned commit using [`tiged`](https://github.com/tiged/tiged) (the maintained fork of Degit). These are workspace packages installed into `packages/` and are **gitignored** — never commit that directory.
 
 ### Development
 

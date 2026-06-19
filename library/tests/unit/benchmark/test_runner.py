@@ -106,7 +106,7 @@ class TestDetectResumePoint:
         # Create all markers
         (seed_dir / "train").mkdir(parents=True)
         (seed_dir / "train" / "metrics.csv").write_text("epoch,val/f1\n1,0.5\n")
-        (seed_dir / "train" / "best_checkpoint.ckpt").write_text("fake")
+        (seed_dir / "train" / "best_checkpoint.pt").write_text("fake")
         (seed_dir / "test" / "torch").mkdir(parents=True)
         (seed_dir / "test" / "torch" / "result.json").write_text("{}")
         (seed_dir / "export").mkdir(parents=True)
@@ -126,7 +126,7 @@ class TestDetectResumePoint:
         seed_dir = tmp_path / "exp" / "0"
         (seed_dir / "train").mkdir(parents=True)
         (seed_dir / "train" / "metrics.csv").write_text("epoch,val/f1\n1,0.5\n")
-        (seed_dir / "train" / "best_checkpoint.ckpt").write_text("fake")
+        (seed_dir / "train" / "best_checkpoint.pt").write_text("fake")
         (seed_dir / "test" / "torch").mkdir(parents=True)
         (seed_dir / "test" / "torch" / "result.json").write_text("{}")
         # export not done
