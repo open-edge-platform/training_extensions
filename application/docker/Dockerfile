@@ -1,4 +1,6 @@
 # syntax=docker/dockerfile:1.7
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
 ##############
 # Backend base

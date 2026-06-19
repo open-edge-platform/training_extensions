@@ -10,23 +10,23 @@
 security.md @open-edge-platform/geti-ci-maintain
 
 # Library (getitune)
-library/ @open-edge-platform/training_extensions-lib-write
-library/uv.lock @sys-geti @open-edge-platform/training_extensions-lib-write
+library/ @open-edge-platform/geti-lib-write
+library/uv.lock @sys-geti @open-edge-platform/geti-lib-write
 
 # Application backend
-application/backend/ @open-edge-platform/training_extensions-backend-write
-application/backend/uv.lock @sys-geti @open-edge-platform/training_extensions-backend-write
+application/backend/ @open-edge-platform/geti-backend-write
+application/backend/uv.lock @sys-geti @open-edge-platform/geti-backend-write
 
 # Application frontend
-application/ui/ @open-edge-platform/training_extensions-ui-write
-application/ui/src-tauri/Cargo.lock @sys-geti @open-edge-platform/training_extensions-ui-write
+application/ui/ @open-edge-platform/geti-ui-write
+application/ui/src-tauri/Cargo.lock @sys-geti @open-edge-platform/geti-ui-write
 
 # Application build and deployment
-application/docker/ @open-edge-platform/training_extensions-backend-write
-application/docker/Dockerfile @sys-geti @open-edge-platform/training_extensions-backend-write
+application/docker/ @open-edge-platform/geti-backend-write
+application/docker/Dockerfile @sys-geti @open-edge-platform/geti-backend-write
 
 # Application documentation
-application/docs/ @leoll2 @jpggvilaca
+application/docs/ @leoll2 @jpggvilaca @yvolokitin
 
 # Model manifests
 application/backend/app/supported_models/manifests/ @leoll2 @kprokofi

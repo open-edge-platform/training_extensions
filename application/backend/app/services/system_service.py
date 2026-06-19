@@ -109,13 +109,16 @@ class SystemService:
     @staticmethod
     def get_inference_devices() -> list[DeviceInfo]:
         """
-        Get available compute devices for inference (CPU, XPU, ...).
+        Get available compute devices for inference (CPU and integrated GPUs only).
 
         Unlike training (which relies on PyTorch), inference is performed via OpenVINO, so devices are listed using
         OpenVINO's `core.available_devices` API.
 
         OpenVINO returns device names such as 'CPU', 'GPU', 'GPU.0', 'GPU.1', ... Per the OpenVINO documentation,
         when an integrated GPU is present it always takes id 0, and 'GPU' is an alias for 'GPU.0'.
+
+        Only CPU and integrated GPUs (iGPUs) are returned; discrete GPUs (dGPUs) are intentionally excluded.
+        The integrated vs. discrete distinction is made using OpenVINO's `DEVICE_TYPE` property.
 
         Returns:
             list[DeviceInfo]: List of available inference devices.
@@ -135,6 +138,15 @@ class SystemService:
                 if ov_device == "CPU":
                     devices.append(DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None))
                 elif ov_device.startswith("GPU"):
+                    # Only integrated GPUs (iGPUs) are supported for inference; skip discrete GPUs (dGPUs).
+                    try:
+                        device_type = core.get_property(ov_device, "DEVICE_TYPE")
+                    except Exception:
+                        logger.exception("Failed to query DEVICE_TYPE for OpenVINO device '{}'; skipping.", ov_device)
+                        continue
+                    if "integrated" not in str(device_type).lower():
+                        logger.debug("Skipping non-integrated OpenVINO GPU device: {}", ov_device)
+                        continue
                     index = 0 if ov_device == "GPU" else int(ov_device.split(".", 1)[1])
                     name = core.get_property(ov_device, "FULL_DEVICE_NAME")
                     try:

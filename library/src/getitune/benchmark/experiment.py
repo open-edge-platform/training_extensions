@@ -12,9 +12,16 @@ import time
 import traceback as _traceback
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
+import yaml
+
+from getitune.types.task import TaskType
+
+if TYPE_CHECKING:
+    from getitune.engine.engine import Engine
+    from getitune.metrics import MetricCallable
 
 logger = logging.getLogger(__name__)
 
@@ -168,8 +175,8 @@ def detect_resume_point(seed_dir: Path) -> tuple[bool, str | None]:
             shutil.rmtree(seed_dir)
         return False, None
 
-    checkpoint = seed_dir / "train" / "best_checkpoint.ckpt"
-    if not checkpoint.exists():
+    checkpoint_exists = (seed_dir / "train" / "best_checkpoint.pt").exists()
+    if not checkpoint_exists:
         # metrics exist but checkpoint missing -> corrupt
         shutil.rmtree(seed_dir)
         return False, None
@@ -277,6 +284,85 @@ def _get_peak_gpu_memory_mb() -> float:
     return 0.0
 
 
+def _count_test_samples(engine: Engine) -> int:
+    """Return the number of test samples for *engine*'s datamodule (>= 1).
+
+    The engine's ``datamodule`` may be a :class:`DataModule` (exposing
+    ``subsets``) or a filesystem path (Ultralytics data-root mode). Falls back
+    to ``1`` when the count cannot be determined so latency math stays safe.
+    """
+    datamodule = engine.datamodule
+    subsets = getattr(datamodule, "subsets", None)
+    if isinstance(subsets, dict):
+        return max(len(subsets.get("test", [])), 1)
+    return 1
+
+
+# ---------------------------------------------------------------------------
+# Ultralytics backend helpers
+# ---------------------------------------------------------------------------
+
+
+def _recipe_backend(recipe_path: Path) -> tuple[str, TaskType | None]:
+    """Inspect a recipe and return ``(backend, task_type)``.
+
+    ``backend`` is ``"ultralytics"`` when the recipe declares
+    ``backend: ultralytics``, otherwise ``"lightning"``.  ``task_type`` is the
+    parsed :class:`TaskType` for ultralytics recipes (read from the ``task``
+    field) and ``None`` for the Lightning path.
+    """
+    try:
+        with recipe_path.open(encoding="utf-8") as fh:
+            raw = yaml.safe_load(fh)
+    except (OSError, yaml.YAMLError) as exc:
+        msg = f"Could not load recipe {recipe_path}: {exc}"
+        raise ValueError(msg) from exc
+    if isinstance(raw, dict) and raw.get("backend") == "ultralytics":
+        task_raw = raw.get("task")
+        task_type = TaskType(task_raw) if task_raw else None
+        return "ultralytics", task_type
+    return "lightning", None
+
+
+def _ultralytics_torch_metric(task_type: TaskType | None) -> MetricCallable | None:
+    """Return the torchmetrics callable Lightning uses for *task_type*.
+
+    Driving the Ultralytics engine's torchmetrics evaluation path with the same
+    callable keeps the produced metric names (e.g. ``test/map_50``,
+    ``test/f1-score``) comparable across backends.
+    """
+    from getitune.metrics.fmeasure import (
+        MaskRLEMeanAPFMeasureCallable,
+        MeanAveragePrecisionFMeasureCallable,
+    )
+
+    return {
+        TaskType.DETECTION: MeanAveragePrecisionFMeasureCallable,
+        TaskType.INSTANCE_SEGMENTATION: MaskRLEMeanAPFMeasureCallable,
+    }.get(task_type)  # type: ignore[arg-type]
+
+
+def _write_phase_metrics_csv(work_dir: Path, metrics: dict[str, Any] | None) -> None:
+    """Persist a flat metric dict as ``<work_dir>/csv/version_0/metrics.csv``.
+
+    The Ultralytics engine returns metrics from ``test()`` but, unlike
+    Lightning's ``CSVLogger``, does not write them to disk.  Writing them to the
+    same path Lightning uses lets the existing scraping logic find them.
+    """
+    if not metrics:
+        return
+    scalar_metrics = {
+        key: (value.item() if hasattr(value, "item") else value)
+        for key, value in metrics.items()
+        if isinstance(value, (int, float)) or hasattr(value, "item")
+    }
+    if not scalar_metrics:
+        return
+    csv_dir = work_dir / "csv" / "version_0"
+    csv_dir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame([scalar_metrics]).to_csv(csv_dir / "metrics.csv", index=False)
+
+
 # ---------------------------------------------------------------------------
 # Executor
 # ---------------------------------------------------------------------------
@@ -312,26 +398,81 @@ class ExperimentExecutor:
         self.seed = seed
         self.deterministic = deterministic
         self.max_epochs = max_epochs
+        self._backend, self._task_type = _recipe_backend(recipe_path)
+
+    @property
+    def is_ultralytics(self) -> bool:
+        """Whether this experiment's recipe uses the Ultralytics backend."""
+        return self._backend == "ultralytics"
+
+    @property
+    def _checkpoint_name(self) -> str:
+        """Trained-checkpoint filename written by the engine after training."""
+        return "best_checkpoint.pt"
+
+    def _build_torch_engine(self, work_dir: Path) -> Engine:
+        """Build the torch-side engine (Lightning or Ultralytics) for *work_dir*.
+
+        The Ultralytics path mirrors the application's getitune trainer: it
+        builds a model + datamodule from the recipe and dispatches them through
+        the library's ``create_engine`` factory.
+        """
+        if self.is_ultralytics:
+            from getitune.backend.ultralytics.tools.configurator import Configurator
+            from getitune.engine import create_engine
+
+            configurator = Configurator(
+                data=self.data_path,
+                model=self.recipe_path,
+                task=self._task_type,
+            )
+            if self.scenario_overrides:
+                try:
+                    configurator.apply_overrides(self.scenario_overrides)
+                except (KeyError, ValueError, TypeError):
+                    logger.warning(
+                        "Could not apply scenario overrides %s to Ultralytics recipe %s; ignoring.",
+                        self.scenario_overrides,
+                        self.recipe_path,
+                    )
+            datamodule = configurator.build_datamodule()
+            model: Any = configurator.create_model(datamodule.label_info)
+            return create_engine(
+                model=model,
+                data=datamodule,
+                work_dir=work_dir,
+                device=self.accelerator,
+                train_args=configurator.training,
+                export_args={
+                    "confidence_threshold": configurator.export.get("confidence_threshold", 0.25),
+                    "iou_threshold": configurator.export.get("iou_threshold", 0.5),
+                },
+            )
+
+        from getitune.backend.lightning.engine import LightningEngine
+
+        overrides = resolve_overrides(self.scenario_overrides)
+        return LightningEngine.from_config(
+            config_path=self.recipe_path,
+            data_root=self.data_path,
+            work_dir=work_dir,
+            device=self.accelerator,
+            **overrides,
+        )
 
     # -- phases ------------------------------------------------------------
 
     def train(self) -> PhaseResult:
         """Train the model and return scraped metrics."""
-        from getitune.backend.lightning.engine import LightningEngine
+        engine = self._build_torch_engine(self.work_dir / "train")
 
-        overrides = resolve_overrides(self.scenario_overrides)
-        engine = LightningEngine.from_config(
-            config_path=self.recipe_path,
-            data=self.data_path,
-            work_dir=self.work_dir / "train",
-            device=self.accelerator,
-            **overrides,
-        )
-
-        kwargs: dict[str, Any] = {
-            "seed": self.seed,
-            "deterministic": self.deterministic,
-        }
+        kwargs: dict[str, Any] = {"seed": self.seed}
+        # The Ultralytics trainer expects a boolean ``deterministic``; coerce the
+        # Lightning-style "warn" sentinel away for that backend.
+        deterministic = self.deterministic
+        if self.is_ultralytics and not isinstance(deterministic, bool):
+            deterministic = False
+        kwargs["deterministic"] = deterministic
         if self.max_epochs is not None and self.max_epochs > 0:
             kwargs["max_epochs"] = self.max_epochs
         kwargs.update(self.extra_train_kwargs)
@@ -340,7 +481,7 @@ class ExperimentExecutor:
         engine.train(**kwargs)
         wall = time.monotonic() - start
 
-        # Scrape metrics from the CSV that Lightning writes
+        # Scrape metrics from the CSV that the engine writes
         csv_path = _find_csv_metrics(self.work_dir / "train")
         csv_metrics = _scrape_csv_metrics(csv_path, prefix="training:") if csv_path else {}
         csv_metrics["training:e2e_time"] = wall
@@ -351,23 +492,27 @@ class ExperimentExecutor:
 
     def test_torch(self) -> PhaseResult:
         """Test the PyTorch checkpoint and return metrics."""
-        from getitune.backend.lightning.engine import LightningEngine
+        engine = self._build_torch_engine(self.work_dir / "test" / "torch")
+        ckpt = self.work_dir / "train" / self._checkpoint_name
 
-        overrides = resolve_overrides(self.scenario_overrides)
-        engine = LightningEngine.from_config(
-            config_path=self.recipe_path,
-            data=self.data_path,
-            work_dir=self.work_dir / "test" / "torch",
-            device=self.accelerator,
-            **overrides,
-        )
-        ckpt = self.work_dir / "train" / "best_checkpoint.ckpt"
+        test_kwargs: dict[str, Any] = {}
+        if self.is_ultralytics:
+            # Drive the shared torchmetrics evaluation path so metric names match
+            # the Lightning backend (e.g. test/map_50, test/f1-score).
+            metric_callable = _ultralytics_torch_metric(self._task_type)
+            if metric_callable is not None:
+                test_kwargs["metric"] = metric_callable
 
         start = time.monotonic()
-        engine.test(checkpoint=ckpt)
+        metrics = engine.test(checkpoint=ckpt, **test_kwargs)
         wall = time.monotonic() - start
 
-        num_samples = max(len(engine.datamodule.subsets.get("test", [])), 1)
+        # The Ultralytics engine returns metrics without writing a metrics.csv;
+        # persist them where the scraper looks so both backends behave the same.
+        if self.is_ultralytics:
+            _write_phase_metrics_csv(Path(engine.work_dir), metrics)
+
+        num_samples = _count_test_samples(engine)
         latency = wall / num_samples
 
         csv_path = _find_csv_metrics(Path(engine.work_dir))
@@ -385,17 +530,8 @@ class ExperimentExecutor:
 
     def export(self) -> PhaseResult:
         """Export the trained model to OpenVINO IR."""
-        from getitune.backend.lightning.engine import LightningEngine
-
-        overrides = resolve_overrides(self.scenario_overrides)
-        engine = LightningEngine.from_config(
-            config_path=self.recipe_path,
-            data=self.data_path,
-            work_dir=self.work_dir / "export",
-            device=self.accelerator,
-            **overrides,
-        )
-        ckpt = self.work_dir / "train" / "best_checkpoint.ckpt"
+        engine = self._build_torch_engine(self.work_dir / "export")
+        ckpt = self.work_dir / "train" / self._checkpoint_name
 
         start = time.monotonic()
         engine.export(checkpoint=ckpt)
@@ -419,7 +555,7 @@ class ExperimentExecutor:
         engine.test(checkpoint=exported)
         wall = time.monotonic() - start
 
-        num_samples = max(len(engine.datamodule.subsets.get("test", [])), 1)
+        num_samples = _count_test_samples(engine)
         latency = wall / num_samples
 
         csv_path = _find_csv_metrics(Path(engine.work_dir))
@@ -471,7 +607,7 @@ class ExperimentExecutor:
         engine.test(checkpoint=optimized)
         wall = time.monotonic() - start
 
-        num_samples = max(len(engine.datamodule.subsets.get("test", [])), 1)
+        num_samples = _count_test_samples(engine)
         latency = wall / num_samples
 
         csv_path = _find_csv_metrics(Path(engine.work_dir))

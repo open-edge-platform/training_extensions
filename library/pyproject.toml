@@ -67,7 +67,6 @@ dev = [
     "pytest-stress",
     "pytest-html",
     "coverage",
-    "pytest-csv",
     "pytest-timeout",
     "pytest-mock",
     "pytest-forked",

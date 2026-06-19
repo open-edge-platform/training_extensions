@@ -130,6 +130,15 @@ experiments:
       - name: deimv2_s
         priority: extended
         recipe: detection/deimv2_s.yaml
+      - name: yolo26_n
+        priority: extended
+        recipe: detection/yolo26_n.yaml
+      - name: yolo26_s
+        priority: extended
+        recipe: detection/yolo26_s.yaml
+      - name: yolo26_m
+        priority: extended
+        recipe: detection/yolo26_m.yaml
     datasets:
       - bccd
     criteria:
@@ -201,6 +210,15 @@ experiments:
       - name: rfdetr_seg_large
         priority: extended
         recipe: instance_segmentation/rfdetr_seg_large.yaml
+      - name: yolo26_n_seg
+        priority: extended
+        recipe: instance_segmentation/yolo26_n_seg.yaml
+      - name: yolo26_s_seg
+        priority: extended
+        recipe: instance_segmentation/yolo26_s_seg.yaml
+      - name: yolo26_m_seg
+        priority: extended
+        recipe: instance_segmentation/yolo26_m_seg.yaml
     datasets:
       - wgisd
     criteria:
