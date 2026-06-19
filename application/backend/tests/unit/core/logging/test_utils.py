@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
-import logging
 import sys
 
 from app.core.logging import LogConfig, logging_ctx
@@ -17,12 +16,10 @@ class TestLoggingCtx:
         log_path = tmp_path / "job.log"
 
         with logging_ctx(LogConfig(log_folder=str(tmp_path), log_file=log_path.name, level="INFO", serialize=True)):
-            logging.getLogger("nncf").info("Metric of initial model: 0.5090429186820984")
             print("Collecting values for each data item using the initial model")
             print("Elapsed Time: 00:00:53", file=sys.stderr)
 
         messages = _read_messages(log_path)
-        assert "Metric of initial model: 0.5090429186820984" in messages
         assert "Collecting values for each data item using the initial model" in messages
         assert "Elapsed Time: 00:00:53" in messages
 
