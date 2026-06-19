@@ -20,7 +20,7 @@ type MediaItemActionsProps = {
     id: string;
     mediaUrl: string;
     mediaFileName: string;
-    onDeleted: (deletedIds: string[]) => void;
+    onDeleted?: (deletedIds: string[]) => void;
     onAnnotate: () => void;
 };
 
