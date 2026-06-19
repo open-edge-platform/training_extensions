@@ -11,6 +11,7 @@ import inspect
 import logging
 import multiprocessing
 import os
+import shutil
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -309,18 +310,8 @@ class LightningEngine(Engine):
             msg = "self.checkpoint should be Path or str at this time."
             raise TypeError(msg)
 
-        best_checkpoint_symlink = Path(self.work_dir) / "best_checkpoint.pt"
-        if best_checkpoint_symlink.is_symlink() and best_checkpoint_symlink.exists():
-            best_checkpoint_symlink.unlink()
-        try:
-            best_checkpoint_symlink.symlink_to(self.checkpoint)
-        except OSError:
-            # Symlink creation may fail on Windows when the process lacks
-            # SeCreateSymbolicLinkPrivilege (e.g. frozen PyInstaller apps
-            # running without admin rights).  Fall back to a regular copy.
-            import shutil
-
-            shutil.copy2(self.checkpoint, best_checkpoint_symlink)
+        best_checkpoint = Path(self.work_dir) / "best_checkpoint.pt"
+        shutil.copy2(self.checkpoint, best_checkpoint)
 
         return self._build_train_metrics()
 

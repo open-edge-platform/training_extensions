@@ -718,7 +718,7 @@ class UltralyticsEngine(Engine):
         if not checkpoint_text:
             return None
 
-        checkpoint = Path(checkpoint_text).resolve()
+        checkpoint = Path(checkpoint_text)
         if checkpoint.exists():
             return checkpoint
 
@@ -740,11 +740,15 @@ class UltralyticsEngine(Engine):
 
         # Copy to a canonical path so the public API never exposes
         # Ultralytics-internal directory structure (train/weights/best.pt).
+        # Unlink any pre-existing symlink so copyfile writes a real file
+        # instead of following the symlink and overwriting its target.
         canonical_path = self._work_dir / "best_checkpoint.pt"
+        if canonical_path.is_symlink():
+            canonical_path.unlink()
         shutil.copyfile(checkpoint, canonical_path)
 
-        self._last_train_checkpoint = canonical_path.resolve()
-        checkpoint_file.write_text(str(self._last_train_checkpoint), encoding="utf-8")
+        self._last_train_checkpoint = canonical_path
+        checkpoint_file.write_text(str(canonical_path), encoding="utf-8")
 
     def _remap_results_csv(self) -> None:
         """Rename columns in the Ultralytics ``results.csv`` to standard metric names.
