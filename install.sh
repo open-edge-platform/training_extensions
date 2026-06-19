@@ -19,7 +19,7 @@ cleanup() {
 trap 'cleanup $LINENO' ERR
 trap 'echo ""; echo "Installation interrupted."; exit 130' INT TERM
 
-GIT_URL="https://github.com/open-edge-platform/training_extensions.git"
+GIT_URL="https://github.com/open-edge-platform/geti.git"
 GIT_BRANCH="nightly-2026.06.17"
 
 usage() {
