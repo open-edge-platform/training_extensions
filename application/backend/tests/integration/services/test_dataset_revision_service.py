@@ -588,6 +588,47 @@ class TestDatasetRevisionServiceIntegration:
 
         assert latest_revision is None
 
+    def test_get_latest_uptodate_dataset_revision_after_subset_assignment_same_second(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[tuple[MediaDB, DatasetItemDB]]],
+    ) -> None:
+        """Regression test for dataset duplication after training.
+
+        Reproduces the scenario where unassigned items get a subset assigned right before a dataset revision is
+        saved (as happens during training when annotations are filled in after import). The item's `updated_at` is
+        stored with microsecond precision, while the revision's `created_at` was previously stored with
+        whole-second precision (SQLite CURRENT_TIMESTAMP), truncated down. When both happen within the same second,
+        the freshly saved revision was wrongly considered stale, causing a duplicate dataset on the next training.
+        """
+        project, media_and_dataset_items = fxt_project_with_subset_items_on_disk
+
+        # Assign a subset to a previously-unassigned item; this bumps its `updated_at` to "now".
+        dataset_item = next(
+            ds_item
+            for _, ds_item in media_and_dataset_items
+            if ds_item.subset == DatasetItemSubset.UNASSIGNED.name.lower()
+        )
+        fxt_dataset_service.assign_dataset_item_subset(
+            project_id=project.id, dataset_item_id=UUID(dataset_item.id), subset=DatasetItemSubset.TRAINING
+        )
+
+        # Save a revision immediately afterwards (same wall-clock second as the subset assignment).
+        dataset = fxt_dataset_service.get_dm_dataset(
+            project.id, project.task, DatasetItemAnnotationStatus.WITH_ANNOTATIONS, SampleMode.TRAINING
+        )
+        revision_id = fxt_dataset_revision_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+
+        # The just-created revision must be recognized as up to date (no duplicate would be created on next training).
+        latest_revision = fxt_dataset_revision_service.get_latest_uptodate_dataset_revision(project_id=project.id)
+
+        assert latest_revision is not None
+        assert latest_revision.id == revision_id
+
     def test_get_dataset_revision_not_found(
         self,
         fxt_dataset_revision_service: DatasetRevisionService,
