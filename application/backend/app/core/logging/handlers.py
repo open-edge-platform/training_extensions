@@ -39,14 +39,24 @@ class LoggerStdoutWriter:
         self._buffer: list[str] = []
 
     def write(self, msg: str) -> int:
-        for char in msg:
+        i = 0
+        while i < len(msg):
+            char = msg[i]
             if char == "\r":
+                # Treat CRLF as a normal newline; only clear for in-line progress updates.
+                if i + 1 < len(msg) and msg[i + 1] == "\n":
+                    self._emit_buffer()
+                    i += 2
+                    continue
                 self._buffer.clear()
+                i += 1
                 continue
             if char == "\n":
                 self._emit_buffer()
+                i += 1
                 continue
             self._buffer.append(char)
+            i += 1
         return len(msg)
 
     def flush(self) -> None:
