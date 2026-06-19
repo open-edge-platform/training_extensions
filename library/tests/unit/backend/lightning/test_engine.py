@@ -68,7 +68,7 @@ class TestEngine:
         assert engine._model.label_info.num_classes == 4321
 
     def test_training_with_override_args(self, fxt_engine, mocker) -> None:
-        mocker.patch("pathlib.Path.symlink_to")
+        mocker.patch("getitune.backend.lightning.engine.shutil.copy2")
         mocker.patch("getitune.backend.lightning.engine.Trainer.fit")
         mock_seed_everything = mocker.patch("getitune.backend.lightning.engine.seed_everything")
 
@@ -237,7 +237,7 @@ class TestEngine:
     def test_from_config(self, tmp_path, mocker) -> None:
         recipe_path = "src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
         data_root = "tests/assets/classification_cifar10"
-        mocker.patch("pathlib.Path.symlink_to")
+        mocker.patch("getitune.backend.lightning.engine.shutil.copy2")
         mocker.patch("getitune.backend.lightning.engine.Trainer.fit")
 
         overriding = {
