@@ -25,9 +25,24 @@ import { getDatasetRevisionThumbnailUrl } from '../../../../shared/media-url.uti
 import { datasetRevisionItemToMedia } from './utils';
 
 const VIEW_MODE_SETTINGS: Record<GalleryViewMode, GridLayoutOptions> = {
-    [ViewModes.LARGE]: { minItemSize: new Size(180, 180), minSpace: new Size(6, 6), preserveAspectRatio: true },
-    [ViewModes.MEDIUM]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
-    [ViewModes.SMALL]: { minItemSize: new Size(80, 80), minSpace: new Size(4, 4), preserveAspectRatio: true },
+    [ViewModes.LARGE]: {
+        minItemSize: new Size(180, 180),
+        maxItemSize: new Size(180, 180),
+        minSpace: new Size(6, 6),
+        preserveAspectRatio: true,
+    },
+    [ViewModes.MEDIUM]: {
+        minItemSize: new Size(120, 120),
+        maxItemSize: new Size(120, 120),
+        minSpace: new Size(4, 4),
+        preserveAspectRatio: true,
+    },
+    [ViewModes.SMALL]: {
+        minItemSize: new Size(80, 80),
+        maxItemSize: new Size(80, 80),
+        minSpace: new Size(4, 4),
+        preserveAspectRatio: true,
+    },
 };
 
 type SubsetGalleryProps = {
