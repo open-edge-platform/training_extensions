@@ -146,7 +146,13 @@ class SystemService:
                     except Exception:
                         logger.exception("Failed to query DEVICE_TYPE for OpenVINO device '{}'; skipping.", ov_device)
                         continue
-                    name = core.get_property(ov_device, "FULL_DEVICE_NAME")
+                    try:
+                        name = core.get_property(ov_device, "FULL_DEVICE_NAME")
+                    except Exception:
+                        logger.exception(
+                            "Failed to query FULL_DEVICE_NAME for OpenVINO device '{}'; skipping.", ov_device
+                        )
+                        continue
                     is_integrated = "integrated" in str(device_type).lower()
                     is_intel = "intel" in str(name).lower()
                     if not (is_integrated or is_intel):
