@@ -331,7 +331,7 @@ For those who would like to contribute, see [Contributing guide](CONTRIBUTING.md
 </p>
 
 <a href="https://github.com/open-edge-platform/geti/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=open-edge-platform/training_extensions" alt="Contributors" />
+  <img src="https://contrib.rocks/image?repo=open-edge-platform/geti" alt="Contributors" />
 </a>
 
 ## License
