@@ -116,56 +116,68 @@ Once Geti is up and running, follow the intuitive UI to train your first model.
 
 ## Quick start with `getitune`
 
-The Geti™ training engine `getitune` is published on PyPI and can train, optimize, and deploy models.
-
-To install `getitune`:
+Prefer to work programmatically? Geti's training engine is published on PyPI and can train, optimize, and deploy models
+from Python. It requires **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, and **NumPy ≥ 2.0**.
 
 ```bash
-# With uv (recommended)
-uv pip install "getitune"
-
-# Or with pip
-pip install "getitune"
+uv pip install "getitune[xpu]" --extra-index-url https://download.pytorch.org/whl/xpu    # for Intel® XPU acceleration
+uv pip install "getitune[cuda]" --extra-index-url https://download.pytorch.org/whl/cu128    # for NVIDIA® CUDA acceleration
+uv pip install getitune # CPU-only by default
 ```
 
-Provide `getitune` with a dataset and fine-tune a model:
+> ⚠️ **Ultralytics YOLO Models**: The PyPI package does **not** include Ultralytics YOLO26 models. Install from source to use them:
+>
+> ```bash
+> git clone https://github.com/open-edge-platform/training_extensions.git
+> cd training_extensions/library
+> uv sync --extra xpu --extra ultralytics                              # Intel GPU + YOLO
+> uv sync --extra cuda --extra ultralytics                             # NVIDIA GPU + YOLO
+> uv sync --extra cpu --extra ultralytics                              # CPU + YOLO
+> ```
+>
+> See the [library README](library/README.md#installation) for more details.
 
-```Python
-from getitune.utils import list_models
+**Discover available models and train a model in just a few lines of code:**
+
+```python
 from getitune.engine import create_engine
-from getitune.types import ExportFormat, ExportPrecision
+from getitune.utils import list_models
 
-# List all available models names
-all_models = list_models()
+# Explore available models for your task
+all_models = list_models()                    # List all model names
+detection_models = list_models(task="DETECTION")  # Filter by task
+recipes = list_models(return_recipes=True)    # Get full recipe YAML paths
 
-# create Engine
+# Create an engine using any model name or recipe path
 engine = create_engine(
-    model="efficientnet_b0",
-    data="/path/to/dataset",
-    work_dir="./my_workspace",
+    model="efficientnet_b0",                  # model name, recipe YAML path, or exported IR/ONNX
+    data="/path/to/dataset",                  # dataset directory or YAML path
+    work_dir="./my_workspace",                # checkpoints and logs directory
+    device="auto",                            # "auto", "cpu", "gpu", "xpu".
 )
 
-# train a model
-engine.train()
+# Train and validate
+engine.train(max_epochs=50)
+metrics = engine.test()
 
-# Export to FP32 OpenVINO IR (default)
-ov_ir_path = engine.export()
+# Export to OpenVINO IR (default) for deployment
+exported_model_path = engine.export()
 
-# validate engine 
-ov_engine = create_engine(
-    model="/path/to/exported_model.xml",
-    data="/path/to/dataset",
-)
-ov_engine.test() # test on test subset
-ov_engine.predict() # predict on test subset
+# load exported OpenVINO model
+ov_engine = create_engine(model=exported_model_path, data=engine.datamodule)
 
-# optimize a model to int8 quantized version via NNCF tool
-ov_engine.optimize()
+# optimize the model for edge deployment
+optimized_model_path = ov_engine.optimize()
+
+# test the optimized model
+metrics = ov_engine.test()
+
+# predict with the optimized model
+predictions = ov_engine.predict()
 ```
 
-> [!NOTE]
-> See the [`getitune` README](library/README.md) for the full list of recipes, advanced configuration, dataset support,
-> inference/optimization examples, and hardware-specific PyTorch installation options.
+See the [library README](library/README.md) for the full list of recipes, advanced configuration, dataset support,
+backend-specific options, and deployment/optimization examples.
 
 ## Key Features
 
@@ -335,124 +347,6 @@ Geti™ is a powerful tool to build vision models for a wide range of processes,
 - [ASRock Industrial](https://www.asrockind.com/en-gb/article/176)
 - [PeopleSense.AI](https://community.intel.com/t5/Blogs/Tech-Innovation/Artificial-Intelligence-AI/Intel-Liftoff-Days-2024-Highlights-from-the-Third-Edition/post/1661265)
 - [Capgemini](https://www.capgemini.com/insights/expert-perspectives/capgemini-and-intel-corporation-redefining-the-future-of-robotics-and-physical-ai/)
-
-## Quick Start
-
-### 1. Install Geti™
-
-Geti™ ships as a Docker image optimized for each supported hardware target. Use the provided <code>install.sh</code> script for a one-command setup:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/open-edge-platform/training_extensions/develop/install.sh | bash
-```
-
-The script auto-detects your hardware and pulls the appropriate Docker image. For manual installation and alternative methods (Python Desktop, Docker Compose, Windows), see the [installation guide](https://docs.geti.intel.com/).
-
-#### Docker
-
-Pull a pre-built image for your hardware and launch it:
-
-```bash
-docker pull ghcr.io/open-edge-platform/geti-xpu    # modern Intel® CPU/GPU (recommended)
-docker pull ghcr.io/open-edge-platform/geti-cuda   # NVIDIA® CUDA platforms
-docker pull ghcr.io/open-edge-platform/geti-cpu    # CPU-only (most lightweight)
-
-# Retag the pulled image as `geti-{cpu,xpu,cuda}:latest` for using with `just run-image`
-docker tag ghcr.io/open-edge-platform/geti-cpu:latest geti-cpu:latest
-
-just run-image --accelerator xpu                   # launch the application
-```
-
-Then open the Geti web application at [**http://localhost:7860**](http://localhost:7860).
-
-For build-from-source options and advanced setup, see the [installation guide](https://docs.geti.intel.com/) and the
-[application README](application/README.md).
-
-#### Install natively with Ultralytics YOLO26 models (the latest NMS‑free, edge‑optimized models (Nano / Small / Medium) for object detection and instance segmentation. The integration covers the full model lifecycle: training, inference, quantization, and OpenVINO™ model export
-
-Linux, WSL (In order to run a script you need to have curl & git installed):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/open-edge-platform/training_extensions/develop/install.sh | bash
-```
-
-### 2. Train your first model
-
-Once Geti is running, build your first model directly in the web UI:
-
-1. **Create a project** — choose a task (object detection, instance segmentation, or classification) and define your labels.
-2. **Upload media** — drag in 20–50 representative images to start.
-3. **Annotate** — label your media with the built-in manual and AI-assisted tools.
-4. **Train** — pick a recommended architecture and start training; watch progress in the Jobs panel.
-5. **Deploy** — build an inference pipeline (source → model → sink) and run predictions in real time, or export an
-   OpenVINO™-optimized bundle for the edge.
-
-See [Training your first model](https://docs.geti.intel.com/) for the full walkthrough.
-
-### Use the Geti Library (`getitune`)
-
-Prefer to work programmatically? Geti's training engine is published on PyPI and can train, optimize, and deploy models
-from Python. It requires **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, and **NumPy ≥ 2.0**.
-
-```bash
-uv pip install "getitune[xpu]" --extra-index-url https://download.pytorch.org/whl/xpu    # for Intel® XPU acceleration
-uv pip install "getitune[cuda]" --extra-index-url https://download.pytorch.org/whl/cu128    # for NVIDIA® CUDA acceleration
-uv pip install getitune # CPU-only by default
-```
-
-> ⚠️ **Ultralytics YOLO Models**: The PyPI package does **not** include Ultralytics YOLO26 models. Install from source to use them:
->
-> ```bash
-> git clone https://github.com/open-edge-platform/training_extensions.git
-> cd training_extensions/library
-> uv sync --extra xpu --extra ultralytics                              # Intel GPU + YOLO
-> uv sync --extra cuda --extra ultralytics                             # NVIDIA GPU + YOLO
-> uv sync --extra cpu --extra ultralytics                              # CPU + YOLO
-> ```
->
-> See the [library README](library/README.md#installation) for more details.
-
-**Discover available models and train a model in just a few lines of code:**
-
-```python
-from getitune.engine import create_engine
-from getitune.utils import list_models
-
-# Explore available models for your task
-all_models = list_models()                    # List all model names
-detection_models = list_models(task="DETECTION")  # Filter by task
-recipes = list_models(return_recipes=True)    # Get full recipe YAML paths
-
-# Create an engine using any model name or recipe path
-engine = create_engine(
-    model="efficientnet_b0",                  # model name, recipe YAML path, or exported IR/ONNX
-    data="/path/to/dataset",                  # dataset directory or YAML path
-    work_dir="./my_workspace",                # checkpoints and logs directory
-    device="auto",                            # "auto", "cpu", "gpu", "xpu".
-)
-
-# Train and validate
-engine.train(max_epochs=50)
-metrics = engine.test()
-
-# Export to OpenVINO IR (default) for deployment
-exported_model_path = engine.export()
-
-# load exported OpenVINO model
-ov_engine = create_engine(model=exported_model_path, data=engine.datamodule)
-
-# optimize the model for edge deployment
-optimized_model_path = ov_engine.optimize()
-
-# test the optimized model
-metrics = ov_engine.test()
-
-# predict with the optimized model
-predictions = ov_engine.predict()
-```
-
-See the [library README](library/README.md) for the full list of recipes, advanced configuration, dataset support,
-backend-specific options, and deployment/optimization examples.
 
 ## Migrating from Geti 2.x
 
