@@ -12,15 +12,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
-from rfdetr.main import populate_args
-from rfdetr.models.lwdetr import build_criterion_and_postprocessors
-from rfdetr.util.get_param_dicts import get_param_dict
+from rfdetr._namespace import _namespace_from_configs
+from rfdetr.config import ModelConfig, TrainConfig
+from rfdetr.models import build_criterion_from_config, build_model_from_config, load_pretrain_weights
+from rfdetr.models._defaults import MODEL_DEFAULTS
+
+from getitune.backend.lightning.models.detection.detectors._rfdetr_vendored import get_param_dict
 from torchvision import tv_tensors
 from torchvision.ops import box_convert
 
 from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
 from getitune.backend.lightning.models.detection.utils import limit_batch_objects
-from getitune.backend.lightning.models.utils.utils import load_checkpoint
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.types.export import ExportFormat
@@ -45,11 +47,11 @@ class RFDETRMixin:
         """Build the core RF-DETR model.
 
         Handles the full pipeline shared by both detection and instance segmentation:
-        1. Instantiate the rfdetr model class
-        2. Load pretrained checkpoint
-        3. Reinitialize detection head for ``num_classes``
-        4. Build criterion and postprocessor
-        5. Wrap in ``RFDETRDetector``
+        1. Build LWDETR from per-variant config.
+        2. Load & align pretrained weights (handles head resize internally).
+        3. Reinit classification biases to zero (sigmoid=0.5 neutral prior).
+        4. Build criterion and postprocessor.
+        5. Wrap in ``RFDETRDetector``.
 
         Args:
             num_classes: Number of target classes.
@@ -58,54 +60,32 @@ class RFDETRMixin:
         Returns:
             Configured ``RFDETRDetector`` instance.
         """
-        model_class = self._model_class_mapping[self.model_name]  # type: ignore[attr-defined]
+        model_config_cls = self._model_config_mapping[self.model_name]  # type: ignore[attr-defined]
 
-        detector = model_class(
-            pretrain_weights=None,
-            gradient_checkpointing=gradient_checkpointing,
+        model_config = model_config_cls()
+        model_config.num_classes = num_classes
+        model_config.gradient_checkpointing = gradient_checkpointing
+        train_config = TrainConfig(dataset_dir=".")
+
+        lwdetr: torch.nn.Module = build_model_from_config(model_config, train_config)
+
+        load_pretrain_weights(lwdetr, model_config)
+
+        torch.nn.init.zeros_(lwdetr.class_embed.bias)  # pyrefly: ignore[bad-argument-type]
+        if getattr(lwdetr, "two_stage", False):
+            for enc_cls_embed in lwdetr.transformer.enc_out_class_embed:
+                torch.nn.init.zeros_(enc_cls_embed.bias)  # pyrefly: ignore[bad-argument-type]
+
+        criterion, postprocessor = build_criterion_from_config(model_config, train_config)
+
+        self.rfdetr_args = _namespace_from_configs(  # type: ignore[attr-defined]
+            model_config, train_config, MODEL_DEFAULTS
         )
-        lwdetr_model = detector.model.model
-
-        load_checkpoint(
-            lwdetr_model,  # pyrefly: ignore[bad-argument-type]
-            self._pretrained_weights[self.model_name],  # type: ignore[attr-defined]
-            map_location="cpu",
-        )
-
-        # Reinitialize detection head for our num_classes
-        detector.model.reinitialize_detection_head(num_classes)
-        detector.model.args.num_classes = num_classes
-
-        # Reset classification biases to zero (sigmoid=0.5 neutral prior).
-        torch.nn.init.zeros_(lwdetr_model.class_embed.bias)
-        if getattr(lwdetr_model, "two_stage", False):
-            for enc_cls_embed in lwdetr_model.transformer.enc_out_class_embed:
-                torch.nn.init.zeros_(enc_cls_embed.bias)
-
-        # Build criterion and postprocessor
-        model_cfg = detector.get_model_config().model_dump()
-        train_cfg = detector.get_train_config(dataset_dir="").model_dump()
-        model_cfg.pop("num_classes")
-        if "class_names" in model_cfg:
-            model_cfg.pop("class_names")
-
-        for k in train_cfg:
-            if k in model_cfg:
-                model_cfg.pop(k)
-
-        all_kwargs = {**model_cfg, **train_cfg, "num_classes": num_classes}
-        rfdetr_args = populate_args(**all_kwargs)
-
-        criterion, postprocessor = build_criterion_and_postprocessors(rfdetr_args)
-        criterion.num_classes = num_classes
-
-        # Store rfdetr_args for optimizer configuration
-        self.rfdetr_args = rfdetr_args  # type: ignore[attr-defined]
 
         return RFDETRDetector(
-            lwdetr_model=lwdetr_model,  # pyrefly: ignore[bad-argument-type]
+            lwdetr_model=lwdetr,  # pyrefly: ignore[bad-argument-type]
             criterion=criterion,
-            postprocessor=postprocessor,
+            postprocessor=postprocessor,  # pyrefly: ignore[bad-argument-type]
             rfdetr_args=self.rfdetr_args,  # pyrefly: ignore[bad-argument-type]
             input_size=self.data_input_params.input_size[0],  # type: ignore[attr-defined]
             multi_scale=self.multi_scale,  # type: ignore[attr-defined]

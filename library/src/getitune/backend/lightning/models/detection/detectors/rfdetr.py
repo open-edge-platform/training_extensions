@@ -14,8 +14,10 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
-from rfdetr.datasets.coco import compute_multi_scale_scales
-from rfdetr.util.misc import nested_tensor_from_tensor_list
+from getitune.backend.lightning.models.detection.detectors._rfdetr_vendored import (
+    compute_multi_scale_scales,
+    nested_tensor_from_tensor_list,
+)
 from torch import Tensor, nn
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxes

@@ -8,15 +8,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar, Literal
 
 import torch
-from rfdetr import (
-    RFDETRSeg2XLarge,
-    RFDETRSegLarge,
-    RFDETRSegMedium,
-    RFDETRSegNano,
-    RFDETRSegSmall,
-    RFDETRSegXLarge,
-)
 from torch.export import Dim
+
+from rfdetr.config import (
+    RFDETRSeg2XLargeConfig,
+    RFDETRSegLargeConfig,
+    RFDETRSegMediumConfig,
+    RFDETRSegNanoConfig,
+    RFDETRSegSmallConfig,
+    RFDETRSegXLargeConfig,
+)
 
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
@@ -27,6 +28,15 @@ from getitune.backend.lightning.models.instance_segmentation.base import Lightni
 from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 from getitune.types.export import TaskLevelExportParameters
+
+from rfdetr.config import (
+    RFDETRSeg2XLargeConfig,
+    RFDETRSegLargeConfig,
+    RFDETRSegMediumConfig,
+    RFDETRSegNanoConfig,
+    RFDETRSegSmallConfig,
+    RFDETRSegXLargeConfig,
+)
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -43,7 +53,7 @@ class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inc
     that combines a DINOv2 backbone with a lightweight DETR decoder. This implementation
     adds instance segmentation support with a mask prediction head.
 
-    This implementation uses the rfdetr Python package with RFDETRSegPreview for the core model components.
+    This implementation uses the rfdetr Python package with RFDETRSeg series for the core model components.
 
     Args:
         label_info: Information about the labels.
@@ -68,22 +78,15 @@ class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inc
         RF-DETR Segmentation uses patch_size=12 with 2 windows for 432x432 input resolution.
     """
 
-    _pretrained_weights: ClassVar[dict[str, str]] = {
-        "rfdetr_seg_n": "https://storage.geti.intel.com/weights/rf-detr-seg-n-ft.pth",
-        "rfdetr_seg_s": "https://storage.geti.intel.com/weights/rf-detr-seg-s-ft.pth",
-        "rfdetr_seg_m": "https://storage.geti.intel.com/weights/rf-detr-seg-m-ft.pth",
-        "rfdetr_seg_l": "https://storage.geti.intel.com/weights/rf-detr-seg-l-ft.pth",
-        "rfdetr_seg_xl": "https://storage.geti.intel.com/weights/rf-detr-seg-xl-ft.pth",
-        "rfdetr_seg_2xl": "https://storage.geti.intel.com/weights/rf-detr-seg-2xl-ft.pth",
-    }
+    _pretrained_weights: ClassVar[dict[str, str]] = {}
 
-    _model_class_mapping: ClassVar[dict[str, type]] = {
-        "rfdetr_seg_n": RFDETRSegNano,
-        "rfdetr_seg_s": RFDETRSegSmall,
-        "rfdetr_seg_m": RFDETRSegMedium,
-        "rfdetr_seg_l": RFDETRSegLarge,
-        "rfdetr_seg_xl": RFDETRSegXLarge,
-        "rfdetr_seg_2xl": RFDETRSeg2XLarge,
+    _model_config_mapping: ClassVar[dict[str, type]] = {
+        "rfdetr_seg_n": RFDETRSegNanoConfig,
+        "rfdetr_seg_s": RFDETRSegSmallConfig,
+        "rfdetr_seg_m": RFDETRSegMediumConfig,
+        "rfdetr_seg_l": RFDETRSegLargeConfig,
+        "rfdetr_seg_xl": RFDETRSegXLargeConfig,
+        "rfdetr_seg_2xl": RFDETRSeg2XLargeConfig,
     }
 
     input_size_multiplier = 24
