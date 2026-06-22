@@ -24,7 +24,7 @@ precision drift downstream):
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -178,8 +178,8 @@ class TrackedDetections:
     track_ids: np.ndarray
     track_states: np.ndarray
     frame_id: int
-    det_indices: np.ndarray | None = field(default=None)
-    interpolated: np.ndarray | None = field(default=None)
+    det_indices: np.ndarray | None = None
+    interpolated: np.ndarray | None = None
 
     def __post_init__(self) -> None:
         validate_bboxes(self.bboxes)
