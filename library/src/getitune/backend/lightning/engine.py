@@ -311,6 +311,7 @@ class LightningEngine(Engine):
             raise TypeError(msg)
 
         best_checkpoint = Path(self.work_dir) / "best_checkpoint.pt"
+        best_checkpoint.unlink(missing_ok=True)
         shutil.copy2(self.checkpoint, best_checkpoint)
 
         return self._build_train_metrics()

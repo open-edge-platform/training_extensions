@@ -76,8 +76,6 @@ Licensing Information: Ultralytics YOLO models are distributed under the AGPL-3.
 
 ## Installation
 
-Requirements: **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, **NumPy ≥ 2.0**.
-
 ## Quick Install
 
 ```bash
