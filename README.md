@@ -74,16 +74,15 @@ curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -
 git clone https://github.com/open-edge-platform/geti.git
 cd geti/application
 
-# 3. Pull the image for your hardware
-docker pull ghcr.io/open-edge-platform/geti-xpu    # modern Intel® CPU/GPU (recommended)
-docker pull ghcr.io/open-edge-platform/geti-cuda   # NVIDIA® GPU (CUDA)
-docker pull ghcr.io/open-edge-platform/geti-cpu    # CPU-only (most lightweight)
+# 3. Pull the image for your hardware (choose one: cpu|cuda|xpu)
+ACCELERATOR=xpu
+docker pull ghcr.io/open-edge-platform/geti-${ACCELERATOR}
 
 # 4. Retag the pulled image for use with just
-docker tag ghcr.io/open-edge-platform/geti-xpu:latest geti-xpu:latest
+docker tag ghcr.io/open-edge-platform/geti-${ACCELERATOR}:latest geti-${ACCELERATOR}:latest
 
 # 5. Launch the application
-just run-image --accelerator xpu
+just run-image --accelerator ${ACCELERATOR}
 ```
 
 Then get access to Geti™ user interface at `http://localhost:7860`.
