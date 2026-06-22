@@ -17,8 +17,7 @@ import { useAnnotator } from '../../../shared/annotator/annotator-provider.compo
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { useTool } from '../../../shared/annotator/tool-provider.component';
 import { useEditableAnnotationState } from '../../../shared/annotator/use-editable-annotation-state.hook';
-import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
-import { getMediaBinaryUrl } from '../../../shared/media-url.utils';
+import { isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
 import { VideoAnnotations, VideoPredictions } from '../annotations/video-annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
@@ -32,84 +31,10 @@ import {
     usePrefetchVideoFramesPredictions,
 } from '../video-player/api/use-video-frames-predictions';
 import { getVideoFrameRangeIndexes } from '../video-player/api/utils';
-import { VideoFrame } from '../video-player/video-frame.component';
 import { useVideoPlayer, useVideoPlayerContext } from '../video-player/video-player-provider.component';
-import { drawImageDataOnCanvas } from './draw-image-data-on-canvas';
+import { MediaImage } from './media-image.component';
 
 import classes from './annotator-canvas.module.scss';
-
-type MediaImageProps = {
-    image: ImageData;
-    mediaItem: Media;
-};
-
-const useDrawImageOnCanvas = (image: ImageData) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-
-    useEffect(() => {
-        const ctx = canvasRef?.current?.getContext('2d');
-
-        if (ctx == null) {
-            return;
-        }
-
-        drawImageDataOnCanvas(ctx, image);
-    }, [image]);
-
-    return canvasRef;
-};
-
-// Oversized static images: use <img> to bypass canvas rasterization limit.
-const StaticImage = ({ mediaItem }: { mediaItem: Media }) => {
-    const projectId = useProjectIdentifier();
-
-    return (
-        <img
-            src={getMediaBinaryUrl(projectId, mediaItem.id)}
-            width={mediaItem.width}
-            height={mediaItem.height}
-            crossOrigin='anonymous'
-            className={classes.image}
-            alt=''
-        />
-    );
-};
-
-type CanvasMediaImageProps = {
-    image: ImageData;
-    showVideoFrame?: boolean;
-};
-
-const CanvasMediaImage = ({ image, showVideoFrame = false }: CanvasMediaImageProps) => {
-    const canvasRef = useDrawImageOnCanvas(image);
-
-    return (
-        <>
-            <canvas ref={canvasRef} width={image.width} height={image.height} className={classes.image} />
-            {showVideoFrame && <VideoFrame canvasRef={canvasRef} />}
-        </>
-    );
-};
-
-const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
-    if (isVideo(mediaItem) || isVideoFrame(mediaItem)) {
-        return <CanvasMediaImage image={image} showVideoFrame />;
-    }
-
-    // Render via canvas only when decoded at native resolution.
-    // `ImageData.data.length` is expected to be width * height * 4
-    // (RGBA: 4 channels, 1 byte per channel = 4 bytes per pixel).
-    const isFullResolution =
-        image.width === mediaItem.width &&
-        image.height === mediaItem.height &&
-        image.data.length === mediaItem.width * mediaItem.height * 4;
-
-    if (isFullResolution) {
-        return <CanvasMediaImage image={image} />;
-    }
-
-    return <StaticImage mediaItem={mediaItem} />;
-};
 
 type ImageAnnotationsProps = {
     mediaItem: Media;
