@@ -78,9 +78,10 @@ class TestDetections:
         assert low.scores[0] == pytest.approx(0.2)
 
     def test_filter_by_class(self):
-        d = _dets(3).filter_by_class([1])
+        d, source_rows = _dets(3).filter_by_class([1])
         assert len(d) == 1
         assert d.class_ids[0] == 1
+        assert source_rows.tolist() == [1]
 
     def test_embeddings_roundtrip_through_filter(self):
         embeds = np.random.default_rng(0).random((3, 8), dtype=np.float32)

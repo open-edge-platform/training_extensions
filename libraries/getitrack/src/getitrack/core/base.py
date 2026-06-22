@@ -14,12 +14,12 @@ from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
-import numpy as np
-
 from getitrack.logger import LOGGER, enable_logging
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    import numpy as np
 
     from getitrack.config import TrackerConfig
     from getitrack.core.detection import Detections, TrackedDetections
@@ -70,19 +70,21 @@ class BaseTracker(ABC):
         passed here.
         """
         class_filter = self.config.association.class_filter
-        filtered = detections if class_filter is None else detections.filter_by_class(class_filter)
+        if class_filter is None:
+            filtered, source_rows = detections, None
+        else:
+            filtered, source_rows = detections.filter_by_class(class_filter)
         tracked = self._update_impl(filtered)
-        if class_filter is not None and tracked.det_indices is not None:
-            remapped = self._remap_det_indices(detections, class_filter, tracked.det_indices)
+        if source_rows is not None and tracked.det_indices is not None:
+            remapped = self._remap_det_indices(source_rows, tracked.det_indices)
             tracked = replace(tracked, det_indices=remapped)
         if self.config.verbose:
             self._log_update(filtered, tracked)
         return tracked
 
     @staticmethod
-    def _remap_det_indices(detections: Detections, class_filter: list[int], det_indices: np.ndarray) -> np.ndarray:
+    def _remap_det_indices(source_rows: np.ndarray, det_indices: np.ndarray) -> np.ndarray:
         """Map ``det_indices`` from filtered-row space back to input rows."""
-        source_rows = np.flatnonzero(np.isin(detections.class_ids, np.asarray(class_filter, dtype=np.int64)))
         remapped = det_indices.copy()
         matched = remapped >= 0
         remapped[matched] = source_rows[remapped[matched]]

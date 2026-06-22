@@ -112,11 +112,16 @@ class Detections:
         high = self.scores >= threshold
         return self._index(high), self._index(~high)
 
-    def filter_by_class(self, class_ids: Sequence[int]) -> Detections:
-        """Return rows whose class id appears in ``class_ids``."""
+    def filter_by_class(self, class_ids: Sequence[int]) -> tuple[Detections, np.ndarray]:
+        """Return ``(filtered, source_rows)`` for rows whose class is in ``class_ids``.
+
+        ``source_rows`` holds the indices of the kept rows in this
+        `Detections`, letting callers map filtered-row positions back to
+        input rows without recomputing the membership test.
+        """
         wanted = np.asarray(list(class_ids), dtype=np.int64)
-        keep = np.isin(self.class_ids, wanted)
-        return self._index(keep)
+        source_rows = np.flatnonzero(np.isin(self.class_ids, wanted))
+        return self._index(source_rows), source_rows
 
     def _index(self, mask: np.ndarray) -> Detections:
         return Detections(

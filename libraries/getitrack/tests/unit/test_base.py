@@ -162,7 +162,8 @@ class TestClassFilter:
         assert out.det_indices.tolist() == [0, 1, 2]
 
     def test_remap_preserves_unmatched_rows(self):
-        remapped = BaseTracker._remap_det_indices(self._dets(), [1], np.array([0, -1, 1], dtype=np.int64))
+        source_rows = np.array([0, 2], dtype=np.int64)
+        remapped = BaseTracker._remap_det_indices(source_rows, np.array([0, -1, 1], dtype=np.int64))
         assert remapped.tolist() == [0, -1, 2]
 
 
