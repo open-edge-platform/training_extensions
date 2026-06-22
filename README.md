@@ -258,21 +258,38 @@ from Python. It requires **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™
 pip install "getitune[cpu]"    # or [xpu] for Intel® GPU, [cuda] for NVIDIA® GPU
 ```
 
+**Discover available models and train a model in just a few lines of code:**
+
 ```python
 from getitune.engine import create_engine
+from getitune.utils import list_models
 
-# Initialize and train using a bundled recipe and dataset
+# Explore available models for your task
+all_models = list_models()                    # List all model names
+detection_models = list_models(task="DETECTION")  # Filter by task
+recipes = list_models(return_recipes=True)    # Get full recipe YAML paths
+
+# Create an engine using any model name or recipe path
 engine = create_engine(
-    data="tests/assets/classification_cifar10",
-    model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+    model="efficientnet_b0",                  # model name, recipe YAML path, or exported IR/ONNX
+    data="/path/to/dataset",                  # dataset directory or YAML path
+    work_dir="./my_workspace",                # checkpoints and logs directory
+    device="auto",                            # "auto", "cpu", "gpu", "0", "xpu", etc.
 )
-engine.train()
-engine.test()
-exported_path = engine.export()  # writes OpenVINO IR
+
+# Train and validate
+engine.train(max_epochs=50)
+metrics = engine.test()
+
+# Export to OpenVINO IR for deployment
+exported_model_path = engine.export()
+
+# Inference on dataset or custom inputs
+predictions = engine.predict()
 ```
 
-See the [library README](library/README.md) for the full list of recipes, advanced configuration, dataset support, and
-inference/optimization examples.
+See the [library README](library/README.md) for the full list of recipes, advanced configuration, dataset support,
+backend-specific options, and deployment/optimization examples.
 
 ## Migrating from Geti 2.x
 

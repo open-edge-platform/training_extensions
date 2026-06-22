@@ -121,6 +121,9 @@ uv pip install "getitune[cpu]"
 > uv pip install "getitune[cuda,ultralytics]" # NVIDIA GPU + YOLO
 > uv pip install "getitune[cpu,ultralytics]" # CPU + YOLO
 > ```
+>
+> ⚠️ **Note**: The PyPI `[ultralytics]` extra includes the Ultralytics framework but **does not bundle YOLO26 model weights**.
+> To use YOLO26 models, you must [install from source](#advanced-installation-install-from-source) using `[ultralytics]`, which includes pre-downloaded model weights.
 
 </details>
 
@@ -369,6 +372,10 @@ engine = UltralyticsEngine(
 engine.train(epochs=50)
 engine.test()
 engine.export()
+
+> ⚠️ **Note for PyPI users**: Direct `UltralyticsEngine` instantiation (as shown above) with YOLO models requires
+> [installing from source](#advanced-installation-install-from-source) with the `[ultralytics]` extra to access pre-downloaded model weights.
+> For PyPI installs, use `create_engine()` which handles model resolution automatically.
 
 
 # -- OpenVINO Backend (inference) --
