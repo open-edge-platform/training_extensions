@@ -502,11 +502,23 @@ function Build-Frontend {
 
     try {
         $env:npm_config_yes = "true"
+
+        # The 'preinstall' hook clones geti_v2 via `npx tiged`, which contains
+        # files with very long paths that exceed the Windows MAX_PATH (260) limit
+        # and fail checkout with "Filename too long". Enable git long-path support
+        # for the child git processes without modifying the user's global config
+        # (GIT_CONFIG_* env vars are inherited by tiged's internal `git clone`).
+        $env:GIT_CONFIG_COUNT = "1"
+        $env:GIT_CONFIG_KEY_0 = "core.longpaths"
+        $env:GIT_CONFIG_VALUE_0 = "true"
+
         # --foreground-scripts surfaces lifecycle-script errors (e.g. the
         # 'preinstall' UI-package clone) in the log instead of a generic exit code.
         Invoke-CmdSpinner -Command $script:NPM_BIN `
             -Arguments @("ci", "--foreground-scripts") `
             -Activity "Installing UI dependencies (this may take several minutes)"
+
+        Remove-Item Env:\GIT_CONFIG_COUNT, Env:\GIT_CONFIG_KEY_0, Env:\GIT_CONFIG_VALUE_0 -ErrorAction SilentlyContinue
 
         Invoke-CmdSpinner -Command $script:NPM_BIN `
             -Arguments @("run", "build:api") `
