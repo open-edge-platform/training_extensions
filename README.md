@@ -150,28 +150,7 @@ exported_path = engine.export()  # writes OpenVINO IR
 
 ## Key Features
 
-<details>
-<summary>🔄 Interactive end-to-end model training</summary>
-
-Geti™ enables users to start building deep-learning computer vision models with as few as 10-20 images and take them to production in one environment - annotate, train, optimize, run inference, and improve accuracy in a rapid train-predict-annotate loop.
-
-</details>
-
-<details>
-<summary>⚡ Hardware-accelerated inference & model optimization</summary>
-
-Every model is automatically exported with [OpenVINO™](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html) for deployment across the full Intel® XPU portfolio (Arc™ GPUs, Core™ Ultra processors); NVIDIA® CUDA and CPU-only execution are also supported. Fine-tune and run inference directly on edge and client hardware - including Intel® Panther Lake and Arc™ Battlemage (B-series) GPUs - with no Kubernetes cluster or data-center GPU required. Built-in accuracy-aware INT8 quantization further reduces model size and latency on resource-constrained edge devices with minimal impact on accuracy.
-
-</details>
-
-<details>
-<summary>🚀 Integrated deployment & inference</summary>
-
-Build custom pipelines (source → model → sink) to deploy models inside Geti and monitor real-time predictions on video streams. Sources include USB/IP cameras and video files; optional sinks include folder, MQTT, and webhook. Complete pipelines can be exported as OpenVINO™-optimized bundles for edge deployment.
-
-</details>
-
-<details>
+<details open>
 <summary>🏆 State-of-the-art model catalog</summary>
 
 Train and fine-tune modern architectures such as RF-DETR, DINOv3 DETR, YOLO26, YOLOX, D-FINE, and Mask R-CNN.
@@ -271,6 +250,27 @@ Would you like to see a specific model added? Let us know by opening a [GitHub i
 </details>
 
 <details>
+<summary>🔄 Interactive end-to-end model training</summary>
+
+Geti™ enables users to start building deep-learning computer vision models with as few as 10-20 images and take them to production in one environment - annotate, train, optimize, run inference, and improve accuracy in a rapid train-predict-annotate loop.
+
+</details>
+
+<details>
+<summary>⚡ Hardware-accelerated inference & model optimization</summary>
+
+Every model is automatically exported with [OpenVINO™](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html) for deployment across the full Intel® XPU portfolio (Arc™ GPUs, Core™ Ultra processors); NVIDIA® CUDA and CPU-only execution are also supported. Fine-tune and run inference directly on edge and client hardware - including Intel® Panther Lake and Arc™ Battlemage (B-series) GPUs - with no Kubernetes cluster or data-center GPU required. Built-in accuracy-aware INT8 quantization further reduces model size and latency on resource-constrained edge devices with minimal impact on accuracy.
+
+</details>
+
+<details>
+<summary>🚀 Integrated deployment & inference</summary>
+
+Build custom pipelines (source → model → sink) to deploy models inside Geti and monitor real-time predictions on video streams. Sources include USB/IP cameras and video files; optional sinks include folder, MQTT, and webhook. Complete pipelines can be exported as OpenVINO™-optimized bundles for edge deployment.
+
+</details>
+
+<details>
 <summary>🎨 Multiple computer vision tasks</summary>
 
 Geti™ supports <a target="_blank" rel="noopener noreferrer" href="https://docs.geti.intel.com/docs/user-guide/learn-geti/computer-vision-tasks/ai-fundamentals-tasks">multiple computer vision tasks</a> that are commonly employed across various use cases - image classification, object detection and instance segmentation from the no-code web interface, with even more tasks available through the `getitune` library.
@@ -335,10 +335,10 @@ For those who would like to contribute, see [Contributing guide](CONTRIBUTING.md
 
 ## License
 
-Geti™ is licensed under the [Apache License Version 2.0](LICENSE). By contributing to the project, you agree to the
-license and copyright terms therein and release your contribution under these terms.
-Stay tuned for further updates soon!
+Geti™ is licensed under the [Apache License Version 2.0](LICENSE).
 
 ## Disclaimers
+
+Geti™ utilizes FFmpeg.
 
 FFmpeg is an open source project licensed under LGPL and GPL. See [https://www.ffmpeg.org/legal.html](https://www.ffmpeg.org/legal.html). You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
