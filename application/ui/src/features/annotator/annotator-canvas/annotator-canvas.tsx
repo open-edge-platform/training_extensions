@@ -1,14 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { MouseEvent, PointerEvent, useEffect, useRef, useState } from 'react';
+import { PointerEvent, useEffect, useRef, useState } from 'react';
 
-import { Loading } from '@geti/ui';
-import { useIsFetching } from '@tanstack/react-query';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { useSpinDelay } from 'spin-delay';
-
-import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import type { Media } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
@@ -21,7 +15,6 @@ import { isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
 import { VideoAnnotations, VideoPredictions } from '../annotations/video-annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
-import { loadImageQueryOptions } from '../hooks/use-load-image-query.hook';
 import { ToolManager } from '../tools/tool-manager.component';
 import { usePrefetchVideoFramesAnnotations } from '../video-player/api/use-video-frames-annotations';
 import {
@@ -32,7 +25,7 @@ import {
 } from '../video-player/api/use-video-frames-predictions';
 import { getVideoFrameRangeIndexes } from '../video-player/api/utils';
 import { useVideoPlayer, useVideoPlayerContext } from '../video-player/video-player-provider.component';
-import { MediaImage } from './media-image.component';
+import { MediaCanvas } from './media-canvas';
 
 import classes from './annotator-canvas.module.scss';
 
@@ -258,53 +251,39 @@ export const AnnotatorCanvas = ({
     isReadOnly = false,
     isLoadingPredictions = false,
 }: AnnotatorCanvasProps) => {
-    const projectId = useProjectIdentifier();
     const isSceneBusy = useIsAnnotatorSceneBusy();
     const { canvasRef } = useAnnotator();
     const { isSingleEditableSelection } = useEditableAnnotationState();
 
-    const isFetchingMedia = useIsFetching({ queryKey: loadImageQueryOptions(projectId, mediaItem).queryKey }) > 0;
-
-    const isLoadingMedia = useSpinDelay(isFetchingMedia, { delay: 400, minDuration: 200 });
     const areToolsDisabled = isSceneBusy || isReadOnly;
-    const size = { width: mediaItem.width, height: mediaItem.height };
     const canEditSelectedAnnotation = !areToolsDisabled && isSingleEditableSelection;
     const { toolLayerRef, toolLayerPointerEvents, handlePointerMove } = useToolLayerPointerPassthrough({
         canEditSelectedAnnotation,
         areToolsDisabled,
     });
 
-    const isPlaceholderImage = image.width === 1 && image.height === 1;
-
-    if (isLoadingMedia && isPlaceholderImage) {
-        return <Loading size='M' />;
-    }
-
     return (
-        <ZoomTransform target={size}>
-            <div
-                style={{ position: 'relative', height: '100%', width: '100%' }}
-                onContextMenu={(event: MouseEvent): void => event.preventDefault()}
-                onPointerMove={handlePointerMove}
-                className={isReadOnly ? classes.readOnlyCanvas : undefined}
-                ref={canvasRef}
-            >
-                {(isLoadingMedia || isLoadingPredictions) && <Loading mode={'overlay'} />}
-                <MediaImage image={image} mediaItem={mediaItem} />
-                <MediaAnnotations mediaItem={mediaItem} mode={mode} />
+        <MediaCanvas
+            mediaItem={mediaItem}
+            image={image}
+            containerRef={canvasRef}
+            onPointerMove={handlePointerMove}
+            className={isReadOnly ? classes.readOnlyCanvas : undefined}
+            isLoadingOverlay={isLoadingPredictions}
+        >
+            <MediaAnnotations mediaItem={mediaItem} mode={mode} />
 
-                <div
-                    ref={toolLayerRef}
-                    aria-hidden={areToolsDisabled || undefined}
-                    style={{
-                        position: 'absolute',
-                        inset: 0,
-                        pointerEvents: toolLayerPointerEvents,
-                    }}
-                >
-                    <ToolManager />
-                </div>
+            <div
+                ref={toolLayerRef}
+                aria-hidden={areToolsDisabled || undefined}
+                style={{
+                    position: 'absolute',
+                    inset: 0,
+                    pointerEvents: toolLayerPointerEvents,
+                }}
+            >
+                <ToolManager />
             </div>
-        </ZoomTransform>
+        </MediaCanvas>
     );
 };
