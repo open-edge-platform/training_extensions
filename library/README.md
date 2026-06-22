@@ -75,8 +75,6 @@ Each task directory also ships an `openvino_model.yaml` recipe for running and o
 
 ## Installation
 
-Requirements: **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, **NumPy ≥ 2.0**.
-
 `getitune` is published on [PyPI](https://pypi.org/project/getitune/).
 
 ### Quick Install

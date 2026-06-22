@@ -51,7 +51,7 @@ def _resolve_recipe(model: MODEL, task: TaskType | str | None) -> Path:
 
     # Bare model name — search the recipe tree.
     name = path.stem if path.suffix else path.name
-    matches = sorted(_RECIPE_PATH.glob(f"**/{name}.yaml"))
+    matches = sorted([*_RECIPE_PATH.glob(f"**/{name}.yaml"), *_RECIPE_PATH.glob(f"**/{name}.yml")])
 
     if not matches:
         msg = (
