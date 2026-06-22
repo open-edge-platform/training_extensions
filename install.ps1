@@ -647,10 +647,39 @@ function Main {
 function Start-App {
     Write-Host ""
     Write-Step "Installation complete! Starting Intel Geti..."
-    Write-Host ""
 
     $uvExe = Join-Path $UV_DIR "uv.exe"
     $backendDir = Join-Path $WorkDir "application\backend"
+
+    # Resolve the URL the user should open. The server binds to 0.0.0.0 by
+    # default, which is not a valid address to open in a browser, so use
+    # localhost. Honour PORT/HOST overrides if the user set them.
+    $port = if ($env:PORT) { $env:PORT } else { "7860" }
+    $browserHost = if ($env:HOST -and $env:HOST -ne "0.0.0.0") { $env:HOST } else { "localhost" }
+    $url = "http://${browserHost}:${port}"
+
+    Write-Host ""
+    Write-Host "Geti will be available at: " -NoNewline
+    Write-Host $url -ForegroundColor Cyan
+    Write-Host "Waiting for the server to become ready (your browser will open automatically)..." -ForegroundColor DarkGray
+    Write-Host ""
+
+    # Poll the health endpoint in the background; once the server responds,
+    # open the default browser. The server itself runs in the foreground below.
+    $readinessJob = Start-Job -ScriptBlock {
+        param($healthUrl, $openUrl)
+        for ($i = 0; $i -lt 150; $i++) {
+            try {
+                $resp = Invoke-WebRequest -Uri $healthUrl -UseBasicParsing -TimeoutSec 2
+                if ($resp.StatusCode -eq 200) {
+                    Start-Process $openUrl
+                    return
+                }
+            } catch {
+                Start-Sleep -Seconds 1
+            }
+        }
+    } -ArgumentList "$url/health", $url
 
     Push-Location $backendDir
     try {
@@ -658,6 +687,8 @@ function Start-App {
         & $uvExe run app/main.py
     } finally {
         Pop-Location
+        Stop-Job $readinessJob -ErrorAction SilentlyContinue
+        Remove-Job $readinessJob -Force -ErrorAction SilentlyContinue
     }
 }
 
