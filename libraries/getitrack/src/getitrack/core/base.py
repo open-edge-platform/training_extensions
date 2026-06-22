@@ -12,7 +12,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import replace
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from getitrack.logger import LOGGER, enable_logging
 
@@ -127,7 +127,7 @@ class BaseTracker(ABC):
         return new_id
 
     @classmethod
-    def from_config(cls, config: TrackerConfig | dict | str | Path) -> BaseTracker:
+    def from_config(cls, config: TrackerConfig | dict[str, Any] | str | Path) -> BaseTracker:
         """Instantiate a tracker dispatched on ``config.algorithm``.
 
         Accepts a `TrackerConfig`, a dict, or a path to a YAML file.
