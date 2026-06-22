@@ -72,7 +72,6 @@ const SubsetMediaDialogContent = ({ item, onClose }: SubsetMediaDialogContentPro
                 image={image}
                 mediaItem={mediaItem}
                 onClose={onClose}
-                mode={mode}
                 subset={item.subset}
                 hasAnnotationStatus={false}
             />
