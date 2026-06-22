@@ -369,6 +369,8 @@ For those who would like to contribute, see [Contributing guide](CONTRIBUTING.md
 
 Geti™ is licensed under the [Apache License Version 2.0](LICENSE).
 
+Ultralytics YOLO models are distributed under the AGPL-3.0 license, an OSI approved license ideal for open-source research, academic, and personal projects. For commercial use, enhanced support, and tailored licensing terms, please explore flexible Ultralytics licensing options at https://www.ultralytics.com/license.
+
 ## Disclaimers
 
 Geti™ utilizes FFmpeg.
