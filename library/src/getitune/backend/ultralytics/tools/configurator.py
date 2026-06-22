@@ -13,7 +13,6 @@ from warnings import warn
 
 from jsonargparse import ArgumentParser, Namespace
 
-from getitune.backend.ultralytics.engine import UltralyticsEngine
 from getitune.backend.ultralytics.models.base import UltralyticsModel
 from getitune.backend.ultralytics.tools.utils import (
     RECIPE_DIR,
@@ -32,6 +31,7 @@ from getitune.types.task import TaskType
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from getitune.backend.ultralytics.engine import UltralyticsEngine
     from getitune.types import PathLike
 
 
@@ -562,11 +562,13 @@ class Configurator:
         self,
         model: UltralyticsModel,
         data: DataModule | PathLike | None = None,
-        work_dir: PathLike = "./getitune-workspace",
+        work_dir: PathLike | None = None,
         device: str | DeviceType = DeviceType.auto,
         **engine_kwargs,
     ) -> UltralyticsEngine:
         """Instantiate the configured Ultralytics engine."""
+        from getitune.backend.ultralytics.engine import UltralyticsEngine as _UltralyticsEngine
+
         if data is None:
             if self._datamodule is not None:
                 data = self._datamodule
@@ -576,7 +578,7 @@ class Configurator:
                 msg = "No data available. Pass data= to create_engine() or call build_datamodule() first."
                 raise ValueError(msg)
 
-        return UltralyticsEngine(
+        return _UltralyticsEngine(
             model=model,
             data=data,
             work_dir=work_dir,

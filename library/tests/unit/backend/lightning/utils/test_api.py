@@ -3,8 +3,8 @@
 
 import pytest
 
-from getitune.backend.lightning.cli.utils import RECIPE_PATH, list_models
 from getitune.types.task import TaskType
+from getitune.utils import RECIPE_PATH, list_models
 
 
 def test_list_models() -> None:

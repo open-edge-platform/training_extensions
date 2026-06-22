@@ -114,58 +114,70 @@ Once Geti is up and running, follow the intuitive UI to train your first model.
 >
 > Detailed installation guide is available in ["Installation guide"](https://docs.geti.intel.com/docs/user-guide/getting-started/installation/installation-guide)
 
-## Quick start with `getitune`
+## Quick start with Geti Library (`getitune`)
 
-The Geti™ training engine `getitune` is published on PyPI and can train, optimize, and deploy models.
-
-To install `getitune`:
+Geti's training engine is published on PyPI and can train, optimize, and deploy models
+from Python.
 
 ```bash
-# With uv (recommended)
-uv pip install "getitune"
-
-# Or with pip
-pip install "getitune"
+uv pip install "getitune[xpu]" --extra-index-url https://download.pytorch.org/whl/xpu    # for Intel® XPU acceleration
+uv pip install "getitune[cuda]" --extra-index-url https://download.pytorch.org/whl/cu128    # for NVIDIA® CUDA acceleration
+uv pip install getitune # CPU-only by default
 ```
 
-Provide `getitune` with a dataset and fine-tune a model:
+> ⚠️ **Ultralytics YOLO Models**: The PyPI package does **not** include Ultralytics YOLO26 models. Install from source to use them:
+>
+> ```bash
+> git clone https://github.com/open-edge-platform/training_extensions.git
+> cd training_extensions/library
+> uv sync --extra xpu --extra ultralytics                              # Intel GPU + YOLO
+> uv sync --extra cuda --extra ultralytics                             # NVIDIA GPU + YOLO
+> uv sync --extra cpu --extra ultralytics                              # CPU + YOLO
+> ```
+>
+> See the [library README](library/README.md#installation) for more details.
 
-```Python
-from getitune.utils import list_models
+**Discover available models and train a model in just a few lines of code:**
+
+```python
 from getitune.engine import create_engine
-from getitune.types import ExportFormat, ExportPrecision
+from getitune.utils import list_models
 
-# List all available models names
-all_models = list_models()
+# Explore available models for your task
+all_models = list_models()                    # List all model names
+detection_models = list_models(task="DETECTION")  # Filter by task
+recipes = list_models(return_recipes=True)    # Get full recipe YAML paths
 
-# create Engine
+# Create an engine using any model name or recipe path
 engine = create_engine(
-    model="efficientnet_b0",
-    data="/path/to/dataset",
-    work_dir="./my_workspace",
+    model="efficientnet_b0",                  # model name, recipe YAML path, or exported IR/ONNX
+    data="/path/to/dataset",                  # dataset directory or YAML path
+    work_dir="./my_workspace",                # checkpoints and logs directory
+    device="auto",                            # "auto", "cpu", "gpu", "xpu".
 )
 
-# train a model
-engine.train()
+# Train and validate
+engine.train(max_epochs=50)
+metrics = engine.test()
 
-# Export to FP32 OpenVINO IR (default)
-ov_ir_path = engine.export()
+# Export to OpenVINO IR (default) for deployment
+exported_model_path = engine.export()
 
-# validate engine 
-ov_engine = create_engine(
-    model="/path/to/exported_model.xml",
-    data="/path/to/dataset",
-)
-ov_engine.test() # test on test subset
-ov_engine.predict() # predict on test subset
+# load exported OpenVINO model
+ov_engine = create_engine(model=exported_model_path, data=engine.datamodule)
 
-# optimize a model to int8 quantized version via NNCF tool
-ov_engine.optimize()
+# optimize the model for edge deployment
+optimized_model_path = ov_engine.optimize()
+
+# test the optimized model
+metrics = ov_engine.test()
+
+# predict with the optimized model
+predictions = ov_engine.predict()
 ```
 
-> [!NOTE]
-> See the [`getitune` README](library/README.md) for the full list of recipes, advanced configuration, dataset support,
-> inference/optimization examples, and hardware-specific PyTorch installation options.
+See the [library README](library/README.md) for the full list of recipes, advanced configuration, dataset support,
+backend-specific options, and deployment/optimization examples.
 
 ## Key Features
 
@@ -362,3 +374,5 @@ Geti™ is licensed under the [Apache License Version 2.0](LICENSE).
 Geti™ utilizes FFmpeg.
 
 FFmpeg is an open source project licensed under LGPL and GPL. See [https://www.ffmpeg.org/legal.html](https://www.ffmpeg.org/legal.html). You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
+
+Ultralytics YOLO models are distributed under the AGPL-3.0 license, an OSI approved license ideal for open-source research, academic, and personal projects. For commercial use, enhanced support, and tailored licensing terms, please explore flexible Ultralytics licensing options at https://www.ultralytics.com/license.

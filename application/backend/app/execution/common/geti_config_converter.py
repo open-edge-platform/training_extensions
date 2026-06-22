@@ -11,9 +11,9 @@ from typing import Any, ClassVar
 from warnings import warn
 
 import yaml
-from getitune.backend.lightning.cli.utils import get_getitune_root_path
 from getitune.backend.ultralytics.tools.configurator import Configurator as UltralyticsConfigurator
 from getitune.tools.auto_configurator import AutoConfigurator
+from getitune.utils import get_getitune_root_path
 from loguru import logger
 
 RECIPE_PATH = get_getitune_root_path() / "recipe"
