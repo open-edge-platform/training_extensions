@@ -14,31 +14,14 @@ from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
+from getitrack.core.registry import ALGORITHM_REGISTRY
 from getitrack.logger import LOGGER, enable_logging
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     import numpy as np
 
     from getitrack.config import TrackerConfig
     from getitrack.core.detection import Detections, TrackedDetections
-
-
-ALGORITHM_REGISTRY: dict[str, type[BaseTracker]] = {}
-
-
-def register_algorithm(name: str) -> Callable[[type[BaseTracker]], type[BaseTracker]]:
-    """Return a decorator that registers a `BaseTracker` subclass under ``name``."""
-
-    def _wrap(cls: type[BaseTracker]) -> type[BaseTracker]:
-        if name in ALGORITHM_REGISTRY:
-            msg = f"algorithm '{name}' is already registered by {ALGORITHM_REGISTRY[name].__name__}"
-            raise ValueError(msg)
-        ALGORITHM_REGISTRY[name] = cls
-        return cls
-
-    return _wrap
 
 
 class BaseTracker(ABC):

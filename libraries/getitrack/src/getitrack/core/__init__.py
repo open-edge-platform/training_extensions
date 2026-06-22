@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Core data types and tracker interface."""
 
-from getitrack.core.base import ALGORITHM_REGISTRY, BaseTracker, register_algorithm
+from getitrack.core.base import BaseTracker
 from getitrack.core.detection import Detections, TrackedDetections, TrackState
+from getitrack.core.registry import ALGORITHM_REGISTRY, register_algorithm
 from getitrack.core.track import Track
 
 __all__ = [

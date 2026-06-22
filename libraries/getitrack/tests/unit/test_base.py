@@ -12,8 +12,9 @@ import pytest
 from loguru import logger
 
 from getitrack.config import AlgorithmType, TrackerConfig
-from getitrack.core.base import ALGORITHM_REGISTRY, BaseTracker, register_algorithm
+from getitrack.core.base import BaseTracker
 from getitrack.core.detection import Detections, TrackedDetections
+from getitrack.core.registry import ALGORITHM_REGISTRY, register_algorithm
 
 
 class _Recording(BaseTracker):
