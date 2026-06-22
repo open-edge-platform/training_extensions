@@ -5,8 +5,8 @@
 `TrackerConfig` is the top-level entry point. Sub-configs group fields by
 responsibility (association, lifecycle, motion, appearance, interpolation)
 so a YAML file can tune one concern in isolation. Field docstrings surface
-as ``description`` strings in ``model_json_schema()`` because each model
-sets ``use_attribute_docstrings=True``.
+as ``description`` strings in ``model_json_schema()`` because the shared
+`_StrictModel` base sets ``use_attribute_docstrings=True``.
 """
 
 from __future__ import annotations
@@ -36,10 +36,14 @@ class InterpolationMethod(StrEnum):
     SPLINE = "spline"
 
 
-class AssociationConfig(BaseModel):
-    """Detection-to-track matching parameters."""
+class _StrictModel(BaseModel):
+    """Base for config models: reject unknown keys and expose field docstrings."""
 
     model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
+
+
+class AssociationConfig(_StrictModel):
+    """Detection-to-track matching parameters."""
 
     match_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.8
     """Maximum assignment cost accepted when matching detections to tracks.
@@ -61,10 +65,8 @@ class AssociationConfig(BaseModel):
     match tracks."""
 
 
-class LifecycleConfig(BaseModel):
+class LifecycleConfig(_StrictModel):
     """Track creation, confirmation, and removal parameters."""
-
-    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
     max_age: Annotated[int, Field(ge=1)] = 30
     """Consecutive missed frames a LOST track may accumulate before removal."""
@@ -78,10 +80,8 @@ class LifecycleConfig(BaseModel):
     0 removes on the first miss (reference ByteTrack behavior)."""
 
 
-class MotionConfig(BaseModel):
+class MotionConfig(_StrictModel):
     """Kalman filter and motion model parameters."""
-
-    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
     process_noise: Annotated[float, Field(gt=0.0)] = 1.0
     """Multiplier on the process-noise covariance (Q). Larger values weight observations over the motion prior."""
@@ -93,10 +93,8 @@ class MotionConfig(BaseModel):
     """Per-frame velocity damping in ``(0, 1]``. Values below 1.0 simulate gradual deceleration."""
 
 
-class AppearanceConfig(BaseModel):
+class AppearanceConfig(_StrictModel):
     """Appearance and embedding-based matching parameters."""
-
-    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
     enabled: bool = False
     """Fuse appearance similarity into the matching cost when true."""
@@ -114,10 +112,8 @@ class AppearanceConfig(BaseModel):
     """Blend between motion and appearance cost: 0.0 is pure motion, 1.0 is pure appearance."""
 
 
-class InterpolationConfig(BaseModel):
+class InterpolationConfig(_StrictModel):
     """Bbox interpolation and smoothing parameters."""
-
-    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
     enabled: bool = True
     """Enable the interpolation post-processing stage."""
@@ -135,14 +131,12 @@ class InterpolationConfig(BaseModel):
     """Frames of lookahead permitted in online mode. 0 is strictly causal (zero latency)."""
 
 
-class TrackerConfig(BaseModel):
+class TrackerConfig(_StrictModel):
     """Top-level tracker configuration.
 
     Construct from a YAML file via `TrackerConfig.from_yaml`, from a dict
     via `TrackerConfig.model_validate`, or programmatically.
     """
-
-    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
     algorithm: AlgorithmType = AlgorithmType.BYTETRACK
     """Algorithm identifier. Each value resolves to a registered `BaseTracker` subclass."""
