@@ -752,6 +752,10 @@ class LightningEngine(Engine):
         """
         from getitune.cli.utils.jsonargparse import get_instantiated_classes
 
+        # Accept data_root as an alias for data (backward compatibility).
+        if data is None and "data_root" in kwargs:
+            data = kwargs.pop("data_root")
+
         # Separate a pre-built DataModule from a plain data-root path so that
         # the CLI parser only receives a file-system path (or None).
         provided_datamodule: DataModule | None = None
