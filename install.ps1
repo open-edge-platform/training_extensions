@@ -206,15 +206,13 @@ function Install-Uv {
     $installerUrl = "https://github.com/astral-sh/uv/releases/download/$uvVersion/uv-installer.ps1"
     $env:UV_INSTALL_DIR = $UV_DIR
 
-    if ($VerbosePreference -eq "Continue") {
-        & powershell -ExecutionPolicy Bypass -Command "irm '$installerUrl' | iex"
-    } else {
-        & powershell -ExecutionPolicy Bypass -Command "irm '$installerUrl' | iex" *>> $LOG_FILE
-    }
+    Invoke-CmdSpinner -Command "powershell" `
+        -Arguments @("-ExecutionPolicy", "Bypass", "-Command", "irm '$installerUrl' | iex") `
+        -Activity "Downloading and installing uv $uvVersion"
 
     Remove-Item Env:\UV_INSTALL_DIR -ErrorAction SilentlyContinue
 
-    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $uvExe)) {
+    if (-not (Test-Path $uvExe)) {
         throw "uv installation failed. Expected binary at $uvExe."
     }
 
@@ -305,7 +303,8 @@ function Install-Npm {
     $env:NVM_SYMLINK = $nodeDir
 
     # Install node (nvm install does not require elevation)
-    Invoke-Cmd -Command $nvmExe -Arguments @("install", $requiredNodeVersion)
+    Invoke-CmdSpinner -Command $nvmExe -Arguments @("install", $requiredNodeVersion) `
+        -Activity "Downloading and installing node $requiredNodeVersion"
 
     # Skip "nvm use" as it requires admin elevation to create a symlink.
     # Instead, we reference binaries directly from the version-specific directory

@@ -192,7 +192,7 @@ install_uv() {
         mkdir -p "$UV_DIR"
     fi
 
-    run_cmd bash -c "curl --proto '=https' --tlsv1.2 -LsSf 'https://github.com/astral-sh/uv/releases/download/${uv_version}/uv-installer.sh' | env UV_INSTALL_DIR='$UV_DIR' sh"
+    run_cmd_spinner "Downloading and installing uv $uv_version" bash -c "curl --proto '=https' --tlsv1.2 -LsSf 'https://github.com/astral-sh/uv/releases/download/${uv_version}/uv-installer.sh' | env UV_INSTALL_DIR='$UV_DIR' sh"
     echo "uv installation complete."
 }
 
@@ -215,7 +215,7 @@ install_nvm() {
         mkdir -p "$NVM_DIR"
     fi
 
-    run_cmd bash -c "curl -sS -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"
+    run_cmd_spinner "Downloading and installing nvm" bash -c "curl -sS -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"
     source "$NVM_DIR/nvm.sh"
     echo "nvm installation complete."
 }
@@ -242,7 +242,7 @@ install_npm() {
     fi
 
     echo "Required node $required_node_version not found in $NVM_DIR. Installing..."
-    run_cmd nvm install "$required_node_version"
+    run_cmd_spinner "Downloading and installing node $required_node_version" nvm install "$required_node_version"
 
     installed_npm_version=$("$NPM_BIN" --version)
     if [ "$(printf '%s\n' "$required_npm_version" "$installed_npm_version" | sort -V | head -n1)" != "$required_npm_version" ]; then

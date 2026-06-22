@@ -273,7 +273,7 @@ Would you like to see a specific model added? Let us know by opening a [GitHub i
       <td><a href="https://arxiv.org/abs/2107.08430">YOLOX</a></td>
     </tr>
     <tr>
-      <td rowspan="5"><b>Instance Segmentation</b><br>Detect objects and produce pixel-precise masks per instance, e.g. measuring object area, robotics, medical imaging.</td>
+      <td rowspan="6"><b>Instance Segmentation</b><br>Detect objects and produce pixel-precise masks per instance, e.g. measuring object area, robotics, medical imaging.</td>
       <td>RTMDet Tiny</td>
       <td><a href="https://arxiv.org/abs/2212.07784">RTMDet</a></td>
     </tr>
@@ -292,6 +292,10 @@ Would you like to see a specific model added? Let us know by opening a [GitHub i
     <tr>
       <td>RF-DETR S / M / L</td>
       <td><a href="https://arxiv.org/abs/2511.09554">RF-DETR</a></td>
+    </tr>
+    <tr>
+      <td>YOLO26 Nano / Small / Medium</td>
+      <td><a href="https://github.com/ultralytics/ultralytics">Ultralytics YOLO</a></td>
     </tr>
     <tr>
       <td rowspan="5"><b>Classification</b> (multi-class, multi-label)<br>Assign one or more labels to an entire image, e.g. quality pass/fail, product categorization, content tagging.</td>
