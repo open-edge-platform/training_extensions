@@ -125,6 +125,8 @@ test.describe('Subset Gallery — read-only dialog', () => {
         const dialog = page.getByRole('dialog');
         await expect(dialog).toBeVisible();
 
+        await expect(dialog.getByLabel('annotation polygon').first()).toBeVisible();
+
         const toggleFocusButton = page.getByRole('button', { name: 'Toggle focus' });
         await toggleFocusButton.click();
         await expect(toggleFocusButton).toBeVisible();
@@ -132,7 +134,10 @@ test.describe('Subset Gallery — read-only dialog', () => {
         await page.getByRole('button', { name: 'Settings' }).click();
         await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
 
-        await page.getByRole('button', { name: 'Close' }).click();
+        await page.getByRole('button', { name: 'Close settings' }).click();
+        await expect(page.getByRole('heading', { name: 'Settings' })).toBeHidden();
+
+        await page.getByRole('button', { name: 'Close', exact: true }).click();
         await expect(dialog).toBeHidden();
     });
 });
