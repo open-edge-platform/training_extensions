@@ -9,15 +9,14 @@ RFDETRInst (instance segmentation) models.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import torch
 from rfdetr._namespace import _namespace_from_configs
-from rfdetr.config import ModelConfig, TrainConfig
+from rfdetr.config import TrainConfig
 from rfdetr.models import build_criterion_from_config, build_model_from_config, load_pretrain_weights
 from rfdetr.models._defaults import MODEL_DEFAULTS
-
-from getitune.backend.lightning.models.detection.detectors._rfdetr_vendored import get_param_dict
+from rfdetr.util.get_param_dicts import get_param_dict
 from torchvision import tv_tensors
 from torchvision.ops import box_convert
 
@@ -30,6 +29,8 @@ from getitune.types.precision import Precision
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from rfdetr.models.lwdetr import LWDETR
 
 
 class RFDETRMixin:
@@ -67,14 +68,14 @@ class RFDETRMixin:
         model_config.gradient_checkpointing = gradient_checkpointing
         train_config = TrainConfig(dataset_dir=".")
 
-        lwdetr: torch.nn.Module = build_model_from_config(model_config, train_config)
+        lwdetr: LWDETR = cast("LWDETR", build_model_from_config(model_config, train_config))
 
         load_pretrain_weights(lwdetr, model_config)
 
-        torch.nn.init.zeros_(lwdetr.class_embed.bias)  # pyrefly: ignore[bad-argument-type]
-        if getattr(lwdetr, "two_stage", False):
+        torch.nn.init.zeros_(lwdetr.class_embed.bias)
+        if lwdetr.two_stage:
             for enc_cls_embed in lwdetr.transformer.enc_out_class_embed:
-                torch.nn.init.zeros_(enc_cls_embed.bias)  # pyrefly: ignore[bad-argument-type]
+                torch.nn.init.zeros_(enc_cls_embed.bias)
 
         criterion, postprocessor = build_criterion_from_config(model_config, train_config)
 
@@ -83,10 +84,10 @@ class RFDETRMixin:
         )
 
         return RFDETRDetector(
-            lwdetr_model=lwdetr,  # pyrefly: ignore[bad-argument-type]
+            lwdetr_model=lwdetr,
             criterion=criterion,
-            postprocessor=postprocessor,  # pyrefly: ignore[bad-argument-type]
-            rfdetr_args=self.rfdetr_args,  # pyrefly: ignore[bad-argument-type]
+            postprocessor=postprocessor,
+            rfdetr_args=self.rfdetr_args,  # type: ignore[attr-defined]
             input_size=self.data_input_params.input_size[0],  # type: ignore[attr-defined]
             multi_scale=self.multi_scale,  # type: ignore[attr-defined]
         )

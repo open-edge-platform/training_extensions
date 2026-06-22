@@ -14,10 +14,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
-from getitune.backend.lightning.models.detection.detectors._rfdetr_vendored import (
-    compute_multi_scale_scales,
-    nested_tensor_from_tensor_list,
-)
+from rfdetr.datasets.coco import compute_multi_scale_scales
+from rfdetr.util.misc import nested_tensor_from_tensor_list
 from torch import Tensor, nn
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxes
@@ -25,7 +23,7 @@ from torchvision.tv_tensors import BoundingBoxes
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
-    from jsonargparse import Namespace
+    from types import SimpleNamespace
 
 
 class RFDETRDetector(BaseModule):
@@ -47,7 +45,7 @@ class RFDETRDetector(BaseModule):
         lwdetr_model: nn.Module,
         criterion: nn.Module,
         postprocessor: nn.Module,
-        rfdetr_args: Namespace,
+        rfdetr_args: SimpleNamespace,
         input_size: int = 560,
         multi_scale: bool = False,
     ) -> None:

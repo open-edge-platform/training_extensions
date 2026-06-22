@@ -8,8 +8,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar, Literal
 
 import torch
-from torch.export import Dim
-
 from rfdetr.config import (
     RFDETRSeg2XLargeConfig,
     RFDETRSegLargeConfig,
@@ -18,6 +16,7 @@ from rfdetr.config import (
     RFDETRSegSmallConfig,
     RFDETRSegXLargeConfig,
 )
+from torch.export import Dim
 
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
@@ -28,15 +27,6 @@ from getitune.backend.lightning.models.instance_segmentation.base import Lightni
 from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 from getitune.types.export import TaskLevelExportParameters
-
-from rfdetr.config import (
-    RFDETRSeg2XLargeConfig,
-    RFDETRSegLargeConfig,
-    RFDETRSegMediumConfig,
-    RFDETRSegNanoConfig,
-    RFDETRSegSmallConfig,
-    RFDETRSegXLargeConfig,
-)
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable

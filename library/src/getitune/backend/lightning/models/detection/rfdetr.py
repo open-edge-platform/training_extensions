@@ -12,14 +12,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
-from torch.export import Dim
-
 from rfdetr.config import (
     RFDETRLargeConfig,
     RFDETRMediumConfig,
     RFDETRNanoConfig,
     RFDETRSmallConfig,
 )
+from torch.export import Dim
 
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
