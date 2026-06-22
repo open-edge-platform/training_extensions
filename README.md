@@ -273,7 +273,7 @@ Build custom pipelines (source → model → sink) to deploy models inside Geti 
 <details>
 <summary>🎨 Multiple computer vision tasks</summary>
 
-Geti™ supports <a target="_blank" rel="noopener noreferrer" href="https://docs.geti.intel.com/docs/user-guide/learn-geti/computer-vision-tasks/ai-fundamentals-tasks">multiple computer vision tasks</a> that are commonly employed across various use cases - image classification, object detection and instance segmentation from the no-code web interface, with even more tasks available through the `getitune` library.
+Geti™ supports [multiple computer vision tasks](https://docs.geti.intel.com/docs/user-guide/learn-geti/computer-vision-tasks/ai-fundamentals-tasks) that are commonly employed across various use cases - image classification, object detection and instance segmentation from the no-code web interface, with even more tasks available through the `getitune` library.
 
 </details>
 
