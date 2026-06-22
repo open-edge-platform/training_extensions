@@ -18,15 +18,28 @@ State transitions::
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import IntEnum
 from typing import TYPE_CHECKING, assert_never
 
-from getitrack.core.detection import TrackState
 from getitrack.logger import LOGGER
 
 if TYPE_CHECKING:
     import numpy as np
 
     from getitrack.config import LifecycleConfig
+
+
+class TrackState(IntEnum):
+    """Lifecycle state of a single track.
+
+    Values are assigned explicitly so `TrackedDetections.track_states` can
+    store them as int8 without depending on declaration order.
+    """
+
+    TENTATIVE = 0
+    ACTIVE = 1
+    LOST = 2
+    REMOVED = 3
 
 
 @dataclass
@@ -77,7 +90,9 @@ class Track:
             case _:
                 assert_never(self.state)
         if self.state != prev_state:
-            LOGGER.debug("track {}: {} -> {} on hit (hits={})", self.track_id, prev_state, self.state, self.hits)
+            LOGGER.debug(
+                "track {}: {} -> {} on hit (hits={})", self.track_id, prev_state.name, self.state.name, self.hits
+            )
 
     def mark_miss(self, lifecycle: LifecycleConfig) -> None:
         """Record a missed observation on this frame and advance state."""
@@ -101,8 +116,8 @@ class Track:
             LOGGER.debug(
                 "track {}: {} -> {} on miss (time_since_update={})",
                 self.track_id,
-                prev_state,
-                self.state,
+                prev_state.name,
+                self.state.name,
                 self.time_since_update,
             )
 

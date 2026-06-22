@@ -5,7 +5,8 @@
 import numpy as np
 import pytest
 
-from getitrack.core.detection import Detections, TrackedDetections, TrackState
+from getitrack.core.detection import Detections, TrackedDetections
+from getitrack.core.track import TrackState
 
 
 def _dets(n: int = 3, frame_id: int = 0) -> Detections:
@@ -18,13 +19,12 @@ def _dets(n: int = 3, frame_id: int = 0) -> Detections:
 
 
 class TestTrackState:
-    def test_ordinals_are_dense_zero_based(self):
-        ordinals = [s.ordinal() for s in TrackState]
-        assert ordinals == list(range(len(TrackState)))
+    def test_values_are_explicit_and_dense(self):
+        assert [int(s) for s in TrackState] == list(range(len(TrackState)))
 
-    def test_from_ordinal_roundtrip(self):
-        for s in TrackState:
-            assert TrackState.from_ordinal(s.ordinal()) is s
+    def test_values_are_locked(self):
+        # Values are part of the on-disk track_states contract; pin them.
+        assert (TrackState.TENTATIVE, TrackState.ACTIVE, TrackState.LOST, TrackState.REMOVED) == (0, 1, 2, 3)
 
 
 class TestDetections:
@@ -152,7 +152,7 @@ class TestTrackedDetections:
             scores=np.array([0.9, 0.5][:n], dtype=np.float32),
             class_ids=np.array([0, 1][:n], dtype=np.int64),
             track_ids=np.array([1, 2][:n], dtype=np.int64),
-            track_states=np.array([TrackState.ACTIVE.ordinal(), TrackState.LOST.ordinal()][:n], dtype=np.int8),
+            track_states=np.array([TrackState.ACTIVE, TrackState.LOST][:n], dtype=np.int8),
             frame_id=0,
         )
 
@@ -174,8 +174,8 @@ class TestTrackedDetections:
         td = self._td(2)
         assert td.to_string_states() == ["active", "lost"]
 
-    def test_invalid_state_ordinal_raises(self):
-        with pytest.raises(ValueError, match="track_states ordinals"):
+    def test_invalid_state_value_raises(self):
+        with pytest.raises(ValueError, match="track_states values"):
             TrackedDetections(
                 bboxes=np.zeros((1, 4), dtype=np.float32),
                 scores=np.zeros(1, dtype=np.float32),
@@ -213,7 +213,7 @@ class TestTrackedDetections:
             scores=np.array([0.9, 0.5], dtype=np.float32),
             class_ids=np.array([0, 1], dtype=np.int64),
             track_ids=np.array([1, 2], dtype=np.int64),
-            track_states=np.array([TrackState.ACTIVE.ordinal(), TrackState.LOST.ordinal()], dtype=np.int8),
+            track_states=np.array([TrackState.ACTIVE, TrackState.LOST], dtype=np.int8),
             frame_id=0,
             interpolated=np.array([False, True]),
         )
@@ -253,7 +253,7 @@ class TestDetIndices:
             scores=np.array([0.9, 0.5], dtype=np.float32),
             class_ids=np.array([0, 1], dtype=np.int64),
             track_ids=np.array([1, 2], dtype=np.int64),
-            track_states=np.array([TrackState.ACTIVE.ordinal(), TrackState.LOST.ordinal()], dtype=np.int8),
+            track_states=np.array([TrackState.ACTIVE, TrackState.LOST], dtype=np.int8),
             frame_id=0,
             det_indices=np.array([5, -1], dtype=np.int64),
         )

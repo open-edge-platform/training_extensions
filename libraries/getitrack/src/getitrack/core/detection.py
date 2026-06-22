@@ -25,44 +25,22 @@ precision drift downstream):
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
 from typing import TYPE_CHECKING
 
 import numpy as np
 
+from getitrack.core.track import TrackState
 from getitrack.core.validation import (
     BBOX_COLS,
     validate_bboxes,
     validate_dtypes,
     validate_row_aligned,
     validate_scores,
+    validate_value_range,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-
-
-class TrackState(StrEnum):
-    """Lifecycle states of a single track.
-
-    State transitions are defined in `getitrack.core.track`.
-    `TrackedDetections.track_states` stores values as int8 ordinals where
-    the ordinal is the member's 0-based position in declaration order.
-    """
-
-    TENTATIVE = "tentative"
-    ACTIVE = "active"
-    LOST = "lost"
-    REMOVED = "removed"
-
-    @classmethod
-    def from_ordinal(cls, ordinal: int) -> TrackState:
-        """Return the member at a given 0-based ordinal."""
-        return list(cls)[ordinal]
-
-    def ordinal(self) -> int:
-        """Return this member's 0-based ordinal."""
-        return list(type(self)).index(self)
 
 
 @dataclass
@@ -162,7 +140,7 @@ class TrackedDetections:
         scores: ``(N,)`` float32 confidence scores in ``[0, 1]``.
         class_ids: ``(N,)`` int64 class identifiers.
         track_ids: ``(N,)`` int64 stable per-object identifiers.
-        track_states: ``(N,)`` int8 ordinals of `TrackState`.
+        track_states: ``(N,)`` int8 `TrackState` values.
         frame_id: Index of the frame this batch belongs to.
         det_indices: Optional ``(N,)`` int64 row indices into the frame's
             input `Detections`, identifying the detection that produced
@@ -193,7 +171,7 @@ class TrackedDetections:
             interpolated=self.interpolated,
         )
         validate_scores(self.scores)
-        _validate_track_states(self.track_states)
+        validate_value_range(self.track_states, high=len(TrackState), name="track_states")
         validate_dtypes(
             bboxes=(self.bboxes, np.float32),
             scores=(self.scores, np.float32),
@@ -209,21 +187,23 @@ class TrackedDetections:
 
     def active_only(self) -> TrackedDetections:
         """Return rows whose state is ``TrackState.ACTIVE``."""
-        keep = self.track_states == TrackState.ACTIVE.ordinal()
+        return self._index(self.track_states == TrackState.ACTIVE)
+
+    def _index(self, mask: np.ndarray) -> TrackedDetections:
         return TrackedDetections(
-            bboxes=self.bboxes[keep],
-            scores=self.scores[keep],
-            class_ids=self.class_ids[keep],
-            track_ids=self.track_ids[keep],
-            track_states=self.track_states[keep],
+            bboxes=self.bboxes[mask],
+            scores=self.scores[mask],
+            class_ids=self.class_ids[mask],
+            track_ids=self.track_ids[mask],
+            track_states=self.track_states[mask],
             frame_id=self.frame_id,
-            det_indices=None if self.det_indices is None else self.det_indices[keep],
-            interpolated=None if self.interpolated is None else self.interpolated[keep],
+            det_indices=None if self.det_indices is None else self.det_indices[mask],
+            interpolated=None if self.interpolated is None else self.interpolated[mask],
         )
 
     def to_string_states(self) -> list[str]:
         """Return per-row state names as lowercase strings."""
-        return [TrackState.from_ordinal(int(o)).value for o in self.track_states]
+        return [TrackState(int(o)).name.lower() for o in self.track_states]
 
     @classmethod
     def create_empty(cls, frame_id: int) -> TrackedDetections:
@@ -236,13 +216,3 @@ class TrackedDetections:
             track_states=np.empty((0,), dtype=np.int8),
             frame_id=frame_id,
         )
-
-
-def _validate_track_states(states: np.ndarray) -> None:
-    """Raise if any track-state ordinal is outside the `TrackState` range."""
-    if states.size == 0:
-        return
-    n_states = len(TrackState)
-    if states.min() < 0 or states.max() >= n_states:
-        msg = f"track_states ordinals must be in [0, {n_states}); got min={states.min()} max={states.max()}"
-        raise ValueError(msg)

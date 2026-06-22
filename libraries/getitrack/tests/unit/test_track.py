@@ -6,8 +6,7 @@ import numpy as np
 import pytest
 
 from getitrack.config import LifecycleConfig
-from getitrack.core.detection import TrackState
-from getitrack.core.track import Track
+from getitrack.core.track import Track, TrackState
 
 
 @pytest.fixture

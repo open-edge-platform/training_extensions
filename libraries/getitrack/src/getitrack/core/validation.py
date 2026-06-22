@@ -40,6 +40,13 @@ def validate_scores(scores: np.ndarray) -> None:
         raise ValueError(msg)
 
 
+def validate_value_range(values: np.ndarray, *, high: int, name: str) -> None:
+    """Raise if any entry of ``values`` falls outside ``[0, high)``."""
+    if values.size and (values.min() < 0 or values.max() >= high):
+        msg = f"{name} values must be in [0, {high}); got min={values.min()} max={values.max()}"
+        raise ValueError(msg)
+
+
 def validate_dtypes(**checks: tuple[np.ndarray, type] | None) -> None:
     """Raise if any ``(array, expected_dtype)`` pair has a mismatched dtype.
 
