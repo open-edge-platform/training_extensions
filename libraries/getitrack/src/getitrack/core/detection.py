@@ -30,10 +30,16 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from getitrack.core.validation import (
+    BBOX_COLS,
+    validate_bboxes,
+    validate_dtypes,
+    validate_row_aligned,
+    validate_scores,
+)
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
-
-_BBOX_COLS = 4
 
 
 class TrackState(StrEnum):
@@ -81,15 +87,15 @@ class Detections:
     embeddings: np.ndarray | None = None
 
     def __post_init__(self) -> None:
-        _validate_bboxes(self.bboxes)
-        _validate_row_aligned(
+        validate_bboxes(self.bboxes)
+        validate_row_aligned(
             n=self.bboxes.shape[0],
             scores=self.scores,
             class_ids=self.class_ids,
             embeddings=self.embeddings,
         )
-        _validate_scores(self.scores)
-        _validate_dtypes(
+        validate_scores(self.scores)
+        validate_dtypes(
             bboxes=(self.bboxes, np.float32),
             scores=(self.scores, np.float32),
             class_ids=(self.class_ids, np.int64),
@@ -136,7 +142,7 @@ class Detections:
     def create_empty(cls, frame_id: int) -> Detections:
         """Construct an empty `Detections` for the given frame."""
         return cls(
-            bboxes=np.empty((0, _BBOX_COLS), dtype=np.float32),
+            bboxes=np.empty((0, BBOX_COLS), dtype=np.float32),
             scores=np.empty((0,), dtype=np.float32),
             class_ids=np.empty((0,), dtype=np.int64),
             frame_id=frame_id,
@@ -176,8 +182,8 @@ class TrackedDetections:
     interpolated: np.ndarray | None = field(default=None)
 
     def __post_init__(self) -> None:
-        _validate_bboxes(self.bboxes)
-        _validate_row_aligned(
+        validate_bboxes(self.bboxes)
+        validate_row_aligned(
             n=self.bboxes.shape[0],
             scores=self.scores,
             class_ids=self.class_ids,
@@ -186,9 +192,9 @@ class TrackedDetections:
             det_indices=self.det_indices,
             interpolated=self.interpolated,
         )
-        _validate_scores(self.scores)
+        validate_scores(self.scores)
         _validate_track_states(self.track_states)
-        _validate_dtypes(
+        validate_dtypes(
             bboxes=(self.bboxes, np.float32),
             scores=(self.scores, np.float32),
             class_ids=(self.class_ids, np.int64),
@@ -223,7 +229,7 @@ class TrackedDetections:
     def create_empty(cls, frame_id: int) -> TrackedDetections:
         """Construct an empty `TrackedDetections` for the given frame."""
         return cls(
-            bboxes=np.empty((0, _BBOX_COLS), dtype=np.float32),
+            bboxes=np.empty((0, BBOX_COLS), dtype=np.float32),
             scores=np.empty((0,), dtype=np.float32),
             class_ids=np.empty((0,), dtype=np.int64),
             track_ids=np.empty((0,), dtype=np.int64),
@@ -232,45 +238,11 @@ class TrackedDetections:
         )
 
 
-def _validate_bboxes(bboxes: np.ndarray) -> None:
-    if bboxes.ndim != 2 or bboxes.shape[1] != _BBOX_COLS:
-        msg = f"bboxes must have shape (N, {_BBOX_COLS}); got {bboxes.shape}"
-        raise ValueError(msg)
-
-
-def _validate_row_aligned(*, n: int, **arrays: np.ndarray | None) -> None:
-    for name, arr in arrays.items():
-        if arr is None:
-            continue
-        if arr.shape[0] != n:
-            msg = f"{name} has {arr.shape[0]} rows; expected {n} to match bboxes"
-            raise ValueError(msg)
-
-
-def _validate_scores(scores: np.ndarray) -> None:
-    if scores.size and (scores.min() < 0.0 or scores.max() > 1.0):
-        msg = f"scores must be in [0, 1]; got min={scores.min()} max={scores.max()}"
-        raise ValueError(msg)
-
-
 def _validate_track_states(states: np.ndarray) -> None:
+    """Raise if any track-state ordinal is outside the `TrackState` range."""
     if states.size == 0:
         return
     n_states = len(TrackState)
     if states.min() < 0 or states.max() >= n_states:
         msg = f"track_states ordinals must be in [0, {n_states}); got min={states.min()} max={states.max()}"
         raise ValueError(msg)
-
-
-def _validate_dtypes(**checks: tuple[np.ndarray, type] | None) -> None:
-    """Raise if any ``(array, expected_dtype)`` pair has a mismatched dtype.
-
-    Pass ``None`` for absent optional fields to keep the call site flat.
-    """
-    for name, item in checks.items():
-        if item is None:
-            continue
-        arr, expected = item
-        if arr.dtype != expected:
-            msg = f"{name} must have dtype {np.dtype(expected).name}; got {arr.dtype.name}"
-            raise TypeError(msg)
