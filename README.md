@@ -5,7 +5,7 @@
 
 [Quick Start](#quick-start) •
 [Geti™ documentation](https://docs.geti.intel.com/) •
-[`getitune` documentation](https://open-edge-platform.github.io/geti/latest/index.html)
+[`getitune` documentation](library/README.md)
 
 [![Container build](https://github.com/open-edge-platform/geti/actions/workflows/build.yaml/badge.svg)](https://github.com/open-edge-platform/geti/actions/workflows/build.yaml)
 [![Codecov](https://codecov.io/gh/open-edge-platform/geti/branch/develop/graph/badge.svg?token=9HVFNMPFGD)](https://codecov.io/gh/open-edge-platform/geti)
@@ -130,17 +130,37 @@ pip install "getitune"
 
 Provide `getitune` with a dataset and fine-tune a model:
 
-```python
+```Python
+from getitune.utils import list_models
 from getitune.engine import create_engine
+from getitune.types import ExportFormat, ExportPrecision
 
-# Initialize and train using a bundled recipe and dataset
+# List all available models names
+all_models = list_models()
+
+# create Engine
 engine = create_engine(
-    data="tests/assets/classification_cifar10",
-    model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+    model="efficientnet_b0",
+    data="/path/to/dataset",
+    work_dir="./my_workspace",
 )
+
+# train a model
 engine.train()
-engine.test()
-exported_path = engine.export()  # writes OpenVINO IR
+
+# Export to FP32 OpenVINO IR (default)
+ov_ir_path = engine.export()
+
+# validate engine 
+ov_engine = create_engine(
+    model="/path/to/exported_model.xml",
+    data="/path/to/dataset",
+)
+ov_engine.test() # test on test subset
+ov_engine.predict() # predict on test subset
+
+# optimize a model to int8 quantized version via NNCF tool
+ov_engine.optimize()
 ```
 
 > [!NOTE]
