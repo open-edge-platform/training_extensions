@@ -114,9 +114,9 @@ Once Geti is up and running, follow the intuitive UI to train your first model.
 >
 > Detailed installation guide is available in ["Installation guide"](https://docs.geti.intel.com/docs/user-guide/getting-started/installation/installation-guide)
 
-## Quick start with `getitune`
+## Quick start with Geti Library (`getitune`)
 
-Prefer to work programmatically? Geti's training engine is published on PyPI and can train, optimize, and deploy models
+Geti's training engine is published on PyPI and can train, optimize, and deploy models
 from Python. It requires **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, and **NumPy ≥ 2.0**.
 
 ```bash
