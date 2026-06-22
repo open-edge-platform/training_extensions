@@ -8,6 +8,7 @@ import { render } from 'test-utils/render';
 import { ModelArchitecturesList } from './model-architectures-list.component';
 
 const mockOnSelectModelArchitectureId = vi.hoisted(() => vi.fn());
+const mockSelectedModelArchitectureId = vi.hoisted(() => ({ value: null as string | null }));
 
 const mockModelArchitectures = [
     getMockedModelArchitecture({ id: 'arch-1', name: 'Alpha Model' }),
@@ -20,7 +21,7 @@ const mockModelArchitectures = [
 vi.mock('../train-model-provider.component', () => ({
     useTrainModelState: () => ({
         modelArchitectures: mockModelArchitectures,
-        selectedModelArchitectureId: null,
+        selectedModelArchitectureId: mockSelectedModelArchitectureId.value,
         onSelectModelArchitectureId: mockOnSelectModelArchitectureId,
     }),
 }));
@@ -28,6 +29,7 @@ vi.mock('../train-model-provider.component', () => ({
 describe('ModelArchitecturesList', () => {
     beforeEach(() => {
         mockOnSelectModelArchitectureId.mockReset();
+        mockSelectedModelArchitectureId.value = null;
     });
 
     it('does not render the sort control in the default (recommended) view', () => {
@@ -52,5 +54,13 @@ describe('ModelArchitecturesList', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Show less' }));
         expect(screen.queryByRole('button', { name: /Sort Models by:/i })).not.toBeInTheDocument();
+    });
+    
+    it('renders expanded list by default if a non-default architecture is already selected', () => {
+        mockSelectedModelArchitectureId.value = 'arch-5';
+        render(<ModelArchitecturesList />);
+
+        expect(screen.getByRole('button', { name: 'Show less' })).toBeVisible();
+        expect(screen.getByRole('button', { name: /Sort Models by:/i })).toBeVisible();
     });
 });
