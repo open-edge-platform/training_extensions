@@ -249,14 +249,28 @@ Once Geti is running, build your first model directly in the web UI:
 
 See [Training your first model](https://docs.geti.intel.com/) for the full walkthrough.
 
-### Use the Python API (`getitune`)
+### Use the Geti Library (`getitune`)
 
 Prefer to work programmatically? Geti's training engine is published on PyPI and can train, optimize, and deploy models
 from Python. It requires **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, and **NumPy ≥ 2.0**.
 
 ```bash
-pip install "getitune[cpu]"    # or [xpu] for Intel® GPU, [cuda] for NVIDIA® GPU
+uv pip install "getitune[xpu]" --extra-index-url https://download.pytorch.org/whl/xpu    # for Intel® XPU acceleration
+uv pip install "getitune[cuda]" --extra-index-url https://download.pytorch.org/whl/cu128    # for NVIDIA® CUDA acceleration
+uv pip install getitune # CPU-only by default
 ```
+
+> ⚠️ **Ultralytics YOLO Models**: The PyPI package does **not** include Ultralytics YOLO26 models. Install from source to use them:
+>
+> ```bash
+> git clone https://github.com/open-edge-platform/training_extensions.git
+> cd training_extensions/library
+> uv sync --extra cpu --extra ultralytics                              # CPU + YOLO
+> uv sync --extra xpu --extra ultralytics                              # Intel GPU + YOLO
+> uv sync --extra cuda --extra ultralytics                             # NVIDIA GPU + YOLO
+> ```
+>
+> See the [library README](library/README.md#installation) for more details.
 
 **Discover available models and train a model in just a few lines of code:**
 

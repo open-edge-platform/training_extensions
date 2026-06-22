@@ -82,6 +82,7 @@ Requirements: **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, 
 
 ```bash
 # With uv (recommended)
+# CPU-only by default
 uv pip install "getitune"
 
 # Or with pip
@@ -89,6 +90,8 @@ pip install "getitune"
 
 # For hardware-specific PyTorch wheels, see "Advanced Installation: Specify Hardware Backend" below.
 ```
+
+⚠️ **Note**: PyPi version doesn't support Ultralytics YOLO models. To use Ultralytics YOLO models, you must [install from source](#advanced-installation-install-from-source).
 
 <details>
 <summary><strong> Advanced Installation: Specify Hardware Backend</strong></summary>
@@ -114,21 +117,12 @@ uv pip install "getitune[cpu]"
 
 > **macOS note**: PyTorch's `+cpu` wheel is only published for Linux and Windows. The `[cpu]` extra resolves this automatically and installs the default `torch==2.10.0` wheel on macOS.
 
-> **Ultralytics YOLO models**: YOLO26 support requires the additional `[ultralytics]` extra. Combine it with any hardware extra:
->
-> ```bash
-> uv pip install "getitune[xpu,ultralytics]" # Intel GPU + YOLO
-> uv pip install "getitune[cuda,ultralytics]" # NVIDIA GPU + YOLO
-> uv pip install "getitune[cpu,ultralytics]" # CPU + YOLO
-> ```
->
-> ⚠️ **Note**: The PyPI `[ultralytics]` extra includes the Ultralytics framework but **does not bundle YOLO26 model weights**.
-> To use YOLO26 models, you must [install from source](#advanced-installation-install-from-source) using `[ultralytics]`, which includes pre-downloaded model weights.
-
+> **Ultralytics YOLO models**: The PyPI version doesn't include Ultralytics YOLO support.
+> To use YOLO26 models, you must [install from source](#advanced-installation-install-from-source).
 </details>
 
 <details>
-<summary><strong> Advanced Installation: Install from Source</strong></summary>
+<summary><strong> Advanced Installation: Install from Source with Ultralytics YOLO Support</strong></summary>
 
 ```bash
 git clone https://github.com/open-edge-platform/geti.git
@@ -158,7 +152,9 @@ pip install -e ".[cuda]" \
 >
 > ```bash
 > uv sync --extra xpu --extra ultralytics  # Intel GPU + YOLO
-> pip install -e ".[xpu,ultralytics]"       # Intel GPU + YOLO
+>
+> # or with pip
+> pip install -e ".[xpu,ultralytics]" --extra-index-url https://download.pytorch.org/whl/xpu  #Intel GPU + YOLO
 > ```
 
 </details>
@@ -373,9 +369,8 @@ engine.train(epochs=50)
 engine.test()
 engine.export()
 
-> ⚠️ **Note for PyPI users**: Direct `UltralyticsEngine` instantiation (as shown above) with YOLO models requires
-> [installing from source](#advanced-installation-install-from-source) with the `[ultralytics]` extra to access pre-downloaded model weights.
-> For PyPI installs, use `create_engine()` which handles model resolution automatically.
+> ⚠️ **Note**: Ultralytics YOLO models and the `UltralyticsEngine` backend require [installing from source](#advanced-installation-install-from-source) with the `[ultralytics]` extra.
+> The PyPI package does **not** include Ultralytics support.
 
 
 # -- OpenVINO Backend (inference) --
