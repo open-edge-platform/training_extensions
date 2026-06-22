@@ -265,9 +265,9 @@ uv pip install getitune # CPU-only by default
 > ```bash
 > git clone https://github.com/open-edge-platform/training_extensions.git
 > cd training_extensions/library
-> uv sync --extra cpu --extra ultralytics                              # CPU + YOLO
 > uv sync --extra xpu --extra ultralytics                              # Intel GPU + YOLO
 > uv sync --extra cuda --extra ultralytics                             # NVIDIA GPU + YOLO
+> uv sync --extra cpu --extra ultralytics                              # CPU + YOLO
 > ```
 >
 > See the [library README](library/README.md#installation) for more details.
@@ -288,18 +288,27 @@ engine = create_engine(
     model="efficientnet_b0",                  # model name, recipe YAML path, or exported IR/ONNX
     data="/path/to/dataset",                  # dataset directory or YAML path
     work_dir="./my_workspace",                # checkpoints and logs directory
-    device="auto",                            # "auto", "cpu", "gpu", "0", "xpu", etc.
+    device="auto",                            # "auto", "cpu", "gpu", "xpu".
 )
 
 # Train and validate
 engine.train(max_epochs=50)
 metrics = engine.test()
 
-# Export to OpenVINO IR for deployment
+# Export to OpenVINO IR (default) for deployment
 exported_model_path = engine.export()
 
-# Inference on dataset or custom inputs
-predictions = engine.predict()
+# load exported OpenVINO model
+ov_engine = create_engine(model=exported_model_path, data=engine.datamodule)
+
+# optimize the model for edge deployment
+optimized_model_path = ov_engine.optimize()
+
+# test the optimized model
+metrics = ov_engine.test()
+
+# predict with the optimized model
+predictions = ov_engine.predict()
 ```
 
 See the [library README](library/README.md) for the full list of recipes, advanced configuration, dataset support,
@@ -341,3 +350,5 @@ Stay tuned for further updates soon!
 ## Disclaimers
 
 FFmpeg is an open source project licensed under LGPL and GPL. See [https://www.ffmpeg.org/legal.html](https://www.ffmpeg.org/legal.html). You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
+
+Ultralytics YOLO models are distributed under the AGPL-3.0 license, an OSI approved license ideal for open-source research, academic, and personal projects. For commercial use, enhanced support, and tailored licensing terms, please explore flexible Ultralytics licensing options at https://www.ultralytics.com/license.
