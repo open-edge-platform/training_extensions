@@ -91,13 +91,54 @@ Then get access to Geti™ user interface at `http://localhost:7860`.
 
 <details>
 <summary>Install from source code</summary>
-To install the Geti™ stable development version from source code, use:
+Install the Geti™ stable development version from source code. The installer clones the repository, sets up its own
+copy of `uv`, Node.js and npm under `.build/`, detects your accelerator (Intel® XPU, NVIDIA® CUDA, or CPU), builds the
+backend and UI, and starts the app. The first build downloads several GB of packages (PyTorch, OpenVINO, …) and can
+take a while — progress is shown for each step, and your browser opens automatically once the server is ready.
+
+Installing from source gives you access to the latest features not yet available in released builds, including
+Ultralytics YOLO26 support.
+
+> [!NOTE]
+> `git` is required on all platforms; `curl` is also required on Linux/WSL. Re-running the installer reuses the cached
+> tools and dependencies, so only the first build is slow.
+
+**Linux / WSL2**:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/open-edge-platform/geti/develop/install.sh | bash
 ```
 
-Installing from source gives you access to the latest features not yet available in released builds, including Ultralytics YOLO26 support.
+To pass flags — `-v`/`--verbose` (stream full output), `-y`/`--yes` (non-interactive), `-w`/`--work-dir <path>` (custom
+install directory, default `./geti`) — forward them through the pipe with `bash -s --`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/open-edge-platform/geti/develop/install.sh | bash -s -- --yes --work-dir ~/geti
+```
+
+**Windows (PowerShell)**:
+
+```powershell
+irm https://raw.githubusercontent.com/open-edge-platform/geti/develop/install.ps1 | iex
+```
+
+To pass parameters — `-Verbose` (stream full output), `-Yes`/`-y` (non-interactive), `-WorkDir <path>`/`-w` (custom
+install directory, default `.\geti`) — run the downloaded script as a script block instead:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/open-edge-platform/geti/develop/install.ps1))) -Yes -WorkDir C:\geti
+```
+
+If your execution policy blocks remote scripts, download first and run it explicitly (Bypass applies only to this
+process and does not change your machine policy):
+
+```powershell
+curl.exe -L https://raw.githubusercontent.com/open-edge-platform/geti/develop/install.ps1 -o install.ps1
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+If a build step fails, re-run with `--verbose` (Linux) or `-Verbose` (Windows), or inspect the log at
+`<work-dir>/.build/.install.log`.
 
 </details>
 

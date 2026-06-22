@@ -97,6 +97,54 @@ function Invoke-Cmd {
     }
 }
 
+function Invoke-CmdSpinner {
+    # Run a long command quietly (output to the log file) while showing an
+    # animated spinner, so the step never looks frozen. In verbose mode the
+    # full output is streamed instead.
+    param(
+        [string]$Command,
+        [string[]]$Arguments,
+        [string]$Activity = "Working"
+    )
+
+    if ($VerbosePreference -eq "Continue") {
+        Write-Host "$Activity..."
+        Invoke-Cmd -Command $Command -Arguments $Arguments
+        return
+    }
+
+    $stdoutTmp = [System.IO.Path]::GetTempFileName()
+    $stderrTmp = [System.IO.Path]::GetTempFileName()
+
+    try {
+        $proc = Start-Process -FilePath $Command -ArgumentList $Arguments `
+            -NoNewWindow -PassThru `
+            -RedirectStandardOutput $stdoutTmp -RedirectStandardError $stderrTmp
+
+        $spinner = '|', '/', '-', '\'
+        $i = 0
+        while (-not $proc.HasExited) {
+            Write-Host -NoNewline ("`r{0}... {1}" -f $Activity, $spinner[$i % 4])
+            Start-Sleep -Milliseconds 200
+            $i++
+        }
+        $proc.WaitForExit()
+
+        # Append captured output to the log file for troubleshooting.
+        Get-Content -LiteralPath $stdoutTmp -ErrorAction SilentlyContinue | Add-Content -LiteralPath $LOG_FILE
+        Get-Content -LiteralPath $stderrTmp -ErrorAction SilentlyContinue | Add-Content -LiteralPath $LOG_FILE
+
+        if ($proc.ExitCode -ne 0) {
+            Write-Host ("`r{0}... failed " -f $Activity) -ForegroundColor Red
+            throw "Command '$Command $($Arguments -join ' ')' failed with exit code $($proc.ExitCode)"
+        }
+
+        Write-Host ("`r{0}... done   " -f $Activity) -ForegroundColor Green
+    } finally {
+        Remove-Item -LiteralPath $stdoutTmp, $stderrTmp -ErrorAction SilentlyContinue
+    }
+}
+
 function Get-RequiredUvVersion {
     $pyprojectPath = Join-Path $WorkDir "application\backend\pyproject.toml"
     $content = Get-Content $pyprojectPath -Raw
@@ -344,7 +392,9 @@ function Invoke-EnsureSourceCode {
     try {
         if (-not (Test-Path $WorkDir)) {
             Write-Step "Cloning Intel Geti repository from $GIT_URL..."
-            & git -c advice.detachedHead=false clone --branch $GIT_BRANCH $GIT_URL $WorkDir 2>&1 | Out-Null
+            Write-Host "This can take several minutes depending on your connection." -ForegroundColor DarkGray
+            # Let git print its native progress meter so the clone never looks frozen.
+            & git -c advice.detachedHead=false clone --progress --branch $GIT_BRANCH $GIT_URL $WorkDir
             if ($LASTEXITCODE -ne 0) { throw "git clone failed (exit code $LASTEXITCODE)" }
         } else {
             Write-Step "Work directory $WorkDir already exists, skipping clone."
@@ -410,18 +460,16 @@ function Find-Hardware {
 }
 
 function Build-Backend {
-    Write-Step "Building venv using accelerator: $($script:ACCELERATOR)"
+    Write-Step "Building Python environment using accelerator: $($script:ACCELERATOR)"
+    Write-Host "This downloads PyTorch, OpenVINO and other large packages and can take several minutes." -ForegroundColor DarkGray
     $backendDir = Join-Path $WorkDir "application\backend"
     Push-Location $backendDir
 
     try {
         $uvExe = Join-Path $UV_DIR "uv.exe"
 
-        if ($VerbosePreference -eq "Continue") {
-            & $uvExe sync --frozen --extra mqtt --extra $script:ACCELERATOR
-        } else {
-            & $uvExe sync --frozen --extra mqtt --extra $script:ACCELERATOR --quiet
-        }
+        # uv shows its own progress meter; do not suppress it so the user gets feedback.
+        & $uvExe sync --frozen --extra mqtt --extra $script:ACCELERATOR
 
         if ($LASTEXITCODE -ne 0) { throw "uv sync failed" }
 
@@ -447,16 +495,21 @@ function Build-Frontend {
     Push-Location $uiDir
 
     try {
-        Write-Step "Installing UI dependencies with npm..."
         $env:npm_config_yes = "true"
-        Invoke-Cmd -Command $script:NPM_BIN -Arguments @("ci")
+        # --foreground-scripts surfaces lifecycle-script errors (e.g. the
+        # 'preinstall' UI-package clone) in the log instead of a generic exit code.
+        Invoke-CmdSpinner -Command $script:NPM_BIN `
+            -Arguments @("ci", "--foreground-scripts") `
+            -Activity "Installing UI dependencies (this may take several minutes)"
 
-        Write-Step "Building API client with npm..."
-        Invoke-Cmd -Command $script:NPM_BIN -Arguments @("run", "build:api")
+        Invoke-CmdSpinner -Command $script:NPM_BIN `
+            -Arguments @("run", "build:api") `
+            -Activity "Building API client"
 
-        Write-Step "Building UI with npm..."
         $env:ASSET_PREFIX = "/html"
-        Invoke-Cmd -Command $script:NPM_BIN -Arguments @("run", "build")
+        Invoke-CmdSpinner -Command $script:NPM_BIN `
+            -Arguments @("run", "build") `
+            -Activity "Building UI (this may take several minutes)"
         Remove-Item Env:\ASSET_PREFIX -ErrorAction SilentlyContinue
     } finally {
         Pop-Location

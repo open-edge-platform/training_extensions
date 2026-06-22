@@ -98,6 +98,41 @@ run_cmd() {
     fi
 }
 
+run_cmd_spinner() {
+    # Run a long command quietly (output to the log file) while showing an
+    # animated spinner, so the step never looks frozen. In verbose mode the
+    # full output is streamed instead.
+    local activity="$1"
+    shift
+
+    if [ -n "${VERBOSE:-}" ]; then
+        echo "${activity}..."
+        "$@"
+        return
+    fi
+
+    "$@" >>"$LOG_FILE" 2>&1 &
+    local pid=$!
+    local spin='|/-\'
+    local i=0
+    if [ -t 2 ]; then
+        while kill -0 "$pid" 2>/dev/null; do
+            i=$(( (i + 1) % 4 ))
+            printf "\r%s... %s" "$activity" "${spin:$i:1}" >&2
+            sleep 0.2
+        done
+    fi
+
+    local rc=0
+    wait "$pid" || rc=$?
+    if [ "$rc" -eq 0 ]; then
+        printf "\r%s... done   \n" "$activity" >&2
+    else
+        printf "\r%s... failed\n" "$activity" >&2
+        return "$rc"
+    fi
+}
+
 get_required_uv_version() {
     local version
     version=$(grep -A 3 '\[tool\.uv\]' "$WORK_DIR/application/backend/pyproject.toml" \
@@ -306,7 +341,8 @@ preflight_checks() {
 ensure_source_code() {
     if [ ! -d "$WORK_DIR" ]; then
         echo "Cloning Intel Geti repository from $GIT_URL..."
-        git -c advice.detachedHead=false clone --branch "$GIT_BRANCH" "$GIT_URL" "$WORK_DIR"
+        echo "This can take several minutes depending on your connection."
+        git -c advice.detachedHead=false clone --progress --branch "$GIT_BRANCH" "$GIT_URL" "$WORK_DIR"
     else
         echo "Work directory $WORK_DIR already exists, skipping clone."
         local remote_url
@@ -367,13 +403,11 @@ detect_hardware() {
 }
 
 build_backend() {
-    echo "Building venv using accelerator: $ACCELERATOR"
+    echo "Building Python environment using accelerator: $ACCELERATOR"
+    echo "This downloads PyTorch, OpenVINO and other large packages and can take several minutes."
     cd "$WORK_DIR/application/backend"
-    if [ -n "${VERBOSE:-}" ]; then
-        "$UV_DIR/uv" sync --frozen --extra mqtt --extra "$ACCELERATOR"
-    else
-        "$UV_DIR/uv" sync --frozen --extra mqtt --extra "$ACCELERATOR" --quiet
-    fi
+    # uv shows its own progress meter; do not suppress it so the user gets feedback.
+    "$UV_DIR/uv" sync --frozen --extra mqtt --extra "$ACCELERATOR"
 
     echo "Generating OpenAPI specification..."
     PYTHONPATH=. "$UV_DIR/uv" run --no-sync app/cli.py gen-api --target-path openapi.json
@@ -382,15 +416,14 @@ build_backend() {
 
 build_frontend() {
     cd "$WORK_DIR/application/ui"
-    echo "Installing UI dependencies with npm..."
     export npm_config_yes=true
-    run_cmd "$NPM_BIN" ci
+    # --foreground-scripts surfaces lifecycle-script errors (e.g. the
+    # 'preinstall' UI-package clone) in the log instead of a generic exit code.
+    run_cmd_spinner "Installing UI dependencies (this may take several minutes)" "$NPM_BIN" ci --foreground-scripts
 
-    echo "Building API client with npm..."
-    run_cmd "$NPM_BIN" run build:api
+    run_cmd_spinner "Building API client" "$NPM_BIN" run build:api
 
-    echo "Building UI with npm..."
-    run_cmd env ASSET_PREFIX="/html" "$NPM_BIN" run build
+    run_cmd_spinner "Building UI (this may take several minutes)" env ASSET_PREFIX="/html" "$NPM_BIN" run build
 }
 
 deploy_frontend() {
