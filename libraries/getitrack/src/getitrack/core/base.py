@@ -14,13 +14,13 @@ from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
+from getitrack.config import TrackerConfig
 from getitrack.core.registry import ALGORITHM_REGISTRY
 from getitrack.logger import LOGGER, enable_logging
 
 if TYPE_CHECKING:
     import numpy as np
 
-    from getitrack.config import TrackerConfig
     from getitrack.core.detection import Detections, TrackedDetections
 
 
@@ -115,14 +115,12 @@ class BaseTracker(ABC):
 
         Accepts a `TrackerConfig`, a dict, or a path to a YAML file.
         """
-        from getitrack.config import TrackerConfig as _TrackerConfig
-
-        if isinstance(config, _TrackerConfig):
+        if isinstance(config, TrackerConfig):
             resolved = config
         elif isinstance(config, dict):
-            resolved = _TrackerConfig.model_validate(config)
+            resolved = TrackerConfig.model_validate(config)
         elif isinstance(config, str | Path):
-            resolved = _TrackerConfig.from_yaml(config)
+            resolved = TrackerConfig.from_yaml(config)
         else:
             msg = f"unsupported config type: {type(config).__name__}"
             raise TypeError(msg)
