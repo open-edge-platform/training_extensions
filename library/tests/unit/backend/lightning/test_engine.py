@@ -217,7 +217,7 @@ class TestEngine:
 
         engine = LightningEngine.from_model_name(
             model_name=model_name,
-            data_root=data_root,
+            data=data_root,
             task=task_type,
             work_dir=tmp_path,
             **overriding,
@@ -231,7 +231,7 @@ class TestEngine:
             engine = LightningEngine.from_model_name(
                 model_name="wrong_model",
                 task=task_type,
-                data_root=data_root,
+                data=data_root,
                 work_dir=tmp_path,
                 **overriding,
             )
@@ -250,7 +250,7 @@ class TestEngine:
 
         engine = LightningEngine.from_config(
             config_path=recipe_path,
-            data_root=data_root,
+            data=data_root,
             work_dir=tmp_path,
             **overriding,
         )

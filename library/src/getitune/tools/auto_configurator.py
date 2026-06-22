@@ -14,7 +14,7 @@ from warnings import warn
 
 from jsonargparse import ArgumentParser, Namespace
 
-from getitune.backend.lightning.cli.utils import get_getitune_root_path, list_models
+from getitune.utils import get_getitune_root_path, list_models
 from getitune.backend.lightning.models.base import DataInputParams, LightningModel
 from getitune.config.data import SamplerConfig, SubsetConfig, TileConfig
 from getitune.data.module import DataModule
