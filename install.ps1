@@ -121,6 +121,12 @@ function Invoke-CmdSpinner {
             -NoNewWindow -PassThru `
             -RedirectStandardOutput $stdoutTmp -RedirectStandardError $stderrTmp
 
+        # Touching .Handle caches the process handle so .ExitCode is reliably
+        # populated after exit. Without this, Start-Process returns $null for
+        # .ExitCode when launching .cmd/.bat files (e.g. npm.cmd), which would
+        # be misread as a failure.
+        $null = $proc.Handle
+
         $spinner = '|', '/', '-', '\'
         $i = 0
         while (-not $proc.HasExited) {
@@ -129,14 +135,15 @@ function Invoke-CmdSpinner {
             $i++
         }
         $proc.WaitForExit()
+        $exitCode = $proc.ExitCode
 
         # Append captured output to the log file for troubleshooting.
         Get-Content -LiteralPath $stdoutTmp -ErrorAction SilentlyContinue | Add-Content -LiteralPath $LOG_FILE
         Get-Content -LiteralPath $stderrTmp -ErrorAction SilentlyContinue | Add-Content -LiteralPath $LOG_FILE
 
-        if ($proc.ExitCode -ne 0) {
+        if ($exitCode -ne 0) {
             Write-Host ("`r{0}... failed " -f $Activity) -ForegroundColor Red
-            throw "Command '$Command $($Arguments -join ' ')' failed with exit code $($proc.ExitCode)"
+            throw "Command '$Command $($Arguments -join ' ')' failed with exit code $exitCode"
         }
 
         Write-Host ("`r{0}... done   " -f $Activity) -ForegroundColor Green
