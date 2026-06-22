@@ -3,28 +3,20 @@
 
 <img src="assets/geti-header.png" alt="Geti™ - A framework to rapidly build and deploy computer vision AI models">
 
-**Enable anyone from domain experts to data scientists to rapidly develop production-ready AI models**
-
-[Key Features](#key-features) •
-[Supported tasks and models](#supported-tasks-and-models) •
 [Quick Start](#quick-start) •
-[Documentation](#documentation) •
-[Community](#community)
+[Geti™ documentation](https://docs.geti.intel.com/) •
+[`getitune` documentation](library/README.md)
 
-[![Daily checks](https://github.com/open-edge-platform/training_extensions/actions/workflows/daily.yml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/daily.yml)
-[![Docker build](https://github.com/open-edge-platform/training_extensions/actions/workflows/build.yaml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/build.yaml)
-[![Codecov](https://codecov.io/gh/open-edge-platform/training_extensions/branch/develop/graph/badge.svg?token=9HVFNMPFGD)](https://codecov.io/gh/open-edge-platform/training_extensions)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/open-edge-platform/training_extensions/badge)](https://securityscorecards.dev/viewer/?uri=github.com/open-edge-platform/training_extensions)
+[![Container build](https://github.com/open-edge-platform/geti/actions/workflows/build.yaml/badge.svg)](https://github.com/open-edge-platform/geti/actions/workflows/build.yaml)
+[![Codecov](https://codecov.io/gh/open-edge-platform/geti/branch/develop/graph/badge.svg?token=9HVFNMPFGD)](https://codecov.io/gh/open-edge-platform/geti)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/open-edge-platform/geti/badge)](https://securityscorecards.dev/viewer/?uri=github.com/open-edge-platform/geti)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PyPI version](https://img.shields.io/pypi/v/getitune?logo=pypi&logoColor=white)](https://pypi.org/project/getitune/)
+[![PyPI downloads](https://static.pepy.tech/badge/getitune)](https://clickpy.clickhouse.com/dashboard/getitune)
 
 </div>
 
-## Introduction
-
-Geti™ is an end-to-end application that takes you from raw images to a deployed computer vision model — annotate, train,
-optimize, and run inference, all in one place, all on your own hardware. Start with as few as 10-20 images and iterate
-in a rapid, feedback-driven loop. Geti runs locally as a single Docker image or a native Windows app, and is optimized
-for Intel® hardware with OpenVINO™ for fast inference across the full Intel® XPU portfolio.
+Geti™ is an end-to-end Vision AI application that takes you from raw images to a deployed computer vision model. Geti™ runs locally as a single container or a native Windows app and is optimized for fast inference across the full Intel® XPU portfolio.
 
 <p align="center">
  <img src="assets/model-lifecycle-infinity-light.png" width="600" alt="Geti™ - Learning Cycle"/>
@@ -39,47 +31,156 @@ for Intel® hardware with OpenVINO™ for fast inference across the full Intel®
 >
 > The development of the Geti™ application now continues in this repository in the [`application`](application) folder.
 > Previous versions of Geti™ are still available in a separate [repository](https://github.com/open-edge-platform/geti_v2).
+> In general, we recommend upgrading to the latest Geti™ release whenever possible - not only to access new functionality,
+> but also to receive better support from Intel and the Geti™ community.
+> To upgrade from Geti™ v2 to v3, please follow the [upgrade guidance](https://docs.geti.intel.com/docs/user-guide/getting-started/installation/migration-from-geti-2x).
+
+## Quick start with Geti™
+
+Before you begin, make sure your machine meets the following requirements:
+
+| Component | Requirement                                            |
+| --------- | ------------------------------------------------------ |
+| CPU       | 8 threads                                              |
+| RAM       | 16 GB                                                  |
+| Disk      | 40 GB free                                             |
+| GPU       | Optional - Intel® XPU or NVIDIA® GPU for larger models |
+
+Geti can be installed as a **Windows application**, run as a **container**, or built **from source code**. Choose the option that best suits your environment below.
+
+<details>
+<summary>Windows Application</summary>
+
+Download the latest Geti™ Windows installer suitable for your hardware (Intel® XPU, NVIDIA® CUDA or CPU-only) from the releases repository:
+
+- [CPU-only version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cpu-3.0.0.msix)
+- [Intel® XPU version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-xpu-3.0.0.msix)
+- [NVIDIA® CUDA version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cuda-3.0.0.msix)
+
+Install Geti™ Windows application and launch it from the Start menu.
+
+</details>
+
+<details>
+<summary>Container image</summary>
+
+Pull a pre-built container image for your hardware and launch it using [`just`](https://just.systems), which handles device passthrough, volumes, and WebRTC ports automatically:
+
+```bash
+# 1. Install just
+curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+
+# 2. Clone the repository
+git clone https://github.com/open-edge-platform/geti.git
+cd geti/application
+
+# 3. Pull the image for your hardware (choose one: cpu|cuda|xpu)
+ACCELERATOR=xpu
+docker pull ghcr.io/open-edge-platform/geti-${ACCELERATOR}
+
+# 4. Retag the pulled image for use with just
+docker tag ghcr.io/open-edge-platform/geti-${ACCELERATOR}:latest geti-${ACCELERATOR}:latest
+
+# 5. Launch the application
+just run-image --accelerator ${ACCELERATOR}
+```
+
+Then get access to Geti™ user interface at `http://localhost:7860`.
+
+</details>
+
+<details>
+<summary>Install from source code</summary>
+To install the Geti™ stable development version from source code, use:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/open-edge-platform/geti/develop/install.sh | bash
+```
+
+Installing from source gives you access to the latest features not yet available in released builds, including Ultralytics YOLO26 support.
+
+</details>
+
+Once Geti is up and running, follow the intuitive UI to train your first model.
+
+<p align="center">
+  <img src="assets/application.gif" alt="Application demo" width="80%">
+</p>
+
+> [!NOTE]
+> See the detailed step-by-step guidance on how to train your first model in
+> ["Training your first model"](https://docs.geti.intel.com/docs/user-guide/quick-start/training-your-first-model) section in the Geti™ documentation.
+> Full instructions and all options are available in [Geti™ documentation](https://docs.geti.intel.com/).
+>
+> Detailed installation guide is available in ["Installation guide"](https://docs.geti.intel.com/docs/user-guide/getting-started/installation/installation-guide)
+
+## Quick start with `getitune`
+
+The Geti™ training engine `getitune` is published on PyPI and can train, optimize, and deploy models.
+
+To install `getitune`:
+
+```bash
+# With uv (recommended)
+uv pip install "getitune"
+
+# Or with pip
+pip install "getitune"
+```
+
+Provide `getitune` with a dataset and fine-tune a model:
+
+```Python
+from getitune.utils import list_models
+from getitune.engine import create_engine
+from getitune.types import ExportFormat, ExportPrecision
+
+# List all available models names
+all_models = list_models()
+
+# create Engine
+engine = create_engine(
+    model="efficientnet_b0",
+    data="/path/to/dataset",
+    work_dir="./my_workspace",
+)
+
+# train a model
+engine.train()
+
+# Export to FP32 OpenVINO IR (default)
+ov_ir_path = engine.export()
+
+# validate engine 
+ov_engine = create_engine(
+    model="/path/to/exported_model.xml",
+    data="/path/to/dataset",
+)
+ov_engine.test() # test on test subset
+ov_engine.predict() # predict on test subset
+
+# optimize a model to int8 quantized version via NNCF tool
+ov_engine.optimize()
+```
+
+> [!NOTE]
+> See the [`getitune` README](library/README.md) for the full list of recipes, advanced configuration, dataset support,
+> inference/optimization examples, and hardware-specific PyTorch installation options.
 
 ## Key Features
 
-- **Interactive end-to-end model training**: Geti™ enables users to start building deep-learning computer vision models
-  with as few as 10-20 images and take them to production in one environment — annotate, train, optimize, run
-  inference, and improve accuracy in a rapid train-predict-annotate loop.
-- **State-of-the-art model catalog**: train and fine-tune modern architectures such as RF-DETR, DINOv3 DETR, YOLO26,
-  YOLOX, D-FINE, and Mask R-CNN — see the [full list below](#supported-tasks-and-models).
-- **Multiple computer vision tasks**: image classification, object detection, and instance segmentation from the no-code
-  web interface, with even more tasks available through the Python API (`getitune`).
-- **Smart annotations**: manual and semi-automated labeling powered by models like SAM (Segment Anything Model), plus
-  bulk labeling to dramatically speed up dataset creation.
-- **Dataset & model versioning**: track how datasets and models evolve, link models to a specific dataset revision, view
-  exact training hyperparameters, and fine-tune from any previous version.
-- **Runs locally, on the edge**: fine-tune models and run inference directly on edge and client hardware — including
-  Intel® Panther Lake and Arc™ Battlemage (B-series) GPUs — with no Kubernetes cluster or data-center GPU required.
-  Minimum recommended setup: **8 CPU threads, 16 GB RAM, 40 GB free disk**.
-- **Hardware acceleration**: optimized for modern Intel® hardware (Arc™ GPUs, Core™ Ultra processors). Every model is
-  automatically exported with [OpenVINO™](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html)
-  for deployment across the full Intel® XPU portfolio; NVIDIA® CUDA and CPU-only execution are also supported.
-- **Dataset import & export**: COCO, Pascal VOC, and YOLO formats plus a Geti-optimized native format, with label
-  filtering to selectively include or exclude labels on import/export.
-- **Model optimization**: built-in quantization with accuracy-aware INT8 optimization to balance inference speed and
-  accuracy on resource-constrained edge devices.
-- **Integrated deployment & inference**: build custom pipelines (source → model → sink) to deploy models inside Geti and
-  monitor real-time predictions on video streams. Sources include USB/IP cameras and video files; optional sinks include
-  folder, MQTT, and webhook. Complete pipelines can be exported as OpenVINO™-optimized bundles for edge deployment.
+<details open>
+<summary>🏆 State-of-the-art model catalog</summary>
 
-## Supported tasks and models
-
-Below is a list of tasks and model architectures supported by Geti™. Some tasks are available directly from the no-code
-web interface, while others are accessible through the Python API (`getitune`) — both are part of the same Geti
-application.
-Would you like to see a specific model added to the list? Let us know by opening a [GitHub issue](https://github.com/open-edge-platform/training_extensions/issues)!
+Train and fine-tune modern architectures such as RF-DETR, DINOv3 DETR, YOLO26, YOLOX, D-FINE, and Mask R-CNN.
+Would you like to see a specific model added? Let us know by opening a [GitHub issue](https://github.com/open-edge-platform/geti/issues)!
 
 <!-- markdownlint-disable MD060 -->
 
 <table>
   <thead>
     <tr>
-      <th>Computer Vision Task</th>
+      <th width="30%">Computer Vision Task</th>
       <th>Model Architecture</th>
       <th>Paper</th>
     </tr>
@@ -165,38 +266,87 @@ Would you like to see a specific model added to the list? Let us know by opening
 
 <!-- markdownlint-enable MD060 -->
 
-<!-- markdownlint-enable MD060 -->
+</details>
 
-> [!TIP]
-> Other projects of the Open Edge Platform enable even more tasks and models, check them:
->
-> - [Anomalib (Studio)](https://github.com/open-edge-platform/anomalib) → anomaly detection
-> - [Physical AI Studio](https://github.com/open-edge-platform/physical-ai-studio) → robot learning, VLA (Vision-Language-Action)
-> - [Instant Learn](https://github.com/open-edge-platform/instant-learn) → visual prompting
-> - [OpenVINO™](https://github.com/openvinotoolkit/openvino) - Software toolkit for optimizing and deploying deep learning models.
-> - [Model API](https://github.com/open-edge-platform/model_api) - wrapper that simplifies model loading, execution, and data processing for easy inference
+<details>
+<summary>🔄 Interactive end-to-end model training</summary>
+
+Geti™ enables users to start building deep-learning computer vision models with as few as 10-20 images and take them to production in one environment - annotate, train, optimize, run inference, and improve accuracy in a rapid train-predict-annotate loop.
+
+</details>
+
+<details>
+<summary>⚡ Hardware-accelerated inference & model optimization</summary>
+
+Every model is automatically exported with [OpenVINO™](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html) for deployment across the full Intel® XPU portfolio (Arc™ GPUs, Core™ Ultra processors); NVIDIA® CUDA and CPU-only execution are also supported. Fine-tune and run inference directly on edge and client hardware - including Intel® Panther Lake and Arc™ Battlemage (B-series) GPUs - with no Kubernetes cluster or data-center GPU required. Built-in accuracy-aware INT8 quantization further reduces model size and latency on resource-constrained edge devices with minimal impact on accuracy.
+
+</details>
+
+<details>
+<summary>🚀 Integrated deployment & inference</summary>
+
+Build custom pipelines (source → model → sink) to deploy models inside Geti and monitor real-time predictions on video streams. Sources include USB/IP cameras and video files; optional sinks include folder, MQTT, and webhook. Complete pipelines can be exported as OpenVINO™-optimized bundles for edge deployment.
+
+</details>
+
+<details>
+<summary>🎨 Multiple computer vision tasks</summary>
+
+Geti™ supports [multiple computer vision tasks](https://docs.geti.intel.com/docs/user-guide/learn-geti/computer-vision-tasks/ai-fundamentals-tasks) that are commonly employed across various use cases - image classification, object detection and instance segmentation from the no-code web interface, with even more tasks available through the `getitune` library.
+
+</details>
+
+<details>
+<summary>🧠 Smart annotations</summary>
+
+Smart annotations in Geti™ enable users to easily create bounding boxes, rotated bounding boxes, segmentation boundaries, and more. These smart annotation features coupled with the AI-assisted annotations and state-of-the-art AI models such as the Segment Anything Model keep human experts in the loop while massively reducing the total annotation efforts needed by a human.
+
+<p align="center">
+  <img src="application/docs/assets/annotator.webp" width="600" alt="Smart Annotations">
+</p>
+</details>
+
+<details>
+<summary>📦 Model & dataset management</summary>
+
+Track how datasets and models evolve, link models to a specific dataset revision, view exact training hyperparameters, and fine-tune from any previous version. Import and export in COCO, Pascal VOC, YOLO, and a Geti-optimized native format, with label filtering to selectively include or exclude labels on import/export.
+
+</details>
+
+## Ecosystem
+
+- [Anomalib](https://github.com/open-edge-platform/anomalib) - An anomaly detection suite comprising state-of-the-art algorithms and features such as experiment management, hyper-parameter optimization and edge inference.
+- [Instant Learn](https://github.com/open-edge-platform/instant-learn) - A framework for developing, benchmarking, and deploying zero-shot visual prompting algorithms on the edge.
+- [Datumaro](https://github.com/open-edge-platform/datumaro) - Dataset Management Framework, a Python library and a CLI tool to build, analyze and manage Computer Vision datasets.
+- [OpenVINO™](https://github.com/openvinotoolkit/openvino) - Software toolkit for optimizing and deploying deep learning models.
+- [OpenVINO™ Model Server](https://github.com/openvinotoolkit/model_server) - A scalable inference server for models optimized with OpenVINO™.
+- [Model API](https://github.com/open-edge-platform/model_api) - A set of wrapper classes for particular tasks and model architectures, simplifying data preprocessing and postprocessing as well as routine procedures.
+- [Physical AI Studio](https://github.com/open-edge-platform/physical-ai-studio) - An end-to-end framework for teaching robots to perform tasks through imitation learning from human demonstrations.
+
+## Who uses Geti™?
+
+Geti™ is a powerful tool to build vision models for a wide range of processes, including detecting defective parts in a production line, reducing downtime on the factory floor, automating inventory management, or other automation projects. We have chosen to highlight a few interesting community members:
+
+- [Intel Foundry](https://medium.com/open-edge-platform/solving-silicon-foundry-woes-with-ai-vision-geti-and-a-robotic-dog-a8382b5d9267)
+- [Royal Brompton and Harefield hospitals](https://www.rbht.nhs.uk/artificial-intelligence-theme-new-trust-led-research)
+- [WSC Sports](https://www.linkedin.com/posts/wsc-sports-technologies_revolutionizing-sports-broadcasting-with-activity-7161419649878773761-cUM3/)
+- [Dell NativeEdge](https://infohub.delltechnologies.com/en-us/p/transforming-edge-ai-with-continuous-learning-meet-intel-geti-and-openvino-on-dell-nativeedge/)
+- [Bravent](https://www.linkedin.com/posts/bravent_intelgeti-openvino-manufacturing-activity-7214544905086390272-H19g/)
+- [ASRock Industrial](https://www.asrockind.com/en-gb/article/176)
+- [PeopleSense.AI](https://community.intel.com/t5/Blogs/Tech-Innovation/Artificial-Intelligence-AI/Intel-Liftoff-Days-2024-Highlights-from-the-Third-Edition/post/1661265)
+- [Capgemini](https://www.capgemini.com/insights/expert-perspectives/capgemini-and-intel-corporation-redefining-the-future-of-robotics-and-physical-ai/)
 
 ## Quick Start
 
-Get Geti running and train your first model in a few minutes. For full instructions and all options, see the
-[official documentation](https://docs.geti.intel.com/) and the [application README](application/README.md).
+### 1. Install Geti™
 
-**Minimum recommended setup:** 8 CPU threads, 16 GB RAM, 40 GB free disk. A GPU (Intel® XPU or NVIDIA® CUDA) is
-recommended for larger models.
+Geti™ ships as a Docker image optimized for each supported hardware target. Use the provided <code>install.sh</code> script for a one-command setup:
 
-### 1. Run Geti
+```bash
+curl -fsSL https://raw.githubusercontent.com/open-edge-platform/training_extensions/develop/install.sh | bash
+```
 
-#### Windows Application
-
-Run Geti as a native Windows application, with prebuilt images for Intel® XPU, NVIDIA® CUDA, and CPU-only environments.
-
-Download the Windows Installer:
-
-- [Download CPU-only version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cpu-3.0.0.msix)
-- [Download Intel® XPU version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-xpu-3.0.0.msix)
-- [Download Nvidia® CUDA version installer](https://storage.geti.intel.com/geti/packages/3.0.0/geti-cuda-3.0.0.msix)
-
-Install Geti Windows application and launch it from the Start menu
+The script auto-detects your hardware and pulls the appropriate Docker image. For manual installation and alternative methods (Python Desktop, Docker Compose, Windows), see the [installation guide](https://docs.geti.intel.com/).
 
 #### Docker
 
@@ -320,24 +470,28 @@ For complete user and developer documentation, visit [**docs.geti.intel.com**](h
 
 ## Community
 
-- To report a bug or submit a feature request, please open a [GitHub issue](https://github.com/open-edge-platform/training_extensions/issues).
-- Ask questions via [GitHub Discussions](https://github.com/open-edge-platform/training_extensions/discussions).
+- To report a bug or submit a feature request, please open a [GitHub issue](https://github.com/open-edge-platform/geti/issues).
+- Ask questions via [GitHub Discussions](https://github.com/open-edge-platform/geti/discussions).
 
-For those who would like to contribute, see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+## Contribute
 
-Thank you! We appreciate your support!
+For those who would like to contribute, see [Contributing guide](CONTRIBUTING.md) for details.
 
-<a href="https://github.com/open-edge-platform/training_extensions/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=open-edge-platform/training_extensions" alt="Contributors" />
+<p align="center">
+  <b>Thank you 👏 to all our contributors!</b>
+</p>
+
+<a href="https://github.com/open-edge-platform/geti/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=open-edge-platform/geti" alt="Contributors" />
 </a>
 
 ## License
 
-Geti™ is licensed under the [Apache License Version 2.0](LICENSE). By contributing to the project, you agree to the
-license and copyright terms therein and release your contribution under these terms.
-Stay tuned for further updates soon!
+Geti™ is licensed under the [Apache License Version 2.0](LICENSE).
 
 ## Disclaimers
+
+Geti™ utilizes FFmpeg.
 
 FFmpeg is an open source project licensed under LGPL and GPL. See [https://www.ffmpeg.org/legal.html](https://www.ffmpeg.org/legal.html). You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
 
