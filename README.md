@@ -308,6 +308,7 @@ Track how datasets and models evolve, link models to a specific dataset revision
 
 Geti™ is a powerful tool to build vision models for a wide range of processes, including detecting defective parts in a production line, reducing downtime on the factory floor, automating inventory management, or other automation projects. We have chosen to highlight a few interesting community members:
 
+- [Intel Foundry](https://medium.com/open-edge-platform/solving-silicon-foundry-woes-with-ai-vision-geti-and-a-robotic-dog-a8382b5d9267)
 - [Royal Brompton and Harefield hospitals](https://www.rbht.nhs.uk/artificial-intelligence-theme-new-trust-led-research)
 - [WSC Sports](https://www.linkedin.com/posts/wsc-sports-technologies_revolutionizing-sports-broadcasting-with-activity-7161419649878773761-cUM3/)
 - [Dell NativeEdge](https://infohub.delltechnologies.com/en-us/p/transforming-edge-ai-with-continuous-learning-meet-intel-geti-and-openvino-on-dell-nativeedge/)
