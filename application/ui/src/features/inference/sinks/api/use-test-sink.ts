@@ -10,7 +10,7 @@ export const testSinkQueryOptions = (sinkId: string) =>
         'post',
         '/api/sinks/{sink_id}:test',
         { params: { path: { sink_id: sinkId } } },
-        { enabled: false, staleTime: Infinity, gcTime: Infinity }
+        { enabled: false, staleTime: Infinity }
     );
 
 export const useTestSink = (sinkId: string) => {

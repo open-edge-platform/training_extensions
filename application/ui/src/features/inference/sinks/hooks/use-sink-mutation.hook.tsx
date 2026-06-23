@@ -58,10 +58,12 @@ export const useSinkMutation = (isNewSink: boolean) => {
             sinkId = String(response.id);
         }
 
-        void queryClient.fetchQuery({
-            ...testSinkQueryOptions(sinkId),
-            staleTime: 0,
-        });
+        void queryClient
+            .fetchQuery({
+                ...testSinkQueryOptions(sinkId),
+                staleTime: 0,
+            })
+            .catch(() => undefined);
 
         return sinkId;
     };

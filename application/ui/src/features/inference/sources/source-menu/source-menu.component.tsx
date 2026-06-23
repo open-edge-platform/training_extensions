@@ -74,7 +74,7 @@ export type SourceMenuProps = {
     isConnected: boolean;
     onEdit: () => void;
     isPipelineRunning: boolean;
-    onTest: () => Promise<boolean>;
+    onTest: () => Promise<void>;
 };
 
 export const SourceMenu = ({ id, name, isConnected, onEdit, isPipelineRunning, onTest }: SourceMenuProps) => {

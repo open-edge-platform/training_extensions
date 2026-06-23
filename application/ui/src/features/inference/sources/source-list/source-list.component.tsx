@@ -35,9 +35,7 @@ const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }
     const { data, isFetched, dataUpdatedAt, refetch } = useTestSource(String(source.id));
 
     const handleTestConnection = async () => {
-        const result = await refetch();
-
-        return result.data?.reachable === true;
+        void refetch();
     };
 
     return (

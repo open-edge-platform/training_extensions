@@ -10,7 +10,7 @@ export const testSourceQueryOptions = (sourceId: string) =>
         'post',
         '/api/sources/{source_id}:test',
         { params: { path: { source_id: sourceId } } },
-        { enabled: false, staleTime: Infinity, gcTime: Infinity }
+        { enabled: false, staleTime: Infinity }
     );
 
 export const useTestSource = (sourceId: string) => {

@@ -23,7 +23,7 @@ export type SinkMenuProps = {
     name: string;
     isConnected: boolean;
     onEdit: () => void;
-    onTest: () => Promise<boolean>;
+    onTest: () => Promise<void>;
 };
 
 export const SinkMenu = ({ id, name, isConnected, onEdit, onTest }: SinkMenuProps) => {

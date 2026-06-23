@@ -64,10 +64,12 @@ export const useSourceMutation = (isNewSource: boolean) => {
             sourceId = String(response.id);
         }
 
-        void queryClient.fetchQuery({
-            ...testSourceQueryOptions(sourceId),
-            staleTime: 0,
-        });
+        void queryClient
+            .fetchQuery({
+                ...testSourceQueryOptions(sourceId),
+                staleTime: 0,
+            })
+            .catch(() => undefined);
 
         return sourceId;
     };

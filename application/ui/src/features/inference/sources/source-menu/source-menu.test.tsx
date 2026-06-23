@@ -44,6 +44,16 @@ describe('SourceMenu', () => {
         );
     };
 
+    it('test connection', async () => {
+        const onTest = vi.fn().mockResolvedValue(true);
+        renderApp({ onTest });
+
+        await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
+        await userEvent.click(screen.getByRole('menuitem', { name: /Test connection/i }));
+
+        expect(onTest).toHaveBeenCalled();
+    });
+
     it('edit', async () => {
         const mockedOnEdit = vi.fn();
 

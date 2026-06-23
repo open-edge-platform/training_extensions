@@ -34,9 +34,7 @@ const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => 
     const { data, isFetched, dataUpdatedAt, refetch } = useTestSink(sink.id);
 
     const handleTestConnection = async () => {
-        const result = await refetch();
-
-        return result.data?.reachable === true;
+        void refetch();
     };
 
     return (

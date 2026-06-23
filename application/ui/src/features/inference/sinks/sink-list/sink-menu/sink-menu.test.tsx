@@ -21,6 +21,16 @@ describe('SinkMenu', () => {
         render(<SinkMenu id={id} name={name} isConnected={isConnected} onEdit={onEdit} onTest={onTest} />);
     };
 
+    it('test connection', async () => {
+        const onTest = vi.fn().mockResolvedValue(true);
+        renderApp({ onTest });
+
+        await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
+        await userEvent.click(screen.getByRole('menuitem', { name: /Test connection/i }));
+
+        expect(onTest).toHaveBeenCalled();
+    });
+
     it('edit', async () => {
         const mockedOnEdit = vi.fn();
 
