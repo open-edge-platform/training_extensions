@@ -100,7 +100,7 @@ Then get access to Geti™ user interface at `http://localhost:7860`.
 The installer clones the repository, sets up its own
 copy of `uv`, Node.js and npm under `.build/`, detects your accelerator (Intel® XPU, NVIDIA® CUDA, or CPU), builds the
 backend and UI, and starts the app. The first build downloads several GB of packages (PyTorch, OpenVINO, …) and can
-take a while — progress is shown for each step, and your browser opens automatically once the server is ready.
+take a while — progress is shown for each step.
 
 
 > [!NOTE]
