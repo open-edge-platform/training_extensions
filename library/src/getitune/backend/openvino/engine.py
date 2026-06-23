@@ -480,6 +480,38 @@ class OVEngine(Engine):
 
         return check_model and check_data
 
+    @classmethod
+    def from_config(
+        cls,
+        config_path: PathLike,
+        data: DataModule | PathLike | None = None,
+        work_dir: PathLike | None = None,
+        device: str | None = None,
+        checkpoint: str | None = None,
+        task: str | None = None,
+        **kwargs,
+    ) -> OVEngine:
+        """Build an OVEngine from a recipe configuration file.
+
+        Args:
+            config_path: Path to the recipe YAML file.
+            data: DataModule or root directory for the data.
+            work_dir: Working directory for the engine. Defaults to None.
+            device: Device to use. Defaults to None.
+            checkpoint: Optional checkpoint path. Defaults to None.
+            task: Task type for disambiguation. Defaults to None.
+            **kwargs: Additional keyword arguments.
+
+        Raises:
+            NotImplementedError: OVEngine does not support construction from a recipe config.
+                Pass an ``.xml`` or ``.onnx`` model path directly to ``create_engine()`` instead.
+        """
+        msg = (
+            "OVEngine does not support construction from a recipe config. "
+            "Pass an '.xml' or '.onnx' model path directly to create_engine() instead."
+        )
+        raise NotImplementedError(msg)
+
     def _update_checkpoint(self, checkpoint: PathLike | None) -> OVModel:
         """Update the OVModel with the given checkpoint path.
 

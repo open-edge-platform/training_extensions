@@ -75,8 +75,6 @@ Each task directory also ships an `openvino_model.yaml` recipe for running and o
 
 ## Installation
 
-Requirements: **Python 3.11–3.14**, **PyTorch 2.10**, **OpenVINO™ 2026.1**, **NumPy ≥ 2.0**.
-
 `getitune` is published on [PyPI](https://pypi.org/project/getitune/).
 
 ### Quick Install
@@ -93,11 +91,11 @@ pip install getitune
 
 `getitune` ships three mutually exclusive extras that select the right PyTorch wheel for your hardware:
 
-| Extra    | PyTorch wheel                                  | Use when                             |
-| -------- | ---------------------------------------------- | ------------------------------------ |
-| `[xpu]`  | `torch==2.10.0+xpu` + `triton-xpu`             | Intel discrete or integrated GPUs.   |
-| `[cuda]` | `torch==2.10.0+cu128`                          | NVIDIA GPUs with CUDA 12.8 drivers.  |
-| `[cpu]`  | `torch==2.10.0+cpu` (Linux/Windows) or default | No GPU, or running on Apple silicon. |
+| Extra    | PyTorch wheel                                                           | Use when                             |
+| -------- | ----------------------------------------------------------------------- | ------------------------------------ |
+| `[cpu]`  | `torch==2.10.0+cpu` (Linux/Windows) or default `torch==2.10.0` (macOS) | No GPU, or running on Apple silicon. |
+| `[xpu]`  | `torch==2.10.0+xpu` + `triton-xpu`                                      | Intel discrete or integrated GPUs.   |
+| `[cuda]` | `torch==2.10.0+cu128`                                                   | NVIDIA GPUs with CUDA 12.8 drivers.  |
 
 Since PyTorch distributes GPU wheels separately, you must include the PyTorch index:
 
@@ -130,67 +128,143 @@ uv sync --extra xpu          # or --extra cpu / --extra cuda
 
 ## Quick Start
 
-### Training and Exporting
+### Discovering Recipes and Models
 
-Getitune supports an API-based training approach. To run training with data config and lightning backend:
+To explore available models and recipes:
 
 ```python
-from getitune.backend.lightning.engine import LightningEngine
+from getitune.utils import list_models
 
-# Initialize and train using the bundled test dataset
-engine = LightningEngine(
-    model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml", # path to recipe YAML / model class instance / model name (e.g., "efficientnet_b0")
-    data_root="tests/assets/classification_cifar10", # path to dataset (any supported format, e.g., COCO, VOC, YOLO, Datumaro)
+# List all available model names
+all_models = list_models()
+
+# List all available recipes / configuration files (full YAML paths)
+all_recipes = list_models(return_recipes=True)
+
+# Filter by task
+detection_models = list_models(task="DETECTION")
+
+# Filter by pattern
+efficient_models = list_models(pattern="*efficient*")
+```
+
+Then pass any model name to `create_engine(model="...", data="...")`.
+
+> **Note on Model Resolution:**
+> - If you pass a **recipe YAML path** (with `.yaml` or `.yml` suffix) that doesn't exist on disk, a `FileNotFoundError` is raised.
+> - If you pass a **model name** that matches recipes under multiple tasks, a `ValueError` is raised listing the matches. Pass `task=` to disambiguate.
+> - Use `list_models(task="...", return_recipes=True)` to get full recipe paths instead of just model names.
+
+---
+
+### Training
+
+Getitune supports an API-based training approach:
+
+```python
+from getitune.engine import create_engine
+
+# Initialize and train using a recipe and dataset
+engine = create_engine(
+    model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml", # recipe YAML path, model name, or model class instance
+    data="tests/assets/classification_cifar10", # path to dataset root or DataModule instance
+    work_dir="./my_workspace",  # Defaults to "./getitune-workspace"
+    device="auto",              # "auto", "cpu", "gpu", "0", "xpu", etc.
 )
-
+engine.train(max_epochs=50)
+engine.test()
 ```
 
-It is also possible to create an engine with model name and task type. Getitune will look for a matching recipe in the bundled recipes and use it to set up the training configuration:
+> **Tip:** Pass `model=` as a recipe YAML path or a model name (e.g., `"efficientnet_b0"`), or a weights path (`.xml`, `.onnx`).
+> If a model name matches recipes under multiple tasks, pass `task=` to disambiguate (e.g., `task="DETECTION"`).
+
+---
+
+### Export
+
+Export a trained model to OpenVINO IR or ONNX format:
 
 ```python
-engine = LightningEngine(
-    model="efficientnet_b0", # model name (e.g., "efficientnet_b0")
-    task="MULTI_CLASS_CLS", # task type (e.g., "MULTI_CLASS_CLS")
-    data_root="tests/assets/classification_cifar10", # path to dataset (any supported format, e.g., COCO, VOC, YOLO, Datumaro)
+from getitune.engine import create_engine
+from getitune.types import ExportFormat, ExportPrecision
+
+engine = create_engine(
+    model="efficientnet_b0",
+    data="/path/to/dataset",
+    work_dir="./my_workspace",
 )
-```
-Run training, test, predict and export the model to OpenVINO IR format:
-```python
-if __name__ == "__main__": # to avoid issues with multiprocessing
-  engine.train()
-  metrics = engine.test() # validate on test set
-  predictions = engine.predict() # predict on test set
-  exported_ov_path = engine.export()  # writes OpenVINO IR
-```
-Geti Library also supports export to ONNX format, which can be enabled by passing export format when calling `export()`. To specify export precision, use the `export_precision` argument. By default, models are exported in FP32 precision.
+engine.train(max_epochs=50)
 
-```python
-from getitune.types.export import ExportFormat, ExportPrecision
+# Export to FP32 OpenVINO IR (default)
+ov_ir_path = engine.export()
 
-exported_onnx_path = engine.export(export_format=ExportFormat.ONNX, export_precision=ExportPrecision.FP16)  # writes ONNX model in FP16 precision
+# Export to FP32 ONNX
+onnx_path = engine.export(export_format=ExportFormat.ONNX)
+
+# Export to FP16 ONNX. Same for OpenVINO IR.
+onnx_path = engine.export(export_format=ExportFormat.ONNX, precision=ExportPrecision.FP16)
 ```
 
-### Inference and Optimization
+---
 
-Getitune provides inference via PyTorch and OpenVINO / ONNX backends:
+### Validation and Inference
+
+Getitune provides inference via PyTorch and OpenVINO backends (utilizing [ModelAPI](https://github.com/open-edge-platform/model_api)):
 
 ```python
-from getitune.backend.openvino.engine import OVEngine
+from getitune.engine import create_engine
 
-# PyTorch inference
-engine = OVEngine(data="/path/to/dataset", model=exported_ov_path) # can also pass onnx model here
-metrics = engine.test() # test OpenVINO model accuracy
-predictions = engine.predict() # predict on test set
+# PyTorch inference with model name
+engine = create_engine(
+    model="efficientnet_b0",
+    data="/path/to/dataset",
+)
+test_metrics = engine.test() # test on test subset
+predictions = engine.predict() # predict on test subset
 ```
-OpenVINO backend provides optimization capabilities like post-training quantization via [NNCF](https://github.com/openvinotoolkit/nncf). Post-training quantization is supported only for OpenVINO IR models.
 
 ```python
-ov_engine = OVEngine(data="/path/to/dataset", model="path/to/exported_model.xml")
-ov_engine.optimize()
-ov_engine.test() # test optimized model accuracy
-predictions = ov_engine.predict() # predict with optimized model
+# OpenVINO inference (from exported model)
+ov_engine = create_engine(
+    model="/path/to/exported_model.xml",
+    data="/path/to/dataset",
+)
+ov_engine.test() # test on test subset
+ov_engine.predict() # predict on test subset
 ```
 
+```python
+# ONNX inference (from exported model)
+ov_engine = create_engine(
+    model="/path/to/exported_model.onnx",
+    data="/path/to/dataset",
+)
+ov_engine.test() # test on test subset
+ov_engine.predict() # predict on test subset
+```
+
+---
+
+### Optimization
+
+Apply post-training quantization to reduce model size and accelerate inference:
+
+```python
+from getitune.engine import create_engine
+
+# Load an exported OpenVINO model and optimize it
+ov_engine = create_engine(
+    model="/path/to/exported_model.xml",
+    data="/path/to/dataset",
+)
+ov_engine.optimize()  # post-training quantization via NNCF
+test_metrics = ov_engine.test() # test on test subset with optimized model
+predictions = ov_engine.predict() # predict on test subset with optimized model
+```
+
+> **Note:** The recommended calibration set size for optimization is around 300 images. Calibration images are automatically taken from the training subset of your dataset.
+>
+> After `.optimize()` the model in the Engine is replaced with an INT8 quantized version. To re-validate or run inference with the original FP32/FP16 model, pass the model XML path directly to `.test()` / `.predict()` or create the Engine again from the original `.xml`.
 
 ---
 
@@ -210,8 +284,8 @@ Zip archives are also accepted, Datumaro extracts them on import.
 ```python
 # Works the same regardless of format, just point to the dataset root
 engine = create_engine(
-    data="/path/to/coco_or_yolo_or_voc_dataset",
-    model=model,  # a model class instance, or an exported OpenVINO/ONNX model path
+    data="/path/to/dataset_root",
+    model="src/getitune/recipe/detection/yolox_s.yaml",
 )
 engine.train()
 ```
@@ -219,6 +293,59 @@ engine.train()
 ---
 
 ### Advanced Usage
+
+<details>
+<summary><strong>Direct Backend Engine Usage</strong></summary>
+
+The backend engines can also be instantiated directly:
+
+```python
+# -- Lightning Backend --
+from getitune.backend.lightning.engine import LightningEngine
+from getitune.models import EfficientNet
+
+engine = LightningEngine(
+    model=EfficientNet(label_info=10, model_name="efficientnet_b0"),
+    data="/path/to/dataset",
+    work_dir="./my_workspace",
+    device="auto",
+)
+engine.train(max_epochs=50)
+engine.test()
+engine.export()
+
+
+# -- OpenVINO Backend (inference) --
+from getitune.backend.openvino.engine import OVEngine
+
+engine = OVEngine(
+    model="/path/to/exported_model.xml",
+    data="/path/to/dataset",
+)
+engine.test()
+engine.optimize()
+```
+
+</details>
+
+<details>
+<summary><strong>Common Engine Parameters</strong></summary>
+
+Customize engine creation with the following parameters:
+
+```python
+engine = create_engine(
+    model="efficientnet_b0",
+    data="/path/to/data",
+    work_dir="./my_workspace",         # Working directory for checkpoints/logs; defaults to "./getitune-workspace"
+    device="gpu",                       # "auto", "cpu", "gpu", "0", "1", "xpu", etc.
+    checkpoint="/path/to/weights.pt",  # Optional pretrained checkpoint for warm-start training
+    task="MULTI_CLASS_CLS",             # Required only if model name matches multiple tasks
+)
+engine.train(max_epochs=50)
+```
+
+</details>
 
 <details>
 <summary><strong>Override training hyperparameters</strong></summary>
@@ -248,7 +375,7 @@ model = EfficientNet(
     optimizer=lambda params: AdamW(params, lr=0.001, weight_decay=0.01),
 )
 
-engine = LightningEngine(data=datamodule, model=model)
+engine = create_engine(data=datamodule, model=model)
 engine.train(max_epochs=100)
 ```
 
@@ -328,18 +455,21 @@ train_subset:
         std: [0.229, 0.224, 0.225]
 ```
 
-Augmentations can be overridden using API as well when creating a `DataModule` instance and passing it to the engine:
+Then reference your custom data config from your recipe with `data: my_data.yaml`.
+
+Augmentations can also be overridden directly via the API by creating a `DataModule` instance and passing it to the engine:
 
 ```python
-from getitune.data.datamodule import DataModule
+from getitune.data.module import DataModule
 from getitune.config.data import SubsetConfig
+from getitune.models import EfficientNet
 import kornia.augmentation as K
 from torchvision.transforms import v2
 
 datamodule = DataModule(
-    task = "MULTI_CLASS_CLS",
-    data_root = "library/tests/assets/classification_cifar10",
-    train_subset = SubsetConfig(
+    task="MULTI_CLASS_CLS",
+    data_root="tests/assets/classification_cifar10",
+    train_subset=SubsetConfig(
         augmentations_cpu=[
             v2.Resize((256, 256)),
         ],
@@ -348,28 +478,28 @@ datamodule = DataModule(
             K.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
         ],
         batch_size=32,
-        num_workers=8
+        num_workers=8,
     ),
-    val_subset = SubsetConfig(
+    val_subset=SubsetConfig(
         subset_name="val",
         augmentations_cpu=[
             v2.Resize((256, 256)),
         ],
         batch_size=32,
-        num_workers=8
+        num_workers=8,
     ),
-    test_subset = SubsetConfig(
+    test_subset=SubsetConfig(
         subset_name="test",
         augmentations_cpu=[
             v2.Resize((256, 256)),
         ],
         batch_size=32,
-        num_workers=8
+        num_workers=8,
     ),
 )
 
 model = EfficientNet(label_info=datamodule.label_info, model_name="efficientnet_b0")
-engine = LightningEngine(data=datamodule, model=model)
+engine = create_engine(data=datamodule, model=model)
 engine.train()
 ```
 
