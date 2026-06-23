@@ -397,14 +397,12 @@ jobs:
       - name: Build PyAV wheel from source
         if: steps.pyav_cache.outputs.cache-hit != 'true'
         working-directory: application/backend
-        env:
-          UV_NO_BINARY_PACKAGE: av
         run: |
           $wheelDir = ".pyav-wheel"
           New-Item -ItemType Directory -Force -Path $wheelDir | Out-Null
 
           # Build PyAV from source against our custom FFmpeg
-          uv pip wheel "av~=16.1.0" --no-deps --wheel-dir $wheelDir
+          uv run python -m pip wheel "av~=16.1.0" --no-binary av --no-deps --wheel-dir $wheelDir
 
           Write-Host "Built PyAV wheel:"
           Get-ChildItem $wheelDir -Filter "av-*.whl" | ForEach-Object { Write-Host "  $($_.Name)" }
