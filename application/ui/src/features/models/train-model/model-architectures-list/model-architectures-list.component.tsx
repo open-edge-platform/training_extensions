@@ -25,17 +25,6 @@ export const ModelArchitecturesList = () => {
     const collapsedArchitectures = recommendedArchitectures.slice(0, SHOW_MORE_THRESHOLD);
     const canToggleArchitecturesList = modelArchitectures.length > SHOW_MORE_THRESHOLD;
 
-    useEffect(() => {
-        if (selectedModelArchitectureId !== null && !showMore) {
-            const isSelectedInCollapsed = collapsedArchitectures.some(
-                (arch) => arch.id === selectedModelArchitectureId
-            );
-            if (!isSelectedInCollapsed) {
-                setShowMore(true);
-            }
-        }
-    }, [selectedModelArchitectureId, collapsedArchitectures, setShowMore, showMore]);
-
     return (
         <Flex direction={'column'} minHeight={0} gap={'size-300'}>
             {showMore ? (
