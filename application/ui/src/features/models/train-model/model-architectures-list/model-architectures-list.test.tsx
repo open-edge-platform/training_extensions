@@ -9,12 +9,6 @@ import { ModelArchitecturesList } from './model-architectures-list.component';
 
 const mockOnSelectModelArchitectureId = vi.hoisted(() => vi.fn());
 const mockSelectedModelArchitectureId = vi.hoisted(() => ({ value: null as string | null }));
-const mockShowMore = vi.hoisted(() => ({ value: false as boolean }));
-const mockSetShowMore = vi.hoisted(() =>
-    vi.fn((val: boolean) => {
-        mockShowMore.value = val;
-    })
-);
 
 const mockModelArchitectures = [
     getMockedModelArchitecture({ id: 'arch-1', name: 'Alpha Model' }),
@@ -29,8 +23,6 @@ vi.mock('../train-model-provider.component', () => ({
         modelArchitectures: mockModelArchitectures,
         selectedModelArchitectureId: mockSelectedModelArchitectureId.value,
         onSelectModelArchitectureId: mockOnSelectModelArchitectureId,
-        showMoreModelArchitectures: mockShowMore.value,
-        setShowMoreModelArchitectures: mockSetShowMore,
     }),
 }));
 
@@ -38,8 +30,6 @@ describe('ModelArchitecturesList', () => {
     beforeEach(() => {
         mockOnSelectModelArchitectureId.mockReset();
         mockSelectedModelArchitectureId.value = null;
-        mockShowMore.value = false;
-        mockSetShowMore.mockClear();
     });
 
     it('does not render the sort control in the default (recommended) view', () => {
@@ -48,27 +38,29 @@ describe('ModelArchitecturesList', () => {
         expect(screen.queryByText('Sort Models by:')).not.toBeInTheDocument();
     });
 
-    it('calls setShowMore with true when clicking "Show more"', async () => {
+    it('renders the sort control after clicking "Show more"', async () => {
         render(<ModelArchitecturesList />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Show more' }));
 
-        expect(mockSetShowMore).toHaveBeenCalledWith(true);
+        expect(screen.getByRole('button', { name: /Sort Models by:/i })).toBeVisible();
     });
 
-    it('calls setShowMore with false when clicking "Show less"', async () => {
-        mockShowMore.value = true;
+    it('hides the sort control again after clicking "Show less"', async () => {
         render(<ModelArchitecturesList />);
 
-        fireEvent.click(screen.getByRole('button', { name: 'Show less' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Show more' }));
+        expect(screen.getByRole('button', { name: /Sort Models by:/i })).toBeVisible();
 
-        expect(mockSetShowMore).toHaveBeenCalledWith(false);
+        fireEvent.click(screen.getByRole('button', { name: 'Show less' }));
+        expect(screen.queryByRole('button', { name: /Sort Models by:/i })).not.toBeInTheDocument();
     });
 
-    it('calls setShowMore to true on mount if a non-default architecture is already selected', () => {
+    it('renders expanded list by default if a non-default architecture is already selected', () => {
         mockSelectedModelArchitectureId.value = mockModelArchitectures[mockModelArchitectures.length - 1].id;
         render(<ModelArchitecturesList />);
 
-        expect(mockSetShowMore).toHaveBeenCalledWith(true);
+        expect(screen.getByRole('button', { name: 'Show less' })).toBeVisible();
+        expect(screen.getByRole('button', { name: /Sort Models by:/i })).toBeVisible();
     });
 });
