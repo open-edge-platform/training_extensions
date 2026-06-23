@@ -21,7 +21,9 @@ export const ModelArchitecturesList = () => {
 
     const [showMore, setShowMore] = useState<boolean>(() => {
         if (selectedModelArchitectureId !== null) {
-            const isSelectedInCollapsed = collapsedArchitectures.some((arch) => arch.id === selectedModelArchitectureId);
+            const isSelectedInCollapsed = collapsedArchitectures.some(
+                (arch) => arch.id === selectedModelArchitectureId
+            );
             return !isSelectedInCollapsed;
         }
         return false;

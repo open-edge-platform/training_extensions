@@ -55,9 +55,9 @@ describe('ModelArchitecturesList', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Show less' }));
         expect(screen.queryByRole('button', { name: /Sort Models by:/i })).not.toBeInTheDocument();
     });
-    
+
     it('renders expanded list by default if a non-default architecture is already selected', () => {
-        mockSelectedModelArchitectureId.value = 'arch-5';
+        mockSelectedModelArchitectureId.value = mockModelArchitectures[mockModelArchitectures.length - 1].id;
         render(<ModelArchitecturesList />);
 
         expect(screen.getByRole('button', { name: 'Show less' })).toBeVisible();
