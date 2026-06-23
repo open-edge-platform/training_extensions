@@ -1,0 +1,25 @@
+.container {
+    padding: var(--spectrum-global-dimension-size-25) var(--spectrum-global-dimension-size-50);
+    background: var(--spectrum-global-color-gray-300);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    margin-right: var(--spectrum-global-dimension-size-100);
+    line-height: var(--spectrum-global-dimension-size-225);
+    width: fit-content !important;
+}
+
+.statusLight {
+    --spectrum-statuslight-positive-dot-color: var(--aqua);
+    --spectrum-statuslight-negative-dot-color: var(--coral);
+
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    padding: 0;
+    line-height: 0;
+    color: white;
+    min-block-size: 0;
+    align-items: center;
+
+    &:before {
+        margin: 0;
+        margin-right: var(--spectrum-global-dimension-size-100);
+    }
+}
