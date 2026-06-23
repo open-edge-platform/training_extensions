@@ -30,12 +30,18 @@ import logging
 import sys
 from copy import deepcopy
 from pathlib import Path
+from urllib.parse import urlparse
 
 from jsonargparse import ArgumentParser as JArgParser
 from jsonargparse import Namespace
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
+
+CLASSIFICATION_TASKS = {"MULTI_CLASS_CLS", "MULTI_LABEL_CLS"}
+
+# Location where the getitune backbones cache their downloaded pre-trained checkpoints.
+CHECKPOINT_CACHE_DIR = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
 
 
 # Tasks to export (skip H_LABEL_CLS as it requires dataset-specific hierarchical label structure)
@@ -48,14 +54,6 @@ EXPORTABLE_TASKS = [
     "ROTATED_DETECTION",
     "KEYPOINT_DETECTION",
 ]
-
-# Models to skip: backbone-only pretrained weights (no pretrained head),
-# so exported models would produce random/meaningless predictions.
-SKIP_MODELS = {
-    "litehrnet_s",
-    "litehrnet_18",
-    "litehrnet_x",
-}
 
 
 def get_recipe_paths(task: str) -> list[str]:
@@ -120,8 +118,11 @@ def create_model_from_config(config: dict, label_info: int, input_size: tuple[in
     The model is created with the original pre-trained number of classes,
     so pre-trained weights (including the head) are loaded as-is.
     """
+    from dataclasses import asdict
+
     from getitune.backend.lightning.models.base import LightningModel
-    from getitune.utils.utils import should_pass_label_info, get_model_cls_from_config
+    from getitune.config.data import IntensityConfig
+    from getitune.utils.utils import get_model_cls_from_config, should_pass_label_info
 
     model_config = deepcopy(config["model"])
 
@@ -136,10 +137,13 @@ def create_model_from_config(config: dict, label_info: int, input_size: tuple[in
     if init_args.get("data_input_params") is None:
         init_args.pop("data_input_params", None)
 
-    # Inject data_input_params if input_size is known
-    # This helps the model configure correct preprocessing for export
+    # Inject data_input_params so the export embeds correct preprocessing.
+    # `intensity_config` (scale_to_unit, ÷255) is mandatory: getitune trains with
+    # a two-stage pipeline.
+    data_input_params: dict = {"intensity_config": asdict(IntensityConfig())}
     if input_size is not None:
-        model_config["init_args"]["data_input_params"] = {"input_size": input_size}
+        data_input_params["input_size"] = input_size
+    model_config["init_args"]["data_input_params"] = data_input_params
 
     model_cls = get_model_cls_from_config(Namespace(model_config))
 
@@ -157,6 +161,165 @@ def create_model_from_config(config: dict, label_info: int, input_size: tuple[in
         fail_untyped=False,
     )
     return model_parser.instantiate_classes(Namespace(model=model_config)).get("model")
+
+
+def _find_head_linear(model):
+    """Return the final ``nn.Linear`` of a classification model's head, or ``None``.
+
+    Supports ``LinearClsHead`` / ``MultiLabelLinearClsHead`` (``head.fc``) and
+    ``VisionTransformerClsHead`` (``head.layers.head``).
+    """
+    from torch import nn
+
+    head = getattr(getattr(model, "model", None), "head", None)
+    if head is None:
+        return None
+
+    fc = getattr(head, "fc", None)
+    if isinstance(fc, nn.Linear):
+        return fc
+
+    layers = getattr(head, "layers", None)
+    vit_head = getattr(layers, "head", None) if layers is not None else None
+    if isinstance(vit_head, nn.Linear):
+        return vit_head
+
+    return None
+
+
+def _last_linear(module):
+    """Return the last ``nn.Linear`` submodule of ``module`` (e.g. the classifier), or ``None``."""
+    from torch import nn
+
+    last = None
+    for sub in module.modules():
+        if isinstance(sub, nn.Linear):
+            last = sub
+    return last
+
+
+def _head_weights_pytorchcv_efficientnet(model_name: str):
+    """Pre-trained ImageNet-1k head for pytorchcv EfficientNet backbones (``output.fc.*``)."""
+    import torch
+    from pytorchcv.models.common.model_store import get_model_file
+
+    path = get_model_file(model_name=model_name, local_model_store_dir_path=str(CHECKPOINT_CACHE_DIR))
+    state_dict = torch.load(path, map_location="cpu", weights_only=False)
+    if isinstance(state_dict, dict) and "state_dict" in state_dict:
+        state_dict = state_dict["state_dict"]
+    if "output.fc.weight" not in state_dict or "output.fc.bias" not in state_dict:
+        return None
+    return state_dict["output.fc.weight"], state_dict["output.fc.bias"]
+
+
+def _head_weights_torchvision(model_name: str):
+    """Pre-trained ImageNet head for torchvision backbones (last ``nn.Linear`` of the classifier)."""
+    from torchvision.models import get_model, get_model_weights
+
+    net = get_model(name=model_name, weights=get_model_weights(model_name))
+    linear = _last_linear(net)
+    if linear is None:
+        return None
+    return linear.weight.detach().clone(), linear.bias.detach().clone()
+
+
+def _head_weights_timm(model_name: str):
+    """Pre-trained head for timm backbones, if the checkpoint exposes a plain ``nn.Linear`` classifier."""
+    import timm
+    from torch import nn
+
+    net = timm.create_model(model_name, pretrained=True)
+    classifier = net.get_classifier()
+    if not isinstance(classifier, nn.Linear) or classifier.bias is None:
+        return None
+    return classifier.weight.detach().clone(), classifier.bias.detach().clone()
+
+
+def _head_weights_vit(model_name: str):
+    """Pre-trained ImageNet head for augreg ViT ``.npz`` checkpoints (``head/kernel`` / ``head/bias``).
+
+    DINOv2 checkpoints are self-supervised and contain no classification head.
+    """
+    import numpy as np
+    import torch
+    from getitune.backend.lightning.models.classification.multiclass_models.vit import pretrained_urls
+
+    url = pretrained_urls.get(model_name)
+    if url is None or not url.endswith(".npz"):
+        return None  # dinov2 (.pth) and unknown variants have no usable head
+
+    cache_file = CHECKPOINT_CACHE_DIR / Path(urlparse(url).path).name
+    if not cache_file.exists():
+        return None
+
+    weights = np.load(cache_file)
+    for prefix in ("", "opt/target/", "params/"):
+        kernel_key, bias_key = f"{prefix}head/kernel", f"{prefix}head/bias"
+        if kernel_key in weights and bias_key in weights:
+            kernel = torch.from_numpy(weights[kernel_key]).t().contiguous()  # (in, out) -> (out, in)
+            bias = torch.from_numpy(weights[bias_key])
+            return kernel, bias
+    return None
+
+
+# Maps the backbone class name to (handler, needs_model_name).
+_HEAD_SOURCES = {
+    "EfficientNetFeatureExtractor": _head_weights_pytorchcv_efficientnet,
+    "TorchvisionBackbone": _head_weights_torchvision,
+    "TimmBackbone": _head_weights_timm,
+    "VisionTransformerBackbone": _head_weights_vit,
+}
+
+
+def recover_pretrained_head(model) -> tuple[str, str]:
+    """Restore the pre-trained classification head weights onto ``model`` in-place.
+
+    The classification backbones are feature extractors that silently drop the
+    checkpoint's classifier head, after which ``_create_model()`` builds a fresh,
+    randomly initialized head. This copies the original pre-trained head weights
+    back onto the model's head so the exported model is accurate.
+
+    Returns:
+        A ``(status, detail)`` tuple where status is one of ``"recovered"``,
+        ``"skipped"`` or ``"failed"``.
+    """
+    import torch
+
+    target = _find_head_linear(model)
+    if target is None:
+        head = getattr(getattr(model, "model", None), "head", None)
+        head_type = type(head).__name__ if head is not None else "<none>"
+        return "skipped", f"unsupported head type '{head_type}' (no plain nn.Linear classifier)"
+
+    backbone = getattr(getattr(model, "model", None), "backbone", None)
+    backbone_type = type(backbone).__name__ if backbone is not None else "<none>"
+    handler = _HEAD_SOURCES.get(backbone_type)
+    if handler is None:
+        return "skipped", f"no head-recovery handler for backbone '{backbone_type}'"
+
+    model_name = getattr(model, "model_name", None)
+    if not model_name:
+        return "skipped", "model has no 'model_name'"
+
+    try:
+        source = handler(model_name)
+    except Exception as exc:  # best effort: failures are surfaced in the export summary
+        return "failed", f"error fetching pre-trained head: {exc}"
+
+    if source is None:
+        return "skipped", f"no compatible pre-trained head available for '{model_name}'"
+
+    weight, bias = source
+    if tuple(weight.shape) != tuple(target.weight.shape) or tuple(bias.shape) != tuple(target.bias.shape):
+        return (
+            "skipped",
+            f"head shape mismatch (checkpoint {tuple(weight.shape)} vs model {tuple(target.weight.shape)})",
+        )
+
+    with torch.no_grad():
+        target.weight.copy_(weight.to(target.weight.dtype))
+        target.bias.copy_(bias.to(target.bias.dtype))
+    return "recovered", f"loaded pre-trained head {tuple(weight.shape)} from '{model_name}'"
 
 
 def export_model(model, output_dir: Path, export_format: str = "OPENVINO", precision: str = "FP32") -> Path:
@@ -226,7 +389,7 @@ def main():
     logger.info(f"Tasks: {tasks}")
     logger.info("")
 
-    results = {"success": [], "failed": [], "skipped": []}
+    results = {"success": [], "failed": [], "skipped": [], "head_not_recovered": []}
 
     for task in tasks:
         logger.info(f"--- Task: {task} ---")
@@ -241,11 +404,6 @@ def main():
         for recipe_path in recipes:
             model_name = Path(recipe_path).stem
             logger.info(f"  Processing: {model_name}")
-
-            if model_name in SKIP_MODELS:
-                logger.warning(f"    SKIPPED: backbone-only pretrained weights (no pretrained head)")
-                results["skipped"].append(f"{task}/{model_name}")
-                continue
 
             try:
                 # Load and parse recipe config
@@ -268,6 +426,16 @@ def main():
                 # Create model with original pre-trained weights
                 logger.info(f"    Creating model with original pre-trained weights...")
                 model = create_model_from_config(config, label_info=label_info, input_size=input_size)
+
+                # Restore the pre-trained classification head (backbones drop it on load,
+                # leaving a randomly initialized head -> ~0% accuracy otherwise).
+                if task in CLASSIFICATION_TASKS:
+                    head_status, head_detail = recover_pretrained_head(model)
+                    if head_status == "recovered":
+                        logger.info(f"    Pre-trained head: {head_detail}")
+                    else:  # "skipped" or "failed"
+                        logger.warning(f"    Pre-trained head NOT recovered (random head): {head_detail}")
+                        results["head_not_recovered"].append(f"{task}/{model_name}: {head_detail}")
 
                 # Export
                 export_dir = output_root / task.lower() / model_name
@@ -302,6 +470,13 @@ def main():
         logger.info(f"  Failed: {len(results['failed'])}")
         for name in results["failed"]:
             logger.info(f"    - {name}")
+    if results["head_not_recovered"]:
+        logger.warning(
+            f"  Classification models exported with a RANDOM head "
+            f"(pre-trained head unavailable): {len(results['head_not_recovered'])}"
+        )
+        for name in results["head_not_recovered"]:
+            logger.warning(f"    - {name}")
 
     if results["failed"]:
         sys.exit(1)
