@@ -42,6 +42,9 @@ export type TrainModelContextProps = {
     isAdvancedSettingsMode: boolean;
     onToggleAdvancedSettingsMode: (isAdvancedSettingsMode: boolean) => void;
 
+    showMoreModelArchitectures: boolean;
+    setShowMoreModelArchitectures: (showMore: boolean) => void;
+
     trainingConfiguration: TrainingConfiguration | undefined;
     defaultTrainingConfiguration: TrainingConfiguration | undefined;
     onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
@@ -127,6 +130,7 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     );
 
     const [isAdvancedSettingsMode, setIsAdvancedSettingsMode] = useState<boolean>(false);
+    const [showMoreModelArchitectures, setShowMoreModelArchitectures] = useState<boolean>(false);
 
     const modelRevisions = useMemo(() => {
         return getModelRevisionsForArchitecture(allModelRevisions, selectedModelArchitectureId);
@@ -166,6 +170,9 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
 
                 isAdvancedSettingsMode,
                 onToggleAdvancedSettingsMode: setIsAdvancedSettingsMode,
+
+                showMoreModelArchitectures,
+                setShowMoreModelArchitectures,
 
                 trainingConfiguration,
                 defaultTrainingConfiguration,

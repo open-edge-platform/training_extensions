@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 
 import { Button, Flex } from '@geti/ui';
 
@@ -13,21 +13,28 @@ import { getRecommendedArchitectures } from './utils';
 const SHOW_MORE_THRESHOLD = 4;
 
 export const ModelArchitecturesList = () => {
-    const { modelArchitectures, selectedModelArchitectureId, onSelectModelArchitectureId } = useTrainModelState();
+    const {
+        modelArchitectures,
+        selectedModelArchitectureId,
+        onSelectModelArchitectureId,
+        showMoreModelArchitectures: showMore,
+        setShowMoreModelArchitectures: setShowMore,
+    } = useTrainModelState();
 
     const recommendedArchitectures = getRecommendedArchitectures(modelArchitectures);
     const collapsedArchitectures = recommendedArchitectures.slice(0, SHOW_MORE_THRESHOLD);
     const canToggleArchitecturesList = modelArchitectures.length > SHOW_MORE_THRESHOLD;
 
-    const [showMore, setShowMore] = useState<boolean>(() => {
-        if (selectedModelArchitectureId !== null) {
+    useEffect(() => {
+        if (selectedModelArchitectureId !== null && !showMore) {
             const isSelectedInCollapsed = collapsedArchitectures.some(
                 (arch) => arch.id === selectedModelArchitectureId
             );
-            return !isSelectedInCollapsed;
+            if (!isSelectedInCollapsed) {
+                setShowMore(true);
+            }
         }
-        return false;
-    });
+    }, [selectedModelArchitectureId, collapsedArchitectures, setShowMore, showMore]);
 
     return (
         <Flex direction={'column'} minHeight={0} gap={'size-300'}>
