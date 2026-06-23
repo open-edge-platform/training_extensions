@@ -91,13 +91,17 @@ Then get access to Geti™ user interface at `http://localhost:7860`.
 
 <details>
 <summary>Install from source code</summary>
-Install the Geti™ stable development version from source code. The installer clones the repository, sets up its own
+
+**Install the Geti™ stable development version from source code.**
+
+**Installing from source gives you access to the latest features not yet available in released builds, including Ultralytics YOLO26 support.**
+
+
+The installer clones the repository, sets up its own
 copy of `uv`, Node.js and npm under `.build/`, detects your accelerator (Intel® XPU, NVIDIA® CUDA, or CPU), builds the
 backend and UI, and starts the app. The first build downloads several GB of packages (PyTorch, OpenVINO, …) and can
 take a while — progress is shown for each step, and your browser opens automatically once the server is ready.
 
-Installing from source gives you access to the latest features not yet available in released builds, including
-Ultralytics YOLO26 support.
 
 > [!NOTE]
 > `git` is required on all platforms; `curl` is also required on Linux/WSL. Re-running the installer reuses the cached
