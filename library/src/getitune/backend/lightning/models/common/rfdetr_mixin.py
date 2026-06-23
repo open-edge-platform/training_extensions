@@ -38,7 +38,7 @@ class RFDETRMixin:
     """Mixin class providing shared RF-DETR functionality for detection and instance segmentation."""
 
     _pretrained_weights: ClassVar[dict[str, str]]
-    _model_class_mapping: ClassVar[dict[str, type]]
+    _model_config_mapping: ClassVar[dict[str, type]]
 
     def _build_rfdetr_model(
         self,
@@ -80,10 +80,13 @@ class RFDETRMixin:
                 )
             )
             cache_dir.mkdir(parents=True, exist_ok=True)
-            weight_filename = Path(model_config.pretrain_weights).name
-            local_path = cache_dir / weight_filename
-            if not local_path.exists():
+            local_path = cache_dir / Path(pretrain_url).name
+            is_distributed = torch.distributed.is_available() and torch.distributed.is_initialized()
+            rank = torch.distributed.get_rank() if is_distributed else 0
+            if rank == 0 and not local_path.exists():
                 download_url_to_file(pretrain_url, str(local_path), progress=os.isatty(0))
+            if is_distributed:
+                torch.distributed.barrier()
             model_config.pretrain_weights = str(local_path)
         else:
             model_config.pretrain_weights = None
