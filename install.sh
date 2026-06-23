@@ -83,7 +83,15 @@ confirm() {
         return 0
     fi
     local response
-    read -rp "$prompt [Y/n]: " response
+    if [ -t 0 ]; then
+        read -rp "$prompt [Y/n]: " response
+    elif [ -e /dev/tty ]; then
+        read -rp "$prompt [Y/n]: " response </dev/tty
+    else
+        echo "Error: confirmation required but no terminal is available."
+        echo "Re-run with -y/--yes to skip prompts in non-interactive mode."
+        exit 1
+    fi
     if [[ "${response,,}" =~ ^n(o)?$ ]]; then
         return 1
     fi
