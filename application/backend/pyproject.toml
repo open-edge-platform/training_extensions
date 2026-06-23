@@ -19,7 +19,7 @@ dependencies = [
     "sqlalchemy~=2.0.44",
     "alembic~=1.17.2",
     "aiofiles==25.1.0",
-    "pydantic-settings~=2.12.0",
+    "pydantic-settings~=2.14.2",
     "aiortc~=1.14.0",
     "datumaro[experimental]~=1.13.1",
     "scikit-learn~=1.7.2",
