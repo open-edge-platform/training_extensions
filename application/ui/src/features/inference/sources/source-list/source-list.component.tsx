@@ -7,9 +7,11 @@ import { clsx } from 'clsx';
 import { usePipeline } from 'hooks/api/pipeline.hook';
 import { isEqual } from 'lodash-es';
 
+import { ConnectionStatusBadge } from '../../../../components/connection-status-badge/connection-status-badge.component';
 import { StatusTag } from '../../../../components/status-tag/status-tag.component';
 import type { SourceConfig } from '../../../../constants/shared-types';
 import { removeUnderscore } from '../../util';
+import { useTestSource } from '../api/use-test-source';
 import { SourceMenu } from '../source-menu/source-menu.component';
 import { SettingsList } from './settings-list/settings-list.component';
 import { SourceIcon } from './source-icon/source-icon.component';
@@ -30,6 +32,14 @@ type SourceListItemProps = {
 };
 
 const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }: SourceListItemProps) => {
+    const { data, isFetched, dataUpdatedAt, refetch } = useTestSource(String(source.id));
+
+    const handleTestConnection = async () => {
+        const result = await refetch();
+
+        return result.data?.reachable === true;
+    };
+
     return (
         <Flex
             key={source.id}
@@ -37,6 +47,9 @@ const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }
             direction='column'
             UNSAFE_className={clsx(classes.card, { [classes.activeCard]: isConnected })}
         >
+            {isFetched && (
+                <ConnectionStatusBadge isAvailable={data?.reachable === true} lastCheckedAt={dataUpdatedAt} />
+            )}
             <Flex alignItems={'center'} gap={'size-200'}>
                 <SourceIcon type={source.source_type} />
 
@@ -58,6 +71,7 @@ const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }
                     isConnected={isConnected}
                     onEdit={() => onEditSource(source)}
                     isPipelineRunning={isPipelineRunning}
+                    onTest={handleTestConnection}
                 />
             </Flex>
         </Flex>

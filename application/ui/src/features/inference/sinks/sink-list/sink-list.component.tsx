@@ -6,9 +6,11 @@ import { Add as AddIcon } from '@geti-ui/ui/icons';
 import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
 
+import { ConnectionStatusBadge } from '../../../../components/connection-status-badge/connection-status-badge.component';
 import { StatusTag } from '../../../../components/status-tag/status-tag.component';
 import { usePipeline } from '../../../../hooks/api/pipeline.hook';
 import { removeUnderscore } from '../../util';
+import { useTestSink } from '../api/use-test-sink';
 import { SinkConfig } from '../utils';
 import { SettingsList } from './settings-list/settings-list.component';
 import { SinkIcon } from './sink-icon/sink-icon.component';
@@ -29,6 +31,14 @@ type SinksListItemProps = {
 };
 
 const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => {
+    const { data, isFetched, dataUpdatedAt, refetch } = useTestSink(sink.id);
+
+    const handleTestConnection = async () => {
+        const result = await refetch();
+
+        return result.data?.reachable === true;
+    };
+
     return (
         <Flex
             key={sink.id}
@@ -38,6 +48,9 @@ const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => 
                 [classes.activeCard]: isConnected,
             })}
         >
+            {isFetched && (
+                <ConnectionStatusBadge isAvailable={data?.reachable === true} lastCheckedAt={dataUpdatedAt} />
+            )}
             <Flex alignItems={'center'} gap={'size-200'}>
                 <SinkIcon type={sink.sink_type} />
 
@@ -54,10 +67,11 @@ const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => 
                 <SettingsList sink={sink} />
 
                 <SinkMenu
-                    id={String(sink.id)}
+                    id={sink.id}
                     name={sink.name}
                     isConnected={isConnected}
                     onEdit={() => onEditSink(sink)}
+                    onTest={handleTestConnection}
                 />
             </Flex>
         </Flex>
