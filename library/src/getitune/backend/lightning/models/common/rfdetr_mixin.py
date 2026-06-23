@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 from rfdetr._namespace import _namespace_from_configs
@@ -69,7 +69,7 @@ class RFDETRMixin:
         model_config.gradient_checkpointing = gradient_checkpointing
         train_config = TrainConfig(dataset_dir=".")
 
-        lwdetr: LWDETR = cast("LWDETR", build_model_from_config(model_config, train_config))
+        lwdetr: LWDETR = build_model_from_config(model_config, train_config)
 
         pretrain_url = self._pretrained_weights.get(self.model_name)  # type: ignore[attr-defined]
         if pretrain_url:
