@@ -661,25 +661,7 @@ function Start-App {
     Write-Host ""
     Write-Host "Geti will be available at: " -NoNewline
     Write-Host $url -ForegroundColor Cyan
-    Write-Host "Waiting for the server to become ready (your browser will open automatically)..." -ForegroundColor DarkGray
     Write-Host ""
-
-    # Poll the health endpoint in the background; once the server responds,
-    # open the default browser. The server itself runs in the foreground below.
-    $readinessJob = Start-Job -ScriptBlock {
-        param($healthUrl, $openUrl)
-        for ($i = 0; $i -lt 150; $i++) {
-            try {
-                $resp = Invoke-WebRequest -Uri $healthUrl -UseBasicParsing -TimeoutSec 2
-                if ($resp.StatusCode -eq 200) {
-                    Start-Process $openUrl
-                    return
-                }
-            } catch {
-                Start-Sleep -Seconds 1
-            }
-        }
-    } -ArgumentList "$url/health", $url
 
     Push-Location $backendDir
     try {
@@ -687,8 +669,6 @@ function Start-App {
         & $uvExe run app/main.py
     } finally {
         Pop-Location
-        Stop-Job $readinessJob -ErrorAction SilentlyContinue
-        Remove-Job $readinessJob -Force -ErrorAction SilentlyContinue
     }
 }
 

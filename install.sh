@@ -498,26 +498,7 @@ run_app() {
 
     echo ""
     echo "Geti will be available at: $url"
-    echo "Waiting for the server to become ready (your browser will open automatically)..."
     echo ""
-
-    # Poll the health endpoint in the background; once the server responds,
-    # open the default browser. The server itself runs in the foreground below.
-    (
-        for _ in $(seq 1 150); do
-            if curl -fsS -o /dev/null --max-time 2 "$url/health" 2>/dev/null; then
-                if command -v xdg-open &>/dev/null; then
-                    xdg-open "$url" >/dev/null 2>&1
-                elif command -v open &>/dev/null; then
-                    open "$url" >/dev/null 2>&1
-                fi
-                break
-            fi
-            sleep 1
-        done
-    ) &
-    local readiness_pid=$!
-    trap 'kill "$readiness_pid" 2>/dev/null || true' EXIT
 
     cd "$WORK_DIR/application/backend"
     STATIC_FILES_DIR=html "$UV_DIR/uv" run app/main.py
