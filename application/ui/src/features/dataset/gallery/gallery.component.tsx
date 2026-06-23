@@ -34,24 +34,9 @@ type GalleryProps = {
 };
 
 const VIEW_MODE_SETTINGS: Record<GalleryViewMode, GridLayoutOptions> = {
-    [ViewModes.LARGE]: {
-        minItemSize: new Size(300, 300),
-        maxItemSize: new Size(300, 300),
-        minSpace: new Size(10, 10),
-        preserveAspectRatio: true,
-    },
-    [ViewModes.MEDIUM]: {
-        minItemSize: new Size(200, 200),
-        maxItemSize: new Size(200, 200),
-        minSpace: new Size(6, 6),
-        preserveAspectRatio: true,
-    },
-    [ViewModes.SMALL]: {
-        minItemSize: new Size(120, 120),
-        maxItemSize: new Size(120, 120),
-        minSpace: new Size(4, 4),
-        preserveAspectRatio: true,
-    },
+    [ViewModes.LARGE]: { minItemSize: new Size(300, 300), minSpace: new Size(10, 10), preserveAspectRatio: true },
+    [ViewModes.MEDIUM]: { minItemSize: new Size(200, 200), minSpace: new Size(6, 6), preserveAspectRatio: true },
+    [ViewModes.SMALL]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
 };
 
 type GalleryListProps = {
