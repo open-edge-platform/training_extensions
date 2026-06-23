@@ -17,6 +17,8 @@ type ReadOnlyAnnotatorProvidersProps = {
     children: ReactNode;
 };
 
+const EMPTY_PREDICTIONS_DTO: AnnotationDTO[] = [];
+
 export const ReadOnlyAnnotatorProviders = ({
     mediaItem,
     initialAnnotationsDTO,
@@ -31,7 +33,7 @@ export const ReadOnlyAnnotatorProviders = ({
                         <AnnotationActionsProvider
                             mediaItem={mediaItem}
                             initialAnnotationsDTO={initialAnnotationsDTO}
-                            initialPredictionsDTO={[]}
+                            initialPredictionsDTO={EMPTY_PREDICTIONS_DTO}
                             isUserReviewed={isUserReviewed}
                             mode='annotation'
                             isReadOnly

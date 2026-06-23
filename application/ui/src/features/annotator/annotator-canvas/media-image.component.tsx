@@ -13,7 +13,7 @@ import { drawImageDataOnCanvas } from './draw-image-data-on-canvas';
 
 import classes from './annotator-canvas.module.scss';
 
-export const useDrawImageOnCanvas = (image: ImageData) => {
+const useDrawImageOnCanvas = (image: ImageData) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {

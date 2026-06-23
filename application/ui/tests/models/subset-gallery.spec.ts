@@ -125,7 +125,7 @@ test.describe('Subset Gallery — read-only dialog', () => {
         const dialog = page.getByRole('dialog');
         await expect(dialog).toBeVisible();
 
-        await expect(dialog.getByLabel('annotation polygon').first()).toBeVisible();
+        await expect(dialog.getByLabel('annotation polygon').last()).toBeVisible();
 
         const toggleFocusButton = page.getByRole('button', { name: 'Toggle focus' });
         await toggleFocusButton.click();
