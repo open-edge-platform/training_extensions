@@ -402,7 +402,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path $wheelDir | Out-Null
 
           # Build PyAV from source against our custom FFmpeg
-          uv run python -m pip wheel "av~=16.1.0" --no-binary av --no-deps --wheel-dir $wheelDir
+          uvx pip wheel "av~=16.1.0" --no-binary av --no-deps --wheel-dir $wheelDir
 
           Write-Host "Built PyAV wheel:"
           Get-ChildItem $wheelDir -Filter "av-*.whl" | ForEach-Object { Write-Host "  $($_.Name)" }
