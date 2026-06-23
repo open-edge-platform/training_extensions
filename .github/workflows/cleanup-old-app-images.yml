@@ -45,7 +45,7 @@ jobs:
       OWNER: ${{ github.repository_owner }}
       # On a scheduled run inputs are empty, so fall back to sensible defaults.
       MIN_VERSIONS_TO_KEEP: ${{ inputs.min_versions_to_keep || 10 }}
-      DRY_RUN: ${{ inputs.dry_run == false && 'false' || 'true' }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && (inputs.dry_run && 'true' || 'false') || 'false' }}
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
