@@ -16,8 +16,9 @@ describe('SinkMenu', () => {
         name = 'name test',
         isConnected = false,
         onEdit = vi.fn(),
+        onTest = vi.fn(),
     }: Partial<SinkMenuProps>) => {
-        render(<SinkMenu id={id} name={name} isConnected={isConnected} onEdit={onEdit} />);
+        render(<SinkMenu id={id} name={name} isConnected={isConnected} onEdit={onEdit} onTest={onTest} />);
     };
 
     it('edit', async () => {
@@ -98,7 +99,7 @@ describe('SinkMenu', () => {
             renderApp({ name });
 
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
-            await userEvent.click(screen.getByRole('menuitem', { name: /Connect/i }));
+            await userEvent.click(screen.getByRole('menuitem', { name: /^Connect$/i }));
 
             expect(await screen.findByLabelText('toast')).toHaveTextContent(`Successfully connected to "${name}"`);
         });
@@ -109,7 +110,7 @@ describe('SinkMenu', () => {
             renderApp({ name });
 
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
-            await userEvent.click(screen.getByRole('menuitem', { name: /Connect/i }));
+            await userEvent.click(screen.getByRole('menuitem', { name: /^Connect$/i }));
 
             await expect(await screen.findByLabelText('toast')).toHaveTextContent(
                 'An unexpected error occurred. Please try again.'
@@ -121,7 +122,7 @@ describe('SinkMenu', () => {
 
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
 
-            expect(screen.getByRole('menuitem', { name: /Connect/i })).toBeVisible();
+            expect(screen.getByRole('menuitem', { name: /^Connect$/i })).toBeVisible();
         });
     });
 

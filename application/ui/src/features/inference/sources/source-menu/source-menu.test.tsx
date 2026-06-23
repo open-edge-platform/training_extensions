@@ -30,6 +30,7 @@ describe('SourceMenu', () => {
         isConnected = false,
         onEdit = vi.fn(),
         isPipelineRunning = false,
+        onTest = vi.fn(),
     }: Partial<SourceMenuProps>) => {
         render(
             <SourceMenu
@@ -38,6 +39,7 @@ describe('SourceMenu', () => {
                 isConnected={isConnected}
                 onEdit={onEdit}
                 isPipelineRunning={isPipelineRunning}
+                onTest={onTest}
             />
         );
     };
@@ -84,9 +86,7 @@ describe('SourceMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /Remove/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
-                `${name} has been removed successfully!`
-            );
+            expect(await screen.findByLabelText('toast')).toHaveTextContent(`${name} has been removed successfully!`);
             expect(pipelinePatchSpy).not.toHaveBeenCalled();
         });
 
@@ -122,11 +122,9 @@ describe('SourceMenu', () => {
             renderApp({ name });
 
             await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
-            await userEvent.click(screen.getByRole('menuitem', { name: /Connect/i }));
+            await userEvent.click(screen.getByRole('menuitem', { name: /^Connect$/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
-                `Successfully connected to "${name}"`
-            );
+            expect(await screen.findByLabelText('toast')).toHaveTextContent(`Successfully connected to "${name}"`);
         });
 
         it('error', async () => {
@@ -135,9 +133,9 @@ describe('SourceMenu', () => {
             renderApp({ name });
 
             await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
-            await userEvent.click(screen.getByRole('menuitem', { name: /Connect/i }));
+            await userEvent.click(screen.getByRole('menuitem', { name: /^Connect$/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
+            expect(await screen.findByLabelText('toast')).toHaveTextContent(
                 'An unexpected error occurred. Please try again.'
             );
         });
@@ -146,7 +144,7 @@ describe('SourceMenu', () => {
             renderApp({ name, isConnected: false });
 
             await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
-            expect(screen.getByRole('menuitem', { name: /Connect/i })).toBeVisible();
+            expect(screen.getByRole('menuitem', { name: /^Connect$/i })).toBeVisible();
         });
     });
 
@@ -181,9 +179,7 @@ describe('SourceMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /Disconnect/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
-                `Successfully disconnected from "${name}"`
-            );
+            expect(await screen.findByLabelText('toast')).toHaveTextContent(`Successfully disconnected from "${name}"`);
 
             expect(disablePipeline).not.toHaveBeenCalled();
             expect(pipelinePatchSpy).toHaveBeenCalledWith({ source_id: null });
@@ -221,7 +217,7 @@ describe('SourceMenu', () => {
 
             await userEvent.click(screen.getByRole('button', { name: 'Disconnect' }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
+            expect(await screen.findByLabelText('toast')).toHaveTextContent(
                 `Successfully disabled pipeline and disconnected from "${name}"`
             );
 
