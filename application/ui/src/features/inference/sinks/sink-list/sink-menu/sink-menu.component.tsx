@@ -15,6 +15,7 @@ const SINK_MENU_OPTIONS = {
     DISCONNECT: 'disconnect',
     REMOVE: 'remove',
     EDIT: 'edit',
+    TEST: 'test',
 };
 
 export type SinkMenuProps = {
@@ -22,9 +23,10 @@ export type SinkMenuProps = {
     name: string;
     isConnected: boolean;
     onEdit: () => void;
+    onTest: () => Promise<boolean>;
 };
 
-export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
+export const SinkMenu = ({ id, name, isConnected, onEdit, onTest }: SinkMenuProps) => {
     const project_id = useProjectIdentifier();
     const removeSink = $api.useMutation('delete', '/api/sinks/{sink_id}', {
         meta: {
@@ -51,6 +53,9 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
                 break;
             case SINK_MENU_OPTIONS.EDIT:
                 onEdit();
+                break;
+            case SINK_MENU_OPTIONS.TEST:
+                void onTest();
                 break;
         }
     };
@@ -114,6 +119,7 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
                 ) : (
                     <Item key={SINK_MENU_OPTIONS.CONNECT}>Connect</Item>
                 )}
+                <Item key={SINK_MENU_OPTIONS.TEST}>Test connection</Item>
                 <Item key={SINK_MENU_OPTIONS.EDIT}>Edit</Item>
                 <Item key={SINK_MENU_OPTIONS.REMOVE}>Remove</Item>
             </Menu>

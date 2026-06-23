@@ -65,6 +65,7 @@ const SOURCE_MENU_OPTIONS = {
     DISCONNECT: 'disconnect',
     REMOVE: 'remove',
     EDIT: 'edit',
+    TEST: 'test',
 };
 
 export type SourceMenuProps = {
@@ -73,9 +74,10 @@ export type SourceMenuProps = {
     isConnected: boolean;
     onEdit: () => void;
     isPipelineRunning: boolean;
+    onTest: () => Promise<boolean>;
 };
 
-export const SourceMenu = ({ id, name, isConnected, onEdit, isPipelineRunning }: SourceMenuProps) => {
+export const SourceMenu = ({ id, name, isConnected, onEdit, isPipelineRunning, onTest }: SourceMenuProps) => {
     const project_id = useProjectIdentifier();
     const [isDisconnectConfirmationDialogVisible, setIsDisconnectConfirmationDialogVisible] = useState<boolean>(false);
     const disablePipelineMutation = useDisablePipeline();
@@ -113,6 +115,9 @@ export const SourceMenu = ({ id, name, isConnected, onEdit, isPipelineRunning }:
                 break;
             case SOURCE_MENU_OPTIONS.EDIT:
                 onEdit();
+                break;
+            case SOURCE_MENU_OPTIONS.TEST:
+                void onTest();
                 break;
         }
     };
@@ -212,6 +217,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit, isPipelineRunning }:
                     ) : (
                         <Item key={SOURCE_MENU_OPTIONS.CONNECT}>Connect</Item>
                     )}
+                    <Item key={SOURCE_MENU_OPTIONS.TEST}>Test connection</Item>
                     <Item key={SOURCE_MENU_OPTIONS.EDIT}>Edit</Item>
                     <Item key={SOURCE_MENU_OPTIONS.REMOVE}>Remove</Item>
                 </Menu>
