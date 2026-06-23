@@ -59,6 +59,19 @@ export const Stream = () => {
         }
     };
 
+    const updateSizeFromVideo = (e: SyntheticEvent<HTMLVideoElement>) => {
+        const video = e.currentTarget;
+        const { videoWidth, videoHeight } = video;
+
+        if (videoWidth && videoHeight) {
+            setVideoSize((prev) =>
+                prev.width === videoWidth && prev.height === videoHeight
+                    ? prev
+                    : { width: videoWidth, height: videoHeight }
+            );
+        }
+    };
+
     return (
         <ZoomTransform target={videoSize}>
             {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
@@ -70,6 +83,7 @@ export const Stream = () => {
                 width={videoSize.width}
                 height={videoSize.height}
                 onLoadedMetadata={onLoadedMetadata}
+                onResize={updateSizeFromVideo}
             />
         </ZoomTransform>
     );
