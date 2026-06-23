@@ -9,6 +9,8 @@ RFDETRInst (instance segmentation) models.
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import torch
@@ -16,6 +18,7 @@ from rfdetr._namespace import _namespace_from_configs
 from rfdetr.config import TrainConfig
 from rfdetr.models import build_criterion_from_config, build_model_from_config, load_pretrain_weights
 from rfdetr.models._defaults import MODEL_DEFAULTS
+from torch.hub import download_url_to_file
 from torchvision import tv_tensors
 from torchvision.ops import box_convert
 
@@ -28,8 +31,6 @@ from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from rfdetr.models.lwdetr import LWDETR
 
 
@@ -70,6 +71,22 @@ class RFDETRMixin:
 
         lwdetr: LWDETR = cast("LWDETR", build_model_from_config(model_config, train_config))
 
+        pretrain_url = self._pretrained_weights.get(self.model_name)  # type: ignore[attr-defined]
+        if pretrain_url:
+            cache_dir = Path(
+                os.environ.get(
+                    "PRETRAINED_WEIGHTS_CACHE_DIR",
+                    Path.home() / ".cache" / "torch" / "hub" / "checkpoints",
+                )
+            )
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            weight_filename = Path(model_config.pretrain_weights).name
+            local_path = cache_dir / weight_filename
+            if not local_path.exists():
+                download_url_to_file(pretrain_url, str(local_path), progress=os.isatty(0))
+            model_config.pretrain_weights = str(local_path)
+        else:
+            model_config.pretrain_weights = None
         load_pretrain_weights(lwdetr, model_config)
 
         torch.nn.init.zeros_(lwdetr.class_embed.bias)

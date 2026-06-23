@@ -130,6 +130,15 @@ class RFDETRDetector(BaseModule):
         target_sizes = torch.tensor(original_sizes, device=pred_logits.device)
         results = self.postprocessor(outputs, target_sizes)
 
+        num_fg = pred_logits.shape[-1] - 1
+        for r in results:
+            fg = r["labels"] < num_fg
+            r["scores"] = r["scores"][fg]
+            r["labels"] = r["labels"][fg]
+            r["boxes"] = r["boxes"][fg]
+            if "masks" in r:
+                r["masks"] = r["masks"][fg]
+
         scores_list: list[Tensor] = []
         boxes_list: list[BoundingBoxes] = []
         labels_list: list[Tensor] = []
@@ -182,16 +191,17 @@ class RFDETRDetector(BaseModule):
         else:
             pred_boxes, pred_logits = outputs
             pred_masks = None
-        # Process outputs similar to PostProcess
-        scores = torch.sigmoid(pred_logits)
+        # Process outputs similar to PostProcess, but exclude background logit
+        # so that labels stay in [0, N-1] (trace-safe; mask-based filtering is not).
+        scores = torch.sigmoid(pred_logits[:, :, :-1])
         # Clamp num_select to available elements
         num_elements = scores.shape[1] * scores.shape[2]
         k = min(num_select, num_elements)
+        num_fg = pred_logits.shape[-1] - 1
         scores, index = torch.topk(scores.flatten(1), k, dim=-1)
 
-        num_classes = pred_logits.shape[-1]
-        labels = index % num_classes
-        box_index = index // num_classes
+        labels = index % num_fg
+        box_index = index // num_fg
         boxes = pred_boxes.gather(
             dim=1,
             index=box_index.unsqueeze(-1).repeat(1, 1, pred_boxes.shape[-1]),

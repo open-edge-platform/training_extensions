@@ -68,7 +68,14 @@ class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inc
         RF-DETR Segmentation uses patch_size=12 with 2 windows for 432x432 input resolution.
     """
 
-    _pretrained_weights: ClassVar[dict[str, str]] = {}
+    _pretrained_weights: ClassVar[dict[str, str]] = {
+        "rfdetr_seg_n": "https://storage.googleapis.com/rfdetr/rf-detr-seg-n-ft.pth",
+        "rfdetr_seg_s": "https://storage.googleapis.com/rfdetr/rf-detr-seg-s-ft.pth",
+        "rfdetr_seg_m": "https://storage.googleapis.com/rfdetr/rf-detr-seg-m-ft.pth",
+        "rfdetr_seg_l": "https://storage.googleapis.com/rfdetr/rf-detr-seg-l-ft.pth",
+        "rfdetr_seg_xl": "https://storage.googleapis.com/rfdetr/rf-detr-seg-xl-ft.pth",
+        "rfdetr_seg_2xl": "https://storage.googleapis.com/rfdetr/rf-detr-seg-2xl-ft.pth",
+    }
 
     _model_config_mapping: ClassVar[dict[str, type]] = {
         "rfdetr_seg_n": RFDETRSegNanoConfig,

@@ -74,7 +74,12 @@ class RFDETR(RFDETRMixin, LightningDetectionModel):  # pyrefly: ignore[inconsist
         Input sizes must be compatible with patch_size * num_windows.
     """
 
-    _pretrained_weights: ClassVar[dict[str, str]] = {}
+    _pretrained_weights: ClassVar[dict[str, str]] = {
+        "rfdetr_nano": "https://storage.googleapis.com/rfdetr/nano_coco/checkpoint_best_regular.pth",
+        "rfdetr_small": "https://storage.googleapis.com/rfdetr/small_coco/checkpoint_best_regular.pth",
+        "rfdetr_medium": "https://storage.googleapis.com/rfdetr/medium_coco/checkpoint_best_regular.pth",
+        "rfdetr_large": "https://storage.googleapis.com/rfdetr/rf-detr-large-2026.pth",
+    }
 
     _model_config_mapping: ClassVar[dict[str, type]] = {
         "rfdetr_large": RFDETRLargeConfig,
