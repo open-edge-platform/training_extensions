@@ -56,7 +56,7 @@ class LifecycleConfig(_StrictModel):
 
     tentative_max_age: Annotated[int, Field(ge=0)] = 0
     """Consecutive missed frames a TENTATIVE track tolerates before removal.
-    0 removes on the first miss (reference ByteTrack behavior)."""
+    0 removes on the first miss."""
 
 
 class MotionConfig(_StrictModel):

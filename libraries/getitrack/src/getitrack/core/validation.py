@@ -50,7 +50,7 @@ def validate_value_range(values: np.ndarray, *, high: int, name: str) -> None:
 def validate_dtypes(**checks: tuple[np.ndarray, type] | None) -> None:
     """Raise if any ``(array, expected_dtype)`` pair has a mismatched dtype.
 
-    Pass ``None`` for absent optional fields to keep the call site flat.
+    Pass ``None`` for absent optional fields.
     """
     for name, item in checks.items():
         if item is None:

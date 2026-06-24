@@ -11,8 +11,7 @@ Bounding boxes are always ``(N, 4)`` in ``xyxy`` order
 coordinates of the source image. Other formats (``cxcywh``, normalised,
 etc.) are converted at the boundary.
 
-Required dtypes (enforced, not coerced, so silent casts cannot mask
-precision drift downstream):
+Required dtypes (enforced, not coerced):
 
 - ``bboxes``: float32
 - ``scores``: float32
