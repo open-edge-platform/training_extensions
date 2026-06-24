@@ -75,7 +75,7 @@ class RFDETR(RFDETRMixin, LightningDetectionModel):  # pyrefly: ignore[inconsist
     """
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "rfdetr_nano": "https://storage.geti.intel.com/weights/rf-detr-nano.pth",
+        "rfdetr_nano": "https://storage.geti.intel.com/weights/rf-detr-nano-2026.pth",
         "rfdetr_small": "https://storage.geti.intel.com/weights/rf-detr-small-2026.pth",
         "rfdetr_medium": "https://storage.geti.intel.com/weights/rf-detr-medium-2026.pth",
         "rfdetr_large": "https://storage.geti.intel.com/weights/rf-detr-large-2026.pth",

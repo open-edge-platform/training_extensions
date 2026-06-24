@@ -1,18 +1,18 @@
-id: instance-segmentation-rfdetr-xl
-name: RF-DETR-Seg-XL
+id: instance-segmentation-rfdetr-n
+name: RF-DETR-Seg-N
 
 pretrained_weights:
-  url: https://storage.geti.intel.com/weights/rf-detr-seg-xl-ft.pth
-  mirror_url: https://storage.googleapis.com/rfdetr/rf-detr-seg-xl-ft.pth
-  sha_sum: 77d67f2b8033fbb25e23f29c22c02a8f677b3939687e9a1a5fdde3765f33f423
+  url: https://storage.geti.intel.com/weights/rf-detr-seg-n-ft.pth
+  mirror_url: https://storage.googleapis.com/rfdetr/rf-detr-seg-n-ft.pth
+  sha_sum: a44613a4ecd6b5ba61a62002c600b0b6cb7a9da2936a45317ec4b62c635fb99b
 
 description: "RF-DETR for instance segmentation extends the RF-DETR object detector with mask prediction capabilities, providing high-accuracy instance segmentation with real-time performance."
 stats:
-  gigaflops: 200.3
-  trainable_parameters: 38.1
+  gigaflops: 41.5
+  trainable_parameters: 33.6
   benchmark_metrics:
-    coco_map_50_95: 48.8
-    coco_map_50: 72.2
+    coco_map_50_95: 40.3
+    coco_map_50: 63.0
 
 capabilities:
   tiling: false
@@ -21,7 +21,6 @@ hyperparameters:
   training:
     learning_rate: 0.0001
     weight_decay: 0.0001
-    batch_size: 2
     early_stopping:
       patience: 15
     scheduler:
@@ -30,20 +29,17 @@ hyperparameters:
     gradient_clip:
       enable: true
       max_grad_norm: 0.1
-    gradient_accumulation:
-      enable: true
-      batches: 4
     allowed_values_input_size:
+      - 288
+      - 312
       - 336
+      - 384
       - 432
       - 480
-      - 528
+      - 504
       - 576
-      - 624
-      - 672
-      - 768
-    input_size_width: 624
-    input_size_height: 624
+    input_size_width: 312
+    input_size_height: 312
   dataset_preparation:
     augmentation:
       random_zoom_out:

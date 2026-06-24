@@ -112,6 +112,11 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
+    "object-detection-rfdetr-n": {
+        "recipe_path": RECIPE_PATH / "detection" / "rfdetr_nano.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
     "object-detection-rfdetr-s": {
         "recipe_path": RECIPE_PATH / "detection" / "rfdetr_small.yaml",
         "status": ModelStatus.ACTIVE,
@@ -178,9 +183,14 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
+    "instance-segmentation-rfdetr-n": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_nano.yaml",
+        "status": ModelStatus.SPEED,
+        "default": False,
+    },
     "instance-segmentation-rfdetr-s": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_small.yaml",
-        "status": ModelStatus.SPEED,
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
     "instance-segmentation-rfdetr-m": {
@@ -196,6 +206,11 @@ TEMPLATE_ID_MAPPING = {
     "instance-segmentation-rfdetr-xl": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_xlarge.yaml",
         "status": ModelStatus.ACCURACY,
+        "default": False,
+    },
+    "instance-segmentation-rfdetr-2xl": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_2xlarge.yaml",
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
     "instance-segmentation-yolo26-n": {
