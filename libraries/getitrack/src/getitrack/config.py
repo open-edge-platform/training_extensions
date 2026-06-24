@@ -111,7 +111,7 @@ class TrackerConfig(_StrictModel):
     match tracks."""
 
     score_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.1
-    """Drop detections with confidence below this value before tracking runs."""
+    """Minimum detection confidence the tracking algorithm considers; lower-scoring detections are excluded."""
 
     lifecycle: LifecycleConfig = Field(default_factory=LifecycleConfig)
     """Track creation, confirmation, and removal parameters."""
