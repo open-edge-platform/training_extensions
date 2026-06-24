@@ -46,7 +46,7 @@ class TestBaseConfig:
 
     def test_unknown_field_raises(self):
         with pytest.raises(ValidationError, match="bogus"):
-            _DemoConfig(bogus=1)
+            _DemoConfig.model_validate({"bogus": 1})
 
     def test_negative_max_age_raises(self):
         with pytest.raises(ValidationError, match="max_age"):
@@ -55,6 +55,11 @@ class TestBaseConfig:
     def test_score_threshold_out_of_range_raises(self):
         with pytest.raises(ValidationError, match="score_threshold"):
             _DemoConfig(score_threshold=2.0)
+
+    def test_variant_rejects_foreign_algorithm(self):
+        # A subclass pins ``algorithm``; a different value must be rejected.
+        with pytest.raises(ValidationError, match="pins algorithm"):
+            _DemoConfig(algorithm=AlgorithmType.OCSORT)
 
 
 class TestYAML:

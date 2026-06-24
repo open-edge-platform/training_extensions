@@ -38,6 +38,10 @@ def register_algorithm(
         if name in ALGORITHM_REGISTRY:
             msg = f"algorithm '{name}' is already registered by {ALGORITHM_REGISTRY[name].__name__}"
             raise ValueError(msg)
+        declared = config.model_fields["algorithm"].default
+        if declared != name:
+            msg = f"config {config.__name__} pins algorithm={declared!r}, but is registered as '{name}'"
+            raise ValueError(msg)
         cls.config_cls = config
         ALGORITHM_REGISTRY[name] = cls
         return cls

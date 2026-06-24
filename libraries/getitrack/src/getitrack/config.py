@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class AlgorithmType(StrEnum):
@@ -121,6 +121,15 @@ class TrackerConfig(_StrictModel):
 
     interpolation: InterpolationConfig = Field(default_factory=InterpolationConfig)
     """Bbox interpolation and smoothing parameters."""
+
+    @model_validator(mode="after")
+    def _algorithm_matches_variant(self) -> TrackerConfig:
+        """Reject an ``algorithm`` value that differs from the one a subclass pins."""
+        field = type(self).model_fields["algorithm"]
+        if not field.is_required() and self.algorithm != field.default:
+            msg = f"{type(self).__name__} pins algorithm={field.default!r}; got {self.algorithm!r}"
+            raise ValueError(msg)
+        return self
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> TrackerConfig:

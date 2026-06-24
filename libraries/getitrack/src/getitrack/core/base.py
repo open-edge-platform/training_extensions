@@ -117,7 +117,7 @@ class BaseTracker(ABC, Generic[ConfigT]):
         Accepts a tracker-config variant, a dict, or a path to a YAML file.
         """
         if isinstance(config, TrackerConfig):
-            resolved = config
+            resolved = resolve_tracker_config(config.model_dump())
         elif isinstance(config, dict):
             resolved = resolve_tracker_config(config)
         elif isinstance(config, str | Path):

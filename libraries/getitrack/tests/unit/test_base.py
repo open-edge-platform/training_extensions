@@ -73,6 +73,13 @@ class TestRegistry:
         with pytest.raises(ValueError, match="already registered"):
             _register_dummy("bytetrack")
 
+    def test_config_name_mismatch_raises(self):
+        class _OcsortConfig(TrackerConfig):
+            algorithm: AlgorithmType = AlgorithmType.OCSORT
+
+        with pytest.raises(ValueError, match="pins algorithm"):
+            register_algorithm("bytetrack", config=_OcsortConfig)(_Recording)
+
 
 class TestFromConfig:
     def test_from_trackerconfig(self):
@@ -84,6 +91,12 @@ class TestFromConfig:
         _register_dummy("bytetrack")
         tracker = BaseTracker.from_config({"algorithm": "bytetrack"})
         assert isinstance(tracker, BaseTracker)
+
+    def test_base_instance_is_upgraded_to_registered_config(self):
+        _register_dummy("bytetrack")
+        tracker = BaseTracker.from_config(TrackerConfig(algorithm=AlgorithmType.BYTETRACK))
+        # A plain base instance is re-resolved to the algorithm's concrete config.
+        assert type(tracker.config) is _DummyConfig
 
     def test_from_yaml_path(self, tmp_path: Path):
         _register_dummy("bytetrack")
