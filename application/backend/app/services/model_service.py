@@ -268,7 +268,7 @@ class ModelService(BaseSessionManagedService):
 
         path = self._projects_dir / str(project_id) / "models" / str(model_id)
         if path.exists():
-            shutil.rmtree(path)
+            shutil.rmtree(path, ignore_errors=True)
             logger.info("Deleted model files at '{}'", path)
 
         try:
@@ -317,7 +317,7 @@ class ModelService(BaseSessionManagedService):
 
         path = self._projects_dir / str(project_id) / "models" / str(model_id)
         if path.exists():
-            shutil.rmtree(path)
+            shutil.rmtree(path, ignore_errors=True)
             logger.info("Deleted model files at '{}'", path)
 
     def list_models(self, project_id: UUID, dataset_revision_id: UUID | None = None) -> list[ModelRevision]:
