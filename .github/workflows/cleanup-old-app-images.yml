@@ -1,14 +1,15 @@
 name: Cleanup Old Application Container Images
 
 # Deletes old geti-cpu / geti-xpu / geti-cuda container image versions from GHCR,
-# while always retaining release images.
+# while always retaining release and release-candidate (RC) images.
 #
 # Retention rules:
 # - Release images (tags matching semver "X.Y.Z", e.g. 3.0.0) are NEVER deleted.
+# - Release-candidate images (tags matching "X.Y.ZrcN", e.g. 3.0.0rc0) are
+#   NEVER deleted.
 # - The "latest" tag is NEVER deleted.
-# - Among the remaining versions (RC builds, dev/daily builds and untagged
-#   versions) the most recent `min_versions_to_keep` are kept; older ones are
-#   deleted.
+# - Among the remaining versions (dev/daily builds and untagged versions) the
+#   most recent `min_versions_to_keep` are kept; older ones are deleted.
 #
 # Supports a dry-run mode (default) that previews deletions without removing
 # anything.
@@ -45,7 +46,7 @@ jobs:
       OWNER: ${{ github.repository_owner }}
       # On a scheduled run inputs are empty, so fall back to sensible defaults.
       MIN_VERSIONS_TO_KEEP: ${{ inputs.min_versions_to_keep || 10 }}
-      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && (inputs.dry_run && 'true' || 'false') || 'false' }}
+      DRY_RUN: ${{ inputs.dry_run == false && 'false' || 'true' }}
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
@@ -105,21 +106,21 @@ jobs:
                 | jq -s 'add'
             )"
 
-            # Count release versions retained (semver "X.Y.Z" tag or "latest").
+            # Count release versions retained (semver "X.Y.Z", RC "X.Y.ZrcN" tag or "latest").
             pkg_retained="$(
               echo "${versions_json}" | jq '[.[]
                 | select(any(.tags[]?;
-                    test("^[0-9]+\\.[0-9]+\\.[0-9]+$") or . == "latest"))] | length'
+                    test("^[0-9]+\\.[0-9]+\\.[0-9]+(rc[0-9]+)?$"; "i") or . == "latest"))] | length'
             )"
             retained_release=$((retained_release + pkg_retained))
 
-            # Non-release candidates: versions without any release/"latest" tag.
+            # Non-release candidates: versions without any release/RC/"latest" tag.
             # Sorted newest first; the first MIN_VERSIONS_TO_KEEP are kept.
             mapfile -t old_version_ids < <(
               echo "${versions_json}" | jq -r --argjson keep "${MIN_VERSIONS_TO_KEEP}" '
                 [.[]
                   | select((any(.tags[]?;
-                      test("^[0-9]+\\.[0-9]+\\.[0-9]+$") or . == "latest")) | not)]
+                      test("^[0-9]+\\.[0-9]+\\.[0-9]+(rc[0-9]+)?$"; "i") or . == "latest")) | not)]
                 | sort_by(.created_at | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime)
                 | reverse
                 | .[$keep:]
