@@ -20,7 +20,7 @@ trap 'cleanup $LINENO' ERR
 trap 'echo ""; echo "Installation interrupted."; exit 130' INT TERM
 
 GIT_URL="https://github.com/open-edge-platform/geti.git"
-GIT_BRANCH="nightly-2026.06.17"
+GIT_BRANCH="nightly-2026.06.19"
 
 usage() {
     cat <<EOF
@@ -31,7 +31,7 @@ Install Intel Geti application and its dependencies.
 Options:
   -v, --verbose     Show detailed output from all commands
   -y, --yes         Assume yes to all prompts (non-interactive mode)
-  -w, --work-dir    Set the working directory (default: \$HOME/geti)
+  -w, --work-dir    Set the working directory (default: \$PWD/geti)
   -h, --help        Show this help message and exit
 EOF
 }
@@ -39,7 +39,7 @@ EOF
 parse_args() {
     VERBOSE=""
     ASSUME_YES=""
-    WORK_DIR="$HOME/geti"
+    WORK_DIR="$(pwd)/geti"
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -83,7 +83,15 @@ confirm() {
         return 0
     fi
     local response
-    read -rp "$prompt [Y/n]: " response
+    if [ -t 0 ]; then
+        read -rp "$prompt [Y/n]: " response
+    elif [ -e /dev/tty ]; then
+        read -rp "$prompt [Y/n]: " response </dev/tty
+    else
+        echo "Error: confirmation required but no terminal is available."
+        echo "Re-run with -y/--yes to skip prompts in non-interactive mode."
+        exit 1
+    fi
     if [[ "${response,,}" =~ ^n(o)?$ ]]; then
         return 1
     fi
@@ -95,6 +103,41 @@ run_cmd() {
         "$@"
     else
         "$@" >>"$LOG_FILE" 2>&1
+    fi
+}
+
+run_cmd_spinner() {
+    # Run a long command quietly (output to the log file) while showing an
+    # animated spinner, so the step never looks frozen. In verbose mode the
+    # full output is streamed instead.
+    local activity="$1"
+    shift
+
+    if [ -n "${VERBOSE:-}" ]; then
+        echo "${activity}..."
+        "$@"
+        return
+    fi
+
+    "$@" >>"$LOG_FILE" 2>&1 &
+    local pid=$!
+    local spin='|/-\'
+    local i=0
+    if [ -t 2 ]; then
+        while kill -0 "$pid" 2>/dev/null; do
+            i=$(( (i + 1) % 4 ))
+            printf "\r%s... %s" "$activity" "${spin:$i:1}" >&2
+            sleep 0.2
+        done
+    fi
+
+    local rc=0
+    wait "$pid" || rc=$?
+    if [ "$rc" -eq 0 ]; then
+        printf "\r%s... done   \n" "$activity" >&2
+    else
+        printf "\r%s... failed\n" "$activity" >&2
+        return "$rc"
     fi
 }
 
@@ -157,7 +200,7 @@ install_uv() {
         mkdir -p "$UV_DIR"
     fi
 
-    run_cmd bash -c "curl --proto '=https' --tlsv1.2 -LsSf 'https://github.com/astral-sh/uv/releases/download/${uv_version}/uv-installer.sh' | env UV_INSTALL_DIR='$UV_DIR' sh"
+    run_cmd_spinner "Downloading and installing uv $uv_version" bash -c "curl --proto '=https' --tlsv1.2 -LsSf 'https://github.com/astral-sh/uv/releases/download/${uv_version}/uv-installer.sh' | env UV_INSTALL_DIR='$UV_DIR' sh"
     echo "uv installation complete."
 }
 
@@ -180,7 +223,7 @@ install_nvm() {
         mkdir -p "$NVM_DIR"
     fi
 
-    run_cmd bash -c "curl -sS -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"
+    run_cmd_spinner "Downloading and installing nvm" bash -c "curl -sS -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"
     source "$NVM_DIR/nvm.sh"
     echo "nvm installation complete."
 }
@@ -207,7 +250,7 @@ install_npm() {
     fi
 
     echo "Required node $required_node_version not found in $NVM_DIR. Installing..."
-    run_cmd nvm install "$required_node_version"
+    run_cmd_spinner "Downloading and installing node $required_node_version" nvm install "$required_node_version"
 
     installed_npm_version=$("$NPM_BIN" --version)
     if [ "$(printf '%s\n' "$required_npm_version" "$installed_npm_version" | sort -V | head -n1)" != "$required_npm_version" ]; then
@@ -306,7 +349,8 @@ preflight_checks() {
 ensure_source_code() {
     if [ ! -d "$WORK_DIR" ]; then
         echo "Cloning Intel Geti repository from $GIT_URL..."
-        git -c advice.detachedHead=false clone --branch "$GIT_BRANCH" "$GIT_URL" "$WORK_DIR"
+        echo "This can take several minutes depending on your connection."
+        git -c advice.detachedHead=false clone --progress --branch "$GIT_BRANCH" "$GIT_URL" "$WORK_DIR"
     else
         echo "Work directory $WORK_DIR already exists, skipping clone."
         local remote_url
@@ -318,11 +362,21 @@ ensure_source_code() {
         fi
         local current_sha expected_sha
         current_sha=$(git -C "$WORK_DIR" rev-parse HEAD 2>/dev/null)
-        git -C "$WORK_DIR" fetch origin "$GIT_BRANCH" --tags 2>/dev/null || true
-        expected_sha=$(git -C "$WORK_DIR" rev-parse "origin/$GIT_BRANCH" 2>/dev/null || git -C "$WORK_DIR" rev-parse "$GIT_BRANCH" 2>/dev/null || true)
+        # Fetch: try as tag first, then as branch
+        git -C "$WORK_DIR" fetch origin "refs/tags/${GIT_BRANCH}:refs/tags/${GIT_BRANCH}" --force 2>/dev/null \
+            || git -C "$WORK_DIR" fetch origin "$GIT_BRANCH" --tags 2>/dev/null \
+            || true
+        # Resolve: try as tag first, then as remote branch
+        expected_sha=$(git -C "$WORK_DIR" rev-parse "refs/tags/$GIT_BRANCH" 2>/dev/null) \
+            || expected_sha=$(git -C "$WORK_DIR" rev-parse "origin/$GIT_BRANCH" 2>/dev/null) \
+            || true
+        if [ -z "$expected_sha" ] || ! echo "$expected_sha" | grep -qE '^[0-9a-f]{40}$'; then
+            echo "Error: Could not resolve ref '$GIT_BRANCH'. Ensure it exists on the remote."
+            exit 1
+        fi
         if [ "$current_sha" != "$expected_sha" ]; then
             echo "Switching to $GIT_BRANCH..."
-            git -c advice.detachedHead=false -C "$WORK_DIR" checkout "$GIT_BRANCH"
+            git -c advice.detachedHead=false -C "$WORK_DIR" checkout --force "$GIT_BRANCH"
         fi
     fi
 }
@@ -357,13 +411,11 @@ detect_hardware() {
 }
 
 build_backend() {
-    echo "Building venv using accelerator: $ACCELERATOR"
+    echo "Building Python environment using accelerator: $ACCELERATOR"
+    echo "This downloads PyTorch, OpenVINO and other large packages and can take several minutes."
     cd "$WORK_DIR/application/backend"
-    if [ -n "${VERBOSE:-}" ]; then
-        "$UV_DIR/uv" sync --frozen --extra mqtt --extra "$ACCELERATOR"
-    else
-        "$UV_DIR/uv" sync --frozen --extra mqtt --extra "$ACCELERATOR" --quiet
-    fi
+    # uv shows its own progress meter; do not suppress it so the user gets feedback.
+    "$UV_DIR/uv" sync --frozen --extra mqtt --extra "$ACCELERATOR"
 
     echo "Generating OpenAPI specification..."
     PYTHONPATH=. "$UV_DIR/uv" run --no-sync app/cli.py gen-api --target-path openapi.json
@@ -372,15 +424,14 @@ build_backend() {
 
 build_frontend() {
     cd "$WORK_DIR/application/ui"
-    echo "Installing UI dependencies with npm..."
     export npm_config_yes=true
-    run_cmd "$NPM_BIN" ci
+    # --foreground-scripts surfaces lifecycle-script errors (e.g. the
+    # 'preinstall' UI-package clone) in the log instead of a generic exit code.
+    run_cmd_spinner "Installing UI dependencies (this may take several minutes)" "$NPM_BIN" ci --foreground-scripts
 
-    echo "Building API client with npm..."
-    run_cmd "$NPM_BIN" run build:api
+    run_cmd_spinner "Building API client" "$NPM_BIN" run build:api
 
-    echo "Building UI with npm..."
-    run_cmd env ASSET_PREFIX="/html" "$NPM_BIN" run build
+    run_cmd_spinner "Building UI (this may take several minutes)" env ASSET_PREFIX="/html" "$NPM_BIN" run build
 }
 
 deploy_frontend() {
@@ -436,6 +487,29 @@ main() {
     build_frontend
     deploy_frontend
     register_shell_cmd
+    run_app
+}
+
+run_app() {
+    echo ""
+    echo "Installation complete! Starting Intel Geti..."
+
+    # Resolve the URL the user should open. The server binds to 0.0.0.0 by
+    # default, which is not a valid address to open in a browser, so use
+    # localhost. Honour PORT/HOST overrides if the user set them.
+    local port="${PORT:-7860}"
+    local browser_host="${HOST:-localhost}"
+    if [ "$browser_host" = "0.0.0.0" ]; then
+        browser_host="localhost"
+    fi
+    local url="http://${browser_host}:${port}"
+
+    echo ""
+    echo "Geti will be available at: $url"
+    echo ""
+
+    cd "$WORK_DIR/application/backend"
+    STATIC_FILES_DIR=html "$UV_DIR/uv" run app/main.py
 }
 
 main "$@"
