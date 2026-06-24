@@ -1,12 +1,14 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Pydantic configuration models for getitrack.
+"""Shared Pydantic configuration models for getitrack.
 
-`TrackerConfig` is the top-level entry point. Sub-configs group fields by
-responsibility (association, lifecycle, motion, appearance, interpolation)
-so a YAML file can tune one concern in isolation. Field docstrings surface
-as ``description`` strings in ``model_json_schema()`` because the shared
-`_StrictModel` base sets ``use_attribute_docstrings=True``.
+`TrackerConfig` holds the parameters common to every algorithm. Each algorithm
+defines its own subclass (e.g. `ByteTrackConfig`) and registers it under an
+``algorithm`` name; loading dispatches on that name so a config validates against
+the matching algorithm and rejects parameters that do not apply.
+
+Sub-configs (lifecycle, motion, interpolation) group related fields. Field
+docstrings become schema ``description`` strings via ``use_attribute_docstrings``.
 """
 
 from __future__ import annotations
@@ -42,29 +44,6 @@ class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
 
-class AssociationConfig(_StrictModel):
-    """Detection-to-track matching parameters."""
-
-    match_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.8
-    """Maximum assignment cost accepted when matching detections to tracks.
-    The cost is ``1 - IoU``, score-fused to ``1 - IoU * score`` where fusion
-    applies, so larger values accept weaker overlaps."""
-
-    score_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.1
-    """Drop detections with confidence below this value before matching runs."""
-
-    high_score_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
-    """Boundary used by two-stage association (ByteTrack) to split detections into high-score and low-score buckets."""
-
-    match_class_only: bool = True
-    """Restrict matching to detection-track pairs that share a class id."""
-
-    class_filter: list[int] | None = None
-    """Track only detections whose class id is in this list; None tracks all
-    classes. Applied before association, so excluded classes never spawn or
-    match tracks."""
-
-
 class LifecycleConfig(_StrictModel):
     """Track creation, confirmation, and removal parameters."""
 
@@ -93,25 +72,6 @@ class MotionConfig(_StrictModel):
     """Per-frame velocity damping in ``(0, 1]``. Values below 1.0 simulate gradual deceleration."""
 
 
-class AppearanceConfig(_StrictModel):
-    """Appearance and embedding-based matching parameters."""
-
-    enabled: bool = False
-    """Fuse appearance similarity into the matching cost when true."""
-
-    embedding_dim: Annotated[int, Field(ge=1)] = 512
-    """Feature-vector dimensionality expected from a detector or re-identification head."""
-
-    similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.7
-    """Minimum cosine similarity accepted as an appearance match."""
-
-    memory_bank_size: Annotated[int, Field(ge=1)] = 10
-    """Number of recent embeddings retained per track."""
-
-    weight: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
-    """Blend between motion and appearance cost: 0.0 is pure motion, 1.0 is pure appearance."""
-
-
 class InterpolationConfig(_StrictModel):
     """Bbox interpolation and smoothing parameters."""
 
@@ -132,20 +92,26 @@ class InterpolationConfig(_StrictModel):
 
 
 class TrackerConfig(_StrictModel):
-    """Top-level tracker configuration.
+    """Parameters shared by all tracking algorithms.
 
-    Construct from a YAML file via `TrackerConfig.from_yaml`, from a dict
-    via `TrackerConfig.model_validate`, or programmatically.
+    Each algorithm subclasses this with its own parameters and pins
+    ``algorithm`` to a single value. Load any variant from YAML via
+    `TrackerConfig.from_yaml`, which dispatches on the ``algorithm`` key.
     """
 
-    algorithm: AlgorithmType = AlgorithmType.BYTETRACK
-    """Algorithm identifier. Each value resolves to a registered `BaseTracker` subclass."""
+    algorithm: AlgorithmType
+    """Algorithm identifier; each subclass defaults it to a single value."""
 
     verbose: bool = False
     """Log a one-line tracking summary per frame at INFO level on the ``getitrack`` logger."""
 
-    association: AssociationConfig = Field(default_factory=AssociationConfig)
-    """Detection-to-track matching parameters."""
+    class_filter: list[int] | None = None
+    """Track only detections whose class id is in this list; None tracks all
+    classes. Applied before association, so excluded classes never spawn or
+    match tracks."""
+
+    score_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.1
+    """Drop detections with confidence below this value before tracking runs."""
 
     lifecycle: LifecycleConfig = Field(default_factory=LifecycleConfig)
     """Track creation, confirmation, and removal parameters."""
@@ -153,18 +119,21 @@ class TrackerConfig(_StrictModel):
     motion: MotionConfig = Field(default_factory=MotionConfig)
     """Kalman filter and motion model parameters."""
 
-    appearance: AppearanceConfig = Field(default_factory=AppearanceConfig)
-    """Appearance and embedding-based matching parameters."""
-
     interpolation: InterpolationConfig = Field(default_factory=InterpolationConfig)
     """Bbox interpolation and smoothing parameters."""
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> TrackerConfig:
-        """Load a validated configuration from a YAML file."""
+        """Load and validate a tracker configuration from a YAML file.
+
+        Dispatches on the ``algorithm`` key (default ``bytetrack``) and returns
+        the matching algorithm's config variant.
+        """
+        from getitrack.core.registry import resolve_tracker_config
+
         with Path(path).open(encoding="utf-8") as f:
             raw: Any = yaml.safe_load(f)
-        return cls.model_validate(raw or {})
+        return resolve_tracker_config(raw or {})
 
     def to_yaml(self, path: str | Path) -> None:
         """Serialise this configuration to a YAML file."""

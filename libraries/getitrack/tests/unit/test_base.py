@@ -11,10 +11,16 @@ import numpy as np
 import pytest
 from loguru import logger
 
-from getitrack.config import AlgorithmType, TrackerConfig
+from getitrack.config import AlgorithmType, LifecycleConfig, TrackerConfig
 from getitrack.core.base import BaseTracker
 from getitrack.core.detection import Detections, TrackedDetections
 from getitrack.core.registry import ALGORITHM_REGISTRY, register_algorithm
+
+
+class _DummyConfig(TrackerConfig):
+    """Minimal config for the dummy tracker used across these tests."""
+
+    algorithm: AlgorithmType = AlgorithmType.BYTETRACK
 
 
 class _Recording(BaseTracker):
@@ -50,7 +56,7 @@ def _clean_registry() -> Iterator[None]:
 
 
 def _register_dummy(name: str = "bytetrack") -> type[BaseTracker]:
-    @register_algorithm(name)
+    @register_algorithm(name, config=_DummyConfig)
     class _Dummy(_Recording):
         algorithm_name = name
 
@@ -71,7 +77,7 @@ class TestRegistry:
 class TestFromConfig:
     def test_from_trackerconfig(self):
         _register_dummy("bytetrack")
-        tracker = BaseTracker.from_config(TrackerConfig())
+        tracker = BaseTracker.from_config(_DummyConfig())
         assert isinstance(tracker, BaseTracker)
 
     def test_from_dict(self):
@@ -82,20 +88,27 @@ class TestFromConfig:
     def test_from_yaml_path(self, tmp_path: Path):
         _register_dummy("bytetrack")
         p = tmp_path / "c.yaml"
-        TrackerConfig().to_yaml(p)
+        _DummyConfig().to_yaml(p)
         tracker = BaseTracker.from_config(p)
         assert isinstance(tracker, BaseTracker)
 
     def test_from_yaml_str_path(self, tmp_path: Path):
         _register_dummy("bytetrack")
         p = tmp_path / "c.yaml"
-        TrackerConfig().to_yaml(p)
+        _DummyConfig().to_yaml(p)
         tracker = BaseTracker.from_config(str(p))
         assert isinstance(tracker, BaseTracker)
 
+    def test_yaml_round_trip_dispatches_to_registered_config(self, tmp_path: Path):
+        _register_dummy("bytetrack")
+        cfg = _DummyConfig(lifecycle=LifecycleConfig(max_age=42))
+        p = tmp_path / "rt.yaml"
+        cfg.to_yaml(p)
+        assert TrackerConfig.from_yaml(p) == cfg
+
     def test_unknown_algorithm_raises(self):
         with pytest.raises(KeyError, match="unknown algorithm"):
-            BaseTracker.from_config(TrackerConfig(algorithm=AlgorithmType.OCSORT))
+            BaseTracker.from_config({"algorithm": "ocsort"})
 
     def test_bad_config_type_raises(self):
         with pytest.raises(TypeError, match="unsupported config type"):
@@ -105,7 +118,7 @@ class TestFromConfig:
 class TestUpdateAndReset:
     def test_update_assigns_monotonic_ids(self):
         _register_dummy("bytetrack")
-        t = BaseTracker.from_config(TrackerConfig())
+        t = BaseTracker.from_config(_DummyConfig())
         dets = Detections(
             bboxes=np.zeros((2, 4), dtype=np.float32),
             scores=np.array([0.9, 0.5], dtype=np.float32),
@@ -119,7 +132,7 @@ class TestUpdateAndReset:
 
     def test_reset_resets_id_counter(self):
         _register_dummy("bytetrack")
-        t = BaseTracker.from_config(TrackerConfig())
+        t = BaseTracker.from_config(_DummyConfig())
         t.update(Detections.create_empty(0))
         t._next_id = 7
         t.reset()
@@ -128,7 +141,7 @@ class TestUpdateAndReset:
 
     def test_abstract_update_cannot_be_instantiated_directly(self):
         with pytest.raises(TypeError):
-            BaseTracker(TrackerConfig())  # type: ignore[abstract]
+            BaseTracker(_DummyConfig())  # type: ignore[abstract]
 
 
 class TestClassFilter:
@@ -142,8 +155,8 @@ class TestClassFilter:
 
     def _tracker(self, class_filter) -> BaseTracker:
         _register_dummy("bytetrack")
-        cfg = TrackerConfig()
-        cfg.association.class_filter = class_filter
+        cfg = _DummyConfig()
+        cfg.class_filter = class_filter
         return BaseTracker.from_config(cfg)
 
     def test_excluded_classes_never_reach_algorithm(self):
@@ -186,20 +199,20 @@ class TestVerboseLogging:
         _register_dummy("bytetrack")
         messages, sink_id = self._capture()
         try:
-            BaseTracker.from_config(TrackerConfig(verbose=True)).update(self._dets())
+            BaseTracker.from_config(_DummyConfig(verbose=True)).update(self._dets())
         finally:
             logger.remove(sink_id)
         assert len(messages) == 1
         msg = messages[0]
         assert "frame    4" in msg
-        assert "2 detections (1 high-score)" in msg
+        assert "2 detections" in msg
         assert "1:3:0.90, 2:8:0.30" in msg
 
     def test_default_is_silent(self):
         _register_dummy("bytetrack")
         messages, sink_id = self._capture(level="DEBUG")
         try:
-            BaseTracker.from_config(TrackerConfig()).update(self._dets())
+            BaseTracker.from_config(_DummyConfig()).update(self._dets())
         finally:
             logger.remove(sink_id)
         assert not messages
@@ -209,10 +222,10 @@ class TestVerboseLogging:
         messages, sink_id = self._capture()
         try:
             # A non-verbose tracker stays suppressed even with a sink attached.
-            BaseTracker.from_config(TrackerConfig()).update(self._dets())
+            BaseTracker.from_config(_DummyConfig()).update(self._dets())
             assert not messages
             # A verbose tracker lifts the package-level suppression.
-            BaseTracker.from_config(TrackerConfig(verbose=True)).update(self._dets())
+            BaseTracker.from_config(_DummyConfig(verbose=True)).update(self._dets())
             assert len(messages) == 1
         finally:
             logger.remove(sink_id)

@@ -12,10 +12,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
 
 from getitrack.config import TrackerConfig
-from getitrack.core.registry import ALGORITHM_REGISTRY
+from getitrack.core.registry import ALGORITHM_REGISTRY, resolve_tracker_config
 from getitrack.logger import LOGGER, enable_logging
 
 if TYPE_CHECKING:
@@ -23,8 +23,10 @@ if TYPE_CHECKING:
 
     from getitrack.core.detection import Detections, TrackedDetections
 
+ConfigT = TypeVar("ConfigT", bound=TrackerConfig)
 
-class BaseTracker(ABC):
+
+class BaseTracker(ABC, Generic[ConfigT]):
     """Abstract base class for multi-object trackers.
 
     Concrete subclasses implement `_update_impl`; the public `update`
@@ -36,8 +38,10 @@ class BaseTracker(ABC):
     """
 
     algorithm_name: ClassVar[str] = ""
+    config_cls: ClassVar[type[TrackerConfig]]
+    config: ConfigT
 
-    def __init__(self, config: TrackerConfig) -> None:
+    def __init__(self, config: ConfigT) -> None:
         self.config = config
         self._next_id: int = 1
         self._frame_id: int | None = None
@@ -47,12 +51,11 @@ class BaseTracker(ABC):
     def update(self, detections: Detections) -> TrackedDetections:
         """Process one frame's detections and return the tracker output.
 
-        Applies ``association.class_filter`` before the algorithm runs,
-        so excluded classes never spawn or match tracks. ``det_indices``
-        on the output always index into the unfiltered ``detections``
-        passed here.
+        Applies ``class_filter`` before the algorithm runs, so excluded
+        classes never spawn or match tracks. ``det_indices`` on the output
+        always index into the unfiltered ``detections`` passed here.
         """
-        class_filter = self.config.association.class_filter
+        class_filter = self.config.class_filter
         if class_filter is None:
             filtered, source_rows = detections, None
         else:
@@ -79,7 +82,6 @@ class BaseTracker(ABC):
 
     def _log_update(self, detections: Detections, tracked: TrackedDetections) -> None:
         """Emit a one-line per-frame summary on the ``getitrack`` logger."""
-        n_high = int((detections.scores >= self.config.association.high_score_threshold).sum())
         pairs = ", ".join(
             f"{tid}:{cls}:{score:.2f}"
             for tid, cls, score in zip(
@@ -90,10 +92,9 @@ class BaseTracker(ABC):
             )
         )
         LOGGER.info(
-            "frame {:4}: {} detections ({} high-score), {} tracks [id:class:score {}]",
+            "frame {:4}: {} detections, {} tracks [id:class:score {}]",
             detections.frame_id,
             len(detections),
-            n_high,
             len(tracked),
             pairs,
         )
@@ -113,12 +114,12 @@ class BaseTracker(ABC):
     def from_config(cls, config: TrackerConfig | dict[str, Any] | str | Path) -> BaseTracker:
         """Instantiate a tracker dispatched on ``config.algorithm``.
 
-        Accepts a `TrackerConfig`, a dict, or a path to a YAML file.
+        Accepts a tracker-config variant, a dict, or a path to a YAML file.
         """
         if isinstance(config, TrackerConfig):
             resolved = config
         elif isinstance(config, dict):
-            resolved = TrackerConfig.model_validate(config)
+            resolved = resolve_tracker_config(config)
         elif isinstance(config, str | Path):
             resolved = TrackerConfig.from_yaml(config)
         else:

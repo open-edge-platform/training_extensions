@@ -1,14 +1,13 @@
 # Default tracker configuration.
 algorithm: bytetrack
 verbose: false
-association:
-  # Detection filtering, applied before matching.
-  score_threshold: 0.1
-  class_filter: null
-  # Detection-to-track matching.
-  match_threshold: 0.8
-  high_score_threshold: 0.6
-  match_class_only: true
+# Detection filtering, applied before tracking.
+score_threshold: 0.1
+class_filter: null
+# Detection-to-track matching.
+match_threshold: 0.8
+high_score_threshold: 0.6
+match_class_only: true
 lifecycle:
   max_age: 30
   min_hits: 2
@@ -17,12 +16,6 @@ motion:
   process_noise: 1.0
   measurement_noise: 1.0
   velocity_decay: 0.99
-appearance:
-  enabled: false
-  embedding_dim: 512
-  similarity_threshold: 0.7
-  memory_bank_size: 10
-  weight: 0.5
 interpolation:
   enabled: true
   method: linear
