@@ -25,6 +25,7 @@ dependencies = [
     "numpy>=2.0",
     "pydantic>=2.7",
     "pyyaml==6.0.3",
+    "scipy>=1.13",
 ]
 
 [dependency-groups]
