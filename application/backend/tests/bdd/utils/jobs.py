@@ -37,13 +37,18 @@ def wait_for_job_completion(base_url: str, job_id: UUID) -> JobView:
     deadline = time.monotonic() + _JOB_WAIT_TIMEOUT_SECONDS
 
     while time.monotonic() < deadline:
+        remaining_time = max(0.1, deadline - time.monotonic())
+
         try:
+            read_timeout = min(30.0, remaining_time)
             with requests.get(
                 f"{base_url}/api/jobs/{job_id}/status",
                 stream=True,
                 headers={"Accept": "text/event-stream"},
-                timeout=(5, 30),
+                timeout=(5, read_timeout),
             ) as stream_response:
+                stream_response.raise_for_status()
+
                 for job_data in parse_sse_events(stream_response):
                     job = JobView.model_validate(job_data)
                     if job.status in terminal_statuses:
@@ -56,12 +61,14 @@ def wait_for_job_completion(base_url: str, job_id: UUID) -> JobView:
 
         # SSE stream ended before reaching a terminal state. Re-check the job
         # status directly in case the terminal event was missed, then reconnect.
+        remaining_time = max(0.1, deadline - time.monotonic())
         try:
-            with requests.get(f"{base_url}/api/jobs/{job_id}", timeout=10) as poll_response:
-                if poll_response.status_code == 200:
-                    job = JobView.model_validate(poll_response.json())
-                    if job.status in terminal_statuses:
-                        break
+            poll_timeout = min(10.0, remaining_time)
+            with requests.get(f"{base_url}/api/jobs/{job_id}", timeout=poll_timeout) as poll_response:
+                poll_response.raise_for_status()
+                job = JobView.model_validate(poll_response.json())
+                if job.status in terminal_statuses:
+                    break
         except requests.exceptions.RequestException:
             pass  # Transient failure; will retry on next iteration.
 
