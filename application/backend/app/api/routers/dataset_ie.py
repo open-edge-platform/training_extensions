@@ -33,10 +33,7 @@ async def upload_archive(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Only zip files are allowed.",
             )
-        staged_dataset = await staged_datasets_service.upload(
-            filename="dataset.zip",
-            chunk_reader=lambda: file.read(1024 * 1024),
-        )
+        staged_dataset = await staged_datasets_service.upload(filename="dataset.zip", file_obj=file.file)
         return StagedDatasetView.model_validate(staged_dataset, from_attributes=True)
     finally:
         await file.close()
