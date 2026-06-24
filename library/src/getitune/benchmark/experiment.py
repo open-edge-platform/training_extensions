@@ -454,7 +454,7 @@ class ExperimentExecutor:
         overrides = resolve_overrides(self.scenario_overrides)
         return LightningEngine.from_config(
             config_path=self.recipe_path,
-            data_root=self.data_path,
+            data=self.data_path,
             work_dir=work_dir,
             device=self.accelerator,
             **overrides,
