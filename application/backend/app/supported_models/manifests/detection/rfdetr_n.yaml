@@ -31,6 +31,7 @@ hyperparameters:
       max_grad_norm: 0.1
     allowed_values_input_size:
       - 320
+      - 384
       - 448
       - 512
       - 576
