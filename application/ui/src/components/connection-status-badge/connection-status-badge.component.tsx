@@ -1,26 +1,49 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, StatusLight, Text } from '@geti/ui';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import { Flex, Loading, Text } from '@geti/ui';
+import { Checkmark, CloseSmall } from '@geti/ui/icons';
 
 import classes from './connection-status-badge.module.scss';
 
-dayjs.extend(relativeTime);
-
 type ConnectionStatusBadgeProps = {
-    isAvailable: boolean;
-    lastCheckedAt: number;
+    isInUse: boolean;
+    isUnreachable: boolean;
+    isPending: boolean;
 };
 
-export const ConnectionStatusBadge = ({ isAvailable, lastCheckedAt }: ConnectionStatusBadgeProps) => {
+export const ConnectionStatusBadge = ({ isInUse, isUnreachable, isPending }: ConnectionStatusBadgeProps) => {
+    if (isPending) {
+        return (
+            <Flex gap={'size-75'} alignItems={'center'} UNSAFE_className={classes.container}>
+                <Loading mode='inline' size='S' />
+                <Text>Checking</Text>
+            </Flex>
+        );
+    }
+
+    if (isInUse) {
+        return (
+            <Flex gap={'size-75'} alignItems={'center'} UNSAFE_className={classes.container}>
+                <Checkmark size='S' UNSAFE_className={classes.inUseIcon} />
+                <Text>In use</Text>
+            </Flex>
+        );
+    }
+
+    if (isUnreachable) {
+        return (
+            <Flex gap={'size-75'} alignItems={'center'} UNSAFE_className={classes.container}>
+                <CloseSmall className={classes.unreachableIcon} />
+                <Text>Unreachable</Text>
+            </Flex>
+        );
+    }
+
     return (
-        <Flex gap={'size-50'} alignItems={'center'} UNSAFE_className={classes.container}>
-            <StatusLight variant={isAvailable ? 'positive' : 'negative'} UNSAFE_className={classes.statusLight}>
-                {isAvailable ? 'Available |' : 'Unavailable |'}
-            </StatusLight>
-            <Text>Last checked: {dayjs(lastCheckedAt).fromNow()}</Text>
+        <Flex gap={'size-75'} alignItems={'center'} UNSAFE_className={classes.container}>
+            <Checkmark size='S' UNSAFE_className={classes.reachableIcon} />
+            <Text>Reachable</Text>
         </Flex>
     );
 };

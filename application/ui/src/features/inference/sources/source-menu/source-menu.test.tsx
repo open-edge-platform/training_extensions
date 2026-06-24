@@ -106,6 +106,7 @@ describe('SourceMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
 
             expect(screen.getByRole('menuitem', { name: /Remove/i })).toHaveAttribute('aria-disabled', 'true');
+            expect(screen.getByRole('menuitem', { name: /Test connection/i })).toHaveAttribute('aria-disabled', 'true');
         });
     });
 

@@ -8,7 +8,6 @@ import { usePipeline } from 'hooks/api/pipeline.hook';
 import { isEqual } from 'lodash-es';
 
 import { ConnectionStatusBadge } from '../../../../components/connection-status-badge/connection-status-badge.component';
-import { StatusTag } from '../../../../components/status-tag/status-tag.component';
 import type { SourceConfig } from '../../../../constants/shared-types';
 import { removeUnderscore } from '../../util';
 import { useTestSource } from '../api/use-test-source';
@@ -32,7 +31,8 @@ type SourceListItemProps = {
 };
 
 const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }: SourceListItemProps) => {
-    const { data, isFetched, dataUpdatedAt, refetch } = useTestSource(String(source.id));
+    const { data, isFetched, isFetching, refetch } = useTestSource(String(source.id));
+    const showConnectionStatusBadge = isConnected || isFetched || isFetching;
 
     const handleTestConnection = async () => {
         void refetch();
@@ -45,8 +45,12 @@ const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }
             direction='column'
             UNSAFE_className={clsx(classes.card, { [classes.activeCard]: isConnected })}
         >
-            {isFetched && (
-                <ConnectionStatusBadge isAvailable={data?.reachable === true} lastCheckedAt={dataUpdatedAt} />
+            {showConnectionStatusBadge && (
+                <ConnectionStatusBadge
+                    isInUse={isConnected}
+                    isUnreachable={isFetched && data?.reachable === false}
+                    isPending={isFetching}
+                />
             )}
             <Flex alignItems={'center'} gap={'size-200'}>
                 <SourceIcon type={source.source_type} />
@@ -55,7 +59,6 @@ const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }
                     <Text UNSAFE_className={classes.title}>{source.name}</Text>
                     <Flex gap={'size-100'} alignItems={'center'}>
                         <Text UNSAFE_className={classes.type}>{removeUnderscore(source.source_type)}</Text>
-                        <StatusTag isConnected={isConnected} />
                     </Flex>
                 </Flex>
             </Flex>

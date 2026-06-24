@@ -7,7 +7,6 @@ import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
 
 import { ConnectionStatusBadge } from '../../../../components/connection-status-badge/connection-status-badge.component';
-import { StatusTag } from '../../../../components/status-tag/status-tag.component';
 import { usePipeline } from '../../../../hooks/api/pipeline.hook';
 import { removeUnderscore } from '../../util';
 import { useTestSink } from '../api/use-test-sink';
@@ -31,7 +30,8 @@ type SinksListItemProps = {
 };
 
 const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => {
-    const { data, isFetched, dataUpdatedAt, refetch } = useTestSink(sink.id);
+    const { data, isFetched, isFetching, refetch } = useTestSink(sink.id);
+    const showConnectionStatusBadge = isConnected || isFetched || isFetching;
 
     const handleTestConnection = async () => {
         void refetch();
@@ -46,8 +46,12 @@ const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => 
                 [classes.activeCard]: isConnected,
             })}
         >
-            {isFetched && (
-                <ConnectionStatusBadge isAvailable={data?.reachable === true} lastCheckedAt={dataUpdatedAt} />
+            {showConnectionStatusBadge && (
+                <ConnectionStatusBadge
+                    isInUse={isConnected}
+                    isUnreachable={isFetched && data?.reachable === false}
+                    isPending={isFetching}
+                />
             )}
             <Flex alignItems={'center'} gap={'size-200'}>
                 <SinkIcon type={sink.sink_type} />
@@ -56,7 +60,6 @@ const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => 
                     <Text UNSAFE_className={classes.title}>{sink.name}</Text>
                     <Flex gap={'size-100'} alignItems={'center'}>
                         <Text UNSAFE_className={classes.type}>{removeUnderscore(sink.sink_type)}</Text>
-                        <StatusTag isConnected={isConnected} />
                     </Flex>
                 </Flex>
             </Flex>

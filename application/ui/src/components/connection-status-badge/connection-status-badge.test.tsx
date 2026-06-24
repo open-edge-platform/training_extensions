@@ -7,28 +7,27 @@ import { render } from 'test-utils/render';
 import { ConnectionStatusBadge } from './connection-status-badge.component';
 
 describe('ConnectionStatusBadge', () => {
-    beforeEach(() => {
-        vi.useFakeTimers();
-        vi.setSystemTime(new Date('2026-01-01T10:00:00.000Z'));
+    it('shows in use state', () => {
+        render(<ConnectionStatusBadge isInUse isUnreachable={false} isPending={false} />);
+
+        expect(screen.getByText('In use')).toBeVisible();
     });
 
-    afterEach(() => {
-        vi.useRealTimers();
+    it('shows unreachable state', () => {
+        render(<ConnectionStatusBadge isInUse={false} isUnreachable isPending={false} />);
+
+        expect(screen.getByText('Unreachable')).toBeVisible();
     });
 
-    it('shows available with last checked time', () => {
-        render(<ConnectionStatusBadge isAvailable lastCheckedAt={new Date('2026-01-01T09:30:00.000Z').valueOf()} />);
+    it('shows reachable state', () => {
+        render(<ConnectionStatusBadge isInUse={false} isUnreachable={false} isPending={false} />);
 
-        expect(screen.getByText(/Available/)).toBeVisible();
-        expect(screen.getByText('Last checked: 30 minutes ago')).toBeVisible();
+        expect(screen.getByText('Reachable')).toBeVisible();
     });
 
-    it('shows unavailable with last checked time', () => {
-        render(
-            <ConnectionStatusBadge isAvailable={false} lastCheckedAt={new Date('2026-01-01T09:59:00.000Z').valueOf()} />
-        );
+    it('shows checking state when pending', () => {
+        render(<ConnectionStatusBadge isInUse={false} isUnreachable={false} isPending />);
 
-        expect(screen.getByText(/Unavailable/)).toBeVisible();
-        expect(screen.getByText('Last checked: a minute ago')).toBeVisible();
+        expect(screen.getByText('Checking')).toBeVisible();
     });
 });

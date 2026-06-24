@@ -7,19 +7,14 @@
     width: fit-content !important;
 }
 
-.statusLight {
-    --spectrum-statuslight-positive-dot-color: var(--aqua);
-    --spectrum-statuslight-negative-dot-color: var(--coral);
+.inUseIcon {
+    color: var(--moss);
+}
 
-    font-size: var(--spectrum-global-dimension-font-size-75);
-    padding: 0;
-    line-height: 0;
-    color: white;
-    min-block-size: 0;
-    align-items: center;
+.reachableIcon {
+    color: var(--aqua);
+}
 
-    &:before {
-        margin: 0;
-        margin-right: var(--spectrum-global-dimension-size-100);
-    }
+.unreachableIcon {
+    color: var(--coral);
 }

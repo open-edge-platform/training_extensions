@@ -211,7 +211,10 @@ export const SourceMenu = ({ id, name, isConnected, onEdit, isPipelineRunning, o
                 <ActionButton isQuiet aria-label='source menu'>
                     <MoreMenu />
                 </ActionButton>
-                <Menu onAction={handleOnAction} disabledKeys={isConnected ? [SOURCE_MENU_OPTIONS.REMOVE] : []}>
+                <Menu
+                    onAction={handleOnAction}
+                    disabledKeys={isConnected ? [SOURCE_MENU_OPTIONS.REMOVE, SOURCE_MENU_OPTIONS.TEST] : []}
+                >
                     {isConnected ? (
                         <Item key={SOURCE_MENU_OPTIONS.DISCONNECT}>Disconnect</Item>
                     ) : (
