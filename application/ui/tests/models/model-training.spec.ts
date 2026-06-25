@@ -349,11 +349,11 @@ test.describe('Model training flow', () => {
         modelsPage,
         page,
     }) => {
-        const notRecommendedmodelArchitecture = mockedModelArchitectures.find(
+        const notRecommendedModelArchitecture = mockedModelArchitectures.find(
             (architecture) => architecture.performanceCategory === undefined
         );
 
-        if (notRecommendedmodelArchitecture === undefined) {
+        if (notRecommendedModelArchitecture === undefined) {
             throw new Error('No not recommended model architecture found in mocked data');
         }
 
@@ -367,7 +367,7 @@ test.describe('Model training flow', () => {
         });
 
         await test.step('Select a not recommended model architecture', async () => {
-            await modelsPage.selectModelArchitecture(notRecommendedmodelArchitecture.name);
+            await modelsPage.selectModelArchitecture(notRecommendedModelArchitecture.name);
         });
 
         await test.step('Open advanced settings', async () => {
@@ -381,7 +381,7 @@ test.describe('Model training flow', () => {
 
         await test.step('Verify that the list is still expanded and selected architecture is visible', async () => {
             await expect(page.getByRole('button', { name: 'Show less' })).toBeVisible();
-            await expect(modelsPage.getModelArchitecture(notRecommendedmodelArchitecture.name)).toBeVisible();
+            await expect(modelsPage.getModelArchitecture(notRecommendedModelArchitecture.name)).toBeInViewport();
         });
     });
 });
