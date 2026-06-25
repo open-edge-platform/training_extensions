@@ -20,8 +20,12 @@ jobs:
         working-directory: application/backend
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.sha }}
+          persist-credentials: false
+
 
       - name: Install common dependencies
         uses: ./.github/actions/install-common-deps
