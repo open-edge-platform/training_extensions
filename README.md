@@ -181,6 +181,8 @@ uv pip install getitune # CPU-only by default
 > ```
 >
 > See the [library README](library/README.md#installation) for more details.
+>
+> ℹ️ Ultralytics YOLO models are distributed under the [AGPL-3.0 license](https://www.ultralytics.com/license).
 
 **Discover available models and train a model in just a few lines of code:**
 
@@ -424,4 +426,5 @@ Geti™ utilizes FFmpeg.
 
 FFmpeg is an open source project licensed under LGPL and GPL. See [https://www.ffmpeg.org/legal.html](https://www.ffmpeg.org/legal.html). You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
 
-Ultralytics YOLO models are distributed under the AGPL-3.0 license, an OSI approved license ideal for open-source research, academic, and personal projects. For commercial use, enhanced support, and tailored licensing terms, please explore flexible Ultralytics licensing options at https://www.ultralytics.com/license.
+> [!NOTE]
+> Ultralytics YOLO models are distributed under the AGPL-3.0 license, an OSI approved license ideal for open-source research, academic, and personal projects. For commercial use, enhanced support, and tailored licensing terms, please explore flexible Ultralytics licensing options at https://www.ultralytics.com/license.
