@@ -23,10 +23,23 @@ import { expect, http, test } from '../fixtures';
 import { MOCKED_MODEL_TRAINING_CONFIGURATION, MOCKED_TRAINING_CONFIGURATION } from './mocks';
 
 const mockedModelArchitectures = [
-    getMockedModelArchitecture({ id: 'Object_Detection_SSD', name: 'Object_Detection_SSD' }),
+    getMockedModelArchitecture({
+        id: 'Object_Detection_SSD',
+        name: 'Object_Detection_SSD',
+        performanceCategory: 'balance',
+    }),
     getMockedModelArchitecture({
         id: 'Custom_Object_Detection_Gen3_ATSS',
         name: 'Custom_Object_Detection_Gen3_ATSS',
+        performanceCategory: 'speed',
+    }),
+    getMockedModelArchitecture({ id: 'arch-3', name: 'Gamma Model', performanceCategory: 'accuracy' }),
+    getMockedModelArchitecture({ id: 'arch-4', name: 'Delta Model', performanceCategory: undefined }),
+    getMockedModelArchitecture({ id: 'arch-5', name: 'Epsilon Model', performanceCategory: undefined }),
+    getMockedModelArchitecture({
+        id: 'Object_Detection_YOLOX_X',
+        name: 'Object_Detection_YOLOX_X',
+        performanceCategory: undefined,
     }),
 ];
 
@@ -329,5 +342,46 @@ test.describe('Model training flow', () => {
         expect(state.submittedTrainingConfiguration).toMatchObject(
             getTrainingConfigurationUpdatePayload({ parameters: updatedTrainingConfigurationParameters })
         );
+    });
+
+    test('Keeps model architectures list expanded when navigating back from advanced settings if not recommended model is selected', async ({
+        network,
+        modelsPage,
+        page,
+    }) => {
+        const notRecommendedmodelArchitecture = mockedModelArchitectures.find(
+            (architecture) => architecture.performanceCategory === undefined
+        );
+
+        if (notRecommendedmodelArchitecture === undefined) {
+            throw new Error('No not recommended model architecture found in mocked data');
+        }
+
+        setupNetworkMocks(network);
+
+        await modelsPage.goto();
+        await modelsPage.openTrainModelDialog();
+
+        await test.step('Expand architectures list', async () => {
+            await modelsPage.openMoreModelArchitectures();
+        });
+
+        await test.step('Select a not recommended model architecture', async () => {
+            await modelsPage.selectModelArchitecture(notRecommendedmodelArchitecture.name);
+        });
+
+        await test.step('Open advanced settings', async () => {
+            await modelsPage.openAdvancedSettings();
+            await expect(page.getByRole('tab', { name: 'Data management' })).toBeVisible();
+        });
+
+        await test.step('Navigate back', async () => {
+            await modelsPage.goBack();
+        });
+
+        await test.step('Verify that the list is still expanded and selected architecture is visible', async () => {
+            await expect(page.getByRole('button', { name: 'Show less' })).toBeVisible();
+            await expect(modelsPage.getModelArchitecture(notRecommendedmodelArchitecture.name)).toBeVisible();
+        });
     });
 });
