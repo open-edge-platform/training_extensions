@@ -268,8 +268,13 @@ class ModelService(BaseSessionManagedService):
 
         path = self._projects_dir / str(project_id) / "models" / str(model_id)
         if path.exists():
-            shutil.rmtree(path)
-            logger.info("Deleted model files at '{}'", path)
+            try:
+                shutil.rmtree(path)
+                logger.info("Deleted model files at '{}'", path)
+            except PermissionError as exc:
+                if getattr(exc, "winerror", None) == 32:
+                    raise ResourceInUseError(ResourceType.MODEL, str(model_id))
+                raise
 
         try:
             deleted = model_rev_repo.delete(str(model_id))
@@ -317,8 +322,13 @@ class ModelService(BaseSessionManagedService):
 
         path = self._projects_dir / str(project_id) / "models" / str(model_id)
         if path.exists():
-            shutil.rmtree(path)
-            logger.info("Deleted model files at '{}'", path)
+            try:
+                shutil.rmtree(path)
+                logger.info("Deleted model files at '{}'", path)
+            except PermissionError as exc:
+                if getattr(exc, "winerror", None) == 32:
+                    raise ResourceInUseError(ResourceType.MODEL, str(model_id))
+                raise
 
     def list_models(self, project_id: UUID, dataset_revision_id: UUID | None = None) -> list[ModelRevision]:
         """
