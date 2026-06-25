@@ -327,6 +327,7 @@ class TransformsUpdater:
         },
         "random_erasing": {
             "class_paths": [
+                "getitune.data.augmentation.transforms.MaskSafeRandomErasing",
                 "kornia.augmentation.RandomErasing",
                 "torchvision.transforms.v2.RandomErasing",
             ],
@@ -484,7 +485,8 @@ class TransformsUpdater:
     def _choose_variant(cls, registry_entry: dict, is_ultralytics: bool) -> tuple[str, str]:
         """Choose class_path and target stage for a new augmentation.
 
-        For Ultralytics backends, prefers torchvision / getitune CPU variants.
+        For Ultralytics backends, prefers torchvision CPU variants over
+        getitune custom variants (which may include kornia GPU subclasses).
         For other backends, uses the registry default (typically kornia GPU).
 
         Returns:
@@ -492,7 +494,10 @@ class TransformsUpdater:
         """
         if is_ultralytics:
             for cp in registry_entry["class_paths"]:
-                if cp.startswith(("torchvision.", "getitune.")):
+                if cp.startswith("torchvision."):
+                    return cp, "cpu"
+            for cp in registry_entry["class_paths"]:
+                if cp.startswith("getitune."):
                     return cp, "cpu"
         return registry_entry["class_paths"][0], registry_entry["stage"]
 
