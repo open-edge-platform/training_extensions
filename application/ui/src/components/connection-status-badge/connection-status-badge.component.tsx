@@ -1,8 +1,11 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { ReactNode } from 'react';
+
 import { Flex, Loading, Text } from '@geti/ui';
 import { Checkmark, CloseSmall } from '@geti/ui/icons';
+import { clsx } from 'clsx';
 
 import classes from './connection-status-badge.module.scss';
 
@@ -10,40 +13,50 @@ type ConnectionStatusBadgeProps = {
     isInUse: boolean;
     isUnreachable: boolean;
     isPending: boolean;
+    errorMessage?: string;
 };
 
-export const ConnectionStatusBadge = ({ isInUse, isUnreachable, isPending }: ConnectionStatusBadgeProps) => {
-    if (isPending) {
-        return (
-            <Flex gap={'size-75'} alignItems={'center'} UNSAFE_className={classes.container}>
-                <Loading mode='inline' size='S' />
-                <Text>Testing connection...</Text>
-            </Flex>
-        );
-    }
+type BadgeState = {
+    icon: ReactNode;
+    label: string;
+    isInUseContainer?: boolean;
+};
 
-    if (isInUse) {
-        return (
-            <Flex gap={'size-75'} alignItems={'center'} UNSAFE_className={classes.container}>
-                <Checkmark size='S' UNSAFE_className={classes.inUseIcon} />
-                <Text>In use</Text>
-            </Flex>
-        );
-    }
-
-    if (isUnreachable) {
-        return (
-            <Flex gap={'size-75'} alignItems={'center'} UNSAFE_className={classes.container}>
-                <CloseSmall className={classes.unreachableIcon} />
-                <Text>Unreachable</Text>
-            </Flex>
-        );
-    }
+export const ConnectionStatusBadge = ({
+    isInUse,
+    isUnreachable,
+    isPending,
+    errorMessage,
+}: ConnectionStatusBadgeProps) => {
+    const badgeState: BadgeState = isPending
+        ? {
+              icon: <Loading mode='inline' size='S' />,
+              label: 'Testing connection...',
+          }
+        : isInUse
+          ? {
+                icon: <Checkmark size='S' UNSAFE_className={classes.inUseIcon} />,
+                label: 'In use',
+                isInUseContainer: true,
+            }
+          : isUnreachable
+            ? {
+                  icon: <CloseSmall className={classes.unreachableIcon} />,
+                  label: errorMessage ?? 'Unreachable',
+              }
+            : {
+                  icon: <Checkmark size='S' UNSAFE_className={classes.readyIcon} />,
+                  label: 'Ready',
+              };
 
     return (
-        <Flex gap={'size-75'} alignItems={'center'} UNSAFE_className={classes.container}>
-            <Checkmark size='S' UNSAFE_className={classes.reachableIcon} />
-            <Text>Reachable</Text>
+        <Flex
+            gap={'size-75'}
+            alignItems={'center'}
+            UNSAFE_className={clsx(classes.container, { [classes.inUseContainer]: badgeState.isInUseContainer })}
+        >
+            {badgeState.icon}
+            <Text>{badgeState.label}</Text>
         </Flex>
     );
 };

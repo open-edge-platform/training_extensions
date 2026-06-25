@@ -1,17 +1,20 @@
 .container {
-    padding: var(--spectrum-global-dimension-size-25) var(--spectrum-global-dimension-size-50);
+    padding: var(--spectrum-global-dimension-size-50);
+    padding-right: var(--spectrum-global-dimension-size-100);
     background: var(--spectrum-global-color-gray-300);
     font-size: var(--spectrum-global-dimension-font-size-75);
     margin-right: var(--spectrum-global-dimension-size-100);
     line-height: var(--spectrum-global-dimension-size-225);
     width: fit-content !important;
+    border-radius: var(--spectrum-global-dimension-size-50);
 }
 
-.inUseIcon {
-    color: var(--moss);
+.inUseContainer {
+    background: var(--background-dark);
 }
 
-.reachableIcon {
+.inUseIcon,
+.readyIcon {
     color: var(--aqua);
 }
 

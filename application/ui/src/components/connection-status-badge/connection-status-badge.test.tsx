@@ -7,27 +7,36 @@ import { render } from 'test-utils/render';
 import { ConnectionStatusBadge } from './connection-status-badge.component';
 
 describe('ConnectionStatusBadge', () => {
-    it('shows in use state', () => {
+    it('shows "in use" state', () => {
         render(<ConnectionStatusBadge isInUse isUnreachable={false} isPending={false} />);
 
-        expect(screen.getByText('In use')).toBeVisible();
+        const label = screen.getByText(/In use/);
+
+        expect(label).toBeVisible();
     });
 
-    it('shows unreachable state', () => {
-        render(<ConnectionStatusBadge isInUse={false} isUnreachable isPending={false} />);
-
-        expect(screen.getByText('Unreachable')).toBeVisible();
-    });
-
-    it('shows reachable state', () => {
+    it('shows ready state', () => {
         render(<ConnectionStatusBadge isInUse={false} isUnreachable={false} isPending={false} />);
 
-        expect(screen.getByText('Reachable')).toBeVisible();
+        expect(screen.getByText(/Ready/)).toBeVisible();
     });
 
-    it('shows checking state when pending', () => {
+    it('shows testing state when pending', () => {
         render(<ConnectionStatusBadge isInUse={false} isUnreachable={false} isPending />);
 
-        expect(screen.getByText('Checking')).toBeVisible();
+        expect(screen.getByText(/Testing connection\.\./)).toBeVisible();
+    });
+
+    it('shows API error message when unreachable due to request failure', () => {
+        render(
+            <ConnectionStatusBadge
+                isInUse={false}
+                isUnreachable
+                isPending={false}
+                errorMessage={'Connection timed out'}
+            />
+        );
+
+        expect(screen.getByText(/Connection timed out/)).toBeVisible();
     });
 });

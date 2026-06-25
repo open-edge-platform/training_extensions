@@ -9,6 +9,7 @@ import { isEqual } from 'lodash-es';
 
 import { ConnectionStatusBadge } from '../../../../components/connection-status-badge/connection-status-badge.component';
 import type { SourceConfig } from '../../../../constants/shared-types';
+import { getErrorMessage } from '../../../../query-client/query-client';
 import { removeUnderscore } from '../../util';
 import { useTestSource } from '../api/use-test-source';
 import { SourceMenu } from '../source-menu/source-menu.component';
@@ -31,8 +32,8 @@ type SourceListItemProps = {
 };
 
 const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }: SourceListItemProps) => {
-    const { data, isFetched, isFetching, refetch } = useTestSource(String(source.id));
-    const showConnectionStatusBadge = isConnected || isFetched || isFetching;
+    const { data, error, isError, isFetched, isFetching, refetch } = useTestSource(String(source.id));
+    const showConnectionStatusBadge = isConnected || isFetched || isFetching || isError;
 
     const handleTestConnection = async () => {
         void refetch();
@@ -48,8 +49,9 @@ const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }
             {showConnectionStatusBadge && (
                 <ConnectionStatusBadge
                     isInUse={isConnected}
-                    isUnreachable={isFetched && data?.reachable === false}
+                    isUnreachable={isError || (isFetched && data?.reachable === false)}
                     isPending={isFetching}
+                    errorMessage={isError ? getErrorMessage(error) : undefined}
                 />
             )}
             <Flex alignItems={'center'} gap={'size-200'}>
