@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { Grid, RadioGroup } from '@geti/ui';
+import { Grid, RadioGroup } from '@geti-ui/ui';
 
 import styles from './model-architectures-list-layout.module.scss';
 

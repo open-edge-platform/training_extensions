@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup } from '@geti/ui';
+import { Button, ButtonGroup } from '@geti-ui/ui';
 import { useImportDatasetAsNewProject } from 'hooks/storage/use-import-dataset-as-new-project.hook';
 
 import { ImportJobProcessButtons } from '../../../../../components/import-job-process/import-job-process-buttons.component';

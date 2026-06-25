@@ -3,8 +3,8 @@
 
 import { Key, useMemo } from 'react';
 
-import { ActionButton, Flex, Grid, Item, Menu, MenuTrigger, Picker } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
+import { ActionButton, Flex, Grid, Item, Menu, MenuTrigger, Picker } from '@geti-ui/ui';
+import { MoreMenu } from '@geti-ui/ui/icons';
 import { useProjectTask } from 'hooks/use-project-task.hook';
 
 import { TrainModel } from '../../train-model/train-model.component';

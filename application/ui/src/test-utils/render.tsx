@@ -3,8 +3,7 @@
 
 import { Suspense, type ReactNode } from 'react';
 
-import { IntelBrandedLoading } from '@geti/ui';
-import { ThemeProvider } from '@geti/ui/theme';
+import { IntelBrandedLoading, ThemeProvider } from '@geti-ui/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
     render as rtlRender,

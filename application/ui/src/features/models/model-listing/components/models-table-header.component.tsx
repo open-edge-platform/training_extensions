@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 
-import { dimensionValue, Grid } from '@geti/ui';
+import { dimensionValue, Grid } from '@geti-ui/ui';
 import { useProjectTask } from 'hooks/use-project-task.hook';
 
 import { GRID_COLUMNS } from '../constants';

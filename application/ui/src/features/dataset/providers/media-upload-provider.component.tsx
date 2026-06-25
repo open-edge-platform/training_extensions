@@ -3,7 +3,7 @@
 
 import { createContext, Dispatch, ReactNode, useContext, useEffect, useMemo, useReducer } from 'react';
 
-import { Button, Flex, Loading } from '@geti/ui';
+import { Button, Flex, Loading } from '@geti-ui/ui';
 
 import { removeToast, toast } from '../../../components/toast/toast.component';
 import { pluralizeItems } from '../../../shared/util';

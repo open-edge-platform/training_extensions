@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Grid, Keyboard, Text } from '@geti/ui';
+import { Divider, Grid, Keyboard, Text } from '@geti-ui/ui';
 
 import { formatHotkeyForDisplay, HOTKEYS } from '../../../../../shared/hotkeys-definition';
 import { useAvailableTools } from '../../../../annotator/tools/annotator-tools/use-available-tools';

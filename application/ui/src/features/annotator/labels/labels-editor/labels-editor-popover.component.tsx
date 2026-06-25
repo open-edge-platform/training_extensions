@@ -3,8 +3,8 @@
 
 import { ComponentProps, ComponentRef, ReactNode, useRef, useState } from 'react';
 
-import { ActionButton, AlertDialog, DialogContainer, Popover, Text, Tooltip, TooltipTrigger } from '@geti/ui';
-import { Add, Edit } from '@geti/ui/icons';
+import { ActionButton, AlertDialog, CustomPopover, DialogContainer, Text, Tooltip, TooltipTrigger } from '@geti-ui/ui';
+import { Add, Edit } from '@geti-ui/ui/icons';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 import { OverlayTriggerState } from 'react-stately';
 
@@ -14,7 +14,7 @@ import { LabelsEditor } from './labels-editor.component';
 
 type LabelEditorPopoverProps = {
     state: OverlayTriggerState;
-    triggerRef: ComponentProps<typeof Popover>['triggerRef'];
+    triggerRef: ComponentProps<typeof CustomPopover>['triggerRef'];
     children: ReactNode;
 };
 
@@ -22,16 +22,16 @@ const POPOVER_OFFSET_ALIGNMENT = 8;
 
 const LabelEditorPopover = ({ triggerRef, state, children }: LabelEditorPopoverProps) => {
     return (
-        <Popover
-            hideArrow
+        <CustomPopover
             triggerRef={triggerRef}
-            state={state}
+            isOpen={state.isOpen}
+            onOpenChange={state.setOpen}
             placement={'bottom end'}
             offset={POPOVER_OFFSET_ALIGNMENT}
             crossOffset={POPOVER_OFFSET_ALIGNMENT}
         >
             {children}
-        </Popover>
+        </CustomPopover>
     );
 };
 

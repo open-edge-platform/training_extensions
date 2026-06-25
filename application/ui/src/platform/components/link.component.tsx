@@ -3,7 +3,7 @@
 
 import { type ComponentProps } from 'react';
 
-import { Link as GetiLink } from '@geti/ui';
+import { Link as GetiLink } from '@geti-ui/ui';
 
 type LinkProps = ComponentProps<typeof GetiLink>;
 

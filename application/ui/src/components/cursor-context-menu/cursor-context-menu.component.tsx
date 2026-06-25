@@ -3,7 +3,7 @@
 
 import { ReactNode, RefObject, useState } from 'react';
 
-import { dimensionValue, Flex, Popover } from '@geti/ui';
+import { CustomPopover, dimensionValue, Flex } from '@geti-ui/ui';
 import { OverlayTriggerState } from 'react-stately';
 
 import { useEventListener } from '../../hooks/event-listener.hook';
@@ -33,14 +33,13 @@ export const CursorContextMenu = ({ state, children, triggerRef, onOpen }: Curso
     );
 
     return (
-        <Popover
-            hideArrow
-            state={state}
+        <CustomPopover
+            isOpen={state.isOpen}
+            onOpenChange={state.setOpen}
             offset={cursorPosition.y}
             crossOffset={cursorPosition.x}
             placement={'bottom start'}
             triggerRef={triggerRef}
-            onDismissButtonPress={state.close}
         >
             <Flex
                 gap={'size-100'}
@@ -49,6 +48,6 @@ export const CursorContextMenu = ({ state, children, triggerRef, onOpen }: Curso
             >
                 {children}
             </Flex>
-        </Popover>
+        </CustomPopover>
     );
 };

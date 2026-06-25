@@ -3,7 +3,7 @@
 
 import { Suspense } from 'react';
 
-import { Flex, Grid, Item, Loading, TabList, Tabs, View } from '@geti/ui';
+import { Flex, Grid, Item, Loading, TabList, Tabs, View } from '@geti-ui/ui';
 import { usePrefetchQuery } from '@tanstack/react-query';
 import { usePrefetchPipeline } from 'hooks/api/pipeline.hook';
 import { useProject } from 'hooks/api/project.hook';
