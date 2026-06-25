@@ -1,0 +1,159 @@
+name: Cleanup Old Application Container Images
+
+# Deletes old geti-cpu / geti-xpu / geti-cuda container image versions from GHCR,
+# while always retaining release and release-candidate (RC) images.
+#
+# Retention rules:
+# - Release images (tags matching semver "X.Y.Z", e.g. 3.0.0) are NEVER deleted.
+# - Release-candidate images (tags matching "X.Y.ZrcN", e.g. 3.0.0rc0) are
+#   NEVER deleted.
+# - The "latest" tag is NEVER deleted.
+# - Among the remaining versions (dev/daily builds and untagged versions) the
+#   most recent `min_versions_to_keep` are kept; older ones are deleted.
+#
+# Supports a dry-run mode (default) that previews deletions without removing
+# anything.
+
+on:
+  workflow_dispatch:
+    inputs:
+      min_versions_to_keep:
+        description: "Number of most recent non-release image versions to keep per package"
+        required: false
+        type: number
+        default: 10
+      dry_run:
+        description: "Preview deletions without removing image versions"
+        required: false
+        type: boolean
+        default: true
+  schedule:
+    # Run weekly on Sunday at 03:00 UTC.
+    - cron: "0 3 * * 0"
+
+permissions: {} # No permissions by default
+
+jobs:
+  cleanup-old-images:
+    name: Delete old GHCR application images
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    permissions:
+      packages: write
+    env:
+      # Ensure that a token with package write permissions is used, as the default GITHUB_TOKEN may not have sufficient scopes in some contexts (e.g. forked PRs).
+      # GH_TOKEN: ${{ secrets.WRITE_PACKAGES_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+      OWNER: ${{ github.repository_owner }}
+      # On a scheduled run inputs are empty, so fall back to sensible defaults.
+      MIN_VERSIONS_TO_KEEP: ${{ inputs.min_versions_to_keep || 10 }}
+      DRY_RUN: ${{ inputs.dry_run == false && 'false' || 'true' }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - name: Delete old image versions from GHCR
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Application container packages to clean up.
+          packages=(geti-cpu geti-xpu geti-cuda)
+
+          # Validate MIN_VERSIONS_TO_KEEP is a non-negative integer.
+          if ! [[ "${MIN_VERSIONS_TO_KEEP}" =~ ^[0-9]+$ ]]; then
+            echo "::error::Invalid min_versions_to_keep '${MIN_VERSIONS_TO_KEEP}'. Must be a non-negative integer."
+            exit 1
+          fi
+
+          deleted=0
+          candidates=0
+          retained_release=0
+          scanned_packages=0
+
+          owner_type="$(gh api "users/${OWNER}" --jq '.type')"
+          if [[ "${owner_type}" == "Organization" ]]; then
+            api_scope="orgs/${OWNER}"
+            scope_kind="organization"
+          else
+            api_scope="users/${OWNER}"
+            scope_kind="user"
+          fi
+
+          echo "Owner: ${OWNER} (type=${owner_type})"
+          echo "Using ${scope_kind} package API scope: ${api_scope}"
+          echo "Minimum non-release versions to keep per package: ${MIN_VERSIONS_TO_KEEP}"
+          echo "Dry run: ${DRY_RUN}"
+
+          for package in "${packages[@]}"; do
+            scanned_packages=$((scanned_packages + 1))
+            package_url="$(printf '%s' "${package}" | jq -sRr @uri)"
+            echo "::group::Processing package: ${package}"
+
+            # Skip packages that do not exist for this owner.
+            if ! gh api "${api_scope}/packages/container/${package_url}" >/dev/null 2>&1; then
+              echo "Package '${package}' not found for owner '${OWNER}', skipping."
+              echo "::endgroup::"
+              continue
+            fi
+
+            # Fetch all versions with their first tag and creation date.
+            versions_json="$(
+              gh api --paginate \
+                "${api_scope}/packages/container/${package_url}/versions?per_page=100" \
+                --jq '[.[] | {id, tags: (.metadata.container.tags // []), created_at}]' \
+                | jq -s 'add'
+            )"
+
+            # Count release versions retained (semver "X.Y.Z", RC "X.Y.ZrcN" tag or "latest").
+            pkg_retained="$(
+              echo "${versions_json}" | jq '[.[]
+                | select(any(.tags[]?;
+                    test("^[0-9]+\\.[0-9]+\\.[0-9]+(rc[0-9]+)?$"; "i") or . == "latest"))] | length'
+            )"
+            retained_release=$((retained_release + pkg_retained))
+
+            # Non-release candidates: versions without any release/RC/"latest" tag.
+            # Sorted newest first; the first MIN_VERSIONS_TO_KEEP are kept.
+            mapfile -t old_version_ids < <(
+              echo "${versions_json}" | jq -r --argjson keep "${MIN_VERSIONS_TO_KEEP}" '
+                [.[]
+                  | select((any(.tags[]?;
+                      test("^[0-9]+\\.[0-9]+\\.[0-9]+(rc[0-9]+)?$"; "i") or . == "latest")) | not)]
+                | sort_by(.created_at | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime)
+                | reverse
+                | .[$keep:]
+                | .[].id'
+            )
+
+            echo "Release versions retained for ${package}: ${pkg_retained}"
+            echo "Old non-release versions to delete for ${package}: ${#old_version_ids[@]}"
+
+            for version_id in "${old_version_ids[@]}"; do
+              candidates=$((candidates + 1))
+              if [[ "${DRY_RUN}" == "true" ]]; then
+                echo "[dry-run] Would delete ${package} version id ${version_id}"
+              else
+                echo "Deleting ${package} version id ${version_id}"
+                gh api -X DELETE "${api_scope}/packages/container/${package_url}/versions/${version_id}"
+                deleted=$((deleted + 1))
+              fi
+            done
+
+            echo "::endgroup::"
+          done
+
+          {
+            echo "## Application Image Cleanup"
+            echo ""
+            echo "- Owner: ${OWNER}"
+            echo "- Owner type: ${owner_type}"
+            echo "- API scope: ${api_scope}"
+            echo "- Packages scanned: ${scanned_packages}"
+            echo "- Minimum non-release versions kept per package: ${MIN_VERSIONS_TO_KEEP}"
+            echo "- Release versions retained: ${retained_release}"
+            echo "- Old versions matched for deletion: ${candidates}"
+            echo "- Versions deleted: ${deleted}"
+            echo "- Dry run: ${DRY_RUN}"
+          } >> "${GITHUB_STEP_SUMMARY}"

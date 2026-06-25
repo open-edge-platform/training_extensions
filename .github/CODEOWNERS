@@ -1,7 +1,7 @@
 # See help here: https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 
 # Default owners for any file not covered by other rules
-* @samet-akcay @leoll2 @Radwan-Ibrahim
+* @samet-akcay @leoll2 @Radwan-Ibrahim @itallix @warrkan @yvolokitin
 
 # CI and security
 .github/actions/ @open-edge-platform/geti-ci-maintain

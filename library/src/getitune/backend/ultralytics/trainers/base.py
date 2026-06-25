@@ -255,14 +255,15 @@ class GetiTuneBaseTrainer:
                 ni = counter["ni"]
                 if ni <= natural_nw:
                     xi = [0, natural_nw]
-                    trainer.accumulate = max(1, int(np.interp(ni, xi, [1, nbs / batch_size]).round()))
+                    accumulate = np.interp(ni, xi, [1.0, float(nbs / batch_size)])
+                    trainer.accumulate = max(1, round(accumulate))
                     for pg in trainer.optimizer.param_groups:
                         pg["lr"] = np.interp(
                             ni,
                             xi,
                             [
                                 warmup_bias_lr if pg.get("param_group") == "bias" else 0.0,
-                                pg["initial_lr"] * trainer.lf(trainer.epoch),
+                                float(pg["initial_lr"]) * float(trainer.lf(trainer.epoch)),
                             ],
                         )
                         if "momentum" in pg:
