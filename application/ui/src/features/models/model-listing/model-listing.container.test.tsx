@@ -4,7 +4,7 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
-import { getMockedModel } from 'mocks/mock-model';
+import { getMockedModel, getMockedModelArchitecture } from 'mocks/mock-model';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
@@ -26,6 +26,34 @@ const renderModelListing = () => {
 describe('ModelListingContainer', () => {
     beforeEach(() => {
         server.use(
+            http.get('/api/model_architectures', () => {
+                const mockModelArchitectureBalance = getMockedModelArchitecture({
+                    id: 'architecture-1',
+                    name: 'YOLOX',
+                });
+                const mockModelArchitectureSpeed = getMockedModelArchitecture({
+                    id: 'architecture-2',
+                    name: 'Deim-DFine-L',
+                });
+
+                const mockModelArchitectureAccuracy = getMockedModelArchitecture({
+                    id: 'architecture-3',
+                    name: 'MobileNetV2',
+                });
+
+                return HttpResponse.json({
+                    model_architectures: [
+                        mockModelArchitectureBalance,
+                        mockModelArchitectureSpeed,
+                        mockModelArchitectureAccuracy,
+                    ],
+                    top_picks: {
+                        balance: mockModelArchitectureBalance.id,
+                        speed: mockModelArchitectureSpeed.id,
+                        accuracy: mockModelArchitectureAccuracy.id,
+                    },
+                });
+            }),
             http.get('/api/projects/{project_id}', () => HttpResponse.json(getMockedProject({ id: PROJECT_ID }))),
             http.get('/api/jobs', () => HttpResponse.json([])),
             http.get('/api/projects/{project_id}/dataset_revisions', () =>
