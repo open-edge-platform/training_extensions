@@ -126,9 +126,3 @@ jobs:
             gh pr comment "${PR_NUMBER}" --body "${BODY}"
           fi
 
-      - name: Upload import.txt artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: import-time-trace-${{ matrix.accelerator }}
-          path: application/backend/import.txt
-
