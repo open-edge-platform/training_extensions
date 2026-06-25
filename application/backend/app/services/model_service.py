@@ -271,7 +271,7 @@ class ModelService(BaseSessionManagedService):
             try:
                 shutil.rmtree(path)
                 logger.info("Deleted model files at '{}'", path)
-            except OSError as exc:
+            except PermissionError as exc:
                 if getattr(exc, "winerror", None) == 32:
                     raise ResourceInUseError(ResourceType.MODEL, str(model_id))
                 raise
@@ -325,7 +325,7 @@ class ModelService(BaseSessionManagedService):
             try:
                 shutil.rmtree(path)
                 logger.info("Deleted model files at '{}'", path)
-            except OSError as exc:
+            except PermissionError as exc:
                 if getattr(exc, "winerror", None) == 32:
                     raise ResourceInUseError(ResourceType.MODEL, str(model_id))
                 raise

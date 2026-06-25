@@ -433,7 +433,7 @@ class TestModelServiceIntegration:
         model_rev_path.mkdir(parents=True, exist_ok=True)
         (model_rev_path / "config.yaml").touch()
 
-        err = OSError("Permission denied")
+        err = PermissionError("Permission denied")
         err.winerror = 32
 
         with (
