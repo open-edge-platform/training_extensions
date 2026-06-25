@@ -258,7 +258,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         Otherwise, it creates a new dataset from the current items in the database with user-verified annotations.
         """
 
-        from getitune.config.data import SamplerConfig
+        from getitune.config.data import SamplerConfig, SubsetConfig
         from getitune.data.entity.utils import detect_storage_dtype
         from getitune.data.factory import TransformLibFactory
 
@@ -786,6 +786,8 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         filtering_config: Filtering,
     ) -> list:
         """Build polars filter conditions for min/max annotation object counts."""
+        from getitune import TaskType
+
         filter_conditions = []
 
         if filtering_config.min_annotation_objects.enable:
@@ -818,6 +820,8 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             A new Dataset containing only the samples that pass the filter, or the original
             dataset unchanged if filtering is disabled.
         """
+        from getitune import TaskType
+
         filtering_config = training_config.task_level_parameters.dataset_preparation.filtering
         min_enabled = filtering_config.min_annotation_objects.enable
         max_enabled = filtering_config.max_annotation_objects.enable

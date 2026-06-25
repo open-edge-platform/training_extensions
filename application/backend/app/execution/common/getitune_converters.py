@@ -15,6 +15,8 @@ from app.models import Task, TaskType
 
 def get_getitune_task_type_by_task(task: Task) -> "GetiTuneTaskType":
     """Map internal Task to GetiTuneTaskType."""
+    from getitune import TaskType as GetiTuneTaskType
+
     match task.task_type:
         case TaskType.CLASSIFICATION:
             if task.exclusive_labels:
@@ -48,6 +50,7 @@ def get_metric_by_task(task: Task) -> "MetricCallable":
 
 def get_getitune_dataset_class_by_task_type(getitune_task_type: "GetiTuneTaskType") -> type["VisionDataset"]:
     """Get the VisionDataset class corresponding to the given GetiTuneTaskType."""
+    from getitune import TaskType as GetiTuneTaskType
     from getitune.data import DetectionDataset, InstanceSegDataset, MulticlassClsDataset, MultilabelClsDataset
 
     task_type_to_class: dict[GetiTuneTaskType, type[VisionDataset]] = {
