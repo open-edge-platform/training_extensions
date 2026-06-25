@@ -16,7 +16,6 @@ from rfdetr.config import (
     RFDETRSegSmallConfig,
     RFDETRSegXLargeConfig,
 )
-from torch.export import Dim
 
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
@@ -158,8 +157,9 @@ class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inc
             onnx_export_configuration={
                 "input_names": ["images"],
                 "output_names": ["boxes", "labels", "masks"],
-                "dynamic_shapes": {"inputs": {0: Dim("batch")}},
-                "autograd_inlining": False,
+                "dynamic_axes": {"images": {0: "batch"}},
+                "dynamo": False,
+                "do_constant_folding": True,
                 "opset_version": 18,
             },
             output_names=["boxes", "labels", "masks"],
