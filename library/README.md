@@ -89,7 +89,7 @@ pip install "getitune"
 # For hardware-specific PyTorch wheels, see "Advanced Installation: Specify Hardware Backend" below.
 ```
 
-⚠️ **Note**: PyPi version doesn't support Ultralytics YOLO models. To use Ultralytics YOLO models, you must [install from source](#advanced-install-from-source).
+⚠️ **Note**: PyPI version doesn't support Ultralytics YOLO models. To use Ultralytics YOLO models, you must [install from source](#advanced-install-from-source).
 
 <details>
 <summary><strong> Advanced Installation: Specify Hardware Backend</strong></summary>
