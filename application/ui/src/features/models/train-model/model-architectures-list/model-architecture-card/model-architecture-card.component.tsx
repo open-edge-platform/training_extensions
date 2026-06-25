@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useRef } from 'react';
 
 import { Content, ContextualHelp, Divider, Flex, Heading, Radio, Text } from '@geti/ui';
 import { clsx } from 'clsx';
@@ -110,6 +110,38 @@ const useModelArchitecture = () => {
     return context;
 };
 
+const useScrollModelIntoViewIfSelected = (isSelected: boolean) => {
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!isSelected || ref.current === null) {
+            return;
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const entry = entries[0];
+
+                if (!entry.isIntersecting) {
+                    ref.current?.scrollIntoView({ behavior: 'smooth' });
+                    observer.disconnect();
+                }
+            },
+            {
+                threshold: 1.0,
+            }
+        );
+
+        observer.observe(ref.current);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [isSelected]);
+
+    return ref;
+};
+
 type ModelArchitectureProps = {
     isSelected: boolean;
     children: ReactNode;
@@ -123,9 +155,12 @@ export const ModelArchitectureCard = ({
     onSelect,
     modelArchitecture,
 }: ModelArchitectureProps) => {
+    const ref = useScrollModelIntoViewIfSelected(isSelected);
+
     return (
         <ModelArchitectureContext value={{ isSelected, modelArchitecture }}>
             <div
+                ref={ref}
                 className={clsx(classes.modelArchitectureContainer, {
                     [classes.modelArchitectureSelected]: isSelected,
                 })}
