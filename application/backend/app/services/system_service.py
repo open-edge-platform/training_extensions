@@ -117,6 +117,20 @@ class SystemService:
         memory_info = psutil.virtual_memory()
         return self.process.memory_info().rss / (1024 * 1024), memory_info.total / (1024 * 1024)
 
+    def get_available_memory(self) -> float:
+        """
+        Get the memory currently available to start new work.
+
+        Uses ``psutil.virtual_memory().available``, i.e. the memory that can be given to a process
+        without the system swapping. This already accounts for RAM consumed by the operating system
+        and other running processes (including this one), so it is the realistic budget a CPU
+        training run can draw from.
+
+        Returns:
+            float: Available memory in MB.
+        """
+        return psutil.virtual_memory().available / (1024 * 1024)
+
     def get_cpu_usage(self) -> float:
         """
         Get the CPU usage of the process

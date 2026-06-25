@@ -164,7 +164,7 @@ class TestJobEndpoints:
         system_service.get_device_info.return_value = DeviceInfo(
             type=DeviceType.XPU, name="Intel GPU", memory=2 * 1024 * 1024 * 1024, index=0
         )
-        system_service.get_memory_usage.return_value = (1000.0, 16000.0)
+        system_service.get_available_memory.return_value = 15000.0
         app.dependency_overrides[get_system_service] = lambda: system_service
 
         with (

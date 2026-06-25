@@ -101,7 +101,7 @@ class TestCheckTrainingMemory:
         )
         device = DeviceInfo(type=DeviceType.XPU, name="GPU", memory=4 * 1024 * 1024 * 1024, index=0)
 
-        result = check_training_memory(manifest, device, total_system_memory_mb=64000.0)
+        result = check_training_memory(manifest, device, available_system_memory_mb=64000.0)
 
         assert result.estimated_memory_mb == 5000.0
         assert result.available_memory_mb == 4096.0
@@ -122,10 +122,31 @@ class TestCheckTrainingMemory:
         )
         device = DeviceInfo.cpu()
 
-        result = check_training_memory(manifest, device, total_system_memory_mb=32000.0)
+        result = check_training_memory(manifest, device, available_system_memory_mb=32000.0)
 
         assert result.available_memory_mb == 32000.0
         assert result.fits is True
+
+    def test_cpu_does_not_fit_when_free_memory_is_low(self):
+        # A model that easily fits in total RAM but not in the small amount currently free.
+        manifest = _Manifest(
+            "m",
+            "Model",
+            MemoryFootprint(
+                reference_batch_size=8,
+                estimated_training_memory_mb=3000.0,
+                base_memory_mb=2000.0,
+                per_sample_memory_mb=125.0,
+            ),
+            batch_size=8,
+        )
+        device = DeviceInfo.cpu()
+
+        # Only ~1.5 GB free even though the machine may have 64 GB total.
+        result = check_training_memory(manifest, device, available_system_memory_mb=1536.0)
+
+        assert result.available_memory_mb == 1536.0
+        assert result.fits is False
 
 
 class TestRecommendLighterModels:
@@ -168,7 +189,7 @@ class TestRecommendLighterModels:
         recommendations = recommend_lighter_models(
             candidate_manifests=[heavy, medium, light],
             device=device,
-            total_system_memory_mb=64000.0,
+            available_system_memory_mb=64000.0,
             exclude_id="heavy",
         )
 

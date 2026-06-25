@@ -23,6 +23,14 @@ class TestSystemService:
         assert total > 0
         assert used <= total
 
+    def test_get_available_memory(self, fxt_system_service: SystemService):
+        """Test getting available (free) memory"""
+        _, total = fxt_system_service.get_memory_usage()
+        available = fxt_system_service.get_available_memory()
+
+        assert available > 0
+        assert available <= total
+
     def test_get_cpu_usage(self, fxt_system_service: SystemService):
         """Test getting CPU usage"""
         cpu_usage = fxt_system_service.get_cpu_usage()

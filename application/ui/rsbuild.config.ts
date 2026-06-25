@@ -131,6 +131,17 @@ export default defineConfig({
         },
     },
     server: {
+        // Proxy backend calls to the FastAPI server so the web dev build can
+        // use same-origin requests (empty PUBLIC_API_BASE_URL). This avoids
+        // cross-origin CORS failures regardless of whether the app is opened
+        // via localhost, 127.0.0.1 or a LAN IP. `ws: true` keeps SSE / job
+        // streaming working through the proxy.
+        proxy: isTauriBuild
+            ? undefined
+            : {
+                  '/api': { target: 'http://localhost:7860', changeOrigin: true, ws: true },
+                  '/health': { target: 'http://localhost:7860', changeOrigin: true },
+              },
         headers: {
             'Cross-Origin-Embedder-Policy': 'credentialless',
             'Cross-Origin-Opener-Policy': 'same-origin',

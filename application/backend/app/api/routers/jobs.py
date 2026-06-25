@@ -48,7 +48,7 @@ def _check_training_memory_or_raise(
     manifest: ModelManifest,
     device: DeviceInfo,
     task: TaskType,
-    total_system_memory_mb: float,
+    available_system_memory_mb: float,
 ) -> None:
     """Run a pre-flight training-memory feasibility check, raising HTTP 409 when it does not fit.
 
@@ -56,7 +56,7 @@ def _check_training_memory_or_raise(
         manifest: Manifest of the model the user wants to train.
         device: Device selected for training.
         task: Task type of the project (used to scope the recommended alternatives).
-        total_system_memory_mb: Total host RAM in megabytes.
+        available_system_memory_mb: Currently free host RAM in megabytes.
 
     Raises:
         HTTPException: With status 409 and a structured payload when training is not expected to fit
@@ -65,7 +65,7 @@ def _check_training_memory_or_raise(
     result = check_training_memory(
         manifest=manifest,
         device=device,
-        total_system_memory_mb=total_system_memory_mb,
+        available_system_memory_mb=available_system_memory_mb,
     )
     if result.fits:
         return
@@ -78,7 +78,7 @@ def _check_training_memory_or_raise(
     recommendations = recommend_lighter_models(
         candidate_manifests=candidate_manifests,
         device=device,
-        total_system_memory_mb=total_system_memory_mb,
+        available_system_memory_mb=available_system_memory_mb,
         exclude_id=manifest.id,
     )
     raise HTTPException(
@@ -89,8 +89,8 @@ def _check_training_memory_or_raise(
                 f"Training '{manifest.name}' is estimated to require "
                 f"{result.estimated_memory_mb:.0f} MB on {result.device_name}, which exceeds the "
                 f"usable memory of {result.usable_memory_mb:.0f} MB "
-                f"(of {result.available_memory_mb:.0f} MB total). Training is likely to fail with an "
-                "out-of-memory error. Please choose a lighter model architecture."
+                f"(of {result.available_memory_mb:.0f} MB currently free). Training is likely to fail "
+                "with an out-of-memory error. Please free up memory or choose a lighter model architecture."
             ),
             "model_architecture_id": manifest.id,
             "model_architecture_name": manifest.name,
@@ -145,12 +145,12 @@ async def submit_job(
                 arch_id = job_request.parameters.model_architecture_id
                 manifest = ModelManifestService.get_model_manifest_by_id(arch_id)
                 arch_name = manifest.name
-                _, total_system_memory_mb = system_service.get_memory_usage()
+                available_system_memory_mb = system_service.get_available_memory()
                 _check_training_memory_or_raise(
                     manifest=manifest,
                     device=device,
                     task=project.task.task_type,
-                    total_system_memory_mb=total_system_memory_mb,
+                    available_system_memory_mb=available_system_memory_mb,
                 )
                 job = TrainingJob(
                     id=job_id,

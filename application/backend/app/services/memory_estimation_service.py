@@ -116,7 +116,7 @@ class MemoryCheckResult:
 def check_training_memory(
     manifest: ModelManifest,
     device: DeviceInfo,
-    total_system_memory_mb: float,
+    available_system_memory_mb: float,
     batch_size: int | None = None,
 ) -> MemoryCheckResult:
     """Check whether a model can be trained on the given device within the available memory.
@@ -124,7 +124,10 @@ def check_training_memory(
     Args:
         manifest: Manifest of the model to be trained.
         device: Device selected for training.
-        total_system_memory_mb: Total host RAM in megabytes (used for CPU/AUTO training).
+        available_system_memory_mb: Currently free host RAM in megabytes (used for CPU/AUTO
+            training). This must be the available, not total, memory: the operating system and other
+            processes (including Geti itself) already occupy part of the total RAM, so only the free
+            portion can realistically be used by a training run.
         batch_size: Batch size to estimate for; defaults to the manifest's configured batch size.
 
     Returns:
@@ -137,8 +140,8 @@ def check_training_memory(
     if device.type in (DeviceType.XPU, DeviceType.CUDA) and device.memory is not None:
         available_memory_mb = device.memory / _BYTES_PER_MB
     else:
-        # CPU and AUTO training draws from host RAM.
-        available_memory_mb = total_system_memory_mb
+        # CPU and AUTO training draws from whatever host RAM is currently free.
+        available_memory_mb = available_system_memory_mb
 
     usable_memory_mb = available_memory_mb * MEMORY_SAFETY_FRACTION
 
@@ -163,7 +166,7 @@ class RecommendedModel:
 def recommend_lighter_models(
     candidate_manifests: list[ModelManifest],
     device: DeviceInfo,
-    total_system_memory_mb: float,
+    available_system_memory_mb: float,
     exclude_id: str,
 ) -> list[RecommendedModel]:
     """Find model architectures of the same task that are expected to fit in memory.
@@ -171,7 +174,7 @@ def recommend_lighter_models(
     Args:
         candidate_manifests: Manifests to consider (typically all manifests for the project's task).
         device: Device selected for training.
-        total_system_memory_mb: Total host RAM in megabytes.
+        available_system_memory_mb: Currently free host RAM in megabytes.
         exclude_id: Architecture ID to exclude (the one that did not fit).
 
     Returns:
@@ -185,7 +188,7 @@ def recommend_lighter_models(
         result = check_training_memory(
             manifest=manifest,
             device=device,
-            total_system_memory_mb=total_system_memory_mb,
+            available_system_memory_mb=available_system_memory_mb,
         )
         if result.fits:
             recommendations.append(
