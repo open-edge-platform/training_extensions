@@ -54,3 +54,9 @@ hyperparameters:
         probability: 1.0
         min_scale: 0.3
         max_scale: 1.0
+
+memory_footprint:
+  reference_batch_size: 4
+  estimated_training_memory_mb: 2684.1
+  base_memory_mb: 1568.7
+  per_sample_memory_mb: 278.843

@@ -6,10 +6,15 @@ import { isEqual } from 'lodash-es';
 
 import { useTrainModelMutation } from '../api/use-train-model-mutation';
 import { useUpdateTrainingConfigurationMutation } from '../api/use-update-training-configuration-mutation';
+import { getInsufficientMemoryDetail, InsufficientMemoryDetail } from '../insufficient-memory';
 import { useTrainModelState } from '../train-model-provider.component';
 import { getTrainingConfigurationUpdatePayload } from './utils';
 
-export const useTrainModel = () => {
+export const useTrainModel = ({
+    onInsufficientMemory,
+}: {
+    onInsufficientMemory?: (detail: InsufficientMemoryDetail) => void;
+} = {}) => {
     const projectIdentifier = useProjectIdentifier();
     const trainModelMutation = useTrainModelMutation();
     const updateTrainingConfigurationMutation = useUpdateTrainingConfigurationMutation();
@@ -25,6 +30,13 @@ export const useTrainModel = () => {
         datasetRevisions,
         modelRevisions,
     } = useTrainModelState();
+
+    const handleTrainError = (error: unknown) => {
+        const detail = getInsufficientMemoryDetail(error);
+        if (detail !== null) {
+            onInsufficientMemory?.(detail);
+        }
+    };
 
     /**
      * Triggers model training with the following workflow:
@@ -66,7 +78,7 @@ export const useTrainModel = () => {
         const hasConfigurationChanged = !isEqual(defaultTrainingConfiguration, trainingConfiguration);
 
         if (!isAdvancedSettingsMode || !hasConfigurationChanged) {
-            trainModelMutation.mutate(trainModelMutationBody, { onSuccess });
+            trainModelMutation.mutate(trainModelMutationBody, { onSuccess, onError: handleTrainError });
 
             return;
         }
@@ -91,7 +103,8 @@ export const useTrainModel = () => {
                 onSuccess: () => {
                     trainModelMutation.mutate(trainModelMutationBody, {
                         onSuccess,
-                        onError: () => {
+                        onError: (error) => {
+                            handleTrainError(error);
                             updateTrainingConfigurationMutation.mutate({
                                 ...configurationParams,
                                 body: getTrainingConfigurationUpdatePayload(defaultTrainingConfiguration),

@@ -18,3 +18,9 @@ hyperparameters:
   training:
     learning_rate: 0.0049
     weight_decay: 0.0001
+
+memory_footprint:
+  reference_batch_size: 64
+  estimated_training_memory_mb: 1143.0
+  base_memory_mb: 1104.9
+  per_sample_memory_mb: 0.595

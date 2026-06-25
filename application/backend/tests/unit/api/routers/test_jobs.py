@@ -12,7 +12,7 @@ import pytest
 from httpx import AsyncClient
 from starlette import status
 
-from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue
+from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue, get_system_service
 from app.api.schemas.jobs import JobRequestAdapter
 from app.api.schemas.jobs.quantization import QuantizationRequest
 from app.api.schemas.jobs.training import TrainingRequest
@@ -21,6 +21,7 @@ from app.core.jobs.control_plane import CancellationResult
 from app.core.jobs.models import Job, JobStatus, JobType
 from app.main import app
 from app.models import Project, Task, TaskType, TrainingJob, TrainingJobParams
+from app.models.model_manifest import MemoryFootprint, ModelManifestDeprecationStatus
 from app.models.system import DeviceInfo, DeviceType
 
 
@@ -82,6 +83,17 @@ class TestJobEndpoints:
 
         mock_manifest = Mock()
         mock_manifest.name = "ViT Tiny"
+        mock_manifest.id = "image-classification-vit-tiny"
+        mock_manifest.task = TaskType.CLASSIFICATION
+        mock_manifest.support_status = ModelManifestDeprecationStatus.ACTIVE
+        # A lightweight footprint that fits within any test machine's RAM, so the pre-flight check passes.
+        mock_manifest.memory_footprint = MemoryFootprint(
+            reference_batch_size=64,
+            estimated_training_memory_mb=1164.0,
+            base_memory_mb=1100.0,
+            per_sample_memory_mb=1.0,
+        )
+        mock_manifest.hyperparameters.training.batch_size = 64
 
         with patch("app.api.routers.jobs.ModelManifestService.get_model_manifest_by_id", return_value=mock_manifest):
             job_request = JobRequestAdapter.validate_python(
@@ -109,6 +121,85 @@ class TestJobEndpoints:
             fxt_jobs_queue.submit.assert_called_once()
             assert fxt_jobs_queue.submit.call_args[0][0].params.model_architecture_id == "image-classification-vit-tiny"
             assert fxt_jobs_queue.submit.call_args[0][0].params.task.task_type == TaskType.CLASSIFICATION
+
+    def test_submit_train_job_insufficient_memory(self, tmp_path, fxt_client, fxt_jobs_queue, fxt_project_service):
+        app.dependency_overrides[get_job_dir] = lambda: tmp_path / "logs" / "jobs"
+        app.dependency_overrides[get_data_dir] = lambda: tmp_path / "data"
+        project = Mock(spec=Project)
+        project.id = uuid4()
+        project.task = Mock(spec=Task)
+        project.task.task_type = TaskType.DETECTION
+        project.task.exclusive_labels = True
+        fxt_project_service.get_project_by_id.return_value = project
+
+        # A heavy model that does not fit on a small (2 GB) GPU.
+        heavy_manifest = Mock()
+        heavy_manifest.name = "Heavy Model"
+        heavy_manifest.id = "object-detection-heavy"
+        heavy_manifest.task = TaskType.DETECTION
+        heavy_manifest.support_status = ModelManifestDeprecationStatus.ACTIVE
+        heavy_manifest.memory_footprint = MemoryFootprint(
+            reference_batch_size=8,
+            estimated_training_memory_mb=16000.0,
+            base_memory_mb=8000.0,
+            per_sample_memory_mb=1000.0,
+        )
+        heavy_manifest.hyperparameters.training.batch_size = 8
+
+        # A light alternative that fits and should be recommended.
+        light_manifest = Mock()
+        light_manifest.name = "Light Model"
+        light_manifest.id = "object-detection-light"
+        light_manifest.task = TaskType.DETECTION
+        light_manifest.support_status = ModelManifestDeprecationStatus.ACTIVE
+        light_manifest.memory_footprint = MemoryFootprint(
+            reference_batch_size=8,
+            estimated_training_memory_mb=900.0,
+            base_memory_mb=800.0,
+            per_sample_memory_mb=12.5,
+        )
+        light_manifest.hyperparameters.training.batch_size = 8
+
+        system_service = Mock()
+        system_service.get_device_info.return_value = DeviceInfo(
+            type=DeviceType.XPU, name="Intel GPU", memory=2 * 1024 * 1024 * 1024, index=0
+        )
+        system_service.get_memory_usage.return_value = (1000.0, 16000.0)
+        app.dependency_overrides[get_system_service] = lambda: system_service
+
+        with (
+            patch(
+                "app.api.routers.jobs.ModelManifestService.get_model_manifest_by_id",
+                return_value=heavy_manifest,
+            ),
+            patch(
+                "app.api.routers.jobs.ModelManifestService.get_model_manifests",
+                return_value={heavy_manifest.id: heavy_manifest, light_manifest.id: light_manifest},
+            ),
+        ):
+            job_request = JobRequestAdapter.validate_python(
+                {
+                    "project_id": project.id,
+                    "job_type": JobType.TRAIN,
+                    "parameters": {
+                        "device": "xpu",
+                        "model_architecture_id": "object-detection-heavy",
+                        "parent_model_revision_id": uuid4(),
+                        "parent_model_variant_id": uuid4(),
+                    },
+                }
+            )
+
+            response = fxt_client.post("/api/jobs", json=job_request.model_dump(mode="json"))
+
+        app.dependency_overrides.pop(get_system_service, None)
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        detail = response.json()["detail"]
+        assert detail["code"] == "insufficient_memory"
+        assert detail["model_architecture_id"] == "object-detection-heavy"
+        assert [model["id"] for model in detail["recommended_models"]] == ["object-detection-light"]
+        fxt_jobs_queue.submit.assert_not_called()
 
     def test_submit_quantize_job(self, tmp_path, fxt_client, fxt_jobs_queue, fxt_project_service):
         app.dependency_overrides[get_job_dir] = lambda: tmp_path / "logs" / "jobs"

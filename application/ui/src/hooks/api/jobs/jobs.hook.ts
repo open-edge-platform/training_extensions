@@ -9,6 +9,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { $api } from '../../../api/client';
 import { toast } from '../../../components/toast/toast.component';
 import { Job } from '../../../constants/shared-types';
+import { isInsufficientMemoryError } from '../../../features/models/train-model/insufficient-memory';
 import { getQueryKey } from '../../../query-client/query-client';
 import { useSSE } from '../../use-sse.hook';
 import { isQuantizeJob, isTrainJob } from '../util';
@@ -80,6 +81,11 @@ export const useSubmitJob = () => {
     return $api.useMutation('post', '/api/jobs', {
         meta: {
             invalidateQueries: [['get', '/api/jobs']],
+            // The insufficient-memory case is surfaced through a dedicated dialog, so suppress the
+            // generic error toast for it.
+            error: {
+                notify: (error: unknown) => !isInsufficientMemoryError(error),
+            },
         },
     });
 };

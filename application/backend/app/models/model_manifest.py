@@ -77,6 +77,46 @@ class ModelStats(BaseModel):
     )
 
 
+class MemoryFootprint(BaseModel):
+    """Precomputed estimate of the host/device memory required to train the model.
+
+    The estimate is split into a batch-independent component (model weights, gradients and
+    optimizer state plus framework overhead) and a per-sample component (activations), so that
+    the total can be re-scaled at runtime for an arbitrary batch size:
+
+        estimated_memory_mb(batch_size) = base_memory_mb + per_sample_memory_mb * batch_size
+
+    Values are heuristics derived from the model statistics (parameter count, gigaflops and input
+    resolution); they are intended for a conservative pre-flight feasibility check, not as an exact
+    measurement of peak memory usage.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+    reference_batch_size: int = Field(
+        gt=0,
+        title="Reference batch size",
+        description="Batch size at which 'estimated_training_memory_mb' was computed.",
+    )
+    estimated_training_memory_mb: float = Field(
+        ge=0.0,
+        title="Estimated training memory (MB)",
+        description="Estimated peak memory required to train the model at the reference batch size, in megabytes.",
+    )
+    base_memory_mb: float = Field(
+        ge=0.0,
+        title="Base memory (MB)",
+        description=(
+            "Batch-independent memory component (model weights, gradients, optimizer state and "
+            "framework overhead), in megabytes."
+        ),
+    )
+    per_sample_memory_mb: float = Field(
+        ge=0.0,
+        title="Per-sample memory (MB)",
+        description="Additional memory required per sample in a training batch (activations), in megabytes.",
+    )
+
+
 class Capabilities(BaseModel):
     """Model capabilities configuration."""
 
@@ -115,6 +155,11 @@ class ModelManifest(BaseModel):
     description: str = Field(title="Description", description="Detailed description of the model capabilities")
     task: TaskType = Field(title="Task Type", description="Type of machine learning task addressed by the model")
     stats: ModelStats = Field(title="Model Statistics", description="Statistics about the model")
+    memory_footprint: MemoryFootprint | None = Field(
+        default=None,
+        title="Memory Footprint",
+        description="Precomputed estimate of the memory required to train the model.",
+    )
     support_status: ModelManifestDeprecationStatus = Field(
         default=ModelManifestDeprecationStatus.ACTIVE,
         title="Support Status",

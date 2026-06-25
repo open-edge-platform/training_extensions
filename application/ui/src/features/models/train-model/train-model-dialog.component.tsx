@@ -15,6 +15,7 @@ import {
     Text,
     toast,
 } from '@geti/ui';
+import { useState } from 'react';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useMatch } from 'react-router';
 
@@ -23,6 +24,8 @@ import { AdvancedSettings } from './advanced-settings/advanced-settings.componen
 import { BasicTrainModelContent } from './basic-train-model-content.component';
 import { useTrainModel } from './hooks/use-train-model';
 import { useTrainModelDisabledReason } from './hooks/use-train-model-disabled-reason';
+import { InsufficientMemoryDetail } from './insufficient-memory';
+import { InsufficientMemoryDialog } from './insufficient-memory-dialog.component';
 import { TrainModelDialogLayout } from './train-model-dialog-layout.component';
 import { useTrainModelState } from './train-model-provider.component';
 
@@ -37,13 +40,16 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
         isAdvancedSettingsMode,
         onToggleAdvancedSettingsMode,
         trainingConfiguration,
+        onSelectModelArchitectureId,
     } = useTrainModelState();
     const projectId = useProjectIdentifier();
     const isModelsPage = useMatch(paths.project.models.pattern);
     const trainingDisabledReason = useTrainModelDisabledReason().reason;
     const isTrainingDisabled = trainingDisabledReason !== undefined;
 
-    const { trainModel, isPending } = useTrainModel();
+    const [insufficientMemory, setInsufficientMemory] = useState<InsufficientMemoryDetail | null>(null);
+
+    const { trainModel, isPending } = useTrainModel({ onInsufficientMemory: setInsufficientMemory });
 
     const isStartButtonDisabled =
         isTrainingDisabled || selectedModelArchitectureId === null || selectedTrainingDevice === null || isPending;
@@ -129,6 +135,12 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                     </Button>
                 </ButtonGroup>
             </Footer>
+
+            <InsufficientMemoryDialog
+                detail={insufficientMemory}
+                onClose={() => setInsufficientMemory(null)}
+                onSelectModel={onSelectModelArchitectureId}
+            />
         </Dialog>
     );
 };

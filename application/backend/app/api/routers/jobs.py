@@ -34,10 +34,80 @@ from app.models.jobs import (
     PrepareDatasetForImportJob,
     PrepareDatasetForImportJobParams,
 )
+from app.models.model_manifest import ModelManifest, ModelManifestDeprecationStatus
+from app.models.system import DeviceInfo
+from app.models.task import TaskType
 from app.services import ProjectService, SystemService
+from app.services.memory_estimation_service import check_training_memory, recommend_lighter_models
 from app.services.model_manifest_service import ModelManifestService
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
+
+
+def _check_training_memory_or_raise(
+    manifest: ModelManifest,
+    device: DeviceInfo,
+    task: TaskType,
+    total_system_memory_mb: float,
+) -> None:
+    """Run a pre-flight training-memory feasibility check, raising HTTP 409 when it does not fit.
+
+    Args:
+        manifest: Manifest of the model the user wants to train.
+        device: Device selected for training.
+        task: Task type of the project (used to scope the recommended alternatives).
+        total_system_memory_mb: Total host RAM in megabytes.
+
+    Raises:
+        HTTPException: With status 409 and a structured payload when training is not expected to fit
+            within the available memory of the selected device.
+    """
+    result = check_training_memory(
+        manifest=manifest,
+        device=device,
+        total_system_memory_mb=total_system_memory_mb,
+    )
+    if result.fits:
+        return
+
+    candidate_manifests = [
+        candidate
+        for candidate in ModelManifestService.get_model_manifests().values()
+        if candidate.task == task and candidate.support_status == ModelManifestDeprecationStatus.ACTIVE
+    ]
+    recommendations = recommend_lighter_models(
+        candidate_manifests=candidate_manifests,
+        device=device,
+        total_system_memory_mb=total_system_memory_mb,
+        exclude_id=manifest.id,
+    )
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={
+            "code": "insufficient_memory",
+            "message": (
+                f"Training '{manifest.name}' is estimated to require "
+                f"{result.estimated_memory_mb:.0f} MB on {result.device_name}, which exceeds the "
+                f"usable memory of {result.usable_memory_mb:.0f} MB "
+                f"(of {result.available_memory_mb:.0f} MB total). Training is likely to fail with an "
+                "out-of-memory error. Please choose a lighter model architecture."
+            ),
+            "model_architecture_id": manifest.id,
+            "model_architecture_name": manifest.name,
+            "device": result.device_name,
+            "estimated_memory_mb": result.estimated_memory_mb,
+            "available_memory_mb": result.available_memory_mb,
+            "usable_memory_mb": result.usable_memory_mb,
+            "recommended_models": [
+                {
+                    "id": recommendation.id,
+                    "name": recommendation.name,
+                    "estimated_memory_mb": recommendation.estimated_memory_mb,
+                }
+                for recommendation in recommendations
+            ],
+        },
+    )
 
 
 @router.post(
@@ -48,7 +118,9 @@ router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
         status.HTTP_202_ACCEPTED: {"description": "Job successfully created"},
         status.HTTP_400_BAD_REQUEST: {"description": "Unknown job type or invalid parameters"},
         status.HTTP_404_NOT_FOUND: {"description": "Project not found or dataset doesn't exist"},
-        status.HTTP_409_CONFLICT: {"description": "Dataset is locked by another job"},
+        status.HTTP_409_CONFLICT: {
+            "description": "Dataset is locked by another job, or insufficient memory to train the selected model"
+        },
         status.HTTP_422_UNPROCESSABLE_CONTENT: {
             "description": "Dataset already in datumaro format and ready for import"
         },
@@ -71,7 +143,15 @@ async def submit_job(
                 device = system_service.get_device_info(job_request.parameters.device)
                 project = project_service.get_project_by_id(job_request.project_id)
                 arch_id = job_request.parameters.model_architecture_id
-                arch_name = ModelManifestService.get_model_manifest_by_id(arch_id).name
+                manifest = ModelManifestService.get_model_manifest_by_id(arch_id)
+                arch_name = manifest.name
+                _, total_system_memory_mb = system_service.get_memory_usage()
+                _check_training_memory_or_raise(
+                    manifest=manifest,
+                    device=device,
+                    task=project.task.task_type,
+                    total_system_memory_mb=total_system_memory_mb,
+                )
                 job = TrainingJob(
                     id=job_id,
                     project_id=project.id,

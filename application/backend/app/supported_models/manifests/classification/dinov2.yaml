@@ -22,3 +22,9 @@ hyperparameters:
     scheduler:
       factor: 0.5
       patience: 3
+
+memory_footprint:
+  reference_batch_size: 64
+  estimated_training_memory_mb: 1580.8
+  base_memory_mb: 1359.7
+  per_sample_memory_mb: 3.455

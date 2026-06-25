@@ -31,3 +31,9 @@ hyperparameters:
         epochs: 100
     input_size_width: 640
     input_size_height: 640
+
+memory_footprint:
+  reference_batch_size: 8
+  estimated_training_memory_mb: 8192.9
+  base_memory_mb: 1664.9
+  per_sample_memory_mb: 816.0

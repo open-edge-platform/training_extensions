@@ -70,3 +70,9 @@ hyperparameters:
       random_horizontal_flip:
         enable: true
         probability: 0.5
+
+memory_footprint:
+  reference_batch_size: 8
+  estimated_training_memory_mb: 4608.9
+  base_memory_mb: 1335.3
+  per_sample_memory_mb: 409.2

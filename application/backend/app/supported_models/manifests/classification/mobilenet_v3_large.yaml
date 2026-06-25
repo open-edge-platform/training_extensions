@@ -22,3 +22,9 @@ hyperparameters:
       warmup:
         enable: true
         epochs: 10
+
+memory_footprint:
+  reference_batch_size: 64
+  estimated_training_memory_mb: 1127.1
+  base_memory_mb: 1106.4
+  per_sample_memory_mb: 0.323

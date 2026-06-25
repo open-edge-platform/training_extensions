@@ -370,4 +370,52 @@ describe('useTrainModel', () => {
             expect(capturedConfigBody).toEqual(getTrainingConfigurationUpdatePayload(changedConfiguration));
         });
     });
+
+    describe('insufficient memory', () => {
+        const insufficientMemoryDetail = {
+            code: 'insufficient_memory',
+            message: 'Not enough memory',
+            model_architecture_id: 'arch-1',
+            model_architecture_name: 'Heavy Model',
+            device: 'Intel GPU',
+            estimated_memory_mb: 16000,
+            available_memory_mb: 2048,
+            usable_memory_mb: 1740,
+            recommended_models: [{ id: 'arch-light', name: 'Light Model', estimated_memory_mb: 900 }],
+        };
+
+        it('invokes onInsufficientMemory with the structured detail on a 409 response', async () => {
+            server.use(
+                http.post('/api/jobs', () =>
+                    // @ts-expect-error: We only care about mocking the detail property.
+                    HttpResponse.json({ detail: insufficientMemoryDetail }, { status: 409 })
+                )
+            );
+
+            const onInsufficientMemory = vi.fn();
+            const onSuccess = vi.fn();
+            const { result } = renderHook(() => useTrainModel({ onInsufficientMemory }));
+
+            act(() => {
+                result.current.trainModel({ onSuccess });
+            });
+
+            await waitFor(() => expect(onInsufficientMemory).toHaveBeenCalledWith(insufficientMemoryDetail));
+            expect(onSuccess).not.toHaveBeenCalled();
+        });
+
+        it('does not invoke onInsufficientMemory for unrelated errors', async () => {
+            registerFailingTrainHandler();
+
+            const onInsufficientMemory = vi.fn();
+            const { result } = renderHook(() => useTrainModel({ onInsufficientMemory }));
+
+            act(() => {
+                result.current.trainModel({ onSuccess: vi.fn() });
+            });
+
+            await waitFor(() => expect(result.current.isPending).toBe(false));
+            expect(onInsufficientMemory).not.toHaveBeenCalled();
+        });
+    });
 });
