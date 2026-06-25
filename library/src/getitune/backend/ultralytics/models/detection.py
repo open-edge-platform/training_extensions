@@ -17,25 +17,46 @@ from .base import UltralyticsModel
 class UltralyticsDetectionModel(UltralyticsModel):
     """YOLO detection model.
 
-    Supported variants: ``yolo26n``, ``yolo26s``, ``yolo26m``.
+    Supported variants:
+
+    * YOLO26: ``yolo26n``, ``yolo26s``, ``yolo26m``, ``yolo26l``, ``yolo26x``
+    * YOLO11: ``yolo11n``, ``yolo11s``, ``yolo11m``, ``yolo11l``, ``yolo11x``
+    * YOLO12: ``yolo12n``, ``yolo12s``, ``yolo12m``, ``yolo12l``, ``yolo12x``
     """
 
     task: ClassVar[str] = "detect"
     trainer_cls: ClassVar[type] = DetectionTrainer
     validator_cls: ClassVar[type] = DetectionValidator
 
+    _BASE_URL: ClassVar[str] = "https://github.com/ultralytics/assets/releases/download/v8.4.0"
+
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "yolo26n": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt",
-        "yolo26s": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s.pt",
-        "yolo26m": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m.pt",
+        # YOLO26
+        "yolo26n": f"{_BASE_URL}/yolo26n.pt",
+        "yolo26s": f"{_BASE_URL}/yolo26s.pt",
+        "yolo26m": f"{_BASE_URL}/yolo26m.pt",
+        "yolo26l": f"{_BASE_URL}/yolo26l.pt",
+        "yolo26x": f"{_BASE_URL}/yolo26x.pt",
+        # YOLO11
+        "yolo11n": f"{_BASE_URL}/yolo11n.pt",
+        "yolo11s": f"{_BASE_URL}/yolo11s.pt",
+        "yolo11m": f"{_BASE_URL}/yolo11m.pt",
+        "yolo11l": f"{_BASE_URL}/yolo11l.pt",
+        "yolo11x": f"{_BASE_URL}/yolo11x.pt",
+        # YOLO12
+        "yolo12n": f"{_BASE_URL}/yolo12n.pt",
+        "yolo12s": f"{_BASE_URL}/yolo12s.pt",
+        "yolo12m": f"{_BASE_URL}/yolo12m.pt",
+        "yolo12l": f"{_BASE_URL}/yolo12l.pt",
+        "yolo12x": f"{_BASE_URL}/yolo12x.pt",
     }
 
     @property
     def _default_preprocessing_params(self) -> dict[str, DataInputParams]:
         """Per-variant preprocessing defaults.
 
-        All YOLO26 detection models use 640x640 input. The mean/std
-        here are identity since no additional normalization is needed after
+        All supported detection variants use 640x640 input. The mean/std
+        are identity since no additional normalization is needed after
         intensity scaling.
         """
         default = DataInputParams(
@@ -43,11 +64,7 @@ class UltralyticsDetectionModel(UltralyticsModel):
             mean=(0.0, 0.0, 0.0),
             std=(1.0, 1.0, 1.0),
         )
-        return {
-            "yolo26n": default,
-            "yolo26s": default,
-            "yolo26m": default,
-        }
+        return {variant: default for variant in self._pretrained_weights}
 
     metric_keys: ClassVar[dict[str, str]] = {
         "metrics/mAP50(B)": "val/map_50",

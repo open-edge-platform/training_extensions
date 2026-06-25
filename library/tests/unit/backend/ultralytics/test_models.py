@@ -12,6 +12,7 @@ import pytest
 
 from getitune.backend.lightning.models.base import DataInputParams
 from getitune.backend.ultralytics.models import UltralyticsDetectionModel
+from getitune.backend.ultralytics.models.instance_segmentation import UltralyticsInstSegModel
 from getitune.types.export import TaskLevelExportParameters
 from getitune.types.label import LabelInfo
 
@@ -158,3 +159,64 @@ class TestPretrainedWeights:
 
         mock_yolo.load.assert_not_called()
         assert yolo is mock_yolo
+
+    def test_detection_contains_yolo26_l_x(self) -> None:
+        weights = UltralyticsDetectionModel._pretrained_weights
+        assert "yolo26l" in weights
+        assert "yolo26x" in weights
+        assert "yolo26l.pt" in weights["yolo26l"]
+        assert "yolo26x.pt" in weights["yolo26x"]
+
+    @pytest.mark.parametrize("variant", ["yolo11n", "yolo11s", "yolo11m", "yolo11l", "yolo11x"])
+    def test_detection_contains_yolo11_variants(self, variant: str) -> None:
+        weights = UltralyticsDetectionModel._pretrained_weights
+        assert variant in weights
+        assert f"{variant}.pt" in weights[variant]
+
+    @pytest.mark.parametrize("variant", ["yolo12n", "yolo12s", "yolo12m", "yolo12l", "yolo12x"])
+    def test_detection_contains_yolo12_variants(self, variant: str) -> None:
+        weights = UltralyticsDetectionModel._pretrained_weights
+        assert variant in weights
+        assert f"{variant}.pt" in weights[variant]
+
+    def test_detection_all_weights_point_to_v8_4_0(self) -> None:
+        """All pretrained weight URLs must reference the v8.4.0 release."""
+        for name, url in UltralyticsDetectionModel._pretrained_weights.items():
+            assert "v8.4.0" in url, f"URL for {name!r} does not reference v8.4.0: {url}"
+
+    def test_inst_seg_contains_yolo26_l_x(self) -> None:
+        weights = UltralyticsInstSegModel._pretrained_weights
+        assert "yolo26l-seg" in weights
+        assert "yolo26x-seg" in weights
+        assert "yolo26l-seg.pt" in weights["yolo26l-seg"]
+        assert "yolo26x-seg.pt" in weights["yolo26x-seg"]
+
+    @pytest.mark.parametrize(
+        "variant",
+        ["yolo11n-seg", "yolo11s-seg", "yolo11m-seg", "yolo11l-seg", "yolo11x-seg"],
+    )
+    def test_inst_seg_contains_yolo11_variants(self, variant: str) -> None:
+        weights = UltralyticsInstSegModel._pretrained_weights
+        assert variant in weights
+        assert f"{variant}.pt" in weights[variant]
+
+    def test_inst_seg_all_weights_point_to_v8_4_0(self) -> None:
+        """All pretrained weight URLs must reference the v8.4.0 release."""
+        for name, url in UltralyticsInstSegModel._pretrained_weights.items():
+            assert "v8.4.0" in url, f"URL for {name!r} does not reference v8.4.0: {url}"
+
+    def test_detection_preprocessing_params_cover_all_variants(self) -> None:
+        """Every entry in _pretrained_weights must have a preprocessing default."""
+        model = UltralyticsDetectionModel(model_name="yolo26n.yaml", pretrained=False)
+        defaults = model._default_preprocessing_params
+        assert isinstance(defaults, dict)
+        for variant in UltralyticsDetectionModel._pretrained_weights:
+            assert variant in defaults, f"No preprocessing params for detection variant {variant!r}"
+
+    def test_inst_seg_preprocessing_params_cover_all_variants(self) -> None:
+        """Every entry in _pretrained_weights must have a preprocessing default."""
+        model = UltralyticsInstSegModel(model_name="yolo26n-seg.yaml", pretrained=False)
+        defaults = model._default_preprocessing_params
+        assert isinstance(defaults, dict)
+        for variant in UltralyticsInstSegModel._pretrained_weights:
+            assert variant in defaults, f"No preprocessing params for seg variant {variant!r}"
