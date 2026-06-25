@@ -10,7 +10,7 @@
 [Supported Tasks & Models](#supported-tasks--models) •
 [Installation](#installation) •
 [Quick Start](#quick-start) •
-[Docs](https://open-edge-platform.github.io/training_extensions/latest/index.html) •
+[Docs](https://open-edge-platform.github.io/geti/latest/index.html) •
 [License](#license)
 
 [![PyPI](https://img.shields.io/pypi/v/getitune)](https://pypi.org/project/getitune)
@@ -42,7 +42,7 @@ It supports diverse combinations of model architectures, learning methods, and t
 
 Each supported task ships with curated "recipes": YAML files that bundle the model, data pipeline, and training configuration into a single one-stop entry point. Recipes are validated on standard datasets so you get a strong baseline out of the box.
 
-### Key Features
+## Key Features
 
 - **Multi-task support**: classification, object detection, instance segmentation, semantic segmentation, and keypoint detection, see the [full model list below](#supported-tasks--models).
 - **Tiling** for large images across detection and segmentation tasks.
@@ -60,13 +60,13 @@ Each supported task ships with curated "recipes": YAML files that bundle the mod
 
 All recipes live under `src/getitune/recipe/<task>/`. Pass any of these YAMLs directly to the API as `model=...`. Recipes whose name ends in `_tile` enable the tiling pipeline for large images.
 
-| Task                                                      | Recipe directory                                                                                                                                                                                               | Example recipes                                                                                                                                            |
-| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Classification (multi-class / multi-label / hierarchical) | [multi_class_cls](src/getitune/recipe/classification/multi_class_cls/), [multi_label_cls](src/getitune/recipe/classification/multi_label_cls/), [h_label_cls](src/getitune/recipe/classification/h_label_cls/) | `dino_v2`, `vit_tiny`, `efficientnet_b0`, `efficientnet_b3`, `efficientnet_v2`, `mobilenet_v3_large`                                                       |
+| Task                                                      | Recipe directory                                                                                                                                                                                               | Example recipes                                                                                                                                                              |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Classification (multi-class / multi-label / hierarchical) | [multi_class_cls](src/getitune/recipe/classification/multi_class_cls/), [multi_label_cls](src/getitune/recipe/classification/multi_label_cls/), [h_label_cls](src/getitune/recipe/classification/h_label_cls/) | `dino_v2`, `vit_tiny`, `efficientnet_b0`, `efficientnet_b3`, `efficientnet_v2`, `mobilenet_v3_large`                                                                         |
 | Object detection                                          | [detection](src/getitune/recipe/detection/)                                                                                                                                                                    | `atss_mobilenetv2`, `ssd_mobilenetv2`, `yolox_{tiny,s,l,x}`, `rtdetr_50`, `dfine_x`, `deim_dfine_{l,m,x}`, `deimv2_{s,m,l}`, `rfdetr_{small,medium,large}`, `yolo26_{n,s,m}` |
-| Instance segmentation                                     | [instance_segmentation](src/getitune/recipe/instance_segmentation/)            | `maskrcnn_{r50,swint,efficientnetb2b}`, `rtmdet_inst_tiny`, `rfdetr_seg_{small,medium,large,xlarge}`, `yolo26_{n,s,m}_seg` |
-| Semantic segmentation                                     | [semantic_segmentation](src/getitune/recipe/semantic_segmentation/)                                                                                                                                            | `dino_v2`, `litehrnet_{s,18,x}`, `segnext_{t,s,b}` (with `_tile` variants)                                                                                 |
-| Keypoint detection                                        | [keypoint_detection](src/getitune/recipe/keypoint_detection/)                                                                                                                                                  | `rtmpose_tiny`                                                                                                                                             |
+| Instance segmentation                                     | [instance_segmentation](src/getitune/recipe/instance_segmentation/)                                                                                                                                            | `maskrcnn_{r50,swint,efficientnetb2b}`, `rtmdet_inst_tiny`, `rfdetr_seg_{small,medium,large,xlarge}`, `yolo26_{n,s,m}_seg`                                                   |
+| Semantic segmentation                                     | [semantic_segmentation](src/getitune/recipe/semantic_segmentation/)                                                                                                                                            | `dino_v2`, `litehrnet_{s,18,x}`, `segnext_{t,s,b}` (with `_tile` variants)                                                                                                   |
+| Keypoint detection                                        | [keypoint_detection](src/getitune/recipe/keypoint_detection/)                                                                                                                                                  | `rtmpose_tiny`                                                                                                                                                               |
 
 Each task directory also ships an `openvino_model.yaml` recipe for running and optimizing pre-exported OpenVINO IR models via `OVEngine`.
 
@@ -89,17 +89,17 @@ pip install "getitune"
 # For hardware-specific PyTorch wheels, see "Advanced Installation: Specify Hardware Backend" below.
 ```
 
-⚠️ **Note**: PyPi version doesn't support Ultralytics YOLO models. To use Ultralytics YOLO models, you must [install from source](#advanced-installation-install-from-source).
+⚠️ **Note**: PyPi version doesn't support Ultralytics YOLO models. To use Ultralytics YOLO models, you must [install from source](#advanced-install-from-source).
 
 <details>
 <summary><strong> Advanced Installation: Specify Hardware Backend</strong></summary>
 
 `getitune` ships three mutually exclusive extras that select the right PyTorch wheel for your hardware:
 
-| Extra    | PyTorch wheel                                                          | Use when                             | Setup Guide |
-| -------- | ---------------------------------------------------------------------- | ------------------------------------ | --- |
-| `[cpu]`  | `torch==2.10.0+cpu` (Linux/Windows) or default `torch==2.10.0` (macOS) | No GPU, or running on Apple silicon. | — |
-| `[xpu]`  | `torch==2.10.0+xpu` + `triton-xpu`                                     | Intel discrete or integrated GPUs.   | [Intel GPU drivers](https://github.com/intel/compute-runtime/releases) |
+| Extra    | PyTorch wheel                                                          | Use when                             | Setup Guide                                                                      |
+| -------- | ---------------------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------- |
+| `[cpu]`  | `torch==2.10.0+cpu` (Linux/Windows) or default `torch==2.10.0` (macOS) | No GPU, or running on Apple silicon. | —                                                                                |
+| `[xpu]`  | `torch==2.10.0+xpu` + `triton-xpu`                                     | Intel discrete or integrated GPUs.   | [Intel GPU drivers](https://github.com/intel/compute-runtime/releases)           |
 | `[cuda]` | `torch==2.10.0+cu128`                                                  | NVIDIA GPUs with CUDA 12.8 drivers.  | [NVIDIA CUDA Toolkit](https://developer.nvidia.com/cuda-12-8-0-download-archive) |
 
 ```bash
@@ -113,14 +113,14 @@ uv pip install "getitune[cuda]" --extra-index-url https://download.pytorch.org/w
 uv pip install "getitune[cpu]"
 ```
 
-> **macOS note**: PyTorch's `+cpu` wheel is only published for Linux and Windows. The `[cpu]` extra resolves this automatically and installs the default `torch==2.10.0` wheel on macOS.
-
+> **macOS**: PyTorch's `+cpu` wheel is only published for Linux and Windows. The `[cpu]` extra resolves this automatically and installs the default `torch==2.10.0` wheel on macOS.
 > **Ultralytics YOLO models**: The PyPI version doesn't include Ultralytics YOLO support.
-> To use YOLO26 models, you must [install from source](#advanced-installation-install-from-source).
+> To use YOLO26 models, you must [install from source](#advanced-install-from-source).
+
 </details>
 
 <details>
-<summary><strong> Advanced Installation: Install from Source with Ultralytics YOLO Support</strong></summary>
+<summary><a id="advanced-install-from-source"></a><strong> Advanced Installation: Install from Source with Ultralytics YOLO Support</strong></summary>
 
 ```bash
 git clone https://github.com/open-edge-platform/geti.git
@@ -184,6 +184,7 @@ efficient_models = list_models(pattern="*efficient*")
 Then pass any model name to `create_engine(model="...", data="...")`.
 
 > **Note on Model Resolution:**
+>
 > - If you pass a **recipe YAML path** (with `.yaml` or `.yml` suffix) that doesn't exist on disk, a `FileNotFoundError` is raised.
 > - If you pass a **model name** that matches recipes under multiple tasks, a `ValueError` is raised listing the matches. Pass `task=` to disambiguate.
 > - Use `list_models(task="...", return_recipes=True)` to get full recipe paths instead of just model names.
@@ -469,6 +470,7 @@ data: src/getitune/recipe/_base_/data/classification.yaml
 overrides:
   max_epochs: 100
 ```
+
 </details>
 
 <details>
