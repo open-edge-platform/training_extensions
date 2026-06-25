@@ -365,7 +365,7 @@ class TestModelServiceIntegration:
         with patch("app.services.model_service.shutil.rmtree") as mock_rmtree:
             fxt_model_service.delete_model(project_id=fxt_project_id, model_id=fxt_model_id)
 
-            mock_rmtree.assert_called_once_with(model_rev_path, ignore_errors=True)
+            mock_rmtree.assert_called_once_with(model_rev_path)
         assert db_session.get(ModelRevisionDB, str(fxt_model_id)) is None
 
     def test_delete_model_only_files(
@@ -385,7 +385,7 @@ class TestModelServiceIntegration:
         with patch("app.services.model_service.shutil.rmtree") as mock_rmtree:
             fxt_model_service.delete_model_files(project_id=fxt_project_id, model_id=fxt_model_id)
 
-            mock_rmtree.assert_called_once_with(model_rev_path, ignore_errors=True)
+            mock_rmtree.assert_called_once_with(model_rev_path)
         model_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
         assert model_db is not None
         assert model_db.files_deleted is True
@@ -419,6 +419,31 @@ class TestModelServiceIntegration:
         model_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
         assert model_db is not None
         assert model_db.files_deleted is False
+
+    def test_delete_model_with_files_no_permission(
+        self,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+        db_session: Session,
+    ):
+        """Test that delete_model throws ResourceInUseError when Windows file locks are encountered."""
+        model_rev_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_rev_path.mkdir(parents=True, exist_ok=True)
+        (model_rev_path / "config.yaml").touch()
+
+        err = OSError("Permission denied")
+        err.winerror = 32
+
+        with (
+            patch("app.services.model_service.shutil.rmtree", side_effect=err),
+            pytest.raises(ResourceInUseError),
+        ):
+            fxt_model_service.delete_model(project_id=fxt_project_id, model_id=fxt_model_id)
+
+        assert db_session.get(ModelRevisionDB, str(fxt_model_id)) is not None
+        assert model_rev_path.exists()
 
     def test_delete_model_triggers_dataset_revision_files_deletion(
         self,
