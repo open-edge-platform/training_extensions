@@ -196,6 +196,7 @@ export default [
             ],
 
             '@typescript-eslint/ban-ts-comment': 'warn',
+            '@typescript-eslint/no-non-null-assertion': 'error',
             'no-console': ['error', { allow: ['warn', 'error', 'time', 'timeEnd', 'info'] }],
             'object-shorthand': ['error', 'always'],
         },
@@ -205,7 +206,6 @@ export default [
 
         rules: {
             'max-len': 'off',
-            '@typescript-eslint/no-non-null-assertion': 'error',
         },
     },
 ];
