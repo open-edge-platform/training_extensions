@@ -114,6 +114,10 @@ svg {
 /* Increase the modal’s opaque background when a modal is opened inside another modal. */
 [data-testid='underlay'] {
     z-index: 2 !important;
+    /* Darken and blur the backdrop so the dialog stands out more. */
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
 }
 
 [class*='spectrum-Radio-input'] {

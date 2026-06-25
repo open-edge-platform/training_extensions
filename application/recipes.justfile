@@ -52,7 +52,7 @@ import-project archive force_flag="":
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Importing demo project from: $(basename "{{ archive }}")..."
-    cmd="uv run app/cli.py import-project --input {{ archive }}"
+    cmd="uv run app/cli.py import-project --input {{ archive }} --skip-if-exists"
     if [ -n "{{ force_flag }}" ]; then
         cmd="$cmd --force-import"
         echo "  (using --force-import flag to bypass schema version checks)"

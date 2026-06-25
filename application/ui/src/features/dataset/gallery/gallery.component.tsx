@@ -84,7 +84,7 @@ const GalleryList = ({
                                 item={item}
                                 alt={item.name}
                                 url={mediaUrl}
-                                onDoubleClick={() => onSelectedMediaItemChange(item)}
+                                onClick={() => onSelectedMediaItemChange(item)}
                             />
                         )}
                         topLeftElement={() => (
@@ -158,7 +158,7 @@ export const Gallery = ({
             <DatasetDropZone onFilesDropped={uploadFiles}>
                 {content}
 
-                <DialogContainer type={'fullscreenTakeover'} onDismiss={() => onSelectedMediaItemChange(null)}>
+                <DialogContainer type={'modal'} onDismiss={() => onSelectedMediaItemChange(null)}>
                     {selectedMediaItem !== null && (
                         <MediaPreview
                             mediaItem={selectedMediaItem}

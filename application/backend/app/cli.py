@@ -109,13 +109,25 @@ def export_project(project_id: str, output: str) -> None:
     is_flag=True,
     help="Bypass database schema version check and attempt import anyway (use at your own risk)",
 )
-def import_project(input_archive: str, force_import: bool) -> None:
+@click.option(
+    "--skip-if-exists",
+    is_flag=True,
+    help="Skip the import (exit 0) if the project already exists instead of failing",
+)
+def import_project(input_archive: str, force_import: bool, skip_if_exists: bool) -> None:
     """Import project data from a zip archive into the SQLite database."""
+    from app.db.import_export.common import ProjectAlreadyExistsError
     from app.db.import_export.import_project import import_project as do_import
 
     try:
         do_import(input_archive=input_archive, allow_mismatching_db_schema=force_import)
         click.echo("✓ Project imported successfully!")
+    except ProjectAlreadyExistsError as e:
+        if skip_if_exists:
+            click.echo(f"↷ Skipping import, project already exists: {e}")
+            return
+        click.echo(f"✗ Import failed: {e}")
+        sys.exit(1)
     except Exception as e:
         click.echo(f"✗ Import failed: {e}")
         sys.exit(1)
@@ -179,10 +191,18 @@ def setup_demo_sources(video_paths: tuple[str, ...]) -> None:
         click.echo(f"Creating {len(sources_to_create)} source record(s) in database...")
         try:
             with get_db_session() as db:
-                db.add_all(sources_to_create)
-                db.flush()
-                db.commit()
-            click.echo(f"✓ Created {len(sources_to_create)} demo source(s) successfully!")
+                existing_names = {name for (name,) in db.query(SourceDB.name).all()}
+                new_sources = [source for source in sources_to_create if source.name not in existing_names]
+                skipped = len(sources_to_create) - len(new_sources)
+                if skipped:
+                    click.echo(f"↷ Skipping {skipped} source(s) that already exist")
+                if new_sources:
+                    db.add_all(new_sources)
+                    db.flush()
+                    db.commit()
+                    click.echo(f"✓ Created {len(new_sources)} demo source(s) successfully!")
+                else:
+                    click.echo("✓ All demo sources already exist, nothing to create.")
         except Exception as e:
             click.echo(f"✗ Failed to create sources: {e}")
             sys.exit(1)
@@ -209,6 +229,10 @@ def setup_demo_sinks() -> None:
     click.echo(f"Creating default folder sink: {sink.name}")
     try:
         with get_db_session() as db:
+            exists = db.query(SinkDB.id).filter(SinkDB.name == sink.name).first() is not None
+            if exists:
+                click.echo(f"↷ Skipping sink, already exists: {sink.name}")
+                return
             db.add(sink)
             db.flush()
             db.commit()

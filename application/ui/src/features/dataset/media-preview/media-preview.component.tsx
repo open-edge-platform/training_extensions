@@ -1,9 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { Content, Dialog, Grid, View } from '@geti/ui';
+import { ActionButton, Content, Dialog, Flex, Grid, View } from '@geti/ui';
+import { Close, Expand, FitScreen } from '@geti/ui/icons';
 import { useDatasetMediaWithReviewStatus } from 'hooks/use-dataset-media-with-review-status.hook';
 
 import type { DatasetSubset, Media } from '../../../constants/shared-types';
@@ -23,6 +24,27 @@ import { SIDEBAR_WIDTH } from './constants';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { useAnnotatorMediaTransition } from './use-annotator-media-transition.hook';
 import { getInitialAnnotations, useAnnotatorMode } from './utils';
+
+// On small screens (tablets / small laptops) the annotator always opens fullscreen without window controls.
+const TABLET_MEDIA_QUERY = '(max-width: 1024px)';
+
+const useMatchMedia = (query: string): boolean => {
+    const [matches, setMatches] = useState(() =>
+        typeof window !== 'undefined' ? window.matchMedia(query).matches : false
+    );
+
+    useEffect(() => {
+        const mediaQueryList = window.matchMedia(query);
+        const handleChange = (event: MediaQueryListEvent) => setMatches(event.matches);
+
+        setMatches(mediaQueryList.matches);
+        mediaQueryList.addEventListener('change', handleChange);
+
+        return () => mediaQueryList.removeEventListener('change', handleChange);
+    }, [query]);
+
+    return matches;
+};
 
 type MediaPreviewProps = {
     mediaItem: Media;
@@ -156,14 +178,39 @@ const MediaPreviewContent = ({
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
     const { items, isFetchingNextPage, fetchNextPage, isMediaItemReviewedById } = useDatasetMediaWithReviewStatus();
 
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const isTablet = useMatchMedia(TABLET_MEDIA_QUERY);
+    const isFullScreenSized = isTablet || isFullscreen;
+
     return (
         <Dialog
             UNSAFE_style={{
                 backgroundColor: 'var(--spectrum-global-color-gray-50)',
                 '--spectrum-dialog-padding-x': 'var(--spectrum-global-dimension-size-250)',
                 '--spectrum-dialog-padding-y': 'var(--spectrum-global-dimension-size-250)',
+                '--spectrum-dialog-max-width': 'none',
+                position: 'relative',
+                width: isFullScreenSized ? '100vw' : '90vw',
+                height: isFullScreenSized ? '100vh' : '90vh',
+                maxWidth: isFullScreenSized ? '100vw' : '90vw',
+                maxHeight: isFullScreenSized ? '100vh' : '90vh',
+                borderRadius: isFullScreenSized ? 0 : undefined,
             }}
         >
+            {!isTablet && (
+                <Flex position='absolute' top='size-150' right='size-150' gap='size-100' UNSAFE_style={{ zIndex: 10 }}>
+                    <ActionButton
+                        isQuiet
+                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                        onPress={() => setIsFullscreen((prev) => !prev)}
+                    >
+                        {isFullscreen ? <FitScreen /> : <Expand />}
+                    </ActionButton>
+                    <ActionButton isQuiet aria-label='Close annotator' onPress={close}>
+                        <Close />
+                    </ActionButton>
+                </Flex>
+            )}
             <Content>
                 <Grid
                     gap='size-125'
