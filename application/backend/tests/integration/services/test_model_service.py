@@ -434,7 +434,7 @@ class TestModelServiceIntegration:
         (model_rev_path / "config.yaml").touch()
 
         err = PermissionError("Permission denied")
-        err.winerror = 32
+        setattr(err, "winerror", 32)
 
         with (
             patch("app.services.model_service.shutil.rmtree", side_effect=err),
