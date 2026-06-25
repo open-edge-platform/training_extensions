@@ -24,3 +24,9 @@ export const downloadFile = (url: string, name?: string, startedMessage?: string
 export const formatBytes = (bytes: number): string => prettyBytes(bytes);
 
 export const pluralizeItems = (count: number) => (pluralRules.select(count) === 'one' ? 'item' : 'items');
+
+export function assertIsNotNullable<T>(value: T | null | undefined): asserts value is T {
+    if (value === null || value === undefined) {
+        throw new Error(`${value} must not be null or undefined`);
+    }
+}

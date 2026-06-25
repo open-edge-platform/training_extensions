@@ -6,7 +6,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { API_BASE_URL, fetchClient } from '../../../../api/client';
 import { getQueryKey } from '../../../../query-client/query-client';
-import { downloadFile } from '../../../../shared/util';
+import { assertIsNotNullable, downloadFile } from '../../../../shared/util';
 import { type LogEntry } from '../log-types';
 import { parseLogLine } from '../log-utils';
 
@@ -36,9 +36,13 @@ export const useModelLogs = (modelId: string | undefined) => {
         queryKey: getQueryKey([
             'get',
             '/api/projects/{project_id}/models/{model_id}/logs',
-            { params: { path: { project_id: projectId, model_id: modelId! } } },
+            { params: { path: { project_id: projectId, model_id: modelId } } },
         ]),
-        queryFn: () => fetchModelLogs(projectId, modelId!),
+        queryFn: () => {
+            assertIsNotNullable(modelId);
+
+            return fetchModelLogs(projectId, modelId);
+        },
         enabled: !!modelId,
         staleTime: Infinity, // Completed/failed model logs don't change
     });
@@ -54,9 +58,7 @@ export const useDownloadModelLogs = (modelId: string) => {
 
     const mutation = useMutation({
         mutationFn: async () => {
-            if (!modelId) {
-                throw new Error('Model id is required to download logs');
-            }
+            assertIsNotNullable(modelId);
 
             await downloadModelLogsFile(projectId, modelId);
         },
