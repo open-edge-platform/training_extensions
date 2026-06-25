@@ -57,7 +57,7 @@ export const TogglePipelineButton = () => {
     return (
         <>
             <Switch isEmphasized isSelected={isPipelineEnabled} isDisabled={isPending} onChange={handleToggle}>
-                Pipeline {isPipelineEnabled ? 'Enabled' : 'Disabled'}
+                Pipeline {isPipelineEnabled ? 'enabled' : 'disabled'}
             </Switch>
 
             <EnablePipelineBlockedDialog
