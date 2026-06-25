@@ -2,11 +2,25 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, screen } from '@testing-library/react';
-import { getMockedLabel } from 'mocks/mock-labels';
+import { getMockedAnnotationLabel, getMockedAnnotationLabelRef } from 'mocks/mock-labels';
 import { render } from 'test-utils/render';
 
-import type { Label } from '../../../../constants/shared-types';
+import type { AnnotationLabel, AnnotationLabelRef } from '../../../../shared/types';
 import { AnnotationLabels } from './annotation-labels.component';
+
+// Resolve refs by returning a mock AnnotationLabel matching the ref id
+vi.mock('../../../../shared/annotator/labels', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('../../../../shared/annotator/labels')>();
+    return {
+        ...actual,
+        useLabelResolver: () => ({
+            getLabel: () => undefined,
+            resolveAnnotationLabel: (ref: AnnotationLabelRef): AnnotationLabel | undefined => {
+                return getMockedAnnotationLabel({ id: ref.id, name: ref.id, color: '#FF0000' });
+            },
+        }),
+    };
+});
 
 describe('AnnotationLabels', () => {
     const mockOnRemove = vi.fn();
@@ -25,47 +39,47 @@ describe('AnnotationLabels', () => {
         expect(screen.getByText('No label')).toBeInTheDocument();
     });
 
-    it('renders single label with name and color', () => {
-        const label = getMockedLabel({ name: 'Person', color: '#FF0000' });
+    it('renders single label with name and color resolved from catalog', () => {
+        const labelRef = getMockedAnnotationLabelRef({ id: 'label-1' });
 
         render(
             <svg>
-                <AnnotationLabels labels={[label]} onRemove={mockOnRemove} />
+                <AnnotationLabels labels={[labelRef]} onRemove={mockOnRemove} />
             </svg>
         );
 
-        expect(screen.getByText('Person')).toBeInTheDocument();
+        expect(screen.getByText('label-1')).toBeInTheDocument();
 
-        const labelElement = screen.getByLabelText('label Person background');
+        const labelElement = screen.getByLabelText('label label-1 background');
         expect(labelElement).toHaveStyle({ '--label-color': '#FF0000' });
     });
 
     it('renders multiple labels horizontally', () => {
-        const labels: Label[] = [
-            getMockedLabel({ id: '1', name: 'Person', color: '#FF0000' }),
-            getMockedLabel({ id: '2', name: 'Car', color: '#00FF00' }),
+        const refs: AnnotationLabelRef[] = [
+            getMockedAnnotationLabelRef({ id: 'label-1' }),
+            getMockedAnnotationLabelRef({ id: 'label-2' }),
         ];
 
         render(
             <svg>
-                <AnnotationLabels labels={labels} onRemove={mockOnRemove} />
+                <AnnotationLabels labels={refs} onRemove={mockOnRemove} />
             </svg>
         );
 
-        expect(screen.getByText('Person')).toBeInTheDocument();
-        expect(screen.getByText('Car')).toBeInTheDocument();
+        expect(screen.getAllByText('label-1').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('label-2').length).toBeGreaterThan(0);
     });
 
     it('calls onRemove when close button clicked', () => {
-        const label = getMockedLabel({ id: 'label-1', name: 'Person' });
+        const labelRef = getMockedAnnotationLabelRef({ id: 'label-1' });
 
         render(
             <svg>
-                <AnnotationLabels labels={[label]} onRemove={mockOnRemove} />
+                <AnnotationLabels labels={[labelRef]} onRemove={mockOnRemove} />
             </svg>
         );
 
-        const closeButton = screen.getByLabelText('Remove Person');
+        const closeButton = screen.getByLabelText('Remove label-1');
         fireEvent.pointerDown(closeButton);
 
         expect(mockOnRemove).toHaveBeenCalledTimes(1);
@@ -73,23 +87,23 @@ describe('AnnotationLabels', () => {
     });
 
     it('does not render remove button when labels are non-removable', () => {
-        const label = getMockedLabel({ id: 'label-1', name: 'Person' });
+        const labelRef = getMockedAnnotationLabelRef({ id: 'label-1' });
 
         render(
             <svg>
-                <AnnotationLabels labels={[label]} onRemove={mockOnRemove} isRemovable={false} />
+                <AnnotationLabels labels={[labelRef]} onRemove={mockOnRemove} isRemovable={false} />
             </svg>
         );
 
-        expect(screen.queryByLabelText('Remove Person')).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Remove label-1')).not.toBeInTheDocument();
     });
 
     it('positions foreignObject just above annotation anchor for CSS scaling', () => {
-        const label = getMockedLabel({ name: 'Person' });
+        const labelRef = getMockedAnnotationLabelRef({ id: 'label-1' });
 
         render(
             <svg>
-                <AnnotationLabels labels={[label]} onRemove={mockOnRemove} />
+                <AnnotationLabels labels={[labelRef]} onRemove={mockOnRemove} />
             </svg>
         );
 
@@ -98,16 +112,16 @@ describe('AnnotationLabels', () => {
     });
 
     it('prevents event propagation on close button click', () => {
-        const label = getMockedLabel({ id: 'label-1', name: 'Person' });
+        const labelRef = getMockedAnnotationLabelRef({ id: 'label-1' });
         const mockParentHandler = vi.fn();
 
         render(
             <svg onPointerDown={mockParentHandler}>
-                <AnnotationLabels labels={[label]} onRemove={mockOnRemove} />
+                <AnnotationLabels labels={[labelRef]} onRemove={mockOnRemove} />
             </svg>
         );
 
-        const closeButton = screen.getByLabelText('Remove Person');
+        const closeButton = screen.getByLabelText('Remove label-1');
         fireEvent.pointerDown(closeButton);
 
         expect(mockOnRemove).toHaveBeenCalled();
@@ -116,19 +130,19 @@ describe('AnnotationLabels', () => {
     });
 
     it('renders labels in correct order', () => {
-        const labels: Label[] = [
-            getMockedLabel({ id: '1', name: 'First', color: '#FF0000' }),
-            getMockedLabel({ id: '2', name: 'Second', color: '#00FF00' }),
+        const labelRefs: AnnotationLabelRef[] = [
+            getMockedAnnotationLabelRef({ id: 'label-1' }),
+            getMockedAnnotationLabelRef({ id: 'label-2' }),
         ];
 
         render(
             <svg>
-                <AnnotationLabels labels={labels} onRemove={mockOnRemove} />
+                <AnnotationLabels labels={labelRefs} onRemove={mockOnRemove} />
             </svg>
         );
 
-        const firstLabel = screen.getByLabelText('label First background');
-        const secondLabel = screen.getByLabelText('label Second background');
+        const firstLabel = screen.getByLabelText('label label-1 background');
+        const secondLabel = screen.getByLabelText('label label-2 background');
 
         expect(firstLabel).toBeInTheDocument();
         expect(secondLabel).toBeInTheDocument();
@@ -137,21 +151,21 @@ describe('AnnotationLabels', () => {
     });
 
     it('applies correct border radius for first and last labels', () => {
-        const labels: Label[] = [
-            getMockedLabel({ id: '1', name: 'First', color: '#FF0000' }),
-            getMockedLabel({ id: '2', name: 'Middle', color: '#00FF00' }),
-            getMockedLabel({ id: '3', name: 'Last', color: '#0000FF' }),
+        const refs: AnnotationLabelRef[] = [
+            getMockedAnnotationLabelRef({ id: 'label-1' }),
+            getMockedAnnotationLabelRef({ id: 'label-2' }),
+            getMockedAnnotationLabelRef({ id: 'label-3' }),
         ];
 
         render(
             <svg>
-                <AnnotationLabels labels={labels} onRemove={mockOnRemove} />
+                <AnnotationLabels labels={refs} onRemove={mockOnRemove} />
             </svg>
         );
 
-        const firstLabel = screen.getByLabelText('label First background');
-        const middleLabel = screen.getByLabelText('label Middle background');
-        const lastLabel = screen.getByLabelText('label Last background');
+        const firstLabel = screen.getByLabelText('label label-1 background');
+        const middleLabel = screen.getByLabelText('label label-2 background');
+        const lastLabel = screen.getByLabelText('label label-3 background');
 
         // First label should have top-left rounded
         expect(firstLabel).toHaveStyle({
@@ -168,19 +182,19 @@ describe('AnnotationLabels', () => {
     });
 
     it('applies bottom corners when useBottomCorners is true', () => {
-        const labels: Label[] = [
-            getMockedLabel({ id: '1', name: 'First', color: '#FF0000' }),
-            getMockedLabel({ id: '2', name: 'Last', color: '#00FF00' }),
+        const labelRefs: AnnotationLabelRef[] = [
+            getMockedAnnotationLabelRef({ id: 'label-1' }),
+            getMockedAnnotationLabelRef({ id: 'label-2' }),
         ];
 
         render(
             <svg>
-                <AnnotationLabels labels={labels} onRemove={mockOnRemove} useBottomCorners />
+                <AnnotationLabels labels={labelRefs} onRemove={mockOnRemove} useBottomCorners />
             </svg>
         );
 
-        const firstLabel = screen.getByLabelText('label First background');
-        const lastLabel = screen.getByLabelText('label Last background');
+        const firstLabel = screen.getByLabelText('label label-1 background');
+        const lastLabel = screen.getByLabelText('label label-2 background');
 
         // First label should have bottom-left rounded
         expect(firstLabel).toHaveStyle({

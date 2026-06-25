@@ -38,7 +38,7 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
 
     const toggleClassificationLabel = (label: Label) => {
         if (isEmpty(annotations)) {
-            addAnnotations([{ type: 'full_image' }], [label]);
+            addAnnotations([{ type: 'full_image' }], [{ id: label.id }]);
             return;
         }
 
@@ -77,7 +77,7 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
             if (isAlreadySelected) {
                 updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels: [] })));
             } else {
-                updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels: [label] })));
+                updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels: [{ id: label.id }] })));
             }
         }
     };
@@ -105,7 +105,7 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
                 setSelectedLabelId(null);
             } else {
                 // Add label
-                updateAnnotations(selectedAnnotationsList, [label]);
+                updateAnnotations(selectedAnnotationsList, [{ id: label.id }]);
                 setSelectedLabelId(label.id);
             }
         } else {

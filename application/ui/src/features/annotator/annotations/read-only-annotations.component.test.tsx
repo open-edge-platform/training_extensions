@@ -3,11 +3,12 @@
 
 import { screen } from '@testing-library/react';
 import { getMockedAnnotation } from 'mocks/mock-annotation';
+import { getMockedAnnotationLabel } from 'mocks/mock-labels';
 import { render } from 'test-utils/render';
 
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
-import type { Annotation } from '../../../shared/types';
+import type { Annotation, AnnotationLabel, AnnotationLabelRef } from '../../../shared/types';
 import { useCanvasSettings } from '../../dataset/media-preview/primary-toolbar/settings/canvas-settings-provider.component';
 import { ReadOnlyAnnotations } from './read-only-annotations.component';
 
@@ -22,6 +23,19 @@ vi.mock('../../../shared/annotator/annotation-visibility-provider.component', ()
 vi.mock('../../dataset/media-preview/primary-toolbar/settings/canvas-settings-provider.component', () => ({
     useCanvasSettings: vi.fn(),
 }));
+
+vi.mock('../../../shared/annotator/labels', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('../../../shared/annotator/labels')>();
+    return {
+        ...actual,
+        useLabelResolver: () => ({
+            getLabel: () => undefined,
+            resolveAnnotationLabel: (ref: AnnotationLabelRef): AnnotationLabel | undefined => {
+                return getMockedAnnotationLabel({ id: ref.id, name: ref.id });
+            },
+        }),
+    };
+});
 
 vi.mock('../annotator-labels-provider.component', () => ({
     useAnnotatorLabels: () => ({

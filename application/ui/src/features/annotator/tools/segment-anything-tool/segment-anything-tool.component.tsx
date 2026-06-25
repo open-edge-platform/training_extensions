@@ -135,7 +135,7 @@ export const SegmentAnythingTool = () => {
     const previewAnnotations = previewShapes.map((shape, idx): Annotation => {
         return {
             shape,
-            labels: selectedLabel ? [selectedLabel] : [],
+            labels: selectedLabel ? [{ id: selectedLabel.id }] : [],
             id: `${idx}`,
         };
     });
