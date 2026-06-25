@@ -17,7 +17,7 @@ export const ConnectionStatusBadge = ({ isInUse, isUnreachable, isPending }: Con
         return (
             <Flex gap={'size-75'} alignItems={'center'} UNSAFE_className={classes.container}>
                 <Loading mode='inline' size='S' />
-                <Text>Checking</Text>
+                <Text>Testing connection...</Text>
             </Flex>
         );
     }
