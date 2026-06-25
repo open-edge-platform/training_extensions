@@ -19,7 +19,7 @@ export type Shape = Rect | Polygon | FullImage;
 
 export type AnnotationLabel = components['schemas']['LabelView'] & { probability?: number };
 
-export type Annotation = Omit<components['schemas']['DatasetItemAnnotation-Input'], 'labels'> & {
+export type Annotation = Omit<components['schemas']['DatasetItemAnnotation'], 'labels'> & {
     id: string;
     labels: AnnotationLabel[];
 };
