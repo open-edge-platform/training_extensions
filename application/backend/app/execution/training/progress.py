@@ -2,14 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from lightning import Callback, LightningModule
-from lightning import Trainer as LightningTrainer
-from lightning.pytorch.utilities.types import STEP_OUTPUT
+if TYPE_CHECKING:
+    from lightning import LightningModule
+    from lightning import Trainer as LightningTrainer
+    from lightning.pytorch.utilities.types import STEP_OUTPUT
 
 
-class TrainingProgressCallback(Callback):
+class TrainingProgressCallback:
     def __init__(self, on_progress_update: Callable[[float], None], min_p: float = 0, max_p: float = 100.0):
         self._on_progress_update = on_progress_update
         self._min_p = min_p
@@ -17,7 +18,7 @@ class TrainingProgressCallback(Callback):
         self._total_steps: int | None = None
         self._current_step: int = 0
 
-    def _update_total_steps(self, trainer: LightningTrainer) -> None:
+    def _update_total_steps(self, trainer: "LightningTrainer") -> None:
         if self._total_steps is not None:
             return
         max_epochs = trainer.max_epochs or 1
@@ -33,9 +34,9 @@ class TrainingProgressCallback(Callback):
 
     def on_train_batch_end(
         self,
-        trainer: LightningTrainer,
-        pl_module: LightningModule,
-        outputs: STEP_OUTPUT,
+        trainer: "LightningTrainer",
+        pl_module: "LightningModule",
+        outputs: "STEP_OUTPUT",
         batch: Any,
         batch_idx: int,
     ) -> None:

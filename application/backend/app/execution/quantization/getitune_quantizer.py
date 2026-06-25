@@ -5,15 +5,16 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 from uuid import UUID
+
+if TYPE_CHECKING:
+    from getitune.backend.openvino.engine import OVEngine
+    from getitune.config.data import SubsetConfig
+    from getitune.data.module import DataModule
 
 import yaml
 from datumaro.experimental.fields import Subset
-from getitune.backend.openvino.engine import OVEngine
-from getitune.config.data import SamplerConfig, SubsetConfig
-from getitune.data.entity.utils import detect_storage_dtype
-from getitune.data.factory import TransformLibFactory
-from getitune.data.module import DataModule
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -105,7 +106,11 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         self,
         params: QuantizationJobParams,
         model: ModelRevision,
-    ) -> DataModule:
+    ) -> "DataModule":
+        from getitune.config.data import SamplerConfig, SubsetConfig
+        from getitune.data.entity.utils import detect_storage_dtype
+        from getitune.data.factory import TransformLibFactory
+
         """Load and prepare the calibration dataset from the training dataset revision."""
         # Get the dataset revision used for training
         dataset_revision_id = model.training_info.dataset_revision_id if model.training_info else None
@@ -134,7 +139,7 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         converter = GetiConfigConverter()
         getitune_training_config = converter.convert(geti_training_config)
 
-        def build_subset_config(subset_name: str) -> SubsetConfig:
+        def build_subset_config(subset_name: str) -> "SubsetConfig":
             subset_cfg_data = getitune_training_config["data"][f"{subset_name}_subset"]
             subset_cfg_data["input_size"] = getitune_training_config["data"]["input_size"]
             sampler_cfg_data = subset_cfg_data.pop("sampler", {})
@@ -208,8 +213,10 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         self,
         params: QuantizationJobParams,
         model: ModelRevision,
-        datamodule: DataModule,
-    ) -> OVEngine:
+        datamodule: "DataModule",
+    ) -> "OVEngine":
+        from getitune.backend.openvino.engine import OVEngine
+
         """Create the OVEngine for quantization."""
         openvino_variant = self._get_openvino_fp16_variant(model)
         if openvino_variant is None:
@@ -226,7 +233,7 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
     @step("Run Quantization", 80)
     def run_quantization(
         self,
-        ov_engine: OVEngine,
+        ov_engine: "OVEngine",
         subset_size: int,
         max_drop: float | None = None,
     ) -> Path:
@@ -248,7 +255,7 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
     @step("Evaluate Quantized Model", 95)
     def evaluate_quantized_model(
         self,
-        ov_engine: OVEngine,
+        ov_engine: "OVEngine",
         quantized_model_path: Path,
         task: Task,
         model_revision_id: UUID,

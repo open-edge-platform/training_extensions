@@ -7,31 +7,22 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 import polars as pl
 import yaml
 from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
-from getitune import TaskType
-from getitune.backend.lightning.models.base import DataInputParams, LightningModel
-from getitune.backend.openvino.engine import OVEngine
-from getitune.backend.ultralytics.models.base import UltralyticsModel
-from getitune.config.data import SamplerConfig, SubsetConfig
-from getitune.data.dataset.base import VisionDataset
-from getitune.data.entity.utils import detect_storage_dtype
-from getitune.data.factory import TransformLibFactory
-from getitune.data.module import DataModule
-from getitune.engine import create_engine
-from getitune.engine.engine import Engine
-from getitune.types.device import DeviceType as GetiTuneDeviceType
-from getitune.types.export import ExportFormat
-from getitune.types.precision import Precision
 from jsonargparse import ArgumentParser, Namespace
-from lightning import Callback
 from loguru import logger
 from sqlalchemy.orm import Session
+
+if TYPE_CHECKING:
+    from getitune import TaskType
+    from getitune.config.data import SubsetConfig
+    from getitune.data.dataset.base import VisionDataset
+    from getitune.engine.engine import Engine
 
 from app.core.jobs.exec.exceptions import CancelledExc
 from app.datumaro_converter import SampleMode
@@ -92,12 +83,12 @@ class TrainingDependencies:
 
 @dataclass(frozen=True)
 class DatasetInfo:
-    getitune_training_dataset: VisionDataset
-    getitune_validation_dataset: VisionDataset
-    getitune_testing_dataset: VisionDataset
-    getitune_training_subset_config: SubsetConfig
-    getitune_validation_subset_config: SubsetConfig
-    getitune_testing_subset_config: SubsetConfig
+    getitune_training_dataset: "VisionDataset"
+    getitune_validation_dataset: "VisionDataset"
+    getitune_testing_dataset: "VisionDataset"
+    getitune_training_subset_config: "SubsetConfig"
+    getitune_validation_subset_config: "SubsetConfig"
+    getitune_testing_subset_config: "SubsetConfig"
     revision_id: UUID
 
 
@@ -267,6 +258,10 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         Otherwise, it creates a new dataset from the current items in the database with user-verified annotations.
         """
 
+        from getitune.config.data import SamplerConfig
+        from getitune.data.entity.utils import detect_storage_dtype
+        from getitune.data.factory import TransformLibFactory
+
         def build_subset_config(subset_name: str) -> SubsetConfig:
             subset_cfg_data = getitune_training_config["data"][f"{subset_name}_subset"]
             subset_cfg_data["input_size"] = getitune_training_config["data"]["input_size"]
@@ -393,7 +388,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         weights_path: Path,
         model_id: UUID,
         device: DeviceInfo,
-    ) -> tuple[Path, Engine]:
+    ) -> tuple[Path, "Engine"]:
         """Execute model training.
 
         Instantiates the model from *training_config* with jsonargparse and
@@ -402,6 +397,13 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         in the config; backends that do not support them simply ignore the
         parameter.
         """
+        from getitune.backend.lightning.models.base import DataInputParams, LightningModel
+        from getitune.backend.ultralytics.models.base import UltralyticsModel
+        from getitune.data.module import DataModule
+        from getitune.engine import create_engine
+        from getitune.types.device import DeviceType as GetiTuneDeviceType
+        from lightning import Callback
+
         logger.info("Preparing the DataModule for training (model_id={})", model_id)
         datamodule = DataModule.from_vision_datasets(
             train_dataset=dataset_info.getitune_training_dataset,
@@ -480,7 +482,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
     @step("Evaluate Model", 95)
     def evaluate_model(
         self,
-        getitune_engine: Engine,
+        getitune_engine: "Engine",
         task: Task,
         model_revision_id: UUID,
         model_variants: list[ModelVariantDescriptor],
@@ -496,6 +498,8 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         - OpenVINO (.xml) and ONNX (.onnx) variants are evaluated with OVEngine, which
           natively supports both checkpoint types.
         """
+        from getitune.backend.openvino.engine import OVEngine
+
         metric_callable = get_metric_by_task(task)
         ov_work_dir_base = Path(getitune_engine.work_dir)
         datamodule = getitune_engine.datamodule
@@ -549,7 +553,10 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             )
 
     @step("Export Model")
-    def export_model(self, getitune_engine: Engine, model_checkpoint_path: Path) -> ExportedModels:
+    def export_model(self, getitune_engine: "Engine", model_checkpoint_path: Path) -> ExportedModels:
+        from getitune.types.export import ExportFormat
+        from getitune.types.precision import Precision
+
         """Export the trained model to desired OpenVINO and ONNX formats"""
         logger.info("Exporting the model to OpenVINO format (FP16 precision)...")
         exported_ov_model_path = getitune_engine.export(
@@ -774,7 +781,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
     def _build_filter_conditions(
         self,
-        getitune_task_type: TaskType,
+        getitune_task_type: "TaskType",
         annotation_field: str,
         filtering_config: Filtering,
     ) -> list:

@@ -513,7 +513,7 @@ wheels = [
 
 [[package]]
 name = "datumaro"
-version = "1.13.2"
+version = "1.13.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
@@ -535,13 +535,13 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/38/4e/cc7046853ac7292df08283bef31cfd6b58e5fb8f87f4c682b89c9d6ccd65/datumaro-1.13.2.tar.gz", hash = "sha256:42a2bddb8f8cfbcaaf3d3c0ecada3637801ca901891c9b79a8a8d96532adda84", size = 622803, upload-time = "2026-06-18T13:42:27.122Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e2/ae/406aed3f87c7c1727df0a5db73db2622fca015e6b4f164bdccdc8cb7d87b/datumaro-1.13.3.tar.gz", hash = "sha256:28dd4e17bd467b46fe98e313003020dc506afedbceeca5e3c9adf3d0fc352ad7", size = 622896, upload-time = "2026-06-24T13:29:05.329Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/22/08/3b2a535c6a4074f11a7ea02f733c652f7349e6052f91c8504b4a154b8cbb/datumaro-1.13.2-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:964c8534ca709b1514f2902631119664caa976dfe63f8ee0f06ffc64ab3efc93", size = 1062075, upload-time = "2026-06-18T13:42:19.271Z" },
-    { url = "https://files.pythonhosted.org/packages/95/8a/075a4505f17519ba7db3d16d1f9ab0d4aabecd6802b26883d279ade4b8bb/datumaro-1.13.2-cp313-cp313-macosx_11_0_x86_64.whl", hash = "sha256:c034ff27f8647f864691d9acd15aa9566bb6071f4076897d92cbbda4ca469d86", size = 1076377, upload-time = "2026-06-18T13:42:20.604Z" },
-    { url = "https://files.pythonhosted.org/packages/48/18/59a640bbc807a0e6e0ede7ef1851c851079faf6d5eef39dc4ec6b2fb2956/datumaro-1.13.2-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:4615d63aca90a29c43b356fad31e49a0ed490c499a585a5a0b02917cfdecf830", size = 1121386, upload-time = "2026-06-18T13:42:22.679Z" },
-    { url = "https://files.pythonhosted.org/packages/82/b3/48e996bffa0314a88269f8c59c0143a45479ce4ec0080f9b18b1efa8e40c/datumaro-1.13.2-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:ff519d2b611adfc654cf557e2d6f4dc30ceba1283e3a95adfb467c6c5f94cf27", size = 1193677, upload-time = "2026-06-18T13:42:24.191Z" },
-    { url = "https://files.pythonhosted.org/packages/73/e0/46ab4a936663f70f23b5ec31a736727d0687c14a80dad8ab3f0debdc26e3/datumaro-1.13.2-cp313-cp313-win_amd64.whl", hash = "sha256:8e20a73823ea9032c73cb2c1407c438736abd8aab13ffc9c84d4974f6d40761a", size = 968865, upload-time = "2026-06-18T13:42:25.636Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/8d/f91c97167b2157c8563d525b9522f57fe4b7c50d9e99f75fc881f3c9f78a/datumaro-1.13.3-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:a526e3122388aa7f14315ac5b08856adcbf3c54341787bd99b09e932fa42756d", size = 1062453, upload-time = "2026-06-24T13:28:56.907Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/79/5aa681557e077b38ef505af0de1e467408e9e3064ebab6035e63a1f51675/datumaro-1.13.3-cp313-cp313-macosx_11_0_x86_64.whl", hash = "sha256:2b8ea5973534047472b7fce37967d4aa28dac688bf3e65f6a812938dca8dcfc1", size = 1076733, upload-time = "2026-06-24T13:28:59.074Z" },
+    { url = "https://files.pythonhosted.org/packages/da/8e/c37c2c5bbff5ae863b93eb63ee756e13d24d1fd533f0206f1a8e6c732509/datumaro-1.13.3-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:09e83c88eea52e5dd744010a428b9c8849ded7ad5a6d707362920edc571cb676", size = 1121733, upload-time = "2026-06-24T13:29:00.838Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/19/848476ae2deb9a33d28007b31e242bfdd7ce95bd96d4cb7dd4a33508c82d/datumaro-1.13.3-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:e4d940ed3ea2de7dabd73f31d52fa327cd8150d1ccf0d2564d00c2f3e7583321", size = 1194132, upload-time = "2026-06-24T13:29:02.454Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/83/749bb2c977ad91e6cdbd2ef79966386b02e0d15f2a6c1201839485a24de5/datumaro-1.13.3-cp313-cp313-win_amd64.whl", hash = "sha256:109b7a8af6dfd29b9b53210b77d9a147bee88dddc226c78efd9c6af51b6a04da", size = 969191, upload-time = "2026-06-24T13:29:03.93Z" },
 ]
 
 [package.optional-dependencies]
@@ -910,7 +910,7 @@ requires-dist = [
     { name = "alembic", specifier = "~=1.17.2" },
     { name = "av", specifier = "~=16.1.0" },
     { name = "cv2-enumerate-cameras", specifier = "==1.3.3" },
-    { name = "datumaro", extras = ["experimental"], specifier = "~=1.13.2" },
+    { name = "datumaro", extras = ["experimental"], specifier = "~=1.13.3" },
     { name = "fastapi", extras = ["standard"], specifier = "~=0.121.2" },
     { name = "faster-coco-eval", specifier = "~=1.7.0" },
     { name = "getitune", extras = ["cpu", "ultralytics"], marker = "extra == 'cpu'", editable = "../../library" },
