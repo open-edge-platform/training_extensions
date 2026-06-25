@@ -58,8 +58,6 @@ from app.services import (
     TrainingConfigurationService,
 )
 
-from .progress import TrainingProgressCallback
-
 MODEL_WEIGHTS_PATH = "model_weights_path"
 
 
@@ -403,6 +401,8 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         from getitune.engine import create_engine
         from getitune.types.device import DeviceType as GetiTuneDeviceType
         from lightning import Callback
+
+        from .progress import TrainingProgressCallback
 
         logger.info("Preparing the DataModule for training (model_id={})", model_id)
         datamodule = DataModule.from_vision_datasets(
