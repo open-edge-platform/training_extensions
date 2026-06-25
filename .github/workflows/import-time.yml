@@ -1,0 +1,130 @@
+name: Import Time Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  import-time:
+    name: Measure Backend Import Time
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        accelerator: [cpu, xpu, cuda]
+    defaults:
+      run:
+        working-directory: application/backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install common dependencies
+        uses: ./.github/actions/install-common-deps
+        with:
+          install-just: "false"
+
+      - name: Install dependencies
+        run: uv sync --extra ${{ matrix.accelerator }}
+
+      - name: Measure import time
+        run: |
+          uv run python -X importtime -c 'import app.main' 2> import.txt
+
+      - name: Check for forbidden heavy imports
+        run: |
+          # These modules are expensive to import and must not be pulled in by
+          # `app.main`. If any of them appear in the import trace, fail the check.
+          FORBIDDEN="torch torchvision lightning model_api getitune sklearn"
+
+          FOUND=""
+          for module in ${FORBIDDEN}; do
+            # The imported package is the 3rd '|'-separated column of the
+            # `-X importtime` output. Match the module exactly or as a parent
+            # package (e.g. `torch` or `torch.nn`), ignoring indentation.
+            if awk -F'|' -v m="${module}" '
+                  {
+                    pkg = $3
+                    gsub(/^[ \t]+|[ \t]+$/, "", pkg)
+                    if (pkg == m || index(pkg, m ".") == 1) { found = 1 }
+                  }
+                  END { exit !found }
+                ' import.txt; then
+              echo "::error::Forbidden module '${module}' is imported by app.main"
+              FOUND="${FOUND} ${module}"
+            fi
+          done
+
+          if [ -n "${FOUND}" ]; then
+            echo "Forbidden heavy imports detected:${FOUND}"
+            exit 1
+          fi
+          echo "No forbidden heavy imports detected."
+
+      - name: Extract total import time
+        id: import_time
+        run: |
+          # The last line of import.txt contains the total cumulative import time for app.main
+          TOTAL_LINE=$(grep 'app.main' import.txt | tail -1)
+          SELF_TIME=$(echo "$TOTAL_LINE" | awk '{print $1}')
+          CUMULATIVE_TIME=$(echo "$TOTAL_LINE" | awk '{print $3}')
+
+          # Convert from microseconds to seconds
+          CUMULATIVE_SEC=$(awk "BEGIN {printf \"%.3f\", $CUMULATIVE_TIME / 1000000}")
+          SELF_SEC=$(awk "BEGIN {printf \"%.3f\", $SELF_TIME / 1000000}")
+
+          echo "cumulative=$CUMULATIVE_SEC" >> "$GITHUB_OUTPUT"
+          echo "self=$SELF_SEC" >> "$GITHUB_OUTPUT"
+
+      - name: Post PR comment
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          ACCELERATOR: ${{ matrix.accelerator }}
+          CUMULATIVE: ${{ steps.import_time.outputs.cumulative }}
+          SELF: ${{ steps.import_time.outputs.self }}
+        run: |
+          MARKER="<!-- backend-import-time -->"
+          HEADER="${MARKER}
+          ### ⏱️ Backend import time — \`app.main\`
+
+          | Accelerator | Cumulative (s) | Self (s) |
+          |-------------|----------------|----------|"
+          NEW_ROW="| \`${ACCELERATOR}\` | ${CUMULATIVE} | ${SELF} |"
+
+          # Find the shared comment
+          COMMENT_ID=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+            --paginate --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" \
+          | head -n1)
+
+          if [ -n "${COMMENT_ID}" ]; then
+            # Read the current body, replace or append the accelerator row
+            EXISTING=$(gh api "repos/${GITHUB_REPOSITORY}/issues/comments/${COMMENT_ID}" --jq .body)
+            if echo "${EXISTING}" | grep -q "| \`${ACCELERATOR}\`"; then
+              BODY=$(echo "${EXISTING}" | sed "s/| \`${ACCELERATOR}\` |.*/${NEW_ROW}/")
+            else
+              BODY="${EXISTING}
+          ${NEW_ROW}"
+            fi
+            gh api \
+              --method PATCH \
+              "repos/${GITHUB_REPOSITORY}/issues/comments/${COMMENT_ID}" \
+              -f body="${BODY}"
+          else
+            BODY="${HEADER}
+          ${NEW_ROW}"
+            gh pr comment "${PR_NUMBER}" --body "${BODY}"
+          fi
+
+      - name: Upload import.txt artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: import-time-trace-${{ matrix.accelerator }}
+          path: application/backend/import.txt
+
