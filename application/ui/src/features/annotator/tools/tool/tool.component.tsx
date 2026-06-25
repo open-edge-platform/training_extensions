@@ -13,7 +13,7 @@ type HotkeyProps = {
     hotkey: string;
 };
 
-export const Hotkey = ({ hotkey }: HotkeyProps) => {
+const Hotkey = ({ hotkey }: HotkeyProps) => {
     return (
         <View backgroundColor={'gray-200'} paddingX={'size-100'} paddingY={'size-50'}>
             <Text UNSAFE_className={classes.hotkeyText}>{hotkey.toLocaleUpperCase()}</Text>
@@ -25,7 +25,7 @@ type DrawingToolsTooltipProps = {
     tool: ToolConfig;
 };
 
-export const DrawingToolsTooltip = ({ tool }: DrawingToolsTooltipProps) => {
+const DrawingToolsTooltip = ({ tool }: DrawingToolsTooltipProps) => {
     const { tooltip, hotkey, label } = tool;
 
     return (
