@@ -38,7 +38,9 @@ export const NumberParameterField = ({
     }
 
     const fieldStep = getStep({ step, type, maxValue, minValue });
-    const formatOptions = type === 'float' ? { maximumFractionDigits: Math.abs(Math.log10(fieldStep)) } : undefined;
+    // Preserve full precision for float values instead of rounding to the
+    // NumberField default of 3 fraction digits.
+    const formatOptions = type === 'float' ? { maximumFractionDigits: 20 } : undefined;
 
     const handleValueChange = (inputValue: number): void => {
         setParameterValue(inputValue);
@@ -49,7 +51,6 @@ export const NumberParameterField = ({
         return (
             <NumberField
                 aria-label={`Change ${name}`}
-                step={fieldStep}
                 hideStepper
                 width={'size-900'}
                 value={parameterValue}
@@ -57,6 +58,7 @@ export const NumberParameterField = ({
                 maxValue={maxValue === null ? undefined : maxValue}
                 onChange={onChange}
                 isDisabled={isDisabled}
+                formatOptions={formatOptions}
             />
         );
     }
@@ -77,7 +79,6 @@ export const NumberParameterField = ({
             />
             <NumberField
                 hideStepper
-                step={fieldStep}
                 width={'size-900'}
                 value={parameterValue}
                 minValue={minValue}
