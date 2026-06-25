@@ -8,6 +8,7 @@ import { negate } from 'lodash-es';
 
 import type { Label, TaskType } from '../../constants/shared-types';
 import { isClassificationTask } from '../../features/project/task-type-guards';
+import type { AnnotationLabel, AnnotationLabelRef } from '../types';
 
 export const EMPTY_LABEL_ID = 'empty-label';
 const NO_LABEL: Label = { id: EMPTY_LABEL_ID, name: 'No label', color: 'var(--no-label)', hotkey: 'N' };
@@ -46,3 +47,23 @@ export const useProjectLabelsWithEmptyLabel = (): Label[] => {
 
 export const filterOutEmptyLabels = <T extends Pick<Label, 'id'>>(labels: T[]): T[] =>
     labels.filter((label) => label.id !== EMPTY_LABEL_ID);
+
+export const useLabelResolver = () => {
+    const labels = useProjectLabelsWithEmptyLabel();
+
+    const labelMap = useMemo(() => new Map(labels.map((label) => [label.id, label])), [labels]);
+
+    const getLabel = (id: string): Label | undefined => labelMap.get(id);
+
+    const resolveAnnotationLabel = (ref: AnnotationLabelRef): AnnotationLabel | undefined => {
+        const label = labelMap.get(ref.id);
+
+        if (label === undefined) {
+            return undefined;
+        }
+
+        return ref.probability !== undefined ? { ...label, probability: ref.probability } : label;
+    };
+
+    return { getLabel, resolveAnnotationLabel };
+};
