@@ -15,10 +15,10 @@ import { ModelListingProvider, useModelListing } from './provider/model-listing-
 
 const ModelListingContent = () => {
     const runningJobs = useGetCurrentRunningJobs();
-    const { groupedModels, searchBy, datasetRevisions, groupBy } = useModelListing();
+    const { groupedModels, searchBy, datasetRevisions, groupBy, showFailedModels } = useModelListing();
 
-    const hasNoResults = groupedModels.length === 0 && searchBy.length > 0;
-    const hasNoModels = groupedModels.length === 0 && searchBy.length === 0;
+    const hasNoResults = groupedModels.length === 0 && (searchBy.length > 0 || !showFailedModels);
+    const hasNoModels = groupedModels.length === 0 && searchBy.length === 0 && showFailedModels;
 
     if (hasNoModels && isEmpty(runningJobs)) {
         return (
