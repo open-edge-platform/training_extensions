@@ -48,11 +48,7 @@ export const CursorContextMenu = ({ state, children, triggerRef, onOpen }: Curso
                 popover surface (background/elevation) that CustomPopover does not style itself.
             */}
             <ThemeProvider id={undefined}>
-                <View
-                    backgroundColor={'gray-100'}
-                    borderRadius={'regular'}
-                    UNSAFE_style={{ boxShadow: '0 0 4px rgba(0, 0, 0, 0.5)' }}
-                >
+                <View backgroundColor={'gray-100'} borderRadius={'regular'}>
                     <Flex
                         gap={'size-100'}
                         justifyContent={'space-between'}
