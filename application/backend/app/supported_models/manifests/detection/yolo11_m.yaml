@@ -3,9 +3,9 @@ name: YOLO11-M
 license: AGPL-3.0
 
 pretrained_weights:
-  url: https://storage.geti.intel.com/weights/yolo11m.pt
+  url: https://huggingface.co/Ultralytics/YOLO11/resolve/main/yolo11m.pt
   mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11m.pt
-  sha_sum: ""
+  sha_sum: "d5ffc1a674953a08e11a8d21e022781b1b23a19b730afc309290bd9fb5305b95"
 
 description: "YOLO11-M is the medium Ultralytics YOLO11 detection model. It targets higher accuracy while using the Geti Tune data pipeline for preprocessing and dataset handling."
 stats:

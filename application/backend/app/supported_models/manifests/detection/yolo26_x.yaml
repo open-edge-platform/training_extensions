@@ -3,9 +3,9 @@ name: YOLO26-X
 license: AGPL-3.0
 
 pretrained_weights:
-  url: https://storage.geti.intel.com/weights/yolo26x.pt
+  url: https://huggingface.co/Ultralytics/YOLO26/resolve/main/yolo26x.pt
   mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26x.pt
-  sha_sum: ""
+  sha_sum: "9fdd44a31c504547ffb81d2c6d9e6dac3493c8eaa8b0398d3f43bae6c7003e92"
 
 description: "YOLO26-X is the extra-large Ultralytics YOLO26 detection model. It targets maximum accuracy while using the Geti Tune data pipeline for preprocessing and dataset handling."
 stats:

@@ -3,9 +3,9 @@ name: YOLO11-L
 license: AGPL-3.0
 
 pretrained_weights:
-  url: https://storage.geti.intel.com/weights/yolo11l.pt
+  url: https://huggingface.co/Ultralytics/YOLO11/resolve/main/yolo11l.pt
   mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11l.pt
-  sha_sum: ""
+  sha_sum: "9ebd0e09d59811db4b1d61e2bc6730649608b1ac47f8dd01e2da6bca7c20023f"
 
 description: "YOLO11-L is the large Ultralytics YOLO11 detection model. It offers high accuracy while using the Geti Tune data pipeline for preprocessing and dataset handling."
 stats:

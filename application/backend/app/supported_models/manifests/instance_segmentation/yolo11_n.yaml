@@ -3,9 +3,9 @@ name: YOLO11-N-Seg
 license: AGPL-3.0
 
 pretrained_weights:
-  url: https://storage.geti.intel.com/weights/yolo11n-seg.pt
+  url: https://huggingface.co/Ultralytics/YOLO11/resolve/main/yolo11n-seg.pt
   mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n-seg.pt
-  sha_sum: ""
+  sha_sum: "55ed65c56c91713d23e8402371c6c49a6fd84f257f7dce452e8d70e41dcbe152"
 
 description: "YOLO11-N-Seg is the nano Ultralytics YOLO11 instance segmentation model. It is optimized for fast fine-tuning and low-latency inference while using the Geti Tune data pipeline for preprocessing and dataset handling."
 stats:
