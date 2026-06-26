@@ -184,7 +184,6 @@ def prepare_roboflow_hf_dataset(
     staging = args.archive_dir / f"{args.name}_raw"
     images_dir = staging / "images"
 
-    logger.info("Building Datumaro dataset from %s ...", repo)
     print(f"Building Datumaro dataset from {repo} ...")
     dataset = _build_dataset(parquet_paths, label_names, images_dir)
     print(f"  Dataset length: {len(dataset)}")
