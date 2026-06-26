@@ -113,7 +113,10 @@ export const SinkMenu = ({ id, name, isConnected, onEdit, onTest }: SinkMenuProp
             <ActionButton isQuiet aria-label='sink menu'>
                 <MoreMenu />
             </ActionButton>
-            <Menu onAction={handleOnAction} disabledKeys={isConnected ? [SINK_MENU_OPTIONS.REMOVE] : []}>
+            <Menu
+                onAction={handleOnAction}
+                disabledKeys={isConnected ? [SINK_MENU_OPTIONS.REMOVE, SINK_MENU_OPTIONS.TEST] : []}
+            >
                 {isConnected ? (
                     <Item key={SINK_MENU_OPTIONS.DISCONNECT}>Disconnect</Item>
                 ) : (
