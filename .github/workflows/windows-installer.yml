@@ -141,6 +141,29 @@ jobs:
 
       # Build or restore cached PyAV wheel
 
+      - name: Determine cache strategy
+        id: cache_strategy
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          # workflow_call (nightly) -> no cache (build from scratch to warm cache)
+          # workflow_dispatch + release/RC -> no cache (clean build for releases)
+          # workflow_dispatch (regular) -> use cache
+          $useCache = "true"
+          if ($env:EVENT_NAME -eq "workflow_call") {
+            $useCache = "false"
+            Write-Host "Nightly build (workflow_call): cache disabled, building from scratch"
+          } elseif ($env:EVENT_NAME -eq "workflow_dispatch") {
+            $isRelease = ("${{ github.ref }}" -match "^refs/heads/release/") -or ("${{ github.ref }}" -match "^refs/tags/")
+            if ($isRelease) {
+              $useCache = "false"
+              Write-Host "Release/RC build (workflow_dispatch): cache disabled for clean build"
+            } else {
+              Write-Host "Regular workflow_dispatch: cache enabled"
+            }
+          }
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "use-cache=$useCache"
+
       - name: Compute PyAV wheel cache key
         id: pyav_cache_key
         run: |
@@ -151,6 +174,7 @@ jobs:
           Add-Content -Path $env:GITHUB_OUTPUT -Value "cache-key=$cacheKey"
 
       - name: Restore PyAV wheel from cache
+        if: steps.cache_strategy.outputs.use-cache == 'true'
         id: pyav_cache
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
@@ -412,6 +436,13 @@ jobs:
           New-Item -ItemType Directory -Force -Path $dllDir | Out-Null
           Copy-Item "C:\ffmpeg-build\bin\*.dll" -Destination $dllDir -Force
           Write-Host "Cached FFmpeg DLLs to $dllDir"
+
+      - name: Save PyAV wheel to cache
+        if: steps.pyav_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: application/backend/.pyav-wheel
+          key: ${{ steps.pyav_cache_key.outputs.cache-key }}
 
       - name: Configure uv to use cached PyAV wheel
         working-directory: application/backend
