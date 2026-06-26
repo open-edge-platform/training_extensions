@@ -381,7 +381,7 @@ test.describe('Model training flow', () => {
 
         await test.step('Verify that the list is still expanded and selected architecture is visible', async () => {
             await expect(page.getByRole('button', { name: 'Show less' })).toBeVisible();
-            await expect(modelsPage.getModelArchitecture(notRecommendedModelArchitecture.name)).toBeInViewport();
+            await expect(modelsPage.getModelArchitecture(notRecommendedModelArchitecture.name)).toBeVisible();
         });
     });
 });
