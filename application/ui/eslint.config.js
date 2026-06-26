@@ -22,22 +22,22 @@ const compat = new FlatCompat({
 const restrictedImportPaths = [
     {
         name: '@adobe/react-spectrum',
-        message: 'Use component from the @geti/ui folder instead.',
+        message: 'Use component from the @geti-ui/ui package instead.',
     },
 ];
 
 const restrictedImportPatterns = [
     {
         group: ['@react-spectrum'],
-        message: 'Use component from the @geti/ui folder instead.',
+        message: 'Use component from the @geti-ui/ui package instead.',
     },
     {
         group: ['@react-types/*'],
-        message: 'Use type from the @geti/ui folder instead.',
+        message: 'Use type from the @geti-ui/ui package instead.',
     },
     {
         group: ['@spectrum-icons'],
-        message: 'Use icons from the @geti/ui/icons folder instead.',
+        message: 'Use icons from the @geti-ui/ui/icons package instead.',
     },
     {
         group: ['src/*'],

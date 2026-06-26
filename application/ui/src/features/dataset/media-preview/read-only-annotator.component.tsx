@@ -1,8 +1,8 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Icon, Text, View } from '@geti/ui';
-import { CloseSemiBold } from '@geti/ui/icons';
+import { ActionButton, Flex, Icon, Text, View } from '@geti-ui/ui';
+import { CloseSemiBold } from '@geti-ui/ui/icons';
 
 import type { DatasetSubset, Media } from '../../../constants/shared-types';
 import { ReadOnlyAnnotatorCanvas } from '../../annotator/annotator-canvas/read-only-annotator-canvas';

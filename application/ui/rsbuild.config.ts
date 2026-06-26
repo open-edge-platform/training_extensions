@@ -127,6 +127,13 @@ export default defineConfig({
                 ...config,
                 resolve: { ...config.resolve, extensions },
                 watchOptions: { ...config.watchOptions, ignored: ['**/src-tauri/**'] },
+                // `@geti-ui/ui` (built with rslib) ships a split webpack-style runtime
+                // chunk (`0~rslib-runtime.js`) that does `export { __webpack_require__ }`.
+                // Rspack's module concatenation (scope hoisting) panics on it with
+                // `The export "__webpack_require__" ... has no internal name`. Disabling
+                // scope hoisting sidesteps the panic.
+                // TODO[geti-ui]: remove once the package no longer emits that runtime export.
+                optimization: { ...config.optimization, concatenateModules: false },
             };
         },
     },

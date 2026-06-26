@@ -1,8 +1,8 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Item, Loading, TabList, TabPanels, Tabs, Text } from '@geti/ui';
-import { Info } from '@geti/ui/icons';
+import { Flex, Item, Loading, TabList, TabPanels, Tabs, Text } from '@geti-ui/ui';
+import { Info } from '@geti-ui/ui/icons';
 
 import { useGetDatasetRevisions } from '../../../../hooks/use-get-dataset-revisions.hook';
 import { UltralyticsLicense } from '../../components/ultralytics-license.component';

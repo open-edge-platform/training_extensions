@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Grid } from '@geti/ui';
+import { dimensionValue, Grid } from '@geti-ui/ui';
 
 import { ColumnHeader } from '../components/column-header.component';
 import { GroupByMode } from '../types';

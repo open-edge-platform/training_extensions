@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Flex, Heading, Text } from '@geti/ui';
+import { dimensionValue, Flex, Heading, Text } from '@geti-ui/ui';
 
 import { type ModelArchitectureWithPerformanceCategory } from '../../../../../constants/shared-types';
 import { PerformanceCategoryBadge } from '../model-row/performance-category-badge.component';

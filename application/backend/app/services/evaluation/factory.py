@@ -1,10 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from datumaro.experimental import Dataset
+from datumaro.experimental import Dataset
 
 from .evaluators import (
     DetectionEvaluator,
@@ -19,7 +16,7 @@ class EvaluatorFactory:
     """Factory to get a suitable evaluator for a given set of ground truth and predictions datasets."""
 
     @classmethod
-    def get_evaluator(cls, predictions_dataset: "Dataset", ground_truth_dataset: "Dataset") -> Evaluator:
+    def get_evaluator(cls, predictions_dataset: Dataset, ground_truth_dataset: Dataset) -> Evaluator:
         if predictions_dataset.dtype != ground_truth_dataset.dtype:
             raise ValueError("Predictions and ground truth datasets must have the same dtype")
 

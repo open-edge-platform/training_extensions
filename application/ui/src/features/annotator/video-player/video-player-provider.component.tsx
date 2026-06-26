@@ -15,7 +15,7 @@ import {
     useState,
 } from 'react';
 
-import { VisuallyHidden } from '@geti/ui';
+import { VisuallyHidden } from '@geti-ui/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { MediaVideoFrame } from '../../../constants/shared-types';

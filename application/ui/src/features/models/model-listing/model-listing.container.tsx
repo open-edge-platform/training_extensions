@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Divider, Flex, Heading } from '@geti/ui';
+import { dimensionValue, Divider, Flex, Heading } from '@geti-ui/ui';
 import { useGetCurrentRunningJobs } from 'hooks/api/jobs/jobs.hook';
 import { isEmpty, isString } from 'lodash-es';
 

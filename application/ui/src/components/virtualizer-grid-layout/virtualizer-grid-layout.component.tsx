@@ -3,7 +3,7 @@
 
 import { ComponentProps, ReactNode, useRef } from 'react';
 
-import { AriaComponentsListBox, GridLayout, ListBoxItem, Loading, View, Virtualizer } from '@geti/ui';
+import { AriaComponentsListBox, AriaListBoxItem, GridLayout, Loading, View, Virtualizer } from '@geti-ui/ui';
 import { useLoadMore } from '@react-aria/utils';
 import { GridLayoutOptions } from 'react-aria-components';
 
@@ -82,20 +82,20 @@ export const VirtualizerGridLayout = <T extends GridItem>({
                         const itemId = getItemId(item);
 
                         return (
-                            <ListBoxItem
+                            <AriaListBoxItem
                                 id={itemId}
                                 key={`${ariaLabel}-${itemId}-${index}`}
                                 textValue={String(itemId)}
                                 className={classes.mediaItem}
                             >
                                 {contentItem(item)}
-                            </ListBoxItem>
+                            </AriaListBoxItem>
                         );
                     })}
                     {isLoadingMore && !isPending && (
-                        <ListBoxItem id={'loader'} textValue={'loading'}>
+                        <AriaListBoxItem id={'loader'} textValue={'loading'}>
                             <Loading mode='overlay' />
-                        </ListBoxItem>
+                        </AriaListBoxItem>
                     )}
                 </AriaComponentsListBox>
             </Virtualizer>

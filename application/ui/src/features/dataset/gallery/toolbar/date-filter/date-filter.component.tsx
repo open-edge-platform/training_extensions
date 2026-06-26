@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Content, DatePicker, Dialog, DialogTrigger, Flex, PressableElement, Text } from '@geti/ui';
+import { Content, DatePicker, Dialog, DialogTrigger, Flex, PressableElement, Text } from '@geti-ui/ui';
 import { getLocalTimeZone, parseAbsoluteToLocal, type DateValue } from '@internationalized/date';
 import dayjs from 'dayjs';
 import { useDatasetFiltersSearchParams } from 'hooks/use-dataset-filters-search-params.hook';
@@ -51,22 +51,26 @@ export const DateFilter = () => {
 
     return (
         <DialogTrigger hideArrow type='popover'>
-            <PressableElement aria-label='Filter by date'>
-                <Flex
-                    gap={'size-75'}
-                    wrap={'wrap'}
-                    minWidth={'size-2400'}
-                    maxWidth={'size-5000'}
-                    height={'size-400'}
-                    alignItems={'center'}
-                    UNSAFE_className={classes.filterContainer}
-                >
-                    {dates.map((date) => (
-                        <FilterChips key={date.id} name={date.name} onClose={() => handleRemoveFilter(date.id)} />
-                    ))}
+            <PressableElement>
+                <div role='button' aria-label='Filter by date'>
+                    <Flex
+                        gap={'size-75'}
+                        wrap={'wrap'}
+                        minWidth={'size-2400'}
+                        maxWidth={'size-5000'}
+                        height={'size-400'}
+                        alignItems={'center'}
+                        UNSAFE_className={classes.filterContainer}
+                    >
+                        {dates.map((date) => (
+                            <FilterChips key={date.id} name={date.name} onClose={() => handleRemoveFilter(date.id)} />
+                        ))}
 
-                    {isEmpty(dates) && <Text UNSAFE_className={classes.searchPlaceholder}>Filter by upload date</Text>}
-                </Flex>
+                        {isEmpty(dates) && (
+                            <Text UNSAFE_className={classes.searchPlaceholder}>Filter by upload date</Text>
+                        )}
+                    </Flex>
+                </div>
             </PressableElement>
 
             <Dialog maxWidth={'size-3600'} UNSAFE_className={classes.dialog} aria-label='Filter media items'>

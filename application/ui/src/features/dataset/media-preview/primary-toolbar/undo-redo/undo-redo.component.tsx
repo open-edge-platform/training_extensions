@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Tooltip, TooltipTrigger } from '@geti/ui';
-import { Redo, Undo } from '@geti/ui/icons';
+import { ActionButton, Flex, Tooltip, TooltipTrigger } from '@geti-ui/ui';
+import { Redo, Undo } from '@geti-ui/ui/icons';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { HOTKEYS } from '../../../../../shared/hotkeys-definition';

@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Switch } from '@geti/ui';
+import { Switch } from '@geti-ui/ui';
 import { useDisablePipeline, useEnablePipeline, usePipeline } from 'hooks/api/pipeline.hook';
 import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';

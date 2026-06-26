@@ -1,5 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 import os
 import shutil
 from collections.abc import Callable
@@ -7,31 +9,22 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 import polars as pl
 import yaml
 from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
-from getitune import TaskType
-from getitune.backend.lightning.models.base import DataInputParams, LightningModel
-from getitune.backend.openvino.engine import OVEngine
-from getitune.backend.ultralytics.models.base import UltralyticsModel
-from getitune.config.data import SamplerConfig, SubsetConfig
-from getitune.data.dataset.base import VisionDataset
-from getitune.data.entity.utils import detect_storage_dtype
-from getitune.data.factory import TransformLibFactory
-from getitune.data.module import DataModule
-from getitune.engine import create_engine
-from getitune.engine.engine import Engine
-from getitune.types.device import DeviceType as GetiTuneDeviceType
-from getitune.types.export import ExportFormat
-from getitune.types.precision import Precision
 from jsonargparse import ArgumentParser, Namespace
-from lightning import Callback
 from loguru import logger
 from sqlalchemy.orm import Session
+
+if TYPE_CHECKING:
+    from getitune import TaskType
+    from getitune.config.data import SubsetConfig
+    from getitune.data.dataset.base import VisionDataset
+    from getitune.engine.engine import Engine
 
 from app.core.jobs.exec.exceptions import CancelledExc
 from app.datumaro_converter import SampleMode
@@ -66,8 +59,6 @@ from app.services import (
     SubsetService,
     TrainingConfigurationService,
 )
-
-from .progress import TrainingProgressCallback
 
 MODEL_WEIGHTS_PATH = "model_weights_path"
 
@@ -267,6 +258,10 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         Otherwise, it creates a new dataset from the current items in the database with user-verified annotations.
         """
 
+        from getitune.config.data import SamplerConfig, SubsetConfig
+        from getitune.data.entity.utils import detect_storage_dtype
+        from getitune.data.factory import TransformLibFactory
+
         def build_subset_config(subset_name: str) -> SubsetConfig:
             subset_cfg_data = getitune_training_config["data"][f"{subset_name}_subset"]
             subset_cfg_data["input_size"] = getitune_training_config["data"]["input_size"]
@@ -403,6 +398,15 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         in the config; backends that do not support them simply ignore the
         parameter.
         """
+        from getitune.backend.lightning.models.base import DataInputParams, LightningModel
+        from getitune.backend.ultralytics.models.base import UltralyticsModel
+        from getitune.data.module import DataModule
+        from getitune.engine import create_engine
+        from getitune.types.device import DeviceType as GetiTuneDeviceType
+        from lightning import Callback
+
+        from .progress import TrainingProgressCallback
+
         logger.info("Preparing the DataModule for training (model_id={})", model_id)
         datamodule = DataModule.from_vision_datasets(
             train_dataset=dataset_info.getitune_training_dataset,
@@ -503,6 +507,8 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         - OpenVINO (.xml) and ONNX (.onnx) variants are evaluated with OVEngine, which
           natively supports both checkpoint types.
         """
+        from getitune.backend.openvino.engine import OVEngine
+
         metric_callable = get_metric_by_task(task)
         ov_work_dir_base = Path(getitune_engine.work_dir)
         datamodule = getitune_engine.datamodule
@@ -557,6 +563,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
     @step("Export Model")
     def export_model(self, getitune_engine: Engine, model_checkpoint_path: Path) -> ExportedModels:
+        from getitune.types.export import ExportFormat
+        from getitune.types.precision import Precision
+
         """Export the trained model to desired OpenVINO and ONNX formats"""
         logger.info("Exporting the model to OpenVINO format (FP16 precision)...")
         exported_ov_model_path = getitune_engine.export(
@@ -787,6 +796,8 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         filtering_config: Filtering,
     ) -> list:
         """Build polars filter conditions for min/max annotation object counts."""
+        from getitune import TaskType
+
         filter_conditions = []
 
         if filtering_config.min_annotation_objects.enable:
@@ -819,6 +830,8 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             A new Dataset containing only the samples that pass the filter, or the original
             dataset unchanged if filtering is disabled.
         """
+        from getitune import TaskType
+
         filtering_config = training_config.task_level_parameters.dataset_preparation.filtering
         min_enabled = filtering_config.min_annotation_objects.enable
         max_enabled = filtering_config.max_annotation_objects.enable

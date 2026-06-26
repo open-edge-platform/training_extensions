@@ -1,8 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Content, DropZone, FileTrigger, Flex, Heading, IllustratedMessage, Text } from '@geti/ui';
-import { LinkOut } from '@geti/ui/icons';
+import { Button, Content, DropZone, FileTrigger, Flex, Heading, IllustratedMessage, Text } from '@geti-ui/ui';
+import { LinkOut } from '@geti-ui/ui/icons';
 import { useSubmitJob } from 'hooks/api/jobs/jobs.hook';
 
 import { $api } from '../../api/client';

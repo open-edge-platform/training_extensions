@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
-import { CheckCircleOutlined, Search } from '@geti/ui/icons';
+import { View } from '@geti-ui/ui';
+import { CheckCircleOutlined, Search } from '@geti-ui/ui/icons';
 
 import classes from './annotation-state-icon.module.scss';
 

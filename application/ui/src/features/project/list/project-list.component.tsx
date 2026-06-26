@@ -3,7 +3,7 @@
 
 import { Suspense, useMemo, useState } from 'react';
 
-import { Content, Flex, Grid, Heading, Loading, Text, View } from '@geti/ui';
+import { Content, Flex, Grid, Heading, Loading, Text, View } from '@geti-ui/ui';
 import { useProjects } from 'hooks/api/project.hook';
 
 import { version } from '../../../../package.json';
