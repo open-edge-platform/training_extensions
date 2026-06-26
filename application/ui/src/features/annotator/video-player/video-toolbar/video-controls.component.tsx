@@ -1,8 +1,8 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, PressableElement, Tooltip, TooltipTrigger } from '@geti/ui';
-import { Pause, Play, SoundOff, SoundOn, StepBackward, StepForward } from '@geti/ui/icons';
+import { ActionButton, Flex, PressableElement, Tooltip, TooltipTrigger } from '@geti-ui/ui';
+import { Pause, Play, SoundOff, SoundOn, StepBackward, StepForward } from '@geti-ui/ui/icons';
 
 import { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
 import { useIsFetchingPredictions } from '../../api/use-media-predictions';

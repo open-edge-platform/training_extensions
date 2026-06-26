@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { PhotoPlaceholder, View, type DimensionValue } from '@geti/ui';
+import { PhotoPlaceholder, View, type DimensionValue } from '@geti-ui/ui';
 
 import { type Project } from '../../../constants/shared-types';
 import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';

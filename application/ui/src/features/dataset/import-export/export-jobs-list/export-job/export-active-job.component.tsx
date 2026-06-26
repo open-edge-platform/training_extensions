@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Flex, Loading, Text, View } from '@geti/ui';
+import { Divider, Flex, Loading, Text, View } from '@geti-ui/ui';
 import { getJobProgress, isJobRunning } from 'hooks/api/util';
 import { useExportDataset } from 'hooks/storage/use-export-dataset.hook';
 

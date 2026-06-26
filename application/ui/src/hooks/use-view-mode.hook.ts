@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ViewModes } from '@geti/ui';
+import { ViewModes } from '@geti-ui/ui';
 import { useLocalStorage } from 'usehooks-ts';
 
 const VIEW_MODE_KEY = 'view-mode';

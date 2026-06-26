@@ -3,7 +3,7 @@
 
 import { Dispatch, SetStateAction } from 'react';
 
-import { Grid, minmax } from '@geti/ui';
+import { Grid, minmax } from '@geti-ui/ui';
 
 import type { ConfigurableParameterGroup, TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { Accordion } from '../../components/accordion/accordion.component';

@@ -3,8 +3,8 @@
 
 import { useState } from 'react';
 
-import { ActionButton, Flex, SearchField, TextFieldRef } from '@geti/ui';
-import { Search } from '@geti/ui/icons';
+import { ActionButton, Flex, SearchField, TextFieldRef } from '@geti-ui/ui';
+import { Search } from '@geti-ui/ui/icons';
 
 import classes from './expandable-search.module.scss';
 

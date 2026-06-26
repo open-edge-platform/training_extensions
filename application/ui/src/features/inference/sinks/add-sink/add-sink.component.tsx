@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { Button, Form } from '@geti/ui';
+import { Button, Form } from '@geti-ui/ui';
 
 import { usePatchPipeline } from '../../../../hooks/api/pipeline.hook';
 import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';

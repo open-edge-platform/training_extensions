@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Item, TabList, TabPanels, Tabs, Text } from '@geti/ui';
+import { Flex, Item, TabList, TabPanels, Tabs, Text } from '@geti-ui/ui';
 import { isEmpty } from 'lodash-es';
 
 import { ReactComponent as ONNX } from '../../../../assets/icons/onnx-logo.svg';

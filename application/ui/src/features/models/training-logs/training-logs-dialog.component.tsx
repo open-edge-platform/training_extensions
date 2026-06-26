@@ -12,8 +12,8 @@ import {
     Loading,
     Text,
     useDialogContainer,
-} from '@geti/ui';
-import { CloseSemiBold, DownloadIcon } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { CloseSemiBold, DownloadIcon } from '@geti-ui/ui/icons';
 
 import { useDownloadModelLogs, useModelLogs } from './hooks/use-model-logs.hook';
 import { useStreamJobLogs } from './hooks/use-stream-job-logs.hook';

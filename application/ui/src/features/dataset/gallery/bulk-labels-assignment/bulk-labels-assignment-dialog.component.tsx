@@ -14,8 +14,8 @@ import {
     Flex,
     Heading,
     Text,
-} from '@geti/ui';
-import { Info } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { Info } from '@geti-ui/ui/icons';
 import { useProject } from 'hooks/api/project.hook';
 import { isEmpty } from 'lodash-es';
 

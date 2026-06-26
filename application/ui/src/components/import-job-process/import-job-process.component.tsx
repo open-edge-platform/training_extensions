@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Flex, Loading, Text } from '@geti/ui';
+import { dimensionValue, Flex, Loading, Text } from '@geti-ui/ui';
 import { useImportJobStatus } from 'hooks/api/jobs/use-import-job-status.hook';
 import { getJobProgress, isJobPending } from 'hooks/api/util';
 import { isEmpty } from 'lodash-es';

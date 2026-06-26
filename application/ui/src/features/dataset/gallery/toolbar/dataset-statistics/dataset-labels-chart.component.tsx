@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue } from '@geti/ui';
+import { dimensionValue } from '@geti-ui/ui';
 import {
     Bar,
     BarChart,

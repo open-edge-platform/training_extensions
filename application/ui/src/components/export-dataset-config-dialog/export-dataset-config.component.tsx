@@ -18,8 +18,8 @@ import {
     RadioGroup,
     Text,
     View,
-} from '@geti/ui';
-import { Alert, LinkOut } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { Alert, LinkOut } from '@geti-ui/ui/icons';
 import { OverlayTriggerState } from '@react-stately/overlays';
 import { useProject } from 'hooks/api/project.hook';
 
