@@ -19,11 +19,23 @@ from torch import Tensor, nn
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxes
 
-from getitune.backend.lightning.models.detection.detectors._rfdetr_vendored import compute_multi_scale_scales
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
     from types import SimpleNamespace
+
+
+def _compute_multi_scale_scales(
+    resolution: int,
+    expanded_scales: bool = False,
+    patch_size: int = 16,
+    num_windows: int = 4,
+) -> list[int]:
+    base_num_patches_per_window = resolution // (patch_size * num_windows)
+    offsets = [-3, -2, -1, 0, 1, 2, 3, 4] if not expanded_scales else [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]
+    scales = [base_num_patches_per_window + offset for offset in offsets]
+    proposed_scales = [scale * patch_size * num_windows for scale in scales]
+    return [scale for scale in proposed_scales if scale >= patch_size * num_windows * 2]
 
 
 class RFDETRDetector(BaseModule):
@@ -58,7 +70,7 @@ class RFDETRDetector(BaseModule):
 
         # Store scales for multi-scale training
         self.scales = (
-            compute_multi_scale_scales(
+            _compute_multi_scale_scales(
                 rfdetr_args.resolution, rfdetr_args.expanded_scales, rfdetr_args.patch_size, rfdetr_args.num_windows
             )
             if multi_scale

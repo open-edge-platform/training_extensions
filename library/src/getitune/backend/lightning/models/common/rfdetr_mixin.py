@@ -18,11 +18,11 @@ from rfdetr._namespace import _namespace_from_configs
 from rfdetr.config import TrainConfig
 from rfdetr.models import build_criterion_from_config, build_model_from_config, load_pretrain_weights
 from rfdetr.models._defaults import MODEL_DEFAULTS
+from rfdetr.training.param_groups import get_param_dict
 from torch.hub import download_url_to_file
 from torchvision import tv_tensors
 from torchvision.ops import box_convert
 
-from getitune.backend.lightning.models.detection.detectors._rfdetr_vendored import get_param_dict
 from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
 from getitune.backend.lightning.models.detection.utils import limit_batch_objects
 from getitune.data.entity.base import BatchLoss

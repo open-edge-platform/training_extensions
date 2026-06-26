@@ -432,6 +432,10 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             "work_dir": self._data_dir / f"getitune-workspace-{model_id}",
             "device": getitune_device_type,
         }
+        # Ultralytics models load weights via engine's checkpoint param (for both
+        # fresh training from base weights and resume from parent revision).
+        # Lightning models self-load pretrained weights during construction via
+        # PRETRAINED_WEIGHTS_CACHE_DIR, so a checkpoint is only needed for resume.
         if is_ultralytics or has_model_revision:
             engine_kwargs["checkpoint"] = weights_path
 
