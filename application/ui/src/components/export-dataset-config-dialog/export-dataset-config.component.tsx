@@ -52,7 +52,7 @@ const WarningMessages = ({ emptyLabelName }: WarningMessagesProps) => {
                         and frames containing them will be exported as unannotated.`}
                     </Text>
                 )}
-                <Text>{`To preserve videos ${emptyLabelName !== null ? 'or empty labels' : ''}, please
+                <Text>{`To preserve videos${emptyLabelName !== null ? ' or empty labels' : ''}, please
                 use the Geti export format.`}</Text>
             </Flex>
         </Flex>
