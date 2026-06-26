@@ -68,12 +68,14 @@ const FORM_ID = 'export-dataset-form';
 const EXPORT_FORMATS_LINK =
     'https://docs.geti.intel.com/docs/user-guide/geti-fundamentals/datasets/dataset-export-import#supported-formats';
 
-export const ExportDatasetConfig = ({
-    name = 'dataset',
-    datasetId,
-    statistics,
-    dialogState,
-}: ExportDatasetConfigProps) => {
+type ExportDatasetDialogContentProps = {
+    name: string;
+    datasetId: string | null;
+    statistics: ReactNode;
+    dialogState: OverlayTriggerState;
+};
+
+const ExportDatasetDialogContent = ({ name, datasetId, statistics, dialogState }: ExportDatasetDialogContentProps) => {
     const { data: selectedProject } = useProject();
 
     const [formState, submitAction, isPending] = useExportDatasetJobAction({
@@ -90,76 +92,86 @@ export const ExportDatasetConfig = ({
     const emptyLabel = getEmptyLabel(selectedProject.task.task_type, selectedProject.task.exclusive_labels);
 
     return (
+        <Dialog size='L' width={{ base: '70vw' }}>
+            <Heading>Export {name}</Heading>
+            <Divider />
+            <Content UNSAFE_className={classes.container}>
+                <Heading>Exported dataset statistics</Heading>
+                {statistics}
+
+                <Heading>Export settings</Heading>
+
+                <View backgroundColor='gray-75' padding='size-200' borderRadius='regular'>
+                    <Form id={FORM_ID} validationBehavior='native' action={submitAction}>
+                        <MultiSelectList
+                            name='labels'
+                            items={labels}
+                            maxHeight='size-2000'
+                            label='Filter annotations by label'
+                            defaultSelectedKeys={new Set(labels.map(({ id }) => id))}
+                        />
+
+                        <Checkbox name='include_unannotated' defaultSelected={formState.include_unannotated}>
+                            Include media without annotations
+                        </Checkbox>
+
+                        <Divider size='S' />
+
+                        <RadioGroup
+                            name='export_format'
+                            label='Select dataset export format'
+                            defaultValue={formState.export_format}
+                            onChange={(value) => setSelectedExportFormat(value)}
+                        >
+                            {formatOptions.map((item) => (
+                                <Radio key={item.value} value={item.value}>
+                                    {item.label}
+                                </Radio>
+                            ))}
+                        </RadioGroup>
+                    </Form>
+
+                    {isNonGetiFormatSelected && <WarningMessages emptyLabelName={emptyLabel?.name ?? null} />}
+
+                    <Link
+                        href={EXPORT_FORMATS_LINK}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        UNSAFE_className={classes.link}
+                    >
+                        Learn more about export formats
+                        <LinkOut size='XS' />
+                    </Link>
+                </View>
+            </Content>
+
+            <ButtonGroup>
+                <Button onPress={dialogState.close} variant='secondary'>
+                    Cancel
+                </Button>
+                <Button type='submit' form={FORM_ID} variant='accent' isPending={isPending} isDisabled={isPending}>
+                    Export
+                </Button>
+            </ButtonGroup>
+        </Dialog>
+    );
+};
+
+export const ExportDatasetConfig = ({
+    name = 'dataset',
+    datasetId,
+    statistics,
+    dialogState,
+}: ExportDatasetConfigProps) => {
+    return (
         <DialogContainer onDismiss={dialogState.close}>
             {dialogState.isOpen && (
-                <Dialog size='L' width={{ base: '70vw' }}>
-                    <Heading>Export {name}</Heading>
-                    <Divider />
-                    <Content UNSAFE_className={classes.container}>
-                        <Heading>Exported dataset statistics</Heading>
-                        {statistics}
-
-                        <Heading>Export settings</Heading>
-
-                        <View backgroundColor='gray-75' padding='size-200' borderRadius='regular'>
-                            <Form id={FORM_ID} validationBehavior='native' action={submitAction}>
-                                <MultiSelectList
-                                    name='labels'
-                                    items={labels}
-                                    maxHeight='size-2000'
-                                    label='Filter annotations by label'
-                                    defaultSelectedKeys={new Set(labels.map(({ id }) => id))}
-                                />
-
-                                <Checkbox name='include_unannotated' defaultSelected={formState.include_unannotated}>
-                                    Include media without annotations
-                                </Checkbox>
-
-                                <Divider size='S' />
-
-                                <RadioGroup
-                                    name='export_format'
-                                    label='Select dataset export format'
-                                    defaultValue={formState.export_format}
-                                    onChange={(value) => setSelectedExportFormat(value)}
-                                >
-                                    {formatOptions.map((item) => (
-                                        <Radio key={item.value} value={item.value}>
-                                            {item.label}
-                                        </Radio>
-                                    ))}
-                                </RadioGroup>
-                            </Form>
-
-                            {isNonGetiFormatSelected && <WarningMessages emptyLabelName={emptyLabel?.name ?? null} />}
-
-                            <Link
-                                href={EXPORT_FORMATS_LINK}
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                UNSAFE_className={classes.link}
-                            >
-                                Learn more about export formats
-                                <LinkOut size='XS' />
-                            </Link>
-                        </View>
-                    </Content>
-
-                    <ButtonGroup>
-                        <Button onPress={dialogState.close} variant='secondary'>
-                            Cancel
-                        </Button>
-                        <Button
-                            type='submit'
-                            form={FORM_ID}
-                            variant='accent'
-                            isPending={isPending}
-                            isDisabled={isPending}
-                        >
-                            Export
-                        </Button>
-                    </ButtonGroup>
-                </Dialog>
+                <ExportDatasetDialogContent
+                    name={name}
+                    datasetId={datasetId}
+                    statistics={statistics}
+                    dialogState={dialogState}
+                />
             )}
         </DialogContainer>
     );
