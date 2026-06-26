@@ -17,10 +17,16 @@ export const isNonEmptyArray = <T>(value: T): value is IsValidArrayType<T> => Ar
 
 export const isNonEmptyString = (value: unknown): value is string => isString(value) && value !== '';
 
-export const downloadFile = (url: string, name?: string): void => {
-    platformDownloadFile(url, name);
+export const downloadFile = (url: string, name?: string, startedMessage?: string): void => {
+    platformDownloadFile(url, name, startedMessage);
 };
 
 export const formatBytes = (bytes: number): string => prettyBytes(bytes);
 
 export const pluralizeItems = (count: number) => (pluralRules.select(count) === 'one' ? 'item' : 'items');
+
+export function assertIsNotNullable<T>(value: T | null | undefined, name = 'value'): asserts value is T {
+    if (value === null || value === undefined) {
+        throw new Error(`${name} must not be null or undefined`);
+    }
+}

@@ -47,7 +47,6 @@ def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
             img = img.permute(2, 0, 1)
         # Check for HCW format: channels in the middle dimension
         elif img.shape[1] in (1, 3, 4) and img.shape[0] > 4 and img.shape[2] > 4:
-            # HCW format detected, convert to CHW
             img = img.permute(1, 0, 2)
         # If 4 channels (RGBA), convert to 3 channels (RGB)
         if img.shape[0] == 4:

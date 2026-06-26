@@ -6,6 +6,7 @@ import threading
 from collections.abc import Callable
 
 import cv2
+import numpy as np
 from loguru import logger
 from watchdog.events import DirCreatedEvent, DirDeletedEvent, FileCreatedEvent, FileDeletedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
@@ -45,6 +46,8 @@ class ImagesFolderStream(VideoStream):
             ignore_existing_images (bool): Flag if images, which already are in the folder at startup moment,
             should be ignored
         """
+        if not os.path.isdir(folder_path):
+            raise Exception(f"Directory not found: {folder_path}")
         self.folder_path = folder_path
         logger.info("Using folder_path: {}", self.folder_path)
 
@@ -99,10 +102,21 @@ class ImagesFolderStream(VideoStream):
     def get_data(self) -> StreamData | None:
         try:
             file = self.files.pop(0)
-            image = cv2.imread(file)
+            try:
+                # IMREAD_UNCHANGED preserves the original bit depth (e.g. 16-bit PNG/TIFF images).
+                image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
+            except FileNotFoundError:
+                # On Windows, Ultralytics patches cv2.imread with an np.fromfile-based
+                # version (ultralytics/utils/__init__.py) which raises FileNotFoundError
+                # on missing/corrupt files instead of returning None.
+                # On Linux this exception does not fire, but catching it is harmless.
+                image = None
             if image is None:
                 # Image cannot be loaded
                 return None
+            # Add explicit channel dimension for 2D grayscale: (H, W) → (H, W, 1)
+            if image.ndim == 2:
+                image = image[..., np.newaxis]
             return StreamData(
                 frame_data=image,
                 timestamp=os.path.getmtime(file),

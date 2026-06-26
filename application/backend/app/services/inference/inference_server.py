@@ -116,7 +116,7 @@ class InferenceServer:
                         resource_type=ResourceType.MODEL,
                         resource_id=f"{model_id} variant {model_variant.id}",
                     )
-                model_xml_path, _ = paths
+                model_xml_path = paths[0]
 
                 if self._loaded_model is not None:
                     ModelLoader.unload(self._loaded_model)

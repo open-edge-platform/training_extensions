@@ -3,6 +3,12 @@
 
 import { type Page } from '@playwright/test';
 
+export const pluralizeItems = (count: number) => {
+    const pluralRules = new Intl.PluralRules('en');
+
+    return pluralRules.select(count) === 'one' ? 'item' : 'items';
+};
+
 export class DatasetPage {
     constructor(private readonly page: Page) {}
 
@@ -60,7 +66,7 @@ export class DatasetPage {
     }
 
     getUploadProgressText(total: number) {
-        return this.page.getByText(`Uploading ${total} item(s)...`);
+        return this.page.getByText(`Uploading ${total} ${pluralizeItems(total)}...`);
     }
 
     getUploadProgressDetailText(succeeded: number, failed = 0) {
@@ -71,7 +77,7 @@ export class DatasetPage {
     }
 
     getUploadFinishedText(total: number) {
-        return this.page.getByText(`Uploaded ${total} item(s)`);
+        return this.page.getByText(`Uploaded ${total} ${pluralizeItems(total)}`);
     }
 
     getShowDetailsButton() {
@@ -129,6 +135,14 @@ export class DatasetPage {
 
     clickContinue() {
         return this.getContinueButton().click();
+    }
+
+    getSkipButton() {
+        return this.page.getByRole('button', { name: 'Skip' });
+    }
+
+    clickSkip() {
+        return this.getSkipButton().click();
     }
 
     getBulkDialogAssignButton() {

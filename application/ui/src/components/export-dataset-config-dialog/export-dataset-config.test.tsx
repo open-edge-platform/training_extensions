@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
@@ -19,6 +19,8 @@ describe('ExportDatasetConfig', () => {
         toggle: vi.fn(),
         setOpen: vi.fn(),
     };
+
+    const VIDEO_WARNING = /Exporting videos is not supported by this dataset format/i;
 
     const renderApp = (project: SchemaProjectView) => {
         server.use(
@@ -59,5 +61,25 @@ describe('ExportDatasetConfig', () => {
         expect(await screen.findByText('Export dataset')).toBeVisible();
         expect(screen.getByRole('radio', { name: 'Geti' })).toBeVisible();
         expect(screen.queryByRole('radio', { name: 'COCO' })).toBeVisible();
+    });
+
+    it('does not show the video export warning when the default Geti format is selected', async () => {
+        renderApp(getMockedProject({ task: { exclusive_labels: true, task_type: 'instance_segmentation' } }));
+
+        expect(await screen.findByText('Export dataset')).toBeVisible();
+        expect(screen.getByRole('radio', { name: 'Geti' })).toBeChecked();
+        expect(screen.queryByText(VIDEO_WARNING)).not.toBeInTheDocument();
+    });
+
+    it('shows the video export warning when a non-Geti format is selected', async () => {
+        renderApp(getMockedProject({ task: { exclusive_labels: true, task_type: 'instance_segmentation' } }));
+
+        fireEvent.click(await screen.findByRole('radio', { name: 'COCO' }));
+        expect(screen.getByRole('radio', { name: 'COCO' })).toBeChecked();
+        expect(screen.getByText(VIDEO_WARNING)).toBeVisible();
+
+        fireEvent.click(screen.getByRole('radio', { name: 'Geti' }));
+        expect(screen.getByRole('radio', { name: 'Geti' })).toBeChecked();
+        expect(screen.queryByText(VIDEO_WARNING)).not.toBeInTheDocument();
     });
 });

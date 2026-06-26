@@ -29,7 +29,7 @@ describe('DeleteMediaItem', () => {
 
         fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
 
-        expect(await screen.findByText(`1 item(s) deleted successfully`)).toBeVisible();
+        expect(await screen.findByText(`1 item deleted successfully`)).toBeVisible();
         expect(requestBody).toEqual({ media_ids: [itemId] });
         expect(mockedOnDeleted).toHaveBeenCalledWith([itemId]);
     });
@@ -53,7 +53,7 @@ describe('DeleteMediaItem', () => {
 
         fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
 
-        expect(await screen.findByText(`3 item(s) deleted successfully`)).toBeVisible();
+        expect(await screen.findByText(`3 items deleted successfully`)).toBeVisible();
         expect(requestBody).toEqual({ media_ids: itemsIds });
         expect(mockedOnDeleted).toHaveBeenCalledWith(itemsIds);
     });

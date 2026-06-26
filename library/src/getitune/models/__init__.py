@@ -17,7 +17,6 @@ from getitune.backend.lightning.models import (
     MaskRCNN,
     MaskRCNNTV,
     MobileNetV3,
-    RTMDet,
     RTMDetInst,
     RTMPose,
     SegNext,
@@ -35,6 +34,15 @@ from getitune.backend.openvino.models import (
     OVMultilabelClassificationModel,
     OVSegmentationModel,
 )
+
+try:
+    from getitune.backend.ultralytics.models import (
+        UltralyticsDetectionModel,
+        UltralyticsInstSegModel,
+    )
+except ImportError:
+    UltralyticsDetectionModel = None  # type: ignore[assignment]
+    UltralyticsInstSegModel = None  # type: ignore[assignment]
 
 __all__ = [
     # detection
@@ -63,7 +71,6 @@ __all__ = [
     "OVMulticlassClassificationModel",
     "OVMultilabelClassificationModel",
     "OVSegmentationModel",
-    "RTMDet",
     "RTMDetInst",
     "RTMPose",
     "SegNext",
@@ -71,3 +78,11 @@ __all__ = [
     "TimmModel",
     "VisionTransformer",
 ]
+
+if UltralyticsDetectionModel is not None:
+    __all__.extend(
+        [
+            "UltralyticsDetectionModel",
+            "UltralyticsInstSegModel",
+        ]
+    )

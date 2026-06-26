@@ -12,11 +12,18 @@ import type { RegionOfInterest } from '../../shared/types';
 import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
 import { getImageData } from './tools/utils';
 
+// See tools/utils.ts for the oversized image handling flow (downscale → display
+// in media-space → disable smart tools or coordinate-transform at boundaries).
 type SelectedMediaItemContextProps = {
     mediaItem: Media;
     roi: RegionOfInterest;
     setMediaItem: (item: Media) => void;
+    // Media-space view of the image: width/height always match the media item so
+    // coordinate clamping in drawing tools stays in annotation space.
     image: ImageData;
+    // True once the current item's full-resolution pixels are loaded and decoded.
+    // False during loading, while a placeholder is shown, or for images too large
+    // to rasterise at full size (smart tools are disabled in that case).
     isImageReady: boolean;
 };
 
@@ -86,8 +93,24 @@ export const SelectedMediaItemProvider = ({
 }: SelectedMediaItemProviderProps) => {
     const [mediaItem, setMediaItem] = useMediaItem(initialMediaItem);
 
-    const { data: image = getImageData(new Image()), isSuccess, isPlaceholderData } = useLoadImageQuery(mediaItem);
-    const isImageReady = isSuccess && !isPlaceholderData;
+    const {
+        data: loadedImage = getImageData(new Image()),
+        isSuccess,
+        isPlaceholderData,
+    } = useLoadImageQuery(mediaItem);
+
+    // For oversized media: wrap downscaled data in full-size dimensions so
+    // drawing tools clamp to media-space, not the smaller buffer dimensions.
+    const decodedAtFullSize = loadedImage.width === mediaItem.width && loadedImage.height === mediaItem.height;
+    const image = decodedAtFullSize
+        ? loadedImage
+        : ({
+              width: mediaItem.width,
+              height: mediaItem.height,
+              data: loadedImage.data,
+              colorSpace: 'srgb',
+          } as ImageData);
+    const isImageReady = isSuccess && !isPlaceholderData && decodedAtFullSize;
 
     const roi: RegionOfInterest = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 

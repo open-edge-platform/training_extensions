@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { BoundingBox, DetectionTool, Polygon, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
+import { BoundingBox, Polygon, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
 
 import { ReactComponent as MagneticLasso } from '../../../../assets/icons/magnetic-lasso.svg';
 import BoundingBoxImg from '../../../../assets/tools/bounding-box.webp';
@@ -11,7 +11,9 @@ import SAMDetectionImg from '../../../../assets/tools/sam-detection.webp';
 import SAMSegmentationImg from '../../../../assets/tools/sam-segmentation.webp';
 import { useProjectTask } from '../../../../hooks/use-project-task.hook';
 import { HOTKEYS } from '../../../../shared/hotkeys-definition';
+import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { ToolConfig } from '../interface';
+import { canRasteriseAtFullSize } from '../utils';
 
 const SELECTION_TOOL_CONFIG: ToolConfig = {
     type: 'selection',
@@ -79,13 +81,6 @@ const MAGNETIC_LASSO_TOOL_CONFIG: ToolConfig = {
     },
 };
 
-const SSIM_TOOL_CONFIG: ToolConfig = {
-    type: 'ssim',
-    icon: DetectionTool,
-    hotkey: HOTKEYS.ssimTool,
-    label: 'Detection assistant',
-};
-
 const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
     classification: [],
     detection: [SELECTION_TOOL_CONFIG, BOUNDING_BOX_TOOL_CONFIG, AUTO_SEGMENTATION_DETECTION_CONFIG],
@@ -94,12 +89,19 @@ const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
         POLYGON_TOOL_CONFIG,
         MAGNETIC_LASSO_TOOL_CONFIG,
         AUTO_SEGMENTATION_CONFIG,
-        SSIM_TOOL_CONFIG,
     ],
 };
 
 export const useAvailableTools = (): ToolConfig[] => {
     const taskType = useProjectTask();
+    const { mediaItem } = useSelectedMediaItem();
+
+    // Disable smart tools (SAM, magnetic lasso, SSIM) for oversized media.
+    if (!canRasteriseAtFullSize(mediaItem.width, mediaItem.height)) {
+        return TASK_TOOL_CONFIG[taskType].filter(
+            (tool) => tool.type !== 'sam' && tool.type !== 'magnetic-lasso' && tool.type !== 'ssim'
+        );
+    }
 
     return TASK_TOOL_CONFIG[taskType];
 };

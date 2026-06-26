@@ -4,7 +4,7 @@
 from sqlalchemy import Select, exists, func, select
 from sqlalchemy.orm import aliased
 
-from app.db.schema import DatasetItemDB, MediaDB
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB
 from app.models import DatasetItemAnnotationStatus, MediaType
 
 
@@ -75,6 +75,55 @@ def _apply_annotation_status_filter_with_video_support(stmt: Select, annotation_
             )
         )
     return stmt
+
+
+def _apply_label_filter_with_video_support(stmt: Select, label_ids: list[str] | None = None) -> Select:
+    """Apply a label filter to a media query, accounting for the video/frame hierarchy.
+
+    Unlike a plain join on ``DatasetItemLabelDB``, this also works for videos, which do
+    not have their own ``DatasetItemDB`` rows. A video is considered to match a label if
+    at least one of its frames has a ``DatasetItemDB`` annotated with one of the given
+    labels. In that case the video itself is returned (not its individual frames).
+
+    Images and video frames match when their own dataset item carries one of the labels.
+
+    Args:
+        stmt: The base SQLAlchemy select statement, expected to have ``MediaDB`` as its
+              primary entity.
+        label_ids: The list of label ids to filter by, or ``None``/empty to skip filtering.
+
+    Returns:
+        The select statement with the label condition applied.
+    """
+    if not label_ids:
+        return stmt
+
+    # Image or frame: its own dataset item carries one of the requested labels
+    own_label_exists = exists(
+        select(DatasetItemLabelDB.dataset_item_id)
+        .where(
+            DatasetItemLabelDB.dataset_item_id == MediaDB.id,
+            DatasetItemLabelDB.label_id.in_(label_ids),
+        )
+        .correlate(MediaDB)
+    )
+
+    # Video: at least one of its frames has a dataset item carrying one of the requested labels
+    frame_alias = aliased(MediaDB)
+    frame_label_exists = exists(
+        select(DatasetItemLabelDB.dataset_item_id)
+        .join(frame_alias, frame_alias.id == DatasetItemLabelDB.dataset_item_id)
+        .where(
+            frame_alias.video_id == MediaDB.id,
+            DatasetItemLabelDB.label_id.in_(label_ids),
+        )
+        .correlate(MediaDB)
+    )
+
+    return stmt.where(
+        ((MediaDB.type != MediaType.VIDEO) & own_label_exists)
+        | ((MediaDB.type == MediaType.VIDEO) & frame_label_exists)
+    )
 
 
 def _apply_subset_filter(stmt: Select, subset: str | None = None) -> Select:

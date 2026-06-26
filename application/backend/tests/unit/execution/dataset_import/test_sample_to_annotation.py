@@ -272,6 +272,43 @@ class TestSegmentationConversion:
         assert result[0].labels[0].id == fxt_project_labels_for_mapping[1].id
         assert result[1].labels[0].id == fxt_project_labels_for_mapping[0].id
 
+    def test_convert_segmentation_skips_empty_polygons(self, fxt_converter):
+        """Empty (zero-point) polygons are skipped.
+
+        This mirrors bounding-box-only source annotations (e.g. COCO with empty "segmentation"),
+        which the importer represents as polygons with no points.
+        """
+        labels = np.array([0])
+        polygons = np.array([np.empty((0, 2), dtype=np.float32)], dtype=object)
+        sample = InstanceSegmentationImportExportSample(label=labels, polygons=polygons, confidence=None)
+
+        result = fxt_converter.convert_sample(sample)
+
+        assert result == []
+
+    def test_convert_segmentation_mixes_empty_and_valid_polygons(self, fxt_converter, fxt_project_labels):
+        """Only non-empty polygons are converted; empty ones are dropped while preserving alignment."""
+        labels = np.array([0, 1, 2])
+        polygons = np.array(
+            [
+                np.empty((0, 2), dtype=np.float32),
+                np.array([[10.0, 20.0], [30.0, 40.0], [50.0, 60.0]], dtype=np.float32),
+                np.empty((0, 2), dtype=np.float32),
+            ],
+            dtype=object,
+        )
+        confidences = np.array([0.5, 0.92, 0.7])
+        sample = InstanceSegmentationImportExportSample(label=labels, polygons=polygons, confidence=confidences)
+
+        result = fxt_converter.convert_sample(sample)
+
+        assert len(result) == 1
+        assert isinstance(result[0].shape, Polygon)
+        assert len(result[0].shape.points) == 3
+        # The kept polygon must keep its own label and confidence (index 1), not the skipped one's.
+        assert result[0].labels[0].id == fxt_project_labels[1].id
+        assert result[0].confidences == pytest.approx([0.92], abs=1e-6)
+
 
 class TestLabelMapping:
     def test_converter_with_labels_not_in_project(self, fxt_label_categories, fxt_project_labels):

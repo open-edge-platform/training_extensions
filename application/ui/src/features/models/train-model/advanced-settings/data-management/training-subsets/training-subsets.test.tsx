@@ -14,6 +14,7 @@ import { render } from 'test-utils/render';
 import { http } from '../../../../../../api/utils';
 import { TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { server } from '../../../../../../msw-node-setup';
+import { distributeByLargestRemainder } from '../../../../utils';
 import { TrainingSubsets } from './training-subsets.component';
 import { getSubsetSplitParameters, SubsetSplitParameters } from './utils';
 
@@ -108,9 +109,10 @@ const expectTrainingSubsetsDistribution = async ({
     validationSubset: number;
     testSubset: number;
 }) => {
-    const newTestingSize = Math.floor(unassignedSize * (testSubset / 100));
-    const newValidationSize = Math.floor(unassignedSize * (validationSubset / 100));
-    const newTrainingSize = unassignedSize - newValidationSize - newTestingSize;
+    const [newTrainingSize, newValidationSize, newTestingSize] = distributeByLargestRemainder(
+        [trainingSubset, validationSubset, testSubset],
+        unassignedSize
+    );
 
     expectTrainingSubsetsDistributionProportion({
         validationSubset,
@@ -392,5 +394,51 @@ describe('TrainingSubsets', () => {
 
         expect(alert).toBeInTheDocument();
         expect(within(alert).getByRole('heading')).toHaveTextContent('Invalid training subsets configuration');
+    });
+
+    it('45/28/27 split on 5 unassigned items distributes as Training=2, Validation=2, Test=1', async () => {
+        const trainingSize = 0;
+        const validationSize = 0;
+        const testSize = 0;
+        const unassignedSize = 5;
+
+        mockSubsetsNetworkRequest({ trainingSize, validationSize, unassignedSize, testSize });
+
+        const regressionSubsetParameters: SubsetSplitParameters = [
+            getMockedConfigurationParameter({
+                key: 'training',
+                value_type: 'int',
+                name: 'Training percentage',
+                value: 45,
+                description: 'Percentage of data to use for training',
+                default_value: 45,
+                max_value: 100,
+                min_value: 1,
+            }),
+            getMockedConfigurationParameter({
+                key: 'validation',
+                value_type: 'int',
+                name: 'Validation percentage',
+                value: 28,
+                description: 'Percentage of data to use for validation',
+                default_value: 28,
+                max_value: 100,
+                min_value: 1,
+            }),
+            getMockedConfigurationParameter({
+                key: 'test',
+                value_type: 'int',
+                name: 'Test percentage',
+                value: 27,
+                description: 'Percentage of data to use for testing',
+                default_value: 27,
+                max_value: 100,
+                min_value: 1,
+            }),
+        ];
+
+        render(<App subsetParameters={regressionSubsetParameters} />);
+
+        await expectSubsetSizes({ trainingSize: 2, validationSize: 2, testSize: 1 });
     });
 });

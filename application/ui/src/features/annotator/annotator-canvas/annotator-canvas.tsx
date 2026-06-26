@@ -1,14 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { MouseEvent, PointerEvent, useEffect, useRef, useState } from 'react';
+import { PointerEvent, useEffect, useRef, useState } from 'react';
 
-import { Loading } from '@geti/ui';
-import { useIsFetching } from '@tanstack/react-query';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { useSpinDelay } from 'spin-delay';
-
-import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import type { Media } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
@@ -17,11 +11,10 @@ import { useAnnotator } from '../../../shared/annotator/annotator-provider.compo
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { useTool } from '../../../shared/annotator/tool-provider.component';
 import { useEditableAnnotationState } from '../../../shared/annotator/use-editable-annotation-state.hook';
-import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
+import { isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
 import { VideoAnnotations, VideoPredictions } from '../annotations/video-annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
-import { loadImageQueryOptions } from '../hooks/use-load-image-query.hook';
 import { ToolManager } from '../tools/tool-manager.component';
 import { usePrefetchVideoFramesAnnotations } from '../video-player/api/use-video-frames-annotations';
 import {
@@ -31,42 +24,10 @@ import {
     usePrefetchVideoFramesPredictions,
 } from '../video-player/api/use-video-frames-predictions';
 import { getVideoFrameRangeIndexes } from '../video-player/api/utils';
-import { VideoFrame } from '../video-player/video-frame.component';
 import { useVideoPlayer, useVideoPlayerContext } from '../video-player/video-player-provider.component';
+import { MediaCanvas } from './media-canvas';
 
 import classes from './annotator-canvas.module.scss';
-
-type MediaImageProps = {
-    image: ImageData;
-    mediaItem: Media;
-};
-
-const useDrawImageOnCanvas = (image: ImageData) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-
-    useEffect(() => {
-        const ctx = canvasRef?.current?.getContext('2d');
-
-        if (ctx == null) {
-            return;
-        }
-
-        ctx.putImageData(image, 0, 0);
-    }, [image]);
-
-    return canvasRef;
-};
-
-const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
-    const canvasRef = useDrawImageOnCanvas(image);
-
-    return (
-        <>
-            <canvas ref={canvasRef} width={image.width} height={image.height} className={classes.image} />
-            {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && <VideoFrame canvasRef={canvasRef} />}
-        </>
-    );
-};
 
 type ImageAnnotationsProps = {
     mediaItem: Media;
@@ -190,9 +151,13 @@ type AnnotatorCanvasProps = {
 
 type UseToolLayerPointerPassthroughProps = {
     canEditSelectedAnnotation: boolean;
+    areToolsDisabled: boolean;
 };
 
-const useToolLayerPointerPassthrough = ({ canEditSelectedAnnotation }: UseToolLayerPointerPassthroughProps) => {
+const useToolLayerPointerPassthrough = ({
+    canEditSelectedAnnotation,
+    areToolsDisabled,
+}: UseToolLayerPointerPassthroughProps) => {
     const { activeTool } = useTool();
     const isSelectionToolActive = activeTool === 'selection';
     const toolLayerRef = useRef<HTMLDivElement>(null);
@@ -266,8 +231,15 @@ const useToolLayerPointerPassthrough = ({ canEditSelectedAnnotation }: UseToolLa
         };
     }, []);
 
+    // When tools are disabled (prediction/read-only mode, or scene busy) we keep `ToolManager` mounted so
+    // worker-backed tools (notably Segment Anything) don't unmount and discard their in-flight encoder
+    // promises — coming back used to stack new encoder RPCs behind the still-running ones and trip the
+    // SAM encoder timeout. Pointer-events: none routes clicks/hover straight through to the annotations
+    // layer below, matching the previous behavior of unmounting the tool layer entirely.
     const toolLayerPointerEvents =
-        isSelectionToolActive || (canEditSelectedAnnotation && isToolLayerPointerPassthrough) ? 'none' : 'auto';
+        areToolsDisabled || isSelectionToolActive || (canEditSelectedAnnotation && isToolLayerPointerPassthrough)
+            ? 'none'
+            : 'auto';
 
     return { toolLayerRef, toolLayerPointerEvents, handlePointerMove } as const;
 };
@@ -279,53 +251,39 @@ export const AnnotatorCanvas = ({
     isReadOnly = false,
     isLoadingPredictions = false,
 }: AnnotatorCanvasProps) => {
-    const projectId = useProjectIdentifier();
     const isSceneBusy = useIsAnnotatorSceneBusy();
     const { canvasRef } = useAnnotator();
     const { isSingleEditableSelection } = useEditableAnnotationState();
 
-    const isFetchingMedia = useIsFetching({ queryKey: loadImageQueryOptions(projectId, mediaItem).queryKey }) > 0;
-
-    const isLoadingMedia = useSpinDelay(isFetchingMedia, { delay: 400, minDuration: 200 });
     const areToolsDisabled = isSceneBusy || isReadOnly;
-    const size = { width: mediaItem.width, height: mediaItem.height };
     const canEditSelectedAnnotation = !areToolsDisabled && isSingleEditableSelection;
     const { toolLayerRef, toolLayerPointerEvents, handlePointerMove } = useToolLayerPointerPassthrough({
         canEditSelectedAnnotation,
+        areToolsDisabled,
     });
 
-    const isPlaceholderImage = image.width === 1 && image.height === 1;
-
-    if (isLoadingMedia && isPlaceholderImage) {
-        return <Loading size='M' />;
-    }
-
     return (
-        <ZoomTransform target={size}>
-            <div
-                style={{ position: 'relative', height: '100%', width: '100%' }}
-                onContextMenu={(event: MouseEvent): void => event.preventDefault()}
-                onPointerMove={handlePointerMove}
-                className={isReadOnly ? classes.readOnlyCanvas : undefined}
-                ref={canvasRef}
-            >
-                {(isLoadingMedia || isLoadingPredictions) && <Loading mode={'overlay'} />}
-                <MediaImage image={image} mediaItem={mediaItem} />
-                <MediaAnnotations mediaItem={mediaItem} mode={mode} />
+        <MediaCanvas
+            mediaItem={mediaItem}
+            image={image}
+            containerRef={canvasRef}
+            onPointerMove={handlePointerMove}
+            className={isReadOnly ? classes.readOnlyCanvas : undefined}
+            isLoadingOverlay={isLoadingPredictions}
+        >
+            <MediaAnnotations mediaItem={mediaItem} mode={mode} />
 
-                {!areToolsDisabled && (
-                    <div
-                        ref={toolLayerRef}
-                        style={{
-                            position: 'absolute',
-                            inset: 0,
-                            pointerEvents: toolLayerPointerEvents,
-                        }}
-                    >
-                        <ToolManager />
-                    </div>
-                )}
+            <div
+                ref={toolLayerRef}
+                aria-hidden={areToolsDisabled || undefined}
+                style={{
+                    position: 'absolute',
+                    inset: 0,
+                    pointerEvents: toolLayerPointerEvents,
+                }}
+            >
+                <ToolManager />
             </div>
-        </ZoomTransform>
+        </MediaCanvas>
     );
 };

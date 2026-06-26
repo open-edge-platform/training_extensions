@@ -5,6 +5,12 @@
     "windows": ["main"],
     "permissions": [
         "core:default",
+        "dialog:allow-open",
+        "dialog:allow-save",
+        {
+            "identifier": "fs:allow-write-file",
+            "allow": [{ "path": "$HOME/**" }]
+        },
         {
             "identifier": "opener:allow-open-url",
             "allow": [{ "url": "https://www.intel.com/*" }, { "url": "https://github.com/*" }]

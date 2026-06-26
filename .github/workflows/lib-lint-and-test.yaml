@@ -27,10 +27,11 @@ jobs:
     runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
+      run_benchmark_dataset_scripts: ${{ steps.check_benchmark_dataset_scripts.outputs.run }}
     steps:
       - &checkout
         name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           persist-credentials: false
 
@@ -42,6 +43,17 @@ jobs:
             test:
               - library/**
               - .github/**
+
+      # Separate filter so we only run the (slow, network-bound) benchmark
+      # dataset preparation tests when those scripts are touched.
+      - name: Check benchmark dataset script paths
+        id: check_benchmark_dataset_scripts
+        uses: ./.github/actions/check-paths
+        with:
+          files_yaml: |
+            test:
+              - library/scripts/benchmark_datasets/**
+              - library/tests/unit/scripts/**
 
   code-quality-checks:
     runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
@@ -86,7 +98,7 @@ jobs:
     steps:
       # YAML anchors not used cause currently zizmor don't support them in matrix strategies
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           persist-credentials: false
 
@@ -115,7 +127,7 @@ jobs:
         run: just test-unit --cov --cov-report=xml --cov-append
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7
         with:
           directory: library
           flags: coverage_unit-tests_Python-${{ matrix.python-version }}
@@ -144,7 +156,7 @@ jobs:
     steps:
       # YAML anchors aren't used because Zizmor fails here and support for them is best-effort for now
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           persist-credentials: false
 
@@ -173,10 +185,50 @@ jobs:
         run: just test-integration \
           -ra \
           --showlocals \
-          --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv \
+          --junitxml=${{ matrix.task }}_Python-${{ matrix.python-version }}.xml \
           --task ${{ matrix.task }} \
           --open-subprocess \
           --run-category-only
+
+  # Real-network test for the benchmark-dataset preparation scripts. Only runs
+  # when files under ``library/scripts/benchmark_datasets/**`` (or the matching
+  # tests) are modified, since it actually downloads datasets from the internet.
+  benchmark-dataset-scripts:
+    name: benchmark-dataset-scripts
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    needs:
+      - check-paths
+    if: needs.check-paths.outputs.run_benchmark_dataset_scripts == 'true'
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+
+      # TODO remove after switching to an official Datumaro release with pre-built wheels
+      - name: Installing Rust toolchain
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: stable
+
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
+        with:
+          uv-version-file: library/pyproject.toml
+          python-version: "3.11"
+
+      - name: Installing dependencies
+        working-directory: library
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        run: just venv
+
+      - name: Run benchmark dataset script tests
+        working-directory: library
+        run: uv run pytest ./tests/unit/scripts -v --run-network
 
   required-check:
     name: Required Check lib-lint-and-test
@@ -185,6 +237,7 @@ jobs:
       - code-quality-checks
       - unit-tests
       - integration-tests
+      - benchmark-dataset-scripts
     runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}

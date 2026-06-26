@@ -11,14 +11,16 @@ import { MediaItem } from '../../../../components/media-item/media-item.componen
 import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { DatasetRevisionItem } from '../../../../constants/shared-types';
-import { AnnotatorProviders } from '../../../../features/dataset/media-preview/annotator-providers.component';
+import {
+    SelectedMediaItemProvider,
+    useSelectedMediaItem,
+} from '../../../../features/annotator/selected-media-item-provider.component';
 import { useAnnotationsQuery } from '../../../../features/dataset/media-preview/api/use-annotations-query';
+import { ReadOnlyAnnotatorProviders } from '../../../../features/dataset/media-preview/read-only-annotator-providers.component';
 import { ReadOnlyAnnotator } from '../../../../features/dataset/media-preview/read-only-annotator.component';
 import { getInitialAnnotations } from '../../../../features/dataset/media-preview/utils';
 import { type GalleryViewMode } from '../../../../shared/gallery-view-modes';
 import { getDatasetRevisionThumbnailUrl } from '../../../../shared/media-url.utils';
-import { useLoadImageQuery } from '../../../annotator/hooks/use-load-image-query.hook';
-import { getImageData } from '../../../annotator/tools/utils';
 import { datasetRevisionItemToMedia } from './utils';
 
 const VIEW_MODE_SETTINGS: Record<GalleryViewMode, GridLayoutOptions> = {
@@ -42,14 +44,38 @@ type SubsetMediaDialogProps = {
     onClose: () => void;
 };
 
-const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
-    const mediaItem = datasetRevisionItemToMedia(item);
+type SubsetMediaDialogContentProps = {
+    item: DatasetRevisionItem;
+    onClose: () => void;
+};
+
+const SubsetMediaDialogContent = ({ item, onClose }: SubsetMediaDialogContentProps) => {
+    const { mediaItem, image } = useSelectedMediaItem();
     const { data: annotationsData } = useAnnotationsQuery(mediaItem);
-    const { data: image = getImageData(new Image()) } = useLoadImageQuery(mediaItem);
 
     const annotationsDTO = annotationsData?.annotations ?? [];
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
-    const mode = 'annotation';
+
+    return (
+        <ReadOnlyAnnotatorProviders
+            key={mediaItem.id}
+            mediaItem={mediaItem}
+            initialAnnotationsDTO={getInitialAnnotations(isUserReviewed, annotationsDTO)}
+            isUserReviewed={isUserReviewed}
+        >
+            <ReadOnlyAnnotator
+                image={image}
+                mediaItem={mediaItem}
+                onClose={onClose}
+                subset={item.subset}
+                hasAnnotationStatus={false}
+            />
+        </ReadOnlyAnnotatorProviders>
+    );
+};
+
+const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
+    const mediaItem = datasetRevisionItemToMedia(item);
 
     return (
         <Dialog>
@@ -62,24 +88,9 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
                     columns={['1fr']}
                     areas={['header', 'canvas', 'bottom']}
                 >
-                    <AnnotatorProviders
-                        key={mediaItem.id}
-                        mediaItem={mediaItem}
-                        initialAnnotationsDTO={getInitialAnnotations(isUserReviewed, annotationsDTO)}
-                        initialPredictionsDTO={[]}
-                        isUserReviewed={isUserReviewed}
-                        mode={mode}
-                        isReadOnly
-                    >
-                        <ReadOnlyAnnotator
-                            image={image}
-                            mediaItem={mediaItem}
-                            onClose={onClose}
-                            mode={mode}
-                            subset={item.subset}
-                            hasAnnotationStatus={false}
-                        />
-                    </AnnotatorProviders>
+                    <SelectedMediaItemProvider mediaItem={mediaItem}>
+                        <SubsetMediaDialogContent item={item} onClose={onClose} />
+                    </SelectedMediaItemProvider>
                 </Grid>
             </Content>
         </Dialog>

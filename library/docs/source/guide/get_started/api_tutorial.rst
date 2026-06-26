@@ -74,7 +74,7 @@ If you want to use other models offered by Geti Library, you can get a list of a
 
         .. code-block:: python
 
-            from getitune.backend.lightning.cli.utils import list_models
+            from getitune.utils import list_models
 
             model_lists = list_models(task="DETECTION")
             print(model_lists)
@@ -113,7 +113,7 @@ If you want to use other models offered by Geti Library, you can get a list of a
 
         .. code-block:: python
 
-            from getitune.backend.lightning.cli.utils import list_models
+            from getitune.utils import list_models
 
             model_lists = list_models(task="DETECTION", print_table=True)
 
@@ -132,7 +132,7 @@ If you want to use other models offered by Geti Library, you can get a list of a
 
     .. code-block:: python
 
-        from getitune.backend.lightning.cli.utils import list_models
+        from getitune.utils import list_models
 
         model_lists = list_models(task="DETECTION", pattern="tile")
         print(model_lists)

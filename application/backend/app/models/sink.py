@@ -100,7 +100,7 @@ class WebhookConfig(SinkConfig):
     webhook_url: str
     http_method: HttpMethod = "POST"
     headers: HttpHeaders | None = None
-    timeout: int = 10  # seconds
+    timeout: int = Field(default=10, gt=0)  # seconds
 
 
 class WebhookSinkConfig(BaseSinkConfig):
@@ -114,3 +114,17 @@ Sink = Annotated[
 ]
 
 SinkAdapter: TypeAdapter[Sink] = TypeAdapter(Sink)
+
+
+class SinkTestResult(BaseModel):
+    reachable: bool
+    error: str | None
+    latency_ms: float | None
+
+    @staticmethod
+    def success(latency_ms: float) -> "SinkTestResult":
+        return SinkTestResult(reachable=True, error=None, latency_ms=latency_ms)
+
+    @staticmethod
+    def failure(error: str | None) -> "SinkTestResult":
+        return SinkTestResult(reachable=False, error=error, latency_ms=None)

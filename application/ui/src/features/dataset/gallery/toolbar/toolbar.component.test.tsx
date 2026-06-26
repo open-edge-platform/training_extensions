@@ -108,6 +108,7 @@ describe('Toolbar', () => {
             selectedKeys: new Set(),
             setSelectedKeys: vi.fn(),
             toggleSelectedKeys: vi.fn(),
+            isSelected: vi.fn().mockReturnValue(false),
         });
     });
 
@@ -147,6 +148,7 @@ describe('Toolbar', () => {
             selectedKeys: new Set([item1.id, item2.id]),
             setSelectedKeys: vi.fn(),
             toggleSelectedKeys: vi.fn(),
+            isSelected: vi.fn().mockReturnValue(false),
         });
 
         await renderToolbar([item1, item2]);
@@ -175,6 +177,7 @@ describe('Toolbar', () => {
             selectedKeys: new Set([firstItem.id]),
             setSelectedKeys: vi.fn(),
             toggleSelectedKeys: vi.fn(),
+            isSelected: vi.fn().mockReturnValue(false),
         });
 
         await renderToolbar([firstItem]);
@@ -192,6 +195,7 @@ describe('Toolbar', () => {
             selectedKeys: new Set(),
             setSelectedKeys: vi.fn(),
             toggleSelectedKeys: vi.fn(),
+            isSelected: vi.fn().mockReturnValue(false),
         });
 
         await renderToolbar([firstItem]);
@@ -209,6 +213,7 @@ describe('Toolbar', () => {
             selectedKeys: new Set(firstItem.id),
             setSelectedKeys: vi.fn(),
             toggleSelectedKeys: vi.fn(),
+            isSelected: vi.fn().mockReturnValue(false),
         });
 
         await renderToolbar([firstItem]);

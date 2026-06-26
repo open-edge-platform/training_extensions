@@ -7,6 +7,8 @@ from pathlib import Path
 
 import requests
 from loguru import logger
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 
 from app.models import ModelManifest, TaskType
 
@@ -15,6 +17,10 @@ from .model_manifest_service import ModelManifestService
 
 class BaseWeightsService:
     """Service for downloading and managing pretrained model weights from external archives."""
+
+    REQUEST_TIMEOUT = (10, 600)  # (connect timeout, read timeout) in seconds
+    RETRY_TOTAL = 3  # total number of retries for failed requests
+    RETRY_BACKOFF_FACTOR = 1.0  # exponential backoff factor for retries (e.g., 1s, 2s, 4s)
 
     def __init__(self, data_dir: Path) -> None:
         self.pretrained_weights_dir = data_dir / "pretrained_weights"
@@ -161,21 +167,27 @@ class BaseWeightsService:
         Raises:
             OSError: If there's insufficient disk space
         """
-        try:
-            # Use a longer read timeout to allow for large file downloads
-            response = requests.head(remote_url, allow_redirects=True, timeout=(10, 600))
-            response.raise_for_status()
+        # Use a conservative default (500MB) if the remote size cannot be queried.
+        file_size = 500 * 1024 * 1024
+        # Try with and without proxies, as some environments may have proxy issues that cause the HEAD request to fail
+        for use_env_proxy in (True, False):
+            try:
+                with self._build_retry_session(use_env_proxy=use_env_proxy) as session:
+                    response = session.head(remote_url, allow_redirects=True, timeout=self.REQUEST_TIMEOUT)
+                    response.raise_for_status()
 
-            content_length = response.headers.get("content-length")
-            if content_length:
-                file_size = int(content_length)
-            else:
-                # If we can't get the size, assume a reasonable default (500MB)
-                file_size = 500 * 1024 * 1024
-                logger.warning(f"Could not determine file size for {remote_url}, assuming 500MB")
-        except Exception as e:
-            logger.warning(f"Could not check remote file size for {remote_url}: {e}, assuming 500MB")
-            file_size = 500 * 1024 * 1024
+                    content_length = response.headers.get("content-length")
+                    if content_length:
+                        file_size = int(content_length)
+                    else:
+                        logger.warning(f"Could not determine file size for {remote_url}, assuming 500MB")
+                    break
+            except Exception as e:
+                # Log per mode so we can see whether proxy or direct access failed.
+                proxy_mode = "env-proxy" if use_env_proxy else "direct"
+                logger.warning(f"Could not check remote file size for {remote_url} via {proxy_mode}: {e}")
+        else:
+            logger.warning(f"Could not check remote file size for {remote_url}; assuming 500MB")
 
         stat = shutil.disk_usage(self.pretrained_weights_dir)
         available_space = stat.free
@@ -198,37 +210,72 @@ class BaseWeightsService:
             sha_sum: Expected SHA256 checksum for verification
 
         Raises:
-            ValueError: If downloaded file fails integrity check, or if download fails
+            RuntimeError: If downloaded file fails integrity check, or if download fails
         """
         self._check_disk_space(remote_url)
 
         # Create temporary file for download
         temp_path = local_path.with_suffix(".tmp")
         try:
-            # Stream the download to handle large files, use a longer read timeout to allow for large file downloads
-            with requests.get(remote_url, stream=True, timeout=(10, 600)) as response:
-                response.raise_for_status()
-                with open(temp_path, "wb") as f:
-                    for data in response.iter_content(chunk_size=4096):
-                        f.write(data)
+            # Ensure all folders exist for the destination path
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Attempt the download with and without proxies, since some environment may have proxy issues
+            last_error: Exception | None = None
+            for use_env_proxy in (True, False):
+                try:
+                    with (
+                        self._build_retry_session(use_env_proxy=use_env_proxy) as session,
+                        session.get(remote_url, stream=True, timeout=self.REQUEST_TIMEOUT) as response,
+                    ):
+                        response.raise_for_status()
+                        with open(temp_path, "wb") as f:
+                            for data in response.iter_content(chunk_size=4096):
+                                f.write(data)
+                    break
+                except requests.RequestException as e:
+                    last_error = e
+                    proxy_mode = "env-proxy" if use_env_proxy else "direct"
+                    logger.warning(f"Weight download failed via {proxy_mode} for {remote_url}: {e}")
+            else:
+                raise RuntimeError(f"Failed to download weights from {remote_url}: {last_error}")
 
             if not self._verify_file_integrity(temp_path, sha_sum):
                 temp_path.unlink()
-                raise ValueError(f"Downloaded file failed integrity check for {remote_url}")
+                raise RuntimeError(f"Downloaded file failed integrity check for {remote_url}")
 
             # Move temporary file to final location
             temp_path.rename(local_path)
             logger.info(f"Successfully downloaded and verified weights: {local_path}")
         except requests.RequestException as e:
             logger.error(f"Failed to download weights from {remote_url}: {e}")
-            raise ValueError(f"Failed to download weights from {remote_url}: {e}")
+            raise RuntimeError(f"Failed to download weights from {remote_url}: {e}") from e
+        except RuntimeError:
+            # Re-raise runtime errors to preserve the original error type and message and avoid the broad except clause
+            raise
         except Exception as e:
             logger.error(f"Unexpected error downloading weights from {remote_url}: {e}")
-            raise ValueError(f"Unexpected error downloading weights from {remote_url}: {e}")
+            raise RuntimeError(f"Unexpected error downloading weights from {remote_url}: {e}") from e
         finally:
             # Clean up temporary file if it exists
             if temp_path.exists():
                 temp_path.unlink()
+
+    def _build_retry_session(self, use_env_proxy: bool) -> requests.Session:
+        session = requests.Session()
+        # trust_env=False disables HTTP(S)_PROXY and NO_PROXY from environment.
+        session.trust_env = use_env_proxy
+
+        retry = Retry(
+            total=self.RETRY_TOTAL,
+            backoff_factor=self.RETRY_BACKOFF_FACTOR,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=frozenset(["HEAD", "GET"]),
+        )
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+        return session
 
     @staticmethod
     def _get_and_validate_model_manifest(task: TaskType, model_manifest_id: str) -> ModelManifest:

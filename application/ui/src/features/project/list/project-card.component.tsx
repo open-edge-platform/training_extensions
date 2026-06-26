@@ -88,7 +88,7 @@ export const ProjectCard = ({ item, prioritizeImage = false, projectNames }: Pro
 
                     <View flex={1} padding={cardPadding}>
                         <Flex alignItems={'center'} justifyContent={'space-between'}>
-                            <Heading level={2} marginEnd={'size-400'} UNSAFE_className={classes.projectName}>
+                            <Heading level={2} marginEnd={'size-400'} UNSAFE_className={classes.projectCardName}>
                                 <span title={item.name}>{item.name}</span>
                             </Heading>
                         </Flex>
@@ -98,9 +98,11 @@ export const ProjectCard = ({ item, prioritizeImage = false, projectNames }: Pro
                             {isActive && <ActiveProjectBadge />}
                         </Flex>
 
-                        <Flex marginTop={'size-100'} gap={'size-100'} direction={'column'}>
-                            <Text>• Created: {formatCreationDate(item.created_at)}</Text>
-                            <Text UNSAFE_className={classes.labelList}>
+                        <Flex marginTop={'size-200'} gap={'size-100'} direction={'column'}>
+                            <Text UNSAFE_className={classes.projectMetadata}>
+                                • Created: {formatCreationDate(item.created_at)}
+                            </Text>
+                            <Text UNSAFE_className={clsx(classes.labelList, classes.projectMetadata)}>
                                 • Labels: {(item.task.labels ?? []).map((label) => label.name).join(', ')}
                             </Text>
                         </Flex>

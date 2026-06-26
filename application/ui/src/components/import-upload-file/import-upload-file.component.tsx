@@ -1,13 +1,16 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Content, DropZone, FileTrigger, Flex, Heading, IllustratedMessage, Text, toast } from '@geti/ui';
+import { Button, Content, DropZone, FileTrigger, Flex, Heading, IllustratedMessage, Text } from '@geti/ui';
 import { LinkOut } from '@geti/ui/icons';
+import { useSubmitJob } from 'hooks/api/jobs/jobs.hook';
 
 import { $api } from '../../api/client';
 import { ReactComponent as EmptyDataset } from '../../assets/drop-files.svg';
 import { Link } from '../../platform/components/link.component';
+import { ThreeDotsFlashing } from '../../shared/components/three-dots-flashing/three-dots-flashing.component';
 import { getFilesFromDropEvent } from '../../shared/drop-zone.utils';
+import { toast } from '../toast/toast.component';
 import { formatToFileArray, isSupportedDatasetZip } from './util';
 
 import classes from './import-upload-file.module.scss';
@@ -21,7 +24,7 @@ type ImportUploadFileProps = {
 
 export const ImportUploadFile = ({ formatOptions, onFileUploaded }: ImportUploadFileProps) => {
     const stagedDatasetMutation = $api.useMutation('post', '/api/staged_datasets');
-    const prepareImportJobMutation = $api.useMutation('post', '/api/jobs');
+    const prepareImportJobMutation = useSubmitJob();
 
     const handleLoadingFile = (files: File[]) => {
         const hasMultipleFiles = files.length > 1;
@@ -80,7 +83,10 @@ export const ImportUploadFile = ({ formatOptions, onFileUploaded }: ImportUpload
                 <Content>
                     {isPending && (
                         <Flex alignItems={'center'} direction={'column'} gap={'size-100'}>
-                            <Heading level={1}>Uploading...</Heading>
+                            <Heading level={1} UNSAFE_className={classes.statusTitle}>
+                                Uploading
+                                <ThreeDotsFlashing />
+                            </Heading>
                             <Text>Dataset is being uploaded</Text>
                         </Flex>
                     )}

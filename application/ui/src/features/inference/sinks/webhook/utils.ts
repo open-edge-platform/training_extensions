@@ -16,6 +16,8 @@ export enum Fields {
     VALUE = 'value',
 }
 
+const INITIAL_WEBHOOK_TIMEOUT = 1;
+
 export const getPairsFromObject = (obj: Record<string, string>): Pair[] => {
     return Object.entries(obj).map(([key, value]) => ({ key, value }));
 };
@@ -23,7 +25,7 @@ export const getPairsFromObject = (obj: Record<string, string>): Pair[] => {
 export const getWebhookInitialConfig = (): WebhookSinkConfig => ({
     id: '',
     name: '',
-    timeout: 0,
+    timeout: INITIAL_WEBHOOK_TIMEOUT,
     sink_type: 'webhook',
     rate_limit: null,
     webhook_url: '',

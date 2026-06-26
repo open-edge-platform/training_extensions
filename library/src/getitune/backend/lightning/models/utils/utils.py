@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import copy
+import logging
 import os
 import re
 from collections import OrderedDict, abc, namedtuple
@@ -22,6 +23,8 @@ from torch.utils.model_zoo import load_url
 BoolTypeTensor = Union[torch.BoolTensor, torch.cuda.BoolTensor]
 LongTypeTensor = Union[torch.LongTensor, torch.cuda.LongTensor]
 IndexType = Union[str, slice, int, list, LongTypeTensor, BoolTypeTensor, np.ndarray]
+
+logger = logging.getLogger(__name__)
 
 
 def _torch_hub_model_reduce(self) -> tuple[Callable, tuple]:  # noqa: ANN001
@@ -120,7 +123,7 @@ def load_from_http(
         map_location (str | None, optional): Specifies where to load the checkpoint onto.
             Defaults to None.
         model_dir (str | None, optional): The directory to save the downloaded checkpoint.
-            Defaults to None.
+            Defaults to PRETRAINED_WEIGHTS_CACHE_DIR.
         progress (bool, optional): Whether to display a progress bar while downloading the checkpoint.
             Defaults to True if running in a terminal, otherwise False.
 
@@ -131,6 +134,10 @@ def load_from_http(
         None
 
     """
+    if not model_dir:
+        model_dir = os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"]
+    logger.info("Checkpoint URL: '%s'", filename)
+    logger.info("Checkpoint folder: '%s'", model_dir)
     rank, world_size = get_dist_info()
     if rank == 0:
         checkpoint = load_url(filename, model_dir=model_dir, map_location=map_location, progress=progress)
