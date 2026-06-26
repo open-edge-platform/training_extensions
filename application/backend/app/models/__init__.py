@@ -13,7 +13,14 @@ from .dataset import AnnotationType, DatasetFormat, StagedDataset
 from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset
 from .dataset_revision import DatasetRevision
 from .evaluation import EvaluationResult
-from .inference import BatchInferenceInput, BatchInferenceMedia, BatchInferencePrediction, BatchInferenceResult
+from .inference import (
+    BatchInferenceInput,
+    BatchInferenceMedia,
+    BatchInferencePrediction,
+    BatchInferenceResult,
+    InferenceWorkerStatus,
+    InferenceWorkerStatusCode,
+)
 from .jobs import (
     ExportDatasetJob,
     ExportDatasetJobParams,
@@ -37,6 +44,8 @@ from .sink import (
     RosSinkConfig,
     Sink,
     SinkAdapter,
+    SinkStatus,
+    SinkStatusCode,
     SinkType,
     WebhookSinkConfig,
 )
@@ -46,6 +55,8 @@ from .source import (
     IPCameraSourceConfig,
     Source,
     SourceAdapter,
+    SourceStatus,
+    SourceStatusCode,
     SourceType,
     USBCameraSourceConfig,
     VideoFileSourceConfig,
@@ -80,6 +91,8 @@ __all__ = [
     "IPCameraSourceConfig",
     "Image",
     "ImagesFolderSourceConfig",
+    "InferenceWorkerStatus",
+    "InferenceWorkerStatusCode",
     "Label",
     "LabelReference",
     "LabelUpdateInfo",
@@ -103,9 +116,13 @@ __all__ = [
     "Shape",
     "Sink",
     "SinkAdapter",
+    "SinkStatus",
+    "SinkStatusCode",
     "SinkType",
     "Source",
     "SourceAdapter",
+    "SourceStatus",
+    "SourceStatusCode",
     "SourceType",
     "StagedDataset",
     "Task",

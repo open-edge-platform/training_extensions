@@ -3,7 +3,8 @@
 
 import multiprocessing as mp
 import queue
-from multiprocessing.synchronize import Condition
+from multiprocessing.shared_memory import SharedMemory
+from multiprocessing.synchronize import Condition, Lock
 from multiprocessing.synchronize import Event as EventClass
 from threading import Thread
 
@@ -11,11 +12,12 @@ from loguru import logger
 from loguru._logger import Logger as LoguruLogger
 
 from app.db import get_db_session
-from app.models import DisconnectedSourceConfig, Source, SourceType
+from app.models import DisconnectedSourceConfig, Source, SourceStatus, SourceStatusCode, SourceType
 from app.services import SourceService, VideoStreamService
 from app.stream.stream_data import StreamData
 from app.stream.video_stream import VideoStream
 from app.workers.base import BaseProcessWorker
+from app.workers.shm_status import write_status
 
 
 class StreamLoader(BaseProcessWorker):
@@ -26,6 +28,8 @@ class StreamLoader(BaseProcessWorker):
     def __init__(
         self,
         frame_queue: mp.Queue,
+        status_shm_name: str,
+        status_shm_lock: Lock,
         stop_event: EventClass,
         source_changed_condition: Condition | None,
         logger_: LoguruLogger,
@@ -33,6 +37,9 @@ class StreamLoader(BaseProcessWorker):
         super().__init__(stop_event=stop_event, logger_=logger_, queues_to_cancel=[frame_queue])
         self._frame_queue = frame_queue
         self._source_changed_condition = source_changed_condition
+        self._status_shm_name = status_shm_name
+        self._status_shm_lock = status_shm_lock
+        self._status_shm: SharedMemory | None = None
 
         self._source: Source = DisconnectedSourceConfig()
         self._video_stream: VideoStream | None = None
@@ -65,6 +72,7 @@ class StreamLoader(BaseProcessWorker):
 
     def setup(self) -> None:
         super().setup()
+        self._status_shm = SharedMemory(name=self._status_shm_name, create=False)
         self._load_source()
         Thread(target=self._reload_source_loop, name="Source reloader", daemon=True).start()
 
@@ -82,6 +90,10 @@ class StreamLoader(BaseProcessWorker):
                 self._source.source_type,
             )
             self._video_stream = None
+            self._report_status(
+                SourceStatusCode.ERROR,
+                f"Failed to open video stream for source {self._source.name!r}",
+            )
 
     def run_loop(self) -> None:
         while not self.should_stop():
@@ -102,6 +114,7 @@ class StreamLoader(BaseProcessWorker):
                     _enqueue_frame_with_retry(
                         self._frame_queue, stream_data, self._video_stream.is_real_time(), self._stop_event
                     )
+                    self._report_status(SourceStatusCode.OK)
                 elif self._video_stream.is_finished():
                     # Finite source fully consumed: stop the stream instead of polling forever.
                     logger.info(
@@ -111,16 +124,34 @@ class StreamLoader(BaseProcessWorker):
                     )
                     self._video_stream.release()
                     self._video_stream = None
+                    self._report_status(
+                        SourceStatusCode.FINISHED,
+                        f"Stream finished for source {self._source.name!r}",
+                    )
                 else:
+                    self._report_status(SourceStatusCode.OK)
                     self.stop_aware_sleep(0.1)
             except Exception:
                 logger.exception("Error acquiring frame")
+                self._report_status(SourceStatusCode.ERROR, "Error acquiring frame")
                 self.stop_aware_sleep(2)
 
     def teardown(self) -> None:
         if self._video_stream is not None:
             logger.debug("Releasing video stream...")
             self._video_stream.release()
+        if self._status_shm is not None:
+            self._status_shm.close()
+
+    def _report_status(self, code: SourceStatusCode, message: str = "") -> None:
+        """Write the latest status into shared memory (overwrites previous value)."""
+        if self._status_shm is None:
+            return
+        status = SourceStatus(code=code, source_id=self._source.id, message=message)
+        try:
+            write_status(status, self._status_shm, self._status_shm_lock)
+        except Exception:
+            logger.debug("Failed to write source status to shared memory")
 
 
 def _enqueue_frame_with_retry(

@@ -2,13 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import multiprocessing as mp
+import queue
+from multiprocessing.shared_memory import SharedMemory
+from unittest.mock import Mock, patch
+from uuid import uuid4
 
 import numpy as np
 import pytest
 from loguru import logger
 
+from app.models.inference import InferenceWorkerStatus, InferenceWorkerStatusCode
 from app.stream.stream_data import StreamData
 from app.workers.inference import InferenceWorker, PredictionReorderBuffer
+from app.workers.shm_status import STATUS_SHM_SIZE, read_status
 
 
 @pytest.fixture(autouse=True)
@@ -164,3 +171,120 @@ class TestEnqueuePrediction:
         t.start()
         t.join(timeout=2)
         assert done.is_set(), "_enqueue_prediction blocked on a full queue"
+
+
+@pytest.fixture
+def fxt_status_shm():
+    """Real backing shared-memory block standing in for the scheduler-owned inference status shm."""
+    shm = SharedMemory(create=True, size=STATUS_SHM_SIZE)
+    try:
+        yield shm
+    finally:
+        shm.close()
+        shm.unlink()
+
+
+@pytest.fixture
+def fxt_status_shm_lock():
+    return mp.get_context("spawn").Lock()
+
+
+class TestInferenceStatusReporting:
+    """Tests that the worker reports OK and ERROR inference statuses to shared memory."""
+
+    def test_report_status_ok(self, fxt_status_shm, fxt_status_shm_lock):
+        """_report_status writes an OK status that can be read back from shared memory."""
+        worker = object.__new__(InferenceWorker)
+        worker._inference_status_shm = fxt_status_shm
+        worker._inference_status_shm_lock = fxt_status_shm_lock
+        model_id = uuid4()
+
+        worker._report_status(code=InferenceWorkerStatusCode.OK, model_id=model_id)
+
+        status = read_status(InferenceWorkerStatus, fxt_status_shm, fxt_status_shm_lock)
+        assert status is not None
+        assert status.code == InferenceWorkerStatusCode.OK
+        assert status.model_id == model_id
+
+    def test_report_status_error(self, fxt_status_shm, fxt_status_shm_lock):
+        """_report_status writes an ERROR status (with message) that can be read back."""
+        worker = object.__new__(InferenceWorker)
+        worker._inference_status_shm = fxt_status_shm
+        worker._inference_status_shm_lock = fxt_status_shm_lock
+        model_id = uuid4()
+
+        worker._report_status(
+            code=InferenceWorkerStatusCode.ERROR, model_id=model_id, message="Unhandled error in inference loop"
+        )
+
+        status = read_status(InferenceWorkerStatus, fxt_status_shm, fxt_status_shm_lock)
+        assert status is not None
+        assert status.code == InferenceWorkerStatusCode.ERROR
+        assert status.model_id == model_id
+        assert status.message == "Unhandled error in inference loop"
+
+    def test_report_status_noop_without_shm(self, fxt_status_shm, fxt_status_shm_lock):
+        """_report_status is a no-op (does not raise, writes nothing) when no shm is attached."""
+        worker = object.__new__(InferenceWorker)
+        worker._inference_status_shm = None
+        worker._inference_status_shm_lock = fxt_status_shm_lock
+
+        worker._report_status(code=InferenceWorkerStatusCode.OK, model_id=uuid4())
+
+        # Nothing was written to the (separate, still-empty) block.
+        assert read_status(InferenceWorkerStatus, fxt_status_shm, fxt_status_shm_lock) is None
+
+    def test_on_inference_completed_reports_ok(self, fxt_status_shm, fxt_status_shm_lock, fxt_create_stream_data):
+        """A completed inference reports an OK status for the model that produced it."""
+        worker = object.__new__(InferenceWorker)
+        worker._inference_status_shm = fxt_status_shm
+        worker._inference_status_shm_lock = fxt_status_shm_lock
+        worker._metrics_service = Mock()
+        # A plain queue.Queue stands in for the multiprocessing queue (only *_nowait APIs are used here).
+        worker._pred_queue = queue.Queue(maxsize=4)  # pyrefly: ignore[bad-assignment]
+        # Set the name-mangled private buffer via setattr to avoid static "missing-attribute" analysis.
+        setattr(worker, "_InferenceWorker__prediction_buffer", PredictionReorderBuffer())
+
+        ts = 1.0
+        model_id = uuid4()
+        worker._prediction_buffer.register_expected_timestamp(ts)
+        stream_data = fxt_create_stream_data(ts)
+        userdata = {"inference_start_time": ts, "model_id": model_id, "stream_data": stream_data}
+
+        with patch("app.workers.inference.Visualizer.overlay_predictions", return_value=stream_data.frame_data):
+            worker._on_inference_completed(Mock(), userdata)
+
+        status = read_status(InferenceWorkerStatus, fxt_status_shm, fxt_status_shm_lock)
+        assert status is not None
+        assert status.code == InferenceWorkerStatusCode.OK
+        assert status.model_id == model_id
+
+    def test_run_loop_reports_error_on_failure(self, fxt_status_shm, fxt_status_shm_lock):
+        """An unhandled error in the inference loop reports an ERROR status for the loaded model."""
+        worker = object.__new__(InferenceWorker)
+        worker._inference_status_shm = fxt_status_shm
+        worker._inference_status_shm_lock = fxt_status_shm_lock
+        model_id = uuid4()
+        worker._loaded_model = Mock(model_id=model_id)
+
+        def _raise() -> None:
+            raise RuntimeError("boom")
+
+        worker._refresh_loaded_model = _raise  # type: ignore[method-assign]
+        worker.stop_aware_sleep = lambda *_: None  # type: ignore[method-assign]
+
+        iterations = {"n": 0}
+
+        def _should_stop() -> bool:
+            iterations["n"] += 1
+            return iterations["n"] > 1  # run exactly one iteration, then stop
+
+        worker.should_stop = _should_stop  # type: ignore[method-assign]
+
+        worker.run_loop()
+
+        status = read_status(InferenceWorkerStatus, fxt_status_shm, fxt_status_shm_lock)
+        assert status is not None
+        assert status.code == InferenceWorkerStatusCode.ERROR
+        assert status.model_id == model_id
+        assert status.message == "Unhandled error in inference loop"

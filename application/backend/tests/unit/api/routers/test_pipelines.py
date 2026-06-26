@@ -8,18 +8,30 @@ from uuid import uuid4
 import pytest
 from fastapi import status
 
-from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service
+from app.api.dependencies import (
+    get_inference_status_service,
+    get_pipeline_metrics_service,
+    get_pipeline_service,
+    get_sink_status_service,
+    get_source_status_service,
+)
 from app.api.schemas import PipelineView
 from app.main import app
 from app.models import DataCollectionConfig, FixedRateDataCollectionPolicy, PipelineStatus
+from app.models.inference import InferenceWorkerStatus, InferenceWorkerStatusCode
 from app.models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
+from app.models.sink import SinkStatus, SinkStatusCode
+from app.models.source import SourceStatus, SourceStatusCode
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, ResourceType
+from app.services.inference_status_service import InferenceStatusService
 from app.services.pipeline_service import (
     DeviceInt8NotSupportedError,
     FolderSinkNotAccessibleError,
     IncompatibleModelVariantError,
     OtherProjectActiveError,
 )
+from app.services.sink_status_service import SinkStatusService
+from app.services.source_status_service import SourceStatusService
 
 
 @pytest.fixture
@@ -45,6 +57,33 @@ def fxt_pipeline_metrics_service() -> MagicMock:
     return pipeline_metrics_service
 
 
+@pytest.fixture
+def fxt_source_status_service() -> MagicMock:
+    source_status_service = MagicMock(spec=SourceStatusService)
+    app.dependency_overrides[get_source_status_service] = lambda: source_status_service
+    return source_status_service
+
+
+@pytest.fixture
+def fxt_sink_status_service() -> MagicMock:
+    sink_status_service = MagicMock(spec=SinkStatusService)
+    app.dependency_overrides[get_sink_status_service] = lambda: sink_status_service
+    return sink_status_service
+
+
+@pytest.fixture
+def fxt_inference_status_service() -> MagicMock:
+    inference_status_service = MagicMock(spec=InferenceStatusService)
+    app.dependency_overrides[get_inference_status_service] = lambda: inference_status_service
+    return inference_status_service
+
+
+@pytest.fixture(autouse=True)
+def fxt_clear_overrides():
+    yield
+    app.dependency_overrides.clear()
+
+
 class TestPipelineEndpoints:
     @pytest.mark.parametrize(
         "http_method, service_method",
@@ -66,6 +105,107 @@ class TestPipelineEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         fxt_pipeline_service.get_pipeline_by_id.assert_called_once_with(fxt_pipeline.project_id)
+
+    def test_get_pipeline_health_idle(
+        self,
+        fxt_pipeline,
+        fxt_pipeline_service,
+        fxt_source_status_service,
+        fxt_sink_status_service,
+        fxt_inference_status_service,
+        fxt_client,
+    ):
+        """When the pipeline is idle, health is 'idle' with no component statuses."""
+        fxt_pipeline.status = PipelineStatus.IDLE
+        fxt_pipeline_service.get_pipeline_by_id.return_value = fxt_pipeline
+
+        response = fxt_client.get(f"/api/projects/{fxt_pipeline.project_id}/pipeline:health")
+
+        assert response.status_code == status.HTTP_200_OK
+        response_data = response.json()
+        assert response_data["status"] == PipelineStatus.IDLE
+        assert response_data["components"] is None
+        fxt_pipeline_service.get_pipeline_by_id.assert_called_once_with(fxt_pipeline.project_id)
+        fxt_source_status_service.get_status.assert_not_called()
+        fxt_sink_status_service.get_status.assert_not_called()
+        fxt_inference_status_service.get_status.assert_not_called()
+
+    def test_get_pipeline_health_running(
+        self,
+        fxt_pipeline,
+        fxt_pipeline_service,
+        fxt_source_status_service,
+        fxt_sink_status_service,
+        fxt_inference_status_service,
+        fxt_client,
+    ):
+        """When the pipeline is running, health aggregates source, sink, and model component statuses."""
+        project_id = fxt_pipeline.project_id
+        source_id, sink_id, model_id = uuid4(), uuid4(), uuid4()
+        running_pipeline = MagicMock()
+        running_pipeline.status = PipelineStatus.RUNNING
+        running_pipeline.source_id = source_id
+        running_pipeline.sink_id = sink_id
+        running_pipeline.model_id = model_id
+        fxt_pipeline_service.get_pipeline_by_id.return_value = running_pipeline
+
+        fxt_source_status_service.get_status.return_value = SourceStatus(
+            code=SourceStatusCode.OK, source_id=source_id, message="streaming"
+        )
+        fxt_sink_status_service.get_status.return_value = SinkStatus(
+            code=SinkStatusCode.OK, sink_id=sink_id, message="dispatching"
+        )
+        fxt_inference_status_service.get_status.return_value = InferenceWorkerStatus(
+            code=InferenceWorkerStatusCode.OK, model_id=model_id, message="inferring"
+        )
+
+        response = fxt_client.get(f"/api/projects/{project_id}/pipeline:health")
+
+        assert response.status_code == status.HTTP_200_OK
+        response_data = response.json()
+        assert response_data["status"] == PipelineStatus.RUNNING
+        assert response_data["components"]["source"]["status"] == SourceStatusCode.OK
+        assert response_data["components"]["source"]["message"] == "streaming"
+        assert response_data["components"]["sink"]["status"] == SinkStatusCode.OK
+        assert response_data["components"]["sink"]["message"] == "dispatching"
+        assert response_data["components"]["model"]["status"] == InferenceWorkerStatusCode.OK
+        assert response_data["components"]["model"]["message"] == "inferring"
+
+        fxt_pipeline_service.get_pipeline_by_id.assert_called_once_with(project_id)
+        fxt_source_status_service.get_status.assert_called_once_with(source_id=source_id)
+        fxt_sink_status_service.get_status.assert_called_once_with(sink_id=sink_id)
+        fxt_inference_status_service.get_status.assert_called_once_with(model_id=model_id)
+
+    def test_get_pipeline_health_running_components_unavailable(
+        self,
+        fxt_pipeline,
+        fxt_pipeline_service,
+        fxt_source_status_service,
+        fxt_sink_status_service,
+        fxt_inference_status_service,
+        fxt_client,
+    ):
+        """When the pipeline is running but a status is missing, the component reports 'unavailable'."""
+        project_id = fxt_pipeline.project_id
+        running_pipeline = MagicMock()
+        running_pipeline.status = PipelineStatus.RUNNING
+        running_pipeline.source_id = uuid4()
+        running_pipeline.sink_id = uuid4()
+        running_pipeline.model_id = uuid4()
+        fxt_pipeline_service.get_pipeline_by_id.return_value = running_pipeline
+
+        fxt_source_status_service.get_status.return_value = None
+        fxt_sink_status_service.get_status.return_value = None
+        fxt_inference_status_service.get_status.return_value = None
+
+        response = fxt_client.get(f"/api/projects/{project_id}/pipeline:health")
+
+        assert response.status_code == status.HTTP_200_OK
+        response_data = response.json()
+        assert response_data["status"] == PipelineStatus.RUNNING
+        assert response_data["components"]["source"]["status"] == "unavailable"
+        assert response_data["components"]["sink"]["status"] == "unavailable"
+        assert response_data["components"]["model"]["status"] == "unavailable"
 
     def test_update_pipeline_success(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
         project_id, sink_id = fxt_pipeline.project_id, str(uuid4())

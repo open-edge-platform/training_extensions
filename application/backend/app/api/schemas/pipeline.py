@@ -1,15 +1,75 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.models import DataCollectionConfig, ModelRevision, PipelineStatus
+from app.models import (
+    DataCollectionConfig,
+    InferenceWorkerStatus,
+    ModelRevision,
+    PipelineStatus,
+    SinkStatus,
+    SourceStatus,
+)
 from app.models.model_revision import ModelVariant
 
 from .sink import SinkView
 from .source import SourceView
+
+
+class Status(BaseModel):
+    status: str
+    message: str | None
+    timestamp: datetime
+
+    @staticmethod
+    def unavailable() -> Status:
+        return Status(status="unavailable", message=None, timestamp=datetime.now())
+
+
+class PipelineComponentsHealth(BaseModel):
+    source: Status
+    sink: Status
+    model: Status
+
+
+class PipelineHealth(BaseModel):
+    status: str
+    components: PipelineComponentsHealth | None = None
+
+    @staticmethod
+    def idle() -> PipelineHealth:
+        return PipelineHealth(status=PipelineStatus.IDLE)
+
+    @staticmethod
+    def running(
+        source_status: SourceStatus | None,
+        sink_status: SinkStatus | None,
+        inference_status: InferenceWorkerStatus | None,
+    ) -> PipelineHealth:
+        return PipelineHealth(
+            status=PipelineStatus.RUNNING,
+            components=PipelineComponentsHealth(
+                source=Status(
+                    status=source_status.code, message=source_status.message, timestamp=source_status.timestamp
+                )
+                if source_status
+                else Status.unavailable(),
+                sink=Status(status=sink_status.code, message=sink_status.message, timestamp=sink_status.timestamp)
+                if sink_status
+                else Status.unavailable(),
+                model=Status(
+                    status=inference_status.code, message=inference_status.message, timestamp=inference_status.timestamp
+                )
+                if inference_status
+                else Status.unavailable(),
+            ),
+        )
 
 
 class PipelineView(BaseModel):

@@ -23,6 +23,8 @@ from app.workers import (
     InferenceWorkerConfig,
     StreamLoader,
 )
+from app.workers.shm_status import STATUS_SHM_SIZE
+from app.workers.sink_status_holder import SinkStatusHolder
 
 
 class Scheduler:
@@ -32,7 +34,11 @@ class Scheduler:
     PREDICTION_QUEUE_SIZE = 5
 
     def __init__(
-        self, event_bus: EventBus, data_collector: DataCollector, inference_server: InferenceServer, mp_ctx: BaseContext
+        self,
+        event_bus: EventBus,
+        data_collector: DataCollector,
+        inference_server: InferenceServer,
+        mp_ctx: BaseContext,
     ) -> None:
         logger.info("Initializing Scheduler...")
         self._event_bus = event_bus
@@ -44,6 +50,12 @@ class Scheduler:
         self.frame_queue = self._mp_ctx.Queue(maxsize=self.FRAME_QUEUE_SIZE)
         # Queue for the inference results (predictions)
         self.pred_queue = self._mp_ctx.Queue(maxsize=self.PREDICTION_QUEUE_SIZE)
+        # Shared memory for source status (IPC: StreamLoader -> Scheduler/API)
+        self.source_status_shm = SharedMemory(create=True, size=STATUS_SHM_SIZE)
+        self.source_status_lock = mp_ctx.Lock()
+        # Shared memory for inference worker status (IPC: InferenceWorker -> Scheduler/API)
+        self.inference_status_shm = SharedMemory(create=True, size=STATUS_SHM_SIZE)
+        self.inference_status_lock = mp_ctx.Lock()
         # Broadcaster for pushing predictions to the visualization stream (WebRTC)
         self.rtc_stream_broadcaster: FrameBroadcaster[np.ndarray] = FrameBroadcaster[np.ndarray]()
         # Event to sync all processes on application shutdown
@@ -52,6 +64,9 @@ class Scheduler:
         # Shared memory for metrics collector
         self.shm_metrics = SharedMemory(create=True, size=SIZE)
         self.shm_metrics_lock = self._mp_ctx.Lock()
+
+        # Thread-safe holder for sink status
+        self.sink_status_holder = SinkStatusHolder()
 
         self.processes: list[BaseProcess] = []
         self.threads: list[threading.Thread] = []
@@ -64,6 +79,8 @@ class Scheduler:
         # Create and start processes
         stream_loader_proc = StreamLoader(
             frame_queue=self.frame_queue,
+            status_shm_name=self.source_status_shm.name,
+            status_shm_lock=self.source_status_lock,
             stop_event=self.mp_stop_event,
             source_changed_condition=self._event_bus.source_changed_condition,
             logger_=logger,  # type: ignore
@@ -76,6 +93,8 @@ class Scheduler:
             model_reload_event=self._event_bus.model_reload_event,
             shm_name=self.shm_metrics.name,
             shm_lock=self.shm_metrics_lock,
+            inference_status_shm_name=self.inference_status_shm.name,
+            inference_status_shm_lock=self.inference_status_lock,
             logger_=logger,  # type: ignore
         )
         inference_server_proc = InferenceWorker(inference_worker_config)
@@ -90,6 +109,7 @@ class Scheduler:
             rtc_stream_broadcaster=self.rtc_stream_broadcaster,
             stop_event=self.mp_stop_event,
             data_collector=self._data_collector,
+            sink_status_holder=self.sink_status_holder,
         )
 
         # Start all workers
@@ -145,6 +165,10 @@ class Scheduler:
         self.threads.clear()
         self.shm_metrics.close()
         self.shm_metrics.unlink()
+        self.source_status_shm.close()
+        self.source_status_shm.unlink()
+        self.inference_status_shm.close()
+        self.inference_status_shm.unlink()
 
         self._cleanup_queues()
 

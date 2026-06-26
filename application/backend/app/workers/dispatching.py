@@ -10,6 +10,7 @@ from loguru import logger
 
 from app.db import get_db_session
 from app.models import DisconnectedSinkConfig, Sink, SinkType
+from app.models.sink import SinkStatus, SinkStatusCode
 from app.services import DispatchService, SinkService
 from app.services.data_collect import DataCollector
 from app.services.dispatchers import Dispatcher, DispatchError
@@ -17,6 +18,7 @@ from app.services.event.event_bus import EventBus, EventType
 from app.stream.stream_data import StreamData
 from app.webrtc import FrameBroadcaster
 from app.workers.base import BaseThreadWorker
+from app.workers.sink_status_holder import SinkStatusHolder
 
 
 class DispatchingWorker(BaseThreadWorker):
@@ -34,6 +36,7 @@ class DispatchingWorker(BaseThreadWorker):
         rtc_stream_broadcaster: FrameBroadcaster[np.ndarray],
         stop_event: EventClass,
         data_collector: DataCollector,
+        sink_status_holder: SinkStatusHolder,
     ) -> None:
         super().__init__(stop_event=stop_event)
         self._event_bus = event_bus
@@ -41,6 +44,7 @@ class DispatchingWorker(BaseThreadWorker):
         self._rtc_stream_broadcaster = rtc_stream_broadcaster
 
         self._data_collector = data_collector
+        self._sink_status_holder = sink_status_holder
 
         self._sink: Sink
         self._destinations: list[Dispatcher] = []
@@ -114,7 +118,13 @@ class DispatchingWorker(BaseThreadWorker):
                             image_with_visualization=image_with_visualization,
                             predictions=prediction,
                         )
+                        self._sink_status_holder.status = SinkStatus(code=SinkStatusCode.OK, sink_id=self._sink.id)
                     except DispatchError:
+                        self._sink_status_holder.status = SinkStatus(
+                            code=SinkStatusCode.ERROR,
+                            sink_id=self._sink.id,
+                            message="Failed to dispatch to one or more destinations",
+                        )
                         logger.exception(
                             "Failed to dispatch results to sink: id={}, name={!r} dispatcher={}",
                             self._sink.id,
