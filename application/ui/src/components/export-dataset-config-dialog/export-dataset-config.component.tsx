@@ -25,21 +25,34 @@ import { useProject } from 'hooks/api/project.hook';
 
 import { useExportDatasetJobAction } from '../../hooks/use-export-dataset-job-action.hook';
 import { Link } from '../../platform/components/link.component';
+import { getEmptyLabel } from '../../shared/annotator/labels';
 import { MultiSelectList } from '../multi-select-list/multi-select-list.component';
 import { getFormatOptions } from '../util';
 
 import classes from './export-dataset-config.module.scss';
 
-const WarningMessage = () => {
+type WarningMessagesProps = {
+    emptyLabelName: string | null;
+};
+
+const WarningMessages = ({ emptyLabelName }: WarningMessagesProps) => {
     return (
         <Flex alignItems={'start'} marginTop={'size-100'} gap={'size-100'}>
             <Flex>
                 <Alert className={classes.warningMessageIcon} />
             </Flex>
-            <Text>
-                Exporting videos is not supported by this dataset format. All annotated frames from videos will be
-                exported as images.
-            </Text>
+            <Flex direction={'column'} gap={'size-75'}>
+                <Text>
+                    Exporting videos is not supported by this dataset format. All annotated frames from videos will be
+                    exported as images.
+                </Text>
+                {emptyLabelName !== null && (
+                    <Text>
+                        {`Empty labels ('${emptyLabelName}') are exclusively supported by the Geti format. Other
+                        export formats do not support empty labels.`}
+                    </Text>
+                )}
+            </Flex>
         </Flex>
     );
 };
@@ -71,9 +84,10 @@ export const ExportDatasetConfig = ({
     const formatOptions = getFormatOptions(selectedProject.task.task_type);
     const [selectedExportFormat, setSelectedExportFormat] = useState<string | null>(formatOptions.at(0)?.value ?? null);
 
-    const labels = selectedProject.task?.labels?.map((label) => ({ id: label.name, name: label.name })) ?? [];
+    const labels = selectedProject.task.labels?.map((label) => ({ id: label.name, name: label.name })) ?? [];
 
     const isNonGetiFormatSelected = selectedExportFormat !== 'geti';
+    const emptyLabel = getEmptyLabel(selectedProject.task.task_type, selectedProject.task.exclusive_labels);
 
     return (
         <DialogContainer onDismiss={dialogState.close}>
@@ -117,7 +131,7 @@ export const ExportDatasetConfig = ({
                                 </RadioGroup>
                             </Form>
 
-                            {isNonGetiFormatSelected && <WarningMessage />}
+                            {isNonGetiFormatSelected && <WarningMessages emptyLabelName={emptyLabel?.name ?? null} />}
 
                             <Link
                                 href={EXPORT_FORMATS_LINK}
