@@ -11,14 +11,14 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import torch
 from rfdetr._namespace import _namespace_from_configs
 from rfdetr.config import TrainConfig
 from rfdetr.models import build_criterion_from_config, build_model_from_config, load_pretrain_weights
 from rfdetr.models._defaults import MODEL_DEFAULTS
-from rfdetr.training.param_groups import get_param_dict
+from rfdetr.models.backbone import Joiner
 from torch.hub import download_url_to_file
 from torchvision import tv_tensors
 from torchvision.ops import box_convert
@@ -32,6 +32,29 @@ from getitune.types.precision import Precision
 
 if TYPE_CHECKING:
     from rfdetr.models.lwdetr import LWDETR
+
+
+def _get_param_dict(args: Any, model_without_ddp: torch.nn.Module) -> list[dict[str, Any]]:
+    if not isinstance(model_without_ddp.backbone, Joiner):
+        msg = f"Expected backbone to be Joiner, got {type(model_without_ddp.backbone).__name__}"
+        raise TypeError(msg)
+
+    backbone = cast(Any, model_without_ddp.backbone[0])
+    backbone_named_param_lr_pairs = backbone.get_named_param_lr_pairs(args, prefix="backbone.0")
+    backbone_param_lr_pairs = [param_dict for _, param_dict in backbone_named_param_lr_pairs.items()]
+
+    decoder_key = "transformer.decoder"
+    decoder_params = [p for n, p in model_without_ddp.named_parameters() if decoder_key in n and p.requires_grad]
+    decoder_param_lr_pairs = [{"params": param, "lr": args.lr * args.lr_component_decay} for param in decoder_params]
+
+    other_params = [
+        p
+        for n, p in model_without_ddp.named_parameters()
+        if (n not in backbone_named_param_lr_pairs and decoder_key not in n and p.requires_grad)
+    ]
+    other_param_dicts = [{"params": param, "lr": args.lr} for param in other_params]
+
+    return other_param_dicts + backbone_param_lr_pairs + decoder_param_lr_pairs
 
 
 class RFDETRMixin:
@@ -270,7 +293,7 @@ class RFDETRMixin:
         # Get parameter groups from rfdetr with correct args
         self.rfdetr_args.lr = default_lr  # type: ignore[attr-defined]
         self.rfdetr_args.weight_decay = default_weight_decay  # type: ignore[attr-defined]
-        param_groups = get_param_dict(self.rfdetr_args, self.model.lwdetr)  # type: ignore[attr-defined]  # pyrefly: ignore[bad-argument-type]
+        param_groups = _get_param_dict(self.rfdetr_args, self.model.lwdetr)  # type: ignore[attr-defined]  # pyrefly: ignore[bad-argument-type]
 
         # Create optimizer and schedulers
         optimizer = self.optimizer_callable(param_groups)  # type: ignore[attr-defined]
