@@ -89,6 +89,7 @@ export const NumberParameterField = ({
                 isDisabled={isDisabled}
                 aria-label={`Change ${name}`}
                 formatOptions={formatOptions}
+                step={numberFieldStep}
             />
         </Flex>
     );
