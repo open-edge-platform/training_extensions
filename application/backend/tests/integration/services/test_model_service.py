@@ -428,14 +428,17 @@ class TestModelServiceIntegration:
         fxt_model_service: ModelService,
         db_session: Session,
     ):
-        """Test that delete_model fails when filesystem cleanup is denied due to OSError."""
+        """Test that delete_model throws ResourceInUseError when Windows file locks are encountered."""
         model_rev_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
         model_rev_path.mkdir(parents=True, exist_ok=True)
         (model_rev_path / "config.yaml").touch()
 
+        err = PermissionError("Permission denied")
+        setattr(err, "winerror", 32)
+
         with (
-            patch("app.services.model_service.shutil.rmtree", side_effect=OSError("Permission denied")),
-            pytest.raises(OSError),
+            patch("app.services.model_service.shutil.rmtree", side_effect=err),
+            pytest.raises(ResourceInUseError),
         ):
             fxt_model_service.delete_model(project_id=fxt_project_id, model_id=fxt_model_id)
 

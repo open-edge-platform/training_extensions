@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { type Key } from '@geti/ui';
+import { type Key } from '@geti-ui/ui';
 import { fireEvent, screen } from '@testing-library/react';
 import { getMockedMediaImage } from 'mocks/mock-media';
 import { render } from 'test-utils/render';

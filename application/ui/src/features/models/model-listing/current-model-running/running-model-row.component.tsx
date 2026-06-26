@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { AlertDialog, Button, DialogContainer, Flex, Grid, Loading, Tag, Text } from '@geti/ui';
+import { AlertDialog, Button, DialogContainer, Flex, Grid, Loading, Tag, Text } from '@geti-ui/ui';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import { useStreamJobStatus } from 'hooks/api/jobs/jobs.hook';

@@ -14,8 +14,8 @@ import {
     TableHeader,
     TableView,
     Text,
-} from '@geti/ui';
-import { DownloadIcon } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { DownloadIcon } from '@geti-ui/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { get } from 'lodash-es';
 import { useNumberFormatter } from 'react-aria';

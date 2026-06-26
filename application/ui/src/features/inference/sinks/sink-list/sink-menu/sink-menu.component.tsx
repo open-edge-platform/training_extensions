@@ -3,8 +3,8 @@
 
 import { Key } from 'react';
 
-import { ActionButton, Item, Menu, MenuTrigger } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
+import { ActionButton, Item, Menu, MenuTrigger } from '@geti-ui/ui';
+import { MoreMenu } from '@geti-ui/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../../api/client';

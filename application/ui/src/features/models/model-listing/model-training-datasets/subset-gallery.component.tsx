@@ -3,7 +3,7 @@
 
 import { Suspense, useState } from 'react';
 
-import { Content, Dialog, DialogContainer, Flex, Grid, Loading, Size, Text, View, ViewModes } from '@geti/ui';
+import { Content, Dialog, DialogContainer, Flex, Grid, Loading, Size, Text, View, ViewModes } from '@geti-ui/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { GridLayoutOptions } from 'react-aria-components';
 
@@ -15,11 +15,10 @@ import {
     SelectedMediaItemProvider,
     useSelectedMediaItem,
 } from '../../../../features/annotator/selected-media-item-provider.component';
-import { AnnotatorProviders } from '../../../../features/dataset/media-preview/annotator-providers.component';
 import { useAnnotationsQuery } from '../../../../features/dataset/media-preview/api/use-annotations-query';
+import { ReadOnlyAnnotatorProviders } from '../../../../features/dataset/media-preview/read-only-annotator-providers.component';
 import { ReadOnlyAnnotator } from '../../../../features/dataset/media-preview/read-only-annotator.component';
 import { getInitialAnnotations } from '../../../../features/dataset/media-preview/utils';
-import { ToolProvider } from '../../../../shared/annotator/tool-provider.component';
 import { type GalleryViewMode } from '../../../../shared/gallery-view-modes';
 import { getDatasetRevisionThumbnailUrl } from '../../../../shared/media-url.utils';
 import { datasetRevisionItemToMedia } from './utils';
@@ -56,27 +55,22 @@ const SubsetMediaDialogContent = ({ item, onClose }: SubsetMediaDialogContentPro
 
     const annotationsDTO = annotationsData?.annotations ?? [];
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
-    const mode = 'annotation';
 
     return (
-        <AnnotatorProviders
+        <ReadOnlyAnnotatorProviders
             key={mediaItem.id}
             mediaItem={mediaItem}
             initialAnnotationsDTO={getInitialAnnotations(isUserReviewed, annotationsDTO)}
-            initialPredictionsDTO={[]}
             isUserReviewed={isUserReviewed}
-            mode={mode}
-            isReadOnly
         >
             <ReadOnlyAnnotator
                 image={image}
                 mediaItem={mediaItem}
                 onClose={onClose}
-                mode={mode}
                 subset={item.subset}
                 hasAnnotationStatus={false}
             />
-        </AnnotatorProviders>
+        </ReadOnlyAnnotatorProviders>
     );
 };
 
@@ -94,11 +88,9 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
                     columns={['1fr']}
                     areas={['header', 'canvas', 'bottom']}
                 >
-                    <ToolProvider>
-                        <SelectedMediaItemProvider mediaItem={mediaItem}>
-                            <SubsetMediaDialogContent item={item} onClose={onClose} />
-                        </SelectedMediaItemProvider>
-                    </ToolProvider>
+                    <SelectedMediaItemProvider mediaItem={mediaItem}>
+                        <SubsetMediaDialogContent item={item} onClose={onClose} />
+                    </SelectedMediaItemProvider>
                 </Grid>
             </Content>
         </Dialog>

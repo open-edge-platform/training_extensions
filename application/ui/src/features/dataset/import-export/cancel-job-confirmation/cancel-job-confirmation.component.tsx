@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { AlertDialog, Button, DialogTrigger } from '@geti/ui';
+import { AlertDialog, Button, DialogTrigger } from '@geti-ui/ui';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 import { isInvalidJob } from 'hooks/api/util';
 

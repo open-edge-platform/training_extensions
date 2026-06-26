@@ -3,8 +3,8 @@
 
 import { useState } from 'react';
 
-import { ActionButton, Flex, Loading, View } from '@geti/ui';
-import { Add } from '@geti/ui/icons';
+import { ActionButton, Flex, Loading, View } from '@geti-ui/ui';
+import { Add } from '@geti-ui/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Label } from '../../../../constants/shared-types';

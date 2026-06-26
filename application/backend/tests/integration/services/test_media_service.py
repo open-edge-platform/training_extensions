@@ -554,8 +554,14 @@ class TestMediaServiceIntegration:
         use_pipeline_source: bool,
     ) -> None:
         """Test creating a media."""
-        image = PILImage.new("RGB", (1024, 768))
+        rng = np.random.default_rng(seed=42)
+        image_data = rng.integers(0, 255, (64, 96, 3), dtype=np.uint8)
+        image = PILImage.fromarray(image_data, mode="RGB")
         image.getexif()[ExifTags.Base.Software] = "Intel Geti"
+
+        original_file_path = tmp_path / f"original.{format}"
+        image.save(original_file_path, exif=image.getexif())
+        original_bytes = original_file_path.read_bytes()
 
         project, pipeline = fxt_project_with_pipeline
 
@@ -564,10 +570,14 @@ class TestMediaServiceIntegration:
                 project_id=project.id,
                 name="test",
                 image_format=format,
-                data=image,
+                data=BytesIO(original_bytes),
                 source_id=pipeline.source_id if use_pipeline_source else None,
             )
         )
+
+        binary_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}.{format}"
+        assert binary_file_path.exists()
+        assert binary_file_path.read_bytes() == original_bytes
 
         media = db_session.get(MediaDB, str(created_media.id))
         assert media is not None
@@ -577,8 +587,8 @@ class TestMediaServiceIntegration:
             and media.type == "image"
             and media.name == "test"
             and media.format == format
-            and media.width == 1024
-            and media.height == 768
+            and media.width == 96
+            and media.height == 64
         )
         if use_pipeline_source:
             assert media.source_id == str(pipeline.source_id)

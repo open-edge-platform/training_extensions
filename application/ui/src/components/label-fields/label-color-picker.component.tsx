@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ColorEditor, ColorSwatch, ColorSwatchPicker, Flex, ColorPicker as SpectrumColorPicker } from '@geti/ui';
+import { ColorEditor, ColorSwatch, ColorSwatchPicker, Flex, ColorPicker as SpectrumColorPicker } from '@geti-ui/ui';
 
 import { DISTINCT_COLORS } from '../../features/annotator/label-utils';
 

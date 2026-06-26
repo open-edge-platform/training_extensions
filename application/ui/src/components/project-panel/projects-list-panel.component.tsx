@@ -16,8 +16,8 @@ import {
     Tag,
     Text,
     View,
-} from '@geti/ui';
-import { Edit } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { Edit } from '@geti-ui/ui/icons';
 import { useProjects } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { partition } from 'lodash-es';

@@ -3,7 +3,7 @@
 
 import { createContext, ReactNode, useContext } from 'react';
 
-import { Content, ContextualHelp, Divider, Flex, Heading, Radio, Text } from '@geti/ui';
+import { Content, ContextualHelp, Divider, Flex, Heading, Radio, Text } from '@geti-ui/ui';
 import { clsx } from 'clsx';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../../constants/shared-types';

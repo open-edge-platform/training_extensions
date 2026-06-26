@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Content, Dialog, DialogContainer, Divider, Heading } from '@geti/ui';
+import { Content, Dialog, DialogContainer, Divider, Heading } from '@geti-ui/ui';
 import { useProject } from 'hooks/api/project.hook';
 import { useImportDatasetToProject } from 'hooks/storage/use-import-dataset-to-project.hook';
 

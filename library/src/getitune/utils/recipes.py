@@ -1,7 +1,7 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""getitune APIs for User-friendliness."""
+"""Utilities for discovering and listing model recipes."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def list_models(
         task (TaskType | None, optional): Recipe Filter by Task.
         pattern (Optional[str], optional): A string pattern to filter the list of available models. Defaults to None.
         print_table (bool, optional): Output the recipe information as a Rich.Table.
-            This is primarily used for `getitune find` in the CLI.
+            This is primarily used for ``getitune find`` in the CLI.
         return_recipes (bool, optional): If True, return the recipe paths instead of model names.
 
     Returns:

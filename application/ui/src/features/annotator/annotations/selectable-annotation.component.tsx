@@ -6,6 +6,7 @@ import { MouseEvent, ReactNode, useEffect, useRef } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
+import { useLabelResolver } from '../../../shared/annotator/labels';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { HOTKEYS } from '../../../shared/hotkeys-definition';
 import { useAnnotatorLabels } from '../annotator-labels-provider.component';
@@ -17,6 +18,7 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     const { deleteAnnotations } = useAnnotationActions();
     const { setSelectedLabelId } = useAnnotatorLabels();
     const { setSelectedAnnotations, selectedAnnotations } = useSelectedAnnotations();
+    const { resolveAnnotationLabel } = useLabelResolver();
     const elementRef = useRef<SVGGElement>(null);
 
     const isSelected = selectedAnnotations?.has(annotation.id);
@@ -104,7 +106,7 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
             tabIndex={isSelected ? 0 : -1}
             onClick={handleSelectAnnotation}
             style={{
-                ...drawingStyles(annotation.labels?.[0] ?? null),
+                ...drawingStyles(annotation.labels[0] ? (resolveAnnotationLabel(annotation.labels[0]) ?? null) : null),
                 ...selectionStyles,
                 zIndex: 999,
                 outline: 'none',

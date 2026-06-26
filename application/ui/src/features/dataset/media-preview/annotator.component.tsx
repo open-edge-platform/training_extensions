@@ -3,7 +3,7 @@
 
 import { useRef, useState } from 'react';
 
-import { Key, View } from '@geti/ui';
+import { Key, View } from '@geti-ui/ui';
 import { useSpinDelay } from 'spin-delay';
 
 import type { DatasetSubset, Media } from '../../../constants/shared-types';

@@ -3,8 +3,8 @@
 
 import { Key } from 'react';
 
-import { ActionButton, DialogContainer, Item, Menu, MenuTrigger } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
+import { ActionButton, DialogContainer, Item, Menu, MenuTrigger } from '@geti-ui/ui';
+import { MoreMenu } from '@geti-ui/ui/icons';
 
 import { downloadFile } from '../../../../shared/util';
 import { useDeleteMediaItem } from '../../api/use-delete-media-item';
