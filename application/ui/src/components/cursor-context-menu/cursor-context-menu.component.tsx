@@ -47,7 +47,7 @@ export const CursorContextMenu = ({ state, children, triggerRef, onOpen }: Curso
                 styles disappear. Re-apply ThemeProvider here so the tokens resolve, and provide the
                 popover surface (background/elevation) that CustomPopover does not style itself.
             */}
-            <ThemeProvider id={undefined}>
+            <ThemeProvider>
                 <View backgroundColor={'gray-100'} borderRadius={'regular'}>
                     <Flex
                         gap={'size-100'}
