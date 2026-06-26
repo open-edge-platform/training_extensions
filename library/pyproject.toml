@@ -109,7 +109,7 @@ xpu = [
     "torchvision==0.25.0+xpu"
 ]
 ultralytics = [
-    "ultralytics~=8.4.41",
+    "ultralytics~=8.4.78",
 ]
 
 docs = [

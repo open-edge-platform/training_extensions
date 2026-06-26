@@ -58,7 +58,7 @@ class UltralyticsInstSegModel(UltralyticsModel):
             mean=(0.0, 0.0, 0.0),
             std=(1.0, 1.0, 1.0),
         )
-        return {variant: default for variant in self._pretrained_weights}
+        return dict.fromkeys(self._pretrained_weights, default)
 
     @property
     def _export_parameters(self) -> TaskLevelExportParameters:
