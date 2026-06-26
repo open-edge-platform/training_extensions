@@ -62,6 +62,7 @@ env:
   UI_TARGET_PATH: .\application\ui\src-tauri\target
   MAKEAPP_PATH: "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.26100.0\\x64\\makeappx.exe"
   SIGNTOOL_PATH: "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.26100.0\\x64\\signtool.exe"
+  FFMPEG_COMMIT: "00d1f41b2eb070803a927c6132c240e14142d0b9"
 
 permissions: {} # No permissions by default on workflow level
 
@@ -138,9 +139,57 @@ jobs:
           save-if: ${{ startsWith(github.ref_name, 'release/') || github.ref_name == 'develop' }}
           workspaces: application\ui\src-tauri -> target
 
-      # Build custom ffmpeg
+      # Build or restore cached PyAV wheel
+
+      - name: Determine cache strategy
+        id: cache_strategy
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GIT_REF: ${{ github.ref }}
+        run: |
+          # workflow_call (nightly) -> no restore, but save (warm cache for daytime builds)
+          # workflow_dispatch + release/RC -> no cache at all (clean build, no save)
+          # workflow_dispatch (regular) -> restore and use cache
+          $useCache = "true"
+          $saveCache = "true"
+          if ($env:EVENT_NAME -eq "workflow_call") {
+            $useCache = "false"
+            Write-Host "Nightly build (workflow_call): cache restore disabled, will save after build"
+          } elseif ($env:EVENT_NAME -eq "workflow_dispatch") {
+            $isRelease = ($env:GIT_REF -match "^refs/heads/release/") -or ($env:GIT_REF -match "^refs/tags/")
+            if ($isRelease) {
+              $useCache = "false"
+              $saveCache = "false"
+              Write-Host "Release/RC build (workflow_dispatch): cache fully disabled (no restore, no save)"
+            } else {
+              Write-Host "Regular workflow_dispatch: cache enabled"
+            }
+          }
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "use-cache=$useCache"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "save-cache=$saveCache"
+
+      - name: Compute PyAV wheel cache key
+        id: pyav_cache_key
+        run: |
+          $pyavVersion = (Select-String -Path "application\backend\pyproject.toml" -Pattern '"av~=([^"]+)"' | ForEach-Object { $_.Matches.Groups[1].Value })
+          $pythonVersion = (python --version 2>&1) -replace 'Python ',''
+          $cacheKey = "pyav-wheel-win-ffmpeg-${{ env.FFMPEG_COMMIT }}-av-${pyavVersion}-py-${pythonVersion}"
+          Write-Host "Cache key: $cacheKey"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "cache-key=$cacheKey"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "pyav-version=$pyavVersion"
+
+      - name: Restore PyAV wheel from cache
+        if: steps.cache_strategy.outputs.use-cache == 'true'
+        id: pyav_cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: application/backend/.pyav-wheel
+          key: ${{ steps.pyav_cache_key.outputs.cache-key }}
+
+      # Build custom ffmpeg (only on cache miss)
 
       - name: Install MSYS2 (for FFmpeg build tools)
+        if: steps.pyav_cache.outputs.cache-hit != 'true'
         uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2.32.0
         with:
           msystem: UCRT64
@@ -160,6 +209,7 @@ jobs:
             make
 
       - name: Configure custom prefix
+        if: steps.pyav_cache.outputs.cache-hit != 'true'
         shell: msys2 {0}
         run: |
           set -euo pipefail
@@ -169,6 +219,7 @@ jobs:
           echo "PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig:${PKG_CONFIG_PATH:-}" >> $GITHUB_ENV
 
       - name: Build OpenH264 from source
+        if: steps.pyav_cache.outputs.cache-hit != 'true'
         shell: msys2 {0}
         env:
           OPENH264_COMMIT: "e3f5b10438e2bacc155cf54578222bd4236c9f06"
@@ -193,6 +244,7 @@ jobs:
           pkg-config --modversion openh264
           
       - name: Build SVT-AV1 from source
+        if: steps.pyav_cache.outputs.cache-hit != 'true'
         shell: msys2 {0}
         env:
           SVT_AV1_COMMIT: "e7fcc226994c87b76b66389545eb73a844f13002"
@@ -222,6 +274,7 @@ jobs:
           pkg-config --modversion SvtAv1Enc
 
       - name: Build libvpl (oneVPL) from source
+        if: steps.pyav_cache.outputs.cache-hit != 'true'
         shell: msys2 {0}
         env:
           LIBVPL_COMMIT: "778a66d6c6537f08eabb91955dbbf1bce3812894"
@@ -250,9 +303,8 @@ jobs:
           pkg-config --modversion vpl
 
       - name: Build FFmpeg from source
+        if: steps.pyav_cache.outputs.cache-hit != 'true'
         shell: msys2 {0}
-        env:
-          FFMPEG_COMMIT: "00d1f41b2eb070803a927c6132c240e14142d0b9"
         run: |
           set -euo pipefail
           export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
@@ -288,6 +340,7 @@ jobs:
           "$PREFIX/bin/ffmpeg" -hide_banner -h encoder=h264_qsv
 
       - name: Copy runtime DLLs into FFmpeg prefix
+        if: steps.pyav_cache.outputs.cache-hit != 'true'
         shell: msys2 {0}
         run: |
           set -euo pipefail
@@ -310,11 +363,13 @@ jobs:
           done
 
       - name: Set up MSVC developer environment
+        if: steps.pyav_cache.outputs.cache-hit != 'true'
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
         with:
           arch: x64
 
       - name: Generate MSVC import libraries from FFmpeg DLLs
+        if: steps.pyav_cache.outputs.cache-hit != 'true'
         run: |
           $BIN_PATH = "C:\ffmpeg-build\bin"
           $LIB_PATH = "C:\ffmpeg-build\lib"
@@ -345,6 +400,7 @@ jobs:
           }
 
       - name: Configure PyAV build environment
+        if: steps.pyav_cache.outputs.cache-hit != 'true'
         run: |
           $FFMPEG_PREFIX = "C:\ffmpeg-build"
 
@@ -367,8 +423,39 @@ jobs:
           Add-Content -Path $env:GITHUB_PATH -Value "$FFMPEG_PREFIX\bin"
           Add-Content -Path $env:GITHUB_PATH -Value "C:\msys64\ucrt64\bin"
 
-          # Force uv to build PyAV from source against our FFmpeg
-          Add-Content -Path $env:GITHUB_ENV -Value "UV_NO_BINARY_PACKAGE=av"
+      - name: Build PyAV wheel from source
+        if: steps.pyav_cache.outputs.cache-hit != 'true'
+        working-directory: application/backend
+        run: |
+          $wheelDir = ".pyav-wheel"
+          New-Item -ItemType Directory -Force -Path $wheelDir | Out-Null
+
+          # Build PyAV from source against our custom FFmpeg
+          $pyavVersion = "${{ steps.pyav_cache_key.outputs.pyav-version }}"
+          uvx pip wheel "av~=$pyavVersion" --no-binary av --no-deps --wheel-dir $wheelDir
+
+          Write-Host "Built PyAV wheel:"
+          Get-ChildItem $wheelDir -Filter "av-*.whl" | ForEach-Object { Write-Host "  $($_.Name)" }
+
+          # Copy FFmpeg runtime DLLs into the cache directory for reuse
+          $dllDir = "$wheelDir\ffmpeg-dlls"
+          New-Item -ItemType Directory -Force -Path $dllDir | Out-Null
+          Copy-Item "C:\ffmpeg-build\bin\*.dll" -Destination $dllDir -Force
+          Write-Host "Cached FFmpeg DLLs to $dllDir"
+
+      - name: Save PyAV wheel to cache
+        if: steps.cache_strategy.outputs.save-cache == 'true' && steps.pyav_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: application/backend/.pyav-wheel
+          key: ${{ steps.pyav_cache_key.outputs.cache-key }}
+
+      - name: Configure uv to use cached PyAV wheel
+        working-directory: application/backend
+        run: |
+          $wheelDir = (Resolve-Path ".pyav-wheel").Path
+          Write-Host "Using PyAV wheel from: $wheelDir"
+          Add-Content -Path $env:GITHUB_ENV -Value "UV_FIND_LINKS=$wheelDir"
 
       # Build backend
 
@@ -383,7 +470,7 @@ jobs:
         working-directory: application/backend
         run: |
           $avDir = ".venv\Lib\site-packages\av"
-          $ffmpegBin = "C:\ffmpeg-build\bin"
+          $ffmpegBin = ".pyav-wheel\ffmpeg-dlls"
 
           # Copy all FFmpeg DLLs into the av package directory
           Copy-Item "$ffmpegBin\*.dll" -Destination $avDir -Force
