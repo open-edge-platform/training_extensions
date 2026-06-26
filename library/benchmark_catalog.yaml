@@ -70,3 +70,27 @@ datasets:
     description: "AID Multi-Label — 3,000 overhead aerial-scene images (600×600) with multi-label annotations across 17 co-occurring land-cover classes."
     compatible_tasks:
       - classification/multi_label_cls
+
+  - name: axial_mri
+    script: "scripts/benchmark_datasets/prepare_axial_mri.py"
+    size_tier: tiny
+    url: "https://huggingface.co/datasets/Francesco/axial-mri"
+    description: "Axial MRI (Roboflow-100) — 371 brain axial-MRI slices with tumour bounding-box annotations (negative/positive). Tiny, privacy-safe medical detection benchmark."
+    compatible_tasks:
+      - detection
+
+  - name: cable_damage
+    script: "scripts/benchmark_datasets/prepare_cable_damage.py"
+    size_tier: medium
+    url: "https://huggingface.co/datasets/Francesco/cable-damage"
+    description: "Cable Damage (Roboflow-100) — 1,318 close-up cable images with damage bounding-box annotations (break/thunderbolt). Industrial damage-inspection detection benchmark."
+    compatible_tasks:
+      - detection
+
+  - name: vehicles
+    script: "scripts/benchmark_datasets/prepare_vehicles.py"
+    size_tier: large
+    url: "https://huggingface.co/datasets/Francesco/vehicles-q0x2v"
+    description: "Vehicles (Roboflow-100) — 4,058 road-scene images with bounding-box annotations across 12 vehicle types (cars, buses, trucks). Large multi-class on-road detection benchmark."
+    compatible_tasks:
+      - detection
