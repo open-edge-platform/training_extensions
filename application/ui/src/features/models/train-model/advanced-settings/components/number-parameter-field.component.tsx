@@ -41,6 +41,7 @@ export const NumberParameterField = ({
     // Preserve full precision for float values instead of rounding to the
     // NumberField default of 3 fraction digits.
     const formatOptions = type === 'float' ? { maximumFractionDigits: 20 } : undefined;
+    const numberFieldStep = type === 'int' ? fieldStep : undefined;
 
     const handleValueChange = (inputValue: number): void => {
         setParameterValue(inputValue);
@@ -59,6 +60,7 @@ export const NumberParameterField = ({
                 onChange={onChange}
                 isDisabled={isDisabled}
                 formatOptions={formatOptions}
+                step={numberFieldStep}
             />
         );
     }

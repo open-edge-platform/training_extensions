@@ -56,9 +56,14 @@ const expectNumberParameter = async (parameter: NumberConfigurableParameter, gro
     const newValue = Math.round((parameter.value + step) * 1e6) / 1e6;
 
     await userEvent.click(parameterInput as HTMLElement);
-    await userEvent.clear(parameterInput as HTMLElement);
-    await userEvent.type(parameterInput as HTMLElement, newValue.toString());
-    await userEvent.tab();
+
+    if (parameter.value_type === 'int') {
+        await userEvent.keyboard('{ArrowUp}');
+    } else {
+        await userEvent.clear(parameterInput as HTMLElement);
+        await userEvent.type(parameterInput as HTMLElement, newValue.toString());
+        await userEvent.tab();
+    }
 
     expect(parameterInput).toHaveValue(newValue.toString());
 
