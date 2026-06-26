@@ -145,24 +145,28 @@ jobs:
         id: cache_strategy
         env:
           EVENT_NAME: ${{ github.event_name }}
+          GIT_REF: ${{ github.ref }}
         run: |
-          # workflow_call (nightly) -> no cache (build from scratch to warm cache)
-          # workflow_dispatch + release/RC -> no cache (clean build for releases)
-          # workflow_dispatch (regular) -> use cache
+          # workflow_call (nightly) -> no restore, but save (warm cache for daytime builds)
+          # workflow_dispatch + release/RC -> no cache at all (clean build, no save)
+          # workflow_dispatch (regular) -> restore and use cache
           $useCache = "true"
+          $saveCache = "true"
           if ($env:EVENT_NAME -eq "workflow_call") {
             $useCache = "false"
-            Write-Host "Nightly build (workflow_call): cache disabled, building from scratch"
+            Write-Host "Nightly build (workflow_call): cache restore disabled, will save after build"
           } elseif ($env:EVENT_NAME -eq "workflow_dispatch") {
-            $isRelease = ("${{ github.ref }}" -match "^refs/heads/release/") -or ("${{ github.ref }}" -match "^refs/tags/")
+            $isRelease = ($env:GIT_REF -match "^refs/heads/release/") -or ($env:GIT_REF -match "^refs/tags/")
             if ($isRelease) {
               $useCache = "false"
-              Write-Host "Release/RC build (workflow_dispatch): cache disabled for clean build"
+              $saveCache = "false"
+              Write-Host "Release/RC build (workflow_dispatch): cache fully disabled (no restore, no save)"
             } else {
               Write-Host "Regular workflow_dispatch: cache enabled"
             }
           }
           Add-Content -Path $env:GITHUB_OUTPUT -Value "use-cache=$useCache"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "save-cache=$saveCache"
 
       - name: Compute PyAV wheel cache key
         id: pyav_cache_key
@@ -172,6 +176,7 @@ jobs:
           $cacheKey = "pyav-wheel-win-ffmpeg-${{ env.FFMPEG_COMMIT }}-av-${pyavVersion}-py-${pythonVersion}"
           Write-Host "Cache key: $cacheKey"
           Add-Content -Path $env:GITHUB_OUTPUT -Value "cache-key=$cacheKey"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "pyav-version=$pyavVersion"
 
       - name: Restore PyAV wheel from cache
         if: steps.cache_strategy.outputs.use-cache == 'true'
@@ -426,7 +431,8 @@ jobs:
           New-Item -ItemType Directory -Force -Path $wheelDir | Out-Null
 
           # Build PyAV from source against our custom FFmpeg
-          uvx pip wheel "av~=16.1.0" --no-binary av --no-deps --wheel-dir $wheelDir
+          $pyavVersion = "${{ steps.pyav_cache_key.outputs.pyav-version }}"
+          uvx pip wheel "av~=$pyavVersion" --no-binary av --no-deps --wheel-dir $wheelDir
 
           Write-Host "Built PyAV wheel:"
           Get-ChildItem $wheelDir -Filter "av-*.whl" | ForEach-Object { Write-Host "  $($_.Name)" }
@@ -438,7 +444,7 @@ jobs:
           Write-Host "Cached FFmpeg DLLs to $dllDir"
 
       - name: Save PyAV wheel to cache
-        if: steps.pyav_cache.outputs.cache-hit != 'true'
+        if: steps.cache_strategy.outputs.save-cache == 'true' && steps.pyav_cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: application/backend/.pyav-wheel
