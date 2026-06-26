@@ -3,8 +3,8 @@
 
 import { ReactNode } from 'react';
 
-import { Flex, Loading, Text } from '@geti/ui';
-import { Checkmark, CloseSmall } from '@geti/ui/icons';
+import { Flex, Loading, Text } from '@geti-ui/ui';
+import { Checkmark, CloseSmall } from '@geti-ui/ui/icons';
 import { clsx } from 'clsx';
 
 import classes from './connection-status-badge.module.scss';
