@@ -30,3 +30,6 @@ application/docs/ @leoll2 @jpggvilaca
 
 # Model manifests
 application/backend/app/supported_models/manifests/ @leoll2 @kprokofi
+
+# Getitrack
+libraries/getitrack/ @leoll2 @kprokofi
