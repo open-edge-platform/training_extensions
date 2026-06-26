@@ -948,7 +948,7 @@ requires-dist = [
     { name = "alembic", specifier = "~=1.17.2" },
     { name = "av", specifier = "~=16.1.0" },
     { name = "cv2-enumerate-cameras", specifier = "==1.3.3" },
-    { name = "datumaro", extras = ["experimental"], specifier = "~=1.13.2" },
+    { name = "datumaro", extras = ["experimental"], specifier = "~=1.13.3" },
     { name = "fastapi", extras = ["standard"], specifier = "~=0.138.1" },
     { name = "faster-coco-eval", specifier = "~=1.7.0" },
     { name = "getitune", extras = ["cpu", "ultralytics"], marker = "extra == 'cpu'", editable = "../../library" },
