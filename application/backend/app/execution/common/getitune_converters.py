@@ -1,5 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -10,10 +12,11 @@ if TYPE_CHECKING:
     from getitune.data.dataset.base import VisionDataset
     from getitune.metrics import MetricCallable
 
+
 from app.models import Task, TaskType
 
 
-def get_getitune_task_type_by_task(task: Task) -> "GetiTuneTaskType":
+def get_getitune_task_type_by_task(task: Task) -> GetiTuneTaskType:
     """Map internal Task to GetiTuneTaskType."""
     from getitune import TaskType as GetiTuneTaskType
 
@@ -30,7 +33,7 @@ def get_getitune_task_type_by_task(task: Task) -> "GetiTuneTaskType":
             raise ValueError(f"Unsupported task type: {task.task_type}")
 
 
-def get_metric_by_task(task: Task) -> "MetricCallable":
+def get_metric_by_task(task: Task) -> MetricCallable:
     """Map internal Task to Metric."""
     from getitune.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
     from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
@@ -48,7 +51,7 @@ def get_metric_by_task(task: Task) -> "MetricCallable":
             raise ValueError(f"Unsupported task type: {task.task_type}")
 
 
-def get_getitune_dataset_class_by_task_type(getitune_task_type: "GetiTuneTaskType") -> type["VisionDataset"]:
+def get_getitune_dataset_class_by_task_type(getitune_task_type: GetiTuneTaskType) -> type[VisionDataset]:
     """Get the VisionDataset class corresponding to the given GetiTuneTaskType."""
     from getitune import TaskType as GetiTuneTaskType
     from getitune.data import DetectionDataset, InstanceSegDataset, MulticlassClsDataset, MultilabelClsDataset

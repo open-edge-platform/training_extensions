@@ -1,5 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 import os
 import shutil
 from collections.abc import Callable
@@ -81,12 +83,12 @@ class TrainingDependencies:
 
 @dataclass(frozen=True)
 class DatasetInfo:
-    getitune_training_dataset: "VisionDataset"
-    getitune_validation_dataset: "VisionDataset"
-    getitune_testing_dataset: "VisionDataset"
-    getitune_training_subset_config: "SubsetConfig"
-    getitune_validation_subset_config: "SubsetConfig"
-    getitune_testing_subset_config: "SubsetConfig"
+    getitune_training_dataset: VisionDataset
+    getitune_validation_dataset: VisionDataset
+    getitune_testing_dataset: VisionDataset
+    getitune_training_subset_config: SubsetConfig
+    getitune_validation_subset_config: SubsetConfig
+    getitune_testing_subset_config: SubsetConfig
     revision_id: UUID
 
 
@@ -386,7 +388,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         weights_path: Path,
         model_id: UUID,
         device: DeviceInfo,
-    ) -> tuple[Path, "Engine"]:
+    ) -> tuple[Path, Engine]:
         """Execute model training.
 
         Instantiates the model from *training_config* with jsonargparse and
@@ -482,7 +484,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
     @step("Evaluate Model", 95)
     def evaluate_model(
         self,
-        getitune_engine: "Engine",
+        getitune_engine: Engine,
         task: Task,
         model_revision_id: UUID,
         model_variants: list[ModelVariantDescriptor],
@@ -553,7 +555,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             )
 
     @step("Export Model")
-    def export_model(self, getitune_engine: "Engine", model_checkpoint_path: Path) -> ExportedModels:
+    def export_model(self, getitune_engine: Engine, model_checkpoint_path: Path) -> ExportedModels:
         from getitune.types.export import ExportFormat
         from getitune.types.precision import Precision
 
@@ -781,7 +783,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
 
     def _build_filter_conditions(
         self,
-        getitune_task_type: "TaskType",
+        getitune_task_type: TaskType,
         annotation_field: str,
         filtering_config: Filtering,
     ) -> list:

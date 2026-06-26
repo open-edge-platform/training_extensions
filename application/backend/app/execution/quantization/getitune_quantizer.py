@@ -1,5 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 import shutil
 from collections.abc import Callable
 from contextlib import AbstractContextManager
@@ -106,7 +108,7 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         self,
         params: QuantizationJobParams,
         model: ModelRevision,
-    ) -> "DataModule":
+    ) -> DataModule:
         from getitune.config.data import SamplerConfig, SubsetConfig
         from getitune.data.entity.utils import detect_storage_dtype
         from getitune.data.factory import TransformLibFactory
@@ -139,7 +141,7 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         converter = GetiConfigConverter()
         getitune_training_config = converter.convert(geti_training_config)
 
-        def build_subset_config(subset_name: str) -> "SubsetConfig":
+        def build_subset_config(subset_name: str) -> SubsetConfig:
             subset_cfg_data = getitune_training_config["data"][f"{subset_name}_subset"]
             subset_cfg_data["input_size"] = getitune_training_config["data"]["input_size"]
             sampler_cfg_data = subset_cfg_data.pop("sampler", {})
@@ -213,8 +215,8 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
         self,
         params: QuantizationJobParams,
         model: ModelRevision,
-        datamodule: "DataModule",
-    ) -> "OVEngine":
+        datamodule: DataModule,
+    ) -> OVEngine:
         from getitune.backend.openvino.engine import OVEngine
 
         """Create the OVEngine for quantization."""
@@ -233,7 +235,7 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
     @step("Run Quantization", 80)
     def run_quantization(
         self,
-        ov_engine: "OVEngine",
+        ov_engine: OVEngine,
         subset_size: int,
         max_drop: float | None = None,
     ) -> Path:
@@ -255,7 +257,7 @@ class GetiTuneQuantizer(Execution[QuantizationJobParams]):
     @step("Evaluate Quantized Model", 95)
     def evaluate_quantized_model(
         self,
-        ov_engine: "OVEngine",
+        ov_engine: OVEngine,
         quantized_model_path: Path,
         task: Task,
         model_revision_id: UUID,

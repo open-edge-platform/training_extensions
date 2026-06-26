@@ -4,12 +4,14 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
-permissions:
-  pull-requests: write
+permissions: {}
 
 jobs:
   import-time:
     name: Measure Backend Import Time
+    permissions:
+      # Required to post comments on the PR with the import time results
+      pull-requests: write
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
