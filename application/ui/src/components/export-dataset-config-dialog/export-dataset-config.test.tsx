@@ -21,8 +21,8 @@ describe('ExportDatasetConfig', () => {
     };
 
     const VIDEO_WARNING = /Exporting videos is not supported by this dataset format/i;
-    const EMPTY_LABEL_WARNING_NO_OBJECT = /Empty labels \('No object'\) are exclusively supported by the Geti format/i;
-    const EMPTY_LABEL_WARNING_NO_LABEL = /Empty labels \('No label'\) are exclusively supported by the Geti format/i;
+    const EMPTY_LABEL_WARNING_NO_OBJECT = /does not support empty labels.*"No object"/i;
+    const EMPTY_LABEL_WARNING_NO_LABEL = /does not support empty labels.*"No label"/i;
 
     const renderApp = (project: SchemaProjectView) => {
         server.use(
