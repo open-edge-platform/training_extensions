@@ -120,31 +120,44 @@ class MediaService(BaseSessionManagedService):
         except Exception:
             logger.exception("Failed to generate thumbnail image")
 
+    @staticmethod
+    def _copy_binary(data: BinaryIO | BytesIO, path: Path, chunk_size: int = 1024 * 1024) -> None:
+        data.seek(0)
+        with path.open("wb") as output:
+            while chunk := data.read(chunk_size):
+                output.write(chunk)
+
     def create_image(
         self,
         metadata: ImageMetadata,
     ) -> Media:
         """Creates a new media (image)"""
         media_id = uuid4()
+        original_binary: BinaryIO | BytesIO | None = None
         match metadata.data:
             case Image.Image():
                 image = metadata.data
             case np.ndarray():
                 image = self._read_image_from_ndarray(metadata.data)
             case _:
+                original_binary = metadata.data
                 image = self._read_image_from_binary(metadata.data)
 
         dataset_dir = self.projects_dir / f"{metadata.project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
         binary_path = dataset_dir / f"{media_id}.{metadata.image_format}"
-        try:
-            image.save(binary_path, exif=image.getexif())
-        except RuntimeError:
-            logger.warning(
-                "Failed to save image with EXIF data ({}), saving without EXIF.",
-                metadata.name,
-            )
-            image.save(binary_path)
+
+        if original_binary is not None:
+            self._copy_binary(original_binary, binary_path)
+        else:
+            try:
+                image.save(binary_path, exif=image.getexif())
+            except RuntimeError:
+                logger.warning(
+                    "Failed to save image with EXIF data ({}), saving without EXIF.",
+                    metadata.name,
+                )
+                image.save(binary_path)
 
         try:
             MediaService._generate_and_save_thumbnail(image, dataset_dir / f"{media_id}-thumb.jpg")
@@ -185,11 +198,7 @@ class MediaService(BaseSessionManagedService):
         dataset_dir.mkdir(parents=True, exist_ok=True)
         binary_path = dataset_dir / f"{media_id}.{video_format}"
 
-        data.seek(0)
-        with open(binary_path, "wb") as f:
-            # Read in chunks to avoid memory issues for large files
-            while chunk := data.read(VIDEO_WRITE_CHUNK_SIZE):
-                f.write(chunk)
+        self._copy_binary(data, binary_path, VIDEO_WRITE_CHUNK_SIZE)
 
         try:
             video_metadata = self._get_video_service().get_video_metadata(video_path=binary_path)

@@ -609,6 +609,12 @@ class TestTransformsUpdater:
         assert "std" in noise[0]["init_args"]
         assert noise[0]["init_args"]["std"] == 0.1
 
+    def test_random_erasing_uses_mask_safe_class(self) -> None:
+        """random_erasing must map to MaskSafeRandomErasing, not raw kornia class."""
+        registry_entry = TransformsUpdater.AUGMENTATION_REGISTRY["random_erasing"]
+        assert "getitune.data.augmentation.transforms.MaskSafeRandomErasing" in registry_entry["class_paths"]
+        assert registry_entry["stage"] == "gpu"
+
 
 class TestGetCallbackIdx:
     def test_found(self) -> None:
