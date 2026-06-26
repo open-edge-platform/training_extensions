@@ -49,10 +49,11 @@ const WarningMessages = ({ emptyLabelName }: WarningMessagesProps) => {
                 {emptyLabelName !== null && (
                     <Text>
                         {`The selected format does not support empty labels (e.g. "${emptyLabelName}"). Images
-                        and frames containing them will be exported as unannotated. To preserve videos or empty
-                        labels, please use the Geti export format.`}
+                        and frames containing them will be exported as unannotated.`}
                     </Text>
                 )}
+                <Text>{`To preserve videos ${emptyLabelName !== null ? 'or empty labels' : ''}, please
+                use the Geti export format.`}</Text>
             </Flex>
         </Flex>
     );
