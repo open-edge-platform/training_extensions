@@ -1,6 +1,5 @@
 #  Copyright (C) 2026 Intel Corporation
 #  SPDX-License-Identifier: Apache-2.0
-
 import types
 from enum import StrEnum
 from typing import Annotated, Any, Literal, Union, cast, get_args, get_origin
@@ -8,6 +7,7 @@ from typing import Annotated, Any, Literal, Union, cast, get_args, get_origin
 from pydantic import BaseModel, Discriminator, Field, Tag
 from pydantic.fields import FieldInfo
 
+from app.models import TaskType
 from app.models.training_configuration import ParamValueType, TrainingConfiguration
 
 
@@ -441,7 +441,7 @@ class TrainingConfigurationView(BaseModel):
 
     @classmethod
     def from_training_configuration(
-        cls, config: TrainingConfiguration, default_config: TrainingConfiguration
+        cls, config: TrainingConfiguration, default_config: TrainingConfiguration, task_type: TaskType | None = None
     ) -> "TrainingConfigurationView":
         """Convert TrainingConfiguration to TrainingConfigurationView.
 
@@ -485,7 +485,15 @@ class TrainingConfigurationView(BaseModel):
             type(config.task_level_parameters).model_fields["evaluation"],
         )
 
-        # Return with direct list of parameter groups
+# Filter allowed_values for validation_metric based on task_type
+        if task_type is not None:
+            for param in evaluation_group.parameters:
+                if type(param).__name__ == "StringParameterView" and param.key == "validation_metric": # type: ignore[attr-defined]
+                    if task_type == TaskType.CLASSIFICATION:
+                        param.allowed_values = ["default", "Accuracy", "Precision", "Recall", "F-measure"] # type: ignore[attr-defined, bad-assignment]
+                    elif task_type in [TaskType.DETECTION, TaskType.INSTANCE_SEGMENTATION]:
+                        param.allowed_values = ["default", "mAP", "mAP@0.5", "mAP@0.75", "mAR@1", "mAR@10", "mAR@100"] # type: ignore[attr-defined, bad-assignment]
+
         return cls(parameters=[merged_dataset_prep, training_group, evaluation_group])
 
     model_config = {
@@ -1361,7 +1369,19 @@ class TrainingConfigurationView(BaseModel):
                                 "value": "default",
                                 "default_value": "default",
                                 "value_type": "str",
-                                "allowed_values": ["default"],
+                                "allowed_values": [
+                                    "default",
+                                    "Accuracy",
+                                    "Precision",
+                                    "Recall",
+                                    "F-measure",
+                                    "mAP",
+                                    "mAP@0.5",
+                                    "mAP@0.75",
+                                    "mAR@1",
+                                    "mAR@10",
+                                    "mAR@100",
+                                ],
                             }
                         ],
                     },

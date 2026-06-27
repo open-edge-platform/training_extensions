@@ -16,7 +16,12 @@ from getitune.backend.ultralytics.tools.configurator import Configurator as Ultr
 from getitune.tools.auto_configurator import AutoConfigurator
 from loguru import logger
 
+from app.api.schemas.evaluation import RAW_METRICS_TO_API_METRICS
+
 RECIPE_PATH = get_getitune_root_path() / "recipe"
+
+
+API_METRICS_TO_RAW_METRICS = {v: k for k, v in RAW_METRICS_TO_API_METRICS.items()}
 
 
 class ModelStatus(str, Enum):
@@ -898,6 +903,10 @@ class GetiConfigConverter:
         if intensity_mapping:
             GetiConfigConverter._update_intensity_mapping(default_config, intensity_mapping)
 
+        evaluation_params = task_level_params.get("evaluation", {})
+        if evaluation_params:
+            GetiConfigConverter._update_evaluation_metric(default_config, evaluation_params)
+
         GetiConfigConverter._remove_unused_key(default_config)
         return default_config
 
@@ -986,6 +995,74 @@ class GetiConfigConverter:
         if idx > -1:
             callbacks.pop(idx)
             logger.info("DEIM framework disabled: removed AugmentationSchedulerCallback")
+
+    @staticmethod
+    def _update_evaluation_metric(config: dict, evaluation_cfg: dict) -> None:  # noqa: C901, PLR0912
+        """Update the evaluation metric used for early stopping, model checkpoint and callback monitor."""
+        validation_metric = evaluation_cfg.get("validation_metric")
+        if validation_metric is None or validation_metric == "default":
+            return
+
+        # Get raw metric name mapped to getitune convention (e.g. "f_measure" -> "val/f1-score")
+        raw_metric = API_METRICS_TO_RAW_METRICS.get(validation_metric)
+        if raw_metric is None:
+            logger.warning(f"Unknown validation metric: {validation_metric}")
+            return
+
+        # Manually map "f_measure" to what getitune actually produces
+        if raw_metric == "f_measure":
+            target_metric = "val/f1-score"
+        elif raw_metric == "accuracy":
+            target_metric = "val/accuracy"
+        elif raw_metric == "map":
+            target_metric = "val/map"
+        elif raw_metric == "map_50":
+            target_metric = "val/map_50"
+        elif raw_metric == "map_75":
+            target_metric = "val/map_75"
+        elif raw_metric == "mar_1":
+            target_metric = "val/mar_1"
+        elif raw_metric == "mar_10":
+            target_metric = "val/mar_10"
+        elif raw_metric == "mar_100":
+            target_metric = "val/mar_100"
+        elif raw_metric == "precision":
+            target_metric = "val/precision"
+        elif raw_metric == "recall":
+            target_metric = "val/recall"
+        else:
+            target_metric = f"val/{raw_metric}"
+
+        logger.info(f"Updating evaluation metric to {target_metric}")
+
+        # Update root callback_monitor
+        if "callback_monitor" in config:
+            config["callback_monitor"] = target_metric
+
+        # Update ModelCheckpoint
+        if "callbacks" in config:
+            for callback in config["callbacks"]:
+                if (
+                    callback.get("class_path")
+                    in [
+                        "lightning.pytorch.callbacks.ModelCheckpoint",
+                        "getitune.backend.lightning.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
+                    ]
+                    and "init_args" in callback
+                ):
+                    callback["init_args"]["monitor"] = target_metric
+
+        # Update Scheduler (ReduceLROnPlateau)
+        if "model" in config and "init_args" in config["model"]:
+            scheduler = config["model"]["init_args"].get("scheduler")
+            if isinstance(scheduler, dict) and "init_args" in scheduler:
+                main_scheduler = scheduler["init_args"].get("main_scheduler_callable")
+                if (
+                    isinstance(main_scheduler, dict)
+                    and main_scheduler.get("class_path") == "lightning.pytorch.cli.ReduceLROnPlateau"
+                    and "init_args" in main_scheduler
+                ):
+                    main_scheduler["init_args"]["monitor"] = target_metric
 
     @staticmethod
     def _update_intensity_mapping(config: dict, intensity_mapping: dict) -> None:

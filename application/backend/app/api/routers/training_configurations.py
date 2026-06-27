@@ -6,9 +6,9 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.openapi.models import Example
 
-from app.api.dependencies import get_training_configuration_service
+from app.api.dependencies import get_project, get_training_configuration_service
 from app.api.schemas import TrainingConfigurationView
-from app.api.validators import ProjectID
+from app.api.schemas.project import ProjectView
 from app.services.model_manifest_service import ManifestNotFoundException
 from app.services.training_configuration_service import TrainingConfigurationService
 
@@ -50,10 +50,10 @@ UPDATE_TRAINING_CONFIG_EXAMPLES = {
 
 @router.get("")
 def get_training_configuration_by_model_architecture(
+    project: Annotated[ProjectView, Depends(get_project)],
     training_configuration_service: Annotated[
         TrainingConfigurationService, Depends(get_training_configuration_service)
     ],
-    project_id: ProjectID,
     model_architecture_id: Annotated[str, Query()],
 ) -> TrainingConfigurationView:
     """
@@ -64,12 +64,14 @@ def get_training_configuration_by_model_architecture(
     """
     try:
         training_config = training_configuration_service.get_by_model_architecture(
-            project_id=project_id, model_architecture_id=model_architecture_id
+            project_id=project.id, model_architecture_id=model_architecture_id
         )
         default_config = TrainingConfigurationService.get_default_by_model_architecture(
             model_architecture_id=model_architecture_id
         )
-        return TrainingConfigurationView.from_training_configuration(training_config, default_config)
+        return TrainingConfigurationView.from_training_configuration(
+            training_config, default_config, task_type=project.task.task_type
+        )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except ManifestNotFoundException as e:
@@ -78,10 +80,10 @@ def get_training_configuration_by_model_architecture(
 
 @router.patch("", status_code=status.HTTP_200_OK)
 def update_training_configuration_for_model_architecture(
+    project: Annotated[ProjectView, Depends(get_project)],
     training_configuration_service: Annotated[
         TrainingConfigurationService, Depends(get_training_configuration_service)
     ],
-    project_id: ProjectID,
     model_architecture_id: Annotated[str, Query()],
     training_config_update: Annotated[dict, Body(openapi_examples=UPDATE_TRAINING_CONFIG_EXAMPLES)],
 ) -> TrainingConfigurationView:
@@ -95,16 +97,18 @@ def update_training_configuration_for_model_architecture(
     """
     try:
         training_config = training_configuration_service.get_by_model_architecture(
-            project_id=project_id, model_architecture_id=model_architecture_id
+            project_id=project.id, model_architecture_id=model_architecture_id
         )
         training_config.apply_updates(training_config_update)
         training_configuration_service.update(
-            project_id=project_id, model_architecture_id=model_architecture_id, training_configuration=training_config
+            project_id=project.id, model_architecture_id=model_architecture_id, training_configuration=training_config
         )
         default_config = TrainingConfigurationService.get_default_by_model_architecture(
             model_architecture_id=model_architecture_id
         )
-        return TrainingConfigurationView.from_training_configuration(training_config, default_config)
+        return TrainingConfigurationView.from_training_configuration(
+            training_config, default_config, task_type=project.task.task_type
+        )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except ManifestNotFoundException as e:

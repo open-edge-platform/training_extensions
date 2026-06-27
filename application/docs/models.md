@@ -195,14 +195,15 @@ compared to the ground truth annotations to compute the metrics.
 ### Evaluation metrics
 
 The following table lists the evaluation metrics supported by Geti for each task type.
-Most of the metrics commonly used in research and industry are included.
+Most of the metrics commonly used in research and industry are included. By default, Accuracy or F-measure is used as the primary validation metric to optimize during training, but users can configure this in the advanced training settings to better suit their domain (e.g., optimizing Precision over Recall for manufacturing defect detection, or Recall over Precision for medical use cases).
 
 | Task Type                 | Metrics                                                   |
 | ------------------------- | --------------------------------------------------------- |
-| Multiclass Classification | Accuracy, Precision, Recall, F1                           |
-| Multilabel Classification | Subset Accuracy, Hamming Loss, Precision, Recall, F1, mAP |
+| Multiclass Classification | Accuracy, Precision, Recall, F-measure                           |
+| Multilabel Classification | Subset Accuracy, Hamming Loss, Precision, Recall, F-measure, mAP |
 | Object Detection          | mAP@0.5-0.95 (and single mAP at the various thresholds)   |
 | Instance Segmentation     | mAP@0.5-0.95 (and single mAP at the various thresholds)   |
+
 
 ## Model deletion
 

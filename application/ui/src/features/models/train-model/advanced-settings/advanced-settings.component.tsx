@@ -8,6 +8,7 @@ import { DOMRefValue, Item, TabList, TabPanels, Tabs, Text, useUnwrapDOMRef, Vie
 import { useTrainModelState } from '../train-model-provider.component';
 import { DataManagement } from './data-management/data-management.component';
 import { Training } from './training/training.component';
+import { Evaluation } from './evaluation/evaluation.component';
 
 type ContentWrapperProps = { children: ReactNode; ref: RefObject<DOMRefValue<HTMLDivElement> | null> };
 
@@ -40,6 +41,16 @@ export const AdvancedSettings = () => {
             children: (
                 <DataManagement
                     containerRef={unwrappedContainerRef}
+                    trainingConfiguration={trainingConfiguration}
+                    defaultTrainingConfiguration={defaultTrainingConfiguration}
+                    onTrainingConfigurationChange={onTrainingConfigurationChange}
+                />
+            ),
+        },
+        {
+            name: 'Evaluation',
+            children: (
+                <Evaluation
                     trainingConfiguration={trainingConfiguration}
                     defaultTrainingConfiguration={defaultTrainingConfiguration}
                     onTrainingConfigurationChange={onTrainingConfigurationChange}

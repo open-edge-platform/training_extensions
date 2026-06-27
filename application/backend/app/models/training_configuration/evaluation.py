@@ -9,8 +9,17 @@ from pydantic import BaseModel, Field
 class ValidationMetric(StrEnum):
     """Available metrics for model evaluation during validation."""
 
-    # TODO (#5521): Enable additional metrics
     DEFAULT = "default"  # Auto-select the most appropriate metric based on the task type
+    ACCURACY = "Accuracy"
+    PRECISION = "Precision"
+    RECALL = "Recall"
+    F_MEASURE = "F-measure"
+    MAP = "mAP"  # mAP@0.5:0.95
+    MAP_50 = "mAP@0.5"
+    MAP_75 = "mAP@0.75"
+    MAR_1 = "mAR@1"
+    MAR_10 = "mAR@10"
+    MAR_100 = "mAR@100"
 
 
 class TaskLevelEvaluationParameters(BaseModel):

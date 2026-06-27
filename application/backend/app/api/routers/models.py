@@ -249,7 +249,7 @@ def get_model_training_configuration(
         model_architecture_id=model_architecture_id
     )
     return TrainingConfigurationView.from_training_configuration(
-        config=training_configuration, default_config=default_config
+        config=training_configuration, default_config=default_config, task_type=project.task.task_type
     )
 
 

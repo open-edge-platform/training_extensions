@@ -4,6 +4,7 @@
 import { Flex, Loading, Text } from '@geti/ui';
 
 import type { Evaluation } from '../../../../constants/shared-types';
+import { useGetModelTrainingConfiguration } from '../../hooks/api/use-get-model-training-configuration.hook';
 import { useGetModelTrainingMetrics } from '../../hooks/api/use-get-model-training-metrics.hook';
 import { ModelEvaluations } from './model-evaluations.component';
 import { ModelMetricsGraphs } from './model-metrics-graphs.component';
@@ -16,6 +17,7 @@ type ModelMetricsProps = {
 
 export const ModelMetrics = ({ modelId, evaluations, filesDeleted = false }: ModelMetricsProps) => {
     const { data: trainingMetrics, isPending, isError } = useGetModelTrainingMetrics(filesDeleted ? null : modelId);
+    const { data: trainingConfig } = useGetModelTrainingConfiguration(filesDeleted ? null : modelId);
 
     if (filesDeleted) {
         return (
@@ -37,7 +39,7 @@ export const ModelMetrics = ({ modelId, evaluations, filesDeleted = false }: Mod
                 </Flex>
             ) : (
                 <>
-                    <ModelEvaluations evaluations={evaluations} />
+                    <ModelEvaluations evaluations={evaluations} trainingConfiguration={trainingConfig} />
                     <ModelMetricsGraphs trainingMetrics={trainingMetrics?.training_metrics ?? []} />
                 </>
             )}

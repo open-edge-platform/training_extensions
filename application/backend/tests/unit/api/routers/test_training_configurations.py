@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from unittest.mock import MagicMock, patch
-from uuid import uuid4
 
 import pytest
 
@@ -97,13 +96,15 @@ class TestTrainingConfigurationEndpoints:
     def test_get_training_configuration_by_model_architecture(
         self,
         fxt_client,
+        fxt_get_project,
         fxt_training_configuration_service,
         fxt_training_configuration,
         fxt_default_training_configuration,
     ):
         """Test successful retrieval of training configuration by model architecture."""
-        project_id = uuid4()
+        project_id = fxt_get_project.id
         model_architecture_id = "object-detection-yolox-x"
+        fxt_get_project.task_type = "classification"
         fxt_training_configuration_service.get_by_model_architecture.return_value = fxt_training_configuration
 
         mock_view = MagicMock(spec=TrainingConfigurationView)
@@ -126,15 +127,17 @@ class TestTrainingConfigurationEndpoints:
                 project_id=project_id, model_architecture_id=model_architecture_id
             )
             mock_get_default.assert_called_once_with(model_architecture_id=model_architecture_id)
-            mock_from.assert_called_once_with(fxt_training_configuration, fxt_default_training_configuration)
+            mock_from.assert_called_once_with(
+                fxt_training_configuration, fxt_default_training_configuration, task_type="classification"
+            )
 
         assert response.status_code == 200
 
     def test_get_training_configuration_by_model_architecture_manifest_not_found(
-        self, fxt_client, fxt_training_configuration_service
+        self, fxt_client, fxt_get_project, fxt_training_configuration_service
     ):
         """Test retrieval of training configuration by model architecture when manifest is not found."""
-        project_id = uuid4()
+        project_id = fxt_get_project.id
         model_architecture_id = "object-detection-yolox-x"
         fxt_training_configuration_service.get_by_model_architecture.side_effect = ManifestNotFoundException(
             model_architecture_id
@@ -150,15 +153,18 @@ class TestTrainingConfigurationEndpoints:
     def test_update_training_configuration_for_model_architecture(
         self,
         fxt_client,
+        fxt_get_project,
         fxt_training_configuration,
         fxt_training_configuration_service,
         fxt_default_training_configuration,
     ):
         """Test successful update of training configuration for model architecture."""
-        project_id = uuid4()
+        project_id = fxt_get_project.id
         model_architecture_id = "object-detection-yolox-x"
+        fxt_get_project.task_type = "classification"
         fxt_training_configuration_service.get_by_model_architecture.return_value = fxt_training_configuration
         fxt_training_configuration_service.update.return_value = None
+        fxt_get_project.task_type = "classification"
 
         update_payload = {
             "dataset_preparation.subset_split.training": 60,
@@ -200,15 +206,16 @@ class TestTrainingConfigurationEndpoints:
         )
 
     def test_update_training_configuration_for_model_architecture_manifest_not_found(
-        self, fxt_client, fxt_training_configuration_service
+        self, fxt_client, fxt_get_project, fxt_training_configuration_service
     ):
         """Test update of training configuration for model architecture when manifest is not found."""
-        project_id = uuid4()
+        project_id = fxt_get_project.id
         model_architecture_id = "object-detection-yolox-x"
         fxt_training_configuration_service.get_by_model_architecture.side_effect = ManifestNotFoundException(
             model_architecture_id
         )
         fxt_training_configuration_service.update.return_value = None
+        fxt_get_project.task_type = "classification"
 
         response = fxt_client.patch(
             f"/api/projects/{project_id}/training_configuration",
@@ -220,14 +227,15 @@ class TestTrainingConfigurationEndpoints:
         fxt_training_configuration_service.update.assert_not_called()
 
     def test_update_training_configuration_for_model_architecture_invalid_update(
-        self, fxt_client, fxt_training_configuration, fxt_training_configuration_service
+        self, fxt_client, fxt_get_project, fxt_training_configuration, fxt_training_configuration_service
     ):
         """Test update of training configuration for model architecture with an invalid update list."""
-        project_id = uuid4()
+        project_id = fxt_get_project.id
         model_architecture_id = "object-detection-yolox-x"
         # Return a real TrainingConfiguration so apply_updates actually raises ValueError
         fxt_training_configuration_service.get_by_model_architecture.return_value = fxt_training_configuration
         fxt_training_configuration_service.update.return_value = None
+        fxt_get_project.task_type = "classification"
 
         response = fxt_client.patch(
             f"/api/projects/{project_id}/training_configuration",

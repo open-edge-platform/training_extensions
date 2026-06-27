@@ -60,6 +60,7 @@ def _make_getitune_config(**overrides: Any) -> dict:
             },
         },
         "engine": {"device": "auto"},
+        "callback_monitor": "val/map_50",
         "callbacks": [
             copy.deepcopy(EARLY_STOPPING_CALLBACK),
             copy.deepcopy(CHECKPOINT_CALLBACK),
@@ -788,3 +789,30 @@ class TestIntensityMappingUpdate:
         assert intensity["scale_factor"] == 0.4
         assert intensity["min_value"] == 10.0
         assert intensity["max_value"] == 300.0
+
+
+class TestEvaluationMetricUpdate:
+    """Tests for evaluation metric parameter handling in GetiConfigConverter."""
+
+    def test_convert_applies_evaluation_metric(self) -> None:
+        """F_MEASURE metric mode should update validation metric in getitune config."""
+        otx_cfg = _make_getitune_config()
+        geti_cfg = _make_geti_config(task_level_parameters={"evaluation": {"validation_metric": "F-measure"}})
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["callback_monitor"] == "val/f1-score"
+
+        es_idx = GetiConfigConverter.get_callback_idx(result["callbacks"], EARLY_STOPPING_CLASS_PATH)
+        assert result["callbacks"][es_idx]["init_args"]["monitor"] == "val/f1-score"
+
+        cp_idx = GetiConfigConverter.get_callback_idx(
+            result["callbacks"], "lightning.pytorch.callbacks.ModelCheckpoint"
+        )
+        assert result["callbacks"][cp_idx]["init_args"]["monitor"] == "val/f1-score"
+
+        sched = result["model"]["init_args"]["scheduler"]["init_args"]
+        main = sched["main_scheduler_callable"]
+        assert main["init_args"]["monitor"] == "val/f1-score"

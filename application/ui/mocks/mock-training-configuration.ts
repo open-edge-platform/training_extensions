@@ -231,5 +231,27 @@ export const getMockedTrainingConfiguration = (): TrainingConfigurationParameter
         ],
     };
 
-    return [datasetPreparationGroup, trainingGroup];
+
+    const evaluationGroup: ConfigurableParameterGroup = {
+        type: 'parameter_group',
+        key: 'evaluation',
+        name: 'Evaluation parameters',
+        description: '',
+        parameters: [
+            {
+                type: 'parameter',
+                key: 'validation_metric',
+                name: 'Validation metric',
+                description: 'The metric used to validate the model performance.',
+                value: 'Default',
+                default_value: 'Default',
+                value_type: 'str',
+                allowed_values: ['Default', 'Accuracy', 'F-measure', 'mAP'],
+                depends_on: null,
+            },
+        ],
+    };
+
+    return [datasetPreparationGroup, trainingGroup, evaluationGroup];
+
 };
