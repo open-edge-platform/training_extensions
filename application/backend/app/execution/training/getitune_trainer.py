@@ -440,8 +440,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         # fresh training from base weights and resume from parent revision).
         # Lightning models self-load pretrained weights during construction via
         # PRETRAINED_WEIGHTS_CACHE_DIR, so a checkpoint is only needed for resume.
-        if is_ultralytics or has_model_revision:
-            engine_kwargs["checkpoint"] = weights_path
+        engine_kwargs["checkpoint"] = weights_path if is_ultralytics or has_model_revision else None
 
         model_parser = ArgumentParser()
         model_type = UltralyticsModel if is_ultralytics else LightningModel
