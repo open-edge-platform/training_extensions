@@ -3,7 +3,7 @@ task: INSTANCE_SEGMENTATION
 model:
   class_path: getitune.backend.lightning.models.instance_segmentation.RFDETRInst
   init_args:
-    model_name: rfdetr_seg_xl
+    model_name: rfdetr_seg_n
     label_info: 91
     multi_scale: true
 
@@ -67,8 +67,8 @@ overrides:
   data:
     task: INSTANCE_SEGMENTATION
     input_size:
-      - 624
-      - 624
+      - 312
+      - 312
     train_subset:
       batch_size: 4
       augmentations_cpu:
@@ -104,4 +104,3 @@ overrides:
             size: $(input_size)
             keep_aspect_ratio: false
             resize_targets: false
-

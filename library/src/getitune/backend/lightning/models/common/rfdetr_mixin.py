@@ -9,32 +9,62 @@ RFDETRInst (instance segmentation) models.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar
+import os
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import torch
-from rfdetr.main import populate_args
-from rfdetr.models.lwdetr import build_criterion_and_postprocessors
-from rfdetr.util.get_param_dicts import get_param_dict
+from rfdetr._namespace import _namespace_from_configs
+from rfdetr.config import TrainConfig
+from rfdetr.models import build_criterion_from_config, build_model_from_config, load_pretrain_weights
+from rfdetr.models._defaults import MODEL_DEFAULTS
+from rfdetr.models.backbone import Joiner
+from torch.hub import download_url_to_file
 from torchvision import tv_tensors
 from torchvision.ops import box_convert
 
 from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
 from getitune.backend.lightning.models.detection.utils import limit_batch_objects
-from getitune.backend.lightning.models.utils.utils import load_checkpoint
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    from types import SimpleNamespace
+
+    from rfdetr.models.backbone import Backbone
+    from rfdetr.models.lwdetr import LWDETR
+
+
+def _get_param_dict(args: SimpleNamespace, model_without_ddp: torch.nn.Module) -> list[dict[str, Any]]:
+    if not isinstance(model_without_ddp.backbone, Joiner):
+        msg = f"Expected backbone to be Joiner, got {type(model_without_ddp.backbone).__name__}"
+        raise TypeError(msg)
+
+    backbone = cast("Backbone", model_without_ddp.backbone[0])
+    backbone_named_param_lr_pairs = backbone.get_named_param_lr_pairs(args, prefix="backbone.0")
+    backbone_param_lr_pairs = [param_dict for _, param_dict in backbone_named_param_lr_pairs.items()]
+
+    decoder_key = "transformer.decoder"
+    decoder_params = [p for n, p in model_without_ddp.named_parameters() if decoder_key in n and p.requires_grad]
+    decoder_param_lr_pairs = [{"params": param, "lr": args.lr * args.lr_component_decay} for param in decoder_params]
+
+    other_params = [
+        p
+        for n, p in model_without_ddp.named_parameters()
+        if (n not in backbone_named_param_lr_pairs and decoder_key not in n and p.requires_grad)
+    ]
+    other_param_dicts = [{"params": param, "lr": args.lr} for param in other_params]
+
+    return other_param_dicts + backbone_param_lr_pairs + decoder_param_lr_pairs
 
 
 class RFDETRMixin:
     """Mixin class providing shared RF-DETR functionality for detection and instance segmentation."""
 
     _pretrained_weights: ClassVar[dict[str, str]]
-    _model_class_mapping: ClassVar[dict[str, type]]
+    _model_config_mapping: ClassVar[dict[str, type]]
 
     def _build_rfdetr_model(
         self,
@@ -45,11 +75,11 @@ class RFDETRMixin:
         """Build the core RF-DETR model.
 
         Handles the full pipeline shared by both detection and instance segmentation:
-        1. Instantiate the rfdetr model class
-        2. Load pretrained checkpoint
-        3. Reinitialize detection head for ``num_classes``
-        4. Build criterion and postprocessor
-        5. Wrap in ``RFDETRDetector``
+        1. Build LWDETR from per-variant config.
+        2. Load & align pretrained weights (handles head resize internally).
+        3. Reinit classification biases to zero (sigmoid=0.5 neutral prior).
+        4. Build criterion and postprocessor.
+        5. Wrap in ``RFDETRDetector``.
 
         Args:
             num_classes: Number of target classes.
@@ -58,55 +88,52 @@ class RFDETRMixin:
         Returns:
             Configured ``RFDETRDetector`` instance.
         """
-        model_class = self._model_class_mapping[self.model_name]  # type: ignore[attr-defined]
+        model_config_cls = self._model_config_mapping[self.model_name]  # type: ignore[attr-defined]
 
-        detector = model_class(
-            pretrain_weights=None,
-            gradient_checkpointing=gradient_checkpointing,
-        )
-        lwdetr_model = detector.model.model
+        model_config = model_config_cls()
+        model_config.num_classes = num_classes
+        model_config.gradient_checkpointing = gradient_checkpointing
+        train_config = TrainConfig(dataset_dir=".")
 
-        load_checkpoint(
-            lwdetr_model,  # pyrefly: ignore[bad-argument-type]
-            self._pretrained_weights[self.model_name],  # type: ignore[attr-defined]
-            map_location="cpu",
-        )
+        lwdetr: LWDETR = build_model_from_config(model_config, train_config)
 
-        # Reinitialize detection head for our num_classes
-        detector.model.reinitialize_detection_head(num_classes)
-        detector.model.args.num_classes = num_classes
+        pretrain_url = self._pretrained_weights.get(self.model_name)  # type: ignore[attr-defined]
+        if pretrain_url:
+            cache_dir = Path(
+                os.environ.get(
+                    "PRETRAINED_WEIGHTS_CACHE_DIR",
+                    Path.home() / ".cache" / "torch" / "hub" / "checkpoints",
+                )
+            )
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            local_path = cache_dir / Path(pretrain_url).name
+            is_distributed = torch.distributed.is_available() and torch.distributed.is_initialized()
+            rank = torch.distributed.get_rank() if is_distributed else 0
+            if rank == 0 and not local_path.exists():
+                download_url_to_file(pretrain_url, str(local_path), progress=os.isatty(0))
+            if is_distributed:
+                torch.distributed.barrier()
+            model_config.pretrain_weights = str(local_path)
+        else:
+            model_config.pretrain_weights = None
+        load_pretrain_weights(lwdetr, model_config)
 
-        # Reset classification biases to zero (sigmoid=0.5 neutral prior).
-        torch.nn.init.zeros_(lwdetr_model.class_embed.bias)
-        if getattr(lwdetr_model, "two_stage", False):
-            for enc_cls_embed in lwdetr_model.transformer.enc_out_class_embed:
+        torch.nn.init.zeros_(lwdetr.class_embed.bias)
+        if lwdetr.two_stage:
+            for enc_cls_embed in lwdetr.transformer.enc_out_class_embed:
                 torch.nn.init.zeros_(enc_cls_embed.bias)
 
-        # Build criterion and postprocessor
-        model_cfg = detector.get_model_config().model_dump()
-        train_cfg = detector.get_train_config(dataset_dir="").model_dump()
-        model_cfg.pop("num_classes")
-        if "class_names" in model_cfg:
-            model_cfg.pop("class_names")
+        criterion, postprocessor = build_criterion_from_config(model_config, train_config)
 
-        for k in train_cfg:
-            if k in model_cfg:
-                model_cfg.pop(k)
-
-        all_kwargs = {**model_cfg, **train_cfg, "num_classes": num_classes}
-        rfdetr_args = populate_args(**all_kwargs)
-
-        criterion, postprocessor = build_criterion_and_postprocessors(rfdetr_args)
-        criterion.num_classes = num_classes
-
-        # Store rfdetr_args for optimizer configuration
-        self.rfdetr_args = rfdetr_args  # type: ignore[attr-defined]
+        self.rfdetr_args = _namespace_from_configs(  # type: ignore[attr-defined]
+            model_config, train_config, MODEL_DEFAULTS
+        )
 
         return RFDETRDetector(
-            lwdetr_model=lwdetr_model,  # pyrefly: ignore[bad-argument-type]
+            lwdetr_model=lwdetr,
             criterion=criterion,
             postprocessor=postprocessor,
-            rfdetr_args=self.rfdetr_args,  # pyrefly: ignore[bad-argument-type]
+            rfdetr_args=self.rfdetr_args,  # type: ignore[attr-defined]
             input_size=self.data_input_params.input_size[0],  # type: ignore[attr-defined]
             multi_scale=self.multi_scale,  # type: ignore[attr-defined]
         )
@@ -269,7 +296,7 @@ class RFDETRMixin:
         # Get parameter groups from rfdetr with correct args
         self.rfdetr_args.lr = default_lr  # type: ignore[attr-defined]
         self.rfdetr_args.weight_decay = default_weight_decay  # type: ignore[attr-defined]
-        param_groups = get_param_dict(self.rfdetr_args, self.model.lwdetr)  # type: ignore[attr-defined]  # pyrefly: ignore[bad-argument-type]
+        param_groups = _get_param_dict(self.rfdetr_args, self.model.lwdetr)  # type: ignore[attr-defined]  # pyrefly: ignore[bad-argument-type]
 
         # Create optimizer and schedulers
         optimizer = self.optimizer_callable(param_groups)  # type: ignore[attr-defined]
