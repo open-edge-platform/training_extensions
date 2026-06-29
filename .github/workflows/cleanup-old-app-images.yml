@@ -98,7 +98,7 @@ jobs:
               continue
             fi
 
-            # Fetch all versions with their first tag and creation date, then normalize it to a JSON array
+            # Fetch all versions with their tags and creation date, then normalize it to a JSON array
             raw_versions="$(gh api --paginate "${api_scope}/packages/container/${package_url}/versions?per_page=100")"
 
             versions_json="$(
