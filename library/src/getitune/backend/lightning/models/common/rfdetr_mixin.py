@@ -31,15 +31,17 @@ from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
 
 if TYPE_CHECKING:
+    from types import SimpleNamespace
+
     from rfdetr.models.lwdetr import LWDETR
 
 
-def _get_param_dict(args: Any, model_without_ddp: torch.nn.Module) -> list[dict[str, Any]]:
+def _get_param_dict(args: SimpleNamespace, model_without_ddp: torch.nn.Module) -> list[dict[str, Any]]:
     if not isinstance(model_without_ddp.backbone, Joiner):
         msg = f"Expected backbone to be Joiner, got {type(model_without_ddp.backbone).__name__}"
         raise TypeError(msg)
 
-    backbone = cast(Any, model_without_ddp.backbone[0])
+    backbone = cast("Any", model_without_ddp.backbone[0])
     backbone_named_param_lr_pairs = backbone.get_named_param_lr_pairs(args, prefix="backbone.0")
     backbone_param_lr_pairs = [param_dict for _, param_dict in backbone_named_param_lr_pairs.items()]
 
