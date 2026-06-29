@@ -5,6 +5,7 @@
 
 from .atss_loss import ATSSCriterion
 from .dfine_loss import DFINECriterion
+from .ec_loss import ECCriterion
 from .rtdetr_loss import DetrCriterion
 from .rtmdet_loss import RTMDetCriterion
 from .ssd_loss import SSDCriterion
@@ -14,6 +15,7 @@ __all__ = [
     "ATSSCriterion",
     "DFINECriterion",
     "DetrCriterion",
+    "ECCriterion",
     "RTMDetCriterion",
     "SSDCriterion",
     "YOLOXCriterion",

@@ -905,6 +905,43 @@ class HybridEncoder:
             "fuse_op": "sum",
             "use_fusable_layers": True,
         },
+        # EdgeCrafter models (use sum fusion, fusable layers)
+        "edgecrafter_s": {
+            "in_channels": [192, 192, 192],
+            "hidden_dim": 192,
+            "dim_feedforward": 512,
+            "depth_mult": 0.67,
+            "expansion": 0.34,
+            "fuse_op": "sum",
+            "use_fusable_layers": True,
+        },
+        "edgecrafter_m": {
+            "in_channels": [256, 256, 256],
+            "hidden_dim": 256,
+            "dim_feedforward": 512,
+            "depth_mult": 0.67,
+            "expansion": 0.75,
+            "fuse_op": "sum",
+            "use_fusable_layers": True,
+        },
+        "edgecrafter_l": {
+            "in_channels": [256, 256, 256],
+            "hidden_dim": 256,
+            "dim_feedforward": 1024,
+            "depth_mult": 1.0,
+            "expansion": 0.75,
+            "fuse_op": "sum",
+            "use_fusable_layers": True,
+        },
+        "edgecrafter_x": {
+            "in_channels": [256, 256, 256],
+            "hidden_dim": 256,
+            "dim_feedforward": 2048,
+            "depth_mult": 1.0,
+            "expansion": 1.5,
+            "fuse_op": "sum",
+            "use_fusable_layers": True,
+        },
     }
 
     def __new__(cls, model_name: str) -> HybridEncoderModule:
