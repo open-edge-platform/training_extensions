@@ -388,6 +388,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         weights_path: Path,
         model_id: UUID,
         device: DeviceInfo,
+        has_model_revision: bool,
     ) -> tuple[Path, Engine]:
         """Execute model training.
 
@@ -429,15 +430,20 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         getitune_device_type = (
             GetiTuneDeviceType.gpu if device.type is DeviceType.CUDA else GetiTuneDeviceType(device.type)
         )
+        class_path = model_cfg.get("class_path", "")
+        is_ultralytics = "ultralytics" in class_path
+        # Ultralytics models load weights via engine's checkpoint param (for both
+        # fresh training from base weights and resume from parent revision).
+        # Lightning models self-load pretrained weights during construction via
+        # PRETRAINED_WEIGHTS_CACHE_DIR, so a checkpoint is only needed for resume.
         engine_kwargs: dict[str, Any] = {
             "work_dir": self._data_dir / f"getitune-workspace-{model_id}",
             "device": getitune_device_type,
-            "checkpoint": weights_path,
+            **({"checkpoint": weights_path} if is_ultralytics or has_model_revision else {}),
         }
 
         model_parser = ArgumentParser()
-        class_path = model_cfg.get("class_path", "")
-        model_type = UltralyticsModel if "ultralytics" in class_path else LightningModel
+        model_type = UltralyticsModel if is_ultralytics else LightningModel
         model_parser.add_argument("--model", type=model_type)
         getitune_model = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
 
@@ -709,6 +715,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
                 weights_path=weights_path,
                 model_id=params.model_id,
                 device=params.device,
+                has_model_revision=params.has_model_revision,
             )
             exported_model_paths = self.export_model(
                 getitune_engine=getitune_engine, model_checkpoint_path=trained_model_path

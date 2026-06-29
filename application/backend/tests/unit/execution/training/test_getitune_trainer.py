@@ -808,6 +808,7 @@ class TestGetiTuneTrainerTrainModel:
                 weights_path=weights_path,
                 model_id=model_id,
                 device=geti_device,
+                has_model_revision=False,
             )
 
         # Assert
@@ -827,7 +828,7 @@ class TestGetiTuneTrainerTrainModel:
         assert engine_call_kwargs["model"] == mock_getitune_model
         assert engine_call_kwargs["data"] == mock_datamodule
         assert engine_call_kwargs["work_dir"] == getitune_trainer._data_dir / f"getitune-workspace-{model_id}"
-        assert engine_call_kwargs["checkpoint"] == weights_path
+        assert "checkpoint" not in engine_call_kwargs
 
         # Verify training was started
         mock_getitune_engine.train.assert_called_once()
@@ -908,6 +909,7 @@ class TestGetiTuneTrainerTrainModel:
                 weights_path=weights_path,
                 model_id=model_id,
                 device=DeviceInfo(type=DeviceType.CPU, name="Intel Core", index=None, memory=None),
+                has_model_revision=True,
             )
 
         # Assert
