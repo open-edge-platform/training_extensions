@@ -432,15 +432,15 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         )
         class_path = model_cfg.get("class_path", "")
         is_ultralytics = "ultralytics" in class_path
-        engine_kwargs: dict[str, Any] = {
-            "work_dir": self._data_dir / f"getitune-workspace-{model_id}",
-            "device": getitune_device_type,
-        }
         # Ultralytics models load weights via engine's checkpoint param (for both
         # fresh training from base weights and resume from parent revision).
         # Lightning models self-load pretrained weights during construction via
         # PRETRAINED_WEIGHTS_CACHE_DIR, so a checkpoint is only needed for resume.
-        engine_kwargs["checkpoint"] = weights_path if is_ultralytics or has_model_revision else None
+        engine_kwargs: dict[str, Any] = {
+            "work_dir": self._data_dir / f"getitune-workspace-{model_id}",
+            "device": getitune_device_type,
+            **({"checkpoint": weights_path} if is_ultralytics or has_model_revision else {}),
+        }
 
         model_parser = ArgumentParser()
         model_type = UltralyticsModel if is_ultralytics else LightningModel
