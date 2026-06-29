@@ -40,7 +40,7 @@ def _generate_self_signed(cert_path: Path, key_path: Path) -> None:
 
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "localhost")])
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = datetime.datetime.now(datetime.UTC)
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
@@ -86,11 +86,8 @@ def _main() -> None:
     try:
         _generate_self_signed(cert_path, key_path)
         print("Setup Hook: Self-signed cert generated")
-    except Exception as e:  # noqa: BLE001 - hook must never crash startup
+    except Exception as e:
         print("Setup Hook: Failed to generate TLS cert", e)
 
 
 _main()
-
-
-

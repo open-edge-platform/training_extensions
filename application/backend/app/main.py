@@ -20,6 +20,7 @@ if getattr(sys, "frozen", False) and __name__ == "__main__":
 
 import asyncio
 import logging
+import ssl
 from collections.abc import Awaitable, Callable
 from os import getenv
 from pathlib import Path
@@ -151,9 +152,43 @@ if static_dir is not None and static_dir.is_dir() and any(static_dir.iterdir()):
         return FileResponse(cast(Path, static_dir) / "index.html")
 
 
+# Substrings identifying benign TLS connection-teardown errors raised when a client
+# (e.g. the WebView2-based desktop UI) closes an HTTP/2-over-TLS connection abruptly.
+_BENIGN_TLS_SHUTDOWN_MARKERS = (
+    "SSL shutdown timed out",
+    "APPLICATION_DATA_AFTER_CLOSE_NOTIFY",
+    "application data after close notify",
+)
+
+
+def _is_benign_tls_shutdown_error(exc: BaseException | None, message: str) -> bool:
+    """Return True for harmless TLS teardown errors that should not be logged as errors."""
+    if not isinstance(exc, TimeoutError | ssl.SSLError):
+        return False
+    text = f"{message} {exc}"
+    return any(marker in text for marker in _BENIGN_TLS_SHUTDOWN_MARKERS)
+
+
+def _asyncio_exception_handler(loop: asyncio.AbstractEventLoop, context: dict) -> None:
+    """Filter out benign TLS-shutdown noise; defer all other errors to the default handler."""
+    exc = context.get("exception")
+    message = context.get("message", "")
+    if _is_benign_tls_shutdown_error(exc, message):
+        logger.debug("Ignoring benign TLS shutdown error: {}", message or exc)
+        return
+    loop.default_exception_handler(context)
+
+
 async def main_async() -> None:
     """Async main application entry point for Hypercorn"""
     logger.info("Starting {} in {} mode via Hypercorn (HTTP/2)", settings.app_name, settings.environment)
+
+    # WebView2 / browser clients frequently drop HTTP/2-over-TLS connections without a
+    # clean TLS close, so asyncio's graceful SSL shutdown either times out or observes a
+    # late record. Hypercorn surfaces these as "Unhandled exception in client_connected_cb"
+    # at ERROR level even though they are harmless connection teardown noise. Install an
+    # exception handler that downgrades just these cases and delegates everything else.
+    asyncio.get_running_loop().set_exception_handler(_asyncio_exception_handler)
 
     config = Config()
     config.bind = [f"{settings.host}:{settings.port}"]
