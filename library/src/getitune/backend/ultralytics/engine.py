@@ -128,6 +128,7 @@ class UltralyticsEngine(Engine):
         batch: int | None = None,
         lr0: float | None = None,
         patience: int | None = None,
+        precision: str | None = "16-mixed",
         callbacks: list[Any] | None = None,
         **kwargs,
     ) -> METRICS:
@@ -138,6 +139,14 @@ class UltralyticsEngine(Engine):
             batch: Batch size.
             lr0: Initial learning rate.
             patience: Early stopping patience (0 to disable).
+            precision: Training precision.  Accepted values (same strings as
+                Lightning): ``"16-mixed"``, ``"16"``, ``"bf16-mixed"``,
+                ``"bf16"`` (mixed precision / AMP), ``"32"``, ``"32-true"``
+                (full FP32).  ``None`` leaves the Ultralytics default
+                (``amp=True``, i.e. FP16).  On CPU any FP16/BF16 variant is
+                silently downgraded to FP32.  On XPU the mixin converts the
+                model to BF16 regardless of whether ``"16"`` or ``"bf16"`` was
+                requested.
             callbacks: Accepted for API compatibility; unused by Ultralytics.
             **kwargs: Additional overrides forwarded to Ultralytics training.
 
@@ -156,8 +165,6 @@ class UltralyticsEngine(Engine):
                 dev_type = self._device.type
                 if dev_type != "cpu":
                     self._device = torch.device(f"{dev_type}:{idx}")
-        # Drop Lightning-only kwargs that have no Ultralytics equivalent.
-        kwargs.pop("precision", None)
         explicit: dict[str, Any] = {}
         if max_epochs is not None:
             explicit["epochs"] = max_epochs
@@ -192,6 +199,11 @@ class UltralyticsEngine(Engine):
             "exist_ok": True,
             **merged,
         }
+
+        # Inject amp after **merged so it wins over recipe values.
+        amp_val = self._precision_to_amp(precision, self._device)
+        if amp_val is not None:
+            train_args["amp"] = amp_val
 
         logger.info(
             f"Starting Ultralytics training: model={self._model.model_name}, "
@@ -1082,3 +1094,40 @@ class UltralyticsEngine(Engine):
 
         # Anything else (e.g. "cuda:1", "cpu") — let torch.device parse it.
         return torch.device(device)
+
+    @staticmethod
+    def _precision_to_amp(precision: str | None, device: torch.device) -> bool | None:
+        """Map a Lightning-style precision string to Ultralytics' ``amp`` flag.
+
+        Args:
+            precision: One of ``"16-mixed"``, ``"16"``, ``"bf16-mixed"``,
+                ``"bf16"`` (mixed precision), ``"32"``, ``"32-true"`` (FP32),
+                or ``None`` to leave the Ultralytics default (``amp=True``).
+            device: The training device.  CPU does not support AMP; any FP16/
+                BF16 variant is downgraded to FP32 with a warning.
+
+        Returns:
+            ``True`` to enable AMP, ``False`` to disable it, or ``None`` to
+            leave the Ultralytics default unchanged.
+
+        Raises:
+            ValueError: If *precision* is an unrecognised string.
+        """
+        if precision is None:
+            return None
+
+        _fp16_precisions = {"16-mixed", "16", "bf16-mixed", "bf16"}
+        _fp32_precisions = {"32", "32-true"}
+
+        if precision in _fp32_precisions:
+            return False
+
+        if precision in _fp16_precisions:
+            if device.type == "cpu":
+                logger.warning(f"precision={precision!r} is not supported on CPU; falling back to FP32 (amp=False)")
+                return False
+            return True
+
+        valid = _fp16_precisions | _fp32_precisions
+        msg = f"Unknown precision {precision!r}; expected one of {sorted(valid)} or None"
+        raise ValueError(msg)

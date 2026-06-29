@@ -50,5 +50,6 @@ export const getAllModelsWithOpenVINOVariants = (models: Model[]): SelectableMod
 };
 
 export const isUltralyticsModel = (identifier: string): boolean => {
-    return identifier.toLocaleLowerCase().includes('yolo26-');
+    const lowerIdentifier = identifier.toLocaleLowerCase();
+    return lowerIdentifier.includes('yolo26-') || lowerIdentifier.includes('yolo11-') || lowerIdentifier.includes('yolo12-');
 };
