@@ -757,8 +757,8 @@ class GetiConfigConverter:
                 "status": ModelStatus.ACTIVE,
                 "default": False,
             },
-            "object-detection-yolo26-n": {
-                "recipe_path": RECIPE_PATH / "detection" / "yolo26_n.yaml",
+            "object-detection-rfdetr-n": {
+                "recipe_path": RECIPE_PATH / "detection" / "rfdetr_nano.yaml",
                 "status": ModelStatus.ACTIVE,
                 "default": False,
             },
