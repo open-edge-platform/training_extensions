@@ -850,12 +850,12 @@ class GetiConfigConverter:
             },
             "instance-segmentation-rfdetr-xl": {
                 "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_xlarge.yaml",
-                "status": ModelStatus.ACCURACY,
+                "status": ModelStatus.ACTIVE,
                 "default": False,
             },
             "instance-segmentation-rfdetr-2xl": {
                 "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_2xlarge.yaml",
-                "status": ModelStatus.ACTIVE,
+                "status": ModelStatus.ACCURACY,
                 "default": False,
             },
             "instance-segmentation-yolo26-n": {
