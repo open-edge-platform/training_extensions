@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { Content, Heading, IllustratedMessage, View } from '@geti/ui';
+import { Content, Heading, IllustratedMessage, View } from '@geti-ui/ui';
 import { usePipelineMetrics } from 'hooks/api/pipeline.hook';
 import { CartesianGrid, Label, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
 

@@ -11,6 +11,11 @@ from loguru import logger
 
 FALLBACK_FRAME = np.full((64, 64, 3), 16, dtype=np.uint8)
 
+# Maximum number of short polling attempts before returning a cached/fallback frame.
+# Each attempt sleeps briefly (~16ms) to avoid busy-waiting while still keeping latency low.
+_MAX_POLL_ATTEMPTS = 6
+_POLL_INTERVAL_S = 0.016  # ~60 Hz polling
+
 
 class InferenceVideoStreamTrack(VideoStreamTrack):
     """A video stream track that provides frames with inference results over WebRTC."""
@@ -24,20 +29,14 @@ class InferenceVideoStreamTrack(VideoStreamTrack):
         """
         Asynchronously receive the next video frame from the internal queue.
 
-        This coroutine attempts to obtain a frame from ``self._stream_queue`` with a
-        500ms timeout. If a new frame is received, it is cached in ``self._last_frame``.
-        If the queue is empty and no cached frame exists, the method uses the
-        ``FALLBACK_FRAME``, a small, 64 x 64, dark gray numpy array
-        representing a video frame.
+        This coroutine polls ``self._stream_queue`` with short non-blocking attempts
+        separated by brief asyncio sleeps (≈16 ms each, up to ~100 ms total).
+        This keeps latency low while never blocking the event loop for extended periods,
+        ensuring that aiortc can process ICE keep-alives and other connections concurrently.
 
-        The received or fallback frame is wrapped in a ``VideoFrame`` object, with
-        its presentation timestamp (``pts``) and time base attached.
-
-        Behavior:
-            - Pulls frames from ``_stream_queue`` using ``asyncio.to_thread`` (timeout: 500ms).
-            - On timeout, returns last cached frame if available.
-            - If no cached frame exists, returns ``FALLBACK_FRAME``.
-            - Ensures robust streaming when new frames are intermittently missing.
+        If a new frame is received, it is cached in ``self._last_frame``.
+        If the queue is empty after all polling attempts, the method returns the
+        last cached frame (if available) or ``FALLBACK_FRAME`` (a 64x64 dark gray image).
 
         Returns:
             aiortc.VideoFrame:
@@ -47,29 +46,11 @@ class InferenceVideoStreamTrack(VideoStreamTrack):
         Raises:
             Exception:
                 Logs and propagates any errors during retrieval or conversion.
-
-        Notes:
-            - Uses ``asyncio.to_thread`` to prevent blocking the event loop
-              when calling the synchronous ``queue.Queue.get`` method.
-            - Ensures resilience of streaming by falling back to cached or
-              dummy frames in case of delayed or missing input.
-
         """
         pts, time_base = await self.next_timestamp()
 
         try:
-            try:
-                logger.debug("Getting the frame from the stream_queue...")
-                frame_data = await asyncio.to_thread(self._stream_queue.get, True, 0.5)  # wait for 500ms
-                self._last_frame = frame_data  # cache the successful frame
-            except queue.Empty:
-                logger.debug("Empty queue. Using the last frame...")
-                if self._last_frame is None:
-                    frame_data = FALLBACK_FRAME
-                else:
-                    frame_data = self._last_frame
-
-            logger.debug("Received the frame from the stream_queue.")
+            frame_data = await self._poll_frame()
 
             # Convert numpy array to VideoFrame
             frame = VideoFrame.from_ndarray(frame_data, format="bgr24")
@@ -79,3 +60,23 @@ class InferenceVideoStreamTrack(VideoStreamTrack):
         except Exception:
             logger.exception("Error in recv")
             raise
+
+    async def _poll_frame(self) -> np.ndarray:
+        """Poll the stream queue with short non-blocking attempts.
+
+        Returns the first available frame, or falls back to the last cached frame / fallback.
+        """
+        for _ in range(_MAX_POLL_ATTEMPTS):
+            try:
+                frame_data = self._stream_queue.get_nowait()
+                self._last_frame = frame_data
+                return frame_data
+            except queue.Empty:
+                await asyncio.sleep(_POLL_INTERVAL_S)
+
+        # No frame arrived within the polling window - use fallback
+        if self._last_frame is not None:
+            logger.debug("No frame arrived within the polling window; reusing last frame")
+            return self._last_frame
+        logger.debug("No frame available yet; using fallback frame")
+        return FALLBACK_FRAME

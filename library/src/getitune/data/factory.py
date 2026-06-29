@@ -37,15 +37,12 @@ class TransformLibFactory:
         Returns:
             CPUAugmentationPipeline built from config.
         """
-        if config.augmentations_cpu:
-            # Already a pipeline object (e.g., from from_file method)
-            if isinstance(config.augmentations_cpu, CPUAugmentationPipeline):
-                return config.augmentations_cpu
-            return CPUAugmentationPipeline.from_config(config)
+        if isinstance(config.augmentations_cpu, CPUAugmentationPipeline):
+            return config.augmentations_cpu
 
-        # GPU-only configs may have an empty augmentations_cpu list;
-        # return an identity pipeline so downstream code always gets a valid object.
-        return CPUAugmentationPipeline(augmentations=[])
+        # Always use from_config — it prepends the intensity transform even when
+        # augmentations_cpu is empty.
+        return CPUAugmentationPipeline.from_config(config)
 
 
 class DatasetFactory:

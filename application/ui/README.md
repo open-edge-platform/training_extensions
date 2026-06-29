@@ -2,7 +2,7 @@
 
 Modern React application for AI model training and inference, built with Rsbuild and TypeScript.
 
-The Geti™ applications aim to provide a user experience and design language consistent with the main [Geti application](https://github.com/open-edge-platform/geti). To achieve this, we reuse many architectural decisions from Geti™, including the shared `@geti/ui`, `@geti/config`, and `@geti/smart-tools` packages.
+The Geti™ applications aim to provide a user experience and design language consistent with the main [Geti application](https://github.com/open-edge-platform/geti). To achieve this, we reuse many architectural decisions from Geti™, including the shared `@geti-ui/ui`, `@geti/config`, and `@geti/smart-tools` packages.
 
 ## Goals
 
@@ -23,7 +23,7 @@ The Geti™ applications aim to provide a user experience and design language co
 npm install
 ```
 
-The `preinstall` script clones `@geti/config`, `@geti/ui`, and `@geti/smart-tools` from the `open-edge-platform/geti` repository at a pinned commit using [`tiged`](https://github.com/tiged/tiged) (the maintained fork of Degit). These are workspace packages installed into `packages/` and are **gitignored** — never commit that directory.
+The `preinstall` script clones `@geti/config` and `@geti/smart-tools` from the `open-edge-platform/geti_v2` repository at a pinned commit using [`tiged`](https://github.com/tiged/tiged) (the maintained fork of Degit). These are workspace packages installed into `packages/` and are **gitignored** — never commit that directory. The UI library is consumed as the published [`@geti-ui/ui`](https://github.com/MarkRedeman/geti-ui) npm package (a regular dependency), not a clone.
 
 ### Development
 
@@ -52,8 +52,7 @@ npm run preview      # Preview production build
 .
 ├── packages/                # Cloned via tiged (gitignored)
 │   ├── config               # Shared ESLint/TS/Jest configs (@geti/config)
-│   ├── smart-tools          # AI algorithms — RITM, SAM, OpenCV, ONNX Runtime (@geti/smart-tools)
-│   └── ui                   # Shared React Spectrum-based UI library (@geti/ui)
+│   └── smart-tools          # AI algorithms — RITM, SAM, OpenCV, ONNX Runtime (@geti/smart-tools)
 ├── src/
 │   ├── api/                 # OpenAPI client (openapi-fetch + openapi-react-query)
 │   ├── assets/              # Images, illustrations, icons
@@ -82,7 +81,7 @@ npm run preview      # Preview production build
 ### Key Directories
 
 - **`api/`** — Type-safe API client. `$api` provides `useQuery`, `useSuspenseQuery`, `useMutation`, etc., all typed from `src/api/openapi-spec.d.ts` (auto-generated, gitignored — never edit).
-- **`components/`** — Locally reusable UI primitives (use `*.component.tsx` suffix); promote mature components upstream to `@geti/ui`.
+- **`components/`** — Locally reusable UI primitives (use `*.component.tsx` suffix); promote mature components upstream to `@geti-ui/ui`.
 - **`features/`** — Domain-driven modules. Each owns its own components, hooks, providers, and API hooks.
 - **`hooks/api/`** — Custom reusable API hooks composed on top of `$api`.
 - **`platform/`** — Web/Tauri-specific implementations. Files ending in `.tauri.ts` are swapped in for the desktop build.
@@ -145,7 +144,7 @@ The application is built on four main pillars:
 
 - **React Router** - Single-page application navigation with dynamic routing
 - **Tanstack Query** & [`openapi-react-query`](https://openapi-ts.dev/openapi-react-query/) - Server state management and type-safe API consumption
-- **@geti/ui** - Shared visual components for consistent UX
+- **@geti-ui/ui** - Shared visual components for consistent UX
 - **React Context & Local State** - Local state via `useState`, shared state via `createContext`
 
 #### Testing & CI/CD
@@ -193,7 +192,7 @@ feature-name/
     // SPDX-License-Identifier: Apache-2.0
     ```
 - Prefer **`type`** over `interface` (unless declaration merging is needed).
-- **No direct** `@adobe/react-spectrum`, `@react-spectrum/*`, `@react-types/*`, `@spectrum-icons` imports — go through `@geti/ui`.
+- **No direct** `@adobe/react-spectrum`, `@react-spectrum/*`, `@react-types/*`, `@spectrum-icons` imports — go through `@geti-ui/ui`.
 - Import sorting handled automatically by `@ianvs/prettier-plugin-sort-imports` — do not reorder manually.
 - Path aliases: `test-utils/*`, `hooks/*`, `mocks/*` (see `tsconfig.json`).
 

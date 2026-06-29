@@ -44,6 +44,40 @@ class Engine(ABC):
         """Check if the engine is supported for the given model and data."""
         raise NotImplementedError
 
+    @classmethod
+    def from_config(
+        cls,
+        config_path: PathLike,
+        data: DATA,
+        work_dir: PathLike | None = None,
+        device: str | None = None,
+        checkpoint: str | None = None,
+        task: str | None = None,
+        **kwargs,
+    ) -> Engine:
+        """Build an engine from a recipe configuration file.
+
+        Args:
+            config_path: Path to the recipe YAML file.
+            data: DataModule or root directory for the data.
+            work_dir: Working directory for the engine. Defaults to None.
+            device: Device to use (e.g., ``"auto"``, ``"xpu"``, ``"cpu"``, ``"gpu"``). Defaults to None.
+            checkpoint: Optional path to a checkpoint for pretrained or warm-start weights. Defaults to None.
+            task: Task type for disambiguation when a model name matches recipes under multiple tasks. Defaults to None.
+            **kwargs: Backend-specific keyword arguments forwarded to the engine constructor.
+
+        Returns:
+            An instance of the Engine subclass.
+
+        Raises:
+            NotImplementedError: If the subclass does not implement this method.
+        """
+        msg = (
+            f"{cls.__name__} does not support construction from a recipe config. "
+            "Pass a model instance directly to create_engine() instead."
+        )
+        raise NotImplementedError(msg)
+
     @property
     @abstractmethod
     def work_dir(self) -> PathLike:
@@ -69,3 +103,15 @@ class Engine(ABC):
             DATA: datamodule object.
         """
         raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def best_checkpoint(self) -> Path | None:
+        """Path to the best model checkpoint after training.
+
+        Returns ``None`` if training has not been run or no checkpoint was
+        produced.  Subclasses should override to expose their
+        backend-specific checkpoint resolution.
+        """
+        msg = "Subclasses must implement best_checkpoint"
+        raise NotImplementedError(msg)

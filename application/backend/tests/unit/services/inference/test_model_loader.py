@@ -42,11 +42,9 @@ class TestModelLoader:
         fake_adapter = Mock(spec=OpenvinoAdapter)
 
         with (
-            patch("app.services.inference.model_loader.create_core") as mock_create_core,
-            patch("app.services.inference.model_loader.OpenvinoAdapter", return_value=fake_adapter) as mock_adapter_cls,
-            patch(
-                "app.services.inference.model_loader.Model.create_model", return_value=fake_model
-            ) as mock_create_model,
+            patch("model_api.adapters.create_core") as mock_create_core,
+            patch("model_api.adapters.OpenvinoAdapter", return_value=fake_adapter) as mock_adapter_cls,
+            patch("model_api.models.Model.create_model", return_value=fake_model) as mock_create_model,
         ):
             handle = ModelLoader.load(
                 model_id=model_id,
@@ -72,10 +70,27 @@ class TestModelLoader:
     def test_unload_deletes_async_queue_and_compiled_model(self, fxt_loaded_handle: LoadedModelHandle) -> None:
         """unload() should delete both async_queue and compiled_model from the adapter."""
         adapter = cast(OpenvinoAdapter, fxt_loaded_handle.model.inference_adapter)
-        adapter.async_queue = Mock()
+        async_queue = Mock()
+        adapter.async_queue = async_queue
         adapter.compiled_model = Mock()
 
         ModelLoader.unload(fxt_loaded_handle)
 
+        # In-flight requests must be drained before deleting the queue to avoid a GIL deadlock.
+        async_queue.wait_all.assert_called_once_with()
+        assert not hasattr(adapter, "async_queue")
+        assert not hasattr(adapter, "compiled_model")
+
+    def test_unload_still_releases_resources_if_drain_fails(self, fxt_loaded_handle: LoadedModelHandle) -> None:
+        """If draining in-flight requests raises, unload() must still release the native resources."""
+        adapter = cast(OpenvinoAdapter, fxt_loaded_handle.model.inference_adapter)
+        async_queue = Mock()
+        async_queue.wait_all.side_effect = RuntimeError("boom")
+        adapter.async_queue = async_queue
+        adapter.compiled_model = Mock()
+
+        ModelLoader.unload(fxt_loaded_handle)
+
+        async_queue.wait_all.assert_called_once_with()
         assert not hasattr(adapter, "async_queue")
         assert not hasattr(adapter, "compiled_model")

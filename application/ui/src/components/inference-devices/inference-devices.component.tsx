@@ -3,7 +3,7 @@
 
 import { Key } from 'react';
 
-import { Item, Picker } from '@geti/ui';
+import { Item, Picker } from '@geti-ui/ui';
 
 import { $api } from '../../api/client';
 import { DeviceInfo } from '../../constants/shared-types';

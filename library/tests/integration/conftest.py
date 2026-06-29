@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from getitune.backend.lightning.cli.utils import get_getitune_root_path
 from getitune.types.task import TaskType
+from getitune.utils import get_getitune_root_path
 
 RECIPE_PATH = get_getitune_root_path() / "recipe"
 

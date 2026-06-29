@@ -15,12 +15,13 @@ import {
     useState,
 } from 'react';
 
-import { VisuallyHidden } from '@geti/ui';
+import { VisuallyHidden } from '@geti-ui/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { MediaVideoFrame } from '../../../constants/shared-types';
 import { getMediaBinaryUrl } from '../../../shared/media-url.utils';
 import { useVideoControls, VideoControls } from './use-video-controls';
+import { VideoPlayerErrorReason } from './video-player-error';
 
 type VideoPlayerContextProps = {
     videoRef: RefObject<HTMLVideoElement | null>;
@@ -39,16 +40,20 @@ type VideoPlayerContextProps = {
 
     step: number;
     changeStep: Dispatch<SetStateAction<number>>;
+
+    videoError: VideoPlayerErrorReason | null;
 };
 
 const useSynchronizeVideoTimeWithVideoFrame = ({
     videoFrame,
     videoRef,
     onUpdateCurrentFrameIndex,
+    onUpdateVideoError,
 }: {
     videoRef: RefObject<HTMLVideoElement | null>;
     videoFrame: MediaVideoFrame | undefined;
     onUpdateCurrentFrameIndex: (index: number) => void;
+    onUpdateVideoError: (error: VideoPlayerErrorReason | null) => void;
 }) => {
     const previousVideoFrame = usePreviousVideoFrame(videoFrame);
     /*
@@ -100,6 +105,12 @@ const useSynchronizeVideoTimeWithVideoFrame = ({
             videoRef.current.currentTime = (videoFrame.frame_number + 1) / videoFrame.fps;
         }
     }, [videoFrame, previousVideoFrame, videoRef, onUpdateCurrentFrameIndex]);
+
+    useEffect(() => {
+        if (videoFrame?.id !== previousVideoFrame?.id) {
+            onUpdateVideoError(null);
+        }
+    }, [videoFrame, previousVideoFrame, onUpdateVideoError]);
 };
 
 const usePreviousVideoFrame = (videoFrame: MediaVideoFrame | undefined) => {
@@ -126,11 +137,13 @@ export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaI
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const [playbackRate, setPlaybackRate] = useState<number>(1);
     const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(videoFrame?.frame_number ?? 0);
+    const [videoError, setVideoError] = useState<VideoPlayerErrorReason | null>(null);
 
     useSynchronizeVideoTimeWithVideoFrame({
         videoRef,
         videoFrame,
         onUpdateCurrentFrameIndex: setCurrentFrameIndex,
+        onUpdateVideoError: setVideoError,
     });
 
     const playingVideoFrame: MediaVideoFrame | undefined = useMemo(() => {
@@ -207,6 +220,8 @@ export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaI
 
                   step,
                   changeStep: setStep,
+
+                  videoError,
               }
             : null;
 
@@ -222,6 +237,9 @@ export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaI
                         height={playingVideoFrame.height}
                         preload={'auto'}
                         onEnded={handleEnded}
+                        onError={(event) => {
+                            setVideoError(event.currentTarget.error?.code ?? null);
+                        }}
                         muted
                     />
                 </VisuallyHidden>

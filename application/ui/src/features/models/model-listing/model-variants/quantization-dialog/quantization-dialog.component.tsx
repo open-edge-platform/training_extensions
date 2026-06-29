@@ -3,24 +3,13 @@
 
 import { useState } from 'react';
 
-import {
-    Button,
-    ButtonGroup,
-    Content,
-    Dialog,
-    dimensionValue,
-    Divider,
-    Flex,
-    Heading,
-    Text,
-    toast,
-    View,
-} from '@geti/ui';
-import { InfoOutline } from '@geti/ui/icons';
+import { Button, ButtonGroup, Content, Dialog, dimensionValue, Divider, Flex, Heading, Text, View } from '@geti-ui/ui';
+import { InfoOutline } from '@geti-ui/ui/icons';
 import { useSubmitJob } from 'hooks/api/jobs/jobs.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../../api/client';
+import { toast } from '../../../../../components/toast/toast.component';
 import {
     CalibrationDatasetSizeField,
     DEFAULT_QUANTIZATION_PARAMETERS,

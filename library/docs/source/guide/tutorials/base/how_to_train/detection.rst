@@ -140,7 +140,7 @@ The list of supported recipes for object detection is available with the command
 
         .. code-block:: python
 
-            from getitune.backend.lightning.cli.utils import list_models
+            from getitune.utils import list_models
 
             model_lists = list_models(task="DETECTION", pattern="atss")
             print(model_lists)

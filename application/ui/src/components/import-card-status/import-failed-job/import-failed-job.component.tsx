@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Text } from '@geti/ui';
+import { Button, Text } from '@geti-ui/ui';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 import { formatBytes, isNonEmptyString } from '../../../shared/util';

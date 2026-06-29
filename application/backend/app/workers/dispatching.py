@@ -12,7 +12,7 @@ from app.db import get_db_session
 from app.models import DisconnectedSinkConfig, Sink, SinkType
 from app.services import DispatchService, SinkService
 from app.services.data_collect import DataCollector
-from app.services.dispatchers import Dispatcher
+from app.services.dispatchers import Dispatcher, DispatchError
 from app.services.event.event_bus import EventBus, EventType
 from app.stream.stream_data import StreamData
 from app.webrtc import FrameBroadcaster
@@ -51,6 +51,8 @@ class DispatchingWorker(BaseThreadWorker):
             [EventType.SINK_CHANGED, EventType.PIPELINE_STATUS_CHANGED],
             self._reload_sink,
         )
+        event_bus.subscribe([EventType.SOURCE_CHANGED], self._on_source_changed)
+        event_bus.subscribe([EventType.PIPELINE_STATUS_CHANGED], self._on_pipeline_status_changed)
 
     def setup(self) -> None:
         pass
@@ -67,6 +69,14 @@ class DispatchingWorker(BaseThreadWorker):
     def _reload_sink(self) -> None:
         self._sink, self._destinations = self._load_sink()
         logger.info(f"Active sink set to {self._sink}")
+
+    def _on_source_changed(self) -> None:
+        self._rtc_stream_broadcaster.clear()
+        logger.info("Cleared WebRTC broadcaster after source change")
+
+    def _on_pipeline_status_changed(self) -> None:
+        self._rtc_stream_broadcaster.clear()
+        logger.info("Cleared WebRTC broadcaster after pipeline status change")
 
     def run_loop(self) -> None:
         while not self.should_stop():
@@ -89,18 +99,28 @@ class DispatchingWorker(BaseThreadWorker):
             image_with_visualization = inference_data.visualized_prediction
             prediction = inference_data.prediction
 
+            # Dispatch to the WebRTC stream first so the live preview stays responsive even if
+            # an external sink or data collection step below is momentarily slow (e.g. a blocking
+            # disk or DB write). broadcast() is non-blocking (drop-oldest per consumer).
+            self._rtc_stream_broadcaster.broadcast(image_with_visualization)
+
             # Postprocess and dispatch results to external sinks (folder, MQTT, ROS, webhook, ...).
-            # Skipped when no sink is configured; WebRTC and data collection still run below.
+            # Skipped when no sink is configured; WebRTC and data collection still run regardless.
             if self._sink.sink_type != SinkType.DISCONNECTED:
                 for destination in self._destinations:
-                    destination.dispatch(
-                        original_image=stream_data.frame_data,
-                        image_with_visualization=image_with_visualization,
-                        predictions=prediction,
-                    )
-
-            # Dispatch to WebRTC stream
-            self._rtc_stream_broadcaster.broadcast(image_with_visualization)
+                    try:
+                        destination.dispatch(
+                            original_image=stream_data.frame_data,
+                            image_with_visualization=image_with_visualization,
+                            predictions=prediction,
+                        )
+                    except DispatchError:
+                        logger.exception(
+                            "Failed to dispatch results to sink: id={}, name={!r} dispatcher={}",
+                            self._sink.id,
+                            self._sink.name,
+                            type(destination).__name__,
+                        )
 
             # Collect the image to project dataset if needed
             self._data_collector.collect(

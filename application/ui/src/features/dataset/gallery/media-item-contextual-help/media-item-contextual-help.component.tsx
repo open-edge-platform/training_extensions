@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Content, ContextualHelp, Divider, Text } from '@geti/ui';
+import { Content, ContextualHelp, Divider, Text } from '@geti-ui/ui';
 
 import { Media, MediaVideo } from '../../../../constants/shared-types';
 import { isVideo } from '../../../../shared/media-item-utils';

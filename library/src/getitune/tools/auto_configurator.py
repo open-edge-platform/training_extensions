@@ -14,13 +14,13 @@ from warnings import warn
 
 from jsonargparse import ArgumentParser, Namespace
 
-from getitune.backend.lightning.cli.utils import get_getitune_root_path, list_models
 from getitune.backend.lightning.models.base import DataInputParams, LightningModel
 from getitune.config.data import SamplerConfig, SubsetConfig, TileConfig
 from getitune.data.module import DataModule
 from getitune.types import PathLike
 from getitune.types.label import LabelInfoTypes
 from getitune.types.task import TaskType
+from getitune.utils import get_getitune_root_path, list_models
 from getitune.utils.utils import can_pass_tile_config, get_model_cls_from_config, should_pass_label_info
 
 if TYPE_CHECKING:
@@ -314,6 +314,7 @@ class AutoConfigurator:
         task: TaskType | None = None,
         input_size: tuple[int, int] | None = None,
         keep_aspect_ratio: bool = False,
+        center_padding: bool = False,
         pad_value: int = 0,
     ) -> DataModule:
         """Returns an DataModule object with OpenVINO subset transforms applied.
@@ -325,14 +326,21 @@ class AutoConfigurator:
                 from the OV model metadata.  When provided this overrides
                 ``datamodule.input_size`` so that ``$(input_size)`` placeholders
                 in the OV recipe augmentations resolve to the correct value.
-            keep_aspect_ratio (bool, optional): When ``True``, patches every
-                ``getitune.data.augmentation.transforms.Resize`` step in the OV
-                augmentation lists so that aspect ratio is preserved (matching
-                the ``resize_type`` embedded in the IR metadata at export time).
+            keep_aspect_ratio (bool, optional): When ``True`` and the model uses
+                letterbox preprocessing (fit_to_window_letterbox), every Resize
+                transform in the OV pipeline is patched to preserve aspect ratio
+                (letterbox-style) instead of stretching. This avoids padding/pad-value
+                mismatches between the DataModule Resize and the model's native
+                letterbox.  When ``False``, the OV recipe augmentations are
+                applied as usual (simple stretch resize).
                 Defaults to ``False``.
-            pad_value (int, optional): Padding value for letterbox resize. YOLO-family
-                models use 114 (gray), most others use 0 (black). Read from the
-                exported model's ``pad_value`` metadata. Defaults to ``0``.
+            center_padding (bool, optional): When ``True``, patches Resize
+                transforms to use centered letterbox padding (equal on both
+                sides).  This matches ``fit_to_window_letterbox`` preprocessing.
+                Defaults to ``False``.
+            pad_value (int, optional): Padding fill value for Resize when
+                ``keep_aspect_ratio`` is ``True``.  YOLO models use ``114``
+                (gray); default is ``0`` (black).
 
         Returns:
             DataModule: The modified DataModule object with OpenVINO subset transforms applied.
@@ -345,15 +353,25 @@ class AutoConfigurator:
         ov_config = self._load_default_config(config_path=ov_config_path)["data"]
         subset_config = getattr(datamodule, f"{subset}_subset")
         ov_subset = ov_config.get(f"{subset}_subset", ov_config["test_subset"])
-        subset_config.batch_size = ov_subset["batch_size"]
-        subset_config.augmentations_cpu = ov_subset["augmentations_cpu"]
-        subset_config.augmentations_gpu = ov_subset.get("augmentations_gpu", [])
+
         if keep_aspect_ratio:
-            self._patch_resize_keep_aspect_ratio(subset_config.augmentations_cpu)
-            self._patch_resize_keep_aspect_ratio(subset_config.augmentations_gpu)
-        if pad_value != 0:
-            self._patch_resize_pad_value(subset_config.augmentations_cpu, pad_value)
-            self._patch_resize_pad_value(subset_config.augmentations_gpu, pad_value)
+            subset_config.batch_size = ov_subset["batch_size"]
+            subset_config.augmentations_cpu = ov_subset["augmentations_cpu"]
+            subset_config.augmentations_gpu = ov_subset.get("augmentations_gpu", [])
+            self._patch_resize_keep_aspect_ratio(
+                subset_config.augmentations_cpu,
+                center_padding=center_padding,
+                pad_value=pad_value,
+            )
+            self._patch_resize_keep_aspect_ratio(
+                subset_config.augmentations_gpu,
+                center_padding=center_padding,
+                pad_value=pad_value,
+            )
+        else:
+            subset_config.batch_size = ov_subset["batch_size"]
+            subset_config.augmentations_cpu = ov_subset["augmentations_cpu"]
+            subset_config.augmentations_gpu = ov_subset.get("augmentations_gpu", [])
         datamodule.tile_config.enable_tiler = False
 
         # Resolve input size: prefer model IR metadata, fall back to
@@ -384,9 +402,9 @@ class AutoConfigurator:
         if not datamodule.data_root and datamodule.subsets:
             datamodule.train_subset.input_size = actual_input_size
             return DataModule.from_vision_datasets(
-                train_dataset=datamodule.subsets["train"],
-                val_dataset=datamodule.subsets["val"],
-                test_dataset=datamodule.subsets.get("test"),
+                train_dataset=datamodule.subsets[datamodule.train_subset.subset_name],
+                val_dataset=datamodule.subsets[datamodule.val_subset.subset_name],
+                test_dataset=datamodule.subsets.get(datamodule.test_subset.subset_name),
                 train_subset=datamodule.train_subset,
                 val_subset=datamodule.val_subset,
                 test_subset=datamodule.test_subset,
@@ -409,7 +427,12 @@ class AutoConfigurator:
         )
 
     @staticmethod
-    def _patch_resize_keep_aspect_ratio(augmentations: list[dict]) -> None:
+    def _patch_resize_keep_aspect_ratio(
+        augmentations: list[dict],
+        *,
+        center_padding: bool = False,
+        pad_value: int = 0,
+    ) -> None:
         """Set ``keep_aspect_ratio=True`` on every Resize step in an augmentation list.
 
         The OV recipe templates default to ``keep_aspect_ratio: false``.  When the
@@ -417,28 +440,21 @@ class AutoConfigurator:
         resize was used during training, this method patches the configs so that
         OV inference preprocessing matches training preprocessing exactly.
 
+        When ``center_padding`` is True, also sets ``center_padding=True`` on
+        Resize transforms to match ``fit_to_window_letterbox`` preprocessing.
+
         Args:
             augmentations: List of augmentation config dicts, each with
                 ``class_path`` and optionally ``init_args`` keys.
+            center_padding: Whether to also set ``center_padding=True``.
+            pad_value: Padding fill value for the Resize transform.  YOLO
+                models use ``114`` (gray); default is ``0`` (black).
         """
         for aug in augmentations:
             if "Resize" in aug.get("class_path", ""):
                 init_args = aug.setdefault("init_args", {})
                 init_args["keep_aspect_ratio"] = True
-
-    @staticmethod
-    def _patch_resize_pad_value(augmentations: list[dict], pad_value: int) -> None:
-        """Set ``pad_value`` on every Resize step in an augmentation list.
-
-        YOLO-family models use gray padding (114) during training; this must
-        be replicated during OV inference to avoid a mismatch in padded regions
-        that degrades mAP.
-
-        Args:
-            augmentations: List of augmentation config dicts.
-            pad_value: The padding value to set (e.g. 114 for YOLO models).
-        """
-        for aug in augmentations:
-            if "Resize" in aug.get("class_path", ""):
-                init_args = aug.setdefault("init_args", {})
-                init_args["pad_value"] = pad_value
+                if center_padding:
+                    init_args["center_padding"] = True
+                if pad_value != 0:
+                    init_args["pad_value"] = pad_value

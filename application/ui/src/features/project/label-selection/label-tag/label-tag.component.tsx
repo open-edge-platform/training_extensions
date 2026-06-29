@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, PressableElement, Text, Tooltip, TooltipTrigger } from '@geti/ui';
-import { Cross } from '@geti/ui/icons';
+import { ActionButton, Flex, PressableElement, Text, Tooltip, TooltipTrigger } from '@geti-ui/ui';
+import { Cross } from '@geti-ui/ui/icons';
 
 import type { Label } from '../../../../constants/shared-types';
 import { formatHotkeyForDisplay } from '../../../../shared/hotkeys-definition';

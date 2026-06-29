@@ -80,7 +80,8 @@ class OVModel:
             model_api_configuration (dict[str, Any] | None): Configuration for the Model API.
             metric (MetricCallable): Metric callable for evaluation.
         """
-        self.model_type = model_type
+        self._model_type = model_type
+        self._model_adapter: OpenvinoAdapter | None = None
         self.model_path = model_path
         self.force_cpu = force_cpu
         self.async_inference = async_inference
@@ -144,12 +145,26 @@ class OVModel:
         return resize_type in _aspect_ratio_resize_types
 
     @property
+    def center_padding(self) -> bool:
+        """Return True when the model uses letterbox preprocessing with centered padding.
+
+        ``fit_to_window_letterbox`` distributes padding equally on both sides,
+        while ``fit_to_window`` pads only at the bottom-right.  When this
+        property is True, the evaluation pipeline must also use centered
+        padding (``center_padding=True`` on the Resize transform) to match
+        the training preprocessing.
+        """
+        base = self.model.model if isinstance(self.model, Tiler) else self.model
+        resize_type = getattr(getattr(base, "params", None), "resize_type", None)
+        return resize_type == "fit_to_window_letterbox"
+
+    @property
     def pad_value(self) -> int:
         """Return the padding value embedded in the exported model metadata.
 
-        YOLO-family models use ``114`` (gray) while most other architectures
-        use ``0`` (black).  The value is read from the ModelAPI model parameters
-        which are populated from the IR ``model_info/pad_value`` metadata key.
+        YOLO models use ``114`` (gray) while most other architectures use ``0``
+        (black).  The value is read from the ModelAPI model parameters which
+        are populated from the IR ``model_info/pad_value`` metadata key.
 
         Defaults to ``0`` when the attribute is not accessible.
         """
@@ -162,6 +177,26 @@ class OVModel:
         Args:
             model_adapter (OpenvinoAdapter): Target adapter to read the configuration.
         """
+
+    @property
+    def model_type(self) -> str:
+        """ModelAPI wrapper name, using IR metadata when available."""
+        if self._model_adapter is not None:
+            resolved: str | None = None
+            if self._is_onnx:
+                metadata = self._model_adapter.onnx_metadata.get("model_info", {})
+                if "model_type" in metadata:
+                    resolved = metadata["model_type"]
+            elif self._model_adapter.model.has_rt_info(["model_info", "model_type"]):
+                resolved = str(self._model_adapter.model.get_rt_info(["model_info", "model_type"]).value)
+            if resolved and resolved != self._model_type:
+                logger.info(
+                    "Overriding default model_type '%s' with '%s' from IR metadata.",
+                    self._model_type,
+                    resolved,
+                )
+                return resolved
+        return self._model_type
 
     def _create_model(self) -> Model:
         """Create an OpenVINO model using the Model API.
@@ -191,6 +226,7 @@ class OVModel:
             plugin_config=plugin_config,
             model_parameters=self.model_adapter_parameters,
         )
+        self._model_adapter = model_adapter
 
         self._get_hparams_from_adapter(model_adapter)
 
@@ -198,6 +234,7 @@ class OVModel:
             "input_dtype": "f32",  # our images are scaled to float
             "intensity_mode": "none",  # already done by getitune data pipeline
             "reverse_input_channels": False,  # keeps RGB (model trained on RGB in our pipeline)
+            "intensity_repeat_channels": False,  # pipeline already runs RepeatChannels(3)
             "confidence_threshold": 0.0,  # sends all predictions to metric, matching PyTorch test
         }
         configuration.update(self.model_api_configuration)
@@ -247,7 +284,6 @@ class OVModel:
         """
         async_inference = async_inference and self.async_inference
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
-
         outputs = self.model.infer_batch(numpy_inputs) if async_inference else [self.model(im) for im in numpy_inputs]
 
         return self._customize_outputs(outputs, inputs)
@@ -408,14 +444,14 @@ class OVModel:
 
         return validation_fn
 
-    def transform_fn(self, data_batch: SampleBatch) -> np.array:
+    def transform_fn(self, data_batch: SampleBatch) -> np.ndarray:
         """Transform data for PTQ.
 
         Args:
             data_batch (SampleBatch): Input data batch.
 
         Returns:
-            np.array: Transformed data.
+            np.ndarray: Transformed data.
         """
         np_data = self._customize_inputs(data_batch)
         image = np_data["inputs"][0]
@@ -424,11 +460,11 @@ class OVModel:
         resized_image = model.input_transform(resized_image)
         return model._change_layout(resized_image)  # noqa: SLF001
 
-    def _read_ptq_config_from_ir(self, ov_model: Model) -> dict[str, Any]:
+    def _read_ptq_config_from_ir(self, ov_model: openvino.Model) -> dict[str, Any]:
         """Generate PTQ configuration from the OpenVINO model metadata.
 
         Args:
-            ov_model (Model): OpenVINO model.
+            ov_model (openvino.Model): OpenVINO model.
 
         Returns:
             dict[str, Any]: PTQ configuration.
@@ -476,7 +512,7 @@ class OVModel:
         """
         raise NotImplementedError
 
-    def compute_metrics(self, metric: Metric | MetricCollection) -> dict:
+    def compute_metrics(self, metric: Metric | MetricCollection) -> dict[str, Any]:
         """Compute metrics using the provided metric object.
 
         Args:
@@ -487,7 +523,7 @@ class OVModel:
         """
         return self._compute_metrics(metric)
 
-    def _compute_metrics(self, metric: Metric | MetricCollection, **compute_kwargs) -> dict:
+    def _compute_metrics(self, metric: Metric | MetricCollection, **compute_kwargs) -> dict[str, Any]:
         """Compute metrics with additional arguments.
 
         Args:
@@ -514,7 +550,7 @@ class OVModel:
         return results
 
     @property
-    def model_adapter_parameters(self) -> dict:
+    def model_adapter_parameters(self) -> dict[str, Any]:
         """Get model parameters for export.
 
         Returns:

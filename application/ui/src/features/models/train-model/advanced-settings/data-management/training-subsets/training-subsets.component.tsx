@@ -3,12 +3,13 @@
 
 import { Dispatch, SetStateAction, useState } from 'react';
 
-import { Content, Flex, Heading, InlineAlert, View } from '@geti/ui';
+import { Content, Flex, Heading, InlineAlert, View } from '@geti-ui/ui';
 import { useGetDatasetItems } from 'hooks/use-get-dataset-items.hook';
 import { isEqual } from 'lodash-es';
 
 import type { ConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { isParameterGroup } from '../../../../model-listing/model-training-parameters/utils';
+import { distributeByLargestRemainder } from '../../../../utils';
 import { Accordion } from '../../components/accordion/accordion.component';
 import { ResultingDatasetDistribution } from './resulting-dataset-distribution.component';
 import { SubsetsDistribution } from './subset-distribution.component';
@@ -163,9 +164,10 @@ export const TrainingSubsets = ({
         });
     };
 
-    const newValidationSubsetSize = Math.floor((validationSubsetRatio / 100) * unassignedSubsetSize);
-    const newTestingSubsetSize = Math.floor((testSubsetRatio / 100) * unassignedSubsetSize);
-    const newTrainingSubsetSize = unassignedSubsetSize - newValidationSubsetSize - newTestingSubsetSize;
+    const [newTrainingSubsetSize, newValidationSubsetSize, newTestingSubsetSize] = distributeByLargestRemainder(
+        [trainingSubsetRatio, validationSubsetRatio, testSubsetRatio],
+        unassignedSubsetSize
+    );
 
     const areSubsetsSizesValid = () => {
         const resultingTrainingSubsetSize = trainingSubsetSize + newTrainingSubsetSize;
@@ -217,7 +219,6 @@ export const TrainingSubsets = ({
                         newTrainingSubsetSize={newTrainingSubsetSize}
                         newValidationSubsetSize={newValidationSubsetSize}
                         newTestingSubsetSize={newTestingSubsetSize}
-                        totalDatasetItemsSize={totalDatasetItemsSize}
                     />
                 </View>
 

@@ -8,7 +8,7 @@ import pytest
 from loguru import logger
 
 from app.stream.stream_data import StreamData
-from app.workers.inference import PredictionReorderBuffer
+from app.workers.inference import InferenceWorker, PredictionReorderBuffer
 
 
 @pytest.fixture(autouse=True)
@@ -100,3 +100,67 @@ class TestPredictionReorderBuffer:
         buffer.add_prediction_for_timestamp(ts, fxt_create_stream_data(ts))
         buffer.clear()
         assert buffer.get_ready_predictions() == []
+
+
+class TestEnqueuePrediction:
+    """The inference completion callback must never block, otherwise a model unload
+    (which waits for all in-flight requests) would deadlock the inference process."""
+
+    def _make_worker(self, pred_queue):
+        # Bypass the heavy __init__: _enqueue_prediction only uses self._pred_queue.
+        worker = object.__new__(InferenceWorker)
+        worker._pred_queue = pred_queue
+        return worker
+
+    def test_enqueue_when_not_full(self, fxt_create_stream_data):
+        import queue as queue_mod
+
+        q = queue_mod.Queue(maxsize=2)
+        worker = self._make_worker(q)
+        sd = fxt_create_stream_data(1.0)
+
+        worker._enqueue_prediction(sd)
+
+        assert q.qsize() == 1
+        assert q.get_nowait() is sd
+
+    def test_enqueue_drops_oldest_when_full(self, fxt_create_stream_data):
+        import queue as queue_mod
+
+        q = queue_mod.Queue(maxsize=2)
+        worker = self._make_worker(q)
+        sd_old = fxt_create_stream_data(1.0)
+        sd_mid = fxt_create_stream_data(2.0)
+        sd_new = fxt_create_stream_data(3.0)
+
+        worker._enqueue_prediction(sd_old)
+        worker._enqueue_prediction(sd_mid)
+        # Queue is now full; this must not block and must evict the oldest item.
+        worker._enqueue_prediction(sd_new)
+
+        assert q.qsize() == 2
+        first = q.get_nowait()
+        second = q.get_nowait()
+        # Oldest (sd_old) was evicted; the two newest remain in order.
+        assert first is sd_mid
+        assert second is sd_new
+
+    def test_enqueue_does_not_block_when_full(self, fxt_create_stream_data):
+        """A full queue whose consumer never drains must not stall the callback."""
+        import queue as queue_mod
+        import threading
+
+        q = queue_mod.Queue(maxsize=1)
+        worker = self._make_worker(q)
+        q.put_nowait(fxt_create_stream_data(0.0))
+
+        done = threading.Event()
+
+        def _run():
+            worker._enqueue_prediction(fxt_create_stream_data(1.0))
+            done.set()
+
+        t = threading.Thread(target=_run)
+        t.start()
+        t.join(timeout=2)
+        assert done.is_set(), "_enqueue_prediction blocked on a full queue"

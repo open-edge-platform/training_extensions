@@ -121,7 +121,7 @@ class TestGetiConfigConverterConvert:
         getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config()
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -132,17 +132,81 @@ class TestGetiConfigConverterConvert:
         getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(hyper_parameters={"training": {"learning_rate": 0.01}})
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
         assert result["model"]["init_args"]["optimizer"]["init_args"]["lr"] == 0.01
 
+    def test_convert_ultralytics_recipe_produces_backend_tagged_config(self) -> None:
+        """Ultralytics recipes are converted via the library-side UltralyticsConfigurator."""
+        geti_cfg = _make_geti_config(
+            model_manifest_id="object-detection-yolo26-n",
+            hyper_parameters={"training": {"learning_rate": 0.002, "batch_size": 4, "max_epochs": 10}},
+        )
+
+        result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["backend"] == "ultralytics"
+        assert result["model"]["init_args"]["model_name"] == "yolo26n.yaml"
+        assert result["training"]["lr0"] == 0.002
+        assert result["training"]["batch"] == 4
+        assert result["training"]["epochs"] == 10
+        assert result["data"]["train_subset"]["batch_size"] == 4
+
+    def test_convert_ultralytics_applies_augmentations_via_transforms_updater(self) -> None:
+        """Augmentation hyper_parameters should flow through the shared TransformsUpdater for Ultralytics."""
+        geti_cfg = _make_geti_config(
+            model_manifest_id="object-detection-yolo26-n",
+            hyper_parameters={
+                "dataset_preparation": {
+                    "augmentation": {
+                        "iou_random_crop": {"enable": False},
+                    }
+                }
+            },
+        )
+
+        result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["backend"] == "ultralytics"
+        # iou_random_crop should have been removed by TransformsUpdater
+        cpu_augs = result["data"]["train_subset"]["augmentations_cpu"]
+        crop = [a for a in cpu_augs if "RandomIoUCrop" in a.get("class_path", "")]
+        assert len(crop) == 0
+
+    def test_convert_ultralytics_applies_tiling_via_transforms_updater(self) -> None:
+        """Tiling hyper_parameters should flow through the shared TransformsUpdater for Ultralytics."""
+        geti_cfg = _make_geti_config(
+            model_manifest_id="object-detection-yolo26-n",
+            hyper_parameters={
+                "dataset_preparation": {
+                    "augmentation": {
+                        "tiling": {
+                            "enable": True,
+                            "enable_adaptive_tiling": True,
+                            "tile_size": 512,
+                            "tile_overlap": 0.3,
+                        }
+                    }
+                }
+            },
+        )
+
+        result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["backend"] == "ultralytics"
+        tc = result["data"]["tile_config"]
+        assert tc["enable_tiler"] is True
+        assert tc["enable_adaptive_tiling"] is True
+        assert tc["tile_size"] == (512, 512)
+        assert tc["overlap"] == 0.3
+
     def test_convert_applies_batch_size(self) -> None:
         getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(hyper_parameters={"training": {"batch_size": 16}})
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -153,7 +217,7 @@ class TestGetiConfigConverterConvert:
         getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(hyper_parameters={"training": {"max_epochs": 50}})
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -165,7 +229,7 @@ class TestGetiConfigConverterConvert:
             hyper_parameters={"training": {"early_stopping": {"enable": True, "patience": 20}}}
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -179,7 +243,7 @@ class TestGetiConfigConverterConvert:
             hyper_parameters={"training": {"early_stopping": {"enable": False, "patience": 10}}}
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -190,7 +254,7 @@ class TestGetiConfigConverterConvert:
         getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(hyper_parameters={"training": {"input_size_height": 640, "input_size_width": 640}})
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -200,7 +264,7 @@ class TestGetiConfigConverterConvert:
         getitune_cfg = _make_getitune_config()
         geti_cfg = _make_geti_config(hyper_parameters={"training": {"weight_decay": 0.001}})
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -212,7 +276,7 @@ class TestGetiConfigConverterConvert:
             hyper_parameters={"training": {"gradient_clip": {"enable": True, "max_grad_norm": 1.0}}}
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -225,7 +289,7 @@ class TestGetiConfigConverterConvert:
             hyper_parameters={"training": {"gradient_clip": {"enable": False, "max_grad_norm": 35.0}}}
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -237,7 +301,7 @@ class TestGetiConfigConverterConvert:
             hyper_parameters={"training": {"gradient_accumulation": {"enable": True, "batches": 4}}}
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -250,7 +314,7 @@ class TestGetiConfigConverterConvert:
             hyper_parameters={"training": {"gradient_accumulation": {"enable": False, "batches": 4}}}
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -271,7 +335,7 @@ class TestGetiConfigConverterConvert:
             }
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -294,7 +358,7 @@ class TestGetiConfigConverterConvert:
             }
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -315,7 +379,7 @@ class TestGetiConfigConverterConvert:
             }
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -330,7 +394,7 @@ class TestGetiConfigConverterConvert:
             sub_task_type="MULTI_CLASS_CLS",
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             GetiConfigConverter.convert(geti_cfg)
 
@@ -358,7 +422,7 @@ class TestGetiConfigConverterConvert:
             }
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -545,6 +609,12 @@ class TestTransformsUpdater:
         assert "std" in noise[0]["init_args"]
         assert noise[0]["init_args"]["std"] == 0.1
 
+    def test_random_erasing_uses_mask_safe_class(self) -> None:
+        """random_erasing must map to MaskSafeRandomErasing, not raw kornia class."""
+        registry_entry = TransformsUpdater.AUGMENTATION_REGISTRY["random_erasing"]
+        assert "getitune.data.augmentation.transforms.MaskSafeRandomErasing" in registry_entry["class_paths"]
+        assert registry_entry["stage"] == "gpu"
+
 
 class TestGetCallbackIdx:
     def test_found(self) -> None:
@@ -611,7 +681,7 @@ class TestFullConfigRoundTrip:
             },
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = getitune_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -669,7 +739,7 @@ class TestIntensityMappingUpdate:
             }
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = otx_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -689,7 +759,7 @@ class TestIntensityMappingUpdate:
             }
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = otx_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
@@ -715,7 +785,7 @@ class TestIntensityMappingUpdate:
             }
         )
 
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+        with patch("getitune.tools.auto_configurator.AutoConfigurator") as MockAutoConfigurator:
             MockAutoConfigurator.return_value.config = otx_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 

@@ -73,7 +73,7 @@ class BaseOpenCVStream(VideoStream, ABC):
         """Get metadata specific to this source."""
         return {"source_type": self.source_type.value, **self.metadata}
 
-    def get_data(self) -> StreamData:
+    def get_data(self) -> StreamData | None:
         """Get the latest frame from the video stream."""
         frame = self._read_frame()
         return StreamData(

@@ -51,7 +51,7 @@ describe('TogglePipelineButton', () => {
 
         render(<TogglePipelineButton />);
 
-        fireEvent.click(await screen.findByRole('switch', { name: /Enable Pipeline/i }));
+        fireEvent.click(await screen.findByRole('switch', { name: /Pipeline disabled/i }));
 
         expect(await screen.findByText('Pipeline enabled successfully')).toBeVisible();
         expect(mockStopStream).not.toHaveBeenCalled();
@@ -72,7 +72,7 @@ describe('TogglePipelineButton', () => {
 
         render(<TogglePipelineButton />);
 
-        fireEvent.click(await screen.findByRole('switch', { name: /Disable Pipeline/i }));
+        fireEvent.click(await screen.findByRole('switch', { name: /Pipeline enabled/i }));
 
         expect(await screen.findByText('Pipeline disabled successfully')).toBeVisible();
     });
@@ -96,7 +96,7 @@ describe('TogglePipelineButton', () => {
 
         render(<TogglePipelineButton />);
 
-        fireEvent.click(await screen.findByRole('switch', { name: /Disable Pipeline/i }));
+        fireEvent.click(await screen.findByRole('switch', { name: /Pipeline enabled/i }));
 
         await waitFor(() => {
             expect(mockStopStream).toHaveBeenCalledTimes(1);
@@ -115,7 +115,7 @@ describe('TogglePipelineButton', () => {
 
         render(<TogglePipelineButton />);
 
-        fireEvent.click(await screen.findByRole('switch', { name: /Disable Pipeline/i }));
+        fireEvent.click(await screen.findByRole('switch', { name: /Pipeline enabled/i }));
 
         await screen.findByText('Pipeline disabled successfully');
         expect(mockStopStream).not.toHaveBeenCalled();
@@ -136,7 +136,7 @@ describe('TogglePipelineButton', () => {
 
         render(<TogglePipelineButton />);
 
-        fireEvent.click(await screen.findByRole('switch', { name: /Enable Pipeline/i }));
+        fireEvent.click(await screen.findByRole('switch', { name: /Pipeline disabled/i }));
 
         expect(await screen.findByText('Cannot enable pipeline')).toBeVisible();
         expect(
