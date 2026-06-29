@@ -65,15 +65,8 @@ overrides:
             random_pop: false
             max_cached_images: 20
             img_scale: $(input_size)
-        - class_path: torchvision.transforms.v2.RandomResizedCrop
-          init_args:
-            size: $(input_size)
-            scale: [0.25, 1.0]
-            ratio: [0.75, 1.333]
-            antialias: true
-        - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
-          init_args:
-            min_size: 1
+            scale: 0.5
+            translate: 0.1
         - class_path: getitune.data.augmentation.transforms.CachedMixUp
           init_args:
             img_scale: $(input_size)
@@ -81,6 +74,11 @@ overrides:
             p: 0.5
             random_pop: false
             max_cached_images: 10
+        - class_path: getitune.data.augmentation.transforms.Resize
+          init_args:
+            size: $(input_size)
+            keep_aspect_ratio: true
+            pad_value: 114
       augmentations_gpu:
         - class_path: kornia.augmentation.ColorJiggle
           init_args:
@@ -92,13 +90,11 @@ overrides:
         - class_path: kornia.augmentation.RandomHorizontalFlip
           init_args:
             p: 0.5
-        - class_path: kornia.augmentation.RandomAffine
+        # std=1/255 encodes the x*255 scaling: (x - 0) / (1/255) = x * 255
+        - class_path: kornia.augmentation.Normalize
           init_args:
-            degrees: 10.0
-            translate: [0.1, 0.1]
-            scale: [1.0, 1.0]
-            shear: [-2.0, 2.0]
-            p: 0.7
+            mean: [0.0, 0.0, 0.0]
+            std: [0.003921568627451, 0.003921568627451, 0.003921568627451]
       sampler:
         class_path: getitune.data.samplers.balanced_sampler.BalancedSampler
 
@@ -109,8 +105,14 @@ overrides:
           init_args:
             size: $(input_size)
             keep_aspect_ratio: true
+            pad_value: 114
             resize_targets: false
-      augmentations_gpu: []
+      augmentations_gpu:
+        # std=1/255 encodes the x*255 scaling: (x - 0) / (1/255) = x * 255
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [0.003921568627451, 0.003921568627451, 0.003921568627451]
     test_subset:
       batch_size: 8
       augmentations_cpu:
@@ -118,5 +120,11 @@ overrides:
           init_args:
             size: $(input_size)
             keep_aspect_ratio: true
+            pad_value: 114
             resize_targets: false
-      augmentations_gpu: []
+      augmentations_gpu:
+        # std=1/255 encodes the x*255 scaling: (x - 0) / (1/255) = x * 255
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [0.003921568627451, 0.003921568627451, 0.003921568627451]

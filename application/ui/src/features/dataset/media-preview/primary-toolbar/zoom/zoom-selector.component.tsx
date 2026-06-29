@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Tooltip, TooltipTrigger } from '@geti/ui';
-import { Add, Remove } from '@geti/ui/icons';
+import { ActionButton, Flex, Tooltip, TooltipTrigger } from '@geti-ui/ui';
+import { Add, Remove } from '@geti-ui/ui/icons';
 
 import { IconWrapper } from '../../../../../components/icon-wrapper/icon-wrapper.component';
 import { useSetZoom, useZoom } from '../../../../../components/zoom/zoom.provider';
@@ -31,7 +31,7 @@ export const ZoomSelector = () => {
                 <span
                     aria-label={'Zoom level'}
                     data-value={zoom.scale}
-                    style={{ fontSize: 'var(--spectrum-global-dimension-font-size-25)' }}
+                    style={{ fontSize: 'var(--spectrum-global-dimension-font-size-50)' }}
                 >
                     {(zoom.scale * 100).toFixed(0)}%
                 </span>

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from '@geti/ui';
+import { Flex } from '@geti-ui/ui';
 import { isEmpty } from 'lodash-es';
 
 import { useExportDataset } from '../../../../hooks/storage/use-export-dataset.hook';

@@ -10,53 +10,74 @@ import { server } from '../../../../msw-node-setup';
 import { DeleteMediaItem } from './delete-media-item.component';
 
 describe('DeleteMediaItem', () => {
-    it('deletes a media item and shows a success toast', async () => {
+    it('deletes a single media item and shows a success toast', async () => {
         const itemId = '123';
         const mockedOnDeleted = vitest.fn();
+        let requestBody: { media_ids?: string[] } | undefined;
 
         server.use(
-            http.delete('/api/projects/{project_id}/dataset/media/{media_id}', () => {
-                return HttpResponse.json(null, { status: 204 });
+            http.delete('/api/projects/{project_id}/dataset/media', async ({ request }) => {
+                requestBody = (await request.json()) as { media_ids: string[] };
+                return new HttpResponse(null, { status: 204 });
             })
         );
 
         render(<DeleteMediaItem itemsIds={[itemId]} onDeleted={mockedOnDeleted} />);
 
         fireEvent.click(screen.getByLabelText(/delete media item/i));
-        await screen.findByText(/Are you sure you want to delete 1 item(s)?/i);
+        expect(await screen.findByText(/Are you sure you want to delete 1 item\?/i)).toBeVisible();
 
         fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
 
-        expect(await screen.findByText(`1 item(s) deleted successfully`)).toBeVisible();
+        expect(await screen.findByText(`1 item deleted successfully`)).toBeVisible();
+        expect(requestBody).toEqual({ media_ids: [itemId] });
         expect(mockedOnDeleted).toHaveBeenCalledWith([itemId]);
     });
 
-    it('shows an error toast when deleting a media item fails', async () => {
-        const itemToFail = '321';
-        const itemToDelete = '123';
+    it('deletes multiple media items and shows a success toast', async () => {
+        const itemsIds = ['123', '456', '789'];
+        const mockedOnDeleted = vitest.fn();
+        let requestBody: { media_ids?: string[] } | undefined;
+
+        server.use(
+            http.delete('/api/projects/{project_id}/dataset/media', async ({ request }) => {
+                requestBody = (await request.json()) as { media_ids: string[] };
+                return new HttpResponse(null, { status: 204 });
+            })
+        );
+
+        render(<DeleteMediaItem itemsIds={itemsIds} onDeleted={mockedOnDeleted} />);
+
+        fireEvent.click(screen.getByLabelText(/delete media item/i));
+        expect(await screen.findByText(/Are you sure you want to delete 3 items\?/i)).toBeVisible();
+
+        fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+
+        expect(await screen.findByText(`3 items deleted successfully`)).toBeVisible();
+        expect(requestBody).toEqual({ media_ids: itemsIds });
+        expect(mockedOnDeleted).toHaveBeenCalledWith(itemsIds);
+    });
+
+    it('shows an error toast when deleting media items fails', async () => {
+        const itemsIds = ['123', '456'];
         const errorMessage = 'test error message';
         const mockedOnDeleted = vitest.fn();
 
         server.use(
-            http.delete('/api/projects/{project_id}/dataset/media/{media_id}', ({ params }) => {
-                const { media_id } = params;
-                return media_id === itemToDelete
-                    ? HttpResponse.json(null, { status: 204 })
-                    : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                      // @ts-expect-error
-                      HttpResponse.json({ detail: errorMessage }, { status: 500 });
+            http.delete('/api/projects/{project_id}/dataset/media', () => {
+                // @ts-expect-error error response schema
+                return HttpResponse.json({ detail: errorMessage }, { status: 500 });
             })
         );
 
-        render(<DeleteMediaItem itemsIds={[itemToFail, itemToDelete]} onDeleted={mockedOnDeleted} />);
+        render(<DeleteMediaItem itemsIds={itemsIds} onDeleted={mockedOnDeleted} />);
 
         fireEvent.click(screen.getByLabelText(/delete media item/i));
-        await screen.findByText(/Are you sure you want to delete 2 item(s)?/i);
+        await screen.findByText(/Are you sure you want to delete 2 items\?/i);
 
         fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
 
-        expect(await screen.findByText(`1 item(s) deleted successfully`)).toBeVisible();
         expect(await screen.findByText(`Failed to delete, ${errorMessage}`)).toBeVisible();
-        expect(mockedOnDeleted).toHaveBeenCalledWith([itemToDelete]);
+        expect(mockedOnDeleted).not.toHaveBeenCalled();
     });
 });

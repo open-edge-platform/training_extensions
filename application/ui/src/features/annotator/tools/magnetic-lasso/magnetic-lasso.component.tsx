@@ -4,10 +4,10 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { isPointOverPoint, isPolygonValid } from '@geti/smart-tools/utils';
-import { toast } from '@geti/ui';
 import { useMutation } from '@tanstack/react-query';
 import { isEmpty, isEqual, throttle } from 'lodash-es';
 
+import { toast } from '../../../../components/toast/toast.component';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { Point } from '../../../../shared/types';
 import { isNonEmptyArray } from '../../../../shared/util';
@@ -43,6 +43,7 @@ export const MagneticLasso = () => {
     const isPointerDown = useRef<boolean>(false);
     const isFreeDrawing = useRef<boolean>(false);
     const buildMapPoint = useRef<Point | null>(null);
+    const pendingHistoryCommit = useRef<boolean>(false);
 
     const {
         worker,
@@ -154,10 +155,11 @@ export const MagneticLasso = () => {
 
     const setBuildMapAndSegment = (point: Point) => {
         setLassoSegment([]);
-        setSegments(addFirstPointOrNewOne(point));
+        setSegments(addFirstPointOrNewOne(point), true);
 
         isLoading.current = true;
         buildMapPoint.current = point;
+        pendingHistoryCommit.current = true;
         worker?.buildMap(point);
     };
 
@@ -216,6 +218,10 @@ export const MagneticLasso = () => {
 
             isLoading.current = false;
             worker?.cleanPoints();
+            pendingHistoryCommit.current = false;
+        } else if (pendingHistoryCommit.current) {
+            setSegments((prev) => prev);
+            pendingHistoryCommit.current = false;
         }
 
         setMode(PolygonMode.MagneticLasso);

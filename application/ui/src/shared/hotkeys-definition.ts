@@ -12,6 +12,7 @@ const CTRL_OR_COMMAND_KEY = isMac() ? COMMAND_KEY : CTRL_KEY;
 export const HOTKEYS = {
     undo: `${CTRL_OR_COMMAND_KEY}+z`,
     redo: `${CTRL_OR_COMMAND_KEY}+y`,
+    redoAlt: `${CTRL_OR_COMMAND_KEY}+shift+z`,
     toggleAnnotationsVisibility: 'a',
     deleteAnnotation: 'delete',
     deleteAnnotationAlternative: 'backspace',
@@ -21,7 +22,6 @@ export const HOTKEYS = {
     autoSegmentation: 's',
     polygonTool: 'p',
     magneticLassoTool: 'm',
-    ssimTool: 'i',
     selectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+a`,
     deselectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+d`,
     submit: `${CTRL_OR_COMMAND_KEY}+s`,
@@ -30,6 +30,7 @@ export const HOTKEYS = {
 const COMMON_HOTKEYS = {
     undo: HOTKEYS.undo,
     redo: HOTKEYS.redo,
+    redoAlt: HOTKEYS.redoAlt,
     toggleAnnotationsVisibility: HOTKEYS.toggleAnnotationsVisibility,
     deleteAnnotation: HOTKEYS.deleteAnnotation,
     fitToScreen: HOTKEYS.fitToScreen,
@@ -51,7 +52,6 @@ export const TASK_HOTKEYS = {
         boundingBoxTool: HOTKEYS.boundingBoxTool,
         polygonTool: HOTKEYS.polygonTool,
         magneticLassoTool: HOTKEYS.magneticLassoTool,
-        ssimTool: HOTKEYS.ssimTool,
         ...COMMON_HOTKEYS,
         ...SELECTION_TOOL_HOTKEY,
         ...AUTO_SEGMENTATION_HOTKEY,
@@ -59,7 +59,6 @@ export const TASK_HOTKEYS = {
     instance_segmentation: {
         polygonTool: HOTKEYS.polygonTool,
         magneticLassoTool: HOTKEYS.magneticLassoTool,
-        ssimTool: HOTKEYS.ssimTool,
         ...COMMON_HOTKEYS,
         ...SELECTION_TOOL_HOTKEY,
         ...AUTO_SEGMENTATION_HOTKEY,

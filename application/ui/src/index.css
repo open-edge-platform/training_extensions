@@ -1,3 +1,5 @@
+@import '@geti-ui/ui/styles.css';
+
 @font-face {
     src: url('./assets/fonts/roboto-flex-v30-latin-regular.woff2') format('woff2');
     font-family: 'Roboto Flex';
@@ -35,9 +37,14 @@
 
     --annotation-fill: var(--energy-blue);
     --annotation-stroke: var(--energy-blue-light, #7bdeff);
+    --no-label: #fff;
 
     --moss: #8bae46;
     --moss-tint-1: #b1d272;
+
+    --training-subset: #86b3ca;
+    --validation-subset: var(--geode-tint);
+    --test-subset: var(--moss);
 
     --annotation-fill-opacity: 0.4;
 

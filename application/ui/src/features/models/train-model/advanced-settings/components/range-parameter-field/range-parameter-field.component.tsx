@@ -3,7 +3,7 @@
 
 import { useRef, useState } from 'react';
 
-import { Flex, NumberField, RangeSlider, type RangeValue } from '@geti/ui';
+import { Flex, NumberField, RangeSlider, type RangeValue } from '@geti-ui/ui';
 import { isEqual } from 'lodash-es';
 
 import { FloatConfigurableRangeParameter } from '../../../../../../constants/shared-types';
@@ -58,8 +58,9 @@ export const RangeParameterField = ({
     return (
         <Flex gap={'size-100'}>
             <NumberField
-                isQuiet
                 step={fieldStep}
+                hideStepper
+                width={'size-900'}
                 value={parameterValues.start}
                 minValue={minValue}
                 maxValue={parameterValues.end}
@@ -81,7 +82,8 @@ export const RangeParameterField = ({
                 UNSAFE_className={isDisabled ? '' : classes.rangeSlider}
             />
             <NumberField
-                isQuiet
+                hideStepper
+                width={'size-900'}
                 step={fieldStep}
                 value={parameterValues.end}
                 minValue={parameterValues.start}

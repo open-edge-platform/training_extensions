@@ -3,6 +3,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
+from typing import Self
 
 from app.stream.stream_data import StreamData
 
@@ -24,7 +25,18 @@ class VideoStream(ABC):
             bool: True if the video stream is real-time, False otherwise
         """
 
-    def __enter__(self) -> "VideoStream":
+    def is_finished(self) -> bool:
+        """Check if the stream has permanently ended and will not produce any further frames.
+
+        Real-time and looping streams never finish; finite sources (e.g. a non-looping
+        video file) report True once fully consumed so consumers can stop polling.
+
+        Returns:
+            bool: True if the stream is exhausted and should be stopped, False otherwise
+        """
+        return False
+
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN001

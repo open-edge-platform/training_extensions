@@ -3,8 +3,8 @@
 
 import { Key } from 'react';
 
-import { ActionButton, DialogContainer, Item, Menu, MenuTrigger, toast } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
+import { ActionButton, DialogContainer, Item, Menu, MenuTrigger } from '@geti-ui/ui';
+import { MoreMenu } from '@geti-ui/ui/icons';
 
 import { downloadFile } from '../../../../shared/util';
 import { useDeleteMediaItem } from '../../api/use-delete-media-item';
@@ -20,7 +20,7 @@ type MediaItemActionsProps = {
     id: string;
     mediaUrl: string;
     mediaFileName: string;
-    onDeleted: (deletedIds: string[]) => void;
+    onDeleted?: (deletedIds: string[]) => void;
     onAnnotate: () => void;
 };
 
@@ -29,8 +29,7 @@ export const MediaItemActions = ({ id, onDeleted, mediaUrl, mediaFileName, onAnn
 
     const handleAction = (key: Key) => {
         if (key === MEDIA_ACTIONS.DOWNLOAD) {
-            downloadFile(mediaUrl, mediaFileName);
-            toast({ type: 'info', message: `${mediaFileName} download has started` });
+            downloadFile(mediaUrl, mediaFileName, `${mediaFileName} download has started`);
         } else if (key === MEDIA_ACTIONS.DELETE) {
             openDeleteDialog();
         } else if (key === MEDIA_ACTIONS.ANNOTATE) {

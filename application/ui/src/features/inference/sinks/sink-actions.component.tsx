@@ -3,11 +3,12 @@
 
 import { useState } from 'react';
 
-import { ActionButton, Flex, Loading, Text } from '@geti/ui';
-import { Back } from '@geti/ui/icons';
-import { isEmpty } from 'lodash-es';
+import { ActionButton, Flex, Loading, Text } from '@geti-ui/ui';
+import { Back } from '@geti-ui/ui/icons';
+import { usePipeline } from 'hooks/api/pipeline.hook';
+import { isEmpty, orderBy } from 'lodash-es';
 
-import { $api } from '../../../api/client';
+import { useSinksQuery } from './api/use-sinks-query';
 import { EditSinkForm } from './edit-sink-form.component';
 import { SinkList } from './sink-list/sink-list.component';
 import { SinkOptions } from './sink-options';
@@ -16,8 +17,11 @@ import { SinkConfig } from './utils';
 export const SinkActions = () => {
     const [view, setView] = useState<'list' | 'options' | 'edit'>('list');
     const [currentSink, setCurrentSink] = useState<SinkConfig | null>(null);
-    const { data: sinks = [], isLoading } = $api.useSuspenseQuery('get', '/api/sinks');
+    const { data: sinks = [], isPending } = useSinksQuery();
     const filteredSinks = sinks.filter((sink) => sink.sink_type !== 'disconnected');
+
+    const pipeline = usePipeline();
+    const connectedSinkId = pipeline.data.sink?.id;
 
     const handleShowList = () => {
         setView('list');
@@ -32,21 +36,30 @@ export const SinkActions = () => {
         setCurrentSink(sink);
     };
 
-    if (isLoading) {
+    if (isPending) {
         return <Loading mode={'inline'} size='M' />;
     }
 
     if (view === 'edit' && !isEmpty(currentSink)) {
-        return <EditSinkForm config={currentSink} onSaved={handleShowList} onBackToList={handleShowList} />;
+        return (
+            <EditSinkForm
+                config={currentSink}
+                onSaved={handleShowList}
+                onBackToList={handleShowList}
+                connectedSinkId={connectedSinkId}
+            />
+        );
     }
 
     if (view === 'list') {
-        return <SinkList sinks={filteredSinks} onAddSink={handleAddSinks} onEditSink={handleEditSink} />;
+        const sinksWithConnectedFirst = orderBy(filteredSinks, (sink) => sink.id === connectedSinkId, 'desc');
+
+        return <SinkList sinks={sinksWithConnectedFirst} onAddSink={handleAddSinks} onEditSink={handleEditSink} />;
     }
 
     return (
         <SinkOptions onSaved={handleShowList} hasHeader>
-            <Flex gap={'size-100'} marginBottom={'size-100'} alignItems={'center'} justifyContent={'space-between'}>
+            <Flex gap={'size-100'} marginBottom={'size-100'} alignItems={'center'}>
                 <ActionButton isQuiet onPress={handleShowList}>
                     <Back />
                 </ActionButton>

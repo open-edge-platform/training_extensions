@@ -37,15 +37,12 @@ class TransformLibFactory:
         Returns:
             CPUAugmentationPipeline built from config.
         """
-        if config.augmentations_cpu:
-            # Already a pipeline object (e.g., from from_file method)
-            if isinstance(config.augmentations_cpu, CPUAugmentationPipeline):
-                return config.augmentations_cpu
-            return CPUAugmentationPipeline.from_config(config)
+        if isinstance(config.augmentations_cpu, CPUAugmentationPipeline):
+            return config.augmentations_cpu
 
-        # GPU-only configs may have an empty augmentations_cpu list;
-        # return an identity pipeline so downstream code always gets a valid object.
-        return CPUAugmentationPipeline(augmentations=[])
+        # Always use from_config — it prepends the intensity transform even when
+        # augmentations_cpu is empty.
+        return CPUAugmentationPipeline.from_config(config)
 
 
 class DatasetFactory:
@@ -57,24 +54,12 @@ class DatasetFactory:
         task: TaskType,
         dm_subset: Dataset,
         cfg_subset: SubsetConfig,
+        storage_dtype: str = "uint8",
         # TODO(gdlg): Add support for ignore_index again
         ignore_index: int = 255,  # noqa: ARG003
     ) -> VisionDataset:
         """Create VisionDataset."""
         transforms = TransformLibFactory.generate(cfg_subset)
-
-        # Auto-detect storage dtype from the first image's file header.
-        # Reads only metadata (e.g. PNG IHDR), no pixel data is decoded.
-        storage_dtype = cls._detect_storage_dtype(dm_subset)
-
-        # Propagate the detected dtype into the intensity config so it is
-        # exported into the model's rt_info (input_dtype) for inference.
-        if cfg_subset.intensity.storage_dtype != storage_dtype:
-            logger.info(
-                f"Auto-detected image storage dtype '{storage_dtype}' "
-                f"(intensity config had '{cfg_subset.intensity.storage_dtype}')",
-            )
-            cfg_subset.intensity.storage_dtype = storage_dtype
 
         common_kwargs = {
             "dm_subset": dm_subset,
@@ -120,44 +105,3 @@ class DatasetFactory:
 
             case _:
                 raise NotImplementedError(task)
-
-    @staticmethod
-    def _detect_storage_dtype(dm_subset: Dataset) -> str:
-        """Detect image storage bit depth from file header or dataset schema.
-
-        First tries to probe the first image's file header via PIL (reads only
-        metadata, no pixel data decoded).  If that is not available (e.g. for
-        parquet-backed datasets with no media paths), falls back to the image
-        field dtype declared in the dataset schema.
-
-        Returns:
-            ``"uint8"``, ``"uint16"``, or ``"float32"``.
-        """
-        import polars as pl
-
-        from getitune.data.entity.utils import detect_image_dtype
-
-        # 1. Try file-based detection
-        try:
-            first_item = next(iter(dm_subset))
-            path = getattr(first_item.media, "path", None) if hasattr(first_item, "media") else None
-            if path is not None:
-                return detect_image_dtype(path)
-        except StopIteration:
-            pass
-        except (OSError, ValueError, TypeError) as exc:
-            logger.debug(f"File-based dtype detection failed, falling back to schema: {exc}")
-
-        # 2. Fall back to schema-declared image dtype (parquet datasets)
-        try:
-            img_attr = dm_subset.schema.attributes.get("image")
-            if img_attr is not None and hasattr(img_attr, "field"):
-                dtype = getattr(img_attr.field, "dtype", None)
-                if dtype == pl.UInt16:
-                    return "uint16"
-                if dtype in (pl.Float32, pl.Float64):
-                    return "float32"
-        except (AttributeError, TypeError) as exc:
-            logger.debug(f"Schema-based dtype detection failed: {exc}")
-
-        return "uint8"

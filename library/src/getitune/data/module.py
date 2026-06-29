@@ -19,6 +19,7 @@ from torch.utils.data import DataLoader, RandomSampler
 from getitune.config.data import SubsetConfig, TileConfig
 from getitune.data.augmentation import CPUAugmentationPipeline
 from getitune.data.dataset.tile import TileDatasetFactory
+from getitune.data.entity.utils import detect_storage_dtype
 from getitune.data.factory import DatasetFactory
 from getitune.data.utils import get_adaptive_num_workers, instantiate_sampler
 from getitune.types.device import DeviceType
@@ -140,11 +141,16 @@ class DataModule(LightningDataModule):
         Args:
             dataset: A ``datumaro.experimental.Dataset`` loaded via ``import_dataset``.
         """
-        config_mapping = {
-            self.train_subset.subset_name: self.train_subset,
-            self.val_subset.subset_name: self.val_subset,
-            self.test_subset.subset_name: self.test_subset,
-        }
+        storage_dtype: str | None = None
+        num_channels: int | None = None
+        subset_configs = [self.train_subset, self.val_subset, self.test_subset]
+        subset_names = [cfg.subset_name for cfg in subset_configs]
+        if len(set(subset_names)) != len(subset_names):
+            msg = (
+                f"Subset names must be unique, got {subset_names}. Ensure each SubsetConfig has a distinct subset_name."
+            )
+            raise ValueError(msg)
+        config_mapping = {cfg.subset_name: cfg for cfg in subset_configs}
 
         if self.auto_num_workers:
             if self.device not in [DeviceType.gpu, DeviceType.auto]:
@@ -172,10 +178,32 @@ class DataModule(LightningDataModule):
                 logger.warning(f"Subset '{name}' is empty in the dataset. Skip it")
                 continue
 
+            if storage_dtype is None:
+                storage_dtype, num_channels = detect_storage_dtype(dm_subset)
+
+            if subset_cfg.intensity.storage_dtype != storage_dtype:
+                logger.warning(
+                    f"Overriding intensity storage_dtype '{subset_cfg.intensity.storage_dtype}' "
+                    f"with auto-detected '{storage_dtype}'",
+                )
+                subset_cfg.intensity.storage_dtype = storage_dtype
+
+            # Auto-set repeat_channels for single-channel (grayscale) images.
+            # The model backbone expects 3-channel input, so channel-repeat is
+            # needed for both the training pipeline and the exported OV model
+            # (embedded preprocessing metadata).
+            if num_channels == 1 and subset_cfg.intensity.repeat_channels < 3:
+                logger.info(
+                    f"Single-channel image detected ({num_channels}ch). "
+                    f"Auto-setting intensity.repeat_channels=3 for subset '{name}'.",
+                )
+                subset_cfg.intensity.repeat_channels = 3
+
             subset_dataset = DatasetFactory.create(
                 task=self.task,
                 dm_subset=dm_subset,
                 cfg_subset=subset_cfg,
+                storage_dtype=storage_dtype,
                 ignore_index=self.ignore_index,
             )
 
@@ -184,9 +212,8 @@ class DataModule(LightningDataModule):
                     dataset=subset_dataset,
                     tile_config=self.tile_config,
                 )
-            self.subsets[name] = subset_dataset
-            label_infos += [self.subsets[name].label_info]
-            logger.info(f"Add name: {name}, self.subsets: {self.subsets}")
+            self.subsets[subset_cfg.subset_name] = subset_dataset
+            label_infos += [self.subsets[subset_cfg.subset_name].label_info]
 
         if self._is_meta_info_valid(label_infos) is False:
             msg = "All data meta infos of subsets should be the same."
@@ -265,7 +292,6 @@ class DataModule(LightningDataModule):
         instance = cls.__new__(cls)
         LightningDataModule.__init__(instance)
         # Set basic attributes
-        instance.subsets = {"train": train_dataset, "val": val_dataset, "test": test_dataset}
         instance.task = train_dataset.task_type  # type: ignore[assignment]
         instance.data_root = ""
         instance.tile_config = (
@@ -314,6 +340,11 @@ class DataModule(LightningDataModule):
             # Set the 'train_subset', 'val_subset', 'test_subset' attributes
             setattr(instance, f"{name}_subset", subset_to_assign)
 
+        instance.subsets = {}
+        for name, ds in zip(["train", "val", "test"], [train_dataset, val_dataset, test_dataset]):
+            cfg = getattr(instance, f"{name}_subset")
+            instance.subsets[cfg.subset_name] = ds
+
         # Derive normalization params from the CPU pipeline's Normalize transform if available.
         if getattr(instance.train_subset, "augmentations_cpu", None):
             _cpu_pipeline = CPUAugmentationPipeline.from_config(instance.train_subset)
@@ -323,7 +354,7 @@ class DataModule(LightningDataModule):
             instance.input_mean = None
             instance.input_std = None
 
-        # Propagate intensity config from train subset (mirrors __init__).
+        # Propagate intensity config from train subset.
         instance.input_intensity_config = getattr(instance.train_subset, "intensity", None)
 
         # Save hyperparameters
@@ -409,6 +440,11 @@ class DataModule(LightningDataModule):
         config = self.train_subset
         dataset = self._get_dataset(config.subset_name)
         sampler = instantiate_sampler(config.sampler, dataset=dataset, batch_size=config.batch_size)
+
+        # Pre-populate cached augmentation caches (CachedMosaic, CachedMixUp)
+        # before workers start, so all workers inherit full, diverse caches.
+        if config.num_workers > 0 and hasattr(dataset.transforms, "prepare"):
+            dataset.transforms.prepare(dataset)
 
         common_args = {
             "dataset": dataset,

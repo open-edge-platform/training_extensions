@@ -3,7 +3,7 @@
 
 import { useRef, useState } from 'react';
 
-import { Key, View } from '@geti/ui';
+import { Key, View } from '@geti-ui/ui';
 import { useSpinDelay } from 'spin-delay';
 
 import type { DatasetSubset, Media } from '../../../constants/shared-types';
@@ -15,12 +15,14 @@ import {
     useIsFetchingPredictions,
 } from '../../annotator/api/use-media-predictions';
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
+import { ToolManagerProvider } from '../../annotator/tools/tool-manager-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
+import { useNextPredictionPrefetch } from './use-next-prediction-prefetch.hook';
 import { useNextMediaPrefetch, usePlayPauseVideoBySystem } from './utils';
 
 const DATASET_SUBSETS: DatasetSubset[] = ['unassigned', 'training', 'validation', 'testing'];
@@ -72,6 +74,12 @@ type AnnotatorProps = {
     isUserReviewed: boolean;
 };
 
+const NextPredictionPrefetch = ({ nextMediaItem }: { nextMediaItem: Media }) => {
+    useNextPredictionPrefetch(nextMediaItem);
+
+    return null;
+};
+
 const Annotator = ({
     mediaItem,
     image,
@@ -109,6 +117,7 @@ const Annotator = ({
 
     return (
         <>
+            {isPredictionMode && nextMediaItem && <NextPredictionPrefetch nextMediaItem={nextMediaItem} />}
             <View gridArea={'header'}>
                 <SecondaryToolbar
                     mode={mode}
@@ -187,17 +196,19 @@ export const AnnotatorContainer = ({
             videoFrame={isVideoFrame(mediaItem) ? mediaItem : undefined}
             changeSelectedMediaItem={onSelectedMediaItem}
         >
-            <Annotator
-                mode={mode}
-                subset={subset}
-                items={items}
-                image={image}
-                onClose={onClose}
-                mediaItem={mediaItem}
-                isUserReviewed={isUserReviewed}
-                onChangeAnnotatorMode={changeAnnotatorMode}
-                onSelectedMediaItem={onSelectedMediaItem}
-            />
+            <ToolManagerProvider>
+                <Annotator
+                    mode={mode}
+                    subset={subset}
+                    items={items}
+                    image={image}
+                    onClose={onClose}
+                    mediaItem={mediaItem}
+                    isUserReviewed={isUserReviewed}
+                    onChangeAnnotatorMode={changeAnnotatorMode}
+                    onSelectedMediaItem={onSelectedMediaItem}
+                />
+            </ToolManagerProvider>
         </VideoPlayerProvider>
     );
 };

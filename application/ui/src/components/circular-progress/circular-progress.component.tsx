@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 
-import { type ColorValue } from '@geti/ui';
+import { type ColorValue } from '@geti-ui/ui';
 
 interface CircularProgressProps {
     percentage: number;

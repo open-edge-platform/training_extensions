@@ -3,7 +3,7 @@
 
 import { useRef, useState } from 'react';
 
-import { Flex, NumberField, Slider } from '@geti/ui';
+import { Flex, NumberField, Slider } from '@geti-ui/ui';
 
 import { NumberConfigurableParameter } from '../../../../../constants/shared-types';
 import { getStep } from './utils';
@@ -38,7 +38,10 @@ export const NumberParameterField = ({
     }
 
     const fieldStep = getStep({ step, type, maxValue, minValue });
-    const formatOptions = type === 'float' ? { maximumFractionDigits: Math.abs(Math.log10(fieldStep)) } : undefined;
+    // Preserve full precision for float values instead of rounding to the
+    // NumberField default of 3 fraction digits.
+    const formatOptions = type === 'float' ? { maximumFractionDigits: 20 } : undefined;
+    const numberFieldStep = type === 'int' ? fieldStep : undefined;
 
     const handleValueChange = (inputValue: number): void => {
         setParameterValue(inputValue);
@@ -49,12 +52,15 @@ export const NumberParameterField = ({
         return (
             <NumberField
                 aria-label={`Change ${name}`}
-                step={fieldStep}
+                hideStepper
+                width={'size-900'}
                 value={parameterValue}
                 minValue={minValue === null ? undefined : minValue}
                 maxValue={maxValue === null ? undefined : maxValue}
                 onChange={onChange}
                 isDisabled={isDisabled}
+                formatOptions={formatOptions}
+                step={numberFieldStep}
             />
         );
     }
@@ -74,8 +80,8 @@ export const NumberParameterField = ({
                 isDisabled={isDisabled}
             />
             <NumberField
-                isQuiet
-                step={fieldStep}
+                hideStepper
+                width={'size-900'}
                 value={parameterValue}
                 minValue={minValue}
                 maxValue={maxValue}
@@ -83,6 +89,7 @@ export const NumberParameterField = ({
                 isDisabled={isDisabled}
                 aria-label={`Change ${name}`}
                 formatOptions={formatOptions}
+                step={numberFieldStep}
             />
         </Flex>
     );

@@ -81,8 +81,9 @@
     background-color: var(--energy-blue) !important;
 }
 
-.projectName {
+.projectCardName {
     @include lineClamp.clamp(1);
+    @include lineClamp.breakableText;
 }
 
 .labelList {
@@ -91,4 +92,13 @@
 
 .projectCreationDate {
     font-size: var(--spectrum-global-dimension-font-size-75);
+}
+
+.projectMetadata {
+    line-height: var(--spectrum-global-dimension-font-size-200);
+}
+
+.version {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--spectrum-global-color-gray-800);
 }

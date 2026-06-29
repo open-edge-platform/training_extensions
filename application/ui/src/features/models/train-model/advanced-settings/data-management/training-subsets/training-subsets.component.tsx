@@ -3,12 +3,13 @@
 
 import { Dispatch, SetStateAction, useState } from 'react';
 
-import { Content, Flex, Heading, InlineAlert, View } from '@geti/ui';
+import { Content, Flex, Heading, InlineAlert, View } from '@geti-ui/ui';
 import { useGetDatasetItems } from 'hooks/use-get-dataset-items.hook';
 import { isEqual } from 'lodash-es';
 
 import type { ConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { isParameterGroup } from '../../../../model-listing/model-training-parameters/utils';
+import { distributeByLargestRemainder } from '../../../../utils';
 import { Accordion } from '../../components/accordion/accordion.component';
 import { ResultingDatasetDistribution } from './resulting-dataset-distribution.component';
 import { SubsetsDistribution } from './subset-distribution.component';
@@ -20,8 +21,6 @@ import {
     TRAINING_SUBSET_KEY,
     VALIDATION_SUBSET_KEY,
 } from './utils';
-
-import classes from './training-subsets.module.scss';
 
 type TrainingSubsetsProps = {
     defaultSubsetParameters: SubsetSplitParameters;
@@ -165,9 +164,10 @@ export const TrainingSubsets = ({
         });
     };
 
-    const newValidationSubsetSize = Math.floor((validationSubsetRatio / 100) * unassignedSubsetSize);
-    const newTestingSubsetSize = Math.floor((testSubsetRatio / 100) * unassignedSubsetSize);
-    const newTrainingSubsetSize = unassignedSubsetSize - newValidationSubsetSize - newTestingSubsetSize;
+    const [newTrainingSubsetSize, newValidationSubsetSize, newTestingSubsetSize] = distributeByLargestRemainder(
+        [trainingSubsetRatio, validationSubsetRatio, testSubsetRatio],
+        unassignedSubsetSize
+    );
 
     const areSubsetsSizesValid = () => {
         const resultingTrainingSubsetSize = trainingSubsetSize + newTrainingSubsetSize;
@@ -188,7 +188,7 @@ export const TrainingSubsets = ({
                     {trainingSubsetRatio}/{validationSubsetRatio}/{testSubsetRatio}%
                 </Accordion.Tag>
             </Accordion.Title>
-            <Accordion.Content UNSAFE_className={classes.trainingSubsets}>
+            <Accordion.Content>
                 <Accordion.Description>
                     Specify the distribution of annotated samples that have NOT already been assigned to a subset. Note
                     that samples used in previous training rounds already have a subset and this will remain unchanged,
@@ -219,7 +219,6 @@ export const TrainingSubsets = ({
                         newTrainingSubsetSize={newTrainingSubsetSize}
                         newValidationSubsetSize={newValidationSubsetSize}
                         newTestingSubsetSize={newTestingSubsetSize}
-                        totalDatasetItemsSize={totalDatasetItemsSize}
                     />
                 </View>
 

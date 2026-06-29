@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { type SpectrumDropZoneProps } from '@geti/ui';
+import { type SpectrumDropZoneProps } from '@geti-ui/ui';
 
 import { GetElementType } from './util';
 

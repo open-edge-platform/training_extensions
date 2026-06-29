@@ -45,7 +45,7 @@ vi.mock('hooks/use-project-identifier.hook', () => ({
 
 const mockedJob = getMockedJob({ job_id: 'job-abc' });
 
-const registerSuccessfulTrainHandler = (trainSpy: ReturnType<typeof vi.fn> = vi.fn()) => {
+const registerSuccessfulTrainHandler = (trainSpy: () => void = vi.fn<() => void>()) => {
     server.use(
         http.post('/api/jobs', () => {
             trainSpy();

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Divider, Flex, Heading } from '@geti/ui';
+import { dimensionValue, Divider, Flex, Heading } from '@geti-ui/ui';
 import { useGetCurrentRunningJobs } from 'hooks/api/jobs/jobs.hook';
 import { isEmpty, isString } from 'lodash-es';
 
@@ -15,18 +15,18 @@ import { ModelListingProvider, useModelListing } from './provider/model-listing-
 
 const ModelListingContent = () => {
     const runningJobs = useGetCurrentRunningJobs();
-    const { groupedModels, searchBy, datasetRevisions, groupBy } = useModelListing();
+    const { groupedModels, searchBy, datasetRevisions, groupBy, showFailedModels } = useModelListing();
 
-    const hasNoResults = groupedModels.length === 0 && searchBy.length > 0;
-    const hasNoModels = groupedModels.length === 0 && searchBy.length === 0;
+    const hasNoResults = groupedModels.length === 0 && (searchBy.length > 0 || !showFailedModels);
+    const hasNoModels = groupedModels.length === 0 && searchBy.length === 0 && showFailedModels;
 
-    if (hasNoModels) {
+    if (hasNoModels && isEmpty(runningJobs)) {
         return (
             <Flex
                 direction={'column'}
                 height={'100%'}
                 alignItems={'center'}
-                justifyContent={isEmpty(runningJobs) ? 'center' : 'start'}
+                justifyContent={'center'}
                 UNSAFE_style={{ padding: dimensionValue('size-300') }}
             >
                 <CurrentModelRunning groupBy={groupBy} datasetRevisions={datasetRevisions} />
@@ -40,7 +40,11 @@ const ModelListingContent = () => {
                     flex={1}
                 >
                     <NoTrainedModels />
-                    <Heading level={2}>No models yet. Train your first model to get started.</Heading>
+                    <Heading level={2} UNSAFE_style={{ textAlign: 'center' }}>
+                        No models yet.
+                        <br />
+                        Train your first model to get started.
+                    </Heading>
                     <TrainModel />
                 </Flex>
             </Flex>

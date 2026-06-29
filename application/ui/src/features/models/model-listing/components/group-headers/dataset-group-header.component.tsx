@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Flex, Grid, Heading, Text } from '@geti/ui';
-import { Image, Tag } from '@geti/ui/icons';
+import { dimensionValue, Flex, Grid, Heading, Text } from '@geti-ui/ui';
+import { Image, Tag } from '@geti-ui/ui/icons';
 import { useNumberFormatter } from 'react-aria';
 
 import type { DatasetGroup } from '../../types';
@@ -16,7 +16,7 @@ type DatasetGroupHeaderProps = {
 
 export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
     const hasDatasetRevisionData = dataset.imageCount > 0 && !dataset.filesDeleted;
-    const gridColumns = hasDatasetRevisionData ? ['auto', '1fr', 'auto', '1fr'] : ['auto', '1fr', 'auto'];
+    const gridColumns = hasDatasetRevisionData ? ['auto', '1fr', 'auto', 'max-content'] : ['auto', '1fr', 'auto'];
     const formatter = useNumberFormatter();
 
     return (

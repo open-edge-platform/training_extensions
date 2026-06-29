@@ -3,7 +3,7 @@
 
 import { ReactNode, useState } from 'react';
 
-import { Flex, StatusLight, View } from '@geti/ui';
+import { Flex, StatusLight, View } from '@geti-ui/ui';
 
 import { type AnnotatorMode } from '../../../../../shared/annotator/annotator-mode';
 

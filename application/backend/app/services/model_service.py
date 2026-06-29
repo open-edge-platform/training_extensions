@@ -27,6 +27,7 @@ from app.repositories import (
     PipelineRepository,
 )
 from app.services.dataset_revision_service import DatasetRevisionService
+from app.services.model_manifest_service import ModelManifestService
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from .parent_process_guard import parent_process_only
@@ -56,6 +57,7 @@ KEY_MAPPING = {
     "train/iter_time": MetricDisplayInfo(display_name="Training iteration time", frequency="step"),
     # "train/loss": MetricDisplayInfo(display_name="Training loss", frequency="step"),  # see issue #6350
     "train/loss_bbox": MetricDisplayInfo(display_name="Training loss bbox", frequency="step"),
+    "train/loss_dfl": MetricDisplayInfo(display_name="Training loss DFL", frequency="epoch"),
     "train/loss_centerness": MetricDisplayInfo(display_name="Training loss centerness", frequency="step"),
     "train/loss_cls": MetricDisplayInfo(display_name="Training loss cls", frequency="step"),
     "train/loss_mask": MetricDisplayInfo(display_name="Training loss mask", frequency="step"),
@@ -79,6 +81,8 @@ KEY_MAPPING = {
     "val/mar_large": MetricDisplayInfo(display_name="Validation mAR large", frequency="epoch"),
     "val/mar_medium": MetricDisplayInfo(display_name="Validation mAR medium", frequency="epoch"),
     "val/mar_small": MetricDisplayInfo(display_name="Validation mAR small", frequency="epoch"),
+    "val/precision": MetricDisplayInfo(display_name="Validation precision", frequency="epoch"),
+    "val/recall": MetricDisplayInfo(display_name="Validation recall", frequency="epoch"),
     "validation/data_time": MetricDisplayInfo(display_name="Validation data time", frequency="epoch"),
     "validation/iter_time": MetricDisplayInfo(display_name="Validation iteration time", frequency="epoch"),
 }
@@ -142,6 +146,24 @@ class ModelService(BaseSessionManagedService):
         if not model_rev_db:
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         return model_rev_db.architecture
+
+    def get_model_license(self, project_id: UUID, model_id: UUID) -> str:
+        """
+        Get the license of a model by looking up its architecture in the model manifest.
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+
+        Returns:
+            str: The license string (e.g., "Apache 2.0", "AGPL-3.0").
+
+        Raises:
+            ResourceNotFoundError: If no model with the given model_id is found.
+        """
+        architecture = self.get_model_revision_architecture(project_id, model_id)
+        manifest = ModelManifestService.get_model_manifest_by_id(architecture)
+        return manifest.license
 
     def get_model_variants(self, project_id: UUID, model_id: UUID) -> list[ModelVariant]:
         """
@@ -246,8 +268,13 @@ class ModelService(BaseSessionManagedService):
 
         path = self._projects_dir / str(project_id) / "models" / str(model_id)
         if path.exists():
-            shutil.rmtree(path)
-            logger.info("Deleted model files at '{}'", path)
+            try:
+                shutil.rmtree(path)
+                logger.info("Deleted model files at '{}'", path)
+            except PermissionError as exc:
+                if getattr(exc, "winerror", None) == 32:
+                    raise ResourceInUseError(ResourceType.MODEL, str(model_id))
+                raise
 
         try:
             deleted = model_rev_repo.delete(str(model_id))
@@ -295,8 +322,13 @@ class ModelService(BaseSessionManagedService):
 
         path = self._projects_dir / str(project_id) / "models" / str(model_id)
         if path.exists():
-            shutil.rmtree(path)
-            logger.info("Deleted model files at '{}'", path)
+            try:
+                shutil.rmtree(path)
+                logger.info("Deleted model files at '{}'", path)
+            except PermissionError as exc:
+                if getattr(exc, "winerror", None) == 32:
+                    raise ResourceInUseError(ResourceType.MODEL, str(model_id))
+                raise
 
     def list_models(self, project_id: UUID, dataset_revision_id: UUID | None = None) -> list[ModelRevision]:
         """
@@ -434,14 +466,21 @@ class ModelService(BaseSessionManagedService):
         xml_file = variant_dir / "model.xml"
         bin_file = variant_dir / "model.bin"
         onnx_file = variant_dir / "model.onnx"
-        ckpt_file = variant_dir / "model.ckpt"
+        pt_file = variant_dir / "model.pt"
+        metadata_file = variant_dir / "metadata.yaml"
 
         if xml_file.exists() and bin_file.exists():
-            return True, (xml_file, bin_file)
+            paths: list[Path] = [xml_file, bin_file]
+            if metadata_file.exists():
+                paths.append(metadata_file)
+            return True, tuple(paths)
         if onnx_file.exists():
-            return True, (onnx_file,)
-        if ckpt_file.exists():
-            return True, (ckpt_file,)
+            paths = [onnx_file]
+            if metadata_file.exists():
+                paths.append(metadata_file)
+            return True, tuple(paths)
+        if pt_file.exists():
+            return True, (pt_file,)
 
         return False, ()
 

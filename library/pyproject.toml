@@ -24,7 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "datumaro[experimental] @ git+https://github.com/open-edge-platform/datumaro.git@develop",
+    "datumaro[experimental]~=1.13.1",
     "omegaconf==2.3.0",
     "rich==14.0.0",
     "jsonargparse==4.35.0",
@@ -39,10 +39,11 @@ dependencies = [
     "torchmetrics==1.8.2",
     "pytorchcv==0.0.74",
     "timm==1.0.3",
-    "openvino~=2026.1.0",
-    "openvino-model-api==0.4.2",
+    "openvino~=2026.2.0",
+    "openvino-model-api~=0.4.5",
     "onnx==1.21.0",
-    "onnxconverter-common==1.16.0",
+    "onnxruntime==1.26.0",
+    "onnxslim~=0.1.71",
     "onnxscript==0.6.2",
     "nncf~=3.0",
     "numpy>=2.0",
@@ -66,7 +67,6 @@ dev = [
     "pytest-stress",
     "pytest-html",
     "coverage",
-    "pytest-csv",
     "pytest-timeout",
     "pytest-mock",
     "pytest-forked",
@@ -107,6 +107,9 @@ xpu = [
     "torch==2.10.0+xpu",
     "triton-xpu==3.6.0",
     "torchvision==0.25.0+xpu"
+]
+ultralytics = [
+    "ultralytics~=8.4.41",
 ]
 
 docs = [
@@ -154,6 +157,10 @@ exclude-dependencies = [
 override-dependencies = [
     # Bypass the unnecessarily strict version requirement of 'opencv-python-headless' set by 'roboflow'
     "opencv-python-headless~=4.11",
+    # mlflow caps pyarrow<24 but datumaro 2.0.0 requires pyarrow>=24; pyarrow 24.x works fine with mlflow
+    "pyarrow>=24.0,<25",
+    # roboflow hard-pins idna==3.7; allow newer versions
+    "idna>=3.15",
 ]
 
 [tool.uv.sources]
@@ -428,6 +435,7 @@ markers = [
     "gpu",  # mark tests which require NVIDIA GPU
     "cpu",
     "xpu",  # mark tests which require Intel dGPU,
+    "network",  # mark tests that perform real network I/O; skipped by default unless --run-network is passed
 ]
 python_files = "tests/**/*.py"
 

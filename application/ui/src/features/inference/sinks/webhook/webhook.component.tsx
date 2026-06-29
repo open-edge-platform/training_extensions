@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Item, NumberField, Picker, TextField } from '@geti/ui';
+import { Flex, Item, NumberField, Picker, TextField } from '@geti-ui/ui';
 
 import { OutputFormats } from '../output-formats/output-formats.component';
 import { RateLimitFields } from '../rate-limit/rate-limit-fields.component';
@@ -29,7 +29,7 @@ export const Webhook = ({ defaultState }: WebhookProps) => {
                     <Item key={WebhookHttpMethod.PATCH}>{WebhookHttpMethod.PATCH}</Item>
                     <Item key={WebhookHttpMethod.PUT}>{WebhookHttpMethod.PUT}</Item>
                 </Picker>
-                <NumberField label='Timeout' name='timeout' minValue={0} step={1} defaultValue={defaultState.timeout} />
+                <NumberField label='Timeout' name='timeout' minValue={1} step={1} defaultValue={defaultState.timeout} />
             </Flex>
 
             <TextField

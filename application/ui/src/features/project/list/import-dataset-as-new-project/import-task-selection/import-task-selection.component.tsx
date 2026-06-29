@@ -3,8 +3,8 @@
 
 import { useActionState, useState } from 'react';
 
-import { Flex, Form, Item, Picker, Text, TextField, View } from '@geti/ui';
-import { InfoOutline } from '@geti/ui/icons';
+import { Flex, Form, Item, Picker, Text, TextField, View } from '@geti-ui/ui';
+import { InfoOutline } from '@geti-ui/ui/icons';
 import { useProjects } from 'hooks/api/project.hook';
 import { useStagedDatasetSuspense } from 'hooks/api/staged-dataset.hook';
 import { useImportDatasetAsNewProject } from 'hooks/storage/use-import-dataset-as-new-project.hook';
@@ -13,16 +13,11 @@ import { TaskType } from '../../../../../constants/shared-types';
 import { generateUniqueProjectName } from '../../../create/utils';
 import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
 import { validateProjectName } from '../../../validator';
+import { MAP_PROJECT_TYPE_TO_TITLE } from '../../util';
 import { getAllowedTaskTypes, getRecommendedTaskType, TASK_SELECTION_FORM_ID } from './util';
 
 type ImportTaskSelectionProps = {
     stagedDatasetId: string;
-};
-
-const TASK_LABELS: Record<TaskType, string> = {
-    detection: 'Object detection',
-    classification: 'Classification',
-    instance_segmentation: 'Instance segmentation',
 };
 
 const useFormConfig = (
@@ -76,7 +71,10 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
 
     const items = allowedTaskTypes.map((taskType) => ({
         key: taskType,
-        label: defaultTaskType === taskType ? `${TASK_LABELS[taskType]} (Recommended)` : TASK_LABELS[taskType],
+        label:
+            defaultTaskType === taskType
+                ? `${MAP_PROJECT_TYPE_TO_TITLE[taskType]} (Recommended)`
+                : MAP_PROJECT_TYPE_TO_TITLE[taskType],
     }));
 
     return (

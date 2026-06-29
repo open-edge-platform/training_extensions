@@ -50,9 +50,7 @@ describe('ProjectList', () => {
         it('renders the description text', async () => {
             renderProjectList();
 
-            expect(
-                await screen.findByText(/Create projects to configure new computer vision pipelines/i)
-            ).toBeInTheDocument();
+            expect(await screen.findByText(/Create projects by selecting a computer vision task/i)).toBeInTheDocument();
         });
 
         it('renders a card for each project', async () => {
@@ -164,7 +162,7 @@ describe('ProjectList', () => {
     });
 
     describe('create project card', () => {
-        it('renders create new project and create from dataset buttons', async () => {
+        it('renders create new project and create project from dataset buttons', async () => {
             server.use(http.get('/api/projects', () => HttpResponse.json(projects)));
 
             renderProjectList();
@@ -172,7 +170,7 @@ describe('ProjectList', () => {
             const createButton = await screen.findByRole('button', { name: /create new project/i });
             expect(createButton).toBeVisible();
 
-            const createFromDatasetButton = await screen.findByRole('button', { name: /Create from dataset/i });
+            const createFromDatasetButton = await screen.findByRole('button', { name: /Create project from dataset/i });
             expect(createFromDatasetButton).toBeVisible();
         });
     });

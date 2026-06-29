@@ -3,24 +3,13 @@
 
 import { useState } from 'react';
 
-import {
-    Button,
-    ButtonGroup,
-    Content,
-    Dialog,
-    dimensionValue,
-    Divider,
-    Flex,
-    Heading,
-    Text,
-    toast,
-    View,
-} from '@geti/ui';
-import { InfoOutline } from '@geti/ui/icons';
+import { Button, ButtonGroup, Content, Dialog, dimensionValue, Divider, Flex, Heading, Text, View } from '@geti-ui/ui';
+import { InfoOutline } from '@geti-ui/ui/icons';
 import { useSubmitJob } from 'hooks/api/jobs/jobs.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../../api/client';
+import { toast } from '../../../../../components/toast/toast.component';
 import {
     CalibrationDatasetSizeField,
     DEFAULT_QUANTIZATION_PARAMETERS,
@@ -107,22 +96,24 @@ export const QuantizationDialog = ({ modelId, onClose }: QuantizationDialogProps
 
                         <Divider size={'S'} marginY={'size-200'} />
 
-                        <MaxAccuracyDropField
-                            value={accuracyDrop}
-                            onChange={setAccuracyDrop}
-                            isDisabled={hasNoMaxAccuracyDrop}
-                            onDisabledChange={setHasNoMaxAccuracyDrop}
-                            onReset={() => setAccuracyDrop(DEFAULT_QUANTIZATION_PARAMETERS.accuracyDrop)}
-                        />
+                        <Flex gap={'size-125'} alignItems={'center'} direction={'column'}>
+                            <MaxAccuracyDropField
+                                value={accuracyDrop}
+                                onChange={setAccuracyDrop}
+                                isDisabled={hasNoMaxAccuracyDrop}
+                                onDisabledChange={setHasNoMaxAccuracyDrop}
+                                onReset={() => setAccuracyDrop(DEFAULT_QUANTIZATION_PARAMETERS.accuracyDrop)}
+                            />
 
-                        <CalibrationDatasetSizeField
-                            value={effectiveCalibrationSize}
-                            onChange={setCalibrationSize}
-                            maxValue={maxCalibrationSize}
-                            isDisabled={usesFullCalibrationDataset}
-                            onDisabledChange={setUsesFullCalibrationDataset}
-                            onReset={() => setCalibrationSize(DEFAULT_QUANTIZATION_PARAMETERS.calibrationSize)}
-                        />
+                            <CalibrationDatasetSizeField
+                                value={effectiveCalibrationSize}
+                                onChange={setCalibrationSize}
+                                maxValue={maxCalibrationSize}
+                                isDisabled={usesFullCalibrationDataset}
+                                onDisabledChange={setUsesFullCalibrationDataset}
+                                onReset={() => setCalibrationSize(DEFAULT_QUANTIZATION_PARAMETERS.calibrationSize)}
+                            />
+                        </Flex>
 
                         <Flex gap={'size-100'} alignItems={'center'} marginTop={'size-300'}>
                             <InfoOutline />

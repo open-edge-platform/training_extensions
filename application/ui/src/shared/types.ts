@@ -17,11 +17,13 @@ type FullImage = components['schemas']['FullImage'];
 
 export type Shape = Rect | Polygon | FullImage;
 
+export type AnnotationLabelRef = { id: string; probability?: number };
+
 export type AnnotationLabel = components['schemas']['LabelView'] & { probability?: number };
 
-export type Annotation = Omit<components['schemas']['DatasetItemAnnotation-Input'], 'labels'> & {
+export type Annotation = Omit<components['schemas']['DatasetItemAnnotation'], 'labels' | 'confidences'> & {
     id: string;
-    labels: AnnotationLabel[];
+    labels: AnnotationLabelRef[];
 };
 
 export type ClipperPoint = {

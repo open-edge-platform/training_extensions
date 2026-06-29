@@ -11,6 +11,7 @@ import inspect
 import logging
 import multiprocessing
 import os
+import shutil
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -168,8 +169,7 @@ class LightningEngine(Engine):
             if not isinstance(self.checkpoint, (Path, str)) and not Path(self.checkpoint).exists():
                 msg = f"Checkpoint {self.checkpoint} does not exist."
                 raise FileNotFoundError(msg)
-            chkpt = self._load_model_checkpoint(self.checkpoint, map_location="cpu")
-            self._model.load_state_dict_incrementally(chkpt)
+            self._load_model_checkpoint(self.checkpoint, map_location="cpu")
 
     # ------------------------------------------------------------------------ #
     # General getitune Entry Points
@@ -258,7 +258,6 @@ class LightningEngine(Engine):
                 ...     --resume True
                 ```
         """
-        checkpoint = checkpoint if checkpoint is not None else self.checkpoint
         if adaptive_bs != "None":
             adapt_batch_size(engine=self, **locals(), not_increase=(adaptive_bs != "Full"))
 
@@ -294,12 +293,7 @@ class LightningEngine(Engine):
             # load the entire model state from the checkpoint using the pl.Trainer's API.
             fit_kwargs["ckpt_path"] = checkpoint
         elif not resume and checkpoint:
-            # NOTE: If `resume` is not enabled but `checkpoint` is provided,
-            # load the model state from the checkpoint incrementally.
-            # This means only the model weights are loaded. If there is a mismatch in label_info,
-            # perform incremental weight loading for the model's classification layer.
-            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
-            self.model.load_state_dict_incrementally(ckpt)
+            self._load_model_checkpoint(checkpoint, map_location="cpu")
 
         with override_metric_callable(model=self.model, new_metric_callable=metric) as model:
             # Setup DataAugSwitch for datasets before training starts
@@ -316,18 +310,9 @@ class LightningEngine(Engine):
             msg = "self.checkpoint should be Path or str at this time."
             raise TypeError(msg)
 
-        best_checkpoint_symlink = Path(self.work_dir) / "best_checkpoint.ckpt"
-        if best_checkpoint_symlink.is_symlink() and best_checkpoint_symlink.exists():
-            best_checkpoint_symlink.unlink()
-        try:
-            best_checkpoint_symlink.symlink_to(self.checkpoint)
-        except OSError:
-            # Symlink creation may fail on Windows when the process lacks
-            # SeCreateSymbolicLinkPrivilege (e.g. frozen PyInstaller apps
-            # running without admin rights).  Fall back to a regular copy.
-            import shutil
-
-            shutil.copy2(self.checkpoint, best_checkpoint_symlink)
+        best_checkpoint = Path(self.work_dir) / "best_checkpoint.pt"
+        best_checkpoint.unlink(missing_ok=True)
+        shutil.copy2(self.checkpoint, best_checkpoint)
 
         return self._build_train_metrics()
 
@@ -716,84 +701,86 @@ class LightningEngine(Engine):
     def from_config(
         cls,
         config_path: PathLike,
-        data_root: PathLike | None = None,
+        data: DataModule | PathLike | None = None,
         work_dir: PathLike | None = None,
+        device: str | None = None,
+        checkpoint: str | None = None,
+        task: str | None = None,
         **kwargs,
     ) -> LightningEngine:
         """Builds the engine from a configuration file.
 
         Args:
             config_path (PathLike): The configuration file path.
-            data_root (PathLike | None): Root directory for the data.
-                Defaults to None. If data_root is None, use the data_root from the configuration file.
+            data (DataModule | PathLike | None): Either a pre-built
+                :class:`~getitune.data.module.DataModule` or a root directory
+                path for the data.  When *None*, the data root is read from
+                the configuration file.
             work_dir (PathLike | None, optional): Working directory for the engine.
                 Defaults to None. If work_dir is None, use the work_dir from the configuration file.
-            kwargs: Arguments that can override the engine's arguments.
+            device (str | None, optional): Device to use (e.g., ``"auto"``, ``"xpu"``, ``"cpu"``, ``"gpu"``).
+                Defaults to None.
+            checkpoint (str | None, optional): Path to a checkpoint for pretrained or warm-start weights.
+                Defaults to None.
+            task (str | None, optional): Task type for disambiguation. Defaults to None.
+            kwargs: Backend-specific keyword arguments forwarded to the engine constructor.
 
         Returns:
-            Engine: An instance of the Engine class.
+            LightningEngine: An instance of the LightningEngine class.
 
         Example:
             >>> engine = LightningEngine.from_config(
-            ...     config="config.yaml",
+            ...     config_path="config.yaml",
+            ...     data="/path/to/dataset",
             ... )
             ... engine.train()
         """
         from getitune.cli.utils.jsonargparse import get_instantiated_classes
 
-        # For the Engine argument, prepend 'engine.' for CLI parser
-        filter_kwargs = ["device", "checkpoint", "task"]
-        for key in filter_kwargs:
-            if key in kwargs:
-                kwargs[f"engine.{key}"] = kwargs.pop(key)
+        # Separate a pre-built DataModule from a plain data-root path so that
+        # the CLI parser only receives a file-system path (or None).
+        provided_datamodule: DataModule | None = None
+        if isinstance(data, DataModule):
+            provided_datamodule = data
+            # Give the CLI parser the DataModule's own data_root so it can
+            # still instantiate the model with the correct label_info from
+            # the dataset.  The config-parsed DataModule is discarded below.
+            data_root: PathLike | None = getattr(data, "data_root", None)
+        else:
+            data_root = data  # PathLike | None
+
+        # Route common args explicitly under the process's "engine" namespace.
+        process_kwargs: dict[str, object] = dict(kwargs)
+        if device is not None:
+            process_kwargs["engine.device"] = device
+        if checkpoint is not None:
+            process_kwargs["engine.checkpoint"] = checkpoint
+        if task is not None:
+            process_kwargs["engine.task"] = task.value if isinstance(task, TaskType) else task
         instantiated_config, train_kwargs = get_instantiated_classes(
             config=config_path,
             data_root=data_root,
             work_dir=work_dir,
-            **kwargs,
+            **process_kwargs,
         )
-        engine_kwargs = {**instantiated_config.get("engine", {}), **train_kwargs}
-
-        # Remove any input that is not currently available in Engine and print a warning message.
-        set_valid_args = TrainerArgumentsCache.get_trainer_constructor_args().union(
-            set(inspect.signature(LightningEngine.__init__).parameters.keys()),
+        valid_keys = TrainerArgumentsCache.get_trainer_constructor_args() | set(
+            inspect.signature(LightningEngine.__init__).parameters,
         )
-        # Keys that are legitimate train/test/export method kwargs. They come
-        # from OTXCLI.prepare_subcommand_kwargs("train") being merged into the
-        # engine kwargs, and should be silently dropped here -- warning about
-        # them is noise, because they are consumed at method-call time by the
-        # caller, not by the engine ctor.
-        known_method_kwargs = {
-            "resume",
-            "adaptive_bs",
-            "max_epochs",
-            "run_hpo",
-            "hpo_config",
-            "checkpoint",
-            "export_demo_package",
-            "export_format",
-            "explain",
-            "dump_options",
-            "precision",
-        }
-        removed_args = []
-        for engine_key in list(engine_kwargs.keys()):
-            if engine_key not in set_valid_args:
-                engine_kwargs.pop(engine_key)
-                if engine_key not in known_method_kwargs:
-                    removed_args.append(engine_key)
-        if removed_args:
-            msg = (
-                f"Warning: {removed_args} -> not available in Engine constructor. "
-                "It will be ignored. Use what need in the right places."
-            )
-            warn(msg, stacklevel=1)
+        merged = {**instantiated_config.get("engine", {}), **train_kwargs}
+        engine_kwargs = {k: v for k, v in merged.items() if k in valid_keys}
 
-        if (datamodule := instantiated_config.get("data")) is None:
-            msg = "Cannot instantiate datamodule from config."
-            raise ValueError(msg)
-        if not isinstance(datamodule, DataModule):
-            raise TypeError(datamodule)
+        # Use the caller-supplied DataModule when provided; otherwise build
+        # one from the parsed configuration.
+        if provided_datamodule is not None:
+            datamodule: DataModule = provided_datamodule
+        else:
+            raw_data: DataModule | Any = instantiated_config.get("data")
+            if raw_data is None:
+                msg = "Cannot instantiate datamodule from config."
+                raise ValueError(msg)
+            if not isinstance(raw_data, DataModule):
+                raise TypeError(raw_data)
+            datamodule = raw_data
 
         if (model := instantiated_config.get("model")) is None:
             msg = "Cannot instantiate model from config."
@@ -821,7 +808,7 @@ class LightningEngine(Engine):
         cls,
         model_name: str,
         task: TaskType,
-        data_root: PathLike | None = None,
+        data: PathLike | None = None,
         work_dir: PathLike | None = None,
         **kwargs,
     ) -> LightningEngine:
@@ -830,8 +817,8 @@ class LightningEngine(Engine):
         Args:
             model_name (str): The model name.
             task (TaskType): The type of getitune task.
-            data_root (PathLike | None): Root directory for the data.
-                Defaults to None. If data_root is None, use the data_root from the configuration file.
+            data (PathLike | None): Root directory for the data.
+                Defaults to None. If data is None, use the data_root from the configuration file.
             work_dir (PathLike | None, optional): Working directory for the engine.
                 Defaults to None. If work_dir is None, use the work_dir from the configuration file.
             kwargs: Arguments that can override the engine's arguments.
@@ -843,7 +830,7 @@ class LightningEngine(Engine):
             >>> engine = LightningEngine.from_model_name(
             ...     model_name="atss_mobilenetv2",
             ...     task="DETECTION",
-            ...     data_root=<dataset/path>,
+            ...     data=<dataset/path>,
             ... )
             ... engine.train()
 
@@ -855,7 +842,7 @@ class LightningEngine(Engine):
                 >>> engine = LightningEngine(
                 ...     model_name="atss_mobilenetv2",
                 ...     task="DETECTION",
-                ...     data_root=<dataset/path>,
+                ...     data=<dataset/path>,
                 ...     **overriding,
                 ... )
         """
@@ -873,7 +860,7 @@ class LightningEngine(Engine):
 
         return cls.from_config(
             config_path=config,
-            data_root=data_root,
+            data=data,
             work_dir=work_dir,
             **kwargs,
         )
@@ -892,6 +879,19 @@ class LightningEngine(Engine):
         self._work_dir = work_dir
         self._cache.update(default_root_dir=work_dir)
         self._cache.is_trainer_args_identical = False
+
+    @property
+    def best_checkpoint(self) -> Path | None:
+        """Path to the best model checkpoint after training.
+
+        Returns the checkpoint recorded by the Lightning checkpoint callback,
+        or ``None`` if training has not been run.
+        """
+        if self.checkpoint is not None:
+            ckpt_path = Path(self.checkpoint)
+            if ckpt_path.exists():
+                return ckpt_path
+        return None
 
     @property
     def device(self) -> DeviceConfig:
@@ -1189,10 +1189,11 @@ class LightningEngine(Engine):
             return False
 
         # Set DataAugSwitch for the training dataset
+        train_key = self.datamodule.train_subset.subset_name
         if (
             hasattr(self.datamodule, "subsets")
-            and "train" in self.datamodule.subsets
-            and set_data_aug_switch_if_supported(self.datamodule.subsets["train"])
+            and train_key in self.datamodule.subsets
+            and set_data_aug_switch_if_supported(self.datamodule.subsets[train_key])
         ):
             msg = "DataAugSwitch set for train_dataset"
             logging.info(msg)
@@ -1232,9 +1233,8 @@ class LightningEngine(Engine):
         """Check if the engine is supported for the given model and data."""
         return bool(isinstance(model, LightningModel) and isinstance(data, DataModule))
 
-    @staticmethod
-    def _load_model_checkpoint(checkpoint: PathLike, map_location: str | None = None) -> dict[str, Any]:
-        """Load model checkpoint from the given path.
+    def _load_model_checkpoint(self, checkpoint: PathLike, map_location: str = "cpu") -> dict[str, Any]:
+        """Load model checkpoint from the given path and apply weights to the model.
 
         Args:
             checkpoint (PathLike): Path to the checkpoint file.
@@ -1256,6 +1256,13 @@ class LightningEngine(Engine):
         except Exception as e:
             msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
             raise RuntimeError(e) from None
+
+        if "hyper_parameters" in ckpt and "label_info" in ckpt.get("hyper_parameters", {}):
+            self._model.load_state_dict_incrementally(ckpt)
+        else:
+            from getitune.backend.lightning.models.utils.utils import load_checkpoint
+
+            load_checkpoint(self._model.model, str(checkpoint), map_location=map_location, strict=False)
 
         return ckpt
 

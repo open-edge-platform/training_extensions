@@ -96,20 +96,12 @@ describe('ModelActions', () => {
     it('should show download logs action in training logs dialog', async () => {
         server.use(
             http.get('/api/projects/{project_id}/models/{model_id}/logs', () => {
-                return new HttpResponse(
-                    new Blob(
-                        ['[2025-01-10 10:00:00][INFO ] Initializing\n[2025-01-10 10:00:01][INFO ] Training started'],
-                        {
-                            type: 'text/plain',
-                        }
-                    ),
-                    {
-                        status: 200,
-                        headers: {
-                            'content-type': 'text/plain',
-                        },
-                    }
-                );
+                return new HttpResponse('Training started\nEpoch 1/10 complete\n', {
+                    status: 200,
+                    headers: {
+                        'content-type': 'text/plain',
+                    },
+                });
             })
         );
 
@@ -122,8 +114,11 @@ describe('ModelActions', () => {
 
         await userEvent.click(await screen.findByRole('button', { name: 'Download logs' }));
 
-        expect(downloadFile).toHaveBeenCalledWith(expect.stringMatching(/^blob:/), `training-logs-${mockModel.id}.log`);
-        expect(await screen.findByText('Training logs downloaded successfully')).toBeInTheDocument();
+        expect(downloadFile).toHaveBeenCalledWith(
+            expect.stringMatching(/models\/[^/]+\/logs/),
+            `training-logs-${mockModel.id}.log`,
+            'Training logs download started'
+        );
     });
 
     it('should disable "Rename" when model is currently training', async () => {

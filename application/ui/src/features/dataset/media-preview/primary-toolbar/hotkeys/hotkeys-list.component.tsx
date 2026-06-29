@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Grid, Keyboard, Text } from '@geti/ui';
+import { Divider, Grid, Keyboard, Text } from '@geti-ui/ui';
 
 import { formatHotkeyForDisplay, HOTKEYS } from '../../../../../shared/hotkeys-definition';
 import { useAvailableTools } from '../../../../annotator/tools/annotator-tools/use-available-tools';
@@ -32,7 +32,10 @@ export const HotkeysList = () => {
             ))}
             <Divider size='S' gridColumn={'1/-1'} />
             <HotkeyItem hotkeyName={'Undo'} hotkey={formatHotkeyForDisplay(HOTKEYS.undo)} />
-            <HotkeyItem hotkeyName={'Redo'} hotkey={formatHotkeyForDisplay(HOTKEYS.redo)} />
+            <HotkeyItem
+                hotkeyName={'Redo'}
+                hotkey={`${formatHotkeyForDisplay(HOTKEYS.redo)} or ${formatHotkeyForDisplay(HOTKEYS.redoAlt)}`}
+            />
             <HotkeyItem
                 hotkeyName={'Delete selected annotation'}
                 hotkey={formatHotkeyForDisplay(HOTKEYS.deleteAnnotation)}

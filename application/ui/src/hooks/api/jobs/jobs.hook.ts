@@ -7,12 +7,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../api/client';
+import { toast } from '../../../components/toast/toast.component';
 import { Job } from '../../../constants/shared-types';
 import { getQueryKey } from '../../../query-client/query-client';
 import { useSSE } from '../../use-sse.hook';
 import { isQuantizeJob, isTrainJob } from '../util';
 
 const TERMINAL_STATUSES: string[] = ['DONE', 'FAILED', 'CANCELLED'];
+const ERROR_MESSAGE = 'Job failed. Please check the logs for details and try again.';
 
 export const useStreamJobStatus = (jobId: string | undefined) => {
     const queryClient = useQueryClient();
@@ -32,6 +34,13 @@ export const useStreamJobStatus = (jobId: string | undefined) => {
 
                 return prevJobs.map((job) => (job.job_id === updatedJob.job_id ? updatedJob : job));
             });
+
+            if (updatedJob.status === 'FAILED') {
+                toast({
+                    message: ERROR_MESSAGE,
+                    type: 'error',
+                });
+            }
 
             if (TERMINAL_STATUSES.includes(updatedJob.status)) {
                 close();

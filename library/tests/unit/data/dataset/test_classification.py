@@ -30,6 +30,11 @@ class TestMulticlassClsDataset:
         mock_schema.attributes = mock_attributes
         self.mock_dm_subset.schema = mock_schema
 
+        # Mock label_categories used by the dataset implementation
+        mock_label_categories = Mock()
+        mock_label_categories.labels = ["class_0", "class_1", "class_2"]
+        self.mock_dm_subset.label_categories = mock_label_categories
+
         self.mock_transforms = Mock()
 
     def test_get_idx_list_per_classes_single_class(self):

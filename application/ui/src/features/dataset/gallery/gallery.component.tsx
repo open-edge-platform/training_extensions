@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox, DialogContainer, dimensionValue, Flex, Size, ViewModes } from '@geti/ui';
+import { Checkbox, DialogContainer, dimensionValue, Flex, Size, ViewModes } from '@geti-ui/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
 import { GridLayoutOptions } from 'react-aria-components';
@@ -42,6 +42,7 @@ const VIEW_MODE_SETTINGS: Record<GalleryViewMode, GridLayoutOptions> = {
 type GalleryListProps = {
     items: Media[];
     viewMode: GalleryViewMode;
+    isPending: boolean;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
     isMediaItemReviewedById: (mediaItemId: string) => boolean;
@@ -51,15 +52,14 @@ type GalleryListProps = {
 const GalleryList = ({
     items,
     viewMode,
+    isPending,
     isFetchingNextPage,
     fetchNextPage,
     onSelectedMediaItemChange,
     isMediaItemReviewedById,
 }: GalleryListProps) => {
     const projectId = useProjectIdentifier();
-    const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
-
-    const isSetSelectedKeys = selectedKeys instanceof Set;
+    const { selectedKeys, toggleSelectedKeys, isSelected } = useSelectedData();
 
     return (
         <VirtualizerGridLayout
@@ -68,13 +68,14 @@ const GalleryList = ({
             selectionMode='multiple'
             selectedKeys={selectedKeys}
             layoutOptions={VIEW_MODE_SETTINGS[viewMode]}
+            isPending={isPending}
             isLoadingMore={isFetchingNextPage}
             onLoadMore={fetchNextPage}
-            onSelectionChange={setSelectedKeys}
             contentItem={(item) => {
                 const mediaUrl = getThumbnailUrl(projectId, item.id);
                 const downloadUrl = getMediaDownloadUrl(projectId, item.id);
                 const mediaFileName = `${item.name}.${item.format}`;
+                const selected = isSelected(item.id);
 
                 return (
                     <MediaItem
@@ -95,9 +96,9 @@ const GalleryList = ({
                                 UNSAFE_style={{ margin: dimensionValue('size-150') }}
                             >
                                 <Checkbox
-                                    aria-label={`Select media item ${item.name}`}
+                                    aria-label={`Select media item ${item.id}`}
                                     onChange={() => toggleSelectedKeys([String(item.id)])}
-                                    isSelected={isSetSelectedKeys && selectedKeys.has(String(item.id))}
+                                    isSelected={selected}
                                 />
                             </Flex>
                         )}
@@ -107,7 +108,7 @@ const GalleryList = ({
 
                                 <MediaItemActions
                                     id={item.id}
-                                    onDeleted={toggleSelectedKeys}
+                                    onDeleted={selected ? toggleSelectedKeys : undefined}
                                     mediaUrl={downloadUrl}
                                     mediaFileName={mediaFileName}
                                     onAnnotate={() => onSelectedMediaItemChange(item)}
@@ -144,6 +145,7 @@ export const Gallery = ({
             <GalleryList
                 items={items}
                 viewMode={viewMode}
+                isPending={isPending}
                 fetchNextPage={fetchNextPage}
                 isMediaItemReviewedById={isMediaItemReviewedById}
                 onSelectedMediaItemChange={onSelectedMediaItemChange}

@@ -16,10 +16,9 @@ import { SchemaProjectView } from '../../src/api/openapi-spec';
 import { AnnotationDTO } from '../../src/constants/shared-types';
 import { expect, http, test } from '../fixtures';
 
-const mockedItems = getMultipleMockedMediaImage(20, '1');
+const mockedItems = getMultipleMockedMediaImage(40, '1');
 const mockedItems2 = getMultipleMockedMediaImage(20, '2');
-const mockedItems3 = getMultipleMockedMediaImage(20, '3');
-const totalElements = mockedItems.length + mockedItems2.length + mockedItems3.length;
+const totalElements = mockedItems.length + mockedItems2.length;
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const sampleImagePath = path.resolve(dirname, '../assets/candy-thumbnail.png');
@@ -38,7 +37,7 @@ test.describe('Dataset', () => {
             http.get('/api/projects/{project_id}/dataset/media', ({ query }) => {
                 const offset = Number(query.get('offset') ?? 0);
                 const limit = Number(query.get('limit'));
-                const items = offset === 0 ? mockedItems : offset === 20 ? mockedItems2 : mockedItems3;
+                const items = offset === 0 ? mockedItems : mockedItems2;
 
                 return HttpResponse.json({
                     items,
@@ -54,18 +53,19 @@ test.describe('Dataset', () => {
     });
 
     test('list items', async ({ page, datasetPage }) => {
-        await datasetPage.goto();
-
-        await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
-
         const waitForBatch = (offset: number) =>
             page.waitForResponse(
                 (response) => response.url().includes('/dataset/media') && response.url().includes(`offset=${offset}`)
             );
 
-        for (const offset of [20, 40]) {
-            await Promise.all([waitForBatch(offset), datasetPage.getMediaGrid().press('End')]);
-        }
+        const batch40 = waitForBatch(40);
+
+        await datasetPage.goto();
+
+        await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
+
+        await datasetPage.getMediaGrid().press('End');
+        await batch40;
 
         await datasetPage.selectAll();
 
@@ -79,10 +79,8 @@ test.describe('Dataset', () => {
 
         await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
 
-        const options = datasetPage.getMediaGridOptions();
-
         for (let i = 0; i < selectedElements; i++) {
-            await options.nth(i).click();
+            await datasetPage.selectMediaItem(mockedItems[i].id);
         }
 
         await expect(datasetPage.getSelectedCountText(selectedElements)).toBeVisible();
@@ -141,9 +139,43 @@ test.describe('Dataset', () => {
 
         await expect(datasetPage.getUploadButton()).toBeDisabled();
 
-        await expect(datasetPage.getUploadProgressText(totalFiles, firstBatchCount)).toBeVisible();
+        await expect(datasetPage.getUploadProgressText(totalFiles)).toBeVisible();
 
         await expect(datasetPage.getUploadFinishedText(totalFiles)).toBeVisible();
+    });
+
+    test('shows per-file upload details dialog with status', async ({ network, datasetPage }) => {
+        const filesToUpload = [
+            { name: 'image-one.png', mimeType: 'image/png', buffer: sampleImageBuffer },
+            { name: 'image-two.png', mimeType: 'image/png', buffer: sampleImageBuffer },
+        ];
+
+        network.use(
+            http.post('/api/projects/{project_id}/dataset/media', async () => {
+                return HttpResponse.json(getMockedMediaImage({ id: uuid() }), { status: 201 });
+            })
+        );
+
+        await datasetPage.goto();
+
+        await datasetPage.uploadFiles(filesToUpload);
+
+        // Wait for the final toast so the toast element is stable (in-progress toast re-renders on each update).
+        await expect(datasetPage.getUploadFinishedText(2)).toBeVisible();
+
+        await datasetPage.clickShowDetails();
+
+        const dialog = datasetPage.getUploadDetailsDialog();
+        await expect(dialog).toBeVisible();
+
+        // One header row + two body rows.
+        await expect(datasetPage.getUploadDetailsRows()).toHaveCount(3);
+
+        await expect(dialog.getByRole('row', { name: /image-one\.png/ })).toContainText('Uploaded');
+        await expect(dialog.getByRole('row', { name: /image-two\.png/ })).toContainText('Uploaded');
+
+        await datasetPage.closeUploadDetailsDialog();
+        await expect(dialog).toBeHidden();
     });
 
     test.describe('Bulk labelling while uploading media items', () => {
@@ -171,7 +203,11 @@ test.describe('Dataset', () => {
             { name: 'upload-video.mp4', mimeType: 'video/mp4', buffer: sampleVideoBuffer },
         ];
 
-        const mockNetwork = (network: NetworkFixture, project: SchemaProjectView) => {
+        const mockNetwork = (
+            network: NetworkFixture,
+            project: SchemaProjectView,
+            options?: { onUpload?: () => Promise<void> }
+        ) => {
             const createAnnotationPayloads: [string, AnnotationDTO[]][] = [];
             let getMediaCount = 0;
 
@@ -180,6 +216,8 @@ test.describe('Dataset', () => {
                     const media = mockedMedia[getMediaCount];
 
                     getMediaCount++;
+
+                    await options?.onUpload?.();
 
                     return HttpResponse.json(media, {
                         status: 201,
@@ -343,6 +381,40 @@ test.describe('Dataset', () => {
                 ]);
             }).toPass();
         });
+
+        test('Skip closes the dialog without waiting for the upload to finish', async ({ network, datasetPage }) => {
+            let releaseUpload: () => void = () => {};
+            const uploadGate = new Promise<void>((resolve) => {
+                releaseUpload = resolve;
+            });
+
+            const createAnnotationPayloads = mockNetwork(
+                network,
+                getMockedProject({
+                    task: {
+                        task_type: 'classification',
+                        exclusive_labels: true,
+                        labels: mockedLabels,
+                    },
+                }),
+                { onUpload: () => uploadGate }
+            );
+
+            await datasetPage.goto();
+
+            await datasetPage.uploadFiles(filesToUpload);
+
+            await expect(datasetPage.getLabelAssignmentHeading()).toBeVisible();
+
+            await datasetPage.clickSkip();
+
+            await expect(datasetPage.getLabelAssignmentHeading()).toBeHidden();
+
+            releaseUpload();
+            await expect(datasetPage.getUploadFinishedText(filesToUpload.length)).toBeVisible();
+
+            expect(createAnnotationPayloads).toEqual([]);
+        });
     });
 
     test.describe('Bulk labelling for selected images', () => {
@@ -419,8 +491,8 @@ test.describe('Dataset', () => {
 
             await expect(datasetPage.getAssignLabelButton()).toBeHidden();
 
-            await datasetPage.clickMediaItem('media-1');
-            await datasetPage.clickMediaItem('media-2');
+            await datasetPage.selectMediaItem(mockedMedia[0].id);
+            await datasetPage.selectMediaItem(mockedMedia[1].id);
 
             await datasetPage.clickAssignLabel();
 
@@ -475,9 +547,9 @@ test.describe('Dataset', () => {
 
             await datasetPage.goto();
 
-            await datasetPage.clickMediaItem('media-1');
-            await datasetPage.clickMediaItem('media-2');
-            await datasetPage.clickMediaItem('media-3');
+            await datasetPage.selectMediaItem(mockedMedia[0].id);
+            await datasetPage.selectMediaItem(mockedMedia[1].id);
+            await datasetPage.selectMediaItem(mockedMedia[2].id);
 
             await datasetPage.clickAssignLabel();
 
@@ -530,9 +602,9 @@ test.describe('Dataset', () => {
 
             await datasetPage.goto();
 
-            await datasetPage.clickMediaItem('media-1');
-            await datasetPage.clickMediaItem('media-2');
-            await datasetPage.clickMediaItem('media-3');
+            await datasetPage.selectMediaItem(mockedMedia[0].id);
+            await datasetPage.selectMediaItem(mockedMedia[1].id);
+            await datasetPage.selectMediaItem(mockedMedia[2].id);
 
             await datasetPage.clickAssignLabel();
 

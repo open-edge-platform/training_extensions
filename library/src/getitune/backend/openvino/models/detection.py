@@ -125,21 +125,17 @@ class OVDetectionModel(OVModel):
             model_adapter (OpenvinoAdapter): target adapter to read the config
         """
         if self._is_onnx:
-            # For ONNX models, the adapter parses metadata_props into rt_info.
-            best_confidence_threshold = model_adapter.get_rt_info(["model_info", "confidence_threshold"]).astype(str)
-            self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
+            # For ONNX models, the adapter parses metadata_props into a flat dict.
+            metadata = model_adapter.onnx_metadata.get("model_info", {})
+            best_confidence_threshold = metadata.get("confidence_threshold", None)
+            self.hparams["best_confidence_threshold"] = (
+                float(best_confidence_threshold) if best_confidence_threshold is not None else None
+            )
         elif model_adapter.model.has_rt_info(["model_info", "confidence_threshold"]):
             best_confidence_threshold = model_adapter.model.get_rt_info(["model_info", "confidence_threshold"]).value
-            self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
-        else:
-            msg = (
-                "Cannot get best_confidence_threshold from model metadata. "
-                "Please check whether this model is trained by getitune or not. "
-                "Without this information, it can produce a wrong F1 metric score. "
-                "At this time, it will be set as the default value = None."
+            self.hparams["best_confidence_threshold"] = (
+                float(best_confidence_threshold) if best_confidence_threshold is not None else None
             )
-            log.warning(msg)
-            self.hparams["best_confidence_threshold"] = None
 
     def _customize_outputs(
         self,
@@ -271,3 +267,29 @@ class OVDetectionModel(OVModel):
         best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}
         return super()._compute_metrics(metric, **compute_kwargs)
+
+    def predict_step(self, data_batch: SampleBatch) -> PredictionBatch:
+        """Run detection inference and filter by confidence threshold."""
+        predictions = self(data_batch)
+        threshold = self.hparams.get("best_confidence_threshold", None)
+        if not threshold:
+            return predictions
+
+        if predictions.scores is None or predictions.bboxes is None or predictions.labels is None:
+            return predictions
+
+        filtered_scores: list[torch.Tensor] = []
+        filtered_bboxes: list[tv_tensors.BoundingBoxes] = []
+        filtered_labels: list[torch.Tensor] = []
+        for score, bbox, label in zip(predictions.scores, predictions.bboxes, predictions.labels):
+            keep = score > threshold
+            filtered_scores.append(score[keep])
+            filtered_bboxes.append(
+                tv_tensors.BoundingBoxes(data=bbox[keep], format="XYXY", canvas_size=bbox.canvas_size),
+            )
+            filtered_labels.append(label[keep])
+
+        predictions.scores = filtered_scores
+        predictions.bboxes = filtered_bboxes
+        predictions.labels = filtered_labels
+        return predictions

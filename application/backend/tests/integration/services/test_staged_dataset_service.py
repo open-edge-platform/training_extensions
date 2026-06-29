@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import asyncio
+from io import BytesIO
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -169,25 +169,21 @@ class TestStagedDatasetServiceIntegration:
         self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
     ):
         filename = "dataset.zip"
-        chunks = [b"hello ", b"world", b"!", b""]
-        chunks_iter = iter(chunks)
+        content = b"hello world!"
+        file_obj = BytesIO(content)
 
-        async def chunk_reader() -> bytes:
-            await asyncio.sleep(0)
-            return next(chunks_iter)
-
-        staged_dataset = await fxt_staged_dataset_service.upload(filename=filename, chunk_reader=chunk_reader)
+        staged_dataset = await fxt_staged_dataset_service.upload(filename=filename, file_obj=file_obj)
 
         assert staged_dataset.id is not None
         assert staged_dataset.compressed is True
         assert staged_dataset.format == DatasetFormat.UNKNOWN
-        assert staged_dataset.size == sum(len(c) for c in chunks[:-1])
+        assert staged_dataset.size == len(content)
 
         stored_path = Path(staged_dataset.filename)
         assert stored_path.name == "dataset.zip"
         assert stored_path.is_file()
         assert stored_path.parent.parent == tmp_path
-        assert stored_path.read_bytes() == b"hello world!"
+        assert stored_path.read_bytes() == content
 
     def test_list_all_single_zip_dataset(self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService):
         dataset_id, archive_path = _stage_dataset_archive(tmp_path, "my_coco_dataset.zip", b"123456")

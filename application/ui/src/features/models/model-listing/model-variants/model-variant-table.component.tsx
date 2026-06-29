@@ -14,9 +14,8 @@ import {
     TableHeader,
     TableView,
     Text,
-    toast,
-} from '@geti/ui';
-import { DownloadIcon } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { DownloadIcon } from '@geti-ui/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { get } from 'lodash-es';
 import { useNumberFormatter } from 'react-aria';
@@ -101,9 +100,7 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
 
     const handleDownloadModel = (modelVariantId: string) => {
         const url = `${API_BASE_URL}/api/projects/${projectId}/models/${model.id}/variants/${modelVariantId}/binary`;
-        downloadFile(url);
-
-        toast({ type: 'info', message: 'Model download started' });
+        downloadFile(url, undefined, 'Model download started');
     };
 
     return (

@@ -1,8 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Heading, IllustratedMessage, View } from '@geti/ui';
-import { CloudErrorIcon } from '@geti/ui/icons';
+import { Button, Heading, IllustratedMessage, View } from '@geti-ui/ui';
+import { CloudErrorIcon } from '@geti-ui/ui/icons';
 
 import { paths } from '../../constants/paths';
 import { redirectTo } from '../utils';

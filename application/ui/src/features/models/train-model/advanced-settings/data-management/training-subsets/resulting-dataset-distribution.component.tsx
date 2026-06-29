@@ -1,8 +1,9 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, repeat, Text, View } from '@geti/ui';
+import { Flex, Grid, repeat, Text, View } from '@geti-ui/ui';
 
+import { distributeByLargestRemainder } from '../../../../utils';
 import { LABEL_COLOR_MAPPING, SubsetTile } from './subset-distribution-stats.component';
 
 import classes from './training-subsets.module.scss';
@@ -10,8 +11,8 @@ import classes from './training-subsets.module.scss';
 type SubsetDistributionRowProps = {
     existingSize: number;
     newSize: number;
-    totalSize: number;
     label: string;
+    percentage: number;
 };
 
 const SubsetLabel = ({ label, color }: { color: string; label: string }) => {
@@ -23,9 +24,8 @@ const SubsetLabel = ({ label, color }: { color: string; label: string }) => {
     );
 };
 
-const SubsetDistributionRow = ({ existingSize, newSize, totalSize, label }: SubsetDistributionRowProps) => {
+const SubsetDistributionRow = ({ existingSize, newSize, label, percentage }: SubsetDistributionRowProps) => {
     const resultingSize = existingSize + newSize;
-    const percentage = totalSize > 0 ? Math.round((resultingSize * 100) / totalSize) : 0;
 
     return (
         <>
@@ -42,9 +42,9 @@ const SubsetDistributionRow = ({ existingSize, newSize, totalSize, label }: Subs
 type ResultingDatasetDistributionSubsetProps = {
     color: string;
     label: string;
-    totalSize: number;
     newSize: number;
     existingSize: number;
+    percentage: number;
 };
 
 const ResultingDatasetDistributionSubset = ({
@@ -52,13 +52,18 @@ const ResultingDatasetDistributionSubset = ({
     label,
     existingSize,
     newSize,
-    totalSize,
+    percentage,
 }: ResultingDatasetDistributionSubsetProps) => {
     return (
         <>
             <SubsetLabel label={label} color={color} />
 
-            <SubsetDistributionRow label={label} totalSize={totalSize} newSize={newSize} existingSize={existingSize} />
+            <SubsetDistributionRow
+                label={label}
+                newSize={newSize}
+                existingSize={existingSize}
+                percentage={percentage}
+            />
         </>
     );
 };
@@ -70,8 +75,9 @@ type ResultingDatasetDistributionProps = {
     newTrainingSubsetSize: number;
     newValidationSubsetSize: number;
     newTestingSubsetSize: number;
-    totalDatasetItemsSize: number;
 };
+
+const MAX_VALUE = 100;
 
 export const ResultingDatasetDistribution = ({
     trainingSubsetSize,
@@ -80,8 +86,16 @@ export const ResultingDatasetDistribution = ({
     newTrainingSubsetSize,
     newValidationSubsetSize,
     newTestingSubsetSize,
-    totalDatasetItemsSize,
 }: ResultingDatasetDistributionProps) => {
+    const [trainingPercentage, validationPercentage, testingPercentage] = distributeByLargestRemainder(
+        [
+            trainingSubsetSize + newTrainingSubsetSize,
+            validationSubsetSize + newValidationSubsetSize,
+            testingSubsetSize + newTestingSubsetSize,
+        ],
+        MAX_VALUE
+    );
+
     return (
         <Flex direction={'column'} gap={'size-50'}>
             <Text>Resulting dataset distribution:</Text>
@@ -96,25 +110,25 @@ export const ResultingDatasetDistribution = ({
                     <ResultingDatasetDistributionSubset
                         label={'Training'}
                         color={LABEL_COLOR_MAPPING.training}
-                        totalSize={totalDatasetItemsSize}
                         newSize={newTrainingSubsetSize}
                         existingSize={trainingSubsetSize}
+                        percentage={trainingPercentage}
                     />
 
                     <ResultingDatasetDistributionSubset
                         label={'Validation'}
                         color={LABEL_COLOR_MAPPING.validation}
-                        totalSize={totalDatasetItemsSize}
                         newSize={newValidationSubsetSize}
                         existingSize={validationSubsetSize}
+                        percentage={validationPercentage}
                     />
 
                     <ResultingDatasetDistributionSubset
                         label={'Test'}
                         color={LABEL_COLOR_MAPPING.test}
-                        totalSize={totalDatasetItemsSize}
                         newSize={newTestingSubsetSize}
                         existingSize={testingSubsetSize}
+                        percentage={testingPercentage}
                     />
                 </Grid>
             </View>

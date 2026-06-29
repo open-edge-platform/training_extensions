@@ -3,27 +3,20 @@
 
 import { useState } from 'react';
 
-import { Badge, dimensionValue, Flex, Heading, Text, View } from '@geti/ui';
+import { Badge, dimensionValue, Flex, Heading, Text, View } from '@geti-ui/ui';
 import { clsx } from 'clsx';
 import { NavLink } from 'react-router-dom';
 
 import placeholderThumbnailIconUrl from '../../../assets/icons/image-icon.svg?url';
 import { paths } from '../../../constants/paths';
-import { Project, TaskType } from '../../../constants/shared-types';
+import { Project } from '../../../constants/shared-types';
 import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
-import { isMultiLabelClassificationTask } from '../task-type-guards';
 import { MenuActions } from './menu-actions/menu-actions.component';
-import { formatCreationDate } from './util';
+import { formatCreationDate, getProjectTypeTitle } from './util';
 
 import classes from './project-list.module.scss';
 
 const cardPadding = 'size-200';
-
-const MAP_PROJECT_TYPE_TO_TITLE: Record<TaskType, string> = {
-    detection: 'Object detection',
-    classification: 'Classification',
-    instance_segmentation: 'Instance segmentation',
-};
 
 type ProjectTypeBadgeProps = {
     type: string;
@@ -75,7 +68,7 @@ type ProjectCardProps = {
 
 export const ProjectCard = ({ item, prioritizeImage = false, projectNames }: ProjectCardProps) => {
     const isActive = item.active_pipeline;
-    const isMultiLabelClassification = isMultiLabelClassificationTask(item.task);
+    const taskType = getProjectTypeTitle(item.task);
 
     return (
         <div style={{ position: 'relative' }} aria-label={`Project: ${item.name}`}>
@@ -95,25 +88,21 @@ export const ProjectCard = ({ item, prioritizeImage = false, projectNames }: Pro
 
                     <View flex={1} padding={cardPadding}>
                         <Flex alignItems={'center'} justifyContent={'space-between'}>
-                            <Heading level={2} marginEnd={'size-400'} UNSAFE_className={classes.projectName}>
+                            <Heading level={2} marginEnd={'size-400'} UNSAFE_className={classes.projectCardName}>
                                 <span title={item.name}>{item.name}</span>
                             </Heading>
                         </Flex>
 
                         <Flex gap={'size-50'}>
-                            {isMultiLabelClassification ? (
-                                <ProjectTypeBadge type={'Multi-label classification'} />
-                            ) : (
-                                <ProjectTypeBadge type={MAP_PROJECT_TYPE_TO_TITLE[item.task.task_type]} />
-                            )}
+                            {taskType !== undefined && <ProjectTypeBadge type={taskType} />}
                             {isActive && <ActiveProjectBadge />}
                         </Flex>
 
-                        <Flex marginTop={'size-100'} gap={'size-100'} direction={'column'}>
-                            <Text UNSAFE_className={classes.projectCreationDate}>
+                        <Flex marginTop={'size-200'} gap={'size-100'} direction={'column'}>
+                            <Text UNSAFE_className={classes.projectMetadata}>
                                 • Created: {formatCreationDate(item.created_at)}
                             </Text>
-                            <Text UNSAFE_className={classes.labelList}>
+                            <Text UNSAFE_className={clsx(classes.labelList, classes.projectMetadata)}>
                                 • Labels: {(item.task.labels ?? []).map((label) => label.name).join(', ')}
                             </Text>
                         </Flex>

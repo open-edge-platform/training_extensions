@@ -18,7 +18,7 @@ class DispatchService:
     }
 
     @classmethod
-    def _get_destination(cls, output_config: Sink) -> Dispatcher | None:
+    def get_destination(cls, output_config: Sink) -> Dispatcher | None:
         # TODO handle exceptions: if some output cannot be initialized, exclude it and raise a warning
         factory = cls._dispatcher_registry.get(output_config.sink_type)
         if factory is None:
@@ -34,7 +34,7 @@ class DispatchService:
         Args:
             output_configs (Sequence[OutputConfig]): A sequence of output configurations.
         """
-        return [dispatcher for config in output_configs if (dispatcher := cls._get_destination(config)) is not None]
+        return [dispatcher for config in output_configs if (dispatcher := cls.get_destination(config)) is not None]
 
 
 def _raise_not_implemented(message: str) -> None:

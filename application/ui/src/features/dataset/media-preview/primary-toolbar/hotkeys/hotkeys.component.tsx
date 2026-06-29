@@ -12,8 +12,8 @@ import {
     Text,
     Tooltip,
     TooltipTrigger,
-} from '@geti/ui';
-import { Close, Hotkeys as HotkeysIcon } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { Close, Hotkeys as HotkeysIcon } from '@geti-ui/ui/icons';
 
 import { HotkeysList } from './hotkeys-list.component';
 

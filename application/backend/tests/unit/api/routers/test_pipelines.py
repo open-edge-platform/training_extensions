@@ -185,9 +185,7 @@ class TestPipelineEndpoints:
         [
             OtherProjectActiveError(
                 requested_project_name="this_project_name",
-                requested_project_id="requested-project-id",
                 active_project_name="active_project_name",
-                active_project_id="active-project-id",
             ),
             FolderSinkNotAccessibleError(folder_path="/root/predictions", reason="Read-only file system"),
         ],

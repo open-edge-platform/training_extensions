@@ -1,15 +1,17 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import time
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.db.schema import SourceDB
+from app.db.schema import ProjectDB, SourceDB
 from app.models import Source, SourceType
-from app.models.source import SourceAdapter, SourceConfig
+from app.models.source import SourceAdapter, SourceConfig, SourceTestResult
 from app.repositories import SourceRepository
 from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
+from app.repositories.pipeline_repo import PipelineRepository
 
 from .base import (
     ResourceInUseError,
@@ -20,6 +22,7 @@ from .base import (
 )
 from .event.event_bus import EventBus, EventType
 from .parent_process_guard import parent_process_only
+from .video_stream_service import VideoStreamService
 
 
 class SourceService:
@@ -63,6 +66,22 @@ class SourceService:
 
     @parent_process_only
     def delete_source(self, source: Source) -> None:
+        # Check for pipelines using this source before attempting deletion
+        pipelines = PipelineRepository(self._db_session).get_by_source_id(str(source.id))
+        if pipelines:
+            project_details = []
+            for p in pipelines:
+                project = self._db_session.get(ProjectDB, p.project_id)
+                project_name = project.name if project else p.project_id
+                state = "running" if p.is_running else "configured"
+                project_details.append(f"'{project_name}' ({state})")
+            projects_str = ", ".join(project_details)
+            msg = (
+                f"Source '{source.name}' cannot be deleted because it is used by "
+                f"a pipeline in project: {projects_str}. "
+                f"Please stop and remove the pipeline configuration in that project first."
+            )
+            raise ResourceInUseError(ResourceType.SOURCE, str(source.id), msg)
         try:
             deleted = SourceRepository(self._db_session).delete(str(source.id))
             if not deleted:
@@ -106,3 +125,19 @@ class SourceUpdateService(SourceService):
             return SourceAdapter.validate_python(db_source, from_attributes=True)
         except UniqueConstraintIntegrityError:
             raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, new_name)
+
+    _TEST_TIMEOUT_MS = 5000
+
+    def test_source(self, source: Source) -> SourceTestResult:
+        """Perform a connectivity check on the source."""
+        try:
+            video_stream = VideoStreamService.get_video_stream(input_config=source, timeout=self._TEST_TIMEOUT_MS)
+            if video_stream is None:
+                return SourceTestResult.failure("Disconnected source")
+            start = time.monotonic()
+            with video_stream:
+                video_stream.get_data()
+            elapsed_ms = (time.monotonic() - start) * 1000
+            return SourceTestResult.success(latency_ms=round(elapsed_ms, 1))
+        except Exception as e:
+            return SourceTestResult.failure(str(e))

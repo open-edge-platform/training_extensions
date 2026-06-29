@@ -2,19 +2,21 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
+import socket
 import threading
 import time
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from loguru import logger
-from model_api.models.result import Result
 
 from app.models import MqttSinkConfig
 
-from .base import BaseDispatcher
+from .base import BaseDispatcher, UnavailableDispatcherError
 
 if TYPE_CHECKING:
+    from model_api.models.result import Result
+
     try:
         import paho.mqtt.client as mqtt_cl
     except ImportError:
@@ -23,6 +25,8 @@ if TYPE_CHECKING:
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 CONNECT_TIMEOUT = 10
+
+_TEST_TIMEOUT_SECONDS = 5
 
 
 class MqttDispatcher(BaseDispatcher):
@@ -66,20 +70,8 @@ class MqttDispatcher(BaseDispatcher):
         self._published_messages: list[dict] = []
 
         self.client = mqtt_client or self._create_default_client()
-        self._connect()
 
-    def _create_default_client(self) -> "mqtt_cl.Client":
-        client_id = f"dispatcher_{int(time.time())}"
-        client = self.mqtt_cl.Client(
-            callback_api_version=self.mqtt_enums.CallbackAPIVersion.VERSION2, client_id=client_id
-        )
-        client.on_connect = self._on_connect
-        client.on_disconnect = self._on_disconnect
-        if self.username is not None and self.password is not None:
-            client.username_pw_set(self.username, self.password)
-        return client
-
-    def _connect(self) -> None:
+    def connect(self) -> None:
         for attempt in range(MAX_RETRIES):
             try:
                 logger.info(
@@ -94,6 +86,17 @@ class MqttDispatcher(BaseDispatcher):
                 logger.exception("Connection failed")
                 time.sleep(RETRY_DELAY * (attempt + 1))
         raise ConnectionError("Failed to connect to MQTT broker")
+
+    def _create_default_client(self) -> "mqtt_cl.Client":
+        client_id = f"dispatcher_{int(time.time())}"
+        client = self.mqtt_cl.Client(
+            callback_api_version=self.mqtt_enums.CallbackAPIVersion.VERSION2, client_id=client_id
+        )
+        client.on_connect = self._on_connect
+        client.on_disconnect = self._on_disconnect
+        if self.username is not None and self.password is not None:
+            client.username_pw_set(self.username, self.password)
+        return client
 
     def _on_connect(
         self,
@@ -130,7 +133,7 @@ class MqttDispatcher(BaseDispatcher):
         if not self._connected:
             logger.warning("Client not connected. Reconnecting...")
             try:
-                self._connect()
+                self.connect()
             except ConnectionError:
                 logger.exception("Reconnect failed")
 
@@ -143,7 +146,9 @@ class MqttDispatcher(BaseDispatcher):
         except ValueError:
             logger.exception("Invalid payload for MQTT publish")
 
-    def _dispatch(self, original_image: np.ndarray, image_with_visualization: np.ndarray, predictions: Result) -> None:
+    def _dispatch(
+        self, original_image: np.ndarray, image_with_visualization: np.ndarray, predictions: "Result"
+    ) -> None:
         payload = self._create_payload(original_image, image_with_visualization, predictions)
 
         self.__publish_message(self.topic, payload)
@@ -163,3 +168,12 @@ class MqttDispatcher(BaseDispatcher):
             logger.warning("Error disconnecting MQTT client: {}", self.mqtt_cl.error_string(err))
         self._connected = False
         self._connection_event.clear()
+
+    def test(self) -> None:
+        host = self.broker_host
+        port = self.broker_port
+        try:
+            sock = socket.create_connection((host, port), timeout=_TEST_TIMEOUT_SECONDS)
+            sock.close()
+        except OSError as e:
+            raise UnavailableDispatcherError(f"Cannot connect to MQTT broker at {host}:{port}: {e}") from e

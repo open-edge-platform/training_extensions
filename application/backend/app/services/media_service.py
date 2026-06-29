@@ -88,6 +88,17 @@ class MediaService(BaseSessionManagedService):
 
     @staticmethod
     def _read_image_from_ndarray(data: np.ndarray) -> Image.Image:
+        # Pillow does not support multi-channel uint16 arrays (e.g. 16-bit RGB from datumaro).
+        # Such arrays are always grayscale duplicated across channels - collapse to single channel.
+        if data.dtype == np.uint16 and data.ndim == 3 and data.shape[-1] in (1, 3, 4):
+            if data.shape[-1] == 1 or (
+                np.array_equal(data[:, :, 0], data[:, :, 1]) and np.array_equal(data[:, :, 0], data[:, :, 2])
+            ):
+                data = data[:, :, 0]
+            else:
+                raise InvalidImageError(
+                    "Unsupported 16-bit multi-channel image array. Expected duplicated grayscale channels."
+                )
         return Image.fromarray(data)
 
     @staticmethod
@@ -109,31 +120,44 @@ class MediaService(BaseSessionManagedService):
         except Exception:
             logger.exception("Failed to generate thumbnail image")
 
+    @staticmethod
+    def _copy_binary(data: BinaryIO | BytesIO, path: Path, chunk_size: int = 1024 * 1024) -> None:
+        data.seek(0)
+        with path.open("wb") as output:
+            while chunk := data.read(chunk_size):
+                output.write(chunk)
+
     def create_image(
         self,
         metadata: ImageMetadata,
     ) -> Media:
         """Creates a new media (image)"""
         media_id = uuid4()
+        original_binary: BinaryIO | BytesIO | None = None
         match metadata.data:
             case Image.Image():
                 image = metadata.data
             case np.ndarray():
                 image = self._read_image_from_ndarray(metadata.data)
             case _:
+                original_binary = metadata.data
                 image = self._read_image_from_binary(metadata.data)
 
         dataset_dir = self.projects_dir / f"{metadata.project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
         binary_path = dataset_dir / f"{media_id}.{metadata.image_format}"
-        try:
-            image.save(binary_path, exif=image.getexif())
-        except RuntimeError:
-            logger.warning(
-                "Failed to save image with EXIF data ({}), saving without EXIF.",
-                metadata.name,
-            )
-            image.save(binary_path)
+
+        if original_binary is not None:
+            self._copy_binary(original_binary, binary_path)
+        else:
+            try:
+                image.save(binary_path, exif=image.getexif())
+            except RuntimeError:
+                logger.warning(
+                    "Failed to save image with EXIF data ({}), saving without EXIF.",
+                    metadata.name,
+                )
+                image.save(binary_path)
 
         try:
             MediaService._generate_and_save_thumbnail(image, dataset_dir / f"{media_id}-thumb.jpg")
@@ -174,11 +198,7 @@ class MediaService(BaseSessionManagedService):
         dataset_dir.mkdir(parents=True, exist_ok=True)
         binary_path = dataset_dir / f"{media_id}.{video_format}"
 
-        data.seek(0)
-        with open(binary_path, "wb") as f:
-            # Read in chunks to avoid memory issues for large files
-            while chunk := data.read(VIDEO_WRITE_CHUNK_SIZE):
-                f.write(chunk)
+        self._copy_binary(data, binary_path, VIDEO_WRITE_CHUNK_SIZE)
 
         try:
             video_metadata = self._get_video_service().get_video_metadata(video_path=binary_path)
@@ -325,8 +345,8 @@ class MediaService(BaseSessionManagedService):
 
         repo.delete(obj_id=str(media.id))
 
-    def get_frame_binary(self, project: Project, video: Video, frame_index: int) -> Image.Image:
-        video_path = self.get_media_binary_path(project_id=project.id, media=video)
+    def get_frame_binary(self, project_id: UUID, video: Video, frame_index: int) -> Image.Image:
+        video_path = self.get_media_binary_path(project_id=project_id, media=video)
         return self._get_frame_binary_from_video_file(video_path=video_path, frame_index=frame_index)
 
     def get_frame_binaries(self, project: Project, video: Video, frame_indexes: list[int]) -> dict[int, np.ndarray]:
@@ -345,7 +365,7 @@ class MediaService(BaseSessionManagedService):
         return self._get_video_service().extract_video_frames(video_path=video_path, frame_indexes=frame_indexes)
 
     def get_frame_thumbnail(self, project: Project, video: Video, frame_index: int) -> Image.Image:
-        video_frame = self.get_frame_binary(project=project, video=video, frame_index=frame_index)
+        video_frame = self.get_frame_binary(project_id=project.id, video=video, frame_index=frame_index)
         return MediaService._crop_image_to_thumbnail(video_frame)
 
     def _get_frame_binary_from_video_file(self, video_path: Path, frame_index: int) -> Image.Image:

@@ -12,7 +12,7 @@ from model_api.tilers import InstanceSegmentationTiler
 from torchvision import tv_tensors
 
 from getitune.backend.openvino.models.base import OVModel
-from getitune.backend.openvino.models.utils import rescale_bboxes_to_original
+from getitune.backend.openvino.models.utils import rescale_bboxes_to_original, rescale_masks_to_original
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.data.utils.structures.mask.mask_util import encode_rle
 from getitune.metrics import MetricInput
@@ -95,21 +95,17 @@ class OVInstanceSegmentationModel(OVModel):
         and updates the hyperparameters accordingly.
         """
         if self._is_onnx:
-            # For ONNX models, the adapter parses metadata_props into rt_info.
-            best_confidence_threshold = model_adapter.get_rt_info(["model_info", "confidence_threshold"]).astype(str)
-            self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
+            # For ONNX models, the adapter parses metadata_props into a flat dict.
+            metadata = model_adapter.onnx_metadata.get("model_info", {})
+            best_confidence_threshold = metadata.get("confidence_threshold", None)
+            self.hparams["best_confidence_threshold"] = (
+                float(best_confidence_threshold) if best_confidence_threshold is not None else None
+            )
         elif model_adapter.model.has_rt_info(["model_info", "confidence_threshold"]):
             best_confidence_threshold = model_adapter.model.get_rt_info(["model_info", "confidence_threshold"]).value
-            self.hparams["best_confidence_threshold"] = float(best_confidence_threshold)
-        else:
-            msg = (
-                "Cannot get best_confidence_threshold from model metadata. "
-                "Please check whether this model is trained by getitune or not. "
-                "Without this information, it can produce a wrong F1 metric score. "
-                "At this time, it will be set as the default value = None."
+            self.hparams["best_confidence_threshold"] = (
+                float(best_confidence_threshold) if best_confidence_threshold is not None else None
             )
-            log.warning(msg)
-            self.hparams["best_confidence_threshold"] = None
 
     def _customize_outputs(
         self,
@@ -155,7 +151,19 @@ class OVInstanceSegmentationModel(OVModel):
                 ),
             )
             scores.append(torch.tensor(output.scores.reshape(-1)))
-            masks.append(torch.tensor(output.masks))
+
+            raw_masks = torch.tensor(output.masks)
+            if raw_masks.shape[-2:] == (ori_h, ori_w):
+                rescaled_masks = raw_masks
+            else:
+                rescaled_masks = rescale_masks_to_original(
+                    raw_masks,
+                    img_shape=(img_h, img_w),
+                    ori_shape=(ori_h, ori_w),
+                    padding=img_info.padding,
+                )
+            masks.append(rescaled_masks)
+
             labels.append(torch.tensor(output.labels.reshape(-1) - 1, dtype=torch.long))
 
         if outputs and outputs[0].saliency_map:
@@ -245,6 +253,37 @@ class OVInstanceSegmentationModel(OVModel):
         best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}
         return super()._compute_metrics(metric, **compute_kwargs)
+
+    def predict_step(self, data_batch: SampleBatch) -> PredictionBatch:
+        """Run instance segmentation inference and filter by confidence threshold."""
+        predictions = self(data_batch)
+        threshold = self.hparams.get("best_confidence_threshold", None)
+        if not threshold:
+            return predictions
+
+        if predictions.scores is None or predictions.bboxes is None or predictions.labels is None:
+            return predictions
+
+        filtered_scores: list[torch.Tensor] = []
+        filtered_bboxes: list[tv_tensors.BoundingBoxes] = []
+        filtered_labels: list[torch.Tensor] = []
+        filtered_masks: list = []
+        for i, (score, bbox, label) in enumerate(zip(predictions.scores, predictions.bboxes, predictions.labels)):
+            keep = score > threshold
+            filtered_scores.append(score[keep])
+            filtered_bboxes.append(
+                tv_tensors.BoundingBoxes(data=bbox[keep], format="XYXY", canvas_size=bbox.canvas_size),
+            )
+            filtered_labels.append(label[keep])
+            if predictions.masks is not None and i < len(predictions.masks):
+                filtered_masks.append(predictions.masks[i][keep])
+
+        predictions.scores = filtered_scores
+        predictions.bboxes = filtered_bboxes
+        predictions.labels = filtered_labels
+        if filtered_masks:
+            predictions.masks = filtered_masks
+        return predictions
 
     def _create_label_info_from_model(self) -> LabelInfo:
         """Create label information from the OpenVINO IR or ONNX model metadata.

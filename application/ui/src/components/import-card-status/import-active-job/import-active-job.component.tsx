@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Loading } from '@geti/ui';
+import { Loading } from '@geti-ui/ui';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { getJobProgress, isJobRunning } from 'hooks/api/util';
 import capitalize from 'lodash-es/capitalize';

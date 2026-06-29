@@ -3,12 +3,13 @@
 
 import { useMemo, useState } from 'react';
 
-import { ActionButton, Flex, Loading, Text } from '@geti/ui';
-import { Back } from '@geti/ui/icons';
-import { isEmpty } from 'lodash-es';
+import { ActionButton, Flex, Loading, Text } from '@geti-ui/ui';
+import { Back } from '@geti-ui/ui/icons';
+import { usePipeline } from 'hooks/api/pipeline.hook';
+import { isEmpty, orderBy } from 'lodash-es';
 
-import { $api } from '../../../api/client';
 import type { SourceConfig } from '../../../constants/shared-types';
+import { useSourcesQuery } from './api/use-sources';
 import { EditSourceForm } from './edit-source-form.component';
 import { SourcesList } from './source-list/source-list.component';
 import { SourceOptions } from './source-options';
@@ -16,9 +17,12 @@ import { SourceOptions } from './source-options';
 export const SourceActions = () => {
     const [view, setView] = useState<'list' | 'options' | 'edit'>('list');
     const [currentSource, setCurrentSource] = useState<SourceConfig | null>(null);
-    const { data: sources = [], isLoading } = $api.useSuspenseQuery('get', '/api/sources');
+    const { data: sources = [], isPending } = useSourcesQuery();
     const filteredSources = sources.filter((source) => source.source_type !== 'disconnected');
     const existingNames = useMemo(() => filteredSources.map((source) => source.name), [filteredSources]);
+
+    const pipeline = usePipeline();
+    const connectedSourceId = pipeline.data.source?.id;
 
     const handleShowList = () => {
         setView('list');
@@ -33,21 +37,36 @@ export const SourceActions = () => {
         setCurrentSource(source);
     };
 
-    if (isLoading) {
+    if (isPending) {
         return <Loading mode={'inline'} size='M' />;
     }
 
     if (view === 'edit' && !isEmpty(currentSource)) {
-        return <EditSourceForm config={currentSource} onSaved={handleShowList} onBackToList={handleShowList} />;
+        return (
+            <EditSourceForm
+                config={currentSource}
+                onSaved={handleShowList}
+                onBackToList={handleShowList}
+                connectedSourceId={connectedSourceId}
+            />
+        );
     }
 
     if (view === 'list') {
-        return <SourcesList sources={filteredSources} onAddSource={handleAddSource} onEditSource={handleEditSource} />;
+        const sourcesWithConnectedFirst = orderBy(filteredSources, (source) => source.id === connectedSourceId, 'desc');
+
+        return (
+            <SourcesList
+                sources={sourcesWithConnectedFirst}
+                onAddSource={handleAddSource}
+                onEditSource={handleEditSource}
+            />
+        );
     }
 
     return (
         <SourceOptions onSaved={handleShowList} hasHeader={filteredSources.length > 0} existingNames={existingNames}>
-            <Flex gap={'size-100'} marginBottom={'size-100'} alignItems={'center'} justifyContent={'space-between'}>
+            <Flex gap={'size-100'} marginBottom={'size-100'} alignItems={'center'}>
                 <ActionButton isQuiet onPress={handleShowList}>
                     <Back />
                 </ActionButton>

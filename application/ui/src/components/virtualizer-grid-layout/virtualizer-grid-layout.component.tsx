@@ -3,7 +3,7 @@
 
 import { ComponentProps, ReactNode, useRef } from 'react';
 
-import { AriaComponentsListBox, GridLayout, ListBoxItem, Loading, View, Virtualizer } from '@geti/ui';
+import { AriaComponentsListBox, AriaListBoxItem, GridLayout, Loading, View, Virtualizer } from '@geti-ui/ui';
 import { useLoadMore } from '@react-aria/utils';
 import { GridLayoutOptions } from 'react-aria-components';
 
@@ -25,6 +25,7 @@ interface VirtualizerGridLayoutProps<T extends GridItem>
     scrollToIndex?: number;
     selectionMode: 'single' | 'multiple' | 'none';
     layoutOptions: GridLayoutOptions;
+    isPending?: boolean;
     isLoadingMore: boolean;
     onLoadMore: () => void;
     contentItem: (item: T) => ReactNode;
@@ -37,6 +38,7 @@ export const VirtualizerGridLayout = <T extends GridItem>({
     items,
     ariaLabel,
     selectedKeys,
+    isPending = false,
     isLoadingMore,
     selectionMode,
     layoutOptions,
@@ -48,7 +50,11 @@ export const VirtualizerGridLayout = <T extends GridItem>({
 }: VirtualizerGridLayoutProps<T>) => {
     const ref = useRef<HTMLDivElement | null>(null);
 
-    useLoadMore({ isLoading: isLoadingMore, onLoadMore }, ref);
+    // Treat `isPending` as "loading" for the purposes of auto-pagination, so we
+    // don't kick off a next-page fetch while the initial load is still in
+    // flight. Without this guard the gallery shows the full overlay AND the
+    // inline tile loader at the same time on first render.
+    useLoadMore({ isLoading: isLoadingMore || isPending, onLoadMore }, ref);
 
     useGetTargetPosition({
         ref,
@@ -76,23 +82,24 @@ export const VirtualizerGridLayout = <T extends GridItem>({
                         const itemId = getItemId(item);
 
                         return (
-                            <ListBoxItem
+                            <AriaListBoxItem
                                 id={itemId}
                                 key={`${ariaLabel}-${itemId}-${index}`}
                                 textValue={String(itemId)}
                                 className={classes.mediaItem}
                             >
                                 {contentItem(item)}
-                            </ListBoxItem>
+                            </AriaListBoxItem>
                         );
                     })}
-                    {isLoadingMore && (
-                        <ListBoxItem id={'loader'} textValue={'loading'}>
+                    {isLoadingMore && !isPending && (
+                        <AriaListBoxItem id={'loader'} textValue={'loading'}>
                             <Loading mode='overlay' />
-                        </ListBoxItem>
+                        </AriaListBoxItem>
                     )}
                 </AriaComponentsListBox>
             </Virtualizer>
+            {isPending && <Loading mode='overlay' />}
         </View>
     );
 };

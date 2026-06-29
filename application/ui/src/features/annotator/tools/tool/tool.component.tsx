@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Heading, IllustratedMessage, Text, Tooltip, TooltipTrigger, View } from '@geti/ui';
+import { ActionButton, Flex, Heading, IllustratedMessage, Text, Tooltip, TooltipTrigger, View } from '@geti-ui/ui';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { IconWrapper } from '../../../../components/icon-wrapper/icon-wrapper.component';

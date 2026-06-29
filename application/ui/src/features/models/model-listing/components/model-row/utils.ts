@@ -1,10 +1,15 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Evaluation, Metric, Model } from '../../../../../constants/shared-types';
+import type { Evaluation, Metric, Model, TaskType } from '../../../../../constants/shared-types';
+import { isClassificationTask } from '../../../../project/task-type-guards';
 
 export const getModelEvaluations = (model: Model): Evaluation[] => {
     return model.variants.flatMap((variant) => variant.evaluations);
+};
+
+const getDefaultPerformanceMetricName = (taskType: TaskType | null): string => {
+    return isClassificationTask(taskType) ? 'Accuracy' : 'mAP';
 };
 
 const getTestingEvaluation = (evaluations: Evaluation[]): Evaluation | undefined => {
@@ -42,4 +47,8 @@ export const getFirstAvailableTestingMetric = (
     }
 
     return undefined;
+};
+
+export const getPerformanceColumnLabel = (models: Model[] | undefined, taskType: TaskType | null): string => {
+    return getFirstAvailableTestingMetric(models)?.name ?? getDefaultPerformanceMetricName(taskType);
 };

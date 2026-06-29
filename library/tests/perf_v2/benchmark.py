@@ -13,10 +13,10 @@ from typing import Any, Literal
 
 import pandas as pd
 
-from getitune.backend.lightning.cli.utils import RECIPE_PATH
 from getitune.backend.lightning.engine import LightningEngine
 from getitune.backend.openvino.engine import OVEngine
 from getitune.types.task import TaskType
+from getitune.utils import RECIPE_PATH
 from tests.perf_v2 import CRITERIA_COLLECTIONS, DATASET_COLLECTIONS, MODEL_COLLECTIONS, summary
 from tests.perf_v2.utils import (
     Criterion,
@@ -261,7 +261,7 @@ class Benchmark:
         if dataset_info.extra_overrides:
             kwargs.update(dataset_info.extra_overrides.get("export", {}))
 
-        ckpt_path = sub_work_dir / "train" / "best_checkpoint.ckpt"
+        ckpt_path = sub_work_dir / "train" / "best_checkpoint.pt"
         if not ckpt_path.exists():
             msg = f"Checkpoint file not found: {ckpt_path}"
             raise FileNotFoundError(msg)
@@ -326,7 +326,7 @@ class Benchmark:
 
         return LightningEngine.from_config(
             config_path=FOLDER_MAPPINGS[TaskType(model_info.task)] / (model_info.name + ".yaml"),
-            data_root=self.data_root / dataset_info.path,
+            data=self.data_root / dataset_info.path,
             work_dir=work_dir,
             device=self.accelerator,
         )
@@ -406,7 +406,7 @@ class Benchmark:
                 sub_work_dir=sub_work_dir,
                 tags=tags,
                 criteria=criteria,
-                checkpoint=sub_work_dir / "train" / "best_checkpoint.ckpt",
+                checkpoint=sub_work_dir / "train" / "best_checkpoint.pt",
                 what2test=RunTestType.TORCH,
             )
 

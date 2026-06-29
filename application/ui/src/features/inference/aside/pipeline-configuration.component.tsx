@@ -3,7 +3,7 @@
 
 import { ReactNode, Suspense } from 'react';
 
-import { Flex, Heading, Item, Loading, TabList, TabPanels, Tabs, Text, View } from '@geti/ui';
+import { Flex, Heading, Item, Loading, TabList, TabPanels, Tabs, Text, View } from '@geti-ui/ui';
 
 import { SinkActions } from '../sinks/sink-actions.component';
 import { SourceActions } from '../sources/source-actions.component';
@@ -24,7 +24,14 @@ export const PipelineConfiguration = () => {
             <Suspense fallback={<Loading />}>
                 <StreamInferenceDevices />
             </Suspense>
-            <Tabs aria-label={'Pipeline configuration tabs'} flex={1} minHeight={0}>
+            <Tabs
+                aria-label={'Pipeline configuration tabs'}
+                flex={1}
+                minHeight={0}
+                UNSAFE_style={{
+                    '--spectrum-tabs-selection-indicator-color': 'var(--energy-blue)',
+                }}
+            >
                 <TabList marginBottom={'size-200'}>
                     <Item key='sources' textValue='Sources'>
                         <Text>Input</Text>

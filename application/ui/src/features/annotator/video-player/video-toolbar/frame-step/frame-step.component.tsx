@@ -3,8 +3,8 @@
 
 import { Dispatch, SetStateAction } from 'react';
 
-import { ActionButton, Tooltip, TooltipTrigger, View } from '@geti/ui';
-import { Fps } from '@geti/ui/icons';
+import { ActionButton, Tooltip, TooltipTrigger, View } from '@geti-ui/ui';
+import { Fps } from '@geti-ui/ui/icons';
 
 import { FRAME_STEP_TO_DISPLAY_ALL_FRAMES } from './utils';
 

@@ -3,8 +3,8 @@
 
 import { ReactNode, useRef } from 'react';
 
-import { ActionButton, Button, ButtonGroup, Divider, Flex, Form, Text, View } from '@geti/ui';
-import { Back } from '@geti/ui/icons';
+import { ActionButton, Button, ButtonGroup, Divider, Flex, Form, Text, View } from '@geti-ui/ui';
+import { Back } from '@geti-ui/ui/icons';
 
 import { useConnectSinkToPipeline } from '../../../../hooks/api/pipeline.hook';
 import { useSinkAction } from '../hooks/use-sink-action.hook';
@@ -18,6 +18,7 @@ interface EditSinkProps<T> {
     onBackToList: () => void;
     componentFields: (state: Awaited<T>) => ReactNode;
     bodyFormatter: (formData: FormData) => T;
+    isConnected: boolean;
 }
 
 export const EditSink = <T extends SinkConfig>({
@@ -26,6 +27,7 @@ export const EditSink = <T extends SinkConfig>({
     onBackToList,
     bodyFormatter,
     componentFields,
+    isConnected,
 }: EditSinkProps<T>) => {
     const connectToPipeline = useRef(false);
     const connectToPipelineMutation = useConnectSinkToPipeline();
@@ -43,7 +45,7 @@ export const EditSink = <T extends SinkConfig>({
 
     return (
         <Form validationBehavior={'native'} action={submitAction}>
-            <Flex gap={'size-100'} alignItems={'center'} marginTop={'0px'} justifyContent={'space-between'}>
+            <Flex gap={'size-100'} alignItems={'center'} marginTop={'0px'}>
                 <ActionButton isQuiet onPress={onBackToList}>
                     <Back />
                 </ActionButton>
@@ -66,14 +68,16 @@ export const EditSink = <T extends SinkConfig>({
                     Save
                 </Button>
 
-                <Button
-                    type='submit'
-                    isDisabled={isPending}
-                    UNSAFE_style={{ maxWidth: 'fit-content' }}
-                    onPress={() => (connectToPipeline.current = true)}
-                >
-                    Save & Connect
-                </Button>
+                {!isConnected && (
+                    <Button
+                        type='submit'
+                        isDisabled={isPending}
+                        UNSAFE_style={{ maxWidth: 'fit-content' }}
+                        onPress={() => (connectToPipeline.current = true)}
+                    >
+                        Save & Connect
+                    </Button>
+                )}
             </ButtonGroup>
         </Form>
     );

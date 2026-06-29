@@ -9,7 +9,6 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 import cv2
-import numpy as np
 import pytest
 from testcontainers.compose import DockerCompose
 
@@ -81,6 +80,7 @@ class TestIPCameraStream:
         """Test that IPCameraStream can be closed."""
         with IPCameraStream(config) as stream:
             data = stream.get_data()
+            assert data is not None
             assert data.frame_data.shape[2] == 3
 
     def test_invalid_url(self):
@@ -97,57 +97,47 @@ class TestIPCameraStream:
         with pytest.raises(RuntimeError, match=f"Could not open video source: {invalid_url}"):
             IPCameraStream(config)
 
-    def test_reconnection_after_frame_read_failure(self, config: IPCameraSourceConfig):
-        """Test that IPCameraStream can reconnect after frame read failures."""
+    def test_reconnects_after_transient_failure(self, config: IPCameraSourceConfig):
+        """_reconnect() should re-open the capture and return True on success."""
         with IPCameraStream(config) as stream:
-            data = stream.get_data()
-            assert data.frame_data is not None
+            # Stop the reader thread so we can drive _reconnect() deterministically.
+            stream._stop_reader.set()
+            stream._reader_thread.join(timeout=2)
+            stream._stop_reader.clear()
 
-            # Mock cv2.VideoCapture.read to simulate failure then success
-            mock_cap = MagicMock(spec=cv2.VideoCapture)
-            call_count = 0
+            recovered_cap = MagicMock(spec=cv2.VideoCapture)
+            recovered_cap.isOpened.return_value = True
 
-            def mock_read():
-                nonlocal call_count
-                call_count += 1
-                if call_count <= 2:
-                    return False, None
-
-                dummy_frame = np.zeros((480, 640, 3), dtype=np.uint8)
-                return True, dummy_frame
-
-            mock_cap.read.side_effect = mock_read
-            mock_cap.isOpened.return_value = True
+            init_calls = {"n": 0}
 
             def _initialize_capture():
-                stream.cap = mock_cap
+                init_calls["n"] += 1
+                stream.cap = recovered_cap
 
-            mock_initialize_capture = MagicMock(side_effect=_initialize_capture)
-            stream._initialize_capture = mock_initialize_capture  # type: ignore[method-assign]
-            stream.cap = mock_cap
+            stream._initialize_capture = MagicMock(side_effect=_initialize_capture)  # type: ignore[method-assign]
+            stream.BACKOFF_FACTOR = 0.0
 
-            # This should trigger reconnection logic and succeed
-            data = stream.get_data()
-            assert data.frame_data is not None
-            assert call_count == 3  # Verify reconnection attempts were made
-            assert mock_initialize_capture.call_count == 2
+            assert stream._reconnect() is True
+            assert init_calls["n"] == 1
 
-    def test_max_retries_exceeded(self, config: IPCameraSourceConfig):
-        """Test that IPCameraStream raises exception when max retries are exceeded."""
+    def test_permanent_failure_publishes_error(self, config: IPCameraSourceConfig):
+        """After MAX_RECONNECT_ATTEMPTS the reader should give up and publish an error."""
         with IPCameraStream(config) as stream:
-            mock_cap = MagicMock(spec=cv2.VideoCapture)
-            mock_cap.read.return_value = (False, None)
-            mock_cap.isOpened.return_value = True
+            stream._stop_reader.set()
+            stream._reader_thread.join(timeout=2)
+            stream._stop_reader.clear()
+
+            failing_cap = MagicMock(spec=cv2.VideoCapture)
+            failing_cap.isOpened.return_value = False
 
             def _initialize_capture():
-                stream.cap = mock_cap
+                stream.cap = failing_cap
 
-            mock_initialize_capture = MagicMock(side_effect=_initialize_capture)
-            stream._initialize_capture = mock_initialize_capture  # type: ignore[method-assign]
-            stream.cap = mock_cap
+            stream._initialize_capture = MagicMock(side_effect=_initialize_capture)  # type: ignore[method-assign]
+            stream.cap = failing_cap
+            stream.BACKOFF_FACTOR = 0.0
 
-            # Should exhaust retries and raise RuntimeError
-            with pytest.raises(RuntimeError, match="Failed to capture frame from IP camera after multiple retries"):
-                stream.get_data()
-
-                assert mock_initialize_capture.call_count == 3
+            assert stream._reconnect() is False
+            assert stream._initialize_capture.call_count == stream.MAX_RECONNECT_ATTEMPTS
+            assert isinstance(stream._reader_error, RuntimeError)
+            assert "permanently unavailable" in str(stream._reader_error)

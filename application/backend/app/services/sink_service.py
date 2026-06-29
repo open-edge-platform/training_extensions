@@ -1,16 +1,19 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import time
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.db.schema import SinkDB
+from app.db.schema import ProjectDB, SinkDB
 from app.models import OutputFormat, Sink, SinkAdapter, SinkType
-from app.models.sink import SinkConfig
+from app.models.sink import SinkConfig, SinkTestResult
 from app.repositories import SinkRepository
 from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
+from app.repositories.pipeline_repo import PipelineRepository
 
+from . import DispatchService
 from .base import (
     ResourceInUseError,
     ResourceNotFoundError,
@@ -95,6 +98,22 @@ class SinkService:
 
     @parent_process_only
     def delete_sink(self, sink: Sink) -> None:
+        # Check for pipelines using this sink before attempting deletion
+        pipelines = PipelineRepository(self._db_session).get_by_sink_id(str(sink.id))
+        if pipelines:
+            project_details = []
+            for p in pipelines:
+                project = self._db_session.get(ProjectDB, p.project_id)
+                project_name = project.name if project else p.project_id
+                state = "running" if p.is_running else "configured"
+                project_details.append(f"'{project_name}' ({state})")
+            projects_str = ", ".join(project_details)
+            msg = (
+                f"Sink '{sink.name}' cannot be deleted because it is used by "
+                f"a pipeline in project: {projects_str}. "
+                f"Please stop and remove the pipeline configuration in that project first."
+            )
+            raise ResourceInUseError(ResourceType.SINK, str(sink.id), msg)
         try:
             deleted = SinkRepository(self._db_session).delete(str(sink.id))
             if not deleted:
@@ -109,3 +128,19 @@ class SinkService:
     def get_active_sink_id(self) -> UUID | None:
         id = SinkRepository(self._db_session).get_active_sink_id()
         return UUID(id) if id else None
+
+    _TEST_TIMEOUT_SECONDS = 5
+
+    def test_sink(self, sink: Sink) -> SinkTestResult:
+        """Perform a connectivity check on the sink."""
+        try:
+            destination = DispatchService.get_destination(sink)
+            if destination is None:
+                return SinkTestResult.failure("Disconnected sink")
+            start = time.monotonic()
+            destination.test()
+
+            elapsed_ms = (time.monotonic() - start) * 1000
+            return SinkTestResult.success(latency_ms=round(elapsed_ms, 1))
+        except Exception as e:
+            return SinkTestResult.failure(str(e))

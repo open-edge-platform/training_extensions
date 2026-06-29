@@ -3,8 +3,8 @@
 
 import { useState } from 'react';
 
-import { ActionButton, AlertDialog, DialogContainer, Item, Key, Menu, MenuTrigger } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
+import { ActionButton, AlertDialog, DialogContainer, Item, Key, Menu, MenuTrigger } from '@geti-ui/ui';
+import { MoreMenu } from '@geti-ui/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Model } from '../../../../../constants/shared-types';
@@ -85,7 +85,7 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
         );
     };
 
-    const modelName = model.name ?? 'Unnamed Model';
+    const modelName = model.name;
 
     return (
         <>
@@ -104,7 +104,7 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
             <DialogContainer onDismiss={() => setIsDialogOpen(null)}>
                 {isDialogOpen === DIALOG_TYPES.RENAME && (
                     <RenameModelDialog
-                        currentName={model.name ?? ''}
+                        currentName={model.name}
                         onRename={handleRename}
                         isPending={renameModelMutation.isPending}
                         onClose={() => setIsDialogOpen(null)}

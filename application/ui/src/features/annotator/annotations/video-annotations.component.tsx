@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { mapServerAnnotationsToLocal } from '../../../shared/annotator/annotation-mappers';
-import { useProjectLabelsWithEmptyLabel } from '../../../shared/annotator/labels';
 import { Annotation } from '../../../shared/types';
 import { DEFAULT_ANNOTATION_STYLES } from '../utils';
 import { useVideoFramesAnnotations } from '../video-player/api/use-video-frames-annotations';
@@ -47,8 +46,6 @@ const AnnotationsRenderer = ({ annotations, width, height, ariaLabel }: Annotati
 export const VideoAnnotations = () => {
     const { step, videoFrame } = useVideoPlayer();
 
-    const labels = useProjectLabelsWithEmptyLabel();
-
     const { data: annotations = [] } = useVideoFramesAnnotations({
         frameNumber: videoFrame.frame_number,
         frameSkip: step,
@@ -56,7 +53,7 @@ export const VideoAnnotations = () => {
             const frameAnnotations =
                 data.find((frame) => frame.frame_index === videoFrame.frame_number)?.annotation_data?.annotations ?? [];
 
-            return mapServerAnnotationsToLocal(frameAnnotations, labels);
+            return mapServerAnnotationsToLocal(frameAnnotations);
         },
     });
 
@@ -73,7 +70,6 @@ export const VideoAnnotations = () => {
 export const VideoPredictions = () => {
     const { videoFrame } = useVideoPlayer();
 
-    const labels = useProjectLabelsWithEmptyLabel();
     const { data: predictions = [] } = useVideoFramesPredictions({
         frameNumber: videoFrame.frame_number,
         frameSkip: PREDICTION_FRAME_SKIP,
@@ -81,7 +77,7 @@ export const VideoPredictions = () => {
         selector: (data) => {
             const idxToPredictionsMap = new Map(data.map((frame) => [frame.media.frame_index, frame.prediction]));
 
-            return mapServerAnnotationsToLocal(idxToPredictionsMap.get(videoFrame.frame_number) ?? [], labels);
+            return mapServerAnnotationsToLocal(idxToPredictionsMap.get(videoFrame.frame_number) ?? []);
         },
     });
 

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Badge, Flex, Grid, Text } from '@geti/ui';
+import { Badge, Flex, Grid, Text } from '@geti-ui/ui';
 
 import type {
     DatasetRevision,
@@ -10,7 +10,7 @@ import type {
 } from '../../../../../constants/shared-types';
 import { formatBytes } from '../../../../../shared/util';
 import { GRID_COLUMNS } from '../../constants';
-import { AccuracyIndicator } from '../../model-variants/accuracy-indicator.component';
+import { AccuracyIndicator } from '../../model-variants/accuracy-indicator/accuracy-indicator.component';
 import { type GroupByMode } from '../../types';
 import { formatTrainingDateTime } from '../../utils/date-formatting';
 import { hasDeletedWeights, isFailedModel } from '../../utils/utils';
@@ -70,7 +70,7 @@ export const ModelRow = ({
             <Flex direction={'column'} gap={'size-50'}>
                 <Flex alignItems={'center'} gap={'size-100'} wrap>
                     <Text UNSAFE_className={classes.modelName} data-testid={'model-name'}>
-                        {model.name ?? 'Unnamed Model'}
+                        {model.name}
                     </Text>
                     {isFailedModel(model) && <FailedModel />}
                     {hasDeletedWeights(model) && <DeletedWeightsModel />}

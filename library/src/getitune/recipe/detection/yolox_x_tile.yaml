@@ -73,7 +73,11 @@ overrides:
             contrast: 0.5
             saturation: 0.5
             hue: 0.05
-      augmentations_gpu: []
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [0.00392156862745098, 0.00392156862745098, 0.00392156862745098]
     val_subset:
       batch_size: 4
       augmentations_cpu:
@@ -82,7 +86,11 @@ overrides:
             size: $(input_size)
             keep_aspect_ratio: false
             resize_targets: false
-      augmentations_gpu: []
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [0.00392156862745098, 0.00392156862745098, 0.00392156862745098]
     test_subset:
       batch_size: 4
       augmentations_cpu:
@@ -91,4 +99,8 @@ overrides:
             size: $(input_size)
             keep_aspect_ratio: false
             resize_targets: false
-      augmentations_gpu: []
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [0.00392156862745098, 0.00392156862745098, 0.00392156862745098]

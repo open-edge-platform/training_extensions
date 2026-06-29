@@ -1,13 +1,23 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from uuid import UUID
+from unittest.mock import MagicMock, patch
+from uuid import UUID, uuid4
 
 import pytest
 
 from app.db.schema import PipelineDB, SourceDB
-from app.models import SourceAdapter
-from app.models.source import VideoFileConfig
+from app.models import SourceAdapter, SourceType
+from app.models.source import (
+    ImagesFolderConfig,
+    ImagesFolderSourceConfig,
+    IPCameraConfig,
+    IPCameraSourceConfig,
+    USBCameraConfig,
+    USBCameraSourceConfig,
+    VideoFileConfig,
+    VideoFileSourceConfig,
+)
 from app.services import ResourceInUseError, ResourceType, SourceUpdateService
 from app.services.base import ResourceWithIdAlreadyExistsError, ResourceWithNameAlreadyExistsError
 from app.services.event.event_bus import EventType
@@ -252,3 +262,145 @@ class TestSourceUpdateServiceIntegration:
         assert exc_info.value.resource_type == ResourceType.SOURCE
         assert exc_info.value.resource_id == db_source.id
         assert db_session.query(SourceDB).count() == 1
+        # Verify the error message includes the project name and state
+        assert "Test Detection Project" in str(exc_info.value)
+        assert "running" in str(exc_info.value)
+
+    def test_test_source_video_file_exists(self, fxt_source_update_service, tmp_path):
+        """Test test_source with a valid video file path (file exists but may not be a valid video)."""
+        video_file = tmp_path / "test.mp4"
+        video_file.write_bytes(b"\x00" * 100)
+
+        source = VideoFileSourceConfig(
+            id=uuid4(),
+            source_type=SourceType.VIDEO_FILE,
+            name="Test Video",
+            config_data=VideoFileConfig(video_path=str(video_file)),
+        )
+
+        result = fxt_source_update_service.test_source(source)
+
+        # File exists but is not a valid video, so cv2 can't open it
+        assert not result.reachable
+        assert "Could not open video source" in result.error
+
+    def test_test_source_video_file_not_found(self, fxt_source_update_service):
+        """Test test_source with a non-existent video file."""
+        source = VideoFileSourceConfig(
+            id=uuid4(),
+            source_type=SourceType.VIDEO_FILE,
+            name="Missing Video",
+            config_data=VideoFileConfig(video_path="/nonexistent/path/video.mp4"),
+        )
+
+        result = fxt_source_update_service.test_source(source)
+
+        assert not result.reachable
+        assert "Could not open video source" in result.error
+
+    def test_test_source_images_folder_exists(self, fxt_source_update_service, tmp_path):
+        """Test test_source with an existing accessible images folder."""
+        source = ImagesFolderSourceConfig(
+            id=uuid4(),
+            source_type=SourceType.IMAGES_FOLDER,
+            name="Test Folder",
+            config_data=ImagesFolderConfig(images_folder_path=str(tmp_path), ignore_existing_images=False),
+        )
+
+        result = fxt_source_update_service.test_source(source)
+
+        assert result.reachable
+        assert result.latency_ms is not None
+
+    def test_test_source_images_folder_not_found(self, fxt_source_update_service):
+        """Test test_source with a non-existent images folder."""
+        source = ImagesFolderSourceConfig(
+            id=uuid4(),
+            source_type=SourceType.IMAGES_FOLDER,
+            name="Missing Folder",
+            config_data=ImagesFolderConfig(images_folder_path="/nonexistent/folder", ignore_existing_images=False),
+        )
+
+        result = fxt_source_update_service.test_source(source)
+
+        assert not result.reachable
+        assert "Directory not found" in result.error
+
+    def test_test_source_usb_camera_not_available(self, fxt_source_update_service):
+        """Test test_source with a USB camera device that is not available."""
+        source = USBCameraSourceConfig(
+            id=uuid4(),
+            source_type=SourceType.USB_CAMERA,
+            name="Unavailable USB Camera",
+            config_data=USBCameraConfig(device_id=999),
+        )
+
+        mock_cap = MagicMock()
+        mock_cap.isOpened.return_value = False
+        with patch("app.stream.usb_camera_stream.cv2.VideoCapture", return_value=mock_cap):
+            result = fxt_source_update_service.test_source(source)
+
+        assert not result.reachable
+        assert "Could not open USB camera device" in result.error
+        mock_cap.release.assert_called()
+
+    def test_test_source_usb_camera_reachable(self, fxt_source_update_service):
+        """Test test_source with a reachable USB camera (mocked cv2 capture)."""
+        source = USBCameraSourceConfig(
+            id=uuid4(),
+            source_type=SourceType.USB_CAMERA,
+            name="Reachable USB Camera",
+            config_data=USBCameraConfig(device_id=0),
+        )
+
+        mock_probe_cap = MagicMock()
+        mock_probe_cap.isOpened.return_value = True
+
+        mock_cap = MagicMock()
+        mock_cap.isOpened.return_value = True
+        mock_cap.read.return_value = (True, MagicMock())
+        with (
+            patch("app.stream.usb_camera_stream.cv2.VideoCapture", return_value=mock_probe_cap),
+            patch("app.stream.base_opencv_stream.cv2.VideoCapture", return_value=mock_cap),
+        ):
+            result = fxt_source_update_service.test_source(source)
+
+        assert result.reachable
+        assert result.latency_ms is not None
+        mock_cap.release.assert_called()
+
+    def test_test_source_ip_camera_unreachable(self, fxt_source_update_service):
+        """Test test_source with an unreachable IP camera stream."""
+        source = IPCameraSourceConfig(
+            id=uuid4(),
+            source_type=SourceType.IP_CAMERA,
+            name="Unreachable IP Camera",
+            config_data=IPCameraConfig(stream_url="rtsp://192.0.2.1:554/stream", auth_required=False),
+        )
+
+        mock_cap = MagicMock()
+        mock_cap.isOpened.return_value = False
+        with patch("app.stream.base_opencv_stream.cv2.VideoCapture", return_value=mock_cap):
+            result = fxt_source_update_service.test_source(source)
+
+        assert not result.reachable
+        assert "Could not open video source" in result.error
+
+    def test_test_source_ip_camera_reachable(self, fxt_source_update_service):
+        """Test test_source with a reachable IP camera (mocked cv2 capture)."""
+        source = IPCameraSourceConfig(
+            id=uuid4(),
+            source_type=SourceType.IP_CAMERA,
+            name="Reachable IP Camera",
+            config_data=IPCameraConfig(stream_url="rtsp://192.168.1.100:554/stream", auth_required=False),
+        )
+
+        mock_cap = MagicMock()
+        mock_cap.isOpened.return_value = True
+        mock_cap.retrieve.return_value = (True, MagicMock())
+        with patch("app.stream.base_opencv_stream.cv2.VideoCapture", return_value=mock_cap):
+            result = fxt_source_update_service.test_source(source)
+
+        assert result.reachable
+        assert result.latency_ms is not None
+        mock_cap.release.assert_called_once()

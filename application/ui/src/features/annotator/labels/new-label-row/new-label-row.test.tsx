@@ -266,8 +266,6 @@ describe('NewLabelRow', () => {
         await user.click(hotkeyInput);
         await user.type(hotkeyInput, '{Enter}');
 
-        screen.debug();
-
         expect(onSave).toHaveBeenCalledWith('MyLabel', '#123456', undefined);
     });
 });

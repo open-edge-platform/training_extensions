@@ -150,8 +150,8 @@ class TestPipelineServiceIntegration:
         # Try to activate the second pipeline while the first is still running
         with pytest.raises(OtherProjectActiveError) as excinfo:
             fxt_pipeline_service.update_pipeline(other_pipeline.project_id, {"status": PipelineStatus.RUNNING})
-        assert str(active_pipeline.project_id) in str(excinfo.value)
         assert active_project_db.name in str(excinfo.value)
+        assert str(active_pipeline.project_id) not in str(excinfo.value)
 
     @pytest.mark.parametrize("pipeline_attr", [PipelineField.SINK_ID, PipelineField.SOURCE_ID])
     def test_reconfigure_running_pipeline(

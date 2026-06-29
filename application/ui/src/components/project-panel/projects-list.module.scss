@@ -1,15 +1,18 @@
 @use '../../shared/styles/line-clamp' as lineClamp;
 
-.panelButtons {
-    padding: var(--spectrum-global-dimension-size-125);
+.buttonsGroup {
+    margin-top: var(--spectrum-global-dimension-size-100);
+    border-top: var(--spectrum-alias-border-size-thick) solid var(--spectrum-global-color-gray-300);
+    padding: 0;
 }
 
-.addProjectButton {
+.manageProjectsButton {
     color: var(--spectrum-global-color-gray-900);
+    padding: var(--spectrum-global-dimension-size-275) var(--spectrum-global-dimension-size-350);
 
     & span[class*='spectrum-ActionButton-label'] {
         text-align: start;
-        margin-left: var(--spectrum-global-dimension-size-100) !important;
+        margin-left: var(--spectrum-global-dimension-size-150) !important;
     }
 }
 
@@ -18,13 +21,24 @@
         --spectrum-dialog-padding-x: 0;
         --spectrum-dialog-padding-y: 0;
     }
+
+    & section[class*='Dialog-content'] {
+        padding: 0;
+    }
 }
 
-.projectName {
+.selectedProjectName {
     @include lineClamp.clamp(3);
+    @include lineClamp.breakableText;
 
     text-align: start;
     font-size: var(--spectrum-global-dimension-size-150);
+}
+
+.dialogProjectName {
+    @include lineClamp.breakableText;
+
+    text-align: center;
 }
 
 .statusTag {
@@ -37,7 +51,5 @@
 }
 
 .selectedProjectButton {
-    display: flex;
-    justify-content: start;
-    flex: 1;
+    padding: var(--spectrum-global-dimension-size-100) var(--spectrum-global-dimension-size-150);
 }

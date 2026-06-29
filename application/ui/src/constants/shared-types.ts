@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { components } from '../api/openapi-spec';
+import type { components, operations } from '../api/openapi-spec';
 
 export type Label = components['schemas']['LabelView'];
 
@@ -61,6 +61,13 @@ export type DatasetRevision = components['schemas']['DatasetRevisionView'];
 export type DatasetRevisionItem = components['schemas']['DatasetRevisionItemView'];
 
 export type Project = components['schemas']['ProjectView'];
+export type ProjectCreate = components['schemas']['ProjectCreate'];
+export type CreateProjectRequest =
+    operations['create_project_api_projects_post']['requestBody']['content']['application/json'];
+export type CreateProjectResponse =
+    operations['create_project_api_projects_post']['responses'][201]['content']['application/json'];
+export type CreateProjectTaskType = CreateProjectRequest['task']['task_type'];
+export type CreateProjectLabelName = NonNullable<CreateProjectRequest['task']['labels']>[number]['name'];
 
 export type TaskType = components['schemas']['TaskType'];
 export type Task = components['schemas']['TaskView'];
@@ -80,15 +87,15 @@ export type SourceConfig =
 
 export type SourceConfigPayload = Exclude<SourceConfig, DisconnectedSourceConfig>;
 
-export type AnnotationDTO = components['schemas']['DatasetItemAnnotation-Input'];
-export type PredictionDTO = components['schemas']['DatasetItemAnnotation-Output'];
+export type AnnotationDTO = components['schemas']['DatasetItemAnnotation'];
+export type PredictionDTO = components['schemas']['DatasetItemAnnotation'];
 export type DatasetItemAnnotationStatus = components['schemas']['DatasetItemAnnotationStatus'];
 export type FilterByStatusKey = 'all' | DatasetItemAnnotationStatus;
 
 export type AnnotatedVideoFrame = components['schemas']['AnnotatedVideoFrame'];
 export type VideoFramePrediction = {
     media: components['schemas']['BatchInferenceMedia'];
-    prediction: components['schemas']['DatasetItemAnnotation-Output'][];
+    prediction: components['schemas']['DatasetItemAnnotation'][];
 };
 
 export type PredictionVideoRangePayload = components['schemas']['VideoRange'];
@@ -134,3 +141,4 @@ export type Pagination = components['schemas']['Pagination'];
 export type MediaWithPagination = components['schemas']['MediaWithPagination'];
 export type DatasetFormat = components['schemas']['DatasetFormat'];
 export type DeviceInfo = components['schemas']['DeviceInfoView'];
+export type MediaListPredictionRequest = components['schemas']['MediaListPredictionRequest'];
