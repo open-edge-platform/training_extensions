@@ -86,17 +86,17 @@ fn locate_backend(exe_dir: &std::path::Path) -> PathBuf {
 /// inherited environment doesn't already provide one, so callers can override.
 fn apply_default_env(command: &mut Command, app: &AppHandle) {
     // The Tauri 2 webview loads the UI from `tauri://localhost` on macOS/Linux
-    // and `http://tauri.localhost` on Windows (default `useHttpsScheme=false`).
-    // Both must be in the backend's CORS allowlist or every fetch from the UI
-    // is rejected. Set this unconditionally — a stale value in the user's
-    // shell or a `.env` file shadowing the default would silently break the
-    // app with cryptic CORS errors. In `tauri dev` the webview also loads
-    // from the rsbuild dev server at http://localhost:3000 (see
+    // and `https://tauri.localhost` on Windows (we enable `useHttpsScheme=true`
+    // in tauri.conf.json). Both must be in the backend's CORS allowlist or every
+    // fetch from the UI is rejected. Set this unconditionally — a stale value in
+    // the user's shell or a `.env` file shadowing the default would silently
+    // break the app with cryptic CORS errors. In `tauri dev` the webview also
+    // loads from the rsbuild dev server at http://localhost:3000 (see
     // tauri.conf.json `devUrl`), so that origin must be allowed too.
     #[cfg(debug_assertions)]
-    let cors_origins = "tauri://localhost,http://tauri.localhost,http://localhost:3000";
+    let cors_origins = "tauri://localhost,https://tauri.localhost,http://localhost:3000";
     #[cfg(not(debug_assertions))]
-    let cors_origins = "tauri://localhost,http://tauri.localhost";
+    let cors_origins = "tauri://localhost,https://tauri.localhost";
     command.env("CORS_ORIGINS", cors_origins);
 
     // Resolve OS-conventional per-user dirs via Tauri (driven by the bundle

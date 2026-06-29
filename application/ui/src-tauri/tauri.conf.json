@@ -19,8 +19,9 @@
                 "minHeight": 600,
                 "resizable": true,
                 "fullscreen": false,
+                "useHttpsScheme": true,
                 "dragDropEnabled": false,
-                "additionalBrowserArgs": "--enable-unsafe-webgpu --enable-features=Vulkan"
+                "additionalBrowserArgs": "--enable-unsafe-webgpu --enable-features=Vulkan --ignore-certificate-errors --unsafely-treat-insecure-origin-as-secure=https://localhost:7860"
             }
         ],
         "security": {
