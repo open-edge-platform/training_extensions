@@ -98,13 +98,23 @@ jobs:
               continue
             fi
 
-            # Fetch all versions with their first tag and creation date.
+            # Fetch all versions with their first tag and creation date, then normalize it to a JSON array
+            raw_versions="$(gh api --paginate "${api_scope}/packages/container/${package_url}/versions?per_page=100")"
+
             versions_json="$(
-              gh api --paginate \
-                "${api_scope}/packages/container/${package_url}/versions?per_page=100" \
-                --jq '[.[] | {id, tags: (.metadata.container.tags // []), created_at}]' \
-                | jq -s 'add'
+              printf '%s\n' "${raw_versions}" | \
+              jq -sc '
+                  map(
+                    if type=="array" then .[] else . end
+                  ) |
+                  map({id, tags: (.metadata.container.tags // []), created_at})
+              '
             )"
+
+            if ! echo "${versions_json}" | jq -e 'type=="array"' >/dev/null; then
+              echo "::error::Failed to parse package versions JSON for ${package}"
+              exit 1
+            fi
 
             # Count release versions retained (semver "X.Y.Z", RC "X.Y.ZrcN" tag or "latest").
             pkg_retained="$(
