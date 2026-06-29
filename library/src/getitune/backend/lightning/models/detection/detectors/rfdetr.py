@@ -14,8 +14,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
-from rfdetr.datasets.coco import compute_multi_scale_scales
-from rfdetr.util.misc import nested_tensor_from_tensor_list
+from rfdetr.utilities.tensors import nested_tensor_from_tensor_list
 from torch import Tensor, nn
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxes
@@ -23,7 +22,20 @@ from torchvision.tv_tensors import BoundingBoxes
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
-    from jsonargparse import Namespace
+    from types import SimpleNamespace
+
+
+def _compute_multi_scale_scales(
+    resolution: int,
+    expanded_scales: bool = False,
+    patch_size: int = 16,
+    num_windows: int = 4,
+) -> list[int]:
+    base_num_patches_per_window = resolution // (patch_size * num_windows)
+    offsets = [-3, -2, -1, 0, 1, 2, 3, 4] if not expanded_scales else [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]
+    scales = [base_num_patches_per_window + offset for offset in offsets]
+    proposed_scales = [scale * patch_size * num_windows for scale in scales]
+    return [scale for scale in proposed_scales if scale >= patch_size * num_windows * 2]
 
 
 class RFDETRDetector(BaseModule):
@@ -45,7 +57,7 @@ class RFDETRDetector(BaseModule):
         lwdetr_model: nn.Module,
         criterion: nn.Module,
         postprocessor: nn.Module,
-        rfdetr_args: Namespace,
+        rfdetr_args: SimpleNamespace,
         input_size: int = 560,
         multi_scale: bool = False,
     ) -> None:
@@ -58,7 +70,7 @@ class RFDETRDetector(BaseModule):
 
         # Store scales for multi-scale training
         self.scales = (
-            compute_multi_scale_scales(
+            _compute_multi_scale_scales(
                 rfdetr_args.resolution, rfdetr_args.expanded_scales, rfdetr_args.patch_size, rfdetr_args.num_windows
             )
             if multi_scale
@@ -130,6 +142,15 @@ class RFDETRDetector(BaseModule):
         target_sizes = torch.tensor(original_sizes, device=pred_logits.device)
         results = self.postprocessor(outputs, target_sizes)
 
+        num_fg = pred_logits.shape[-1] - 1
+        for r in results:
+            fg = r["labels"] < num_fg
+            r["scores"] = r["scores"][fg]
+            r["labels"] = r["labels"][fg]
+            r["boxes"] = r["boxes"][fg]
+            if "masks" in r:
+                r["masks"] = r["masks"][fg]
+
         scores_list: list[Tensor] = []
         boxes_list: list[BoundingBoxes] = []
         labels_list: list[Tensor] = []
@@ -182,16 +203,17 @@ class RFDETRDetector(BaseModule):
         else:
             pred_boxes, pred_logits = outputs
             pred_masks = None
-        # Process outputs similar to PostProcess
-        scores = torch.sigmoid(pred_logits)
+        # Process outputs similar to PostProcess, but exclude background logit
+        # so that labels stay in [0, N-1] (trace-safe; mask-based filtering is not).
+        scores = torch.sigmoid(pred_logits[:, :, :-1])
         # Clamp num_select to available elements
         num_elements = scores.shape[1] * scores.shape[2]
         k = min(num_select, num_elements)
+        num_fg = pred_logits.shape[-1] - 1
         scores, index = torch.topk(scores.flatten(1), k, dim=-1)
 
-        num_classes = pred_logits.shape[-1]
-        labels = index % num_classes
-        box_index = index // num_classes
+        labels = index % num_fg
+        box_index = index // num_fg
         boxes = pred_boxes.gather(
             dim=1,
             index=box_index.unsqueeze(-1).repeat(1, 1, pred_boxes.shape[-1]),

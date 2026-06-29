@@ -8,7 +8,7 @@ pretrained_weights:
 
 description: "RF-DETR for instance segmentation extends the RF-DETR object detector with mask prediction capabilities, providing high-accuracy instance segmentation with real-time performance."
 stats:
-  gigaflops: 70.6
+  gigaflops: 62.0
   trainable_parameters: 33.7
   benchmark_metrics:
     coco_map_50_95: 43.1
