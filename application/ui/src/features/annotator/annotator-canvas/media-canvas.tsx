@@ -3,7 +3,7 @@
 
 import { MouseEvent, PointerEvent, ReactNode, RefObject, useRef } from 'react';
 
-import { Loading } from '@geti/ui';
+import { Loading } from '@geti-ui/ui';
 import { useIsFetching } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useSpinDelay } from 'spin-delay';

@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Badge, dimensionValue, Flex, Heading, Text, View } from '@geti/ui';
+import { Badge, dimensionValue, Flex, Heading, Text, View } from '@geti-ui/ui';
 import { clsx } from 'clsx';
 import { NavLink } from 'react-router-dom';
 

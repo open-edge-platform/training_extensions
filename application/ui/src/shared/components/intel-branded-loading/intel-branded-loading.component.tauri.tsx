@@ -6,7 +6,7 @@
 // pure-CSS spinner so the embedded webview doesn't decode a frame per ~16ms
 // while the main thread is busy bootstrapping WASM / OpenCV / SAM workers.
 
-import { Flex, Loading } from '@geti/ui';
+import { Flex, Loading } from '@geti-ui/ui';
 
 type IntelBrandedLoadingProps = {
     height?: string;

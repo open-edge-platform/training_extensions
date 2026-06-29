@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { Badge, Flex, Text } from '@geti/ui';
+import { Badge, Flex, Text } from '@geti-ui/ui';
 
 import styles from './model-row.module.scss';
 

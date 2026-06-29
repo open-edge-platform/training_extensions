@@ -3,7 +3,7 @@
 
 import { Suspense } from 'react';
 
-import { Loading } from '@geti/ui';
+import { Loading } from '@geti-ui/ui';
 
 import { InferenceDevices } from '../../../../../components/inference-devices/inference-devices.component';
 import { usePredictionSetup } from '../../../../annotator/predictions-setup-provider.component';

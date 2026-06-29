@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Image, View } from '@geti/ui';
+import { Image, View } from '@geti-ui/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { MediaVideoFrame } from '../../../../../../../constants/shared-types';

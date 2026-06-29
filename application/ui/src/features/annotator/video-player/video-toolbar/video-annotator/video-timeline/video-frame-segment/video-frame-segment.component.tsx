@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { Flex, View } from '@geti/ui';
+import { Flex, View } from '@geti-ui/ui';
 import { isEmpty } from 'lodash-es';
 import { useNumberFormatter } from 'react-aria';
 

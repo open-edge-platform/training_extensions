@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { ViewModes } from '@geti/ui';
+import { ViewModes } from '@geti-ui/ui';
 import { screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedMediaImage } from 'mocks/mock-media';
@@ -40,8 +40,8 @@ vi.mock('../../../components/virtualizer-grid-layout/virtualizer-grid-layout.com
     ),
 }));
 
-vi.mock('@geti/ui', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('@geti/ui')>();
+vi.mock('@geti-ui/ui', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('@geti-ui/ui')>();
     return {
         ...actual,
         AriaDropZone: ({

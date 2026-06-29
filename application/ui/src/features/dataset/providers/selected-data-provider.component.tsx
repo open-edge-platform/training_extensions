@@ -3,7 +3,7 @@
 
 import { createContext, ReactNode, useContext, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 
-import { Selection } from '@geti/ui';
+import { Selection } from '@geti-ui/ui';
 
 type SelectedDataState = null | {
     selectedKeys: Selection;

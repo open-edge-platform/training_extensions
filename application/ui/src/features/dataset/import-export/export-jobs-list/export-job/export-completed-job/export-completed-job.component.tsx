@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Divider, Flex, Text, View } from '@geti/ui';
+import { Button, Divider, Flex, Text, View } from '@geti-ui/ui';
 import { useDeleteStagedDataset, useStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { isNil } from 'lodash-es';
 

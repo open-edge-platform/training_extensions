@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Flex, View } from '@geti/ui';
+import { Divider, Flex, View } from '@geti-ui/ui';
 
 import { ModelArchitecturesList } from './model-architectures-list/model-architectures-list.component';
 import { SelectDatasetRevision } from './select-dataset-revision.component';

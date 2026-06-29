@@ -3,7 +3,7 @@
 
 import { Dispatch, SetStateAction } from 'react';
 
-import { Flex } from '@geti/ui';
+import { Flex } from '@geti-ui/ui';
 
 import { toast } from '../../../components/toast/toast.component';
 import type { Label, TaskType } from '../../../constants/shared-types';

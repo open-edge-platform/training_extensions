@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Item, Picker, Section } from '@geti/ui';
+import { Item, Picker, Section } from '@geti-ui/ui';
 
 import { SORT_BY_OPTIONS, SortBy } from './utils';
 

@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
+import { View } from '@geti-ui/ui';
 import { isJobDone, isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isNil, isString } from 'lodash-es';

@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Content, dimensionValue, Flex, Grid, Meter, Text } from '@geti/ui';
+import { Content, dimensionValue, Flex, Grid, Meter, Text } from '@geti-ui/ui';
 import { useDatasetStatistics } from 'hooks/api/dataset.hook';
 import { isEmpty } from 'lodash-es';
 

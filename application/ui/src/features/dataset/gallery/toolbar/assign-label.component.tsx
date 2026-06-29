@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Button } from '@geti/ui';
+import { Button } from '@geti-ui/ui';
 import { useProject } from 'hooks/api/project.hook';
 import { isEmpty } from 'lodash-es';
 

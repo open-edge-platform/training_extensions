@@ -98,6 +98,6 @@ describe('DatasetActions', () => {
 
         await userEvent.click(screen.getByRole('menuitem', { name: 'Export' }));
 
-        expect(screen.getByRole('heading', { name: 'Exported dataset statistics' })).toBeVisible();
+        expect(await screen.findByRole('heading', { name: 'Exported dataset statistics' })).toBeVisible();
     });
 });

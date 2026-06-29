@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Item, NumberField, Picker, TextField } from '@geti/ui';
+import { Flex, Item, NumberField, Picker, TextField } from '@geti-ui/ui';
 
 import { OutputFormats } from '../output-formats/output-formats.component';
 import { RateLimitFields } from '../rate-limit/rate-limit-fields.component';

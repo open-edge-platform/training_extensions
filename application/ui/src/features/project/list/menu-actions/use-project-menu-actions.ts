@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Key } from '@geti/ui';
+import { Key } from '@geti-ui/ui';
 import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
 
 import { toast } from '../../../../components/toast/toast.component';

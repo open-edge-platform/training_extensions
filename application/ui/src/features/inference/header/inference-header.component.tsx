@@ -3,7 +3,7 @@
 
 import { Suspense } from 'react';
 
-import { Flex, View } from '@geti/ui';
+import { Flex, View } from '@geti-ui/ui';
 
 import { ActiveModel } from './active-model.component';
 import { TogglePipelineButton } from './toggle-pipeline-button.component';

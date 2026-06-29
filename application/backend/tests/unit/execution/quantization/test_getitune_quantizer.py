@@ -409,7 +409,7 @@ class TestGetiTuneQuantizerInitializeEngine:
             / "model.xml"
         )
 
-        with patch("app.execution.quantization.getitune_quantizer.OVEngine") as mock_engine_cls:
+        with patch("getitune.backend.openvino.engine.OVEngine") as mock_engine_cls:
             mock_engine_cls.return_value = Mock(spec=OVEngine)
 
             engine = quantizer.initialize_engine(
