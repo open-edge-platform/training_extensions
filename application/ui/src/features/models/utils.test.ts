@@ -155,14 +155,20 @@ describe('getModelIdentifierPayload', () => {
 
 describe('isUltralyticsModel', () => {
     it('returns true for ultralytics model identifier', () => {
-        expect(isUltralyticsModel('object-detection-yolo26-m')).toBe(true);
-        expect(isUltralyticsModel('OBJECT-DETECTION-YOLO26-M')).toBe(true);
-        expect(isUltralyticsModel('object-detection-yolo11-n')).toBe(true);
-        expect(isUltralyticsModel('OBJECT-DETECTION-YOLO11-N')).toBe(true);
-        expect(isUltralyticsModel('object-detection-yolo12-s')).toBe(true);
-        expect(isUltralyticsModel('OBJECT-DETECTION-YOLO12-S')).toBe(true);
-        expect(isUltralyticsModel('instance-segmentation-yolo11-l')).toBe(true);
-        expect(isUltralyticsModel('instance-segmentation-yolo12-x')).toBe(true);
+        const models = [
+            'object-detection-yolo26-m',
+            'OBJECT-DETECTION-YOLO26-M',
+            'object-detection-yolo11-n',
+            'OBJECT-DETECTION-YOLO11-N',
+            'object-detection-yolo12-s',
+            'OBJECT-DETECTION-YOLO12-S',
+            'instance-segmentation-yolo11-l',
+            'instance-segmentation-yolo12-x',
+        ];
+
+        models.forEach((model) => {
+            expect(isUltralyticsModel(model)).toBe(true);
+        });
     });
 
     it('returns false for non ultralytics model identifier', () => {

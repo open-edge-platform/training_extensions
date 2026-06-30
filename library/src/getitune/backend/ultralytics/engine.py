@@ -35,6 +35,7 @@ from .models.base import UltralyticsModel
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
+    from pytorch_lightning.trainer.connectors.accelerator_connector import _PRECISION_INPUT
     from torchmetrics import Metric
     from ultralytics import YOLO
 
@@ -128,7 +129,7 @@ class UltralyticsEngine(Engine):
         batch: int | None = None,
         lr0: float | None = None,
         patience: int | None = None,
-        precision: str | None = "16-mixed",
+        precision: _PRECISION_INPUT | None = "16-mixed",
         callbacks: list[Any] | None = None,
         **kwargs,
     ) -> METRICS:
@@ -139,14 +140,13 @@ class UltralyticsEngine(Engine):
             batch: Batch size.
             lr0: Initial learning rate.
             patience: Early stopping patience (0 to disable).
-            precision: Training precision.  Accepted values (same strings as
-                Lightning): ``"16-mixed"``, ``"16"``, ``"bf16-mixed"``,
+            precision: Training precision.  Accepted values: ``"16-mixed"``, ``"16"``, ``"bf16-mixed"``,
                 ``"bf16"`` (mixed precision / AMP), ``"32"``, ``"32-true"``
                 (full FP32).  ``None`` leaves the Ultralytics default
                 (``amp=True``, i.e. FP16).  On CPU any FP16/BF16 variant is
-                silently downgraded to FP32.  On XPU the mixin converts the
-                model to BF16 regardless of whether ``"16"`` or ``"bf16"`` was
-                requested.
+                downgraded to FP32 (a warning is logged).  On XPU the mixin
+                converts the model to BF16 regardless of whether ``"16"`` or
+                ``"bf16"`` was requested.
             callbacks: Accepted for API compatibility; unused by Ultralytics.
             **kwargs: Additional overrides forwarded to Ultralytics training.
 
@@ -1096,12 +1096,14 @@ class UltralyticsEngine(Engine):
         return torch.device(device)
 
     @staticmethod
-    def _precision_to_amp(precision: str | None, device: torch.device) -> bool | None:
+    def _precision_to_amp(precision: _PRECISION_INPUT | None, device: torch.device) -> bool | None:
         """Map a Lightning-style precision string to Ultralytics' ``amp`` flag.
 
         Args:
-            precision: One of ``"16-mixed"``, ``"16"``, ``"bf16-mixed"``,
-                ``"bf16"`` (mixed precision), ``"32"``, ``"32-true"`` (FP32),
+            precision: One of Lightning supported precisions: ``64, 32, 16,
+                'transformer-engine', 'transformer-engine-float16',
+                '16-true', '16-mixed', 'bf16-true', 'bf16-mixed', '32-true',
+                '64-true', '64', '32', '16', 'bf16'``,
                 or ``None`` to leave the Ultralytics default (``amp=True``).
             device: The training device.  CPU does not support AMP; any FP16/
                 BF16 variant is downgraded to FP32 with a warning.
@@ -1109,25 +1111,24 @@ class UltralyticsEngine(Engine):
         Returns:
             ``True`` to enable AMP, ``False`` to disable it, or ``None`` to
             leave the Ultralytics default unchanged.
-
-        Raises:
-            ValueError: If *precision* is an unrecognised string.
         """
         if precision is None:
             return None
 
-        _fp16_precisions = {"16-mixed", "16", "bf16-mixed", "bf16"}
-        _fp32_precisions = {"32", "32-true"}
-
-        if precision in _fp32_precisions:
-            return False
-
-        if precision in _fp16_precisions:
+        if precision in (
+            "16-mixed",
+            "16",
+            16,
+            "bf16-mixed",
+            "bf16",
+            "16-true",
+            "16-mix",
+            "transformer-engine-float16",
+            "bf16-true",
+        ):
             if device.type == "cpu":
                 logger.warning(f"precision={precision!r} is not supported on CPU; falling back to FP32 (amp=False)")
                 return False
             return True
 
-        valid = _fp16_precisions | _fp32_precisions
-        msg = f"Unknown precision {precision!r}; expected one of {sorted(valid)} or None"
-        raise ValueError(msg)
+        return False

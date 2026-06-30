@@ -4,7 +4,7 @@ license: AGPL-3.0
 
 pretrained_weights:
   url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo12n.pt
-  mirror_url: ""
+  mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo12n.pt
   sha_sum: "419ff3dca37d69bacc93a50fa0c186a1c6f9fe62fae0f108b0872829689e9ca6"
 
 description: "YOLO12-N is the nano Ultralytics YOLO12 detection model. It is optimized for fast fine-tuning and low-latency inference while using the Geti Tune data pipeline for preprocessing and dataset handling."

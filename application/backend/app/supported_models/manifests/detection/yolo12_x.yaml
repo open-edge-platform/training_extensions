@@ -4,7 +4,7 @@ license: AGPL-3.0
 
 pretrained_weights:
   url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo12x.pt
-  mirror_url: ""
+  mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo12x.pt
   sha_sum: "682ce8dadee004dbe964950f1bf3eda451671815a6ed62db80b398916b9b7c6f"
 
 description: "YOLO12-X is the extra-large Ultralytics YOLO12 detection model. It targets maximum accuracy while using the Geti Tune data pipeline for preprocessing and dataset handling."

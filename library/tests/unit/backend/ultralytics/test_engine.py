@@ -424,15 +424,12 @@ class TestPrecisionToAmp:
         for dev in [torch.device("cpu"), torch.device("cuda"), torch.device("xpu")]:
             assert UltralyticsEngine._precision_to_amp(None, dev) is None
 
-    def test_unknown_precision_raises(self) -> None:
-        with pytest.raises(ValueError, match="Unknown precision"):
-            UltralyticsEngine._precision_to_amp("fp16", torch.device("cuda"))
-
     def test_none_precision_does_not_inject_amp_into_train_args(self, mocker, tmp_path) -> None:
         """When precision=None, the 'amp' key must be absent from train kwargs."""
         model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         datamodule = mocker.MagicMock(spec=DataModule)
-        engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cuda")
+        engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
+        engine._device = torch.device("cuda")  # no actual CUDA access needed
 
         yolo = MagicMock()
         model._yolo = yolo
@@ -445,7 +442,8 @@ class TestPrecisionToAmp:
         """precision='32' must inject amp=False regardless of device."""
         model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         datamodule = mocker.MagicMock(spec=DataModule)
-        engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cuda")
+        engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
+        engine._device = torch.device("cuda")
 
         yolo = MagicMock()
         model._yolo = yolo
@@ -458,7 +456,8 @@ class TestPrecisionToAmp:
         """precision='16-mixed' on CUDA must inject amp=True."""
         model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
         datamodule = mocker.MagicMock(spec=DataModule)
-        engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cuda")
+        engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
+        engine._device = torch.device("cuda")
 
         yolo = MagicMock()
         model._yolo = yolo

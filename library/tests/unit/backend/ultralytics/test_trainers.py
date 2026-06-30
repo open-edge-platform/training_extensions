@@ -85,6 +85,7 @@ def test_move_batch_to_device_uses_non_blocking_for_xpu() -> None:
 
     trainer = object.__new__(DetectionTrainer)
     trainer.device = torch.device("xpu:0")
+    trainer.args = SimpleNamespace(amp=True)
 
     tensor = MagicMock(spec=torch.Tensor)
     tensor.to.return_value = tensor
