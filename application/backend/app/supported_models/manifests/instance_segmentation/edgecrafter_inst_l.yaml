@@ -1,0 +1,56 @@
+id: instance-segmentation-edgecrafter-l
+name: ECSeg-L
+
+pretrained_weights:
+  url: https://github.com/capsule2077/edgecrafter/releases/download/edgecrafterv1/ecseg_l.pth
+  mirror_url: https://huggingface.co/Intellindust/ECSeg_L/resolve/main/model.safetensors
+  sha_sum: 6fa7e8ffdd277feeef44bb1b8046315ae860023af9432bb75ecf400d74fe2396
+
+description: "EdgeCrafter instance segmentation model (ECSeg-L) extends ECDet with a mask prediction head for high-accuracy real-time instance segmentation."
+
+stats:
+  gigaflops: 111.0
+  trainable_parameters: 34.0
+  benchmark_metrics:
+    coco_map_50_95: 47.1
+
+capabilities:
+  tiling: false
+
+hyperparameters:
+  training:
+    learning_rate: 0.0002
+    weight_decay: 0.0001
+    early_stopping:
+      patience: 15
+    scheduler:
+      factor: 0.1
+      patience: 10
+    gradient_clip:
+      enable: true
+      max_grad_norm: 0.1
+    allowed_values_input_size:
+      - 320
+      - 448
+      - 512
+      - 576
+      - 640
+      - 704
+      - 768
+      - 896
+    input_size_width: 640
+    input_size_height: 640
+  dataset_preparation:
+    augmentation:
+      random_zoom_out:
+        enable: true
+        fill: 0
+        side_range:
+          - 1.0
+          - 4.0
+        probability: 0.5
+      iou_random_crop:
+        enable: true
+        probability: 1.0
+        min_scale: 0.3
+        max_scale: 1.0

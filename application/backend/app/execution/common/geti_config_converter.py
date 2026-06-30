@@ -777,6 +777,26 @@ class GetiConfigConverter:
                 "status": ModelStatus.ACTIVE,
                 "default": False,
             },
+            "object-detection-edgecrafter-s": {
+                "recipe_path": RECIPE_PATH / "detection" / "edgecrafter_s.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-edgecrafter-m": {
+                "recipe_path": RECIPE_PATH / "detection" / "edgecrafter_m.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-edgecrafter-l": {
+                "recipe_path": RECIPE_PATH / "detection" / "edgecrafter_l.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-edgecrafter-x": {
+                "recipe_path": RECIPE_PATH / "detection" / "edgecrafter_x.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
             "object-detection-dinov3-detr-s": {
                 "recipe_path": RECIPE_PATH / "detection" / "deimv2_s.yaml",
                 "status": ModelStatus.ACTIVE,
@@ -856,6 +876,26 @@ class GetiConfigConverter:
             "instance-segmentation-rfdetr-2xl": {
                 "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_2xlarge.yaml",
                 "status": ModelStatus.ACCURACY,
+                "default": False,
+            },
+            "instance-segmentation-edgecrafter-s": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "edgecrafter_inst_s.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-edgecrafter-m": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "edgecrafter_inst_m.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-edgecrafter-l": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "edgecrafter_inst_l.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-edgecrafter-x": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "edgecrafter_inst_x.yaml",
+                "status": ModelStatus.ACTIVE,
                 "default": False,
             },
             "instance-segmentation-yolo26-n": {
