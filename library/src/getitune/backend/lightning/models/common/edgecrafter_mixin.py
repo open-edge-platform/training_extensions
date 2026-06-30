@@ -4,7 +4,6 @@
 """EdgeCrafter Mixin providing shared logic for Detection and Instance Segmentation models.
 
 Modified from EdgeCrafter (https://github.com/Intellindust-AI-Lab/EdgeCrafter).
-Copyright (c) 2026 The EdgeCrafter Authors. All Rights Reserved.
 """
 
 from __future__ import annotations
