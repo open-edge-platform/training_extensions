@@ -5,7 +5,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
+
+if TYPE_CHECKING:
+    from getitune.backend.lightning.models.detection.heads.ec_decoder import ECTransformer
 
 import torch
 from torch import Tensor
@@ -44,7 +47,7 @@ class ECDETRDetector(DETR):
     def _forward_features(
         self,
         images: Tensor,
-        targets: list[dict] | None = None,
+        targets: object = None,
     ) -> dict[str, Any]:
         """Backbone → encoder → decoder forward with spatial feature propagation.
 
@@ -62,7 +65,7 @@ class ECDETRDetector(DETR):
         """
         backbone_feats = self.backbone(images)
         encoder_feats = self.encoder(backbone_feats)
-        return self.decoder(encoder_feats, targets, spatial_feat=backbone_feats[0])
+        return self.decoder(encoder_feats, cast("list[dict] | None", targets), spatial_feat=backbone_feats[0])
 
     def postprocess(
         self,
@@ -92,7 +95,7 @@ class ECDETRDetector(DETR):
         device = outputs["pred_logits"].device
         sizes_tensor = torch.tensor(original_sizes, device=device, dtype=torch.float32)  # [B, 2] as (H, W)
 
-        results = self.decoder.postprocess(outputs, sizes_tensor, self.num_top_queries)
+        results = cast("ECTransformer", self.decoder).postprocess(outputs, sizes_tensor, self.num_top_queries)
 
         has_masks = bool(results) and "masks" in results[0]
 
@@ -112,7 +115,11 @@ class ECDETRDetector(DETR):
 
         for res, orig_size in zip(results, original_sizes):
             scores_list.append(res["scores"])
-            boxes_list.append(BoundingBoxes(res["boxes"], format="xyxy", canvas_size=orig_size))
+            boxes_list.append(
+                BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
+                    res["boxes"], format="xyxy", canvas_size=orig_size
+                )
+            )
             labels_list.append(res["labels"].long())
             if has_masks:
                 masks_list.append(res["masks"])

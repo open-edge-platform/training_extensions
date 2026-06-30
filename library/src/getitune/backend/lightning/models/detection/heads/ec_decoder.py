@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import copy
 from collections import OrderedDict
-from typing import Any, ClassVar
+from typing import Any, cast
 
 import torch
 import torch.nn.functional as F  # noqa: N812
@@ -36,7 +36,7 @@ __all__ = ["ECTransformer"]
 # Per-model hyper-parameters
 # ---------------------------------------------------------------------------
 
-_MODEL_CFGS: ClassVar[dict[str, dict[str, Any]]] = {
+_MODEL_CFGS: dict[str, dict[str, Any]] = {
     "edgecrafter_s": {
         "hidden_dim": 192,
         "num_heads": 8,
@@ -137,8 +137,9 @@ class LQE(nn.Module):
         self.k = k
         self.reg_max = reg_max
         self.reg_conf = MLP(4 * (k + 1), hidden_dim, 1, num_layers, act=act)
-        init.constant_(self.reg_conf.layers[-1].bias, 0)
-        init.constant_(self.reg_conf.layers[-1].weight, 0)
+        _reg_last = cast("nn.Linear", self.reg_conf.layers[-1])
+        init.constant_(_reg_last.bias, 0)
+        init.constant_(_reg_last.weight, 0)
 
     def forward(self, scores: Tensor, pred_corners: Tensor) -> Tensor:
         """Forward pass."""
@@ -437,6 +438,10 @@ class ECTransformerDecoder(nn.Module):
         ref_points_detach = F.sigmoid(ref_points_unact)
         query_pos_embed = query_pos_head(ref_points_detach).clamp(min=-10, max=10)
 
+        ref_points_initial = ref_points_detach
+        pre_bboxes = ref_points_detach
+        pre_scores: Tensor = ref_points_detach
+
         for i, layer in enumerate(self.layers):
             ref_points_input = ref_points_detach.unsqueeze(2)
 
@@ -603,7 +608,7 @@ class ECTransformer(nn.Module):
                 in_dim=hidden_dim,
                 num_blocks=num_layers,
                 downsample_ratio=mask_downsample_ratio,
-                image_size=self.eval_spatial_size,
+                image_size=cast("tuple[int, int]", self.eval_spatial_size),
             )
 
         self.decoder = ECTransformerDecoder(
@@ -671,44 +676,41 @@ class ECTransformer(nn.Module):
             if in_ch == self.hidden_dim:
                 self.input_proj.append(nn.Identity())
             else:
-                self.input_proj.append(
-                    nn.Sequential(
-                        OrderedDict(
-                            [
-                                ("conv", nn.Conv2d(in_ch, self.hidden_dim, 1, bias=False)),
-                                ("norm", nn.BatchNorm2d(self.hidden_dim)),
-                            ]
-                        )
-                    )
-                )
+                _layers1: list[tuple[str, nn.Module]] = [
+                    ("conv", nn.Conv2d(in_ch, self.hidden_dim, 1, bias=False)),
+                    ("norm", nn.BatchNorm2d(self.hidden_dim)),
+                ]
+                self.input_proj.append(nn.Sequential(OrderedDict(_layers1)))
         for _ in range(self.num_levels - len(feat_channels)):
             in_ch = feat_channels[-1]
-            self.input_proj.append(
-                nn.Sequential(
-                    OrderedDict(
-                        [
-                            ("conv", nn.Conv2d(in_ch, self.hidden_dim, 3, 2, padding=1, bias=False)),
-                            ("norm", nn.BatchNorm2d(self.hidden_dim)),
-                        ]
-                    )
-                )
-            )
+            _layers2: list[tuple[str, nn.Module]] = [
+                ("conv", nn.Conv2d(in_ch, self.hidden_dim, 3, 2, padding=1, bias=False)),
+                ("norm", nn.BatchNorm2d(self.hidden_dim)),
+            ]
+            self.input_proj.append(nn.Sequential(OrderedDict(_layers2)))
 
     def _reset_parameters(self, feat_channels: list[int]) -> None:
         bias = bias_init_with_prob(0.01)
         init.constant_(self.enc_score_head.bias, bias)
-        init.constant_(self.enc_bbox_head.layers[-1].weight, 0)
-        init.constant_(self.enc_bbox_head.layers[-1].bias, 0)
-        init.constant_(self.pre_bbox_head.layers[-1].weight, 0)
-        init.constant_(self.pre_bbox_head.layers[-1].bias, 0)
+        _enc_last = cast("nn.Linear", self.enc_bbox_head.layers[-1])
+        init.constant_(_enc_last.weight, 0)
+        init.constant_(_enc_last.bias, 0)
+        _pre_last = cast("nn.Linear", self.pre_bbox_head.layers[-1])
+        init.constant_(_pre_last.weight, 0)
+        init.constant_(_pre_last.bias, 0)
         for cls_, reg_ in zip(self.dec_score_head, self.dec_bbox_head):
-            init.constant_(cls_.bias, bias)
+            init.constant_(cast("nn.Linear", cls_).bias, bias)
             if hasattr(reg_, "layers"):
-                init.constant_(reg_.layers[-1].weight, 0)
-                init.constant_(reg_.layers[-1].bias, 0)
-        init.xavier_uniform_(self.query_pos_head.layers[0].weight)
-        init.xavier_uniform_(self.query_pos_head.layers[1].weight)
-        init.xavier_uniform_(self.query_pos_head.layers[-1].weight)
+                _reg = cast("MLP", reg_)
+                _reg_last = cast("nn.Linear", _reg.layers[-1])
+                init.constant_(_reg_last.weight, 0)
+                init.constant_(_reg_last.bias, 0)
+        _q0 = cast("nn.Linear", self.query_pos_head.layers[0])
+        init.xavier_uniform_(_q0.weight)
+        _q1 = cast("nn.Linear", self.query_pos_head.layers[1])
+        init.xavier_uniform_(_q1.weight)
+        _qlast = cast("nn.Linear", self.query_pos_head.layers[-1])
+        init.xavier_uniform_(_qlast.weight)
 
     def _generate_anchors(
         self,
@@ -781,8 +783,8 @@ class ECTransformer(nn.Module):
         if self.training or not hasattr(self, "anchors"):
             anchors, valid_mask = self._generate_anchors(spatial_shapes, device=memory.device)
         else:
-            anchors = self.anchors  # type: ignore[attr-defined]
-            valid_mask = self.valid_mask  # type: ignore[attr-defined]
+            anchors: Tensor = self.anchors  # type: ignore[attr-defined]
+            valid_mask: Tensor = self.valid_mask  # type: ignore[attr-defined]
 
         if memory.shape[0] > 1:
             anchors = anchors.expand(memory.shape[0], -1, -1)
@@ -811,10 +813,11 @@ class ECTransformer(nn.Module):
         return content, enc_topk_bbox_unact, enc_bboxes_list, enc_logits_list
 
     @staticmethod
-    def _split(x: Tensor | None, dim: int, s_idx: list[int] | None) -> tuple[Tensor | None, Tensor | None]:
+    def _split(x: Tensor | None, dim: int, s_idx: Tensor | list[int] | None) -> tuple[Tensor | None, Tensor | None]:
         if x is None or s_idx is None:
             return None, x
-        return torch.split(x, s_idx, dim=dim)  # type: ignore[return-value]
+        split_sizes: list[int] = s_idx.tolist() if isinstance(s_idx, Tensor) else s_idx
+        return torch.split(x, split_sizes, dim=dim)  # type: ignore[return-value]
 
     def forward(
         self,
@@ -904,7 +907,9 @@ class ECTransformer(nn.Module):
             }
 
         if self.training and self.aux_loss:
-            aux_masks = list(out_masks[:-1]) if out_masks is not None else [None] * (len(out_logits) - 1)
+            aux_masks: list[Tensor | None] = (
+                list(out_masks[:-1]) if out_masks is not None else [None] * (len(out_logits) - 1)
+            )
             out["aux_outputs"] = self._set_aux_loss2(
                 out_logits[:-1],
                 out_bboxes[:-1],
@@ -923,7 +928,9 @@ class ECTransformer(nn.Module):
             out["enc_meta"] = {"class_agnostic": False}
 
             if dn_meta is not None:
-                dn_masks = list(dn_out_masks[:-1]) if dn_out_masks is not None else [None] * (self.num_layers - 1)
+                dn_masks: list[Tensor | None] = (
+                    list(dn_out_masks[:-1]) if dn_out_masks is not None else [None] * (self.num_layers - 1)
+                )
                 out["dn_outputs"] = self._set_aux_loss2(
                     dn_out_logits,
                     dn_out_bboxes,

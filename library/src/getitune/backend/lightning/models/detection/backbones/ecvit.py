@@ -14,7 +14,7 @@ from __future__ import annotations
 import math
 import warnings
 from functools import partial
-from typing import ClassVar, Literal
+from typing import Callable, ClassVar, Literal
 
 import numpy as np
 import torch
@@ -172,7 +172,7 @@ class RopePositionEmbedding(nn.Module):
 
     def _init_weights(self) -> None:
         """Initialise period buffer."""
-        device = self.periods.device  # type: ignore[union-attr]
+        device: torch.device = self.periods.device  # type: ignore[union-attr]
         dtype = torch.get_default_dtype()
         if self.base is not None:
             periods = self.base ** (2 * torch.arange(self.D_head // 4, device=device, dtype=dtype) / (self.D_head // 2))
@@ -373,7 +373,7 @@ class VisionTransformer(nn.Module):
         drop_path_rate: float = 0.0,
         patch_size: int = 16,
         return_layers: list[int] | None = None,
-        norm_layer: type[nn.Module] | None = None,
+        norm_layer: type[nn.Module] | Callable[..., nn.Module] | None = None,
     ) -> None:
         super().__init__()
         if return_layers is None:
