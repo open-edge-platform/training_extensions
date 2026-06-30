@@ -40,7 +40,7 @@ export const AddSource = <T extends SourceConfigPayload>({
                 <>{componentFields(state)}</>
 
                 <Button type='submit' isDisabled={isPending} UNSAFE_style={{ maxWidth: 'fit-content' }}>
-                    Add & Connect
+                    Add & Use
                 </Button>
             </Flex>
         </Form>

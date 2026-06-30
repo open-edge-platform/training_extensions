@@ -6,6 +6,7 @@ import { omit } from 'lodash-es';
 
 import { $api } from '../../../../api/client';
 import { getQueryKey } from '../../../../query-client/query-client';
+import { testSinkQueryOptions } from '../api/use-test-sink';
 import { SinkConfig } from '../utils';
 
 const useUpdateSink = () => {
@@ -31,6 +32,8 @@ const useUpdateSink = () => {
 };
 
 export const useSinkMutation = (isNewSink: boolean) => {
+    const queryClient = useQueryClient();
+
     const addSink = $api.useMutation('post', '/api/sinks', {
         meta: {
             invalidateQueries: [['get', '/api/sinks']],
@@ -40,17 +43,28 @@ export const useSinkMutation = (isNewSink: boolean) => {
     const updateSink = useUpdateSink();
 
     return async (body: SinkConfig) => {
+        let sinkId: string;
+
         if (isNewSink) {
             const response = await addSink.mutateAsync({ body: omit(body, 'id') as SinkConfig });
 
-            return String(response.id);
+            sinkId = String(response.id);
+        } else {
+            const response = await updateSink.mutateAsync({
+                params: { path: { sink_id: String(body.id) } },
+                body: omit(body, 'sink_type'),
+            });
+
+            sinkId = String(response.id);
         }
 
-        const response = await updateSink.mutateAsync({
-            params: { path: { sink_id: String(body.id) } },
-            body: omit(body, 'sink_type'),
-        });
+        void queryClient
+            .fetchQuery({
+                ...testSinkQueryOptions(sinkId),
+                staleTime: 0,
+            })
+            .catch(() => undefined);
 
-        return String(response.id);
+        return sinkId;
     };
 };

@@ -3,9 +3,12 @@
 
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
+import { http } from '../../../../api/utils';
 import { useConnectSinkToPipeline } from '../../../../hooks/api/pipeline.hook';
+import { server } from '../../../../msw-node-setup';
 import { useSinkMutation } from '../hooks/use-sink-mutation.hook';
 import { LocalFolder } from '../local-folder/local-folder.component';
 import { getLocalFolderInitialConfig, localFolderBodyFormatter } from '../local-folder/utils';
@@ -18,6 +21,7 @@ vi.mock('../../../../hooks/api/pipeline.hook');
 describe('EditSink', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        server.use(http.post('/api/sinks/{sink_id}:test', () => HttpResponse.json({ reachable: true })));
     });
 
     const updatedConfig: LocalFolderSinkConfig = {

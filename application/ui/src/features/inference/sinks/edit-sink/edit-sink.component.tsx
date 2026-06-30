@@ -5,8 +5,10 @@ import { ReactNode, useRef } from 'react';
 
 import { ActionButton, Button, ButtonGroup, Divider, Flex, Form, Text, View } from '@geti-ui/ui';
 import { Back } from '@geti-ui/ui/icons';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { useConnectSinkToPipeline } from '../../../../hooks/api/pipeline.hook';
+import { testSinkQueryOptions } from '../api/use-test-sink';
 import { useSinkAction } from '../hooks/use-sink-action.hook';
 import { SinkConfig } from '../utils';
 
@@ -31,6 +33,7 @@ export const EditSink = <T extends SinkConfig>({
 }: EditSinkProps<T>) => {
     const connectToPipeline = useRef(false);
     const connectToPipelineMutation = useConnectSinkToPipeline();
+    const queryClient = useQueryClient();
 
     const [state, submitAction, isPending] = useSinkAction({
         config,
@@ -39,6 +42,7 @@ export const EditSink = <T extends SinkConfig>({
             connectToPipeline.current && (await connectToPipelineMutation(sinkId));
             connectToPipeline.current = false;
             onSaved();
+            void queryClient.fetchQuery(testSinkQueryOptions(sinkId)).catch(() => undefined);
         },
         bodyFormatter,
     });
