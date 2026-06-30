@@ -1,0 +1,72 @@
+id: object-detection-yolo12-l
+name: YOLO12-L
+license: AGPL-3.0
+
+pretrained_weights:
+  url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo12l.pt
+  mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo12l.pt
+  sha_sum: "0babd8dc8f775bb64bb052debdff3d8b9e9b57efa9d7bfa11c84bb82c3fec336"
+
+description: "YOLO12-L is the large Ultralytics YOLO12 detection model. It offers high accuracy while using the Geti Tune data pipeline for preprocessing and dataset handling."
+stats:
+  gigaflops: 88.9
+  trainable_parameters: 26.4
+  benchmark_metrics:
+    coco_map_50_95: 53.7
+
+capabilities:
+  tiling: false
+  xai: false
+
+hyperparameters:
+  training:
+    learning_rate: 0.001
+    weight_decay: 0.0005
+    max_epochs: 100
+    early_stopping:
+      enable: false
+    batch_size: 8
+    input_size_width: 640
+    input_size_height: 640
+    allowed_values_input_size:
+      - 640
+    scheduler:
+      type: cosine_annealing
+      warmup:
+        enable: false
+    gradient_clip:
+      enable: true
+      max_grad_norm: 10.0
+    gradient_accumulation:
+      enable: false
+  dataset_preparation:
+    augmentation:
+      mosaic:
+        enable: true
+        probability: 1.0
+        scale: 0.5
+        translate: 0.1
+      mixup:
+        enable: false
+        probability: 0.5
+        alpha: 1.5
+      iou_random_crop:
+        enable: false
+      color_jitter:
+        enable: true
+        brightness:
+          - 0.6
+          - 1.4
+        contrast:
+          - 0.6
+          - 1.4
+        saturation:
+          - 0.3
+          - 1.7
+        hue:
+          - -0.015
+          - 0.015
+        probability: 1.0
+      random_horizontal_flip:
+        enable: true
+        probability: 0.5

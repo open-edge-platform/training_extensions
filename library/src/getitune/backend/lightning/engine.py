@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     from lightning import Callback
     from lightning.pytorch.loggers import Logger
     from lightning.pytorch.utilities.types import EVAL_DATALOADERS
-    from pytorch_lightning.trainer.connectors.accelerator_connector import _PRECISION_INPUT
+    from lightning_fabric.plugins.precision.precision import _PRECISION_INPUT
 
     from getitune.data.dataset.base import VisionDataset
     from getitune.metrics import MetricCallable

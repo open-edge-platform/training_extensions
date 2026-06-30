@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -119,6 +120,7 @@ class TestXPUAwareTrainerMixin:
         class FakeBaseTrainer:
             def __init__(self):
                 self.device = torch.device("xpu:0")
+                self.args = SimpleNamespace(amp=True)
                 self.scaler = torch.amp.GradScaler("cuda", enabled=True)
                 self.model = torch.nn.Linear(4, 2)
 
@@ -165,6 +167,7 @@ class TestXPUAwareTrainerMixin:
         class FakeBaseTrainer:
             def __init__(self):
                 self.device = torch.device("xpu:0")
+                self.args = SimpleNamespace(amp=True)
                 self.scaler = torch.amp.GradScaler("cpu", enabled=False)
                 self.model = torch.nn.Linear(4, 2)
 
@@ -278,6 +281,7 @@ class TestXPUAwareTrainerMixin:
         class FakeBaseTrainer:
             def __init__(self):
                 self.device = torch.device("xpu:0")
+                self.args = SimpleNamespace(amp=True)
 
         class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
             pass
@@ -297,9 +301,9 @@ class TestXPUAwareTrainerMixin:
 
         with patch(
             "getitune.backend.ultralytics.plugins.xpu_mixin.isinstance",
-            side_effect=lambda o, t: True
-            if t is torch.Tensor and o in (img_tensor, label_tensor)
-            else isinstance(o, t),
+            side_effect=lambda o, t: (
+                True if t is torch.Tensor and o in (img_tensor, label_tensor) else isinstance(o, t)
+            ),
         ):
             result = trainer._move_batch_to_device(batch)
 
@@ -341,6 +345,7 @@ class TestXPUAwareTrainerMixin:
         class FakeBaseTrainer:
             def __init__(self):
                 self.device = torch.device("xpu:0")
+                self.args = SimpleNamespace(amp=True)
                 self.scaler = torch.amp.GradScaler("cpu", enabled=False)
                 self.model = torch.nn.Linear(4, 2)
 
@@ -364,6 +369,7 @@ class TestXPUAwareTrainerMixin:
         class FakeBaseTrainer:
             def __init__(self):
                 self.device = torch.device("xpu:0")
+                self.args = SimpleNamespace(amp=True)
                 self.scaler = torch.amp.GradScaler("cpu", enabled=False)
                 self.model = torch.nn.Linear(4, 2)
                 self.ema = MagicMock()
@@ -390,6 +396,7 @@ class TestXPUAwareTrainerMixin:
         class FakeBaseTrainer:
             def __init__(self):
                 self.device = torch.device("xpu:0")
+                self.args = SimpleNamespace(amp=True)
                 self.model = torch.nn.Linear(4, 2).bfloat16()
 
             def validate(self) -> dict:
@@ -414,6 +421,7 @@ class TestXPUAwareTrainerMixin:
         class FakeBaseTrainer:
             def __init__(self):
                 self.device = torch.device("xpu:0")
+                self.args = SimpleNamespace(amp=True)
                 self.model = torch.nn.Linear(4, 2).bfloat16()
                 self.ema = MagicMock()
                 self.ema.ema = torch.nn.Linear(4, 2)  # fp32 EMA
@@ -451,3 +459,94 @@ class TestXPUAwareTrainerMixin:
         trainer = TestTrainer()
         trainer.validate()
         assert trainer.validate_called
+
+    def test_setup_train_fp32_on_xpu(self) -> None:
+        """On XPU with amp=False, model must stay fp32 and scaler must be disabled."""
+        from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
+
+        bf16_called = []
+
+        class FakeModel(torch.nn.Linear):
+            def bfloat16(self) -> FakeModel:
+                bf16_called.append(True)
+                return super().bfloat16()  # type: ignore[return-value]
+
+        class FakeBaseTrainer:
+            def __init__(self):
+                self.device = torch.device("xpu:0")
+                self.args = SimpleNamespace(amp=False)
+                self.scaler = torch.amp.GradScaler("cpu", enabled=False)
+                self.model = FakeModel(4, 2)
+
+            def _setup_train(self) -> None:
+                pass
+
+        class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
+            pass
+
+        trainer = TestTrainer()
+        assert next(trainer.model.parameters()).dtype == torch.float32, "model starts fp32"
+        trainer._setup_train()
+        assert not trainer.scaler.is_enabled(), "GradScaler must be disabled on XPU"
+        assert next(trainer.model.parameters()).dtype == torch.float32, "model must stay fp32 when amp=False"
+        assert not bf16_called, "model.bfloat16() must NOT be called when amp=False"
+
+    def test_move_batch_to_device_no_bf16_when_amp_false_on_xpu(self) -> None:
+        """On XPU with amp=False, images must NOT be cast to bfloat16."""
+        from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
+
+        class FakeBaseTrainer:
+            def __init__(self):
+                self.device = torch.device("xpu:0")
+                self.args = SimpleNamespace(amp=False)
+
+        class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):
+            pass
+
+        trainer = TestTrainer()
+
+        tensor = MagicMock(spec=torch.Tensor)
+        tensor.to.return_value = tensor
+        batch = {"img": tensor}
+
+        with patch(
+            "getitune.backend.ultralytics.plugins.xpu_mixin.isinstance",
+            side_effect=lambda o, t: True if t is torch.Tensor and o is tensor else isinstance(o, t),
+        ):
+            _ = trainer._move_batch_to_device(batch)
+
+        tensor.to.assert_called_once_with(torch.device("xpu:0"), non_blocking=True)
+        tensor.bfloat16.assert_not_called()
+
+    def test_validate_skips_conversion_when_amp_false(self) -> None:
+        """On XPU with amp=False, validate() must not convert model dtype at all."""
+        from getitune.backend.ultralytics.plugins.xpu_mixin import XPUAwareTrainerMixin
+
+        conversion_log = []
+
+        class FakeModel(torch.nn.Linear):
+            def float(self) -> FakeModel:
+                conversion_log.append("float")
+                return super().float()  # type: ignore[return-value]
+
+            def bfloat16(self) -> FakeModel:
+                conversion_log.append("bfloat16")
+                return super().bfloat16()  # type: ignore[return-value]
+
+        class FakeBaseTrainer:
+            def __init__(self):
+                self.device = torch.device("xpu:0")
+                self.args = SimpleNamespace(amp=False)
+                self.model = FakeModel(4, 2)  # fp32 model
+
+            def validate(self) -> dict:
+                return {}
+
+        class TestTrainer(XPUAwareTrainerMixin, FakeBaseTrainer):  # pyrefly: ignore[inconsistent-inheritance]
+            pass
+
+        trainer = TestTrainer()
+        trainer.validate()
+
+        assert not conversion_log, f"No dtype conversions expected when amp=False, got: {conversion_log}"
+        assert next(trainer.model.parameters()).dtype == torch.float32, "model must stay fp32"

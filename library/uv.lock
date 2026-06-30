@@ -1440,7 +1440,7 @@ requires-dist = [
     { name = "torchvision", marker = "extra == 'xpu'", specifier = "==0.25.0+xpu", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "getitune", extra = "xpu" } },
     { name = "triton-xpu", marker = "extra == 'xpu'", specifier = "==3.6.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "getitune", extra = "xpu" } },
     { name = "typeguard", specifier = ">=4.3,<4.5" },
-    { name = "ultralytics", marker = "extra == 'ultralytics'", specifier = "~=8.4.41" },
+    { name = "ultralytics", marker = "extra == 'ultralytics'", specifier = "~=8.4.82" },
 ]
 provides-extras = ["cpu", "cuda", "xpu", "ultralytics", "docs", "ci-publish"]
 
@@ -6710,7 +6710,7 @@ wheels = [
 
 [[package]]
 name = "ultralytics"
-version = "8.4.69"
+version = "8.4.82"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "matplotlib" },
@@ -6721,7 +6721,6 @@ dependencies = [
     { name = "psutil" },
     { name = "pyyaml" },
     { name = "requests" },
-    { name = "scipy" },
     { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-getitune-cpu') or (sys_platform == 'linux' and extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-cuda') or (sys_platform == 'linux' and extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-xpu') or (sys_platform == 'win32' and extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-cuda') or (sys_platform == 'win32' and extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-xpu') or (extra != 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-cuda' and extra == 'extra-8-getitune-xpu') or (extra != 'extra-8-getitune-cpu' and extra != 'extra-8-getitune-cuda' and extra != 'extra-8-getitune-xpu')" },
     { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-8-getitune-cpu') or (sys_platform == 'win32' and extra == 'extra-8-getitune-cpu') or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-cuda') or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-xpu') or (extra == 'extra-8-getitune-cuda' and extra == 'extra-8-getitune-xpu')" },
     { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-8-getitune-cuda' or (extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-xpu')" },
@@ -6732,9 +6731,9 @@ dependencies = [
     { name = "torchvision", version = "0.25.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-cuda') or (extra != 'extra-8-getitune-cuda' and extra == 'extra-8-getitune-xpu') or (extra != 'extra-8-getitune-cpu' and extra == 'extra-8-getitune-xpu')" },
     { name = "ultralytics-thop" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/01/a9/ec543bdc2892bdb0b751ef7d504de2317a629ec6dc2ac9271a9c64c12f81/ultralytics-8.4.69.tar.gz", hash = "sha256:a619dfc5d56560dce3f7bb1f23675b338d16095922cfe2bf217f6260e378d01f", size = 1107096, upload-time = "2026-06-16T17:05:55.182Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/4f/a0788c822ed7469f6c754b2f07c74bca5698841acfc9d5d3b07e3967e04f/ultralytics-8.4.82.tar.gz", hash = "sha256:db24b0e3840481e31e06a713b2331c65135bbbf25fc77509455510328d7e34dd", size = 1122198, upload-time = "2026-06-29T00:26:22.98Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/74/88/b0bca3e9013eb7a575b4a891d2584b7c59aae122176606d16504aff72d99/ultralytics-8.4.69-py3-none-any.whl", hash = "sha256:855f57a1d17b43441a3cc139df34e5fbea4a99c30cc3cb13e314000be3f53fb7", size = 1316228, upload-time = "2026-06-16T17:05:51.005Z" },
+    { url = "https://files.pythonhosted.org/packages/65/0b/699c937fc9fdce5c5d8e0411248b5cce4159682382cafc19aabdc08397bd/ultralytics-8.4.82-py3-none-any.whl", hash = "sha256:2a42c20173af2f120df0e378d59b6d9f4d517f37c1fdade02f9b650d67fe721b", size = 1332529, upload-time = "2026-06-29T00:26:18.32Z" },
 ]
 
 [[package]]
