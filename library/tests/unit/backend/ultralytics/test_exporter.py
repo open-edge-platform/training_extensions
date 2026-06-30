@@ -634,6 +634,44 @@ class TestMetadataYaml:
 
         assert metadata["task"] == "segment"
 
+    def test_semantic_segmentation_task_mapping(self, tmp_path: Path) -> None:
+        """Semantic segmentation task_type should map to 'semantic' in metadata."""
+        seg_params = TaskLevelExportParameters(
+            model_type="YOLO-sem",
+            model_name="yolo26n-sem",
+            task_type="semantic_segmentation",
+            label_info=_label_info(),
+            optimization_config={},
+            confidence_threshold=0.0,
+            return_soft_prediction=True,
+            blur_strength=0,
+        )
+        exporter = _make_exporter(task_level_export_parameters=seg_params)
+
+        raw_onnx = tmp_path / "raw_model.onnx"
+        raw_onnx.touch()
+
+        mock_yolo = MagicMock()
+        mock_yolo.export.return_value = str(raw_onnx)
+        mock_yolo.model.stride = [8]
+
+        mock_onnx_model = MagicMock()
+
+        output_dir = tmp_path / "output"
+        with (
+            patch("onnx.load", return_value=mock_onnx_model),
+            patch("onnx.save"),
+            patch.object(exporter, "_postprocess_onnx_model", return_value=mock_onnx_model),
+        ):
+            exporter.to_onnx(mock_yolo, output_dir, "model", Precision.FP32)
+
+        import yaml
+
+        with (output_dir / "metadata.yaml").open() as f:
+            metadata = yaml.safe_load(f)
+
+        assert metadata["task"] == "semantic"
+
     def test_stride_from_model(self, tmp_path: Path) -> None:
         """Stride should be read dynamically from model.model.stride."""
         exporter = _make_exporter()

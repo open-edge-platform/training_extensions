@@ -21,10 +21,19 @@ RECIPE_DIR: Path = Path(__file__).resolve().parents[3] / "recipe"
 TASK_TO_RECIPE_SUBDIR: dict[str, str] = {
     TaskType.DETECTION.value: "detection",
     TaskType.INSTANCE_SEGMENTATION.value: "instance_segmentation",
+    TaskType.MULTI_CLASS_CLS.value: "classification/multi_class_cls",
+    TaskType.MULTI_LABEL_CLS.value: "classification/multi_label_cls",
+    TaskType.SEMANTIC_SEGMENTATION.value: "semantic_segmentation",
 }
 
 SUPPORTED_TASKS: frozenset[str] = frozenset(
-    (TaskType.DETECTION.value, TaskType.INSTANCE_SEGMENTATION.value),
+    (
+        TaskType.DETECTION.value,
+        TaskType.INSTANCE_SEGMENTATION.value,
+        TaskType.MULTI_CLASS_CLS.value,
+        TaskType.MULTI_LABEL_CLS.value,
+        TaskType.SEMANTIC_SEGMENTATION.value,
+    ),
 )
 ConfigValue: TypeAlias = str | int | float | bool | None | dict[str, "ConfigValue"] | list["ConfigValue"]
 

@@ -110,3 +110,55 @@ def collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
         new_batch["sem_masks"] = torch.stack([b["sem_masks"] for b in batch], dim=0)
 
     return new_batch
+
+
+def classification_collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
+    """Collate classification adapter dicts into an Ultralytics-compatible batch.
+
+    Stacks images into ``(B, C, H, W)`` and stacks class indices into a 1-D
+    ``(B,)`` int64 tensor, matching what
+    :class:`~ultralytics.models.yolo.classify.ClassificationValidator`
+    expects in ``update_metrics``.
+    """
+    new_batch: dict[str, Any] = {}
+    new_batch["img"] = torch.stack([b["img"] for b in batch], dim=0)
+    new_batch["cls"] = torch.tensor([b["cls"] for b in batch], dtype=torch.int64)
+    new_batch["ori_shape"] = [b["ori_shape"] for b in batch]
+    new_batch["resized_shape"] = [b["resized_shape"] for b in batch]
+    new_batch["ratio_pad"] = [b["ratio_pad"] for b in batch]
+    new_batch["im_file"] = [b.get("im_file", "") for b in batch]
+    return new_batch
+
+
+def multilabel_collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
+    """Collate multi-label classification adapter dicts into a batch.
+
+    Stacks images into ``(B, C, H, W)`` and multi-hot labels into a float
+    ``(B, num_classes)`` tensor.
+    """
+    new_batch: dict[str, Any] = {}
+    new_batch["img"] = torch.stack([b["img"] for b in batch], dim=0)
+    new_batch["cls"] = torch.stack([torch.as_tensor(b["cls"], dtype=torch.float32) for b in batch], dim=0)
+    new_batch["ori_shape"] = [b["ori_shape"] for b in batch]
+    new_batch["resized_shape"] = [b["resized_shape"] for b in batch]
+    new_batch["ratio_pad"] = [b["ratio_pad"] for b in batch]
+    new_batch["im_file"] = [b.get("im_file", "") for b in batch]
+    return new_batch
+
+
+def semantic_collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
+    """Collate semantic segmentation adapter dicts into a batch.
+
+    Stacks images into ``(B, C, H, W)`` and dense semantic masks into a
+    single ``(B, H, W)`` int32 tensor.
+    """
+    new_batch: dict[str, Any] = {}
+    new_batch["img"] = torch.stack([b["img"] for b in batch], dim=0)
+    new_batch["semantic_mask"] = torch.stack(
+        [torch.as_tensor(b["semantic_mask"], dtype=torch.int32) for b in batch], dim=0
+    )
+    new_batch["ori_shape"] = [b["ori_shape"] for b in batch]
+    new_batch["resized_shape"] = [b["resized_shape"] for b in batch]
+    new_batch["ratio_pad"] = [b["ratio_pad"] for b in batch]
+    new_batch["im_file"] = [b.get("im_file", "") for b in batch]
+    return new_batch

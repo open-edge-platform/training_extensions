@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Sequence
 
 import torch
+import torch.nn.functional as f
 import yaml
 from torchvision import tv_tensors
 from ultralytics.utils.metrics import ClassifyMetrics, DetMetrics, SegmentMetrics
@@ -24,9 +25,12 @@ from getitune.data.entity.sample import Prediction, SampleBatch
 from getitune.data.module import DataModule
 from getitune.data.utils.structures.mask.mask_util import encode_rle
 from getitune.engine.engine import Engine
+from getitune.metrics.accuracy import MultiLabelClsMetricCallable
+from getitune.metrics.dice import SegmCallable
 from getitune.metrics.fmeasure import FMeasure
 from getitune.types.device import DeviceType
 from getitune.types.export import ExportFormat
+from getitune.types.label import SegLabelInfo
 from getitune.types.precision import Precision
 from getitune.utils.device import is_xpu_available
 
@@ -35,7 +39,8 @@ from .models.base import UltralyticsModel
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
-    from torchmetrics import Metric
+    from torch.utils.data import DataLoader
+    from torchmetrics import Metric, MetricCollection
     from ultralytics import YOLO
 
     from getitune.types import PathLike
@@ -201,13 +206,16 @@ class UltralyticsEngine(Engine):
         results = yolo.train(**train_args)
         self._record_last_train_checkpoint(self._resolve_trainer_checkpoint(yolo))
         self._remap_results_csv()
-        best_val_confidence_thr = self._compute_best_confidence_threshold()
-        if best_val_confidence_thr is not None:
-            # Cap at the user-specified confidence threshold (0.25 by default)
-            # to avoid overly aggressive pruning that can harm export performance.
-            threshold = min(best_val_confidence_thr, self._export_args.get("confidence_threshold", 0.25))
-            self._export_args["confidence_threshold"] = threshold
-            logger.info(f"Best confidence threshold from FMeasure: {threshold:.4f}")
+        # Confidence-threshold tuning only applies to box/mask tasks.
+        # Classification has no box predictions and therefore no FMeasure sweep.
+        if self._model.task in ("detect", "segment"):
+            best_val_confidence_thr = self._compute_best_confidence_threshold()
+            if best_val_confidence_thr is not None:
+                # Cap at the user-specified confidence threshold (0.25 by default)
+                # to avoid overly aggressive pruning that can harm export performance.
+                threshold = min(best_val_confidence_thr, self._export_args.get("confidence_threshold", 0.25))
+                self._export_args["confidence_threshold"] = threshold
+                logger.info(f"Best confidence threshold from FMeasure: {threshold:.4f}")
         return self._translate_metrics(results)
 
     def test(self, checkpoint: PathLike | None = None, metric: Callable[..., Any] | None = None, **kwargs) -> METRICS:
@@ -237,6 +245,12 @@ class UltralyticsEngine(Engine):
 
         if metric is not None and self._datamodule is not None:
             return self._test_with_torchmetrics(metric)
+
+        if self._datamodule is not None and getattr(self._model, "is_multilabel", False):
+            return self._test_with_torchmetrics(MultiLabelClsMetricCallable)
+
+        if self._datamodule is not None and self._model.task == "semantic":
+            return self._test_with_torchmetrics(SegmCallable)  # pyrefly: ignore[bad-argument-type]
 
         merged = self._build_overrides(**kwargs)
 
@@ -483,7 +497,10 @@ class UltralyticsEngine(Engine):
         results = validator(model=self._model.yolo.model)
         return self._translate_metrics(results)
 
-    def _test_with_torchmetrics(self, metric_callable: Callable[[LabelInfo], Metric]) -> dict[str, float]:
+    def _test_with_torchmetrics(
+        self,
+        metric_callable: Callable[[LabelInfo], Metric | MetricCollection],
+    ) -> dict[str, float]:
         """Evaluate using torchmetrics — same metrics as Lightning models.
 
         Iterates the DataModule's test dataloader, runs YOLO predictions on
@@ -528,6 +545,12 @@ class UltralyticsEngine(Engine):
             f"Starting torchmetrics evaluation: model={self._model.model_name}, "
             f"metric={type(metric).__name__}, batches={len(dataloader)}"
         )
+
+        if self._model.task == "classify":
+            return self._test_classification_with_torchmetrics(metric_callable, dataloader, yolo, device, imgsz)
+
+        if self._model.task == "semantic":
+            return self._test_semantic_with_torchmetrics(metric_callable, dataloader, yolo, device)
 
         for batch in dataloader:
             if not isinstance(batch, SampleBatch):
@@ -581,6 +604,113 @@ class UltralyticsEngine(Engine):
                 target_list.append(tgt_dict)
 
             metric.update(preds=preds_list, target=target_list)
+
+        results = metric.compute()
+        return self._format_torchmetrics_results(results)
+
+    def _test_classification_with_torchmetrics(
+        self,
+        metric_callable: Callable[[LabelInfo], Metric | MetricCollection],
+        dataloader: DataLoader,
+        yolo: YOLO,
+        device: torch.device,
+        imgsz: int | tuple[int, int],
+    ) -> dict[str, float]:
+        """Run torchmetrics evaluation for classification tasks.
+
+        Supports both multi-class (softmax probabilities vs. class indices)
+        and multi-label (sigmoid scores vs. multi-hot targets).
+        """
+        label_info = self._model.label_info or self._datamodule.label_info  # type: ignore[union-attr]
+        metric = metric_callable(label_info)
+        metric = metric.to(device)
+
+        is_multilabel = getattr(self._model, "is_multilabel", False)
+
+        for batch in dataloader:
+            if not isinstance(batch, SampleBatch):
+                msg = f"Expected test_dataloader to yield SampleBatch, got {type(batch)}"
+                raise TypeError(msg)
+            if batch.labels is None:
+                msg = "Classification evaluation requires labels"
+                raise TypeError(msg)
+
+            imgs = batch.images.to(device) if isinstance(batch.images, torch.Tensor) else batch.images
+            raw_results = yolo.predict(
+                source=imgs,
+                device=device,
+                imgsz=imgsz,
+                save=False,
+                verbose=False,
+            )
+
+            scores = []
+            for result in raw_results:
+                if result.probs is None:  # pyrefly: ignore[missing-attribute]
+                    msg = "Classification result is missing probabilities"
+                    raise RuntimeError(msg)
+                scores.append(torch.as_tensor(result.probs.data))
+            preds = torch.stack(scores).to(device)
+            targets = torch.stack([lbl.to(device) for lbl in batch.labels])
+            targets = targets.float() if is_multilabel else targets.long().flatten()
+
+            metric.update(preds=preds, target=targets)
+
+        results = metric.compute()
+        return self._format_torchmetrics_results(results)
+
+    def _test_semantic_with_torchmetrics(
+        self,
+        metric_callable: Callable[[SegLabelInfo], Metric | MetricCollection],
+        dataloader: DataLoader,
+        yolo: YOLO,
+        device: torch.device,
+    ) -> dict[str, float]:
+        """Run torchmetrics evaluation for semantic segmentation.
+
+        Uses getitune's semantic segmentation metric (Dice + mIoU) on dense
+        class maps produced by argmaxing the model logits.
+        """
+        label_info = self._model.label_info or self._datamodule.label_info  # type: ignore[union-attr]
+        if not isinstance(label_info, SegLabelInfo):
+            label_info = SegLabelInfo(
+                label_names=label_info.label_names,
+                label_groups=label_info.label_groups,
+                label_ids=label_info.label_ids,
+            )
+        metric = metric_callable(label_info)
+        metric = metric.to(device)
+
+        if yolo.model is None:
+            msg = "YOLO model is not loaded"
+            raise RuntimeError(msg)
+        yolo.model.to(device).eval()
+
+        logger.info(
+            f"Starting torchmetrics semantic segmentation evaluation: model={self._model.model_name}, "
+            f"metric={type(metric).__name__}, batches={len(dataloader)}"
+        )
+
+        for batch in dataloader:
+            if not isinstance(batch, SampleBatch):
+                msg = f"Expected test_dataloader to yield SampleBatch, got {type(batch)}"
+                raise TypeError(msg)
+            if batch.masks is None:
+                msg = "Semantic segmentation evaluation requires masks"
+                raise TypeError(msg)
+
+            imgs = batch.images.to(device) if isinstance(batch.images, torch.Tensor) else batch.images
+            targets = torch.stack([torch.as_tensor(m.squeeze(0), dtype=torch.int32) for m in batch.masks]).to(device)
+
+            with torch.no_grad():
+                outputs = yolo.model(imgs)
+                if isinstance(outputs, tuple):
+                    outputs = outputs[0]
+                if outputs.shape[-2:] != targets.shape[-2:]:
+                    outputs = f.interpolate(outputs, size=targets.shape[-2:], mode="bilinear", align_corners=False)
+                preds = outputs.argmax(dim=1)
+
+            metric.update(preds=preds, target=targets)
 
         results = metric.compute()
         return self._format_torchmetrics_results(results)
@@ -938,7 +1068,8 @@ class UltralyticsEngine(Engine):
 
         Mirrors the logic in ``LightningModel._log_metrics``: only scalar
         tensors are included; auxiliary keys (``classes``, ``map_per_class``,
-        ``mar_100_per_class``, ``ious``) are skipped.
+        ``mar_100_per_class``, ``ious``) are skipped. Nested dicts returned by
+        ``MetricCollection`` are flattened recursively.
 
         Args:
             results: Dict returned by ``metric.compute()``.
@@ -948,25 +1079,49 @@ class UltralyticsEngine(Engine):
         """
         _skip_keys = {"classes", "map_per_class", "mar_100_per_class", "ious"}
         formatted: dict[str, float] = {}
-        for name, value in results.items():
-            if name in _skip_keys:
-                continue
+
+        def _add(prefix: str, value: Any) -> None:  # noqa: ANN401
+            if isinstance(value, dict):
+                for key, nested in value.items():
+                    if prefix.endswith(f"/{key}"):
+                        _add(prefix, nested)
+                    else:
+                        _add(f"{prefix}/{key}", nested)
+                return
+            if prefix in _skip_keys:
+                return
             if isinstance(value, torch.Tensor):
                 if value.numel() == 1:
-                    formatted[f"test/{name}"] = value.item()
+                    formatted[prefix] = value.item()
                 else:
-                    logger.debug(f"Skipping non-scalar torchmetric '{name}' with {value.numel()} elements")
+                    logger.debug(f"Skipping non-scalar torchmetric '{prefix}' with {value.numel()} elements")
             elif isinstance(value, (int, float)):
-                formatted[f"test/{name}"] = float(value)
+                formatted[prefix] = float(value)
+
+        for name, value in results.items():
+            _add(f"test/{name}", value)
         return formatted
 
-    @staticmethod
     def _convert_predictions(
+        self,
         raw_results: list[Any],
         images: torch.Tensor | tv_tensors.Image | list[torch.Tensor] | list[tv_tensors.Image] | None = None,
         imgs_info: Sequence[ImageInfo | None] | None = None,
     ) -> list[Prediction]:
-        """Convert Ultralytics ``Results`` to getitune ``Prediction``."""
+        """Convert Ultralytics ``Results`` to getitune ``Prediction``.
+
+        Handles three output shapes:
+
+        * **Detection** (``result.boxes``): bounding boxes + class scores.
+        * **Instance segmentation** (``result.boxes`` + ``result.masks``):
+          same as detection, plus a ``(N, H, W)`` mask tensor.
+        * **Classification** (``result.probs``): per-class probability vector.
+          Multi-class returns the top-1 label; multi-label returns all labels
+          above the default 0.5 threshold. ``bboxes`` and ``masks`` remain
+          ``None``.
+        * **Semantic segmentation** (``result.semantic_mask``): dense per-pixel
+          class map returned as a single-channel ``tv_tensors.Mask``.
+        """
         predictions: list[Prediction] = []
         for idx, result in enumerate(raw_results):
             img_tensor, img_info = UltralyticsEngine._resolve_prediction_input(idx, result, images, imgs_info)
@@ -977,7 +1132,22 @@ class UltralyticsEngine(Engine):
             labels = None
             masks = None
 
-            if result.boxes is not None and len(result.boxes):
+            # --- classification ---
+            probs = getattr(result, "probs", None)
+            if probs is not None:
+                scores = torch.as_tensor(probs.data).cpu().float()  # (nc,)
+                if getattr(self._model, "is_multilabel", False):
+                    labels = (scores >= 0.5).nonzero(as_tuple=False).flatten().long()
+                else:
+                    labels = torch.tensor([int(probs.top1)], dtype=torch.long)
+
+            # --- semantic segmentation ---
+            semantic_mask = getattr(result, "semantic_mask", None)
+            if semantic_mask is not None:
+                masks = tv_tensors.Mask(torch.as_tensor(semantic_mask).cpu().unsqueeze(0))
+
+            # --- detection / instance-segmentation ---
+            elif result.boxes is not None and len(result.boxes):
                 boxes_xyxy = torch.as_tensor(result.boxes.xyxy).cpu()  # pyrefly: ignore[missing-attribute]
                 bboxes = tv_tensors.BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
                     boxes_xyxy,
@@ -987,8 +1157,10 @@ class UltralyticsEngine(Engine):
                 scores = torch.as_tensor(result.boxes.conf).cpu()  # pyrefly: ignore[missing-attribute]
                 labels = torch.as_tensor(result.boxes.cls).cpu().long()  # pyrefly: ignore[missing-attribute]
 
-            if result.masks is not None and len(result.masks):
-                masks = tv_tensors.Mask(torch.as_tensor(result.masks.data).cpu())  # pyrefly: ignore[missing-attribute]
+                if result.masks is not None and len(result.masks):
+                    masks = tv_tensors.Mask(
+                        torch.as_tensor(result.masks.data).cpu()
+                    )  # pyrefly: ignore[missing-attribute]
 
             predictions.append(
                 Prediction(

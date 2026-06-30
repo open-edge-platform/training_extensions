@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 import multiprocessing
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import numpy as np
 import torch
@@ -52,7 +52,7 @@ class GetiTuneBaseTrainer:
 
     _datamodule: DataModule | None = None
     _use_getitune_data: bool = False
-    _include_masks: bool = False
+    _task_kind: ClassVar[str] = "detect"
     _progress_fn: Any = None
     _progress_min: float = 0.0
     _progress_max: float = 100.0
@@ -123,7 +123,7 @@ class GetiTuneBaseTrainer:
             self._datamodule.train_subset.subset_name if mode == "train" else self._datamodule.val_subset.subset_name
         )
         vision_dataset = self._datamodule.subsets[subset_key]  # type: ignore[union-attr]
-        return UltralyticsDatasetAdapter(vision_dataset, include_masks=self._include_masks)
+        return UltralyticsDatasetAdapter(vision_dataset, task_kind=self._task_kind)
 
     def get_dataloader(
         self,

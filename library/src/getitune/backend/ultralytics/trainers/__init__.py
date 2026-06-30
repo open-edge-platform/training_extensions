@@ -4,11 +4,16 @@
 """Custom Ultralytics trainer subclasses for getitune data bridge."""
 
 from .base import GetiTuneBaseTrainer
+from .classification import ClassificationTrainer, MultiLabelClassificationTrainer
 from .detection import DetectionTrainer
 from .instance_segmentation import SegmentationTrainer
+from .semantic_segmentation import SemanticSegmentationTrainer
 
 __all__ = [
+    "ClassificationTrainer",
     "DetectionTrainer",
     "GetiTuneBaseTrainer",
+    "MultiLabelClassificationTrainer",
     "SegmentationTrainer",
+    "SemanticSegmentationTrainer",
 ]

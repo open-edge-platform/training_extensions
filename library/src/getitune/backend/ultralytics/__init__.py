@@ -4,7 +4,14 @@
 """Ultralytics backend for getitune."""
 
 from .engine import UltralyticsEngine
-from .models import UltralyticsDetectionModel, UltralyticsInstSegModel, UltralyticsModel
+from .models import (
+    UltralyticsDetectionModel,
+    UltralyticsInstSegModel,
+    UltralyticsModel,
+    UltralyticsMultiClassClsModel,
+    UltralyticsMultiLabelClsModel,
+    UltralyticsSemanticSegModel,
+)
 from .tools.configurator import Configurator
 
 __all__ = [
@@ -13,4 +20,7 @@ __all__ = [
     "UltralyticsEngine",
     "UltralyticsInstSegModel",
     "UltralyticsModel",
+    "UltralyticsMultiClassClsModel",
+    "UltralyticsMultiLabelClsModel",
+    "UltralyticsSemanticSegModel",
 ]
