@@ -43,6 +43,7 @@ jobs:
             test:
               - library/**
               - .github/**
+              - '!.github/workflows/getitrack-*.yaml'
 
       # Separate filter so we only run the (slow, network-bound) benchmark
       # dataset preparation tests when those scripts are touched.

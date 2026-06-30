@@ -1,0 +1,232 @@
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# SETUP CONFIGURATION.                                                        #
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "getitrack"
+dynamic = ["version"]
+description = "getitrack: Multi-object tracking toolkit."
+readme = "README.md"
+requires-python = ">=3.11,<3.15"
+license = "Apache-2.0"
+authors = [
+    { name = "OpenVINO™ Training Extensions Contributors" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "loguru>=0.7",
+    "numpy>=2.0",
+    "pydantic>=2.7",
+    "pyyaml==6.0.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest~=9.0.3",
+    "pytest-mock",
+]
+
+lint = [
+    "ruff==0.11.13",
+    "types-PyYAML~=6.0.12",
+    "pyrefly~=0.51.0",
+]
+
+[tool.uv]
+default-groups = ["dev", "lint"]
+required-version = "~=0.10.4"
+
+[tool.hatch.version]
+path = "src/getitrack/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/getitrack"]
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# COVERAGE CONFIGURATION.                                                     #
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
+
+[tool.coverage.run]
+source = [
+    "src/getitrack/",
+]
+omit = [
+    "**/__init__.py",
+]
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# RUFF CONFIGURATION                                                          #
+[tool.ruff]
+
+# Same as Black.
+line-length = 120
+
+# minimum target version
+target-version = "py311"
+
+# Enumerate all fixed violations.
+show-fixes = true
+
+# Allow imports relative to the "src" and "tests" directories.
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+
+# Enable rules
+select = [
+    "F",    # Pyflakes (`F`)
+
+    # Enable all `pydocstyle` rules, limiting to those that adhere to the
+    # Google convention via `convention = "google"`, below.
+    "D",    # pydocstyle (`D`)
+    "E",    # pycodestyle error (`E`)
+    "W",    # pycodestyle warning (`W`)
+
+    "I",    # isort (`I`)
+    "PL",   # pylint (`PL`)
+
+    "C90",  # mccabe (`C90`)
+    "N",    # pep8-naming (`N`)
+    "UP",   # pyupgrade (`UP`)
+
+    "YTT",  # flake8-2020 (`YTT`)
+    "ANN",  # flake8-annotations (`ANN`)
+    "S",    # flake8-bandit (`S`)
+    # "BLE",  # flake8-blind-except (`BLE`)  -> Need to discuss new exception structure
+    "B",    # flake8-bugbear (`B`)
+    "A",    # flake8-builtins (`A`)
+    "COM",  # flake8-commas (`COM`)
+    "C4",   # flake8-comprehensions (`C4`)
+    "DTZ",  # flake8-datatimez (`DTZ`)
+    "T10",  # flake8-debugger (`T10`)
+    "EM",   # flake8-errmsg (`EM`)
+    "FA",   # flake8-future-annotations (`FA`)
+    "ISC",  # flake8-implicit-str-concat (`ISC`)
+    "ICN",  # flake8-import-conventions (`ICN`)
+    "PIE",  # flake8-pie (`PIE`)
+    "PT",   # flake8-pytest-style (`PT`)
+    "RSE",  # flake8-raise (`RSE`)
+    "RET",  # flake8-return (`RET`)
+    "SLF",  # flake8-self (`SLF`)
+    "SIM",  # flake8-simplify (`SIM`)
+    "TID",  # flake8-tidy-imports (`TID`)
+    "TCH",  # flake8-type-checking (`TCH`)
+    "INT",  # flake8-gettext (`INT`)
+    "ARG",  # flake8-unsused-arguments (`ARG`)
+    "PTH",  # flake8-use-pathlib (`PTH`)
+    "TD",   # flake8-todos (`TD`)
+    "FIX",  # flake8-fixme (`FIX`)
+    # "LOG",  # flake8-logging (`LOG`) -> Rules included in the preview version of RUFF. It may be added in the future, but for now, disable it.
+
+    "ERA",  # eradicate (`ERA`)
+    "PD",   # pandas-vet (`PD`)
+    "PGH",  # pygrep-hooks (`PGH`)
+    "TRY",  # tryceratos (`TRY`)
+    "FLY",  # flynt (`FLY`)
+    "NPY",  # NumPy-specific rules (`NPY`)
+    "PERF", # Perflint (`PERF`)
+    # "FURB", # refurb (`FURB`) -> Rules included in the preview version of RUFF. It may be added in the future, but for now, disable it.
+    "RUF",  # Ruff-specific rules (`RUF`)
+]
+
+ignore = [
+    # pydocstyle
+    # On top of the Google convention, disable `D417`, which requires
+    # documentation for every function parameter.
+    "D417",     # Missing argument descriptions in the docstring
+
+    "D107",     # Missing docstring in `__init__`
+    "D105",     # Missing docstring in magic method
+
+    # flake8-annotations
+    "ANN002",   # Missing type annotation for *args
+    "ANN003",   # Missing type annotation for **kwargs
+
+    "ANN204",   # Missing return type annotation for special method `__init__`
+
+    "ARG002",   # Unused method argument -> some function cannot use argument
+
+    "COM812",   # Missing trailing comma -> conflicts with ISC001
+
+    # flake8-type-checking
+    "TC001",    # typing-only-first-party-import, Sometimes this causes an incorrect error.
+    # flake8-fixme
+    "FIX002",   # line-contains-todo
+
+    "E731",     # Do not assign a `lambda` expression, use a `def`
+    "TD003",    # Missing issue link on the line following this TODO
+]
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+# fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "EM", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
+# unfixable = [
+#     "F401",     # disable autofix for unused imports
+# ]
+exclude = [
+    ".git",
+    ".ruff_cache",
+    ".venv",
+    "build",
+    "dist",
+]
+
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 20
+
+[tool.ruff.lint.pylint]
+allow-magic-value-types = ["str", "bytes", "int", "float"]
+max-args = 20
+max-branches = 50
+max-statements = 150
+max-returns = 10
+
+[tool.ruff.lint.flake8-copyright]
+notice-rgx = """
+# Copyright \\(C\\) (\\d{4}(-\\d{4})?) Intel Corporation
+# SPDX-License-Identifier: Apache-2\\.0
+"""
+
+[tool.ruff.lint.per-file-ignores]
+# Declare an additional exclude rule for test code
+"tests/**/*.py" = [
+    "S101",     # pytest-style allows `assert` statements in tests.
+    "S603",     # Allow for untrusted input in tests.
+    "SLF001",   # We sometimes need to inspect private functions for testing.
+    "TCH003",   # It doesn't seem necessary to use TYPE_CHECKING in tests.
+    "PT004",    # fixture ignore type returning.
+    "E501",     # Test skips lines that are too long.
+    "ANN001",   # Skip annotation type hint in test codes
+    "ANN201",   # Skip return type hint in test codes
+    "D",     # Test skips missing docstring argument with magic (fixture) methods.
+    "ARG001",   # Some arguments are passed for executing fixture
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+markers = [
+    "unit",
+]
+testpaths = ["tests"]
+
+[tool.pyrefly]
+python-version = "3.11.0"
+project-includes = ["src/getitrack/**/*.py*", "tests/**/*.py*"]
+ignore-missing-imports = ["*"]
