@@ -35,7 +35,7 @@ from .models.base import UltralyticsModel
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
-    from pytorch_lightning.trainer.connectors.accelerator_connector import _PRECISION_INPUT
+    from lightning_fabric.plugins.precision.precision import _PRECISION_INPUT
     from torchmetrics import Metric
     from ultralytics import YOLO
 
