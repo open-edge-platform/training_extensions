@@ -330,7 +330,7 @@ ENV LD_LIBRARY_PATH="/opt/vpl/lib:/opt/vpl/lib64:/opt/ffmpeg-vpl/lib:/usr/local/
 ENV PATH="/opt/ffmpeg-vpl/bin:${PATH}"
 
 WORKDIR /application/backend
-COPY --link application/docker/entrypoint.sh /entrypoint.sh
+COPY --link --chmod=755 application/docker/entrypoint.sh /entrypoint.sh
 
 USER ${USER_NAME}
 
