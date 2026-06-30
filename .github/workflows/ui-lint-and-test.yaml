@@ -25,7 +25,8 @@ jobs:
   # If PR or merge_group -> run only if files in specified paths changed
   check_paths:
     name: Check if workflow should run
-    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
+    runs-on:
+      ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
       'ubuntu-latest' }}
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
@@ -48,7 +49,8 @@ jobs:
 
   generate-openapi-spec:
     name: Generate OpenAPI Spec
-    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
+    runs-on:
+      ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
       'ubuntu-latest' }}
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
@@ -79,7 +81,8 @@ jobs:
 
   build:
     name: Build UI
-    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
+    runs-on:
+      ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
       'ubuntu-latest' }}
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
@@ -117,7 +120,8 @@ jobs:
 
   lint:
     name: Eslint checks
-    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
+    runs-on:
+      ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
       'ubuntu-latest' }}
     needs:
       - check_paths
@@ -162,7 +166,8 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
+    runs-on:
+      ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
       'ubuntu-latest' }}
     needs:
       - check_paths
@@ -263,7 +268,8 @@ jobs:
     permissions:
       contents: read # to checkout code
     timeout-minutes: 60
-    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
+    runs-on:
+      ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
       'ubuntu-latest' }}
     container:
       image: mcr.microsoft.com/playwright:v1.61.0-jammy@sha256:264136758e43332108f6420f82c47f639f619ca65301065ceade677763f477ec
@@ -308,7 +314,8 @@ jobs:
       - lint
       - unit-tests
       - playwright-tests
-    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
+    runs-on:
+      ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
       'ubuntu-latest' }}
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
