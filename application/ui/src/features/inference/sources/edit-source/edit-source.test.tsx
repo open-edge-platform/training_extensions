@@ -3,10 +3,13 @@
 
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
+import { http } from '../../../../api/utils';
 import type { IPCameraSourceConfig } from '../../../../constants/shared-types';
 import { useConnectSourceToPipeline } from '../../../../hooks/api/pipeline.hook';
+import { server } from '../../../../msw-node-setup';
 import { useSourceMutation } from '../hooks/use-source-mutation.hook';
 import { IpCamera } from '../ip-camera/ip-camera.component';
 import { getIpCameraInitialConfig, ipCameraBodyFormatter } from '../ip-camera/utils';
@@ -18,6 +21,7 @@ vi.mock('../../../../hooks/api/pipeline.hook');
 describe('EditIpCamera', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        server.use(http.post('/api/sources/{source_id}:test', () => HttpResponse.json({ reachable: true })));
     });
 
     const updatedConfig: IPCameraSourceConfig = {
