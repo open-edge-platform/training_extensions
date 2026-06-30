@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from ultralytics.models.yolo.detect import DetectionValidator as _UltralyticsDetectionValidator
 
 from .base import GetiTuneValidatorMixin
@@ -13,4 +15,4 @@ from .base import GetiTuneValidatorMixin
 class DetectionValidator(GetiTuneValidatorMixin, _UltralyticsDetectionValidator):
     """Detection validator for the getitune data bridge."""
 
-    _include_masks: bool = False
+    _task_kind: ClassVar[str] = "detect"

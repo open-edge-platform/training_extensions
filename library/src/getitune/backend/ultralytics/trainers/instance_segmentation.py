@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.nn.functional as f
@@ -25,13 +25,13 @@ _MASK_RATIO = 4
 class SegmentationTrainer(GetiTuneBaseTrainer, XPUAwareTrainerMixin, _UltralyticsSegmentationTrainer):
     """Instance-segmentation trainer that routes data through a getitune DataModule.
 
-    Mirrors :class:`DetectionTrainer` but passes ``include_masks=True``
-    to the adapter.  Falls back to default Ultralytics loading otherwise.
+    Mirrors :class:`DetectionTrainer` but dispatches the adapter to
+    ``task_kind="segment"``.  Falls back to default Ultralytics loading otherwise.
 
     Inherits :class:`XPUAwareTrainerMixin` for Intel XPU device support.
     """
 
-    _include_masks: bool = True
+    _task_kind: ClassVar[str] = "segment"
 
     def preprocess_batch(self, batch: dict[str, Any]) -> dict[str, Any]:
         """Preprocess batch for training: move to device and downsample masks.

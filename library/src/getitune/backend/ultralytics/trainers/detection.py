@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import Any
+from typing import Any, ClassVar
 
 from ultralytics.models.yolo.detect import DetectionTrainer as _UltralyticsDetectionTrainer
 from ultralytics.models.yolo.detect import DetectionValidator as _UltralyticsDetectionValidator
@@ -27,7 +27,7 @@ class DetectionTrainer(GetiTuneBaseTrainer, XPUAwareTrainerMixin, _UltralyticsDe
     Inherits :class:`XPUAwareTrainerMixin` for Intel XPU device support.
     """
 
-    _include_masks: bool = False
+    _task_kind: ClassVar[str] = "detect"
 
     def preprocess_batch(self, batch: dict[str, Any]) -> dict[str, Any]:
         """Use upstream preprocessing unless the DataModule bridge is active."""

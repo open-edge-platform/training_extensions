@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 from torch.utils.data import DataLoader
@@ -30,12 +30,12 @@ class GetiTuneValidatorMixin:
     When ``_datamodule`` is set and called without a trainer, runs
     standalone validation bypassing Ultralytics' YAML data parsing.
 
-    Subclasses must set :attr:`_include_masks` to control whether the adapter
-    includes instance masks.
+    Subclasses must set :attr:`_task_kind` to dispatch the adapter to the
+    correct per-task ``_getitem_*`` method (e.g. ``"detect"``, ``"segment"``).
     """
 
     _datamodule: DataModule | None = None
-    _include_masks: bool = False
+    _task_kind: ClassVar[str] = "detect"
 
     def __call__(self, trainer: BaseTrainer | None = None, model: torch.nn.Module | None = None) -> dict:
         """Dispatch to upstream (training) or standalone DataModule validation."""
@@ -142,7 +142,7 @@ class GetiTuneValidatorMixin:
         test_key = self._datamodule.test_subset.subset_name
         val_key = self._datamodule.val_subset.subset_name
         subset = self._datamodule.subsets.get(test_key) or self._datamodule.subsets[val_key]
-        adapter = UltralyticsDatasetAdapter(subset, include_masks=self._include_masks)
+        adapter = UltralyticsDatasetAdapter(subset, task_kind=self._task_kind)
         return DataLoader(
             adapter,
             batch_size=self.args.batch,  # type: ignore[attr-defined]

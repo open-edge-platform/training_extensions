@@ -228,7 +228,12 @@ class UltralyticsModelExporter(ModelExporter):
         names = dict(enumerate(label_names))
 
         # Map internal task_type to Ultralytics task identifier.
-        task_map = {"detection": "detect", "instance_segmentation": "segment"}
+        task_map = {
+            "detection": "detect",
+            "instance_segmentation": "segment",
+            "classification": "classify",
+            "semantic_segmentation": "semantic",
+        }
         task = task_map.get(params.task_type, params.task_type)
 
         # Get stride from the model dynamically.

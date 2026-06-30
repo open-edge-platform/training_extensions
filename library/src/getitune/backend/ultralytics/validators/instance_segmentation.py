@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from ultralytics.models.yolo.segment import SegmentationValidator as _UltralyticsSegmentationValidator
 
 from .base import GetiTuneValidatorMixin
@@ -13,4 +15,4 @@ from .base import GetiTuneValidatorMixin
 class SegmentationValidator(GetiTuneValidatorMixin, _UltralyticsSegmentationValidator):
     """Instance-segmentation validator for the getitune data bridge."""
 
-    _include_masks: bool = True
+    _task_kind: ClassVar[str] = "segment"
