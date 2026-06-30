@@ -176,13 +176,16 @@ class _MLPBlock(nn.Module):
     def __init__(self, dim: int) -> None:
         super().__init__()
         self.norm_in = nn.LayerNorm(dim)
-        self.fc1 = nn.Linear(dim, dim * 4)
-        self.act = nn.GELU()
-        self.fc2 = nn.Linear(dim * 4, dim)
+        # Named "layers" to match checkpoint key layout (layers.0, layers.2).
+        self.layers = nn.Sequential(
+            nn.Linear(dim, dim * 4),
+            nn.GELU(),
+            nn.Linear(dim * 4, dim),
+        )
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass."""
-        return x + self.fc2(self.act(self.fc1(self.norm_in(x))))
+        return x + self.layers(self.norm_in(x))
 
 
 class SegmentationHead(nn.Module):
@@ -206,9 +209,11 @@ class SegmentationHead(nn.Module):
         self.downsample_ratio = downsample_ratio
         self.image_size = tuple(image_size)
         self.blocks = nn.ModuleList([_DepthwiseConvBlock(in_dim) for _ in range(num_blocks)])
-        self.spatial_features_proj = nn.Identity()
+        # 1x1 conv projects spatial features channel-wise (matches checkpoint key layout).
+        self.spatial_features_proj = nn.Conv2d(in_dim, in_dim, 1)
         self.query_features_block = _MLPBlock(in_dim)
-        self.query_features_proj = nn.Identity()
+        # Linear projection on query features (matches checkpoint key layout).
+        self.query_features_proj = nn.Linear(in_dim, in_dim)
         self.bias = nn.Parameter(torch.zeros(1))
 
     def forward(
@@ -893,17 +898,19 @@ class ECTransformer(nn.Module):
                 "pred_logits": out_logits[-1],
                 "pred_boxes": out_bboxes[-1],
                 "pred_corners": out_corners[-1],
-                "pred_masks": last_masks,
                 "ref_points": out_refs[-1],
                 "up": self.up,
                 "reg_scale": self.reg_scale,
             }
+            if last_masks is not None:
+                out["pred_masks"] = last_masks
         else:
             out = {
                 "pred_logits": out_logits[-1],
                 "pred_boxes": out_bboxes[-1],
-                "pred_masks": last_masks,
             }
+            if last_masks is not None:
+                out["pred_masks"] = last_masks
 
         if self.training and self.aux_loss:
             aux_masks: list[Tensor | None] = (
@@ -919,11 +926,13 @@ class ECTransformer(nn.Module):
                 out_logits[-1],
             )
             out["enc_aux_outputs"] = self._set_aux_loss(enc_topk_logits_list, enc_topk_bboxes_list)
-            out["pre_outputs"] = {
+            pre_out: dict[str, Any] = {
                 "pred_logits": pre_logits,
                 "pred_boxes": pre_bboxes,
-                "pred_masks": pred_segs,
             }
+            if pred_segs is not None:
+                pre_out["pred_masks"] = pred_segs
+            out["pre_outputs"] = pre_out
             out["enc_meta"] = {"class_agnostic": False}
 
             if dn_meta is not None:
@@ -939,11 +948,13 @@ class ECTransformer(nn.Module):
                     dn_out_corners[-1] if dn_out_corners is not None else None,
                     dn_out_logits[-1] if dn_out_logits is not None else None,
                 )
-                out["dn_pre_outputs"] = {
+                dn_pre_out: dict[str, Any] = {
                     "pred_logits": dn_pre_logits,
                     "pred_boxes": dn_pre_bboxes,
-                    "pred_masks": dn_pre_segs,
                 }
+                if dn_pre_segs is not None:
+                    dn_pre_out["pred_masks"] = dn_pre_segs
+                out["dn_pre_outputs"] = dn_pre_out
                 out["dn_meta"] = dn_meta
 
         return out
@@ -1000,7 +1011,8 @@ class ECTransformer(nn.Module):
         mask_pred = outputs.get("pred_masks")
 
         bbox_pred = torchvision.ops.box_convert(boxes, in_fmt="cxcywh", out_fmt="xyxy")
-        bbox_pred = bbox_pred * orig_target_sizes.repeat(1, 2).unsqueeze(1)
+        # orig_target_sizes is (B, 2) with (H, W); xyxy needs (W, H, W, H) scale.
+        bbox_pred = bbox_pred * orig_target_sizes.flip(-1).repeat(1, 2).unsqueeze(1)
 
         scores = F.sigmoid(logits)
         scores, index = torch.topk(scores.flatten(1), num_top_queries, dim=-1)
