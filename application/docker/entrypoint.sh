@@ -23,3 +23,5 @@ if [[ ! -f "$CERTFILE" || ! -f "$KEYFILE" ]]; then
         -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
     echo "Self-signed cert generated."
 fi
+
+exec "$@"
