@@ -4,18 +4,15 @@
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, BinaryIO
+from typing import Any, BinaryIO
 from uuid import UUID, uuid4
 
 from anyio import to_thread
+from datumaro.experimental import Dataset
 
+from app.datumaro_converter.domain.samples.import_export import BaseImportExportSample
 from app.models import AnnotationType, DatasetFormat, StagedDataset
 from app.models.dataset import DatasetMetadata
-
-if TYPE_CHECKING:
-    from datumaro.experimental import Dataset
-
-    from app.datumaro_converter.domain.samples.import_export import BaseImportExportSample
 
 _ANNOTATION_SHAPE_ATTRS: list[tuple[str, AnnotationType]] = [
     ("bboxes", AnnotationType.BOUNDING_BOX),
@@ -28,7 +25,7 @@ _ANNOTATION_LABEL_ATTRS: list[tuple[str, AnnotationType]] = [
 ]
 
 
-def _count_annotations(sample: "BaseImportExportSample") -> tuple[AnnotationType, int]:
+def _count_annotations(sample: BaseImportExportSample) -> tuple[AnnotationType, int]:
     if (
         hasattr(sample, "annotation_type")
         and callable(getattr(sample, "annotation_type", None))
@@ -66,7 +63,7 @@ class _Counts:
     video_paths: set[str] = field(default_factory=set)
 
 
-def _get_dataset_metadata(dataset: "Dataset") -> DatasetMetadata:
+def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
     from datumaro.experimental import LazyImage, LazyVideoFrame
 
     labels = []

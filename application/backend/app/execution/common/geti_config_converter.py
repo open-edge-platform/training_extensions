@@ -11,12 +11,7 @@ from typing import Any, ClassVar
 from warnings import warn
 
 import yaml
-from getitune.backend.ultralytics.tools.configurator import Configurator as UltralyticsConfigurator
-from getitune.tools.auto_configurator import AutoConfigurator
-from getitune.utils import get_getitune_root_path
 from loguru import logger
-
-RECIPE_PATH = get_getitune_root_path() / "recipe"
 
 
 class ModelStatus(str, Enum):
@@ -27,193 +22,6 @@ class ModelStatus(str, Enum):
     ACCURACY = "accuracy"
     DEPRECATED = "deprecated"
     ACTIVE = "active"
-
-
-TEMPLATE_ID_MAPPING = {
-    # MULTI_CLASS_CLS
-    "image-classification-vit-tiny": {
-        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "vit_tiny.yaml",
-        "status": ModelStatus.BALANCE,
-        "default": False,
-    },
-    "image-classification-dinov2": {
-        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "dino_v2.yaml",
-        "status": ModelStatus.ACCURACY,
-        "default": False,
-    },
-    "image-classification-efficientnet-b0": {
-        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b0.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": True,
-    },
-    "image-classification-efficientnet-v2-s": {
-        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_v2.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "image-classification-mobilenet-v3-large": {
-        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",
-        "status": ModelStatus.SPEED,
-        "default": False,
-    },
-    "image-classification-efficientnet-b3": {
-        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b3.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    # DETECTION
-    "object-detection-atss-mobilenet-v2": {
-        "recipe_path": RECIPE_PATH / "detection" / "atss_mobilenetv2.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": True,
-    },
-    "object-detection-ssd-mobilenet-v2": {
-        "recipe_path": RECIPE_PATH / "detection" / "ssd_mobilenetv2.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-yolox-x": {
-        "recipe_path": RECIPE_PATH / "detection" / "yolox_x.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-yolox-l": {
-        "recipe_path": RECIPE_PATH / "detection" / "yolox_l.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-yolox-s": {
-        "recipe_path": RECIPE_PATH / "detection" / "yolox_s.yaml",
-        "status": ModelStatus.SPEED,
-        "default": False,
-    },
-    "object-detection-yolox-tiny": {
-        "recipe_path": RECIPE_PATH / "detection" / "yolox_tiny.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-rt-detr-r50": {
-        "recipe_path": RECIPE_PATH / "detection" / "rtdetr_50.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-dfine-m": {
-        "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_m.yaml",
-        "status": ModelStatus.BALANCE,
-        "default": False,
-    },
-    "object-detection-dfine-l": {
-        "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_l.yaml",
-        "status": ModelStatus.ACCURACY,
-        "default": False,
-    },
-    "object-detection-dfine-x": {
-        "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_x.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-rfdetr-s": {
-        "recipe_path": RECIPE_PATH / "detection" / "rfdetr_small.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-rfdetr-m": {
-        "recipe_path": RECIPE_PATH / "detection" / "rfdetr_medium.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-rfdetr-l": {
-        "recipe_path": RECIPE_PATH / "detection" / "rfdetr_large.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-dinov3-detr-s": {
-        "recipe_path": RECIPE_PATH / "detection" / "deimv2_s.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-dinov3-detr-m": {
-        "recipe_path": RECIPE_PATH / "detection" / "deimv2_m.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-dinov3-detr-l": {
-        "recipe_path": RECIPE_PATH / "detection" / "deimv2_l.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-yolo26-n": {
-        "recipe_path": RECIPE_PATH / "detection" / "yolo26_n.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-yolo26-s": {
-        "recipe_path": RECIPE_PATH / "detection" / "yolo26_s.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-yolo26-m": {
-        "recipe_path": RECIPE_PATH / "detection" / "yolo26_m.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    # INSTANCE_SEGMENTATION
-    "instance-segmentation-mask-rcnn-swin-t": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "instance-segmentation-mask-rcnn-efficientnet-b2": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_efficientnetb2b.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": True,
-    },
-    "instance-segmentation-rtmdet-tiny": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rtmdet_inst_tiny.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "instance-segmentation-mask-rcnn-resnet50": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "instance-segmentation-rfdetr-s": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_small.yaml",
-        "status": ModelStatus.SPEED,
-        "default": False,
-    },
-    "instance-segmentation-rfdetr-m": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_medium.yaml",
-        "status": ModelStatus.BALANCE,
-        "default": False,
-    },
-    "instance-segmentation-rfdetr-l": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_large.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "instance-segmentation-rfdetr-xl": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_xlarge.yaml",
-        "status": ModelStatus.ACCURACY,
-        "default": False,
-    },
-    "instance-segmentation-yolo26-n": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_n_seg.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "instance-segmentation-yolo26-s": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_s_seg.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "instance-segmentation-yolo26-m": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_m_seg.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-}
 
 
 class TransformsUpdater:
@@ -859,7 +667,213 @@ class GetiConfigConverter:
             dict: The default configuration dictionary.
 
         """
+        from getitune.backend.ultralytics.tools.configurator import Configurator as UltralyticsConfigurator
+        from getitune.tools.auto_configurator import AutoConfigurator
+        from getitune.utils import get_getitune_root_path
+
         hyper_parameters = config["hyper_parameters"]
+
+        RECIPE_PATH = get_getitune_root_path() / "recipe"
+        TEMPLATE_ID_MAPPING = {
+            # MULTI_CLASS_CLS
+            "image-classification-vit-tiny": {
+                "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "vit_tiny.yaml",
+                "status": ModelStatus.BALANCE,
+                "default": False,
+            },
+            "image-classification-dinov2": {
+                "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "dino_v2.yaml",
+                "status": ModelStatus.ACCURACY,
+                "default": False,
+            },
+            "image-classification-efficientnet-b0": {
+                "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b0.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": True,
+            },
+            "image-classification-efficientnet-v2-s": {
+                "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_v2.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "image-classification-mobilenet-v3-large": {
+                "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",
+                "status": ModelStatus.SPEED,
+                "default": False,
+            },
+            "image-classification-efficientnet-b3": {
+                "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b3.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            # DETECTION
+            "object-detection-atss-mobilenet-v2": {
+                "recipe_path": RECIPE_PATH / "detection" / "atss_mobilenetv2.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": True,
+            },
+            "object-detection-ssd-mobilenet-v2": {
+                "recipe_path": RECIPE_PATH / "detection" / "ssd_mobilenetv2.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolox-x": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolox_x.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolox-l": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolox_l.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolox-s": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolox_s.yaml",
+                "status": ModelStatus.SPEED,
+                "default": False,
+            },
+            "object-detection-yolox-tiny": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolox_tiny.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-rt-detr-r50": {
+                "recipe_path": RECIPE_PATH / "detection" / "rtdetr_50.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-dfine-m": {
+                "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_m.yaml",
+                "status": ModelStatus.BALANCE,
+                "default": False,
+            },
+            "object-detection-dfine-l": {
+                "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_l.yaml",
+                "status": ModelStatus.ACCURACY,
+                "default": False,
+            },
+            "object-detection-dfine-x": {
+                "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_x.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-rfdetr-n": {
+                "recipe_path": RECIPE_PATH / "detection" / "rfdetr_nano.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-rfdetr-s": {
+                "recipe_path": RECIPE_PATH / "detection" / "rfdetr_small.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-rfdetr-m": {
+                "recipe_path": RECIPE_PATH / "detection" / "rfdetr_medium.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-rfdetr-l": {
+                "recipe_path": RECIPE_PATH / "detection" / "rfdetr_large.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-dinov3-detr-s": {
+                "recipe_path": RECIPE_PATH / "detection" / "deimv2_s.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-dinov3-detr-m": {
+                "recipe_path": RECIPE_PATH / "detection" / "deimv2_m.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-dinov3-detr-l": {
+                "recipe_path": RECIPE_PATH / "detection" / "deimv2_l.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo26-n": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo26_n.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo26-s": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo26_s.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo26-m": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo26_m.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            # INSTANCE_SEGMENTATION
+            "instance-segmentation-mask-rcnn-swin-t": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-mask-rcnn-efficientnet-b2": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_efficientnetb2b.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": True,
+            },
+            "instance-segmentation-rtmdet-tiny": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "rtmdet_inst_tiny.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-mask-rcnn-resnet50": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-rfdetr-n": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_nano.yaml",
+                "status": ModelStatus.SPEED,
+                "default": False,
+            },
+            "instance-segmentation-rfdetr-s": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_small.yaml",
+                "status": ModelStatus.SPEED,
+                "default": False,
+            },
+            "instance-segmentation-rfdetr-m": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_medium.yaml",
+                "status": ModelStatus.BALANCE,
+                "default": False,
+            },
+            "instance-segmentation-rfdetr-l": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_large.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-rfdetr-xl": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_xlarge.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-rfdetr-2xl": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_2xlarge.yaml",
+                "status": ModelStatus.ACCURACY,
+                "default": False,
+            },
+            "instance-segmentation-yolo26-n": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_n_seg.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-yolo26-s": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_s_seg.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-yolo26-m": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_m_seg.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+        }
 
         model_config_path: Path = TEMPLATE_ID_MAPPING[config["model_manifest_id"]]["recipe_path"]  # type: ignore[assignment]
 

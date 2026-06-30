@@ -70,7 +70,7 @@ overrides:
       - 624
       - 624
     train_subset:
-      batch_size: 2
+      batch_size: 4
       augmentations_cpu:
         - class_path: torchvision.transforms.v2.RandomZoomOut
           init_args:
@@ -88,7 +88,7 @@ overrides:
         class_path: getitune.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
-      batch_size: 2
+      batch_size: 4
       augmentations_cpu:
         - class_path: getitune.data.augmentation.transforms.Resize
           init_args:
@@ -97,7 +97,7 @@ overrides:
             resize_targets: false
 
     test_subset:
-      batch_size: 2
+      batch_size: 4
       augmentations_cpu:
         - class_path: getitune.data.augmentation.transforms.Resize
           init_args:

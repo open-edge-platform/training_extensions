@@ -3,19 +3,15 @@
 
 from abc import ABCMeta, abstractmethod
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 import numpy as np
+from datumaro.experimental import Dataset
 from faster_coco_eval import COCO, COCOeval_faster
 from numpy.typing import NDArray
-from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_score, recall_score
-from sklearn.preprocessing import MultiLabelBinarizer
-
-if TYPE_CHECKING:
-    from datumaro.experimental import Dataset
 
 
-def datumaro_dataset_to_coco(dataset: "Dataset") -> dict:
+def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
     """
     Convert Datumaro Dataset to COCO format.
 
@@ -105,7 +101,7 @@ class AveragingMethod(StrEnum):
 class EvaluatorBase(metaclass=ABCMeta):
     """Base class for all evaluators."""
 
-    def __init__(self, predictions_dataset: "Dataset", ground_truth_dataset: "Dataset"):
+    def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         self.predictions_dataset = predictions_dataset
         self.ground_truth_dataset = ground_truth_dataset
 
@@ -113,7 +109,7 @@ class EvaluatorBase(metaclass=ABCMeta):
 class EvaluatorWithLabelArrays(EvaluatorBase):
     """Base evaluator for tasks that use label arrays."""
 
-    def __init__(self, predictions_dataset: "Dataset", ground_truth_dataset: "Dataset"):
+    def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         super().__init__(predictions_dataset=predictions_dataset, ground_truth_dataset=ground_truth_dataset)
         self.__pred_labels: NDArray[np.int_] | None = None
         self.__gt_labels: NDArray[np.int_] | None = None
@@ -138,10 +134,12 @@ class EvaluatorWithLabelArrays(EvaluatorBase):
 class AccuracyEvaluator(EvaluatorWithLabelArrays):
     """Evaluator for accuracy, precision, recall, and F1 metrics."""
 
-    def __init__(self, predictions_dataset: "Dataset", ground_truth_dataset: "Dataset"):
+    def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         super().__init__(predictions_dataset=predictions_dataset, ground_truth_dataset=ground_truth_dataset)
 
     def precision(self, averaging_method: AveragingMethod = AveragingMethod.MACRO) -> float:
+        from sklearn.metrics import precision_score
+
         return float(
             precision_score(
                 y_true=self._gt_labels,
@@ -151,6 +149,8 @@ class AccuracyEvaluator(EvaluatorWithLabelArrays):
         )
 
     def recall(self, averaging_method: AveragingMethod = AveragingMethod.MACRO) -> float:
+        from sklearn.metrics import recall_score
+
         return float(
             recall_score(
                 y_true=self._gt_labels,
@@ -160,9 +160,13 @@ class AccuracyEvaluator(EvaluatorWithLabelArrays):
         )
 
     def accuracy(self) -> float:
+        from sklearn.metrics import accuracy_score
+
         return float(accuracy_score(y_true=self._gt_labels, y_pred=self._pred_labels))
 
     def f1_score(self, averaging_method: AveragingMethod = AveragingMethod.MACRO) -> float:
+        from sklearn.metrics import f1_score
+
         return float(
             f1_score(
                 y_true=self._gt_labels,
@@ -175,18 +179,20 @@ class AccuracyEvaluator(EvaluatorWithLabelArrays):
 class ConfusionMatrixEvaluator(EvaluatorWithLabelArrays):
     """Evaluator for confusion matrix computation."""
 
-    def __init__(self, predictions_dataset: "Dataset", ground_truth_dataset: "Dataset"):
+    def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         super().__init__(predictions_dataset=predictions_dataset, ground_truth_dataset=ground_truth_dataset)
 
     def confusion_matrix(self) -> np.ndarray:
         """Compute the confusion matrix"""
+        from sklearn.metrics import confusion_matrix
+
         return confusion_matrix(y_true=self._gt_labels, y_pred=self._pred_labels)
 
 
 class MeanAveragePrecisionEvaluator(EvaluatorBase):
     """Evaluator for mean average precision (mAP) metrics."""
 
-    def __init__(self, predictions_dataset: "Dataset", ground_truth_dataset: "Dataset"):
+    def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         super().__init__(predictions_dataset=predictions_dataset, ground_truth_dataset=ground_truth_dataset)
         self.__gt_coco_dict: dict | None = None
         self.__pred_coco_dict: dict | None = None
@@ -220,7 +226,7 @@ class MeanAveragePrecisionEvaluator(EvaluatorBase):
 class MultiClassClassificationEvaluator(AccuracyEvaluator, ConfusionMatrixEvaluator):
     """Evaluator for multi-class classification tasks."""
 
-    def __init__(self, predictions_dataset: "Dataset", ground_truth_dataset: "Dataset"):
+    def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         from datumaro.experimental.fields import LabelField
 
         if (
@@ -245,7 +251,7 @@ class MultiClassClassificationEvaluator(AccuracyEvaluator, ConfusionMatrixEvalua
 class MultiLabelClassificationEvaluator(AccuracyEvaluator):
     """Evaluator for multi-label classification tasks."""
 
-    def __init__(self, predictions_dataset: "Dataset", ground_truth_dataset: "Dataset"):
+    def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         from datumaro.experimental.fields import LabelField
 
         if not (
@@ -259,6 +265,8 @@ class MultiLabelClassificationEvaluator(AccuracyEvaluator):
         )
 
     def _build_label_arrays(self) -> tuple[NDArray[np.int_], NDArray[np.int_]]:
+        from sklearn.preprocessing import MultiLabelBinarizer
+
         mlb = MultiLabelBinarizer()
         gt_labels_list = [s.label for s in self.ground_truth_dataset]
         pred_labels_list = [s.label for s in self.predictions_dataset]

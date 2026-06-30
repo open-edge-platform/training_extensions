@@ -39,8 +39,12 @@ export class ModelsPage {
         await this.page.getByRole('button', { name: 'Train model' }).click();
     }
 
+    getModelArchitecture(architectureName: string) {
+        return this.page.getByRole('radio', { name: architectureName, exact: true });
+    }
+
     async selectModelArchitecture(architectureName: string) {
-        await this.page.getByRole('radio', { name: architectureName, exact: true }).click();
+        await this.getModelArchitecture(architectureName).click();
     }
 
     async startTraining() {
@@ -164,6 +168,14 @@ export class ModelsPage {
 
     async openAdvancedSettings() {
         await this.page.getByRole('button', { name: 'Advanced settings' }).click();
+    }
+
+    async openMoreModelArchitectures() {
+        await this.page.getByRole('button', { name: 'Show more' }).click();
+    }
+
+    async goBack() {
+        await this.page.getByRole('button', { name: 'Back' }).click();
     }
 
     async openTrainingParameters() {

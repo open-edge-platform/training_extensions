@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Text, View } from '@geti/ui';
-import { AddCircle } from '@geti/ui/icons';
+import { ActionButton, Text, View } from '@geti-ui/ui';
+import { AddCircle } from '@geti-ui/ui/icons';
 import { useNavigate } from 'react-router-dom';
 
 import { paths } from '../../../../constants/paths';

@@ -3,8 +3,8 @@
 
 import { KeyboardEvent, useState } from 'react';
 
-import { dimensionValue, Flex, Loading, Text, View } from '@geti/ui';
-import { Pause, Play } from '@geti/ui/icons';
+import { dimensionValue, Flex, Loading, Text, View } from '@geti-ui/ui';
+import { Pause, Play } from '@geti-ui/ui/icons';
 import { clsx } from 'clsx';
 
 import { toast } from '../../../components/toast/toast.component';

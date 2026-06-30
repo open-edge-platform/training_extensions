@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, MediaViewModes, Text, ViewModes } from '@geti/ui';
+import { Flex, MediaViewModes, Text, ViewModes } from '@geti-ui/ui';
 import { useNumberFormatter } from 'react-aria';
 
 import type { DatasetRevision, DatasetSubset } from '../../../../constants/shared-types';
