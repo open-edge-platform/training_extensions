@@ -430,6 +430,7 @@ class TestPrecisionToAmp:
         datamodule = mocker.MagicMock(spec=DataModule)
         engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
         engine._device = torch.device("cuda")  # no actual CUDA access needed
+        mocker.patch.object(engine, "_compute_best_confidence_threshold", return_value=None)
 
         yolo = MagicMock()
         model._yolo = yolo
@@ -444,6 +445,7 @@ class TestPrecisionToAmp:
         datamodule = mocker.MagicMock(spec=DataModule)
         engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
         engine._device = torch.device("cuda")
+        mocker.patch.object(engine, "_compute_best_confidence_threshold", return_value=None)
 
         yolo = MagicMock()
         model._yolo = yolo
@@ -458,6 +460,7 @@ class TestPrecisionToAmp:
         datamodule = mocker.MagicMock(spec=DataModule)
         engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
         engine._device = torch.device("cuda")
+        mocker.patch.object(engine, "_compute_best_confidence_threshold", return_value=None)
 
         yolo = MagicMock()
         model._yolo = yolo
