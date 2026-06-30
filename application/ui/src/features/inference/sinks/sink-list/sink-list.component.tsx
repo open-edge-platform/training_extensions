@@ -6,9 +6,11 @@ import { Add as AddIcon } from '@geti-ui/ui/icons';
 import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
 
-import { StatusTag } from '../../../../components/status-tag/status-tag.component';
+import { ConnectionStatusBadge } from '../../../../components/connection-status-badge/connection-status-badge.component';
 import { usePipeline } from '../../../../hooks/api/pipeline.hook';
+import { getErrorMessage } from '../../../../query-client/query-client';
 import { removeUnderscore } from '../../util';
+import { useTestSink } from '../api/use-test-sink';
 import { SinkConfig } from '../utils';
 import { SettingsList } from './settings-list/settings-list.component';
 import { SinkIcon } from './sink-icon/sink-icon.component';
@@ -29,6 +31,13 @@ type SinksListItemProps = {
 };
 
 const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => {
+    const { data, error, isError, isFetched, isFetching, refetch } = useTestSink(sink.id);
+    const showConnectionStatusBadge = isConnected || isFetched || isFetching || isError;
+
+    const handleTestConnection = async () => {
+        void refetch();
+    };
+
     return (
         <Flex
             key={sink.id}
@@ -38,6 +47,14 @@ const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => 
                 [classes.activeCard]: isConnected,
             })}
         >
+            {showConnectionStatusBadge && (
+                <ConnectionStatusBadge
+                    isInUse={isConnected}
+                    isUnreachable={isError || (isFetched && data?.reachable === false)}
+                    isPending={isFetching}
+                    errorMessage={isError ? getErrorMessage(error) : undefined}
+                />
+            )}
             <Flex alignItems={'center'} gap={'size-200'}>
                 <SinkIcon type={sink.sink_type} />
 
@@ -45,7 +62,6 @@ const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => 
                     <Text UNSAFE_className={classes.title}>{sink.name}</Text>
                     <Flex gap={'size-100'} alignItems={'center'}>
                         <Text UNSAFE_className={classes.type}>{removeUnderscore(sink.sink_type)}</Text>
-                        <StatusTag isConnected={isConnected} />
                     </Flex>
                 </Flex>
             </Flex>
@@ -54,10 +70,11 @@ const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => 
                 <SettingsList sink={sink} />
 
                 <SinkMenu
-                    id={String(sink.id)}
+                    id={sink.id}
                     name={sink.name}
                     isConnected={isConnected}
                     onEdit={() => onEditSink(sink)}
+                    onTest={handleTestConnection}
                 />
             </Flex>
         </Flex>
