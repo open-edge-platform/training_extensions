@@ -26,7 +26,7 @@ application/docker/ @open-edge-platform/geti-backend-write
 application/docker/Dockerfile @sys-geti @open-edge-platform/geti-backend-write
 
 # Application documentation
-application/docs/  @open-edge-platform/geti-backend-write @open-edge-platform/geti-ui-write
+application/docs/ @open-edge-platform/geti-backend-write @open-edge-platform/geti-ui-write
 
 # Model manifests
 application/backend/app/supported_models/manifests/ @open-edge-platform/geti-lib-write @open-edge-platform/geti-backend-write
