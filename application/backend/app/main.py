@@ -124,7 +124,7 @@ async def security_headers_middleware(
 ) -> Response:
     """Add COEP and COOP security headers to all HTTP responses."""
     response = await call_next(request)
-    response.headers.setdefault("Cross-Origin-Embedder-Policy", "require-corp")
+    response.headers.setdefault("Cross-Origin-Embedder-Policy", "credentialless")
     response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
     return response
 
