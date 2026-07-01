@@ -39,7 +39,7 @@ class DockerRunner(BaseServerRunner):
         wait_for_logs(self.container, "Application startup completed", timeout=60)
 
         host = self.container.get_container_host_ip()
-        self.base_url = f"http://{host}:{port}"
+        self.base_url = f"https://{host}:{port}"
         self.context.base_url = self.base_url
 
     def stop_server(self):

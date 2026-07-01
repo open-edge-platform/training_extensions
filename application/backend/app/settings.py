@@ -109,6 +109,18 @@ class Settings(BaseSettings):
         description="Interval in seconds between cache cleanup sweeps",
     )
 
+    # Certificates
+    certfile: Path = Field(
+        default=Path("certs/localhost.pem"),
+        alias="CERTFILE",
+        description="Path to certificate file",
+    )
+    keyfile: Path = Field(
+        default=Path("certs/localhost-key.pem"),
+        alias="KEYFILE",
+        description="Path to private key file",
+    )
+
     @property
     def ice_servers(self) -> list[dict]:
         """Compute ICE servers from coturn and STUN configuration."""

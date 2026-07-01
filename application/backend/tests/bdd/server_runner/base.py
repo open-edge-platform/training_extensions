@@ -6,9 +6,11 @@ import tempfile
 import time
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import cast
 
 import requests
 from behave.runner import Context
+from requests import Session
 
 
 class BaseServerRunner(ABC):
@@ -25,6 +27,12 @@ class BaseServerRunner(ABC):
         self.context.tmp_path = self.tmp_dir
         for subdir in ["data", "logs"]:
             (self.tmp_dir / subdir).mkdir()
+        import urllib3
+
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        session = requests.Session()
+        session.verify = False
+        self.context.session = session
 
     @abstractmethod
     def start_server(self):
@@ -38,7 +46,8 @@ class BaseServerRunner(ABC):
         """Common logic to wait for health endpoint."""
         for _ in range(max_retries):
             try:
-                response = requests.get(f"{self.base_url}/health", timeout=1)
+                session = cast(Session, self.context.session)
+                response = session.get(f"{self.base_url}/health", timeout=1)
                 if response.status_code == 200:
                     return
             except requests.ConnectionError:
@@ -46,6 +55,9 @@ class BaseServerRunner(ABC):
         raise RuntimeError("Server failed to become healthy.")
 
     def cleanup(self):
-        """Remove temporary directories."""
+        """Remove temporary directories and close the session."""
+        if hasattr(self.context, "session"):
+            session = cast(Session, self.context.session)
+            session.close()
         if self.tmp_dir and self.tmp_dir.exists():
             shutil.rmtree(self.tmp_dir)

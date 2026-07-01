@@ -24,7 +24,7 @@ def expect_job_accepted(response: requests.Response) -> JobView:
     return JobView.model_validate(response.json())
 
 
-def wait_for_job_completion(base_url: str, job_id: UUID) -> JobView:
+def wait_for_job_completion(session: requests.Session, base_url: str, job_id: UUID) -> JobView:
     """Wait for a job to reach a terminal state by consuming its SSE status stream.
 
     If the SSE stream ends before the job reaches a terminal state (e.g. due to
@@ -41,7 +41,7 @@ def wait_for_job_completion(base_url: str, job_id: UUID) -> JobView:
 
         try:
             read_timeout = min(30.0, remaining_time)
-            with requests.get(
+            with session.get(
                 f"{base_url}/api/jobs/{job_id}/status",
                 stream=True,
                 headers={"Accept": "text/event-stream"},
@@ -79,7 +79,9 @@ def wait_for_job_completion(base_url: str, job_id: UUID) -> JobView:
     return job
 
 
-def export_dataset(base_url: str, project_id: str, export_format: DatasetFormat, filters: str | None = None) -> JobView:
+def export_dataset(
+    session: requests.Session, base_url: str, project_id: str, export_format: DatasetFormat, filters: str | None = None
+) -> JobView:
     job_body = {
         "job_type": JobType.EXPORT_DATASET,
         "project_id": project_id,
@@ -89,23 +91,27 @@ def export_dataset(base_url: str, project_id: str, export_format: DatasetFormat,
     }
     if filters:
         job_body["parameters"]["filters"] = json.loads(filters)
-    response = requests.post(f"{base_url}/api/jobs", json=job_body)
+    response = session.post(f"{base_url}/api/jobs", json=job_body)
     job = expect_job_accepted(response)
-    return wait_for_job_completion(base_url, job.job_id)
+    return wait_for_job_completion(session, base_url, job.job_id)
 
 
-def prepare_dataset(base_url: str, staged_dataset_id: str) -> JobView:
+def prepare_dataset(session: requests.Session, base_url: str, staged_dataset_id: str) -> JobView:
     job_body = {
         "job_type": JobType.PREPARE_DATASET_FOR_IMPORT,
         "staged_dataset_id": staged_dataset_id,
     }
-    response = requests.post(f"{base_url}/api/jobs", json=job_body)
+    response = session.post(f"{base_url}/api/jobs", json=job_body)
     job = expect_job_accepted(response)
-    return wait_for_job_completion(base_url, job.job_id)
+    return wait_for_job_completion(session, base_url, job.job_id)
 
 
 def import_dataset_to_project(
-    base_url: str, project_id: str, staged_dataset_id: str, labels_mapping: dict[str, str | None] | None = None
+    session: requests.Session,
+    base_url: str,
+    project_id: str,
+    staged_dataset_id: str,
+    labels_mapping: dict[str, str | None] | None = None,
 ) -> JobView:
     job_body = {
         "job_type": JobType.IMPORT_DATASET_TO_PROJECT,
@@ -115,12 +121,13 @@ def import_dataset_to_project(
     }
     if labels_mapping is not None:
         job_body["parameters"] = {"labels_mapping": labels_mapping}
-    response = requests.post(f"{base_url}/api/jobs", json=job_body)
+    response = session.post(f"{base_url}/api/jobs", json=job_body)
     job = expect_job_accepted(response)
-    return wait_for_job_completion(base_url, job.job_id)
+    return wait_for_job_completion(session, base_url, job.job_id)
 
 
 def import_dataset_as_new_project(
+    session: requests.Session,
     base_url: str,
     project_name: str,
     staged_dataset_id: str,
@@ -144,6 +151,6 @@ def import_dataset_as_new_project(
             },
         },
     }
-    response = requests.post(f"{base_url}/api/jobs", json=job_body)
+    response = session.post(f"{base_url}/api/jobs", json=job_body)
     job = expect_job_accepted(response)
-    return wait_for_job_completion(base_url, job.job_id)
+    return wait_for_job_completion(session, base_url, job.job_id)

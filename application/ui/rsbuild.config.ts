@@ -39,7 +39,7 @@ const getPublicApiUrl = () => {
     }
 
     if (isTauriBuild) {
-        return 'http://localhost:7860';
+        return 'https://localhost:7860';
     }
 
     return '';

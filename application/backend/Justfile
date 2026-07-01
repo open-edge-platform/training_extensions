@@ -71,6 +71,28 @@ gen-api-spec output-path="openapi.json": install-uv
     PYTHONPATH=. uv run --no-sync app/cli.py gen-api --target-path {{ output-path }}
 
 # -------------------------------------------------------------------------------------------------
+# Certificates
+# -------------------------------------------------------------------------------------------------
+
+# Generate a self-signed TLS certificate for local development
+gen-certs:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    CERT_DIR="${DATA_DIR:-data}/certs"
+    mkdir -p "$CERT_DIR"
+    if [[ ! -f "$CERT_DIR/localhost.pem" || ! -f "$CERT_DIR/localhost-key.pem" ]]; then
+        openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout "$CERT_DIR/localhost-key.pem" \
+            -out "$CERT_DIR/localhost.pem" \
+            -days 365 \
+            -subj "/CN=localhost" \
+            -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+        echo "Self-signed certs written to $CERT_DIR"
+    else
+        echo "Certs already exist, skipping."
+    fi
+
+# -------------------------------------------------------------------------------------------------
 # Packaging
 # -------------------------------------------------------------------------------------------------
 
@@ -182,7 +204,7 @@ stop-coturn:
 [arg("coturn_port", long="coturn-port", help="Coturn server listening port (default: 443)")]
 [arg("coturn_image", long="coturn-image", help="Coturn server Docker image to use (default: quay.io/coturn/coturn)")]
 [arg("stun_server", long="stun", help="STUN server URL to use for WebRTC")]
-run-server clean="" setup_demo="" force_import="" host="" port="" webrtc_advertise_ip="" log_level="" log_dir="" data_dir="" no_proxy="" enable_coturn="false" coturn_host="" coturn_port="443" coturn_image="quay.io/coturn/coturn" stun_server="": install-uv
+run-server clean="" setup_demo="" force_import="" host="" port="" webrtc_advertise_ip="" log_level="" log_dir="" data_dir="" no_proxy="" enable_coturn="false" coturn_host="" coturn_port="443" coturn_image="quay.io/coturn/coturn" stun_server="": install-uv gen-certs
     #!/usr/bin/env bash
     set -euo pipefail
     export PYTHONUNBUFFERED=1

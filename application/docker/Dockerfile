@@ -305,7 +305,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libv4l-0t64=1.30.1-1 \
         libva2=2.22.* \
         libva-drm2=2.22.* \
-        libvpx9=1.15.0*
+        libvpx9=1.15.0* \
+        openssl=3.5.6*
 
 # Place the venv at the front of PATH so we can call python directly (no uv needed at runtime)
 ENV PATH="/application/backend/.venv/bin:${PATH}"
@@ -329,9 +330,11 @@ ENV LD_LIBRARY_PATH="/opt/vpl/lib:/opt/vpl/lib64:/opt/ffmpeg-vpl/lib:/usr/local/
 ENV PATH="/opt/ffmpeg-vpl/bin:${PATH}"
 
 WORKDIR /application/backend
+COPY --link --chmod=755 application/docker/entrypoint.sh /entrypoint.sh
 
 USER ${USER_NAME}
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["python", "app/main.py"]
 
 ######################

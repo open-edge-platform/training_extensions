@@ -9,6 +9,9 @@
 !application/backend/uv.lock
 !application/VERSION
 
+# Docker entrypoint
+!application/docker/entrypoint.sh
+
 # UI
 !application/ui/src
 !application/ui/public

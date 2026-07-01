@@ -11,7 +11,7 @@
         "build": "rsbuild build",
         "build:tauri": "cross-env BUILD_TARGET=tauri rsbuild build",
         "build:api": "npx openapi-typescript ./src/api/openapi-spec.json -o ./src/api/openapi-spec.d.ts  --root-types && prettier --write src/api/openapi-spec.d.ts",
-        "build:api:download": "curl -o ./src/api/openapi-spec.json http://localhost:7860/api/openapi.json && prettier --write src/api/openapi-spec.json",
+        "build:api:download": "curl --fail --insecure -o ./src/api/openapi-spec.json https://localhost:7860/api/openapi.json && prettier --write src/api/openapi-spec.json",
         "update-spec": "npm run build:api:download && npm run build:api",
         "clone-geti-ui-packages": "npx tiged --force --mode=git https://github.com/open-edge-platform/geti_v2.git/web_ui/packages/config#02d99ef600635d3c49ad9a52ca3f7aade829053e packages/config && npx tiged --force --mode=git https://github.com/open-edge-platform/geti_v2.git/web_ui/packages/smart-tools#02d99ef600635d3c49ad9a52ca3f7aade829053e packages/smart-tools",
         "cyclic-deps-check": "npx madge --circular src/**/*.ts*",

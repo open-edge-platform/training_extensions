@@ -114,6 +114,29 @@ Run `just --usage run-image` to see all available runtime options.
 After the container starts, you can access the Geti web application at [**http://localhost:8080**](http://localhost:8080) (assuming default settings).
 
 <details>
+<summary><strong>TLS certificates</strong></summary>
+
+By default, the container generates a self-signed certificate at startup and serves over HTTPS on the configured port.
+For production deployments, mount your certificate and private key into the container using `--volumes`, then point
+`--certfile` and `--keyfile` to the in-container paths:
+
+```bash
+just run-image --accelerator xpu \
+    --volumes "/path/to/certs:/certs:ro" \
+    --certfile /certs/server.pem \
+    --keyfile  /certs/server-key.pem
+```
+
+The cert directory is mounted read-only and is separate from the data volume - it is never modified by the container.
+
+> [!NOTE]
+> The self-signed certificate triggers a browser security warning. For a trusted local setup, generate a
+> locally-trusted cert with [mkcert](https://github.com/FiloSottile/mkcert) and pass it the same way.
+
+
+</details>
+
+<details>
 <summary><strong>Advanced: Run with a TURN server</strong></summary>
 
 Geti uses WebRTC for the real-time inference streaming visualization in the UI. WebRTC requires the browser to establish

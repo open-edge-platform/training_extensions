@@ -19,12 +19,13 @@
                 "minHeight": 600,
                 "resizable": true,
                 "fullscreen": false,
+                "useHttpsScheme": true,
                 "dragDropEnabled": false,
-                "additionalBrowserArgs": "--enable-unsafe-webgpu --enable-features=Vulkan"
+                "additionalBrowserArgs": "--enable-unsafe-webgpu --enable-features=Vulkan --ignore-certificate-errors --unsafely-treat-insecure-origin-as-secure=https://localhost:7860"
             }
         ],
         "security": {
-            "csp": "default-src 'self'; script-src 'self' 'unsafe-eval' blob:; worker-src 'self' blob:; connect-src 'self' ipc: http://ipc.localhost http://localhost:7860 data:; img-src 'self' http://localhost:7860 data: blob:; media-src 'self' http://localhost:7860 blob: data:; style-src 'self' 'unsafe-inline';",
+            "csp": "default-src 'self'; script-src 'self' 'unsafe-eval' blob:; worker-src 'self' blob:; connect-src 'self' ipc: https://ipc.localhost https://localhost:7860 data:; img-src 'self' https://localhost:7860 data: blob:; media-src 'self' https://localhost:7860 blob: data:; style-src 'self' 'unsafe-inline';",
             "headers": {
                 "Cross-Origin-Opener-Policy": "same-origin",
                 "Cross-Origin-Embedder-Policy": "credentialless"

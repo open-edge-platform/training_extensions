@@ -7,13 +7,13 @@ from pathlib import Path
 from typing import Any, cast
 from uuid import UUID, uuid4
 
-import requests
 from behave import given, then, when
 from behave.model import Table
 from behave.runner import Context
 from datumaro.experimental import Dataset
 from datumaro.experimental.categories import Categories, LabelCategories
 from datumaro.experimental.export_import import export_dataset
+from requests import Session
 
 from app.api.schemas import ProjectView
 from app.api.schemas.dataset import DatasetStatisticsView
@@ -103,7 +103,9 @@ def step_import_dataset_with_mapping(context: Context) -> None:
             labels_mapping[source] = target
     project = cast(ProjectView, context.project)
     staged_dataset_id = cast(UUID, context.staged_dataset_id)
-    import_dataset_to_project(str(context.base_url), str(project.id), str(staged_dataset_id), labels_mapping)
+    import_dataset_to_project(
+        cast(Session, context.session), str(context.base_url), str(project.id), str(staged_dataset_id), labels_mapping
+    )
 
 
 @when("I import the dataset")  # pyrefly: ignore
@@ -111,7 +113,9 @@ def step_import_dataset(context: Context) -> None:
     """Import the dataset with label mappings specified in the table."""
     project = cast(ProjectView, context.project)
     staged_dataset_id = cast(UUID, context.staged_dataset_id)
-    import_dataset_to_project(str(context.base_url), str(project.id), str(staged_dataset_id))
+    import_dataset_to_project(
+        cast(Session, context.session), str(context.base_url), str(project.id), str(staged_dataset_id)
+    )
 
 
 @then("the project statistics are:")  # pyrefly: ignore
@@ -124,7 +128,8 @@ def step_project_statistics_has(context: Context) -> None:
       | annotated_video_frames | 17    |
     """
     project = cast(ProjectView, context.project)
-    response = requests.get(f"{context.base_url}/api/projects/{project.id}/dataset/statistics")
+    session = cast(Session, context.session)
+    response = session.get(f"{context.base_url}/api/projects/{project.id}/dataset/statistics")
     statistics = response.json()
     context.statistics = statistics
 
@@ -168,15 +173,16 @@ def step_project_contains_annotated_media(context: Context) -> None:
 def step_project_contains_unannotated_images(context: Context, count: int) -> None:
     """Verify that the project dataset contains the expected number of annotated images with the specified label."""
     project = cast(ProjectView, context.project)
+    session = cast(Session, context.session)
     # Verify items existing without annotations
-    response = requests.get(
+    response = session.get(
         f"{context.base_url}/api/projects/{project.id}/dataset/items?"
         f"annotation_status={DatasetItemAnnotationStatus.MISSING_ANNOTATIONS}"
     )
     actual_item_count = response.json()["pagination"]["total"]
     assert actual_item_count == count, f"Expected {count} unannotated items, got {actual_item_count}"
     # Verify media existing without annotations
-    response = requests.get(
+    response = session.get(
         f"{context.base_url}/api/projects/{project.id}/dataset/media?"
         f"annotation_status={DatasetItemAnnotationStatus.MISSING_ANNOTATIONS}"
     )
