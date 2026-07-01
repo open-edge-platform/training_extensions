@@ -28,7 +28,7 @@ class TestSubConfigDefaults:
         assert (lc.min_hits, lc.tentative_max_age, lc.max_age) == (2, 0, 30)
 
     def test_motion_default(self):
-        assert MotionConfig().velocity_decay == pytest.approx(0.99)
+        assert MotionConfig().velocity_decay == pytest.approx(1.0)
 
     def test_interpolation_defaults(self):
         ic = InterpolationConfig()

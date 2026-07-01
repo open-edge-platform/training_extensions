@@ -6,7 +6,7 @@ score_threshold: 0.1
 class_filter: null
 # Detection-to-track matching.
 match_threshold: 0.8
-high_score_threshold: 0.6
+high_score_threshold: 0.5
 match_class_only: true
 lifecycle:
   max_age: 30
@@ -15,7 +15,7 @@ lifecycle:
 motion:
   process_noise: 1.0
   measurement_noise: 1.0
-  velocity_decay: 0.99
+  velocity_decay: 1.0
 interpolation:
   enabled: true
   method: linear

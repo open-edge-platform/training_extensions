@@ -68,8 +68,9 @@ class MotionConfig(_StrictModel):
     measurement_noise: Annotated[float, Field(gt=0.0)] = 1.0
     """Multiplier on the measurement-noise covariance (R). Larger values weight the motion prior over observations."""
 
-    velocity_decay: Annotated[float, Field(gt=0.0, le=1.0)] = 0.99
-    """Per-frame velocity damping in ``(0, 1]``. Values below 1.0 simulate gradual deceleration."""
+    velocity_decay: Annotated[float, Field(gt=0.0, le=1.0)] = 1.0
+    """Per-frame velocity damping in ``(0, 1]``. The default 1.0 matches the
+    reference (no damping); values below 1.0 simulate gradual deceleration."""
 
 
 class InterpolationConfig(_StrictModel):
