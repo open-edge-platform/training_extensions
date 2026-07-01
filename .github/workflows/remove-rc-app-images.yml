@@ -68,8 +68,8 @@ jobs:
             echo "Processing package: ${package}"
 
             # Skip packages that do not exist for this owner.
-            if ! gh api "${api_scope}/packages/container/${package_url}" >/dev/null 2>&1; then
-              echo "Package '${package}' not found for owner '${OWNER}', skipping."
+            if ! gh api --silent "${api_scope}/packages/container/${package_url}" >/dev/null; then
+              echo "Unable to access package '${package}' for owner '${OWNER}' (missing or insufficient permissions), skipping."
               continue
             fi
 
