@@ -1,4 +1,4 @@
 interface:
   display_name: "OTX Library Dev"
   short_description: "Work on the OTX Python library in library/"
-  default_prompt: "Use $otx-library-dev to plan or validate a change under library/."
+  default_prompt: "Use $geti-library-dev to plan or validate a change under library/."

@@ -1,4 +1,4 @@
 interface:
   display_name: "OTX OpenAPI Sync"
   short_description: "Sync backend OpenAPI output with UI types"
-  default_prompt: "Use $otx-openapi-sync to regenerate and verify the backend and UI API contract."
+  default_prompt: "Use $geti-openapi-sync to regenerate and verify the backend and UI API contract."

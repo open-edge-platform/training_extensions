@@ -1,4 +1,4 @@
 interface:
   display_name: "OTX Docs Update"
   short_description: "Update README, CHANGELOG, or Sphinx documentation"
-  default_prompt: "Use $otx-docs-update to document recent changes or fixes."
+  default_prompt: "Use $geti-docs-update to document recent changes or fixes."

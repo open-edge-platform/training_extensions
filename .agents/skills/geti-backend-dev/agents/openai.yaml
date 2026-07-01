@@ -1,4 +1,4 @@
 interface:
   display_name: "OTX Backend Dev"
   short_description: "Work on the FastAPI backend in application/backend"
-  default_prompt: "Use $otx-backend-dev to implement or validate a backend change."
+  default_prompt: "Use $geti-backend-dev to implement or validate a backend change."

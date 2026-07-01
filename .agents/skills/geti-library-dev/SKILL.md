@@ -1,5 +1,5 @@
 ---
-name: otx-library-dev
+name: geti-library-dev
 description: Develop and validate changes in `library/` for the OTX Python package. Use when touching `library/src/**`, `library/tests/**`, `library/pyproject.toml`, recipes, or any Python API, CLI, model, training, export, or utility logic owned by the library. Helps with `uv` and `just` setup, choosing cpu, cuda, or xpu extras, and running the smallest relevant lint, unit, model, or integration checks.
 ---
 

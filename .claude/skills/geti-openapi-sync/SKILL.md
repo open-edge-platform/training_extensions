@@ -1,5 +1,5 @@
 ---
-name: otx-openapi-sync
+name: geti-openapi-sync
 description: Regenerate and validate the OpenAPI contract between `application/backend/` and `application/ui/`. Use when backend endpoints, schemas, request or response models, or API surface change, or when `application/ui/src/api/openapi-spec.json` or `openapi-spec.d.ts` is stale. Handles backend spec generation, UI spec placement, TypeScript type regeneration, and the smallest backend and UI checks needed to confirm the contract still matches.
 ---
 
@@ -21,8 +21,8 @@ description: Regenerate and validate the OpenAPI contract between `application/b
 
 - Use direct backend generation when working offline, in CI-like flows, or before the server is runnable.
 - Use `npm run update-spec` when actively iterating with a local backend server.
-- Use `$otx-backend-dev` for backend fixes if generation exposes schema problems.
-- Use `$otx-ui-dev` for UI changes that consume the regenerated types.
+- Use `$geti-backend-dev` for backend fixes if generation exposes schema problems.
+- Use `$geti-ui-dev` for UI changes that consume the regenerated types.
 
 ## Guardrails
 

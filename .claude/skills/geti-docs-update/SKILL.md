@@ -1,5 +1,5 @@
 ---
-name: otx-docs-update
+name: geti-docs-update
 description: Update documentation (README, CHANGELOG, Sphinx docs, or inline docstrings) to reflect changes, fixes, or new features. Use when a PR modifies behavior that should be documented for users or developers.
 ---
 

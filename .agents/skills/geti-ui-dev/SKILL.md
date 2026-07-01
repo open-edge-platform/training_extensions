@@ -1,5 +1,5 @@
 ---
-name: otx-ui-dev
+name: geti-ui-dev
 description: Develop and validate changes in `application/ui/` for the React and TypeScript frontend. Use when touching `application/ui/src/**`, frontend tests, RSBuild or Vitest config, Playwright setup, package scripts, or generated API typings under `src/api`. Helps with Node and npm requirements, install and build commands, lint, typecheck, test workflows, and coordination with backend OpenAPI changes.
 ---
 
@@ -31,7 +31,7 @@ description: Develop and validate changes in `application/ui/` for the React and
 
 - `npm run build:api` reads `src/api/openapi-spec.json` and regenerates `src/api/openapi-spec.d.ts`.
 - `npm run update-spec` downloads the spec from `http://localhost:7860` and then rebuilds the TypeScript types.
-- Use `$otx-openapi-sync` when backend API changes are part of the task.
+- Use `$geti-openapi-sync` when backend API changes are part of the task.
 
 ## Coordination Notes
 
