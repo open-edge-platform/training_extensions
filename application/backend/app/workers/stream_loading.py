@@ -143,7 +143,7 @@ class StreamLoader(BaseProcessWorker):
         if self._status_shm is not None:
             self._status_shm.close()
 
-    def _report_status(self, code: SourceStatusCode, message: str = "") -> None:
+    def _report_status(self, code: SourceStatusCode, message: str | None = None) -> None:
         """Write the latest status into shared memory (overwrites previous value)."""
         if self._status_shm is None:
             return

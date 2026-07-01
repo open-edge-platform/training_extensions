@@ -24,8 +24,8 @@ from .source import SourceView
 
 class Status(BaseModel):
     status: str
-    message: str | None
     timestamp: datetime
+    message: str | None = None
 
     @staticmethod
     def unavailable() -> Status:

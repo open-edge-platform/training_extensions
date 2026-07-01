@@ -262,7 +262,7 @@ class InferenceWorker(BaseProcessWorker):
         if self._inference_status_shm is not None:
             self._inference_status_shm.close()
 
-    def _report_status(self, code: InferenceWorkerStatusCode, model_id: UUID, message: str = "") -> None:
+    def _report_status(self, code: InferenceWorkerStatusCode, model_id: UUID, message: str | None = None) -> None:
         if self._inference_status_shm is None:
             return
         status = InferenceWorkerStatus(code=code, model_id=model_id, message=message)
