@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from os import getenv
 from typing import Annotated, Literal
@@ -152,4 +152,4 @@ class SinkStatus(BaseModel):
     code: SinkStatusCode
     sink_id: UUID
     message: str | None = None
-    timestamp: datetime = Field(default_factory=datetime.now)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))

@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -29,7 +29,7 @@ class Status(BaseModel):
 
     @staticmethod
     def unavailable() -> Status:
-        return Status(status="unavailable", message=None, timestamp=datetime.now())
+        return Status(status="unavailable", message=None, timestamp=datetime.now(UTC))
 
 
 class PipelineComponentsHealth(BaseModel):

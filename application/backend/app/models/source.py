@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from os import getenv
 from typing import Annotated, Literal
@@ -139,7 +139,7 @@ class SourceStatusCode(StrEnum):
 class SourceStatus(BaseModel):
     """
     Status report emitted by StreamLoader to communicate frame-fetching state
-    to the Scheduler (or any consumer in the main process) via a multiprocessing Queue.
+    to the Scheduler (or any consumer in the main process) via shared memory.
     Attributes:
         code: High-level status category.
         source_id: ID of the source this status refers to
@@ -150,4 +150,4 @@ class SourceStatus(BaseModel):
     code: SourceStatusCode
     source_id: UUID
     message: str | None = None
-    timestamp: datetime = Field(default_factory=datetime.now)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
