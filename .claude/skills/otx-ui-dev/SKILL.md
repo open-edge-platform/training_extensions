@@ -8,7 +8,7 @@ description: Develop and validate changes in `application/ui/` for the React and
 ## Quick Start
 
 - Work from `application/ui/`.
-- Use Node `>=v24.2.0` and npm `>=11.3.0`.
+- Use Node `>=24.2.0` and npm `>=11.14.0`.
 - Install or refresh dependencies with `npm ci`.
 - Start with `npm run format:check`, `npm run lint`, `npm run cyclic-deps-check`, and `npm run type-check`.
 

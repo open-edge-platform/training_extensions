@@ -10,7 +10,7 @@
 
 ## Repository Map
 
-- `library/`: OTX Python package, recipes, and tests.
+- `library/`: `getitune` Python package (OTX training library, `src/getitune/`; legacy `src/otx/` re-exports), recipes, and tests.
 - `application/backend/`: FastAPI backend named `geti`; consumes `../../library` as an editable `uv` source.
 - `application/ui/`: React 19 + TypeScript + RSBuild frontend.
 - `library/docs/`: Sphinx-based documentation source.
@@ -54,7 +54,7 @@
 ## Commands: UI
 
 - Work from `application/ui/`.
-- Use Node `>=24.2.0` and npm `>=11.3.0`.
+- Use Node `>=24.2.0` and npm `>=11.14.0`.
 - Install dependencies with `npm ci`. This also fetches the core `@geti` UI packages via a `preinstall` hook.
 - Build with `npm run build`.
 - Run formatting checks with `npm run format:check`.

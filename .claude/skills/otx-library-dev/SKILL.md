@@ -15,7 +15,7 @@ description: Develop and validate changes in `library/` for the OTX Python packa
 ## Workflow
 
 1. Confirm the change belongs in `library/`. If the task is mainly FastAPI or React work, switch to the matching backend or UI skill.
-2. Inspect the nearest module and tests before editing. Keep changes inside the existing package boundaries under `src/otx/`.
+2. Inspect the nearest module and tests before editing. Keep changes inside the existing package boundaries under `src/getitune/` (legacy `src/otx/` only re-exports; prefer editing `getitune`).
 3. Make the smallest change that resolves the task. Avoid lockfile churn unless dependencies changed intentionally.
 4. Run the smallest relevant checks first and widen only if the changed behavior crosses package or task boundaries.
 

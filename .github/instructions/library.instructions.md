@@ -32,7 +32,7 @@ applyTo: "library/**"
 
 - Tests in `library/tests/` — organized as `unit/`, `integration/`, `regression/`.
 - Default device for local tests: `cpu`.
-- Do not commit datasets — use existing fixtures under `library/data/`.
+- Do not commit datasets — use existing fixtures under `library/tests/assets/`.
 
 ## Do not
 
