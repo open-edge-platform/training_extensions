@@ -3,6 +3,10 @@ name: Remove Application RC Container Images
 on:
   workflow_dispatch:
     inputs:
+      version:
+        description: "Released version whose RC images should be removed, e.g. 3.0.0"
+        required: true
+        type: string
       dry_run:
         description: "Preview deletions without removing image versions"
         required: false
@@ -10,6 +14,10 @@ on:
         default: true
 
 permissions: {} # No permissions by default
+
+concurrency:
+  group: ${{ github.repository_owner }}-rc-image-cleanup
+  cancel-in-progress: false
 
 jobs:
   remove-rc-images:
@@ -22,7 +30,7 @@ jobs:
       # GH_TOKEN: ${{ secrets.WRITE_PACKAGES_TOKEN }}
       GH_TOKEN: ${{ github.token }}
       OWNER: ${{ github.repository_owner }}
-      PACKAGE_PREFIX: geti-
+      TARGET_VERSION: ${{ inputs.version }}
       DRY_RUN: ${{ inputs.dry_run }}
     steps:
       - name: Harden the runner (audit all outbound calls)
@@ -34,6 +42,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          # Application container packages to clean up.
+          packages=(geti-cpu geti-xpu geti-cuda)
+
+          # Validate the requested version is a semver release (X.Y.Z).
+          if ! [[ "${TARGET_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version '${TARGET_VERSION}'. Must be a released semver, e.g. 3.0.0."
+            exit 1
+          fi
 
           deleted=0
           candidates=0
@@ -55,47 +72,58 @@ jobs:
 
           echo "Owner: ${OWNER} (type=${owner_type})"
           echo "Using ${scope_kind} package API scope: ${api_scope}"
-          echo "Listing container packages for owner '${OWNER}'"
-
-          mapfile -t packages < <(
-            gh api --paginate "${api_scope}/packages?package_type=container&per_page=100" \
-              --jq '.[].name' \
-              | grep -E "^${PACKAGE_PREFIX}" || true
-          )
-
-          if [[ "${#packages[@]}" -eq 0 ]]; then
-            echo "No container packages found matching prefix '${PACKAGE_PREFIX}'."
-            {
-              echo "## Application RC Image Cleanup"
-              echo ""
-              echo "No packages matched prefix '${PACKAGE_PREFIX}'."
-              echo "No image versions were deleted."
-            } >> "${GITHUB_STEP_SUMMARY}"
-            exit 0
-          fi
+          echo "Target version: ${TARGET_VERSION}"
 
           for package in "${packages[@]}"; do
             scanned_packages=$((scanned_packages + 1))
             package_url="$(printf '%s' "${package}" | jq -sRr @uri)"
             echo "Processing package: ${package}"
 
-            # Select versions where at least one tag matches semver RC format, e.g. 3.0.0rc1.
-            mapfile -t version_ids < <(
-              gh api --paginate "${api_scope}/packages/container/${package_url}/versions?per_page=100" \
-                --jq '.[] | select((.metadata.container.tags // []) | any(test("^[0-9]+\\.[0-9]+\\.[0-9]+rc[0-9]+$"; "i"))) | .id'
-            )
-
-            if [[ "${#version_ids[@]}" -eq 0 ]]; then
-              echo "No RC-tagged versions found for ${package}"
+            # Skip packages that do not exist for this owner.
+            if ! gh api --silent "${api_scope}/packages/container/${package_url}" >/dev/null; then
+              echo "Unable to access package '${package}' for owner '${OWNER}' (missing or insufficient permissions), skipping."
               continue
             fi
 
-            for version_id in "${version_ids[@]}"; do
+            # Fetch all versions and normalize to a JSON array of {id, tags}.
+            raw_versions="$(gh api --paginate "${api_scope}/packages/container/${package_url}/versions?per_page=100")"
+            versions_json="$(
+              printf '%s\n' "${raw_versions}" | \
+              jq -sc '
+                map(if type=="array" then .[] else . end)
+                | map({id, tags: (.metadata.container.tags // [])})
+              '
+            )"
+
+            # Select RC-tagged versions for the requested version (e.g. 3.0.0rc1)
+            # only when the released version (e.g. 3.0.0) also exists as a tag in
+            # this package.
+            # Each line is "<id>\t<comma-separated tags>".
+            mapfile -t versions < <(
+              echo "${versions_json}" | jq -r --arg version "${TARGET_VERSION}" '
+                ([.[] | .tags[]?] | any(. == $version)) as $has_release
+                | .[]
+                | select($has_release
+                    and any(.tags[]?;
+                        startswith($version + "rc")
+                        and ((ltrimstr($version + "rc")) | test("^[0-9]+$"))))
+                | "\(.id)\t\(.tags | join(","))"'
+            )
+
+            if [[ "${#versions[@]}" -eq 0 ]]; then
+              echo "No ${TARGET_VERSION} RC-tagged versions with a matching released version found for ${package}"
+              continue
+            fi
+
+            for version_entry in "${versions[@]}"; do
+              version_id="${version_entry%%$'\t'*}"
+              version_tags="${version_entry#*$'\t'}"
+              [[ -n "${version_tags}" ]] || version_tags="<untagged>"
               candidates=$((candidates + 1))
               if [[ "${DRY_RUN}" == "true" ]]; then
-                echo "[dry-run] Would delete ${package} version id ${version_id}"
+                echo "[dry-run] Would delete ${package} version id ${version_id} (tags: ${version_tags})"
               else
-                echo "Deleting ${package} version id ${version_id}"
+                echo "Deleting ${package} version id ${version_id} (tags: ${version_tags})"
                 gh api -X DELETE "${api_scope}/packages/container/${package_url}/versions/${version_id}"
                 deleted=$((deleted + 1))
               fi
@@ -108,7 +136,7 @@ jobs:
             echo "- Owner: ${OWNER}"
             echo "- Owner type: ${owner_type}"
             echo "- API scope: ${api_scope}"
-            echo "- Package prefix: ${PACKAGE_PREFIX}"
+            echo "- Target version: ${TARGET_VERSION}"
             echo "- Dry run: ${DRY_RUN}"
             echo "- Packages scanned: ${scanned_packages}"
             echo "- Package versions matched: ${candidates}"
