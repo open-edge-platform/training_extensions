@@ -266,7 +266,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' ||
       'ubuntu-latest' }}
     container:
-      image: mcr.microsoft.com/playwright:v1.57.0-jammy@sha256:6aca677c27a967caf7673d108ac67ffaf8fed134f27e17b27a05464ca0ace831
+      image: mcr.microsoft.com/playwright:v1.61.0-jammy@sha256:264136758e43332108f6420f82c47f639f619ca65301065ceade677763f477ec
     steps:
       - *checkout
 
