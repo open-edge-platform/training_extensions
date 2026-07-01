@@ -98,13 +98,23 @@ jobs:
               continue
             fi
 
-            # Fetch all versions with their first tag and creation date.
+            # Fetch all versions and normalize it to a JSON array
+            raw_versions="$(gh api --paginate "${api_scope}/packages/container/${package_url}/versions?per_page=100")"
+
             versions_json="$(
-              gh api --paginate \
-                "${api_scope}/packages/container/${package_url}/versions?per_page=100" \
-                --jq '[.[] | {id, tags: (.metadata.container.tags // []), created_at}]' \
-                | jq -s 'add'
+              printf '%s\n' "${raw_versions}" | \
+              jq -sc '
+                  map(
+                    if type=="array" then .[] else . end
+                  ) |
+                  map({id, tags: (.metadata.container.tags // []), created_at})
+              '
             )"
+
+            if ! echo "${versions_json}" | jq -e 'type=="array"' >/dev/null; then
+              echo "::error::Failed to parse package versions JSON for ${package}"
+              exit 1
+            fi
 
             # Count release versions retained (semver "X.Y.Z", RC "X.Y.ZrcN" tag or "latest").
             pkg_retained="$(
@@ -116,7 +126,8 @@ jobs:
 
             # Non-release candidates: versions without any release/RC/"latest" tag.
             # Sorted newest first; the first MIN_VERSIONS_TO_KEEP are kept.
-            mapfile -t old_version_ids < <(
+            # Each line is "<id>\t<comma-separated tags>".
+            mapfile -t old_versions < <(
               echo "${versions_json}" | jq -r --argjson keep "${MIN_VERSIONS_TO_KEEP}" '
                 [.[]
                   | select((any(.tags[]?;
@@ -124,18 +135,21 @@ jobs:
                 | sort_by(.created_at | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime)
                 | reverse
                 | .[$keep:]
-                | .[].id'
+                | .[] | "\(.id)\t\(.tags | join(","))"'
             )
 
             echo "Release versions retained for ${package}: ${pkg_retained}"
-            echo "Old non-release versions to delete for ${package}: ${#old_version_ids[@]}"
+            echo "Old non-release versions to delete for ${package}: ${#old_versions[@]}"
 
-            for version_id in "${old_version_ids[@]}"; do
+            for version_entry in "${old_versions[@]}"; do
+              version_id="${version_entry%%$'\t'*}"
+              version_tags="${version_entry#*$'\t'}"
+              [[ -n "${version_tags}" ]] || version_tags="<untagged>"
               candidates=$((candidates + 1))
               if [[ "${DRY_RUN}" == "true" ]]; then
-                echo "[dry-run] Would delete ${package} version id ${version_id}"
+                echo "[dry-run] Would delete ${package} version id ${version_id} (tags: ${version_tags})"
               else
-                echo "Deleting ${package} version id ${version_id}"
+                echo "Deleting ${package} version id ${version_id} (tags: ${version_tags})"
                 gh api -X DELETE "${api_scope}/packages/container/${package_url}/versions/${version_id}"
                 deleted=$((deleted + 1))
               fi

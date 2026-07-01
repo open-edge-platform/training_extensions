@@ -1,0 +1,70 @@
+id: instance-segmentation-yolo11-n
+name: YOLO11-N-Seg
+license: AGPL-3.0
+
+pretrained_weights:
+  url: https://huggingface.co/Ultralytics/YOLO11/resolve/main/yolo11n-seg.pt
+  mirror_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n-seg.pt
+  sha_sum: "55ed65c56c91713d23e8402371c6c49a6fd84f257f7dce452e8d70e41dcbe152"
+
+description: "YOLO11-N-Seg is the nano Ultralytics YOLO11 instance segmentation model. It is optimized for fast fine-tuning and low-latency inference while using the Geti Tune data pipeline for preprocessing and dataset handling."
+stats:
+  gigaflops: 9.7
+  trainable_parameters: 2.9
+  benchmark_metrics:
+    coco_map_50_95: 32.0
+
+capabilities:
+  tiling: false
+  xai: false
+
+hyperparameters:
+  training:
+    learning_rate: 0.001
+    weight_decay: 0.0005
+    max_epochs: 100
+    early_stopping:
+      enable: false
+    batch_size: 16
+    input_size_width: 640
+    input_size_height: 640
+    allowed_values_input_size:
+      - 640
+    scheduler:
+      type: cosine_annealing
+      warmup:
+        enable: false
+    gradient_clip:
+      enable: true
+      max_grad_norm: 10.0
+    gradient_accumulation:
+      enable: false
+  dataset_preparation:
+    augmentation:
+      mosaic:
+        enable: true
+        probability: 1.0
+        scale: 0.5
+        translate: 0.1
+      mixup:
+        enable: false
+        probability: 0.5
+        alpha: 1.5
+      color_jitter:
+        enable: true
+        brightness:
+          - 0.6
+          - 1.4
+        contrast:
+          - 0.6
+          - 1.4
+        saturation:
+          - 0.3
+          - 1.7
+        hue:
+          - -0.015
+          - 0.015
+        probability: 1.0
+      random_horizontal_flip:
+        enable: true
+        probability: 0.5

@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     from lightning import Callback
     from lightning.pytorch.loggers import Logger
     from lightning.pytorch.utilities.types import EVAL_DATALOADERS
-    from pytorch_lightning.trainer.connectors.accelerator_connector import _PRECISION_INPUT
+    from lightning_fabric.plugins.precision.precision import _PRECISION_INPUT
 
     from getitune.data.dataset.base import VisionDataset
     from getitune.metrics import MetricCallable
@@ -1260,9 +1260,9 @@ class LightningEngine(Engine):
         if "hyper_parameters" in ckpt and "label_info" in ckpt.get("hyper_parameters", {}):
             self._model.load_state_dict_incrementally(ckpt)
         else:
-            from getitune.backend.lightning.models.utils.utils import load_checkpoint
+            from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model
 
-            load_checkpoint(self._model.model, str(checkpoint), map_location=map_location, strict=False)
+            load_checkpoint_to_model(self._model.model, ckpt, strict=False)
 
         return ckpt
 

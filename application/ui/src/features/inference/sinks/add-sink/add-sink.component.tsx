@@ -40,7 +40,7 @@ export const AddSink = <T extends SinkConfig>({ config, onSaved, bodyFormatter, 
                 isDisabled={isPending || pipeline.isPending}
                 UNSAFE_style={{ maxWidth: 'fit-content' }}
             >
-                Add & Connect
+                Add & Use
             </Button>
         </Form>
     );

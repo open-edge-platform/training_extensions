@@ -757,6 +757,11 @@ class GetiConfigConverter:
                 "status": ModelStatus.ACTIVE,
                 "default": False,
             },
+            "object-detection-rfdetr-n": {
+                "recipe_path": RECIPE_PATH / "detection" / "rfdetr_nano.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
             "object-detection-rfdetr-s": {
                 "recipe_path": RECIPE_PATH / "detection" / "rfdetr_small.yaml",
                 "status": ModelStatus.ACTIVE,
@@ -802,6 +807,66 @@ class GetiConfigConverter:
                 "status": ModelStatus.ACTIVE,
                 "default": False,
             },
+            "object-detection-yolo26-l": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo26_l.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo26-x": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo26_x.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo11-n": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo11_n.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo11-s": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo11_s.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo11-m": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo11_m.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo11-l": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo11_l.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo11-x": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo11_x.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo12-n": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo12_n.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo12-s": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo12_s.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo12-m": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo12_m.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo12-l": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo12_l.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "object-detection-yolo12-x": {
+                "recipe_path": RECIPE_PATH / "detection" / "yolo12_x.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
             # INSTANCE_SEGMENTATION
             "instance-segmentation-mask-rcnn-swin-t": {
                 "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
@@ -823,6 +888,11 @@ class GetiConfigConverter:
                 "status": ModelStatus.ACTIVE,
                 "default": False,
             },
+            "instance-segmentation-rfdetr-n": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_nano.yaml",
+                "status": ModelStatus.SPEED,
+                "default": False,
+            },
             "instance-segmentation-rfdetr-s": {
                 "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_small.yaml",
                 "status": ModelStatus.SPEED,
@@ -840,6 +910,11 @@ class GetiConfigConverter:
             },
             "instance-segmentation-rfdetr-xl": {
                 "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_xlarge.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-rfdetr-2xl": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_2xlarge.yaml",
                 "status": ModelStatus.ACCURACY,
                 "default": False,
             },
@@ -855,6 +930,41 @@ class GetiConfigConverter:
             },
             "instance-segmentation-yolo26-m": {
                 "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_m_seg.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-yolo26-l": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_l_seg.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-yolo26-x": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo26_x_seg.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-yolo11-n": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo11_n_seg.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-yolo11-s": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo11_s_seg.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-yolo11-m": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo11_m_seg.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-yolo11-l": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo11_l_seg.yaml",
+                "status": ModelStatus.ACTIVE,
+                "default": False,
+            },
+            "instance-segmentation-yolo11-x": {
+                "recipe_path": RECIPE_PATH / "instance_segmentation" / "yolo11_x_seg.yaml",
                 "status": ModelStatus.ACTIVE,
                 "default": False,
             },

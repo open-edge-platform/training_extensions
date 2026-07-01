@@ -8,5 +8,3 @@ export const VALID_EXT = [...VALID_VIDEO_EXT, ...VALID_IMAGE_EXT];
 const getFileExtension = (file: File): string => file.name.split('.').pop()?.toLowerCase() ?? '';
 
 export const isVideoFile = (file: File) => VALID_VIDEO_EXT.includes(getFileExtension(file));
-
-export const isSupportedMediaFile = (file: File): boolean => VALID_EXT.includes(getFileExtension(file));

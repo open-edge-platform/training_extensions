@@ -62,6 +62,8 @@ def test_train_args_are_train_only(mocker, tmp_path) -> None:
     _, train_kwargs = yolo.train.call_args
     assert train_kwargs["epochs"] == 7
     assert train_kwargs["lr0"] == 0.01
+    # Default precision="16-mixed" on CPU is downgraded to FP32 → amp must be False.
+    assert train_kwargs["amp"] is False
 
     with patch.object(engine, "_test_with_datamodule", return_value={}) as test_with_datamodule:
         engine.test()
@@ -395,6 +397,77 @@ class TestExtractProgressCallback:
         assert fn is None
         assert min_p == 0.0
         assert max_p == 100.0
+
+
+class TestPrecisionToAmp:
+    """Tests for UltralyticsEngine._precision_to_amp."""
+
+    @pytest.mark.parametrize("precision", ["16-mixed", "16", "bf16-mixed", "bf16"])
+    def test_fp16_variants_return_true_on_cuda(self, precision) -> None:
+        assert UltralyticsEngine._precision_to_amp(precision, torch.device("cuda")) is True
+
+    @pytest.mark.parametrize("precision", ["16-mixed", "16", "bf16-mixed", "bf16"])
+    def test_fp16_variants_return_true_on_xpu(self, precision) -> None:
+        assert UltralyticsEngine._precision_to_amp(precision, torch.device("xpu")) is True
+
+    @pytest.mark.parametrize("precision", ["16-mixed", "16", "bf16-mixed", "bf16"])
+    def test_fp16_variants_return_false_on_cpu(self, precision) -> None:
+        # CPU does not support AMP; must downgrade to FP32 with a warning.
+        assert UltralyticsEngine._precision_to_amp(precision, torch.device("cpu")) is False
+
+    @pytest.mark.parametrize("precision", ["32", "32-true"])
+    def test_fp32_variants_return_false_on_all_devices(self, precision) -> None:
+        for dev in [torch.device("cpu"), torch.device("cuda"), torch.device("xpu")]:
+            assert UltralyticsEngine._precision_to_amp(precision, dev) is False
+
+    def test_none_returns_none(self) -> None:
+        for dev in [torch.device("cpu"), torch.device("cuda"), torch.device("xpu")]:
+            assert UltralyticsEngine._precision_to_amp(None, dev) is None
+
+    def test_none_precision_does_not_inject_amp_into_train_args(self, mocker, tmp_path) -> None:
+        """When precision=None, the 'amp' key must be absent from train kwargs."""
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
+        datamodule = mocker.MagicMock(spec=DataModule)
+        engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
+        engine._device = torch.device("cuda")  # no actual CUDA access needed
+        mocker.patch.object(engine, "_compute_best_confidence_threshold", return_value=None)
+
+        yolo = MagicMock()
+        model._yolo = yolo
+
+        engine.train(precision=None)
+        _, train_kwargs = yolo.train.call_args
+        assert "amp" not in train_kwargs
+
+    def test_fp32_precision_injects_amp_false(self, mocker, tmp_path) -> None:
+        """precision='32' must inject amp=False regardless of device."""
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
+        datamodule = mocker.MagicMock(spec=DataModule)
+        engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
+        engine._device = torch.device("cuda")
+        mocker.patch.object(engine, "_compute_best_confidence_threshold", return_value=None)
+
+        yolo = MagicMock()
+        model._yolo = yolo
+
+        engine.train(precision="32")
+        _, train_kwargs = yolo.train.call_args
+        assert train_kwargs["amp"] is False
+
+    def test_fp16_precision_injects_amp_true_on_cuda(self, mocker, tmp_path) -> None:
+        """precision='16-mixed' on CUDA must inject amp=True."""
+        model = UltralyticsDetectionModel(model_name="yolo26n", label_info=_label_info())
+        datamodule = mocker.MagicMock(spec=DataModule)
+        engine = UltralyticsEngine(model=model, data=datamodule, work_dir=tmp_path, device="cpu")
+        engine._device = torch.device("cuda")
+        mocker.patch.object(engine, "_compute_best_confidence_threshold", return_value=None)
+
+        yolo = MagicMock()
+        model._yolo = yolo
+
+        engine.train(precision="16-mixed")
+        _, train_kwargs = yolo.train.call_args
+        assert train_kwargs["amp"] is True
 
 
 class TestPerClassMetrics:

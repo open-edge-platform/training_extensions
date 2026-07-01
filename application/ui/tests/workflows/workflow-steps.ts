@@ -184,7 +184,7 @@ export const stepConfigureInferenceSourceAndSink = async (
     await page.getByRole('textbox', { name: 'Name' }).fill(config.sourceName);
     await page.getByRole('button', { name: 'Camera list' }).click();
     await page.getByRole('option').first().click();
-    await page.getByRole('button', { name: 'Add & Connect' }).click();
+    await page.getByRole('button', { name: 'Add & Use' }).click();
 
     await openPipelineTab(page, 'Output');
     await page.getByRole('button', { name: 'Add new sink' }).click();
@@ -195,7 +195,7 @@ export const stepConfigureInferenceSourceAndSink = async (
     await page.getByRole('textbox', { name: 'Seconds' }).fill(String(config.rateLimitSeconds));
     await page.getByRole('textbox', { name: 'Folder Path' }).fill(config.sinkFolderPath);
     await page.getByRole('checkbox', { name: 'Predictions', exact: true }).check();
-    await page.getByRole('button', { name: 'Add & Connect' }).click();
+    await page.getByRole('button', { name: 'Add & Use' }).click();
 };
 
 export const stepStartStreamWithAutoCapture = async (page: Page, streamPage: StreamPage): Promise<void> => {
