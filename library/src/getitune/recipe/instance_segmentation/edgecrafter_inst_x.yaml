@@ -6,11 +6,12 @@ model:
     model_name: edgecrafter_x
     label_info: 80
     multi_scale: false
+    backbone_lr: 0.0000025
 
     optimizer:
       class_path: torch.optim.AdamW
       init_args:
-        lr: 0.0001
+        lr: 0.0005
         betas: [0.9, 0.999]
         weight_decay: 0.0001
 
@@ -57,9 +58,135 @@ callbacks:
       save_last: true
       auto_insert_metric_name: false
       filename: "checkpoints/epoch_{epoch:03d}"
-  - class_path: lightning.pytorch.callbacks.EMAWeightAveraging
+  - class_path: getitune.backend.lightning.callbacks.aug_scheduler.AugmentationSchedulerCallback
     init_args:
-      decay: 0.993
+      data_aug_switch:
+        class_path: getitune.backend.lightning.callbacks.aug_scheduler.DataAugSwitch
+        init_args:
+          policy_epochs: [2, 48]
+          input_size: [640, 640]
+          policies:
+            no_aug:
+              augmentations_cpu:
+                - class_path: getitune.data.augmentation.transforms.Resize
+                  init_args:
+                    size: [640, 640]
+                    keep_aspect_ratio: false
+              augmentations_gpu:
+                - class_path: kornia.augmentation.Normalize
+                  init_args:
+                    mean: [0.485, 0.456, 0.406]
+                    std: [0.229, 0.224, 0.225]
+            strong_aug_1:
+              augmentations_cpu:
+                - class_path: getitune.data.augmentation.transforms.CachedMosaic
+                  init_args:
+                    img_scale: [640, 640]
+                    p: 1.0
+                    max_cached_images: 50
+                    random_pop: true
+                - class_path: getitune.data.augmentation.transforms.CachedMixUp
+                  init_args:
+                    img_scale: [640, 640]
+                    p: 1.0
+                    alpha: 1.5
+                    max_cached_images: 20
+                    random_pop: true
+                - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+                  init_args:
+                    min_size: 1
+                - class_path: getitune.data.augmentation.transforms.Resize
+                  init_args:
+                    size: [640, 640]
+                    keep_aspect_ratio: false
+              augmentations_gpu:
+                - class_path: kornia.augmentation.RandomHorizontalFlip
+                  init_args:
+                    p: 0.5
+                - class_path: kornia.augmentation.ColorJiggle
+                  init_args:
+                    brightness: 0.125
+                    contrast: 0.5
+                    saturation: 0.5
+                    hue: 0.05
+                    p: 0.5
+                - class_path: kornia.augmentation.Normalize
+                  init_args:
+                    mean: [0.485, 0.456, 0.406]
+                    std: [0.229, 0.224, 0.225]
+            strong_aug_2:
+              augmentations_cpu:
+                - class_path: getitune.data.augmentation.transforms.CachedMosaic
+                  init_args:
+                    img_scale: [640, 640]
+                    p: 1.0
+                    max_cached_images: 50
+                    random_pop: true
+                - class_path: torchvision.transforms.v2.RandomZoomOut
+                  init_args:
+                    fill: 0
+                    p: 0.5
+                    side_range: [1.0, 2.0]
+                - class_path: getitune.data.augmentation.transforms.RandomIoUCrop
+                - class_path: getitune.data.augmentation.transforms.CachedMixUp
+                  init_args:
+                    img_scale: [640, 640]
+                    p: 1.0
+                    alpha: 1.5
+                    max_cached_images: 20
+                    random_pop: true
+                - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+                  init_args:
+                    min_size: 1
+                - class_path: getitune.data.augmentation.transforms.Resize
+                  init_args:
+                    size: [640, 640]
+                    keep_aspect_ratio: false
+              augmentations_gpu:
+                - class_path: kornia.augmentation.RandomHorizontalFlip
+                  init_args:
+                    p: 0.5
+                - class_path: kornia.augmentation.ColorJiggle
+                  init_args:
+                    brightness: 0.125
+                    contrast: 0.5
+                    saturation: 0.5
+                    hue: 0.05
+                    p: 0.5
+                - class_path: kornia.augmentation.Normalize
+                  init_args:
+                    mean: [0.485, 0.456, 0.406]
+                    std: [0.229, 0.224, 0.225]
+            light_aug:
+              augmentations_cpu:
+                - class_path: torchvision.transforms.v2.RandomZoomOut
+                  init_args:
+                    fill: 0
+                    p: 0.5
+                    side_range: [1.0, 2.0]
+                - class_path: getitune.data.augmentation.transforms.RandomIoUCrop
+                - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+                  init_args:
+                    min_size: 1
+                - class_path: getitune.data.augmentation.transforms.Resize
+                  init_args:
+                    size: [640, 640]
+                    keep_aspect_ratio: false
+              augmentations_gpu:
+                - class_path: kornia.augmentation.RandomHorizontalFlip
+                  init_args:
+                    p: 0.5
+                - class_path: kornia.augmentation.ColorJiggle
+                  init_args:
+                    brightness: 0.125
+                    contrast: 0.5
+                    saturation: 0.5
+                    hue: 0.05
+                    p: 0.5
+                - class_path: kornia.augmentation.Normalize
+                  init_args:
+                    mean: [0.485, 0.456, 0.406]
+                    std: [0.229, 0.224, 0.225]
 
 overrides:
   max_epochs: 100
@@ -84,8 +211,6 @@ overrides:
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
-      sampler:
-        class_path: getitune.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
       batch_size: 4

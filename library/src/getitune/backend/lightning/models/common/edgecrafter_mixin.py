@@ -52,25 +52,25 @@ class EdgeCrafterMixin:
             "backbone_name": "ecvitt",
             "seg_backbone_name": "ecseg_vitt",
             "proj_dim": None,
-            "backbone_lr": 0.0001,
+            "backbone_lr": 0.000025,
         },
         "edgecrafter_m": {
             "backbone_name": "ecvittplus",
             "seg_backbone_name": "ecseg_vittplus",
             "proj_dim": None,
-            "backbone_lr": 0.0001,
+            "backbone_lr": 0.000025,
         },
         "edgecrafter_l": {
             "backbone_name": "ecvits",
             "seg_backbone_name": "ecseg_vits",
             "proj_dim": 256,
-            "backbone_lr": 0.00005,
+            "backbone_lr": 0.000005,
         },
         "edgecrafter_x": {
             "backbone_name": "ecvitsplus",
             "seg_backbone_name": "ecseg_vitsplus",
             "proj_dim": 256,
-            "backbone_lr": 0.00005,
+            "backbone_lr": 0.0000025,
         },
     }
 
@@ -79,6 +79,7 @@ class EdgeCrafterMixin:
         num_classes: int,
         *,
         with_seg: bool = False,
+        backbone_lr: float | None = None,
     ) -> ECDETRDetector:
         """Construct the full EdgeCrafter model for detection or instance segmentation.
 
@@ -94,6 +95,8 @@ class EdgeCrafterMixin:
             num_classes: Number of target classes.
             with_seg: When ``True``, builds the ECSeg variant (adds segmentation
                 head and mask losses).
+            backbone_lr: Optional override for the backbone learning rate.
+                Defaults to the per-variant value in ``_EC_MODEL_CFGS``.
 
         Returns:
             Configured :class:`ECDETRDetector` instance.
@@ -115,17 +118,32 @@ class EdgeCrafterMixin:
             mask_downsample_ratio=4 if with_seg else None,
         )
 
-        weight_dict: dict[str, float] = {
-            "loss_vfl": 1.0,
-            "loss_bbox": 5.0,
-            "loss_giou": 2.0,
-            "loss_fgl": 0.15,
-            "loss_ddf": 1.5,
-            "loss_mal": 1.0,
-        }
         if with_seg:
-            weight_dict["loss_mask_ce"] = 2.0
-            weight_dict["loss_mask_dice"] = 5.0
+            weight_dict: dict[str, float] = {
+                "loss_mal": 2.0,
+                "loss_bbox": 1.0,
+                "loss_giou": 1.0,
+                "loss_fgl": 0.15,
+                "loss_ddf": 1.5,
+                "loss_mask_ce": 5.0,
+                "loss_mask_dice": 5.0,
+            }
+            matcher_cost_dict: dict[str, int | float] | None = {
+                "cost_class": 2,
+                "cost_bbox": 1,
+                "cost_giou": 1,
+                "cost_mask": 5,
+                "cost_dice": 5,
+            }
+        else:
+            weight_dict = {
+                "loss_mal": 1.0,
+                "loss_bbox": 5.0,
+                "loss_giou": 2.0,
+                "loss_fgl": 0.15,
+                "loss_ddf": 1.5,
+            }
+            matcher_cost_dict = None
 
         criterion = ECCriterion(
             weight_dict=weight_dict,
@@ -133,9 +151,10 @@ class EdgeCrafterMixin:
             gamma=1.5,
             reg_max=32,
             num_classes=num_classes,
+            matcher_cost_dict=matcher_cost_dict,
         )
 
-        backbone_lr: float = cfg["backbone_lr"]
+        backbone_lr = backbone_lr if backbone_lr is not None else cfg["backbone_lr"]
         optimizer_configuration = [
             {"params": r"^(?=.*backbone)(?!.*(?:norm|bn|bias)).*$", "lr": backbone_lr},
             {"params": r"^(?=.*backbone)(?=.*(?:norm|bn|bias)).*$", "lr": backbone_lr, "weight_decay": 0.0},
