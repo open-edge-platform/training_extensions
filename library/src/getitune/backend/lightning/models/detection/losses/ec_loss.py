@@ -4,7 +4,6 @@
 """EdgeCrafter criterion implementation.
 
 Modified from EdgeCrafter (https://github.com/Intellindust-AI-Lab/EdgeCrafter).
-Copyright (c) 2026 The EdgeCrafter Authors. All Rights Reserved.
 Modified from D-FINE (https://github.com/Peterande/D-FINE).
 Copyright (c) 2024 D-FINE Authors. All Rights Reserved.
 """
@@ -16,6 +15,8 @@ from typing import Callable
 import torch
 import torch.nn.functional as F  # noqa: N812
 from torch import Tensor
+
+from getitune.backend.lightning.models.common.utils.assigners.hungarian_matcher import HungarianMatcher
 
 from .deim_loss import DEIMCriterion
 
@@ -37,7 +38,22 @@ class ECCriterion(DEIMCriterion):
         gamma: VFL/MAL gamma parameter. Defaults to 2.0.
         num_classes: Number of object classes. Defaults to 80.
         reg_max: Bin count for distribution-based box regression. Defaults to 32.
+        matcher_cost_dict: Optional custom cost dictionary for the Hungarian matcher.
+            When provided, overrides the default detection matcher.
     """
+
+    def __init__(
+        self,
+        weight_dict: dict[str, int | float],
+        alpha: float = 0.2,
+        gamma: float = 2.0,
+        num_classes: int = 80,
+        reg_max: int = 32,
+        matcher_cost_dict: dict[str, int | float] | None = None,
+    ) -> None:
+        super().__init__(weight_dict, alpha, gamma, num_classes, reg_max)
+        if matcher_cost_dict is not None:
+            self.matcher = HungarianMatcher(cost_dict=matcher_cost_dict)
 
     def loss_masks(
         self,

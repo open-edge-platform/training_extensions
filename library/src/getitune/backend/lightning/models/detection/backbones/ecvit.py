@@ -4,7 +4,6 @@
 """EC-ViT backbone (ViTAdapter) for EdgeCrafter models.
 
 Modified from EdgeCrafter (https://github.com/Intellindust-AI-Lab/EdgeCrafter).
-Copyright (c) 2026 The EdgeCrafter Authors. All Rights Reserved.
 Modified from DINOv3 (https://github.com/facebookresearch/dinov3).
 Modified from https://huggingface.co/spaces/Hila/RobustViT/blob/main/ViT/ViT_new.py
 """

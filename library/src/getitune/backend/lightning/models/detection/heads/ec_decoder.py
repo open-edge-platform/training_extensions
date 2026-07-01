@@ -4,7 +4,6 @@
 """EdgeCrafter Transformer Decoder (ECTransformer).
 
 Modified from EdgeCrafter (https://github.com/Intellindust-AI-Lab/EdgeCrafter).
-Copyright (c) 2026 The EdgeCrafter Authors. All Rights Reserved.
 Modified from D-FINE (https://github.com/Peterande/D-FINE).
 Copyright (c) 2024 D-FINE Authors. All Rights Reserved.
 Modified from RT-DETR (https://github.com/lyuwenyu/RT-DETR).

@@ -5,7 +5,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, Literal
+from typing import TYPE_CHECKING, ClassVar, Literal, cast
+
+import torch
+from torch import Tensor
 
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
@@ -15,7 +18,6 @@ from getitune.backend.lightning.models.detection.base import LightningDetectionM
 from getitune.backend.lightning.models.detection.detectors.edgecrafter import ECDETRDetector
 from getitune.config.data import TileConfig
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from getitune.types.export import TaskLevelExportParameters
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -52,6 +54,8 @@ class EdgeCrafter(EdgeCrafterMixin, LightningDetectionModel):  # pyrefly: ignore
         scheduler: LR-scheduler callable. Defaults to :data:`DefaultSchedulerCallable`.
         metric: Metric callable. Defaults to MAP F-measure.
         multi_scale: Whether to use multi-scale training. Defaults to ``False``.
+        backbone_lr: Learning rate for the backbone. Defaults to the upstream
+            per-variant value in :class:`EdgeCrafterMixin`.
         torch_compile: Whether to use ``torch.compile``. Defaults to ``False``.
         tile_config: Tiling configuration. Defaults to disabled tiler.
     """
@@ -79,10 +83,12 @@ class EdgeCrafter(EdgeCrafterMixin, LightningDetectionModel):  # pyrefly: ignore
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
         multi_scale: bool = False,
+        backbone_lr: float | None = None,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
         self.multi_scale = multi_scale
+        self.backbone_lr = backbone_lr
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -104,14 +110,20 @@ class EdgeCrafter(EdgeCrafterMixin, LightningDetectionModel):  # pyrefly: ignore
             Configured :class:`ECDETRDetector`.
         """
         num_classes = num_classes if num_classes is not None else self.num_classes
-        return self._build_ec_model(num_classes, with_seg=False)
+        return self._build_ec_model(num_classes, with_seg=False, backbone_lr=self.backbone_lr)
 
-    @property
-    def _export_parameters(self) -> TaskLevelExportParameters:
-        """Export parameters for EdgeCrafter detection."""
-        # Use a conservative NMS IoU threshold: DETR produces one-to-one predictions
-        # via Hungarian matching, so only suppress near-duplicate boxes.
-        return super()._export_parameters.wrap(iou_threshold=0.8, nms_execute=True)
+    def forward_for_tracing(self, inputs: Tensor) -> dict[str, Tensor]:
+        """Export-mode forward.
+
+        The detector returns boxes in pixel coordinates, but ModelAPI expects
+        DETR-style normalized ``xyxy`` boxes (like DEIM/D-FINE).  Normalize the
+        exported boxes by the input spatial size here.
+        """
+        result = cast("dict[str, Tensor]", super().forward_for_tracing(inputs))
+        _, _, height, width = inputs.shape
+        scale = torch.tensor([width, height, width, height], device=inputs.device, dtype=inputs.dtype)
+        result["bboxes"] = result["bboxes"] / scale
+        return result
 
     @property
     def _exporter(self) -> ModelExporter:

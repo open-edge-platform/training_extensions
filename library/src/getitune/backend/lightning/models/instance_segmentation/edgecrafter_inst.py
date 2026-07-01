@@ -48,6 +48,8 @@ class EdgeCrafterInst(EdgeCrafterMixin, LightningInstanceSegModel):  # pyrefly: 
         scheduler: LR-scheduler callable. Defaults to :data:`DefaultSchedulerCallable`.
         metric: Metric callable. Defaults to mask RLE mean AP.
         multi_scale: Whether to use multi-scale training. Defaults to ``False``.
+        backbone_lr: Learning rate for the backbone. Defaults to the upstream
+            per-variant value in :class:`EdgeCrafterMixin`.
         torch_compile: Whether to use ``torch.compile``. Defaults to ``False``.
         tile_config: Tiling configuration. Defaults to disabled tiler.
     """
@@ -76,10 +78,12 @@ class EdgeCrafterInst(EdgeCrafterMixin, LightningInstanceSegModel):  # pyrefly: 
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
         multi_scale: bool = False,
+        backbone_lr: float | None = None,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
         self.multi_scale = multi_scale
+        self.backbone_lr = backbone_lr
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -101,7 +105,7 @@ class EdgeCrafterInst(EdgeCrafterMixin, LightningInstanceSegModel):  # pyrefly: 
             Configured :class:`ECDETRDetector` with instance-segmentation head.
         """
         num_classes = num_classes if num_classes is not None else self.num_classes
-        return self._build_ec_model(num_classes, with_seg=True)
+        return self._build_ec_model(num_classes, with_seg=True, backbone_lr=self.backbone_lr)
 
     @property
     def _export_parameters(self) -> TaskLevelExportParameters:
