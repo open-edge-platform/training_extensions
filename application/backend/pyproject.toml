@@ -96,7 +96,7 @@ override-dependencies = [
     "idna>=3.15",
 ]
 constraint-dependencies = [
-    "torch==2.10.*",
+    "torch==2.12.*",
 ]
 
 [tool.hatch.version]

@@ -90,19 +90,19 @@ lint = [
 cpu = [
     # Note: platform-specific wheels are only available for Linux and Windows.
     # For macOS, there is only one version of torch (default) available via PyPI.
-    "torch==2.10.0+cpu ; sys_platform == 'linux' or sys_platform == 'win32'",
-    "torchvision==0.25.0+cpu ; sys_platform == 'linux' or sys_platform == 'win32'",
-    "torch==2.10.0 ; sys_platform != 'linux' and sys_platform != 'win32'",
-    "torchvision==0.25.0 ; sys_platform != 'linux' and sys_platform != 'win32'"
+    "torch==2.12.1+cpu ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchvision==0.27.1+cpu ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torch==2.12.1 ; sys_platform != 'linux' and sys_platform != 'win32'",
+    "torchvision==0.27.1 ; sys_platform != 'linux' and sys_platform != 'win32'"
 ]
 cuda = [
-    "torch==2.10.0+cu128",
-    "torchvision==0.25.0+cu128"
+    "torch==2.12.1+cu129",
+    "torchvision==0.27.1+cu129"
 ]
 xpu = [
-    "torch==2.10.0+xpu",
-    "triton-xpu==3.6.0",
-    "torchvision==0.25.0+xpu"
+    "torch==2.12.1+xpu",
+    "triton-xpu==3.7.1",
+    "torchvision==0.27.1+xpu"
 ]
 ultralytics = [
     "ultralytics~=8.4.82",
@@ -183,7 +183,7 @@ explicit = true
 
 [[tool.uv.index]]
 name = "torch-cuda"
-url = "https://download.pytorch.org/whl/cu128"
+url = "https://download.pytorch.org/whl/cu129"
 explicit = true
 
 [[tool.uv.index]]
