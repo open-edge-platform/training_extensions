@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import shutil
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
@@ -80,6 +81,7 @@ class DatasetRevisionService(BaseSessionManagedService):
                     validation_count=item_counts.validation,
                     testing_count=item_counts.testing,
                     size=size_in_bytes,
+                    created_at=datetime.now(UTC),  # Set created_at explicitly with microsecond precision.
                 )
             )
         except (IntegrityError, PrimaryKeyIntegrityError, UniqueConstraintIntegrityError):
