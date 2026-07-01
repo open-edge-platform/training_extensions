@@ -7,21 +7,19 @@ import dayjs from 'dayjs';
 import { useDatasetFiltersSearchParams } from 'hooks/use-dataset-filters-search-params.hook';
 import { isEmpty } from 'lodash-es';
 
-import { FilterChips } from '../filter-chips/filter-chips.component';
+import { formatFilterDate } from '../../../../../shared/date-utils';
 
 import classes from './date-filter.module.scss';
 
 const MIN_DATE = parseAbsoluteToLocal(dayjs('2020-01-30').startOf('d').toISOString());
 const MAX_DATE = parseAbsoluteToLocal(dayjs('9999-11-30').endOf('d').toISOString());
 
-const formatToLocalDate = (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm:ss');
-
 export const DateFilter = () => {
     const { startDate, endDate, setStartDate, setEndDate } = useDatasetFiltersSearchParams();
 
     const dates = [
-        ...(startDate ? [{ id: 'startDate', name: `Start: ${formatToLocalDate(startDate)}` }] : []),
-        ...(endDate ? [{ id: 'endDate', name: `End: ${formatToLocalDate(endDate)}` }] : []),
+        ...(startDate ? [{ id: 'startDate', name: `Start: ${formatFilterDate(startDate)}` }] : []),
+        ...(endDate ? [{ id: 'endDate', name: `End: ${formatFilterDate(endDate)}` }] : []),
     ];
 
     const handleStartDateChange = (date: DateValue | null) => {
@@ -40,15 +38,6 @@ export const DateFilter = () => {
         setEndDate(date.toDate(getLocalTimeZone()).toISOString());
     };
 
-    const handleRemoveFilter = (id: string) => {
-        if (id === 'startDate') {
-            setStartDate(null);
-        }
-        if (id === 'endDate') {
-            setEndDate(null);
-        }
-    };
-
     return (
         <DialogTrigger hideArrow type='popover'>
             <PressableElement>
@@ -62,12 +51,10 @@ export const DateFilter = () => {
                         alignItems={'center'}
                         UNSAFE_className={classes.filterContainer}
                     >
-                        {dates.map((date) => (
-                            <FilterChips key={date.id} name={date.name} onClose={() => handleRemoveFilter(date.id)} />
-                        ))}
-
-                        {isEmpty(dates) && (
+                        {isEmpty(dates) ? (
                             <Text UNSAFE_className={classes.searchPlaceholder}>Filter by upload date</Text>
+                        ) : (
+                            <Text>{dates.map(({ name }) => name).join(', ')}</Text>
                         )}
                     </Flex>
                 </div>

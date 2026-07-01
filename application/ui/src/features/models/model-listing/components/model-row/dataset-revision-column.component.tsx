@@ -6,7 +6,7 @@ import { Image, Tag } from '@geti-ui/ui/icons';
 import { useNumberFormatter } from 'react-aria';
 
 import type { DatasetRevision } from '../../../../../constants/shared-types';
-import { formatDatasetRevisionDate } from '../../utils/date-formatting';
+import { formatDateTime } from '../../../../../shared/date-utils';
 import { ModelBadge } from './model-badge.component';
 
 import styles from './model-row.module.scss';
@@ -32,9 +32,7 @@ export const DatasetColumn = ({ datasetRevision, labelsCount }: DatasetColumnPro
     return (
         <Flex direction={'column'} gap={'size-50'}>
             <Text UNSAFE_className={styles.datasetRevisionName}>{datasetRevision.name}</Text>
-            <Text UNSAFE_className={styles.datasetRevisionDate}>
-                {formatDatasetRevisionDate(datasetRevision.created_at)}
-            </Text>
+            <Text UNSAFE_className={styles.datasetRevisionDate}>{formatDateTime(datasetRevision.created_at)}</Text>
             <Flex gap={'size-100'}>
                 {labelsCount !== undefined && (
                     <ModelBadge id={'labels-count'}>

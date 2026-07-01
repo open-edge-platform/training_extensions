@@ -1,23 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import dayjs from 'dayjs';
-
 import type { DatasetRevision, Model } from '../../../../constants/shared-types';
+import { formatDateTime } from '../../../../shared/date-utils';
 import type { GroupedModels } from '../types';
 
 const formatDatasetStartTime = (dateString: string | null | undefined): string => {
-    if (!dateString) return '-';
+    const formatted = formatDateTime(dateString);
 
-    try {
-        const date = dayjs(dateString);
-
-        if (!date.isValid()) return '-';
-
-        return `Created ${date.format('DD MMM YYYY, hh:mm A')}`;
-    } catch {
-        return '-';
-    }
+    return formatted === '-' ? formatted : `Created ${formatted}`;
 };
 
 type GroupModelsByDatasetOptions = {
