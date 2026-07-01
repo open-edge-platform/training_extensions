@@ -45,7 +45,7 @@ export default defineConfig({
         launchOptions: {
             slowMo: 100,
             headless: true,
-            devtools: true,
+            args: ['--auto-open-devtools-for-tabs'],
         },
         timezoneId: 'UTC',
         actionTimeout: ACTION_TIMEOUT,
