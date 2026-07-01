@@ -20,6 +20,7 @@ from getitune.backend.lightning.models.classification.losses.asymmetric_angular_
     AsymmetricAngularLossWithIgnore,
 )
 from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.lightning.models.classification.utils.loaders import PytorchcvLoaderMixin
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.metrics.accuracy import HLabelClsMetricCallable
 from getitune.types.label import HLabelInfo
@@ -30,7 +31,7 @@ if TYPE_CHECKING:
     from getitune.metrics import MetricCallable
 
 
-class EfficientNetHLabelCls(LightningHlabelClsModel):
+class EfficientNetHLabelCls(PytorchcvLoaderMixin, LightningHlabelClsModel):
     """EfficientNet Model for hierarchical label classification task."""
 
     def __init__(
@@ -53,6 +54,7 @@ class EfficientNetHLabelCls(LightningHlabelClsModel):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
+        pretrained: bool = True,
     ) -> None:
         super().__init__(
             label_info=label_info,
@@ -63,6 +65,7 @@ class EfficientNetHLabelCls(LightningHlabelClsModel):
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
+            pretrained=pretrained,
         )
 
     def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]

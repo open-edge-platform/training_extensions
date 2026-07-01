@@ -41,6 +41,7 @@ from getitune.data.entity.base import (
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.data.entity.tile import TileBatchData
 from getitune.metrics import MetricInput, NullMetricCallable
+from getitune.types import PathLike
 from getitune.types.export import ExportFormat, TaskLevelExportParameters
 from getitune.types.label import LabelInfo, LabelInfoTypes
 from getitune.types.precision import Precision
@@ -172,6 +173,7 @@ class LightningModel(LightningModule):
         metric: MetricCallable = NullMetricCallable,
         torch_compile: bool = False,
         tile_config: TileConfig | dict = TileConfig(enable_tiler=False),
+        pretrained: bool = True,
     ) -> None:
         """Initialize the base model with the given parameters.
 
@@ -190,6 +192,7 @@ class LightningModel(LightningModule):
             metric (MetricCallable, optional): Callable for the metric. Defaults to NullMetricCallable.
             torch_compile (bool, optional): Flag to indicate if torch.compile should be used. Defaults to False.
             tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+            pretrained (bool, optional): Flag to indicate whether to use pretrained model. Defaults to True.
 
         """
         super().__init__()
@@ -198,13 +201,15 @@ class LightningModel(LightningModule):
         self.model_name = model_name
         self.data_input_params = self._configure_preprocessing_params(data_input_params)
         self.model = self._create_model()
+        if pretrained:
+            self.load_pretrained()
         self.optimizer_callable = ensure_callable(optimizer)
         self.scheduler_callable = ensure_callable(scheduler)
         self.metric_callable = ensure_callable(metric)
         self.torch_compile = torch_compile
         self._explain_mode = False
 
-        # NOTE: To guarantee immutablility of the default value
+        # NOTE: To guarantee immutability of the default value
         if isinstance(tile_config, dict):
             tile_config = TileConfig(**tile_config)
         self._tile_config = tile_config.clone()
@@ -1062,3 +1067,13 @@ class LightningModel(LightningModule):
     @abstractmethod
     def task(self) -> TaskType:
         """Get  task type."""
+
+    def load_pretrained(self, weights: PathLike | None = None) -> None:
+        """Load architecture-specific pretrained weights into ``self.model``.
+
+        Distinct from full getitune checkpoints (resume/fine-tune): this seeds the
+        freshly-built architecture. A single combined file covers the whole model
+        (backbone + neck + head). When ``weights`` is None, models load their own
+        default source. Base implementation is a no-op so models without pretrained
+        weights (e.g. most detectors) work unchanged.
+        """

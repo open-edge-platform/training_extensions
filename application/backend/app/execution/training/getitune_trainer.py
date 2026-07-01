@@ -439,7 +439,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         engine_kwargs: dict[str, Any] = {
             "work_dir": self._data_dir / f"getitune-workspace-{model_id}",
             "device": getitune_device_type,
-            **({"checkpoint": weights_path} if is_ultralytics or has_model_revision else {}),
+            "checkpoint": weights_path if is_ultralytics or has_model_revision else None,
+            "pretrained_weights": weights_path if not (is_ultralytics and has_model_revision) else None,
+            "pretrained": False,  # Disable library loading since weights are managed in the App
         }
 
         model_parser = ArgumentParser()

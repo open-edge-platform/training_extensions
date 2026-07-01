@@ -5,7 +5,7 @@
 
 import torch
 from torch import nn
-from torchvision.models import get_model, get_model_weights
+from torchvision.models import get_model
 
 TVModels = [
     "alexnet",
@@ -87,17 +87,14 @@ class TorchvisionBackbone(nn.Module):
     def __init__(
         self,
         backbone: str,
-        pretrained: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
         if backbone not in TVModels:
             msg = f"Backbone model name is not supported: {backbone}. Available models: {TVModels}"
             raise ValueError(msg)
-        tv_model_cfg = {"name": backbone}
-        if pretrained:
-            tv_model_cfg["weights"] = get_model_weights(backbone)
-        net = get_model(**tv_model_cfg)
+        self.model_name = backbone
+        net = get_model(name=backbone)
         self.features = net.features
 
         last_layer = list(net.children())[-1]

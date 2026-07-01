@@ -92,10 +92,11 @@ class LightningEngine(Engine):
 
     def __init__(
         self,
-        model: LightningModel | PathLike | str,
+        model: LightningModel | PathLike,
         data: DataModule | PathLike,
         work_dir: PathLike = "./getitune-workspace",
         checkpoint: PathLike | None = None,
+        pretrained_weights: PathLike | None = None,
         device: DeviceType = DeviceType.auto,
         num_devices: int = 1,
         task: TaskType | None = None,
@@ -109,6 +110,7 @@ class LightningEngine(Engine):
                 or root directory for the data.
             work_dir (PathLike, optional): Working directory for the engine. Defaults to "./getitune-workspace".
             checkpoint (PathLike | None, optional): Path to the checkpoint file (model weights). Defaults to None.
+            pretrained_weights (PathLike | None, optional): Path to the pretrained weights file. Defaults to None.
             device (DeviceType, optional): The device type to use. Defaults to DeviceType.auto.
             num_devices (int, optional): The number of devices to use. If it is 2 or more, it will behave as multi-gpu.
             task (TaskType | None, optional): The task type to use. Useful when you provide model name
@@ -170,6 +172,8 @@ class LightningEngine(Engine):
                 msg = f"Checkpoint {self.checkpoint} does not exist."
                 raise FileNotFoundError(msg)
             self._load_model_checkpoint(self.checkpoint, map_location="cpu")
+        else:
+            self._model.load_pretrained(pretrained_weights)
 
     # ------------------------------------------------------------------------ #
     # General getitune Entry Points

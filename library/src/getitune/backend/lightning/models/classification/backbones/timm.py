@@ -21,26 +21,18 @@ class TimmBackbone(nn.Module):
     Args:
         model_name (str): The name of the model.
             You can find available models at timm.list_models() or timm.list_pretrained().
-        pretrained (bool, optional): Whether to load pretrained weights. Defaults to False.
     """
 
     def __init__(
         self,
         model_name: str,
-        pretrained: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.model_name = model_name
-        self.pretrained: bool | dict = pretrained
 
-        self.model = timm.create_model(
-            self.model_name,
-            pretrained=pretrained,
-            num_classes=1000,
-        )
+        self.model = timm.create_model(self.model_name, num_classes=0)
 
-        self.model.classifier = None  # Detach classifier. Only use 'backbone' part in getitune.
         self.num_head_features = self.model.num_features
         self.num_features = self.model.num_features
 

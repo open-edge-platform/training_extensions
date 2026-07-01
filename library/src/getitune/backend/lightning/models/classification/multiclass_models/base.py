@@ -50,6 +50,7 @@ class LightningMulticlassClsModel(LightningModel):
         Defaults to DefaultSchedulerCallable.
         metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
         torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+        pretrained (bool, optional): Whether to use pretrained weights. Defaults to True.
     """
 
     def __init__(
@@ -62,6 +63,7 @@ class LightningMulticlassClsModel(LightningModel):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
+        pretrained: bool = True,
     ) -> None:
         super().__init__(
             label_info=label_info,
@@ -71,6 +73,7 @@ class LightningMulticlassClsModel(LightningModel):
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
+            pretrained=pretrained,
         )
 
         if freeze_backbone:

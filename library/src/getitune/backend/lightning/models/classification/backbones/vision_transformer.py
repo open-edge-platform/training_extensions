@@ -52,7 +52,7 @@ class VisionTransformerBackbone(BaseModule):
         img_size: Input image size.
         patch_size: Patch size.
         in_chans: Number of image input channels.
-        num_classes: Mumber of classes for classification head.
+        num_classes: Number of classes for classification head.
         embed_dim: Transformer embedding dimension.
         depth: Depth of transformer.
         num_heads: Number of attention heads.
@@ -62,12 +62,9 @@ class VisionTransformerBackbone(BaseModule):
         class_token: Use class token.
         no_embed_class: Don't include position embeddings for class (or reg) tokens.
         reg_tokens: Number of register tokens.
-        drop_rate: Head dropout rate.
         pos_drop_rate: Position embedding dropout rate.
         attn_drop_rate: Attention dropout rate.
         drop_path_rate: Stochastic depth rate.
-        weight_init: Weight initialization scheme.
-        fix_init: Apply weight initialization fix (scaling w/ layer index).
         embed_layer: Patch embedding layer.
         norm_layer: Normalization layer.
         act_layer: MLP activation layer.
@@ -299,11 +296,11 @@ class VisionTransformerBackbone(BaseModule):
             trunc_normal_(self.pos_embed, std=0.02)
 
     @torch.jit.ignore()
-    def load_pretrained(self, checkpoint_path: Path, prefix: str = "") -> None:
+    def load_checkpoint(self, checkpoint_path: Path, prefix: str = "") -> None:
         """Loads the pretrained weight to the VisionTransformer."""
         checkpoint_ext = checkpoint_path.suffix
         if checkpoint_ext == ".npz":  # ViT models (JAX format)
-            self._load_npz_weights(self, checkpoint_path, prefix)
+            self._load_npz_weights(self, str(checkpoint_path), prefix)
         elif checkpoint_ext == ".pth":  # dinov2 models
 
             def resize_positional_embeddings(pos_embed: torch.Tensor, new_shape: tuple[int, int]) -> torch.Tensor:

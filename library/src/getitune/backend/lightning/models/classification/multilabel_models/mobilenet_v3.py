@@ -19,6 +19,8 @@ from getitune.backend.lightning.models.classification.losses.asymmetric_angular_
 )
 from getitune.backend.lightning.models.classification.multilabel_models.base import LightningMultilabelClsModel
 from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.lightning.models.classification.utils.loaders import CheckpointLoaderMixin
+from getitune.backend.lightning.models.classification.utils.pretrained_urls import MOBILENETV3_PRETRAINED_URLS
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
@@ -31,7 +33,7 @@ if TYPE_CHECKING:
     from getitune.metrics import MetricCallable
 
 
-class MobileNetV3MultilabelCls(LightningMultilabelClsModel):
+class MobileNetV3MultilabelCls(CheckpointLoaderMixin, LightningMultilabelClsModel):
     """MobileNetV3 Model for multi-class classification task.
 
     Args:
@@ -45,7 +47,10 @@ class MobileNetV3MultilabelCls(LightningMultilabelClsModel):
             Defaults to DefaultSchedulerCallable.
         metric (MetricCallable, optional): The metric callable. Defaults to MultiClassClsMetricCallable.
         torch_compile (bool, optional): Whether to compile the model using TorchScript. Defaults to False.
+        pretrained (bool, optional): Whether to use pretrained weights. Defaults to True.
     """
+
+    pretrained_urls = MOBILENETV3_PRETRAINED_URLS
 
     def __init__(
         self,
@@ -57,6 +62,7 @@ class MobileNetV3MultilabelCls(LightningMultilabelClsModel):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiLabelClsMetricCallable,
         torch_compile: bool = False,
+        pretrained: bool = True,
     ) -> None:
         super().__init__(
             label_info=label_info,
@@ -67,6 +73,7 @@ class MobileNetV3MultilabelCls(LightningMultilabelClsModel):
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
+            pretrained=pretrained,
         )
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:

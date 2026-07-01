@@ -54,6 +54,7 @@ class LightningHlabelClsModel(LightningModel):
         metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
         torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
         kl_weight: The weight of tree-path KL divergence loss. Defaults to zero, use CrossEntropy only.
+        pretrained (bool, optional): Whether to use pretrained weights. Defaults to True.
     """
 
     label_info: HLabelInfo
@@ -69,6 +70,7 @@ class LightningHlabelClsModel(LightningModel):
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
         kl_weight: float = 0.0,
+        pretrained: bool = True,
     ) -> None:
         self.kl_weight = kl_weight
         super().__init__(
@@ -79,6 +81,7 @@ class LightningHlabelClsModel(LightningModel):
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
+            pretrained=pretrained,
         )
         if freeze_backbone:
             classification_layers = self._identify_classification_layers()

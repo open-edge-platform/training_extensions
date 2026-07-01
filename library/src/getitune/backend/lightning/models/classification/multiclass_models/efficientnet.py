@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Literal
 
 from torch import Tensor, nn
@@ -15,6 +16,7 @@ from getitune.backend.lightning.models.classification.classifier import ImageCla
 from getitune.backend.lightning.models.classification.heads import LinearClsHead
 from getitune.backend.lightning.models.classification.multiclass_models.base import LightningMulticlassClsModel
 from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.lightning.models.classification.utils.loaders import PytorchcvLoaderMixin
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.metrics.accuracy import MultiClassClsMetricCallable
 from getitune.types.label import LabelInfoTypes
@@ -25,7 +27,10 @@ if TYPE_CHECKING:
     from getitune.metrics import MetricCallable
 
 
-class EfficientNetMulticlassCls(LightningMulticlassClsModel):
+logger = logging.getLogger(__name__)
+
+
+class EfficientNetMulticlassCls(PytorchcvLoaderMixin, LightningMulticlassClsModel):
     """EfficientNet Model for multi-class classification task.
 
     Args:
@@ -40,6 +45,7 @@ class EfficientNetMulticlassCls(LightningMulticlassClsModel):
         metric (MetricCallable, optional): Callable for the evaluation metric.
             Defaults to MultiClassClsMetricCallable.
         torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+        pretrained (bool, optional): Whether to use pretrained weights. Defaults to True.
     """
 
     def __init__(
@@ -62,6 +68,7 @@ class EfficientNetMulticlassCls(LightningMulticlassClsModel):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
+        pretrained: bool = True,
     ) -> None:
         super().__init__(
             label_info=label_info,
@@ -72,6 +79,7 @@ class EfficientNetMulticlassCls(LightningMulticlassClsModel):
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
+            pretrained=pretrained,
         )
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:

@@ -6,22 +6,15 @@
 from __future__ import annotations
 
 import math
-import os
-from pathlib import Path
 from typing import Any, Callable, ClassVar
 
 import torch
-from pytorchcv.models.common.model_store import download_model
 from torch import nn
 from torch.nn import functional, init
 
 from getitune.backend.lightning.models.modules.activation import Swish, build_activation_layer
 from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
-
-pretrained_urls = {
-    "efficientnet_b0": "https://storage.geti.intel.com/weights/efficientnet_b0-0752-0e386130.pth.zip",
-}
 
 
 def conv1x1_block(
@@ -405,7 +398,7 @@ class EffiInitBlock(nn.Module):
 
 
 class EfficientNetFeatureExtractor(nn.Module):
-    """Implementation of the EfficientNet Feature Extactor.
+    """Implementation of the EfficientNet Feature Extractor.
 
     Args:
         channels : list of list of int. Number of output channels for each unit.
@@ -609,7 +602,6 @@ class EfficientNetBackbone:
         cls,
         model_name: str,
         input_size: tuple[int, int] | None = None,
-        pretrained: bool = True,
         **kwargs,
     ) -> EfficientNetFeatureExtractor:
         """Create a new instance of the EfficientNet class.
@@ -657,7 +649,7 @@ class EfficientNetBackbone:
         if width_factor > 1.0:
             final_block_channels = round_channels(final_block_channels * width_factor)
 
-        model = EfficientNetFeatureExtractor(
+        return EfficientNetFeatureExtractor(
             channels=channels,
             init_block_channels=init_block_channels,
             final_block_channels=final_block_channels,
@@ -669,9 +661,3 @@ class EfficientNetBackbone:
             in_size=input_size,
             **kwargs,
         )
-
-        if pretrained:
-            cache_dir = Path(os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"])
-            download_model(net=model, model_name=f"{model_name}", local_model_store_dir_path=str(cache_dir))
-            print(f"Download model weight in {cache_dir!s}")
-        return model

@@ -16,14 +16,6 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http
-
-pretrained_urls = {
-    "mobilenetv3_small": "https://storage.geti.intel.com/weights/mobilenetv3-small-55df8e1f.pth",
-    "mobilenetv3_large": "https://storage.geti.intel.com/weights/mobilenetv3-large-1cd25616.pth",
-    "mobilenetv3_large_075": "https://storage.geti.intel.com/weights/mobilenetv3-large-0.75-9632d2a8.pth",
-}
-
 
 class ModelInterface(nn.Module):
     """Model Interface."""
@@ -394,7 +386,6 @@ class MobileNetV3Backbone:
         cls,
         model_name: str = "mobilenetv3_large",
         width_mult: float = 1.0,
-        pretrained: bool = True,
         **kwargs,
     ) -> MobileNetV3FeatureExtractor:
         """Create a new instance of the MobileNetV3 class.
@@ -402,7 +393,6 @@ class MobileNetV3Backbone:
         Args:
             model_name (str, optional): The mode of the MobileNetV3 model. Defaults to "large".
             width_mult (float, optional): Width multiplier for the MobileNetV3 model. Defaults to 1.0.
-            pretrained (bool, optional): Whether to load pretrained weights for the MobileNetV3 model. Defaults to True.
             **kwargs: Additional keyword arguments to be passed to the MobileNetV3 constructor.
 
         Returns:
@@ -412,14 +402,8 @@ class MobileNetV3Backbone:
             msg = f"Unknown MobileNetV3 model: {model_name}"
             raise ValueError(msg)
 
-        model = MobileNetV3FeatureExtractor(
+        return MobileNetV3FeatureExtractor(
             layer_cfgs=cls.MV3_CFG[model_name]["layer_cfgs"],
             width_mult=width_mult,
             **kwargs,
         )
-        if pretrained:
-            key = model_name if width_mult == 1.0 else f"{model_name}_{int(width_mult * 100):03d}"
-            checkpoint = load_from_http(pretrained_urls[key])
-            print(f"init weight - {pretrained_urls[key]}")
-            load_checkpoint_to_model(model, checkpoint)
-        return model

@@ -20,6 +20,7 @@ from getitune.backend.lightning.models.classification.multiclass_models.base imp
     LightningMulticlassClsModel,
 )
 from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.lightning.models.classification.utils.loaders import TorchvisionLoaderMixin
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.metrics.accuracy import MultiClassClsMetricCallable
 from getitune.types.label import LabelInfoTypes
@@ -30,7 +31,7 @@ if TYPE_CHECKING:
     from getitune.metrics import MetricCallable
 
 
-class TVModelMulticlassCls(LightningMulticlassClsModel):
+class TVModelMulticlassCls(TorchvisionLoaderMixin, LightningMulticlassClsModel):
     """Torchvision model for multiclass classification.
 
     Args:
@@ -44,6 +45,7 @@ class TVModelMulticlassCls(LightningMulticlassClsModel):
             Defaults to DefaultSchedulerCallable.
         metric (MetricCallable, optional): Metric for model evaluation. Defaults to MultiClassClsMetricCallable.
         torch_compile (bool, optional): Whether to compile the model using TorchScript. Defaults to False.
+        pretrained (bool, optional): Whether to use pretrained weights. Defaults to True.
     """
 
     def __init__(
@@ -56,6 +58,7 @@ class TVModelMulticlassCls(LightningMulticlassClsModel):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
+        pretrained: bool = True,
     ) -> None:
         super().__init__(
             label_info=label_info,
@@ -66,6 +69,7 @@ class TVModelMulticlassCls(LightningMulticlassClsModel):
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
+            pretrained=pretrained,
         )
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:

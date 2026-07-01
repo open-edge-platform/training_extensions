@@ -5,14 +5,9 @@
 
 from __future__ import annotations
 
-import os
-import warnings
-from pathlib import Path
 from typing import TYPE_CHECKING, Literal
-from urllib.parse import urlparse
 
 from torch import nn
-from torch.hub import download_url_to_file
 
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from getitune.backend.lightning.models.classification.backbones.vision_transformer import VisionTransformerBackbone
@@ -23,6 +18,8 @@ from getitune.backend.lightning.models.classification.heads import (
 from getitune.backend.lightning.models.classification.hlabel_models.base import LightningHlabelClsModel
 from getitune.backend.lightning.models.classification.losses import AsymmetricAngularLossWithIgnore
 from getitune.backend.lightning.models.classification.multiclass_models.vit import ForwardExplainMixInForViT
+from getitune.backend.lightning.models.classification.utils.loaders import VisionTransformerLoaderMixin
+from getitune.backend.lightning.models.classification.utils.pretrained_urls import VIT_PRETRAINED_URLS
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.metrics.accuracy import HLabelClsMetricCallable
 from getitune.types.label import HLabelInfo
@@ -32,31 +29,8 @@ if TYPE_CHECKING:
 
     from getitune.metrics import MetricCallable
 
-pretrained_urls = {
-    "vit-tiny": (
-        "https://storage.geti.intel.com/weights/"
-        "Ti_16-i21k-300ep-lr_0.001-aug_none-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz"
-    ),
-    "vit-small": (
-        "https://storage.geti.intel.com/weights/"
-        "S_16-i21k-300ep-lr_0.001-aug_light1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz"
-    ),
-    "vit-base": (
-        "https://storage.geti.intel.com/weights/"
-        "B_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_224.npz"
-    ),
-    "vit-large": (
-        "https://storage.geti.intel.com/weights/"
-        "L_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.1-sd_0.1--imagenet2012-steps_20k-lr_0.01-res_224.npz"
-    ),
-    "dinov2-small": "https://storage.geti.intel.com/weights/dinov2_vits14_reg4_pretrain.pth",
-    "dinov2-base": "https://storage.geti.intel.com/weights/dinov2_vitb14_reg4_pretrain.pth",
-    "dinov2-large": "https://storage.geti.intel.com/weights/dinov2_vitl14_reg4_pretrain.pth",
-    "dinov2-giant": "https://storage.geti.intel.com/weights/dinov2_vitg14_reg4_pretrain.pth",
-}
 
-
-class VisionTransformerHLabelCls(ForwardExplainMixInForViT, LightningHlabelClsModel):
+class VisionTransformerHLabelCls(VisionTransformerLoaderMixin, ForwardExplainMixInForViT, LightningHlabelClsModel):
     """VisionTransformerForHLabelCls is a model designed for hierarchical label classification using ViT architecture.
 
     Args:
@@ -67,9 +41,11 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, LightningHlabelClsMo
         scheduler (LRSchedulerCallable | LRSchedulerListCallable): Callable for the learning rate scheduler.
         metric (MetricCallable): Callable for the metric.
         torch_compile (bool): Whether to use torch.compile for the model.
+        pretrained (bool, optional): Whether to use pretrained weights. Defaults to True.
     """
 
     label_info: HLabelInfo
+    pretrained_urls = VIT_PRETRAINED_URLS
 
     def __init__(
         self,
@@ -91,6 +67,7 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, LightningHlabelClsMo
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
+        pretrained: bool = True,
     ) -> None:
         self.peft = peft
         super().__init__(
@@ -102,6 +79,7 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, LightningHlabelClsMo
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
+            pretrained=pretrained,
         )
 
     def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]
@@ -130,20 +108,4 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, LightningHlabelClsMo
         )
 
         model.init_weights()
-        if self.model_name in pretrained_urls:
-            print(f"init weight - {pretrained_urls[self.model_name]}")
-            parts = urlparse(pretrained_urls[self.model_name])
-            filename = Path(parts.path).name
-
-            cache_dir = Path(os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"])
-            cache_file = cache_dir / filename
-            if not Path.exists(cache_file):
-                download_url_to_file(pretrained_urls[self.model_name], cache_file, "", progress=True)
-            model.backbone.load_pretrained(checkpoint_path=cache_file)
-        else:
-            warnings.warn(
-                "No pretrained weights found for the specified model. Initializing model with random weights.",
-                stacklevel=1,
-            )
-
         return model

@@ -5,16 +5,12 @@
 
 from __future__ import annotations
 
-import os
 import types
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Literal
-from urllib.parse import urlparse
 
 import numpy as np
 import torch
 from torch import nn
-from torch.hub import download_url_to_file
 
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from getitune.backend.lightning.models.classification.backbones.vision_transformer import VisionTransformerBackbone
@@ -25,6 +21,8 @@ from getitune.backend.lightning.models.classification.heads import (
 from getitune.backend.lightning.models.classification.multiclass_models.base import (
     LightningMulticlassClsModel,
 )
+from getitune.backend.lightning.models.classification.utils.loaders import VisionTransformerLoaderMixin
+from getitune.backend.lightning.models.classification.utils.pretrained_urls import VIT_PRETRAINED_URLS
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.backend.lightning.tools.explain.explain_algo import ViTReciproCAM, feature_vector_fn
 from getitune.data.entity import PredictionBatch, SampleBatch
@@ -36,29 +34,6 @@ if TYPE_CHECKING:
 
     from getitune.metrics import MetricCallable
 
-pretrained_urls = {
-    "vit-tiny": (
-        "https://storage.geti.intel.com/weights/"
-        "Ti_16-i21k-300ep-lr_0.001-aug_none-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz"
-    ),
-    "vit-small": (
-        "https://storage.geti.intel.com/weights/"
-        "S_16-i21k-300ep-lr_0.001-aug_light1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz"
-    ),
-    "vit-base": (
-        "https://storage.geti.intel.com/weights/"
-        "B_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_224.npz"
-    ),
-    "vit-large": (
-        "https://storage.geti.intel.com/weights/"
-        "L_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.1-sd_0.1--imagenet2012-steps_20k-lr_0.01-res_224.npz"
-    ),
-    "dinov2-small": "https://storage.geti.intel.com/weights/dinov2_vits14_reg4_pretrain.pth",
-    "dinov2-base": "https://storage.geti.intel.com/weights/dinov2_vitb14_reg4_pretrain.pth",
-    "dinov2-large": "https://storage.geti.intel.com/weights/dinov2_vitl14_reg4_pretrain.pth",
-    "dinov2-giant": "https://storage.geti.intel.com/weights/dinov2_vitg14_reg4_pretrain.pth",
-}
-
 
 class ForwardExplainMixInForViT:
     """ViT model which can attach a XAI (Explainable AI) branch."""
@@ -66,6 +41,7 @@ class ForwardExplainMixInForViT:
     explain_mode: bool
     num_classes: int
     model: ImageClassifier
+    pretrained_urls = VIT_PRETRAINED_URLS
 
     @torch.no_grad()
     def head_forward_fn(self, x: torch.Tensor) -> torch.Tensor:
@@ -202,10 +178,13 @@ class ForwardExplainMixInForViT:
         return self.model(images=image, mode="tensor")
 
 
-class VisionTransformerMulticlassCls(ForwardExplainMixInForViT, LightningMulticlassClsModel):
+class VisionTransformerMulticlassCls(
+    VisionTransformerLoaderMixin, ForwardExplainMixInForViT, LightningMulticlassClsModel
+):
     """ViT Model for multi-class classification task."""
 
     model: ImageClassifier
+    pretrained_urls = VIT_PRETRAINED_URLS
 
     def __init__(
         self,
@@ -227,6 +206,7 @@ class VisionTransformerMulticlassCls(ForwardExplainMixInForViT, LightningMulticl
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
+        pretrained: bool = True,
     ) -> None:
         self.peft = peft
 
@@ -239,23 +219,13 @@ class VisionTransformerMulticlassCls(ForwardExplainMixInForViT, LightningMulticl
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
+            pretrained=pretrained,
         )
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:
         num_classes = num_classes if num_classes is not None else self.num_classes
         model = self._build_model(num_classes=num_classes)
         model.init_weights()
-        if self.model_name in pretrained_urls:
-            print(f"init weight - {pretrained_urls[self.model_name]}")
-            parts = urlparse(pretrained_urls[self.model_name])
-            filename = Path(parts.path).name
-
-            cache_dir = Path(os.environ["PRETRAINED_WEIGHTS_CACHE_DIR"])
-            cache_file = cache_dir / filename
-            if not Path.exists(cache_file):
-                download_url_to_file(pretrained_urls[self.model_name], cache_file, "", progress=True)
-            model.backbone.load_pretrained(checkpoint_path=cache_file)
-
         return model
 
     def _build_model(self, num_classes: int) -> nn.Module:

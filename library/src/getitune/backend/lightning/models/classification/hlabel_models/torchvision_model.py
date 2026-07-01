@@ -18,6 +18,7 @@ from getitune.backend.lightning.models.classification.heads import (
 from getitune.backend.lightning.models.classification.hlabel_models.base import LightningHlabelClsModel
 from getitune.backend.lightning.models.classification.losses import AsymmetricAngularLossWithIgnore
 from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.lightning.models.classification.utils.loaders import TorchvisionLoaderMixin
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.metrics.accuracy import HLabelClsMetricCallable
 from getitune.types.label import HLabelInfo
@@ -28,19 +29,21 @@ if TYPE_CHECKING:
     from getitune.metrics import MetricCallable
 
 
-class TVModelHLabelCls(LightningHlabelClsModel):
+class TVModelHLabelCls(TorchvisionLoaderMixin, LightningHlabelClsModel):
     """TVModelForHLabelCls class represents a Torchvision model for hierarchical label classification.
 
     Args:
-        label_info (HLabelInfo): Information about the hierarchical labels.
-        backbone (TVModelType): The type of Torchvision backbone model.
-        pretrained (bool, optional): Whether to use pretrained weights. Defaults to True.
-        optimizer (OptimizerCallable, optional): The optimizer callable. Defaults to DefaultOptimizerCallable.
-        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): The learning rate scheduler callable.
+        label_info (LabelInfoTypes): Information about the labels.
+        data_input_params (DataInputParams | dict | None, optional): The data input parameters
+            such as input size and normalization. If None is given,
+            default parameters for the specific model will be used.
+        model_name (str, optional): Backbone model name for feature extraction. Defaults to "efficientnet_v2_s".
+        optimizer (OptimizerCallable, optional): Optimizer for model training. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Learning rate scheduler.
             Defaults to DefaultSchedulerCallable.
-        metric (MetricCallable, optional): The metric callable. Defaults to HLabelClsMetricCallble.
+        metric (MetricCallable, optional): Metric for model evaluation. Defaults to MultiClassClsMetricCallable.
         torch_compile (bool, optional): Whether to compile the model using TorchScript. Defaults to False.
-        input_size (tuple[int, int], optional): The input size of the images. Defaults to (224, 224).
+        pretrained (bool, optional): Whether to use pretrained weights. Defaults to True.
     """
 
     def __init__(
@@ -53,6 +56,7 @@ class TVModelHLabelCls(LightningHlabelClsModel):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
+        pretrained: bool = True,
     ) -> None:
         super().__init__(
             label_info=label_info,
@@ -63,6 +67,7 @@ class TVModelHLabelCls(LightningHlabelClsModel):
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
+            pretrained=pretrained,
         )
 
     def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]

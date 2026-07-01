@@ -21,6 +21,8 @@ from getitune.backend.lightning.models.classification.losses.asymmetric_angular_
     AsymmetricAngularLossWithIgnore,
 )
 from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.lightning.models.classification.utils.loaders import CheckpointLoaderMixin
+from getitune.backend.lightning.models.classification.utils.pretrained_urls import MOBILENETV3_PRETRAINED_URLS
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
@@ -34,8 +36,10 @@ if TYPE_CHECKING:
     from getitune.metrics import MetricCallable
 
 
-class MobileNetV3HLabelCls(LightningHlabelClsModel):
+class MobileNetV3HLabelCls(CheckpointLoaderMixin, LightningHlabelClsModel):
     """MobileNetV3 Model for hierarchical label classification task."""
+
+    pretrained_urls = MOBILENETV3_PRETRAINED_URLS
 
     def __init__(
         self,
@@ -47,6 +51,7 @@ class MobileNetV3HLabelCls(LightningHlabelClsModel):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
+        pretrained: bool = True,
     ) -> None:
         super().__init__(
             label_info=label_info,
@@ -57,6 +62,7 @@ class MobileNetV3HLabelCls(LightningHlabelClsModel):
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
+            pretrained=pretrained,
         )
 
     def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]

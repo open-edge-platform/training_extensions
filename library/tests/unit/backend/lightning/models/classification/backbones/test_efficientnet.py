@@ -24,11 +24,11 @@ class TestEfficientNet:
         ],
     )
     def test_forward(self, model_name):
-        model = EfficientNetBackbone(model_name, pretrained=None)
+        model = EfficientNetBackbone(model_name)
         assert model(torch.randn(1, 3, 244, 244))[0].shape[-1] == 8
         assert model(torch.randn(1, 3, 244, 244))[0].shape[-2] == 8
 
     def test_set_input_size(self):
         input_size = (300, 300)
-        model = EfficientNetBackbone("efficientnet_b0", input_size=input_size, pretrained=None)
+        model = EfficientNetBackbone("efficientnet_b0", input_size=input_size)
         assert model.in_size == input_size
