@@ -33,7 +33,7 @@ export const ActiveFilters = () => {
         .filter(Boolean) as Label[];
 
     const hasActiveFilters =
-        !isEmpty(selectedLabels) || annotationStatus !== null || startDate !== null || endDate !== null;
+        !isEmpty(selectedLabelIds) || annotationStatus !== null || startDate !== null || endDate !== null;
 
     if (!hasActiveFilters) {
         return null;

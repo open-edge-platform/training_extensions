@@ -43,6 +43,10 @@ describe('ActiveFilters', () => {
         vi.mocked(useProjectLabels).mockReturnValue(mockLabels);
     });
 
+    afterEach(() => {
+        vi.clearAllMocks();
+    });
+
     it('renders nothing when there are no active filters', () => {
         mockUseDatasetFiltersSearchParams();
 
@@ -90,12 +94,7 @@ describe('ActiveFilters', () => {
 
         render(<ActiveFilters />);
 
-        const catChipContainer = screen.getByText('Cat').closest('div');
-        const closeIcon = catChipContainer?.querySelector('svg');
-
-        expect(closeIcon).not.toBeNull();
-
-        fireEvent.click(closeIcon as SVGElement);
+        fireEvent.click(screen.getByRole('button', { name: 'Remove Cat filter' }));
 
         expect(mockSetSelectedLabelIds).toHaveBeenCalledWith(['label-2']);
     });
