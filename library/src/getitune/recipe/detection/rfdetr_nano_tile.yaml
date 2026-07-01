@@ -1,0 +1,85 @@
+task: DETECTION
+model:
+  class_path: getitune.backend.lightning.models.detection.rfdetr.RFDETR
+  init_args:
+    model_name: rfdetr_nano
+    label_info: 91
+    multi_scale: true
+
+    optimizer:
+      class_path: torch.optim.AdamW
+      init_args:
+        lr: 0.00021
+        betas: [0.9, 0.999]
+        weight_decay: 0.0001
+
+    scheduler:
+      class_path: getitune.backend.lightning.schedulers.LinearWarmupSchedulerCallable
+      init_args:
+        num_warmup_steps: 0
+        main_scheduler_callable:
+          class_path: lightning.pytorch.cli.ReduceLROnPlateau
+          init_args:
+            mode: max
+            factor: 0.1
+            patience: 10
+            monitor: val/map_50
+
+engine:
+  device: auto
+
+callback_monitor: val/map_50
+
+data: ../_base_/data/detection_tile.yaml
+
+callbacks:
+  - class_path: getitune.backend.lightning.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+    init_args:
+      max_interval: 1
+      min_lrschedule_patience: 5
+  - class_path: getitune.backend.lightning.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
+      mode: max
+      patience: 15
+      check_on_train_epoch_end: false
+      monitor: val/map_50
+      min_delta: 0.001
+      warmup_iters: 100
+      warmup_epochs: 10
+  - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+    init_args:
+      dirpath: ""
+      monitor: val/map_50
+      mode: max
+      save_top_k: 1
+      save_last: true
+      auto_insert_metric_name: false
+      filename: "checkpoints/epoch_{epoch:03d}"
+  - class_path: lightning.pytorch.callbacks.EMAWeightAveraging
+    init_args:
+      decay: 0.993
+
+overrides:
+  gradient_clip_val: 0.1
+  data:
+    input_size:
+      - 384
+      - 384
+    task: DETECTION
+    train_subset:
+      batch_size: 8
+      augmentations_cpu:
+        - class_path: torchvision.transforms.v2.RandomZoomOut
+          init_args:
+            fill: 0
+            p: 0.5
+        - class_path: getitune.data.augmentation.transforms.RandomIoUCrop
+        - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+          init_args:
+            min_size: 1
+        - class_path: getitune.data.augmentation.transforms.Resize
+          init_args:
+            size: $(input_size)
+            keep_aspect_ratio: false
+      sampler:
+        class_path: getitune.data.samplers.balanced_sampler.BalancedSampler
