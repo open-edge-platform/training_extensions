@@ -51,7 +51,7 @@ export const ActiveFilters = () => {
     };
 
     return (
-        <Flex gap={'size-100'} wrap={'wrap'} alignItems={'center'} aria-label='Active filters'>
+        <Flex gap={'size-150'} wrap={'wrap'} alignItems={'center'} aria-label='Active filters'>
             <ActionButton isQuiet onPress={handleClearAll}>
                 Clear all
             </ActionButton>
