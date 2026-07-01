@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 
 if TYPE_CHECKING:
     from getitune import TaskType
-    from getitune.config.data import SubsetConfig
+    from getitune.config.data import SubsetConfig, TileConfig
     from getitune.data.dataset.base import VisionDataset
     from getitune.engine.engine import Engine
 
@@ -90,6 +90,7 @@ class DatasetInfo:
     getitune_validation_subset_config: SubsetConfig
     getitune_testing_subset_config: SubsetConfig
     revision_id: UUID
+    tile_config: TileConfig
 
 
 @dataclass(frozen=True)
@@ -243,7 +244,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             return training_config, getitune_training_config
 
     @step("Prepare Training Dataset", 10)
-    def prepare_training_dataset(
+    def prepare_training_dataset(  # noqa: PLR0915
         self,
         project_id: UUID,
         task: Task,
@@ -258,7 +259,9 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
         Otherwise, it creates a new dataset from the current items in the database with user-verified annotations.
         """
 
-        from getitune.config.data import SamplerConfig, SubsetConfig
+        from getitune import TaskType
+        from getitune.config.data import SamplerConfig, SubsetConfig, TileConfig
+        from getitune.data.dataset.tile import TileDatasetFactory
         from getitune.data.entity.utils import detect_storage_dtype
         from getitune.data.factory import TransformLibFactory
 
@@ -349,6 +352,21 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
                 transforms=test_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
 
+            # Build a TileConfig, and wrap each subset dataset with the tiling factory (if tiling is enabled).
+            tile_cfg_data = getitune_training_config["data"].get("tile_config", {})
+            tile_config = TileConfig(**tile_cfg_data)
+            if tile_config.enable_tiler and getitune_task_type in (TaskType.DETECTION, TaskType.INSTANCE_SEGMENTATION):
+                logger.info("Tiling is enabled - wrapping subset datasets with TileDatasetFactory")
+                getitune_training_dataset = TileDatasetFactory.create(
+                    dataset=getitune_training_dataset, tile_config=tile_config
+                )
+                getitune_validation_dataset = TileDatasetFactory.create(
+                    dataset=getitune_validation_dataset, tile_config=tile_config
+                )
+                getitune_testing_dataset = TileDatasetFactory.create(
+                    dataset=getitune_testing_dataset, tile_config=tile_config
+                )
+
             return DatasetInfo(
                 getitune_training_dataset=getitune_training_dataset,
                 getitune_validation_dataset=getitune_validation_dataset,
@@ -357,6 +375,7 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
                 getitune_validation_subset_config=val_subset_config,
                 getitune_testing_subset_config=test_subset_config,
                 revision_id=dataset_revision_id,
+                tile_config=tile_config,
             )
 
     @step("Prepare Model")
@@ -416,6 +435,8 @@ class GetiTuneTrainer(Execution[TrainingJobParams]):
             val_subset=dataset_info.getitune_validation_subset_config,
             test_subset=dataset_info.getitune_testing_subset_config,
         )
+        # Ensure the datamodule (and downstream model) uses the resolved tiling configuration.
+        datamodule.tile_config = dataset_info.tile_config
 
         logger.info("Instantiating model for training (model_id={})", model_id)
         model_cfg = training_config["model"]

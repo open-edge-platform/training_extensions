@@ -148,9 +148,9 @@ class TestTrainingConfigurationService:
         """Tiling parameters should be removed from the default config when the architecture doesn't support tiling."""
         TrainingConfigurationService.get_default_by_model_architecture.cache_clear()
 
-        # D-FINE-M does not support tiling (capabilities.tiling: false in its manifest)
+        # YOLO11-N does not support tiling (capabilities.tiling: false in its manifest)
         result = TrainingConfigurationService.get_default_by_model_architecture(
-            model_architecture_id="object-detection-dfine-m",
+            model_architecture_id="object-detection-yolo11-n",
         )
 
         assert result.algo_level_parameters.dataset_preparation.augmentation.tiling is None
@@ -183,7 +183,7 @@ class TestTrainingConfigurationService:
         algo_level_config = TrainingConfigurationDB(
             id=str(uuid4()),
             project_id=fxt_project.id,
-            model_architecture_id="object-detection-dfine-m",
+            model_architecture_id="object-detection-yolo11-n",
             configuration_data=algo_level_data,
         )
         db_session.add(algo_level_config)
@@ -191,7 +191,7 @@ class TestTrainingConfigurationService:
 
         result = fxt_training_configuration_service.get_by_model_architecture(
             project_id=UUID(fxt_project.id),
-            model_architecture_id="object-detection-dfine-m",
+            model_architecture_id="object-detection-yolo11-n",
         )
 
         assert result.algo_level_parameters.dataset_preparation.augmentation.tiling is None

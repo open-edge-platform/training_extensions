@@ -14,9 +14,6 @@ stats:
     coco_map_50_95: 49.9
     coco_map_50: 73.1
 
-capabilities:
-  tiling: false
-
 hyperparameters:
   training:
     learning_rate: 0.0001
