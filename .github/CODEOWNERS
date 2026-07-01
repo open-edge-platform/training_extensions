@@ -9,9 +9,10 @@
 .github/renovate.json5 @open-edge-platform/geti-ci-maintain
 security.md @open-edge-platform/geti-ci-maintain
 
-# Library (getitune)
+# Libraries (getitune, getitrack)
 library/ @open-edge-platform/geti-lib-write
 library/uv.lock @sys-geti @open-edge-platform/geti-lib-write
+libraries/getitrack @open-edge-platform/geti-lib-write
 
 # Application backend
 application/backend/ @open-edge-platform/geti-backend-write
