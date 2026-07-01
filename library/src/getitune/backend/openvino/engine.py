@@ -483,41 +483,6 @@ class OVEngine(Engine):
 
         return check_model and check_data
 
-    @classmethod
-    def from_config(
-        cls,
-        config_path: PathLike,
-        data: DataModule | PathLike | None = None,
-        work_dir: PathLike | None = None,
-        device: str | None = None,
-        checkpoint: str | None = None,
-        task: str | None = None,
-        **kwargs,
-    ) -> OVEngine:
-        """OVEngine does not support construction from a recipe config.
-
-        OpenVINO models are selected by passing a ``.xml`` or ``.onnx``
-        weights path directly to :func:`~getitune.engine.create_engine` or
-        as the *model* argument to :class:`OVEngine`.
-
-        Args:
-            config_path: Unused — included for API compatibility.
-            data: Unused — included for API compatibility.
-            work_dir: Unused — included for API compatibility.
-            device: Unused — included for API compatibility.
-            checkpoint: Unused — included for API compatibility.
-            task: Unused — included for API compatibility.
-            **kwargs: Unused — included for API compatibility.
-
-        Raises:
-            NotImplementedError: Always raised.
-        """
-        msg = (
-            f"OVEngine does not support construction from a recipe config '{config_path}'. "
-            "Pass a .xml or .onnx model path directly to create_engine() instead."
-        )
-        raise NotImplementedError(msg)
-
     def _update_checkpoint(self, checkpoint: PathLike | None) -> OVModel:
         """Update the OVModel with the given checkpoint path.
 

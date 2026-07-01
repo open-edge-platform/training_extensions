@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Annotation, Shape } from '../src/shared/types';
-import { getMockedAnnotationLabelRef } from './mock-labels';
+import { getMockedLabel } from './mock-labels';
 
 const SHAPE_DEFAULTS = {
     rectangle: { type: 'rectangle', x: 10, y: 20, width: 100, height: 50 },
@@ -18,7 +18,7 @@ export const getMockedAnnotation = (annotation?: Partial<Annotation>): Annotatio
     return {
         id: 'annotation-1',
         shape: getMockedShape(),
-        labels: [getMockedAnnotationLabelRef()],
+        labels: [getMockedLabel()],
         ...annotation,
     };
 };

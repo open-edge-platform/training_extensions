@@ -673,34 +673,6 @@ class TestGPUAugmentationPipelineForward:
         assert result["images"] is not None
         assert result["masks"] is not None
 
-    def test_mask_safe_random_erasing_preserves_instance_masks(self):
-        """MaskSafeRandomErasing must not modify instance segmentation masks.
-
-        Regression test for kornia RandomErasing that erases mask regions with
-        incorrectly-shaped batch params, causing dimension mismatch errors.
-        """
-        from getitune.data.augmentation.transforms import MaskSafeRandomErasing
-
-        pipeline = GPUAugmentationPipeline(
-            [MaskSafeRandomErasing(p=1.0)],
-            data_keys=["input", "mask"],
-        )
-        images = _make_batched_images(2, h=32, w=32)
-        # Instance seg: different N_instances per sample
-        masks = [
-            torch.randint(0, 2, (3, 32, 32), dtype=torch.float32),  # 3 instances
-            torch.randint(0, 2, (5, 32, 32), dtype=torch.float32),  # 5 instances
-        ]
-        original_masks = [m.clone() for m in masks]
-        result = pipeline(images, masks=masks)
-
-        # Images should be changed (erasing was applied with p=1.0)
-        assert result["images"] is not None
-        assert not torch.equal(result["images"], images)
-        # Masks must be unchanged
-        for orig, out in zip(original_masks, result["masks"]):
-            assert torch.equal(orig, out), "masks must not be modified by MaskSafeRandomErasing"
-
     def test_forward_preserves_batch_size(self):
         pipeline = GPUAugmentationPipeline(
             [kornia_aug.RandomHorizontalFlip(p=0.5)],

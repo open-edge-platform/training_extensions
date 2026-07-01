@@ -153,7 +153,7 @@ describe('ModelVariantTable', () => {
         expect(screen.queryByText('87%')).not.toBeInTheDocument();
     });
 
-    it('shows Accuracy and dash when no primary metric is available anywhere', () => {
+    it('shows Score and dash when no primary metric is available anywhere', () => {
         const model = getMockedModel({
             variants: [
                 getMockedVariant({
@@ -167,7 +167,7 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByRole('columnheader', { name: 'Accuracy' })).toBeInTheDocument();
+        expect(screen.getByRole('columnheader', { name: 'Score' })).toBeInTheDocument();
         expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('-');
     });
 

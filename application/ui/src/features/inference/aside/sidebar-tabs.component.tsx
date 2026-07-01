@@ -3,8 +3,8 @@
 
 import { useState } from 'react';
 
-import { Flex, Grid, Heading, ToggleButton, Tooltip, TooltipTrigger, View } from '@geti-ui/ui';
-import { Gear, GraphChart } from '@geti-ui/ui/icons';
+import { Flex, Grid, Heading, ToggleButton, Tooltip, TooltipTrigger, View } from '@geti/ui';
+import { Gear, GraphChart } from '@geti/ui/icons';
 
 import { ReactComponent as PipelineIcon } from '../../../assets/icons/pipeline.svg';
 import { DataCollection } from './data-collection.component';

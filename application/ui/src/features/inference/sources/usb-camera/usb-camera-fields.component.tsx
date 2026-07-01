@@ -3,8 +3,8 @@
 
 import { Key, useRef, useState } from 'react';
 
-import { ActionButton, Flex, Item, Loading, Picker, TextField } from '@geti-ui/ui';
-import { Refresh } from '@geti-ui/ui/icons';
+import { ActionButton, Flex, Item, Loading, Picker, TextField } from '@geti/ui';
+import { Refresh } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../../api/client';

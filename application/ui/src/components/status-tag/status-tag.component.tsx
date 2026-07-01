@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Text } from '@geti-ui/ui';
+import { Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 
 import classes from './status-tag.module.scss';

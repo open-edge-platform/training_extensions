@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { Flex, TextField } from '@geti-ui/ui';
+import { Flex, TextField } from '@geti/ui';
 import { open } from '@tauri-apps/plugin-dialog';
 
 import { normalizeSelectedPath } from '../../shared/tauri-dialog';

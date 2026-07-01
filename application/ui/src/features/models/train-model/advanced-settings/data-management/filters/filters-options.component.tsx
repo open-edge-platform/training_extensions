@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox, Content, ContextualHelp, Flex, NumberField, Text } from '@geti-ui/ui';
+import { Checkbox, Content, ContextualHelp, Flex, NumberField, Text } from '@geti/ui';
 
 import { ResetButton } from '../../components/reset-button.component';
 import { FilterConfigurableParameterGroup, FilterConfigurableParameters } from './utils';

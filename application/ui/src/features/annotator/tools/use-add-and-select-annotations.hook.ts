@@ -24,10 +24,7 @@ export const useAddAndSelectAnnotations = () => {
                 deleteAnnotations(globalAnnotations.map(({ id }) => id));
             }
 
-            const newIds = addAnnotations(
-                shapes,
-                labels.map(({ id }) => ({ id }))
-            );
+            const newIds = addAnnotations(shapes, labels);
             setSelectedAnnotations(new Set(newIds));
 
             return newIds;

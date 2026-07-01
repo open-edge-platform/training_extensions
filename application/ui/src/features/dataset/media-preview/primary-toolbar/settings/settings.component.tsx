@@ -12,8 +12,8 @@ import {
     Text,
     Tooltip,
     TooltipTrigger,
-} from '@geti-ui/ui';
-import { Adjustments, Close } from '@geti-ui/ui/icons';
+} from '@geti/ui';
+import { Adjustments, Close } from '@geti/ui/icons';
 
 import { CanvasSettings } from './canvas-settings.component';
 

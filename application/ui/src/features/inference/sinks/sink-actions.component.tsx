@@ -3,8 +3,8 @@
 
 import { useState } from 'react';
 
-import { ActionButton, Flex, Loading, Text } from '@geti-ui/ui';
-import { Back } from '@geti-ui/ui/icons';
+import { ActionButton, Flex, Loading, Text } from '@geti/ui';
+import { Back } from '@geti/ui/icons';
 import { usePipeline } from 'hooks/api/pipeline.hook';
 import { isEmpty, orderBy } from 'lodash-es';
 

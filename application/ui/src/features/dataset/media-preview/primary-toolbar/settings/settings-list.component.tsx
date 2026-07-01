@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Flex, Switch, Text, View } from '@geti-ui/ui';
+import { Divider, Flex, Switch, Text, View } from '@geti/ui';
 
 import { AnnotationSetting } from './annotation-setting.component';
 import { CanvasSettingsState } from './canvas-settings-provider.component';

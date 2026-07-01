@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { AlertDialog, DialogContainer } from '@geti-ui/ui';
+import { AlertDialog, DialogContainer } from '@geti/ui';
 
 type EnablePipelineBlockedDialogProps = {
     isOpen: boolean;

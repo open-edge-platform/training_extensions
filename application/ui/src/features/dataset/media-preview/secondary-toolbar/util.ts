@@ -1,17 +1,16 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Label } from '../../../../constants/shared-types';
-import type { AnnotationLabelRef } from '../../../../shared/types';
+import { Label } from '../../../../constants/shared-types';
 
-export const toggleLabel = (newLabel: Label, labels: AnnotationLabelRef[]): AnnotationLabelRef[] => {
+export const toggleLabel = (newLabel: Label, labels: Label[]): Label[] => {
     const isExistingLabel = labels.some(({ id }) => id === newLabel.id);
 
     if (isExistingLabel) {
-        return labels.filter(({ id }) => id !== newLabel.id);
+        return labels.filter(({ id }) => id !== newLabel.id) as Label[];
     }
 
-    return [...labels, { id: newLabel.id }];
+    return [...labels, newLabel];
 };
 
 export const getNextItem = (totalItems: number, newIndex: number) => {

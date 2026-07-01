@@ -162,7 +162,7 @@ def test_engine_workflow(
     # ---- 1. Instantiate engine ------------------------------------------
     engine = LightningEngine.from_config(
         config_path=recipe,
-        data=str(data_root),
+        data_root=str(data_root),
         work_dir=str(work_dir),
         device=fxt_accelerator,
     )

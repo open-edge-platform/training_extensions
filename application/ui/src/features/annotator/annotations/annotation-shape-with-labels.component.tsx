@@ -5,6 +5,7 @@ import { Key } from 'react';
 
 import polylabel from 'polylabel';
 
+import type { Label } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
@@ -33,7 +34,7 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
             setSelectedLabelId(null);
         }
 
-        const updatedLabels = annotation.labels.filter((label) => label.id !== labelId);
+        const updatedLabels = annotation.labels.filter((label) => label.id !== labelId) as Label[];
 
         updateAnnotations([{ ...annotation, labels: updatedLabels }]);
     };

@@ -1,11 +1,14 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Icon, Text, View } from '@geti-ui/ui';
-import { CloseSemiBold } from '@geti-ui/ui/icons';
+import { ActionButton, Flex, Icon, Text, View } from '@geti/ui';
+import { CloseSemiBold } from '@geti/ui/icons';
 
 import type { DatasetSubset, Media } from '../../../constants/shared-types';
-import { ReadOnlyAnnotatorCanvas } from '../../annotator/annotator-canvas/read-only-annotator-canvas';
+import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
+import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
+import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
+import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { Toolbar } from './toolbar-container/toolbar-container.component';
@@ -13,6 +16,7 @@ import { Toolbar } from './toolbar-container/toolbar-container.component';
 import classes from './read-only-annotator.module.scss';
 
 type ReadOnlyAnnotatorProps = {
+    mode: AnnotatorMode;
     mediaItem: Media;
     image: ImageData;
     onClose: () => void;
@@ -32,6 +36,7 @@ type ReadOnlyAnnotatorProps = {
  * It uses the same gridArea structure as the normal annotator but with fewer elements.
  */
 export const ReadOnlyAnnotator = ({
+    mode,
     image,
     mediaItem,
     subset,
@@ -57,9 +62,15 @@ export const ReadOnlyAnnotator = ({
 
             <View gridArea={'canvas'} overflow={'hidden'}>
                 <AnnotatorCanvasSettings>
-                    <ReadOnlyAnnotatorCanvas mediaItem={mediaItem} image={image} />
+                    <AnnotatorCanvas isReadOnly mediaItem={mediaItem} image={image} mode={mode} />
                 </AnnotatorCanvasSettings>
             </View>
+
+            {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
+                <View gridArea={'video-toolbar'}>
+                    <VideoToolbar mode={mode} />
+                </View>
+            )}
 
             <View gridArea={'bottom'}>
                 <BottomToolbar

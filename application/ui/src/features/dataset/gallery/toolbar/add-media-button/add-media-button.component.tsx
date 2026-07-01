@@ -3,7 +3,7 @@
 
 import { ChangeEvent, useRef } from 'react';
 
-import { Button } from '@geti-ui/ui';
+import { Button } from '@geti/ui';
 
 import { VALID_EXT } from '../../utils';
 

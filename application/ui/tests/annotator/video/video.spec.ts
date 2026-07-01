@@ -86,9 +86,6 @@ test.describe('Annotator video player', () => {
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(mockedDetectionProject);
             }),
-            http.get('/api/projects', () => {
-                return HttpResponse.json([mockedDetectionProject]);
-            }),
             http.get('/api/projects/{project_id}/dataset/media', () => {
                 return HttpResponse.json({
                     items: [videoGalleryItem],
@@ -334,9 +331,6 @@ test.describe('Annotator video player', () => {
         network.use(
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(mockedProject);
-            }),
-            http.get('/api/projects', () => {
-                return HttpResponse.json([mockedProject]);
             }),
             http.get('/api/projects/{project_id}/models', async () => {
                 return HttpResponse.json([getMockedModel({ variants: [getMockedVariant({})] })]);

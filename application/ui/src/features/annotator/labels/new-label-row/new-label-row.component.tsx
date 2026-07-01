@@ -3,8 +3,8 @@
 
 import { FocusEvent, KeyboardEvent, useRef, useState } from 'react';
 
-import { ActionButton, DOMRefValue, Flex, Grid, TextField, useUnwrapDOMRef, View } from '@geti-ui/ui';
-import { Add, Close } from '@geti-ui/ui/icons';
+import { ActionButton, DOMRefValue, Flex, Grid, TextField, useUnwrapDOMRef, View } from '@geti/ui';
+import { Add, Close } from '@geti/ui/icons';
 
 import { HotkeyField } from '../../../../components/label-fields/hotkey-field.component';
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
@@ -81,7 +81,6 @@ export const NewLabelRow = ({ onSave, onCancel, validateName, validateHotkey }: 
 
     return (
         <Grid
-            // @ts-expect-error TODO[geti-ui]: Grid wrapper not forwardRef-typed; ref works at runtime
             ref={rowRef}
             columns={['size-350', 'size-400', '1fr', 'size-400', 'size-400']}
             gap={'size-100'}

@@ -1,8 +1,8 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, ButtonGroup, Divider, Flex, Icon, Text } from '@geti-ui/ui';
-import { CloseSemiBold } from '@geti-ui/ui/icons';
+import { ActionButton, Button, ButtonGroup, Divider, Flex, Icon, Text } from '@geti/ui';
+import { CloseSemiBold } from '@geti/ui/icons';
 import { useProject } from 'hooks/api/project.hook';
 import { isEmpty } from 'lodash-es';
 import { useHotkeys } from 'react-hotkeys-hook';

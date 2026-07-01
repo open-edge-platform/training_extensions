@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Grid } from '@geti-ui/ui';
+import { Grid } from '@geti/ui';
 
 import { ZoomProvider } from '../../components/zoom/zoom.provider';
 import { Sidebar } from '../../features/inference/aside/sidebar-tabs.component';

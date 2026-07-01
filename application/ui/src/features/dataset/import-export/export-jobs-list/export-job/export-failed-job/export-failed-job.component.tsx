@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Divider, Flex, Text, View } from '@geti-ui/ui';
+import { Button, Divider, Flex, Text, View } from '@geti/ui';
 
 import { ExportDatasetJob } from '../../../../../../constants/shared-types';
 import { useExportDataset } from '../../../../../../hooks/storage/use-export-dataset.hook';

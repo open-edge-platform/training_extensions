@@ -427,38 +427,29 @@ const drawImageOnCanvas = (img: HTMLImageElement, filter = ''): HTMLCanvasElemen
     const ctx = canvas.getContext('2d');
 
     if (ctx) {
+        const width = img.naturalWidth ? img.naturalWidth : img.width;
+        const height = img.naturalHeight ? img.naturalHeight : img.height;
+
         ctx.filter = filter;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, width, height);
     }
 
     return canvas;
 };
 
-// Canvas rasterization limits (Chrome: 16384² ≈ 268 Mpx total area).
-// Check dimensions upfront: some browsers return a valid 2D context for
-// oversized canvases but then fail/throw at getImageData time (returning
-// blank buffers or OOM), which caused the original "white square" issue.
-const MAX_CANVAS_SIDE = 16384;
-
-export const canRasteriseAtFullSize = (width: number, height: number): boolean =>
-    width <= MAX_CANVAS_SIDE && height <= MAX_CANVAS_SIDE;
-
 export const getImageData = (img: HTMLImageElement): ImageData => {
-    if (img.width === 0 && img.height === 0) return new ImageData(1, 1);
-
-    const sourceWidth = img.naturalWidth || img.width;
-    const sourceHeight = img.naturalHeight || img.height;
-
-    // Oversized media cannot be rasterised to a canvas (and smart tools can't
-    // run on it either), so return a placeholder; it is displayed via <img>.
-    if (!canRasteriseAtFullSize(sourceWidth, sourceHeight)) {
+    // Always return valid imageData, even if the image isn't loaded yet.
+    if (img.width === 0 && img.height === 0) {
         return new ImageData(1, 1);
     }
 
     const canvas = drawImageOnCanvas(img);
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 
-    return ctx !== null ? ctx.getImageData(0, 0, canvas.width, canvas.height) : new ImageData(1, 1);
+    const width = img.naturalWidth ? img.naturalWidth : img.width;
+    const height = img.naturalHeight ? img.naturalHeight : img.height;
+
+    return ctx.getImageData(0, 0, width, height);
 };
 
 export const isKeyboardDelete = (event: KeyboardEvent): boolean =>
@@ -491,22 +482,4 @@ export const projectPointOnLine = ([startPoint, endPoint]: ProjectLine, point: P
         x: b.x * scale + startPoint.x,
         y: b.y * scale + startPoint.y,
     };
-};
-
-/**
- * Oversized image handling (Chrome canvas limit ~268 Mpx):
- * - `getImageData` returns a 1×1 placeholder for media too large to rasterise.
- * - Such media is displayed via an <img> tag (see annotator-canvas.tsx).
- * - Smart tools (SAM, magnetic lasso, SSIM) are disabled for it, because they
- *   rely on a full-resolution canvas/OpenCV buffer that cannot be produced.
- */
-
-/**
- * Checks if an ImageData is a placeholder for oversized media.
- * Full-size ImageData satisfies width * height * 4 entries in `data`
- * (RGBA: 4 channels, 1 byte each). A 1×1 placeholder breaks that.
- * @returns true if data doesn't match full size (i.e., is a placeholder)
- */
-export const isImageOversized = (image: ImageData): boolean => {
-    return image.data.length !== image.width * image.height * 4;
 };

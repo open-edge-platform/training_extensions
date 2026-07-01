@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { AlertDialog, Text } from '@geti-ui/ui';
+import { AlertDialog, Text } from '@geti/ui';
 
 import { pluralizeItems } from '../../../../shared/util';
 

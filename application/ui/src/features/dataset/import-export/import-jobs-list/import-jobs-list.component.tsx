@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from '@geti-ui/ui';
+import { Flex } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useImportDatasetToProject } from 'hooks/storage/use-import-dataset-to-project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';

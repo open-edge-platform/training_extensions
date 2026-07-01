@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Content, ContextualHelp, Text, ToggleButtons } from '@geti-ui/ui';
+import { Content, ContextualHelp, Text, ToggleButtons } from '@geti/ui';
 
 import { TILING_MODES, TilingMode } from './utils';
 

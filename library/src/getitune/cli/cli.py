@@ -539,7 +539,7 @@ class CLI:
         """
         self.console.print(f"[blue]{LIBRARY_LOGO}[/blue] ver.{__version__}", justify="center")
         if self.subcommand == "find":
-            from getitune.utils import list_models
+            from getitune.backend.lightning.cli.utils import list_models
 
             list_models(print_table=True, **self.config[self.subcommand])
         elif self.subcommand in self.engine_subcommands():

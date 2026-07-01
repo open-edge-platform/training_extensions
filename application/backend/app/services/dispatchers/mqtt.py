@@ -9,14 +9,13 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from loguru import logger
+from model_api.models.result import Result
 
 from app.models import MqttSinkConfig
 
 from .base import BaseDispatcher, UnavailableDispatcherError
 
 if TYPE_CHECKING:
-    from model_api.models.result import Result
-
     try:
         import paho.mqtt.client as mqtt_cl
     except ImportError:
@@ -146,9 +145,7 @@ class MqttDispatcher(BaseDispatcher):
         except ValueError:
             logger.exception("Invalid payload for MQTT publish")
 
-    def _dispatch(
-        self, original_image: np.ndarray, image_with_visualization: np.ndarray, predictions: "Result"
-    ) -> None:
+    def _dispatch(self, original_image: np.ndarray, image_with_visualization: np.ndarray, predictions: Result) -> None:
         payload = self._create_payload(original_image, image_with_visualization, predictions)
 
         self.__publish_message(self.topic, payload)

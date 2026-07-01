@@ -3,7 +3,7 @@
 
 import { ComponentProps } from 'react';
 
-import { View } from '@geti-ui/ui';
+import { View } from '@geti/ui';
 
 type ViewProps = ComponentProps<typeof View>;
 

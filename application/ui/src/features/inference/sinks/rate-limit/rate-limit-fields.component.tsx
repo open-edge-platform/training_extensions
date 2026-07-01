@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, NumberField, Text } from '@geti-ui/ui';
+import { Flex, NumberField, Text } from '@geti/ui';
 
 import { positiveNumberOrUndefined } from '../utils';
 

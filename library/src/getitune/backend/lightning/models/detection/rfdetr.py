@@ -12,12 +12,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
-from rfdetr.config import (
-    RFDETRLargeConfig,
-    RFDETRMediumConfig,
-    RFDETRNanoConfig,
-    RFDETRSmallConfig,
-)
+from rfdetr import RFDETRBase, RFDETRLarge, RFDETRMedium, RFDETRNano, RFDETRSmall
+from torch.export import Dim
 
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
@@ -74,17 +70,19 @@ class RFDETR(RFDETRMixin, LightningDetectionModel):  # pyrefly: ignore[inconsist
     """
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
+        "rfdetr_base": "https://storage.geti.intel.com/weights/rf-detr-base-2026.pth",
+        "rfdetr_large": "https://storage.geti.intel.com/weights/rf-detr-large-2026.pth",
         "rfdetr_nano": "https://storage.geti.intel.com/weights/rf-detr-nano-2026.pth",
         "rfdetr_small": "https://storage.geti.intel.com/weights/rf-detr-small-2026.pth",
         "rfdetr_medium": "https://storage.geti.intel.com/weights/rf-detr-medium-2026.pth",
-        "rfdetr_large": "https://storage.geti.intel.com/weights/rf-detr-large-2026.pth",
     }
 
-    _model_config_mapping: ClassVar[dict[str, type]] = {
-        "rfdetr_large": RFDETRLargeConfig,
-        "rfdetr_medium": RFDETRMediumConfig,
-        "rfdetr_nano": RFDETRNanoConfig,
-        "rfdetr_small": RFDETRSmallConfig,
+    _model_class_mapping: ClassVar[dict[str, type]] = {
+        "rfdetr_base": RFDETRBase,
+        "rfdetr_large": RFDETRLarge,
+        "rfdetr_medium": RFDETRMedium,
+        "rfdetr_nano": RFDETRNano,
+        "rfdetr_small": RFDETRSmall,
     }
 
     input_size_multiplier = 8
@@ -96,9 +94,10 @@ class RFDETR(RFDETRMixin, LightningDetectionModel):  # pyrefly: ignore[inconsist
         model_name: Literal[
             "rfdetr_nano",
             "rfdetr_small",
+            "rfdetr_base",
             "rfdetr_medium",
             "rfdetr_large",
-        ] = "rfdetr_medium",
+        ] = "rfdetr_base",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
@@ -157,9 +156,8 @@ class RFDETR(RFDETRMixin, LightningDetectionModel):  # pyrefly: ignore[inconsist
             onnx_export_configuration={
                 "input_names": ["images"],
                 "output_names": ["bboxes", "labels", "scores"],
-                "dynamic_axes": {"images": {0: "batch"}},
-                "dynamo": False,
-                "do_constant_folding": True,
+                "dynamic_shapes": {"inputs": {0: Dim("batch")}},
+                "autograd_inlining": False,
                 "opset_version": 18,
             },
             output_names=["bboxes", "labels", "scores"],
@@ -184,6 +182,11 @@ class RFDETR(RFDETRMixin, LightningDetectionModel):  # pyrefly: ignore[inconsist
             ),
             "rfdetr_small": DataInputParams(
                 input_size=(512, 512),
+                mean=imagenet_mean,
+                std=imagenet_std,
+            ),
+            "rfdetr_base": DataInputParams(
+                input_size=(560, 560),
                 mean=imagenet_mean,
                 std=imagenet_std,
             ),

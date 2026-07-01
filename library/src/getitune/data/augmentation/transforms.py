@@ -8,7 +8,6 @@ from __future__ import annotations
 import typing
 from typing import TYPE_CHECKING, Any, cast
 
-import kornia.augmentation as K  # noqa: N812
 import torch
 import torchvision.transforms.v2 as tvt_v2
 from torchvision import tv_tensors
@@ -1071,27 +1070,3 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
             return inputs if len(inputs) > 1 else inputs[0]
 
         return super().__call__(*inputs)
-
-
-class MaskSafeRandomErasing(K.RandomErasing):
-    """RandomErasing that erases images only, leaving masks unchanged.
-
-    Kornia's RandomErasing overrides :meth:`apply_transform_mask` to also erase
-    mask regions. This causes a shape mismatch in the GPU augmentation pipeline
-    when used with instance segmentation because per-sample mask tensors have
-    ``(N_instances, ...)`` dimensions while the inherited kornia params carry
-    the full batch dimension ``(B, ...)``.
-
-    Semantically, random erasing fills a rectangle on the image with a constant
-    value — object boundaries (masks) are not changed.
-    """
-
-    def apply_transform_mask(
-        self,
-        input: torch.Tensor,  # noqa: A002  # matches parent class kornia signature
-        params: dict[str, torch.Tensor],
-        flags: dict[str, Any],
-        transform: torch.Tensor | None = None,
-    ) -> torch.Tensor:
-        """Passthrough — masks are not affected by RandomErasing."""
-        return input

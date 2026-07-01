@@ -1,6 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import * as geti from '@geti/ui';
 import { waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { renderHook } from 'test-utils/render';
@@ -8,7 +9,6 @@ import { vi } from 'vitest';
 
 import { getMockedJob } from '../../../../mocks/mock-job';
 import { http } from '../../../api/utils';
-import * as toastModule from '../../../components/toast/toast.component';
 import { server } from '../../../msw-node-setup';
 import { MockEventSourceConstructor, resetMockEventSource } from '../../../test-utils/mock-event-source';
 import { useGetCurrentRunningJobs, useStreamJobStatus } from './jobs.hook';
@@ -102,7 +102,7 @@ describe('useStreamJobStatus', () => {
     });
 
     it('shows a toast when job status is FAILED', async () => {
-        const toastSpy = vi.spyOn(toastModule, 'toast');
+        const toastSpy = vi.spyOn(geti, 'toast');
         const failedJob = getMockedJob({ status: 'FAILED' });
 
         renderHook(() => useStreamJobStatus(failedJob.job_id));

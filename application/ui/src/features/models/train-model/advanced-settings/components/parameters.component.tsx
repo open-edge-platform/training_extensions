@@ -15,7 +15,7 @@ import {
     Text,
     ToggleButtons,
     View,
-} from '@geti-ui/ui';
+} from '@geti/ui';
 import { isBoolean, isFunction } from 'lodash-es';
 
 import {

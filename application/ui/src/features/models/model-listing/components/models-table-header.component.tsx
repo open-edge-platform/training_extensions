@@ -3,26 +3,31 @@
 
 import { useMemo } from 'react';
 
-import { dimensionValue, Grid } from '@geti-ui/ui';
-import { useProjectTask } from 'hooks/use-project-task.hook';
+import { dimensionValue, Flex, Grid, Text } from '@geti/ui';
+import { SortDown } from '@geti/ui/icons';
 
 import { GRID_COLUMNS } from '../constants';
 import { useModelListing } from '../provider/model-listing-provider';
-import { ColumnHeader } from './column-header.component';
-import { getPerformanceColumnLabel } from './model-row/utils';
+import { getFirstAvailableTestingMetric } from './model-row/utils';
+
+const ColumnHeader = ({ label, isSorted }: { label: string; isSorted?: boolean }) => (
+    <Flex alignItems='center' gap='size-50'>
+        <Text>{label}</Text>
+        {isSorted && <SortDown width={16} height={16} />}
+    </Flex>
+);
 
 // NOTE: We cannot have DisclosureGroup inside TableView when using Spectrum so
 // We are just rendering the result of the sort, not doing the sort itself on the table.
 // The actual sorting comes from the models screen Header.
 export const ModelsTableHeader = () => {
     const { groupBy, sortBy, groupedModels } = useModelListing();
-    const taskType = useProjectTask();
 
     const performanceColumnName = useMemo(() => {
         const models = groupedModels.flatMap((group) => group.models);
 
-        return getPerformanceColumnLabel(models, taskType);
-    }, [groupedModels, taskType]);
+        return getFirstAvailableTestingMetric(models)?.name ?? 'Score';
+    }, [groupedModels]);
 
     return (
         <Grid

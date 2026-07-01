@@ -100,7 +100,7 @@ class WebhookConfig(SinkConfig):
     webhook_url: str
     http_method: HttpMethod = "POST"
     headers: HttpHeaders | None = None
-    timeout: int = Field(default=10, gt=0)  # seconds
+    timeout: int = 10  # seconds
 
 
 class WebhookSinkConfig(BaseSinkConfig):

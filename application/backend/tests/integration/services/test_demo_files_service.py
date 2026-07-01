@@ -82,33 +82,6 @@ def fxt_project_with_image(
 
 
 @pytest.fixture
-def fxt_project_with_16bit_image(
-    request: pytest.FixtureRequest,
-    fxt_project_with_pipeline: tuple[Project, Pipeline],
-    fxt_media_service: MediaService,
-) -> tuple[Project, Media, ImageFormat]:
-    """Create a project containing a single real 16-bit image (PNG or TIFF) on disk.
-
-    The image format is supplied indirectly via ``request.param`` so the same fixture
-    can be parametrized for both PNG and TIFF.
-    """
-    project, _ = fxt_project_with_pipeline
-    image_format: ImageFormat = request.param
-    # A 16-bit (uint16) single-channel image with a value ramp spanning the full range.
-    array = np.linspace(0, 65535, num=64 * 48, dtype=np.uint16).reshape(48, 64)
-    image = PILImage.fromarray(array)  # mode "I;16"
-    created = fxt_media_service.create_image(
-        ImageMetadata(
-            project_id=project.id,
-            name="sample16",
-            image_format=image_format,
-            data=image,
-        )
-    )
-    return project, created, image_format
-
-
-@pytest.fixture
 def fxt_video_data() -> Callable[[Path, int, int, int], None]:
     """Write a small synthetic AVI video to disk with a known per-frame intensity ramp.
 
@@ -201,27 +174,19 @@ class TestDemoFilesServiceIntegration:
 
         names = [f.name for f in files]
         assert "image.jpg" not in names
-        assert names == ["demo.py", "demo_async.py", "utils.py", "pyproject.toml", "README.md"]
+        assert names == ["demo.py", "demo_async.py", "pyproject.toml", "README.md"]
 
-    @pytest.mark.parametrize(
-        "export_format,expected_format,unexpected_format",
-        [(ModelFormat.OPENVINO, "model.xml", "model.onnx"), (ModelFormat.ONNX, "model.onnx", "model.xml")],
-        ids=["openvino", "onnx"],
-    )
-    def test_bundle_contents(
+    def test_openvino_bundle_contents(
         self,
         fxt_demo_files_service: DemoFilesService,
         fxt_project_with_image: tuple[Project, MediaDB],
-        export_format,
-        expected_format,
-        unexpected_format,
     ) -> None:
         project, _ = fxt_project_with_image
 
-        files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=export_format)
+        files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=ModelFormat.OPENVINO)
 
         names = [f.name for f in files]
-        assert names == ["image.jpg", "demo.py", "demo_async.py", "utils.py", "pyproject.toml", "README.md"]
+        assert names == ["image.jpg", "demo.py", "demo_async.py", "pyproject.toml", "README.md"]
         # Every entry must be a DemoFile with a non-empty bytes payload.
         for f in files:
             assert isinstance(f, DemoFile)
@@ -231,13 +196,14 @@ class TestDemoFilesServiceIntegration:
         by_name = {f.name: f.data for f in files}
 
         # Demo scripts must reference the OpenVINO IR XML, not the ONNX model.
-        utils = by_name["utils.py"].decode("utf-8")
-        assert f'MODEL_PATH = HERE / "{expected_format}"' in utils
-        assert unexpected_format not in utils
-
-        # Sync vs async hints
         demo = by_name["demo.py"].decode("utf-8")
         demo_async = by_name["demo_async.py"].decode("utf-8")
+        assert 'MODEL_PATH = HERE / "model.xml"' in demo
+        assert 'MODEL_PATH = HERE / "model.xml"' in demo_async
+        assert "model.onnx" not in demo
+        assert "model.onnx" not in demo_async
+
+        # Sync vs async hints
         assert "synchronous" in demo.lower()
         assert "AsyncPipeline" in demo_async
 
@@ -251,8 +217,26 @@ class TestDemoFilesServiceIntegration:
         assert "uv" in readme.lower()
         assert "demo.py" in readme
         assert "demo_async.py" in readme
-        assert "utils.py" in readme
-        assert expected_format in readme
+        assert "model.xml" in readme
+
+    def test_onnx_bundle_uses_onnx_model_filename(
+        self,
+        fxt_demo_files_service: DemoFilesService,
+        fxt_project_with_image: tuple[Project, MediaDB],
+    ) -> None:
+        project, _ = fxt_project_with_image
+
+        files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=ModelFormat.ONNX)
+
+        by_name = {f.name: f.data for f in files}
+        assert set(by_name) == {"image.jpg", "demo.py", "demo_async.py", "pyproject.toml", "README.md"}
+
+        for script_name in ("demo.py", "demo_async.py"):
+            script = by_name[script_name].decode("utf-8")
+            assert 'MODEL_PATH = HERE / "model.onnx"' in script
+            assert "model.xml" not in script
+
+        assert "model.onnx" in by_name["README.md"].decode("utf-8")
 
     def test_sample_image_matches_stored_binary(
         self,
@@ -269,55 +253,6 @@ class TestDemoFilesServiceIntegration:
         expected_path: Path = fxt_media_service.get_media_binary_path(project_id=project.id, media=media)
         assert sample.data == expected_path.read_bytes()
 
-    @pytest.mark.parametrize(
-        "fxt_project_with_16bit_image",
-        [ImageFormat.PNG, ImageFormat.TIFF],
-        indirect=True,
-        ids=["png", "tiff"],
-    )
-    def test_16bit_image_bundled_verbatim_and_referenced(
-        self,
-        fxt_demo_files_service: DemoFilesService,
-        fxt_project_with_16bit_image: tuple[Project, Media, ImageFormat],
-        fxt_media_service: MediaService,
-    ) -> None:
-        """A non-JPEG (16-bit PNG/TIFF) sample must be bundled verbatim under its original
-        extension, and the generated demos/README must reference that exact filename.
-
-        This guards the behavior that 16-bit images are not silently re-encoded to JPEG
-        (which would downcast them to 8-bit) and that the sample image extension is
-        correctly propagated into the demo scripts and README.
-        """
-        project, media, image_format = fxt_project_with_16bit_image
-        expected_name = f"image.{image_format.value}"
-
-        files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=ModelFormat.OPENVINO)
-
-        names = [f.name for f in files]
-        # (1) The archive includes image.<ext> (not image.jpg) as the very first entry.
-        assert names == [expected_name, "demo.py", "demo_async.py", "utils.py", "pyproject.toml", "README.md"]
-
-        by_name = {f.name: f.data for f in files}
-
-        # The bundled bytes are exactly the stored file (no lossy re-encoding).
-        expected_path: Path = fxt_media_service.get_media_binary_path(project_id=project.id, media=media)
-        assert by_name[expected_name] == expected_path.read_bytes()
-
-        # ...and the bundled image is genuinely 16-bit (uint16) per channel.
-        decoded = cv2.imdecode(np.frombuffer(by_name[expected_name], dtype=np.uint8), cv2.IMREAD_UNCHANGED)
-        assert decoded is not None
-        assert decoded.dtype == np.uint16
-
-        # (2) The demo scripts reference the actual filename, never the JPEG default.
-        script = by_name["utils.py"].decode("utf-8")
-        assert f'IMAGE_PATH = HERE / "{expected_name}"' in script
-        assert 'HERE / "image.jpg"' not in script
-
-        # ...and so does the README.
-        readme = by_name["README.md"].decode("utf-8")
-        assert expected_name in readme
-        assert "image.jpg" not in readme
-
     def test_video_without_binary_falls_back_gracefully(
         self,
         fxt_demo_files_service: DemoFilesService,
@@ -332,7 +267,7 @@ class TestDemoFilesServiceIntegration:
         names = [f.name for f in files]
         assert "image.jpg" not in names
         # The rest of the bundle is still produced.
-        assert names == ["demo.py", "demo_async.py", "utils.py", "pyproject.toml", "README.md"]
+        assert names == ["demo.py", "demo_async.py", "pyproject.toml", "README.md"]
 
     def test_video_middle_frame_used_when_no_image_available(
         self,
@@ -352,7 +287,7 @@ class TestDemoFilesServiceIntegration:
         files = fxt_demo_files_service.build_demo_files(project_id=project.id, model_format=ModelFormat.OPENVINO)
 
         names = [f.name for f in files]
-        assert names == ["image.jpg", "demo.py", "demo_async.py", "utils.py", "pyproject.toml", "README.md"]
+        assert names == ["image.jpg", "demo.py", "demo_async.py", "pyproject.toml", "README.md"]
 
         sample = next(f for f in files if f.name == "image.jpg")
         assert len(sample.data) > 0
@@ -418,4 +353,4 @@ class TestDemoFilesServiceIntegration:
 
         names = [f.name for f in files]
         assert "image.jpg" not in names
-        assert names == ["demo.py", "demo_async.py", "utils.py", "pyproject.toml", "README.md"]
+        assert names == ["demo.py", "demo_async.py", "pyproject.toml", "README.md"]

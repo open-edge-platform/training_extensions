@@ -12,7 +12,6 @@ export const getMockedPipeline = (customPipeline?: Partial<SchemaPipelineView>):
             name: 'source',
             source_type: 'video_file' as const,
             video_path: 'video.mp4',
-            loop: false,
         },
         model: {
             id: '1',

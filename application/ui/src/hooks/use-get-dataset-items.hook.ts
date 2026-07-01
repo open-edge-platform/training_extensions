@@ -7,7 +7,7 @@ import { $api } from '../api/client';
 import type { DatasetItemAnnotationStatus, DatasetSubset, Pagination } from '../constants/shared-types';
 import { useProjectIdentifier } from './use-project-identifier.hook';
 
-const DATASET_ITEMS_LIMIT = 40;
+const DATASET_ITEMS_LIMIT = 20;
 
 type UseGetDatasetItemsOptions = {
     subset?: DatasetSubset;

@@ -1,8 +1,8 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Text } from '@geti-ui/ui';
-import { Image, Tag } from '@geti-ui/ui/icons';
+import { Flex, Text } from '@geti/ui';
+import { Image, Tag } from '@geti/ui/icons';
 import { useNumberFormatter } from 'react-aria';
 
 import type { DatasetRevision } from '../../../../../constants/shared-types';

@@ -13,7 +13,7 @@ Object.assign(navigator, {
 });
 
 const mockedToast = vi.fn();
-vi.mock('../../components/toast/toast.component', () => ({
+vi.mock('@geti/ui', () => ({
     toast: (params: unknown) => mockedToast(params),
 }));
 

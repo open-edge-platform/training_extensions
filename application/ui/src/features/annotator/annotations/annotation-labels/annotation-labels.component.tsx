@@ -6,8 +6,7 @@ import { PointerEvent, useCallback } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import { useLabelResolver } from '../../../../shared/annotator/labels';
-import type { AnnotationLabel, AnnotationLabelRef } from '../../../../shared/types';
+import { AnnotationLabel } from '../../../../shared/types';
 import { isPrediction } from '../utils';
 
 import classes from './annotation-labels.module.scss';
@@ -19,7 +18,7 @@ const LABEL_HEIGHT_PX = 24;
 const LABEL_MAX_WIDTH_PX = 1000;
 
 interface AnnotationLabelsProps {
-    labels: AnnotationLabelRef[];
+    labels: AnnotationLabel[];
     onRemove: (labelId: string) => void;
     useBottomCorners?: boolean;
     isRemovable?: boolean;
@@ -40,7 +39,6 @@ export const AnnotationLabels = ({
     isRemovable = true,
 }: AnnotationLabelsProps) => {
     const { scale } = useZoom();
-    const { resolveAnnotationLabel } = useLabelResolver();
 
     const onDeleteLabel = useCallback(
         (labelId: string) => (event: PointerEvent) => {
@@ -51,8 +49,7 @@ export const AnnotationLabels = ({
         [onRemove]
     );
 
-    const resolvedLabels = labels.map(resolveAnnotationLabel).filter((label) => label !== undefined);
-    const displayLabels = resolvedLabels.length ? resolvedLabels : [placeholderLabel];
+    const displayLabels = labels.length ? labels : [placeholderLabel];
 
     // Need to round up to preveent sub-pixel render issues when zoomed in
     const foreignObjectHeight = Math.ceil(LABEL_HEIGHT_PX / scale) + 1;
@@ -74,7 +71,7 @@ export const AnnotationLabels = ({
                 {displayLabels.map((label, index) => {
                     const isFirst = index === 0;
                     const isLast = index === displayLabels.length - 1;
-                    const isPlaceholder = !resolvedLabels.length;
+                    const isPlaceholder = !labels.length;
 
                     return (
                         <div

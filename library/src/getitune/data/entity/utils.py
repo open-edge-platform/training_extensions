@@ -16,7 +16,6 @@ import torch.utils._pytree as pytree
 from datumaro.experimental.dataset import Sample  # noqa: TC002
 from datumaro.experimental.fields import image_field
 from datumaro.experimental.fields.images import ImageField, ImagePathField
-from datumaro.experimental.fields.videos import MediaPathField
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -44,11 +43,8 @@ _TIFF_LE = b"II"
 _TIFF_BE = b"MM"
 
 
-def detect_storage_dtype(dataset: Dataset) -> tuple[str, int]:
-    """Detect image storage dtype and channel count from the dataset.
-
-    Reads the first sample's media file header to determine bit depth
-    and number of colour channels without decoding the entire image.
+def detect_storage_dtype(dataset: Dataset) -> str:
+    """Detect image storage dtype by inspecting the dataset schema fields.
 
     Must be called on a raw dataset (before ``convert_to_schema``).
 
@@ -56,22 +52,16 @@ def detect_storage_dtype(dataset: Dataset) -> tuple[str, int]:
         dataset: A ``datumaro.experimental.Dataset`` instance.
 
     Returns:
-        A ``(storage_dtype, num_channels)`` tuple where
-        *storage_dtype* is one of ``"uint8"``, ``"uint16"``, ``"int16"``,
-        ``"float32"`` and *num_channels* is the image channel count
-        (e.g.  1 = grayscale, 3 = RGB, 4 = RGBA).
+        One of ``"uint8"``, ``"uint16"``, ``"int16"``, or ``"float32"``.
 
     Raises:
         ValueError: If no image field is found in the dataset schema.
     """
     for name, attr in dataset.schema.attributes.items():
-        if isinstance(attr.field, (ImagePathField, MediaPathField)):
+        if isinstance(attr.field, ImagePathField):
             return _detect_dtype_from_file(Path(dataset.df[name][0]))
         if isinstance(attr.field, ImageField):
-            dtype = str(attr.field.dtype).lower()
-            fmt = getattr(attr.field, "format", "RGB")
-            num_channels = {"L": 1, "RGB": 3, "RGBA": 4}.get(fmt, 3)
-            return dtype, num_channels
+            return str(attr.field.dtype).lower()
 
     msg = (
         f"Cannot detect image storage dtype: no image field "
@@ -80,54 +70,39 @@ def detect_storage_dtype(dataset: Dataset) -> tuple[str, int]:
     raise ValueError(msg)
 
 
-def _detect_dtype_from_file(path: Path) -> tuple[str, int]:
-    """Detect image storage dtype and channel count from a file header.
-
-    Reads the minimum bytes needed to determine bit depth and colour
-    channels without decoding the full image.
-    """
+def _detect_dtype_from_file(path: Path) -> str:
+    """Detect image storage dtype from a file header without decoding pixels."""
     with path.open("rb") as f:
         sig = f.read(8)
 
-    # PNG: bit_depth at byte 24, color_type at byte 25
+    # PNG: bit_depth is at byte offset 24 in the IHDR chunk
     if sig[:4] == _PNG_SIGNATURE:
         with path.open("rb") as f:
             f.seek(24)  # signature(8) + length(4) + "IHDR"(4) + width(4) + height(4)
             bit_depth = struct.unpack("B", f.read(1))[0]
-            color_type = struct.unpack("B", f.read(1))[0]
-        dtype = "uint16" if bit_depth == 16 else "uint8"
-        # color_type: 0=Grayscale, 2=RGB, 4=Gray+Alpha, 6=RGBA
-        num_channels = {0: 1, 2: 3, 4: 2, 6: 4}.get(color_type, 1)
-        return dtype, num_channels
+        return "uint16" if bit_depth == 16 else "uint8"
 
-    # JPEG is always 8-bit; check mode via PIL for channel count
+    # JPEG is always 8-bit
     if sig[:2] == _JPEG_SIGNATURE:
-        from PIL import Image
+        return "uint8"
 
-        with Image.open(path) as img:
-            num_channels = 1 if img.mode == "L" else 3
-        return "uint8", num_channels
-
-    # TIFF: check dtype and mode via PIL
+    # TIFF: check BitsPerSample tag via PIL
     if sig[:2] in (_TIFF_LE, _TIFF_BE):
         from PIL import Image
 
         with Image.open(path) as img:
             if img.mode in _PIL_16BIT_MODES:
-                dtype = "uint16"
-            elif img.mode in _PIL_FLOAT_MODES:
-                dtype = "float32"
-            else:
-                tag_v2 = getattr(img, "tag_v2", None)
-                if tag_v2 and 258 in tag_v2:
-                    bits = tag_v2[258]
-                    if isinstance(bits, tuple):
-                        bits = bits[0]
-                    dtype = "uint16" if bits == 16 else "uint8"
-                else:
-                    dtype = "uint8"
-            num_channels = 1 if img.mode in ("L", "I", "I;16", "F") else 3
-        return dtype, num_channels
+                return "uint16"
+            if img.mode in _PIL_FLOAT_MODES:
+                return "float32"
+            tag_v2 = getattr(img, "tag_v2", None)
+            if tag_v2 and 258 in tag_v2:  # 258 = BitsPerSample
+                bits = tag_v2[258]
+                if isinstance(bits, tuple):
+                    bits = bits[0]
+                if bits == 16:
+                    return "uint16"
+        return "uint8"
 
     # Fallback: use PIL mode
     from PIL import Image
@@ -135,13 +110,10 @@ def _detect_dtype_from_file(path: Path) -> tuple[str, int]:
     with Image.open(path) as img:
         mode = img.mode
     if mode in _PIL_16BIT_MODES:
-        dtype = "uint16"
-    elif mode in _PIL_FLOAT_MODES:
-        dtype = "float32"
-    else:
-        dtype = "uint8"
-    num_channels = 1 if mode in ("L", "I", "I;16", "F") else 3
-    return dtype, num_channels
+        return "uint16"
+    if mode in _PIL_FLOAT_MODES:
+        return "float32"
+    return "uint8"
 
 
 #: Cache for dynamically created sample classes to avoid re-creation.

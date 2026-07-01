@@ -12,7 +12,7 @@ import {
     Text,
     View,
     type SpectrumDropZoneProps,
-} from '@geti-ui/ui';
+} from '@geti/ui';
 
 import { ReactComponent as DropFiles } from '../../../assets/drop-files.svg';
 import { getFilesFromDropEvent } from '../../../shared/drop-zone.utils';

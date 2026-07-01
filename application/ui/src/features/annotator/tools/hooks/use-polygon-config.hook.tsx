@@ -9,7 +9,7 @@ import { differenceWith, isEmpty, isEqual, isNil } from 'lodash-es';
 import { Point, Polygon } from '../../../../shared/types';
 import { usePolygonState } from '../polygon-tool/polygon-state-provider.component';
 import { deleteSegments, ERASER_FIELD_DEFAULT_RADIUS } from '../polygon-tool/utils';
-import { convertToolShapeToGetiShape, getRelativePoint, isImageOversized } from '../utils';
+import { convertToolShapeToGetiShape, getRelativePoint } from '../utils';
 import { useIntelligentScissorsWorker } from './use-intelligent-scissors-worker.hook';
 
 export const usePolygonConfig = ({
@@ -37,8 +37,9 @@ export const usePolygonConfig = ({
     }, [worker]);
 
     useEffect(() => {
-        if (!isMounted.current || !image || isImageOversized(image)) return;
-        worker?.loadImage(image);
+        if (isMounted.current && image) {
+            worker?.loadImage(image);
+        }
     }, [image, worker]);
 
     const polygon = useMemo<Polygon | null>(() => {
@@ -65,14 +66,8 @@ export const usePolygonConfig = ({
         return clampPoint(getRelativePoint(canvasRef.current, { x: event.clientX, y: event.clientY }, zoom));
     };
 
-    const setPointFromEvent = (callback: (point: Point) => void) => (event: PointerEvent<SVGElement>) => {
-        // A debounced/trailing pointer handler can fire after the canvas element
-        // has unmounted (e.g. switching tools or media), leaving `canvasRef.current`
-        // null. `getRelativePoint` would then throw on `getBoundingClientRect`.
-        if (canvasRef.current === null) return;
-
+    const setPointFromEvent = (callback: (point: Point) => void) => (event: PointerEvent<SVGElement>) =>
         callback(getPointerRelativePosition(event));
-    };
 
     const onPointerMoveRemove = setPointFromEvent((newPoint: Point) => {
         const intersectionPoint = getIntersectionPoint(

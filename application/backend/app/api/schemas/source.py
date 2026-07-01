@@ -102,11 +102,6 @@ class VideoFileSourceConfigView(VideoFileSourceConfig):
     def video_path(self) -> str:
         return self.config_data.video_path
 
-    @computed_field
-    @property
-    def loop(self) -> bool:
-        return self.config_data.loop
-
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -114,7 +109,6 @@ class VideoFileSourceConfigView(VideoFileSourceConfig):
                 "name": "Sample Video",
                 "id": "712750b2-5a82-47ee-8fba-f3dc96cb615d",
                 "video_path": "/path/to/video.mp4",
-                "loop": False,
             }
         }
     }
@@ -185,11 +179,10 @@ class IPCameraSourceConfigCreate(BaseSourceConfigCreate):
 class VideoFileSourceConfigCreate(BaseSourceConfigCreate):
     source_type: Literal[SourceType.VIDEO_FILE]
     video_path: str
-    loop: bool = False
 
     @property
     def config_data(self) -> VideoFileConfig:
-        return VideoFileConfig(video_path=self.video_path, loop=self.loop)
+        return VideoFileConfig(video_path=self.video_path)
 
 
 class ImagesFolderSourceConfigCreate(BaseSourceConfigCreate):

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider } from '@geti-ui/ui';
+import { Divider } from '@geti/ui';
 import { partition } from 'lodash-es';
 
 import { useTool } from '../../../../shared/annotator/tool-provider.component';

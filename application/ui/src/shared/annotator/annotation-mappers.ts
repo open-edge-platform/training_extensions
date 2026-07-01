@@ -3,48 +3,51 @@
 
 import { v4 as uuid } from 'uuid';
 
-import type { AnnotationDTO } from '../../constants/shared-types';
-import type { Annotation, AnnotationLabelRef } from '../types';
+import type { AnnotationDTO, Label } from '../../constants/shared-types';
+import { Annotation, AnnotationLabel } from '../types';
 
-export const mapServerAnnotationsToLocal = (serverAnnotations: AnnotationDTO[]): Annotation[] => {
+export const mapServerAnnotationsToLocal = (
+    serverAnnotations: AnnotationDTO[],
+    projectLabels: Label[]
+): Annotation[] => {
+    const labelMap = new Map(projectLabels.map((label) => [label.id, label]));
+
     return serverAnnotations.map((annotation) => {
-        const labels: AnnotationLabelRef[] = (annotation.labels ?? []).map((labelRef, idx) => {
-            const probability = annotation.confidences?.at(idx);
+        // We only get the ids of the labels
+        const labels = (annotation.labels ?? [])
+            .map((labelRef, idx) => {
+                const label = labelMap.get(labelRef.id);
 
-            if (probability !== undefined) {
-                return { id: labelRef.id, probability };
-            }
+                if (label === undefined) {
+                    return undefined;
+                }
 
-            return { id: labelRef.id };
-        });
+                const probability = annotation.confidences?.at(idx);
+
+                if (probability === undefined) {
+                    return label;
+                }
+
+                return {
+                    ...label,
+                    probability,
+                };
+            })
+            .filter((label): label is AnnotationLabel => label !== undefined);
 
         return {
-            shape: annotation.shape,
+            ...annotation,
             id: uuid(),
             labels,
         };
     });
 };
 
-export const mapLocalAnnotationsToServer = (
-    localAnnotations: Annotation[],
-    validLabelIds?: Set<string>
-): AnnotationDTO[] => {
-    return localAnnotations.map((annotation) => {
-        const filteredLabels = validLabelIds
-            ? annotation.labels.filter((ref) => validLabelIds.has(ref.id))
-            : annotation.labels;
-
-        const hasProbabilities = filteredLabels.some((ref) => ref.probability !== undefined);
-
-        return {
-            labels: filteredLabels.map(({ id }) => ({ id })),
-            shape: annotation.shape,
-            ...(hasProbabilities && {
-                confidences: filteredLabels
-                    .filter((labelRef): labelRef is Required<AnnotationLabelRef> => labelRef.probability !== undefined)
-                    .map((labelRef) => labelRef.probability),
-            }),
-        };
-    });
+export const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): AnnotationDTO[] => {
+    return localAnnotations.map((annotation) => ({
+        // We only want to send the ids of the labels
+        labels: annotation.labels.map((label) => ({ id: label.id })),
+        shape: annotation.shape,
+        ...(annotation.confidences !== undefined && { confidences: annotation.confidences }),
+    }));
 };

@@ -3,13 +3,11 @@
 
 import { ReactNode } from 'react';
 
-import { Flex, View } from '@geti-ui/ui';
-import { isEmpty } from 'lodash-es';
+import { Flex, View } from '@geti/ui';
 import { useNumberFormatter } from 'react-aria';
 
 import { AnnotatedVideoFrame, Label, VideoFramePrediction } from '../../../../../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../../../../../shared/annotator/annotator-mode';
-import { EMPTY_LABEL_ID } from '../../../../../../../shared/annotator/labels';
 import { useVideoFramesAnnotations } from '../../../../api/use-video-frames-annotations';
 import { PREDICTION_CHUNK_SIZE, useVideoFramesPredictions } from '../../../../api/use-video-frames-predictions';
 import { useVideoPlayer } from '../../../../video-player-provider.component';
@@ -25,7 +23,7 @@ const getAriaLabel = (label: Label | undefined, isPrediction: boolean) => {
     }
 
     if (label === undefined) {
-        return 'Not labeled';
+        return 'No label';
     }
     return label.name;
 };
@@ -83,14 +81,10 @@ const useVideoTimelineAnnotations = ({ frameNumber }: { frameNumber: number }) =
         selector: selectAnnotationsForFrame(frameNumber),
     });
 
-    const annotations = videoFramesAnnotations?.annotation_data?.annotations;
-
     const annotatedLabels =
-        annotations === undefined
-            ? undefined
-            : isEmpty(annotations)
-              ? [EMPTY_LABEL_ID]
-              : annotations.flatMap((annotation) => annotation.labels.map(({ id }) => id));
+        videoFramesAnnotations?.annotation_data?.annotations.flatMap((annotation) =>
+            annotation.labels.map(({ id }) => id)
+        ) ?? [];
 
     return {
         annotatedLabels,
@@ -110,7 +104,7 @@ const useVideoTimelinePredictions = ({ frameNumber }: { frameNumber: number }) =
         selector: selectPredictionsForFrame(frameNumber),
     });
 
-    const predictedLabels = data?.prediction?.flatMap((prediction) => prediction.labels.map(({ id }) => id));
+    const predictedLabels = data?.prediction?.flatMap((prediction) => prediction.labels.map(({ id }) => id)) ?? [];
 
     return {
         predictedLabels,
@@ -166,7 +160,7 @@ const PredictionsLabelsSegments = ({ labels, colIndex, frameNumber }: Prediction
                     isPrediction
                     striped={true}
                     isLoading={isPredictionLoading}
-                    label={predictedLabels?.includes(label.id) ? label : undefined}
+                    label={predictedLabels.includes(label.id) ? label : undefined}
                 />
             )}
         />
@@ -192,7 +186,7 @@ const AnnotationsLabelsSegments = ({ labels, colIndex, frameNumber }: Annotation
                     <LabelSegment
                         striped={false}
                         isLoading={isAnnotationLoading}
-                        label={annotatedLabels?.includes(label.id) ? label : undefined}
+                        label={annotatedLabels.includes(label.id) ? label : undefined}
                     />
                 );
             }}

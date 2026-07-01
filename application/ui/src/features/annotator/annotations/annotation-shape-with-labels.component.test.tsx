@@ -3,7 +3,7 @@
 
 import { fireEvent, screen } from '@testing-library/react';
 import { getMockedAnnotation } from 'mocks/mock-annotation';
-import { getMockedAnnotationLabel, getMockedAnnotationLabelRef } from 'mocks/mock-labels';
+import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
@@ -11,7 +11,6 @@ import { render } from 'test-utils/render';
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
-import type { AnnotationLabel, AnnotationLabelRef } from '../../../shared/types';
 import { AnnotationShapeWithLabels } from './annotation-shape-with-labels.component';
 
 const mockDeleteAnnotations = vi.fn();
@@ -50,20 +49,6 @@ vi.mock('../selected-media-item-provider.component', () => ({
     }),
 }));
 
-vi.mock('../../../shared/annotator/labels', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('../../../shared/annotator/labels')>();
-    return {
-        ...actual,
-        useLabelResolver: () => ({
-            getLabel: () => undefined,
-            resolveAnnotationLabel: (ref: AnnotationLabelRef): AnnotationLabel | undefined => {
-                const resolved = getMockedAnnotationLabel({ id: ref.id });
-                return resolved;
-            },
-        }),
-    };
-});
-
 describe('AnnotationShapeWithLabels', () => {
     beforeEach(() => {
         const project = getMockedProject({});
@@ -87,11 +72,11 @@ describe('AnnotationShapeWithLabels', () => {
         const annotation = getMockedAnnotation({
             id: 'full-image-annotation',
             shape: { type: 'full_image' },
-            labels: [getMockedAnnotationLabelRef({ id: EMPTY_LABEL_ID })],
+            labels: [getMockedLabel({ id: EMPTY_LABEL_ID, name: 'No object' })],
         });
 
         render(<AnnotationShapeWithLabels annotation={annotation} />);
-        fireEvent.pointerDown(await screen.findByRole('button', { name: 'Remove label-1' }));
+        fireEvent.pointerDown(await screen.findByRole('button', { name: 'Remove No object' }));
 
         expect(mockUpdateAnnotations).toHaveBeenCalledWith([{ ...annotation, labels: [] }]);
         expect(mockDeleteAnnotations).not.toHaveBeenCalled();
@@ -101,11 +86,11 @@ describe('AnnotationShapeWithLabels', () => {
     it('updates a non-full-image annotation to have no labels when removing its last label', async () => {
         const annotation = getMockedAnnotation({
             id: 'rect-annotation',
-            labels: [getMockedAnnotationLabelRef({ id: 'label-1' })],
+            labels: [getMockedLabel({ id: 'label-1', name: 'Person' })],
         });
 
         render(<AnnotationShapeWithLabels annotation={annotation} />);
-        fireEvent.pointerDown(await screen.findByRole('button', { name: 'Remove label-1' }));
+        fireEvent.pointerDown(await screen.findByRole('button', { name: 'Remove Person' }));
 
         expect(mockUpdateAnnotations).toHaveBeenCalledWith([{ ...annotation, labels: [] }]);
         expect(mockDeleteAnnotations).not.toHaveBeenCalled();

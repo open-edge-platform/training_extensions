@@ -344,66 +344,6 @@ def fxt_dataset_revision_with_parquet(
     return project, revision_id
 
 
-@pytest.fixture
-def fxt_dataset_revision_with_16bit_parquet(
-    fxt_projects_dir: Path,
-    fxt_project_with_pipeline: tuple[Project, Pipeline],
-    db_session: Session,
-) -> tuple[Project, UUID]:
-    """Fixture that creates a dataset revision whose image is a high-bit-depth (16-bit) TIFF.
-
-    The pixel values are confined to a narrow band at the top of the 16-bit range
-    (60000-65000). A naive ``.convert("RGB")`` keeps only the most-significant byte,
-    which would map every pixel to a near-white value (washed-out thumbnail). Correct
-    min-max normalization should instead spread the values across the full [0, 255] range.
-    """
-    project, _ = fxt_project_with_pipeline
-    revision_id = uuid4()
-
-    # Create revision in database
-    db_revision = DatasetRevisionDB(
-        id=str(revision_id),
-        project_id=str(project.id),
-        name=f"Dataset ({str(revision_id).split('-')[0]})",
-        files_deleted=False,
-    )
-    db_session.add(db_revision)
-    db_session.flush()
-
-    # Create revision directory structure
-    revision_path = fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
-    images_path = revision_path / "images"
-    images_path.mkdir(parents=True, exist_ok=True)
-
-    # Create a real 16-bit image file with values confined to a narrow high band.
-    item_id = uuid4()
-    image_filename = "img_16bit.tiff"
-    image_path = images_path / image_filename
-
-    width, height = 1024, 768
-    gradient = np.linspace(60000, 65000, num=width, dtype=np.uint16)
-    arr = np.tile(gradient, (height, 1))
-    high_bit_image = Image.fromarray(arr)  # mode I;16
-    assert high_bit_image.mode in ("I;16", "I")  # sanity check the fixture is actually high bit depth
-    high_bit_image.save(image_path, "TIFF")
-
-    # Create Polars dataframe with expected schema
-    df = pl.DataFrame(
-        {
-            "id": [str(item_id)],
-            "image": [str(image_filename)],
-            "image_info": [{"width": width, "height": height}],
-            "subset": ["TRAINING"],
-        }
-    )
-
-    # Save as Parquet
-    parquet_path = revision_path / "data.parquet"
-    df.write_parquet(parquet_path)
-
-    return project, revision_id
-
-
 class TestDatasetRevisionServiceIntegration:
     """Integration tests for DatasetRevisionService."""
 
@@ -982,55 +922,6 @@ class TestDatasetRevisionServiceIntegration:
 
         assert isinstance(thumbnail, Image.Image)
         assert thumbnail.width == thumbnail.height == DATASET_REVISION_ITEM_THUMBNAIL_SIZE
-        # The thumbnail must be in a mode that can be saved as JPEG downstream
-        # (write_image_to_response()); otherwise saving would fail at request time.
-        assert thumbnail.mode in ("RGB", "L", "CMYK")
-
-    def test_get_dataset_revision_item_thumbnail_high_bit_depth_is_normalized(
-        self,
-        fxt_dataset_revision_service: DatasetRevisionService,
-        fxt_dataset_revision_with_16bit_parquet: tuple[Project, UUID],
-    ) -> None:
-        """Thumbnails for 16-bit images are normalized and JPEG-saveable.
-
-        Without normalization, a naive .convert("RGB") keeps only the high byte of a
-        16-bit image. For values confined to a narrow high band (60000-65000) this yields a
-        washed-out, near-white thumbnail, and a high-bit-depth mode (e.g. I;16) would only
-        fail later when write_image_to_response() tries to save it as JPEG.
-        """
-        project, revision_id = fxt_dataset_revision_with_16bit_parquet
-
-        revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
-
-        revision_path = (
-            fxt_dataset_revision_service.projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
-        )
-        df = pl.read_parquet(revision_path / "data.parquet")
-        item_id = df["id"][0]
-
-        thumbnail = fxt_dataset_revision_service.get_dataset_revision_item_thumbnail(
-            project_id=project.id,
-            dataset_revision=revision,
-            item_id=item_id,
-        )
-
-        assert isinstance(thumbnail, Image.Image)
-        assert thumbnail.width == thumbnail.height == DATASET_REVISION_ITEM_THUMBNAIL_SIZE
-
-        # 1. The thumbnail must be in a JPEG-compatible mode, not a high-bit-depth one.
-        assert thumbnail.mode in ("RGB", "L", "CMYK")
-        assert thumbnail.mode not in ("I;16", "I;16B", "I;16L", "I;16S", "I;16BS", "I", "F")
-
-        # 2. Normalization must spread the narrow input band across the full [0, 255] range
-        thumbnail_arr = np.array(thumbnail.convert("L"))
-        assert thumbnail_arr.min() < 32, "Dark end of the value range should be preserved after normalization"
-        assert thumbnail_arr.max() > 223, "Bright end of the value range should be preserved after normalization"
-
-        # The thumbnail must be savable as JPEG without raising errors (mirrors write_image_to_response()).
-        from io import BytesIO
-
-        buffer = BytesIO()
-        thumbnail.save(buffer, format="JPEG")
 
     def test_get_dataset_revision_item_thumbnail_not_found(
         self,

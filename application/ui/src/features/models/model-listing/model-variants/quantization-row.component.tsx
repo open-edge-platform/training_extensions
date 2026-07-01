@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Content, ContextualHelp, DialogTrigger, Flex, Text } from '@geti-ui/ui';
+import { Button, Content, ContextualHelp, DialogTrigger, Flex, Text } from '@geti/ui';
 
 import { QuantizationDialog } from './quantization-dialog/quantization-dialog.component';
 

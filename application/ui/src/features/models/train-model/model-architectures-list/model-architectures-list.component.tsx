@@ -1,7 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Flex } from '@geti-ui/ui';
+import { useState } from 'react';
+
+import { Button, Flex } from '@geti/ui';
 
 import { useTrainModelState } from '../train-model-provider.component';
 import { AllModelArchitectures } from './all-model-architectures.component';
@@ -11,13 +13,8 @@ import { getRecommendedArchitectures } from './utils';
 const SHOW_MORE_THRESHOLD = 4;
 
 export const ModelArchitecturesList = () => {
-    const {
-        modelArchitectures,
-        selectedModelArchitectureId,
-        onSelectModelArchitectureId,
-        showMoreModelArchitectures,
-        onToggleShowMoreModelArchitectures,
-    } = useTrainModelState();
+    const [showMore, setShowMore] = useState<boolean>(false);
+    const { modelArchitectures, selectedModelArchitectureId, onSelectModelArchitectureId } = useTrainModelState();
 
     const recommendedArchitectures = getRecommendedArchitectures(modelArchitectures);
     const collapsedArchitectures = recommendedArchitectures.slice(0, SHOW_MORE_THRESHOLD);
@@ -25,7 +22,7 @@ export const ModelArchitecturesList = () => {
 
     return (
         <Flex direction={'column'} minHeight={0} gap={'size-300'}>
-            {showMoreModelArchitectures ? (
+            {showMore ? (
                 <AllModelArchitectures
                     modelArchitectures={modelArchitectures}
                     selectedModelArchitectureId={selectedModelArchitectureId}
@@ -40,12 +37,8 @@ export const ModelArchitecturesList = () => {
             )}
 
             {canToggleArchitecturesList && (
-                <Button
-                    alignSelf={'start'}
-                    variant={'primary'}
-                    onPress={() => onToggleShowMoreModelArchitectures(!showMoreModelArchitectures)}
-                >
-                    {showMoreModelArchitectures ? 'Show less' : 'Show more'}
+                <Button alignSelf={'start'} variant={'primary'} onPress={() => setShowMore(!showMore)}>
+                    {showMore ? 'Show less' : 'Show more'}
                 </Button>
             )}
         </Flex>

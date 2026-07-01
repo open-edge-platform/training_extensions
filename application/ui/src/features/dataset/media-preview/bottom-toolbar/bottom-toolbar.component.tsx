@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Item, Key, Picker, Tag, Text } from '@geti-ui/ui';
-import { Accept, Search } from '@geti-ui/ui/icons';
+import { Flex, Grid, Item, Key, Picker, Tag, Text } from '@geti/ui';
+import { Accept, Search } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 import { capitalize } from 'lodash-es';
 

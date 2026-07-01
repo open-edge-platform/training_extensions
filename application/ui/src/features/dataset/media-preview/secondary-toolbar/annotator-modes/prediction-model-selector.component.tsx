@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Item, Picker } from '@geti-ui/ui';
+import { Item, Picker } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { usePredictionSetup } from '../../../../annotator/predictions-setup-provider.component';

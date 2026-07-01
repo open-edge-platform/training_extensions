@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Tooltip, TooltipTrigger } from '@geti-ui/ui';
-import { LabelGroup } from '@geti-ui/ui/icons';
+import { ActionButton, Tooltip, TooltipTrigger } from '@geti/ui';
+import { LabelGroup } from '@geti/ui/icons';
 
 import { IconWrapper } from '../../../../components/icon-wrapper/icon-wrapper.component';
 import { useAnnotationVisibility } from '../../../../shared/annotator/annotation-visibility-provider.component';

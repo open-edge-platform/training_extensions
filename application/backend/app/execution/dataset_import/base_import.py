@@ -103,8 +103,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
                 and target_type not in self.SUPPORTED_CONVERSIONS[dataset_type]
             ):
                 raise ValueError(
-                    f"Dataset type {dataset_type.__name__} conversion to {target_type.__name__} is not supported. "
-                    f"Supported conversions are {list(self.SUPPORTED_CONVERSIONS[dataset_type])}"
+                    f"Dataset type {dataset_type.__name__} conversion to {target_type.__name__} is not supported."
                 )
             dataset = dataset.convert_to_schema(target_type)
         return dataset

@@ -1,17 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Key, useMemo } from 'react';
+import { Key } from 'react';
 
-import { ActionButton, Flex, Grid, Item, Menu, MenuTrigger, Picker } from '@geti-ui/ui';
-import { MoreMenu } from '@geti-ui/ui/icons';
-import { useProjectTask } from 'hooks/use-project-task.hook';
+import { ActionButton, Flex, Grid, Item, Menu, MenuTrigger, Picker } from '@geti/ui';
+import { MoreMenu } from '@geti/ui/icons';
 
 import { TrainModel } from '../../train-model/train-model.component';
 import { useModelListing } from '../provider/model-listing-provider';
 import type { GroupByMode, SortBy } from '../types';
 import { ExpandableSearch } from './expandable-search/expandable-search.component';
-import { getPerformanceColumnLabel } from './model-row/utils';
 
 type MoreOptionsProps = {
     showFailedModels: boolean;
@@ -50,14 +48,7 @@ export const Header = () => {
         onSearchChange,
         showFailedModels,
         onToggleShowFailedModels,
-        groupedModels,
     } = useModelListing();
-    const taskType = useProjectTask();
-    const performanceMetricName = useMemo(() => {
-        const models = groupedModels.flatMap((group) => group.models);
-
-        return getPerformanceColumnLabel(models, taskType);
-    }, [groupedModels, taskType]);
 
     return (
         <Grid columns={['auto auto 1fr auto']} gap={'size-100'} alignItems={'center'}>
@@ -87,7 +78,7 @@ export const Header = () => {
                         <Item key='dataset'>Sort: Dataset</Item>
                     )}
                     <Item key='size'>Sort: Size</Item>
-                    <Item key='score'>{`Sort: ${performanceMetricName}`}</Item>
+                    <Item key='score'>Sort: Score</Item>
                 </Picker>
             </Flex>
 

@@ -5,15 +5,14 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import cast
 from uuid import UUID
 
 from loguru import logger
+from model_api.adapters import OpenvinoAdapter, create_core
+from model_api.models import Model
 
 from app.models.system import DeviceInfo
-
-if TYPE_CHECKING:
-    from model_api.models import Model
 
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
@@ -25,7 +24,7 @@ class LoadedModelHandle:
     model_id: UUID
     variant_id: UUID
     device: DeviceInfo
-    model: "Model"
+    model: Model
     loaded_at: datetime
 
 
@@ -51,9 +50,6 @@ class ModelLoader:
         Returns:
             A LoadedModelHandle containing the ready-to-use Model API model.
         """
-        from model_api.adapters import OpenvinoAdapter, create_core
-        from model_api.models import Model
-
         logger.info("Loading model '{}' on device '{}'", model_xml_path, device)
         ie = create_core()
         adapter = OpenvinoAdapter(
@@ -90,8 +86,6 @@ class ModelLoader:
         Args:
             handle: The handle returned by a previous call to `load`.
         """
-        from model_api.adapters import OpenvinoAdapter
-
         logger.info("Unloading model '{}'", handle.model_id)
         adapter = cast(OpenvinoAdapter, handle.model.inference_adapter)
         if hasattr(adapter, "async_queue"):

@@ -125,7 +125,7 @@ The list of supported recipes for classification is available with the command l
 
     .. code-block:: python
 
-      from getitune.utils import list_models
+      from getitune.backend.lightning.cli.utils import list_models
 
       model_lists = list_models(task="MULTI_CLASS_CLS", pattern="*efficient")
       print(model_lists)

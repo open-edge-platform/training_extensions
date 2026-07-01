@@ -7,7 +7,6 @@ import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedVideoFrame } from 'mocks/mock-media';
 import { render } from 'test-utils/render';
 
-import { EMPTY_LABEL_ID } from '../../../../shared/annotator/labels';
 import { VideoToolbar } from './video-toolbar.component';
 
 const mockVideoFrame = getMockedVideoFrame({
@@ -43,12 +42,8 @@ vi.mock('../video-player-provider.component', () => ({
     useVideoPlayerContext: () => MOCKED_VIDEO_PLAYER_CONTEXT,
 }));
 
-vi.mock('../../../../shared/annotator/labels', async (importOriginal) => ({
-    ...(await importOriginal()),
-    useProjectLabelsWithEmptyLabel: () => [
-        getMockedLabel({ id: 'label-1', name: 'Cat' }),
-        getMockedLabel({ id: EMPTY_LABEL_ID, name: 'No object' }),
-    ],
+vi.mock('../../../../hooks/use-project-labels.hook', () => ({
+    useProjectLabels: () => [getMockedLabel({ id: 'label-1', name: 'Cat' })],
 }));
 
 vi.mock('../../selected-media-item-provider.component', () => ({

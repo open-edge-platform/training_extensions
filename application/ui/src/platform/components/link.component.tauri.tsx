@@ -3,7 +3,7 @@
 
 import { type ComponentProps } from 'react';
 
-import { Link as GetiLink } from '@geti-ui/ui';
+import { Link as GetiLink } from '@geti/ui';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
 type LinkProps = ComponentProps<typeof GetiLink>;

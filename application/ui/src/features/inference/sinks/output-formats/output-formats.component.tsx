@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox, CheckboxGroup } from '@geti-ui/ui';
+import { Checkbox, CheckboxGroup } from '@geti/ui';
 
 import { OutputFormat, SinkOutputFormats } from '../utils';
 

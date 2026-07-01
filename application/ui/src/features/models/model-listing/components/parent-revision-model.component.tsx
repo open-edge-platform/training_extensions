@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link } from '@geti-ui/ui';
+import { Link } from '@geti/ui';
 
 type ParentRevisionModelProps = {
     id: string | undefined;

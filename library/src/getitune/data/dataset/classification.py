@@ -66,7 +66,7 @@ class MulticlassClsDataset(VisionDataset):
             max_refetch=max_refetch,
         )
 
-        labels = list(dm_subset.label_categories.labels)  # type: ignore[missing-attribute]
+        labels = list(dm_subset.schema.attributes["label"].categories.labels)  # type: ignore[missing-attribute]
         self.label_info = LabelInfo(
             label_names=labels,
             label_groups=[labels],
@@ -142,7 +142,7 @@ class MultilabelClsDataset(VisionDataset):
             max_refetch=max_refetch,
         )
 
-        labels = list(dm_subset.label_categories.labels)  # type: ignore[missing-attribute]
+        labels = list(dm_subset.schema.attributes["label"].categories.labels)  # type: ignore[missing-attribute]
         self.label_info = LabelInfo(
             label_names=labels,
             label_groups=[labels],
@@ -244,7 +244,7 @@ class HlabelClsDataset(VisionDataset):
         storage_dtype: str = "uint8",
     ) -> None:
         sample_type = with_image_dtype(ClassificationHierarchicalSample, storage_dtype)
-        label_categories = dm_subset.label_categories
+        label_categories = dm_subset.schema.attributes["label"].categories
         # Pass target categories manually to ensure HierarchicalLabelCategories are not converted to regular Labels.
         target_categories = {"label": label_categories} if label_categories is not None else None
         dm_subset = dm_subset.convert_to_schema(sample_type, target_categories=target_categories)  # type: ignore[arg-type]
@@ -253,7 +253,7 @@ class HlabelClsDataset(VisionDataset):
             transforms=transforms,
             max_refetch=max_refetch,
         )
-        self.dm_categories: HierarchicalLabelCategories = dm_subset.label_categories  # type: ignore[assignment]
+        self.dm_categories: HierarchicalLabelCategories = dm_subset.schema.attributes["label"].categories  # type: ignore[assignment]
         self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)
 
         self.id_to_name_mapping = dict(zip(self.label_info.label_ids, self.label_info.label_names))

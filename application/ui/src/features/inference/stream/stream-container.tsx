@@ -3,11 +3,10 @@
 
 import { KeyboardEvent, useState } from 'react';
 
-import { dimensionValue, Flex, Loading, Text, View } from '@geti-ui/ui';
-import { Pause, Play } from '@geti-ui/ui/icons';
+import { dimensionValue, Flex, Loading, Text, toast, View } from '@geti/ui';
+import { Pause, Play } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 
-import { toast } from '../../../components/toast/toast.component';
 import { usePipeline } from '../../../hooks/api/pipeline.hook';
 import { Stream } from './stream';
 import { useWebRTCConnection } from './web-rtc-connection-provider';

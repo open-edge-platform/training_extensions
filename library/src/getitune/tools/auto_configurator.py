@@ -14,13 +14,13 @@ from warnings import warn
 
 from jsonargparse import ArgumentParser, Namespace
 
+from getitune.backend.lightning.cli.utils import get_getitune_root_path, list_models
 from getitune.backend.lightning.models.base import DataInputParams, LightningModel
 from getitune.config.data import SamplerConfig, SubsetConfig, TileConfig
 from getitune.data.module import DataModule
 from getitune.types import PathLike
 from getitune.types.label import LabelInfoTypes
 from getitune.types.task import TaskType
-from getitune.utils import get_getitune_root_path, list_models
 from getitune.utils.utils import can_pass_tile_config, get_model_cls_from_config, should_pass_label_info
 
 if TYPE_CHECKING:

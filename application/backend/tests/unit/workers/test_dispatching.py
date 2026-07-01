@@ -2,31 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import multiprocessing as mp
-import uuid
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 
-from app.models import DisconnectedSinkConfig, SinkType
-from app.services.dispatchers import DispatchError
+from app.models import DisconnectedSinkConfig
 from app.services.event.event_bus import EventBus, EventType
-from app.stream.stream_data import InferenceData, StreamData
 from app.webrtc import FrameBroadcaster
 from app.workers.dispatching import DispatchingWorker
-
-
-def _make_stream_data() -> StreamData:
-    frame = np.zeros((4, 4, 3), dtype=np.uint8)
-    return StreamData(
-        frame_data=frame,
-        timestamp=0.0,
-        source_metadata={},
-        inference_data=InferenceData(
-            prediction=MagicMock(),
-            visualized_prediction=frame.copy(),
-            model_id=uuid.uuid4(),
-        ),
-    )
 
 
 def _make_worker(event_bus: EventBus, broadcaster: FrameBroadcaster[np.ndarray]) -> DispatchingWorker:
@@ -83,38 +66,4 @@ class TestDispatchingWorkerSourceChange:
         with patch.object(DispatchingWorker, "_load_sink", return_value=(DisconnectedSinkConfig(), [])):
             event_bus.emit_event(EventType.SINK_CHANGED)
 
-    def test_dispatch_error_does_not_stop_loop(self):
-        """A DispatchError from a dispatcher is caught; the loop continues and WebRTC broadcast still happens."""
-        import queue
-
-        event_bus = EventBus()
-        broadcaster = FrameBroadcaster[np.ndarray]()
-
-        failing_dispatcher = MagicMock()
-        failing_dispatcher.dispatch.side_effect = DispatchError()
-
-        pred_queue: queue.Queue = queue.Queue()
-        pred_queue.put(_make_stream_data())
-        pred_queue.put(_make_stream_data())
-
-        with patch.object(
-            DispatchingWorker,
-            "_load_sink",
-            return_value=(MagicMock(sink_type=SinkType.FOLDER), [failing_dispatcher]),
-        ):
-            worker = DispatchingWorker(
-                event_bus=event_bus,
-                pred_queue=pred_queue,  # type: ignore[arg-type]
-                rtc_stream_broadcaster=broadcaster,
-                stop_event=mp.Event(),
-                data_collector=MagicMock(),
-            )
-
-        def stop_when_empty() -> bool:
-            return pred_queue.empty()
-
-        worker.should_stop = stop_when_empty
-        worker.run_loop()
-
-        assert failing_dispatcher.dispatch.call_count == 2
         assert broadcaster.latest_frame is not None

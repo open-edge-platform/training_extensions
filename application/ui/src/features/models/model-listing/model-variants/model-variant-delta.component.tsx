@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Text } from '@geti-ui/ui';
+import { Flex, Text } from '@geti/ui';
 import { useNumberFormatter } from 'react-aria';
 
 type ChangeType = 'accuracy' | 'size';

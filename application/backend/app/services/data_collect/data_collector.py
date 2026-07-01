@@ -181,9 +181,7 @@ class DataCollector:
         )
         if not should_collect:
             return
-        # Convert only 3-channel BGR images to RGB; pass grayscale / other formats through.
-        if frame_data.ndim == 3 and frame_data.shape[2] == 3:
-            frame_data = cv2.cvtColor(frame_data, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
+        frame_data = cv2.cvtColor(frame_data, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
         with get_db_session() as session:
             label_service = LabelService(db_session=session)
             media_service = MediaService(data_dir=self.data_dir, db_session=session)

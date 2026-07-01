@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from '@geti-ui/ui';
+import { Flex } from '@geti/ui';
 
 import { ConfigurableParameter, NumberEnumConfigurableParameter } from '../../../../../../constants/shared-types';
 import { NumberEnumParameterField, Parameter, Parameters } from '../../components/parameters.component';

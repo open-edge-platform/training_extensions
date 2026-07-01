@@ -43,7 +43,7 @@ export const getPerformanceColumnName = (
     return (
         variants.map((variant) => getPrimaryTestingMetricValue(variant)).find((metric) => metric !== undefined)?.name ??
         fp32PytorchMetric?.name ??
-        'Accuracy'
+        'Score'
     );
 };
 

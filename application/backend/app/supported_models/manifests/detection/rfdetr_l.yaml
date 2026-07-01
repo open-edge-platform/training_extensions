@@ -8,7 +8,7 @@ pretrained_weights:
 
 description: "RF-DETR is a real-time object detection model that combines a DINOv2 vision transformer backbone with a novel decoder for high-accuracy detection without NMS post-processing."
 stats:
-  gigaflops: 94.9
+  gigaflops: 125.6
   trainable_parameters: 33.9
   benchmark_metrics:
     coco_map_50_95: 56.5

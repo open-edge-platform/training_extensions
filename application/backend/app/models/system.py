@@ -44,26 +44,6 @@ class DeviceInfo(BaseModel):
             return f"GPU.{self.index}" if self.index is not None else "GPU"
         raise ValueError(f"Unsupported device type for OpenVINO: {self.type}")
 
-    @classmethod
-    def cpu(cls) -> "DeviceInfo":
-        """
-        Create a CPU device info instance.
-
-        Returns:
-            DeviceInfo: CPU device information.
-        """
-        return cls(type=DeviceType.CPU, name="CPU", memory=None, index=None)
-
-    @classmethod
-    def auto(cls) -> "DeviceInfo":
-        """
-        Create an AUTO device info instance.
-
-        Returns:
-            DeviceInfo: AUTO device information.
-        """
-        return cls(type=DeviceType.AUTO, name="AUTO", memory=None, index=None)
-
 
 class CameraInfo(BaseModel):
     """Camera information schema"""

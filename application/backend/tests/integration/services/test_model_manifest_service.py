@@ -4,8 +4,9 @@
 import os
 import pathlib
 from importlib import resources
-from unittest.mock import mock_open, patch
+from unittest.mock import patch
 
+import hiyapyco
 import pytest
 
 from app.models import TaskType
@@ -138,18 +139,18 @@ class TestModelManifestService:
         if license_yaml:
             mock_yaml_result["license"] = license_yaml
 
-        with (
-            patch("app.services.model_manifest_service.open", mock_open(), create=True) as mock_file,
-            patch("app.services.model_manifest_service.yaml.safe_load") as mock_safe_load,
-        ):
-            # Each source file yields the same complete manifest; deep-merging identical
-            # dicts produces an equivalent result.
-            mock_safe_load.return_value = mock_yaml_result
+        with patch("hiyapyco.load") as mock_load:
+            mock_load.return_value = mock_yaml_result
             model_manifest = ModelManifestService._parse_manifest(*sources, relative=True)
 
-            # Verify the relative sources were resolved to the expected absolute paths.
-            opened_paths = [call.args[0] for call in mock_file.call_args_list]
-            assert opened_paths == expected_paths
+            # Verify hiyapyco.load was called with the correct paths
+            mock_load.assert_called_once_with(
+                *expected_paths,
+                method=hiyapyco.METHOD_SUBSTITUTE,
+                interpolate=True,
+                failonmissingfiles=True,
+                none_behavior=hiyapyco.NONE_BEHAVIOR_OVERRIDE,
+            )
             assert model_manifest == ModelManifest(**mock_yaml_result)  # pyrefly: ignore[bad-argument-type]
             if not license_yaml:
                 assert model_manifest.license == "Apache 2.0"

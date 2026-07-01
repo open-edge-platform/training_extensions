@@ -3,7 +3,7 @@
 
 import { Dispatch, SetStateAction, useMemo } from 'react';
 
-import { Flex } from '@geti-ui/ui';
+import { Flex } from '@geti/ui';
 import { partition } from 'lodash-es';
 
 import { ConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
