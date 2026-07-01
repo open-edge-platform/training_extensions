@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Heading } from '@geti-ui/ui';
-import { Search } from '@geti-ui/ui/icons';
+import { Flex, Heading } from '@geti/ui';
+import { Search } from '@geti/ui/icons';
 
 export const EmptySearchResults = () => {
     return (

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Label } from '../src/constants/shared-types';
-import type { AnnotationLabel, AnnotationLabelRef } from '../src/shared/types';
+import type { AnnotationLabel } from '../src/shared/types';
 
 export const getMockedLabel = (label?: Partial<Label>): Label & { isPrediction: boolean } => {
     return {
@@ -20,12 +20,5 @@ export const getMockedAnnotationLabel = (label?: Partial<AnnotationLabel>): Anno
         id: 'label-1',
         name: 'label-1',
         ...label,
-    };
-};
-
-export const getMockedAnnotationLabelRef = (ref?: Partial<AnnotationLabelRef>): AnnotationLabelRef => {
-    return {
-        id: 'label-1',
-        ...ref,
     };
 };

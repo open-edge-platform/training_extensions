@@ -12,7 +12,6 @@ import { http } from '../../../api/utils';
 import type { Label } from '../../../constants/shared-types';
 import { server } from '../../../msw-node-setup';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
-import type { AnnotationLabelRef } from '../../../shared/types';
 import { Labels } from './labels.component';
 
 const mockLabels: Label[] = [
@@ -29,7 +28,7 @@ const mockUpdateAnnotations = vi.fn();
 const mockAddAnnotations = vi.fn();
 const mockDeleteAnnotations = vi.fn();
 const mockSelectedAnnotations = { current: new Set<string>() };
-const mockAnnotations = { current: [] as { id: string; labels: AnnotationLabelRef[]; shape: { type: string } }[] };
+const mockAnnotations = { current: [] as { id: string; labels: Label[]; shape: { type: string } }[] };
 
 vi.mock('../annotator-labels-provider.component', () => ({
     useAnnotatorLabels: () => ({
@@ -127,8 +126,8 @@ describe('Labels', () => {
         const user = userEvent.setup();
         mockSelectedAnnotations.current = new Set(['annotation-1']);
         mockAnnotations.current = [
-            { id: 'annotation-1', labels: [{ id: 'label-1' }], shape: { type: 'RECTANGLE' } },
-            { id: 'annotation-2', labels: [{ id: 'label-2' }], shape: { type: 'RECTANGLE' } },
+            { id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } },
+            { id: 'annotation-2', labels: [mockLabels[1]], shape: { type: 'RECTANGLE' } },
         ];
 
         render(<Labels />);
@@ -137,13 +136,13 @@ describe('Labels', () => {
         await user.click(carButton);
 
         expect(mockSetSelectedLabelId).toHaveBeenCalledWith('label-2');
-        expect(mockUpdateAnnotations).toHaveBeenCalledWith([mockAnnotations.current[0]], [{ id: 'label-2' }]);
+        expect(mockUpdateAnnotations).toHaveBeenCalledWith([mockAnnotations.current[0]], [mockLabels[1]]);
     });
 
     it('does not update annotations when no annotations are selected', async () => {
         const user = userEvent.setup();
         mockSelectedAnnotations.current = new Set();
-        mockAnnotations.current = [{ id: 'annotation-1', labels: [{ id: 'label-1' }], shape: { type: 'RECTANGLE' } }];
+        mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } }];
 
         render(<Labels />);
 
@@ -158,8 +157,8 @@ describe('Labels', () => {
         const user = userEvent.setup();
         mockSelectedAnnotations.current = new Set(['annotation-1', 'annotation-2']);
         mockAnnotations.current = [
-            { id: 'annotation-1', labels: [{ id: 'label-1' }], shape: { type: 'RECTANGLE' } },
-            { id: 'annotation-2', labels: [{ id: 'label-1' }], shape: { type: 'RECTANGLE' } },
+            { id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } },
+            { id: 'annotation-2', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } },
         ];
 
         render(<Labels />);
@@ -178,8 +177,8 @@ describe('Labels', () => {
         const user = userEvent.setup();
         mockSelectedAnnotations.current = new Set(['annotation-1', 'annotation-2']);
         mockAnnotations.current = [
-            { id: 'annotation-1', labels: [{ id: 'label-1' }], shape: { type: 'RECTANGLE' } },
-            { id: 'annotation-2', labels: [{ id: 'label-2' }], shape: { type: 'RECTANGLE' } },
+            { id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } },
+            { id: 'annotation-2', labels: [mockLabels[1]], shape: { type: 'RECTANGLE' } },
         ];
 
         render(<Labels />);
@@ -190,7 +189,7 @@ describe('Labels', () => {
         expect(mockSetSelectedLabelId).toHaveBeenCalledWith('label-1');
         expect(mockUpdateAnnotations).toHaveBeenCalledWith(
             [mockAnnotations.current[0], mockAnnotations.current[1]],
-            [{ id: 'label-1' }]
+            [mockLabels[0]]
         );
     });
 
@@ -204,14 +203,12 @@ describe('Labels', () => {
             const personButton = await screen.findByRole('button', { name: 'Label Person' });
             await user.click(personButton);
 
-            expect(mockAddAnnotations).toHaveBeenCalledWith([{ type: 'full_image' }], [{ id: 'label-1' }]);
+            expect(mockAddAnnotations).toHaveBeenCalledWith([{ type: 'full_image' }], [mockLabels[0]]);
         });
 
         it('replaces labels in single-label mode', async () => {
             const user = userEvent.setup();
-            mockAnnotations.current = [
-                { id: 'annotation-1', labels: [{ id: 'label-1' }], shape: { type: 'full_image' } },
-            ];
+            mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
 
             render(<Labels isClassification={true} isMultiLabel={false} />);
 
@@ -219,15 +216,13 @@ describe('Labels', () => {
             await user.click(carButton);
 
             expect(mockUpdateAnnotations).toHaveBeenCalledWith([
-                { ...mockAnnotations.current[0], labels: [{ id: 'label-2' }] },
+                { ...mockAnnotations.current[0], labels: [mockLabels[1]] },
             ]);
         });
 
         it('toggles label on in multi-label mode', async () => {
             const user = userEvent.setup();
-            mockAnnotations.current = [
-                { id: 'annotation-1', labels: [{ id: 'label-1' }], shape: { type: 'full_image' } },
-            ];
+            mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
 
             render(<Labels isClassification={true} isMultiLabel={true} />);
 
@@ -235,14 +230,14 @@ describe('Labels', () => {
             await user.click(carButton);
 
             expect(mockUpdateAnnotations).toHaveBeenCalledWith([
-                { ...mockAnnotations.current[0], labels: [{ id: 'label-1' }, { id: 'label-2' }] },
+                { ...mockAnnotations.current[0], labels: [mockLabels[0], mockLabels[1]] },
             ]);
         });
 
         it('toggles label off in multi-label mode', async () => {
             const user = userEvent.setup();
             mockAnnotations.current = [
-                { id: 'annotation-1', labels: [{ id: 'label-1' }, { id: 'label-2' }], shape: { type: 'full_image' } },
+                { id: 'annotation-1', labels: [mockLabels[0], mockLabels[1]], shape: { type: 'full_image' } },
             ];
 
             render(<Labels isClassification={true} isMultiLabel={true} />);
@@ -251,15 +246,13 @@ describe('Labels', () => {
             await user.click(personButton);
 
             expect(mockUpdateAnnotations).toHaveBeenCalledWith([
-                { ...mockAnnotations.current[0], labels: [{ id: 'label-2' }] },
+                { ...mockAnnotations.current[0], labels: [mockLabels[1]] },
             ]);
         });
 
         it('keeps annotation with empty labels when removing last label in multi-label mode', async () => {
             const user = userEvent.setup();
-            mockAnnotations.current = [
-                { id: 'annotation-1', labels: [{ id: 'label-1' }], shape: { type: 'full_image' } },
-            ];
+            mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
 
             render(<Labels isClassification={true} isMultiLabel={true} />);
 
@@ -273,9 +266,7 @@ describe('Labels', () => {
         it('does not require selected annotations for classification', async () => {
             const user = userEvent.setup();
             mockSelectedAnnotations.current = new Set(); // No annotations selected
-            mockAnnotations.current = [
-                { id: 'annotation-1', labels: [{ id: 'label-1' }], shape: { type: 'full_image' } },
-            ];
+            mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
 
             render(<Labels isClassification={true} />);
 
@@ -287,7 +278,7 @@ describe('Labels', () => {
 
         it('shows badge as selected when label is applied to annotation', async () => {
             mockAnnotations.current = [
-                { id: 'annotation-1', labels: [{ id: 'label-1' }, { id: 'label-2' }], shape: { type: 'full_image' } },
+                { id: 'annotation-1', labels: [mockLabels[0], mockLabels[1]], shape: { type: 'full_image' } },
             ];
 
             render(<Labels isClassification={true} isMultiLabel={true} />);

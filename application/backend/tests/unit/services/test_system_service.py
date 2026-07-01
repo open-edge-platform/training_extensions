@@ -174,35 +174,25 @@ class TestSystemService:
             assert fxt_system_service.validate_device("cuda-0") is False
 
     def test_get_inference_devices_with_multiple_devices(self, fxt_system_service: SystemService):
-        """Test getting inference devices via OpenVINO: CPU, integrated GPUs, and Intel discrete GPUs are returned"""
+        """Test getting inference devices via OpenVINO when CPU and GPU(s) are available"""
 
         def fake_get_property(device: str, prop: str):
             if prop == "FULL_DEVICE_NAME":
                 return {
                     "GPU.0": "Intel(R) Graphics [0x7d41]",
                     "GPU.1": "Intel(R) Arc(TM) A770",
-                    "GPU.2": "NVIDIA GeForce RTX 4090",
                 }[device]
             if prop == "GPU_DEVICE_TOTAL_MEM_SIZE":
-                return {"GPU.0": 36022263808, "GPU.1": 17179869184, "GPU.2": 25769803776}[device]
-            if prop == "DEVICE_TYPE":
-                # GPU.0 is an integrated GPU (iGPU), GPU.1 and GPU.2 are discrete GPUs (dGPU)
-                return {
-                    "GPU.0": "Type.INTEGRATED",
-                    "GPU.1": "Type.DISCRETE",
-                    "GPU.2": "Type.DISCRETE",
-                }[device]
+                return {"GPU.0": 36022263808, "GPU.1": 17179869184}[device]
             raise KeyError(prop)
 
         mock_core = MagicMock()
-        mock_core.available_devices = ["CPU", "GPU.0", "GPU.1", "GPU.2"]
+        mock_core.available_devices = ["CPU", "GPU.0", "GPU.1"]
         mock_core.get_property.side_effect = fake_get_property
 
         with patch("openvino.Core", return_value=mock_core):
             inference_devices = fxt_system_service.get_inference_devices()
 
-        # The non-Intel discrete GPU (GPU.2) must be filtered out, leaving CPU, the integrated GPU,
-        # and the Intel discrete GPU.
         assert len(inference_devices) == 3
         assert not any(device.type == "cuda" for device in inference_devices)
         assert inference_devices[0].type == "cpu"
@@ -214,9 +204,8 @@ class TestSystemService:
         assert inference_devices[1].memory == 36022263808
         assert inference_devices[1].index == 0
         assert inference_devices[2].type == "xpu"
-        assert inference_devices[2].name == "Intel(R) Arc(TM) A770"
-        assert inference_devices[2].memory == 17179869184
         assert inference_devices[2].index == 1
+        assert inference_devices[2].memory == 17179869184
 
     def test_get_inference_devices_cpu_only(self, fxt_system_service: SystemService):
         """Test getting inference devices when only CPU is available via OpenVINO"""

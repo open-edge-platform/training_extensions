@@ -6,8 +6,8 @@ Feature: Import Dataset As New Project
   So that I can create new projects from external datasets
 
   @import_as_new_project @detection
-  Scenario Outline: Import dataset as a new detection project
-    Given A <dataset_type> dataset with labels ["Chardonnay", "Sauvignon Blanc", "Cabernet Franc"] exists
+  Scenario: Import detection dataset as a new project
+    Given A detection dataset with labels ["Chardonnay", "Sauvignon Blanc", "Cabernet Franc"] exists
     And the dataset contains the following image distribution:
       | Label           | Training | Validation |
       | Chardonnay      | 5        | 2          |
@@ -25,11 +25,6 @@ Feature: Import Dataset As New Project
       | Label           | Instances |
       | Chardonnay      | 7         |
       | Sauvignon Blanc | 7         |
-
-    Examples:
-        | dataset_type          |
-        | detection             |
-        | instance_segmentation |
 
   @import_as_new_project @classification
   Scenario: Import classification dataset as a new project
@@ -51,8 +46,8 @@ Feature: Import Dataset As New Project
       | cat   | 5         |
 
   @import_as_new_project @multilabel
-  Scenario Outline: Import dataset as a new multilabel project
-    Given A <dataset_type> dataset with labels ["cat", "dog"] exists
+  Scenario: Import multilabel classification dataset as a new project
+    Given A multilabel dataset with labels ["cat", "dog"] exists
     And the dataset contains the following image distribution:
       | Label | Training |
       | cat   | 3        |
@@ -70,15 +65,9 @@ Feature: Import Dataset As New Project
       | cat   | 3         |
       | dog   | 3         |
 
-    Examples:
-        | dataset_type          |
-        | multilabel            |
-        | detection             |
-        | instance_segmentation |
-
   @import_as_new_project @segmentation
-  Scenario Outline: Import dataset as a new instance_segmentation project
-    Given A <dataset_type> dataset with labels ["car", "person"] exists
+  Scenario: Import segmentation dataset as a new project
+    Given An instance_segmentation dataset with labels ["car", "person"] exists
     And the dataset contains the following image distribution:
       | Label  | Training | Testing |
       | car    | 3        | 3       |
@@ -95,8 +84,3 @@ Feature: Import Dataset As New Project
       | Label  | Instances |
       | car    | 6         |
       | person | 6         |
-
-    Examples:
-        | dataset_type          |
-        | detection             |
-        | instance_segmentation |

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Switch, TextField } from '@geti-ui/ui';
+import { Flex, Switch, TextField } from '@geti/ui';
 
 import type { IPCameraSourceConfig } from '../../../../constants/shared-types';
 

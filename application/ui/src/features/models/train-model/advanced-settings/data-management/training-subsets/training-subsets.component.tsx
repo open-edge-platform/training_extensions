@@ -3,7 +3,7 @@
 
 import { Dispatch, SetStateAction, useState } from 'react';
 
-import { Content, Flex, Heading, InlineAlert, View } from '@geti-ui/ui';
+import { Content, Flex, Heading, InlineAlert, View } from '@geti/ui';
 import { useGetDatasetItems } from 'hooks/use-get-dataset-items.hook';
 import { isEqual } from 'lodash-es';
 

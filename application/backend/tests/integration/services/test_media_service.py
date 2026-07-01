@@ -554,14 +554,8 @@ class TestMediaServiceIntegration:
         use_pipeline_source: bool,
     ) -> None:
         """Test creating a media."""
-        rng = np.random.default_rng(seed=42)
-        image_data = rng.integers(0, 255, (64, 96, 3), dtype=np.uint8)
-        image = PILImage.fromarray(image_data, mode="RGB")
+        image = PILImage.new("RGB", (1024, 768))
         image.getexif()[ExifTags.Base.Software] = "Intel Geti"
-
-        original_file_path = tmp_path / f"original.{format}"
-        image.save(original_file_path, exif=image.getexif())
-        original_bytes = original_file_path.read_bytes()
 
         project, pipeline = fxt_project_with_pipeline
 
@@ -570,14 +564,10 @@ class TestMediaServiceIntegration:
                 project_id=project.id,
                 name="test",
                 image_format=format,
-                data=BytesIO(original_bytes),
+                data=image,
                 source_id=pipeline.source_id if use_pipeline_source else None,
             )
         )
-
-        binary_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}.{format}"
-        assert binary_file_path.exists()
-        assert binary_file_path.read_bytes() == original_bytes
 
         media = db_session.get(MediaDB, str(created_media.id))
         assert media is not None
@@ -587,8 +577,8 @@ class TestMediaServiceIntegration:
             and media.type == "image"
             and media.name == "test"
             and media.format == format
-            and media.width == 96
-            and media.height == 64
+            and media.width == 1024
+            and media.height == 768
         )
         if use_pipeline_source:
             assert media.source_id == str(pipeline.source_id)
@@ -654,62 +644,6 @@ class TestMediaServiceIntegration:
             arr = np.array(thumb)
             assert arr.min() < 10, "Shadow end of range missing — normalization likely clipped low values"
             assert arr.max() > 245, "Highlight end of range missing — normalization likely clipped high values"
-
-    def test_create_image_from_uint16_3channel_ndarray(
-        self,
-        tmp_path: Path,
-        fxt_media_service: MediaService,
-        fxt_project_with_pipeline: tuple[Project, Pipeline],
-        db_session: Session,
-    ) -> None:
-        """16-bit 3-channel ndarrays from datumaro are saved as single-channel 16-bit PNG.
-
-        Datumaro returns grayscale 16-bit images as (H, W, 3) uint16 arrays with identical channels. Pillow rejects
-        Image.fromarray on such arrays, so _read_image_from_ndarray must collapse them to (H, W) before conversion.
-        The stored file must be:
-          - readable by PIL
-          - in a single-channel 16-bit mode (I;16)
-          - sized correctly
-          - accompanied by a valid JPEG thumbnail
-        """
-        rng = np.random.default_rng(seed=42)
-        channel = rng.integers(0, 65535, (128, 96), dtype=np.uint16)
-        data = np.stack([channel, channel, channel], axis=-1)  # (128, 96, 3) uint16
-
-        project, _ = fxt_project_with_pipeline
-
-        created_media = fxt_media_service.create_image(
-            ImageMetadata(
-                project_id=project.id,
-                name="test_16bit_ndarray",
-                image_format=ImageFormat.PNG,
-                data=data,
-            )
-        )
-
-        # DB record is correct
-        db_media = db_session.get(MediaDB, str(created_media.id))
-        assert db_media is not None
-        assert db_media.width == 96
-        assert db_media.height == 128
-        assert db_media.format == "png"
-
-        # Stored file is a valid single-channel 16-bit PNG
-        binary_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}.png"
-        assert binary_path.exists()
-        with PILImage.open(binary_path) as img:
-            assert img.mode in ("I;16", "I;16B", "I;16L", "I"), f"Expected single-channel 16-bit mode, got {img.mode}"
-            assert img.width == 96
-            assert img.height == 128
-            # Pixel values must match the original channel (no bit-depth truncation)
-            np.testing.assert_array_equal(np.array(img), channel)
-
-        # Thumbnail exists and is a valid JPEG
-        thumb_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
-        assert thumb_path.exists()
-        with PILImage.open(thumb_path) as thumb:
-            assert thumb.format == "JPEG"
-            assert thumb.mode == "RGB"
 
     @pytest.mark.parametrize("format", [ImageFormat.TIF, ImageFormat.TIFF])
     def test_create_tiff_image_with_problematic_exif(

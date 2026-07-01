@@ -3,8 +3,8 @@
 
 import { ReactNode, useState } from 'react';
 
-import { ActionButton, Checkbox, Content, ContextualHelp, Flex, Grid, NumberField, Slider, Text } from '@geti-ui/ui';
-import { Refresh } from '@geti-ui/ui/icons';
+import { ActionButton, Checkbox, Content, ContextualHelp, Flex, Grid, NumberField, Slider, Text } from '@geti/ui';
+import { Refresh } from '@geti/ui/icons';
 
 export const DEFAULT_QUANTIZATION_PARAMETERS = {
     accuracyDrop: 1.0,

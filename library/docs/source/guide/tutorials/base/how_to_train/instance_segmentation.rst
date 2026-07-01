@@ -143,7 +143,7 @@ The list of supported recipes for instance segmentation is available with the co
 
         .. code-block:: python
 
-          from getitune.utils import list_models
+          from getitune.backend.lightning.cli.utils import list_models
 
           model_lists = list_models(task="INSTANCE_SEGMENTATION")
           print(model_lists)

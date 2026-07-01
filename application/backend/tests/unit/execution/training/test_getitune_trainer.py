@@ -533,8 +533,8 @@ class TestGetiTuneTrainerCreateTrainingDataset:
         mock_test_transforms = [Mock()]
 
         with (
-            patch("getitune.data.factory.TransformLibFactory.generate") as mock_generate,
-            patch("getitune.data.entity.utils.detect_storage_dtype", return_value=("uint8", 3)),
+            patch("app.execution.training.getitune_trainer.TransformLibFactory.generate") as mock_generate,
+            patch("app.execution.training.getitune_trainer.detect_storage_dtype", return_value="uint8"),
         ):
             mock_generate.side_effect = [mock_train_transforms, mock_val_transforms, mock_test_transforms]
 
@@ -787,12 +787,12 @@ class TestGetiTuneTrainerTrainModel:
 
         with (
             patch(
-                "getitune.data.module.DataModule.from_vision_datasets",
+                "app.execution.training.getitune_trainer.DataModule.from_vision_datasets",
                 return_value=mock_datamodule,
             ) as mock_datamodule_factory,
             patch("app.execution.training.getitune_trainer.ArgumentParser") as mock_parser_cls,
             patch(
-                "getitune.engine.create_engine",
+                "app.execution.training.getitune_trainer.create_engine",
                 return_value=mock_getitune_engine,
             ) as mock_create_engine,
         ):
@@ -808,7 +808,6 @@ class TestGetiTuneTrainerTrainModel:
                 weights_path=weights_path,
                 model_id=model_id,
                 device=geti_device,
-                has_model_revision=False,
             )
 
         # Assert
@@ -828,7 +827,7 @@ class TestGetiTuneTrainerTrainModel:
         assert engine_call_kwargs["model"] == mock_getitune_model
         assert engine_call_kwargs["data"] == mock_datamodule
         assert engine_call_kwargs["work_dir"] == getitune_trainer._data_dir / f"getitune-workspace-{model_id}"
-        assert "checkpoint" not in engine_call_kwargs
+        assert engine_call_kwargs["checkpoint"] == weights_path
 
         # Verify training was started
         mock_getitune_engine.train.assert_called_once()
@@ -893,9 +892,13 @@ class TestGetiTuneTrainerTrainModel:
         mock_engine.work_dir = tmp_path
 
         with (
-            patch("getitune.data.module.DataModule.from_vision_datasets", return_value=mock_datamodule),
+            patch(
+                "app.execution.training.getitune_trainer.DataModule.from_vision_datasets", return_value=mock_datamodule
+            ),
             patch("app.execution.training.getitune_trainer.ArgumentParser") as mock_parser_cls,
-            patch("getitune.engine.create_engine", return_value=mock_engine) as mock_create_engine,
+            patch(
+                "app.execution.training.getitune_trainer.create_engine", return_value=mock_engine
+            ) as mock_create_engine,
         ):
             mock_model_parser = Mock()
             mock_callbacks_parser = Mock()
@@ -909,7 +912,6 @@ class TestGetiTuneTrainerTrainModel:
                 weights_path=weights_path,
                 model_id=model_id,
                 device=DeviceInfo(type=DeviceType.CPU, name="Intel Core", index=None, memory=None),
-                has_model_revision=True,
             )
 
         # Assert
@@ -1170,7 +1172,7 @@ class TestGetiTuneTrainerEvaluateModel:
 
         # Act
         with patch(
-            "getitune.backend.openvino.engine.OVEngine",
+            "app.execution.training.getitune_trainer.OVEngine",
             side_effect=[mock_ov_engine, mock_onnx_engine],
         ) as mock_ov_engine_cls:
             getitune_trainer.evaluate_model(

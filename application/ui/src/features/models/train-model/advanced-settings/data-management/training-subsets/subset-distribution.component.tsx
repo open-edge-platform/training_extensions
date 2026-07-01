@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Grid, minmax, View } from '@geti-ui/ui';
+import { Grid, minmax, View } from '@geti/ui';
 
 import { ResetButton } from '../../components/reset-button.component';
 import { SubsetDistributionStats } from './subset-distribution-stats.component';

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedAnnotation } from 'mocks/mock-annotation';
-import { getMockedAnnotationLabelRef, getMockedLabel } from 'mocks/mock-labels';
+import { getMockedLabel } from 'mocks/mock-labels';
 import { describe, expect, it } from 'vitest';
 
 import { toggleLabel } from './util';
@@ -15,29 +15,22 @@ describe('secondary toolbar utils', () => {
 
         it('add label when it does not exist in annotation', () => {
             const annotation = getMockedAnnotation({
-                labels: [
-                    getMockedAnnotationLabelRef({ id: 'label-1' }),
-                    getMockedAnnotationLabelRef({ id: 'label-2' }),
-                ],
+                labels: [mockLabel1, mockLabel2],
             });
 
             const result = toggleLabel(mockLabel3, annotation.labels);
 
-            expect(result).toEqual([{ id: 'label-1' }, { id: 'label-2' }, { id: 'label-3' }]);
+            expect(result).toEqual([mockLabel1, mockLabel2, mockLabel3]);
         });
 
         it('remove label when it exists in annotation', () => {
             const annotation = getMockedAnnotation({
-                labels: [
-                    getMockedAnnotationLabelRef({ id: 'label-1' }),
-                    getMockedAnnotationLabelRef({ id: 'label-2' }),
-                    getMockedAnnotationLabelRef({ id: 'label-3' }),
-                ],
+                labels: [mockLabel1, mockLabel2, mockLabel3],
             });
 
             const result = toggleLabel(mockLabel2, annotation.labels);
 
-            expect(result).toEqual([{ id: 'label-1' }, { id: 'label-3' }]);
+            expect(result).toEqual([mockLabel1, mockLabel3]);
         });
 
         it('add label to empty labels array', () => {
@@ -45,12 +38,12 @@ describe('secondary toolbar utils', () => {
 
             const result = toggleLabel(mockLabel1, annotation.labels);
 
-            expect(result).toEqual([{ id: 'label-1' }]);
+            expect(result).toEqual([mockLabel1]);
         });
 
         it('remove the only label from annotation', () => {
             const annotation = getMockedAnnotation({
-                labels: [getMockedAnnotationLabelRef({ id: 'label-1' })],
+                labels: [mockLabel1],
             });
 
             const result = toggleLabel(mockLabel1, annotation.labels);

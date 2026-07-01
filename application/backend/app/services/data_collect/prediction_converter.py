@@ -1,15 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 import cv2
 import numpy as np
 from loguru import logger
-
-if TYPE_CHECKING:
-    from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
-    from model_api.models.result import Result
+from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
+from model_api.models.result import Result
 
 from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
 
@@ -95,7 +93,7 @@ def _find_project_label(
 
 
 def _convert_classification_prediction(
-    labels: Sequence[Label], prediction: "ClassificationResult"
+    labels: Sequence[Label], prediction: ClassificationResult
 ) -> list[DatasetItemAnnotation]:
     predicted_labels: list[LabelReference] = []
     predicted_confidences: list[float] = []
@@ -123,9 +121,7 @@ def _convert_classification_prediction(
     return [DatasetItemAnnotation(labels=predicted_labels, shape=FullImage(), confidences=predicted_confidences)]
 
 
-def _convert_detection_prediction(
-    labels: Sequence[Label], prediction: "DetectionResult"
-) -> list[DatasetItemAnnotation]:
+def _convert_detection_prediction(labels: Sequence[Label], prediction: DetectionResult) -> list[DatasetItemAnnotation]:
     name_map, unmangled_map = _build_label_maps(labels)
     result = []
     prediction_scores_list = prediction.scores.tolist()
@@ -155,7 +151,7 @@ def _convert_detection_prediction(
 def _convert_segmentation_prediction(
     labels: Sequence[Label],
     frame_data: np.ndarray,
-    prediction: "InstanceSegmentationResult",
+    prediction: InstanceSegmentationResult,
 ) -> list[DatasetItemAnnotation]:
     name_map, unmangled_map = _build_label_maps(labels)
     height, width, _ = frame_data.shape
@@ -192,7 +188,7 @@ def _convert_segmentation_prediction(
     return result
 
 
-def get_confidence_scores(prediction: "Result") -> list[float]:
+def get_confidence_scores(prediction: Result) -> list[float]:
     """
     Gets model prediction confidence scores depending on the
     specific type of prediction result (segmentation, detection, or classification).
@@ -205,8 +201,6 @@ def get_confidence_scores(prediction: "Result") -> list[float]:
     Returns:
         list[float]: List of confidence scores.
     """
-    from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
-
     match prediction:
         case InstanceSegmentationResult() | DetectionResult():
             return prediction.scores.tolist()
@@ -218,7 +212,7 @@ def get_confidence_scores(prediction: "Result") -> list[float]:
 
 
 def convert_prediction(
-    labels: Sequence[Label], frame_data: np.ndarray, prediction: "Result"
+    labels: Sequence[Label], frame_data: np.ndarray, prediction: Result
 ) -> list[DatasetItemAnnotation]:
     """
     Converts model predictions to dataset annotations based on prediction type.
@@ -250,8 +244,6 @@ def convert_prediction(
         ...     prediction=detection_result
         ... )
     """
-    from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
-
     match prediction:
         case InstanceSegmentationResult():
             return _convert_segmentation_prediction(labels=labels, frame_data=frame_data, prediction=prediction)

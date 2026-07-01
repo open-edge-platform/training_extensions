@@ -8,7 +8,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { $api } from '../api/client';
 import { DatasetItemAnnotationStatus, DatasetSubset, Media, MediaDTO, Pagination } from '../constants/shared-types';
 
-const DATASET_ITEMS_LIMIT = 40;
+const DATASET_ITEMS_LIMIT = 20;
 
 interface UseGetDatasetMediaItemsOptions {
     subset?: DatasetSubset;

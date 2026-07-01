@@ -3,7 +3,7 @@
 
 import { MutableRefObject } from 'react';
 
-import { Flex } from '@geti-ui/ui';
+import { Flex } from '@geti/ui';
 import { type Item } from 'react-cool-virtual';
 
 import { type Label } from '../../../../../../../constants/shared-types';

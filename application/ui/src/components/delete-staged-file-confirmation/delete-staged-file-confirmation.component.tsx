@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { AlertDialog, Button, DialogTrigger } from '@geti-ui/ui';
+import { AlertDialog, Button, DialogTrigger } from '@geti/ui';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 type DeleteStagedFileConfirmationProps = {

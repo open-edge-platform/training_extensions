@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Flex } from '@geti-ui/ui';
+import { Flex } from '@geti/ui';
 
 import type { ModelArchitecture as ModelArchitectureType } from '../../../../constants/shared-types';
 import { SortModelArchitectures } from '../sort-model-architectures/sort-model-architectures.component';

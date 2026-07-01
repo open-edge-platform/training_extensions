@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Divider, Flex, Heading, NumberField, Slider, Switch, Text } from '@geti-ui/ui';
+import { Divider, Flex, Heading, NumberField, Slider, Switch, Text } from '@geti/ui';
 import { usePatchPipeline, usePipeline } from 'hooks/api/pipeline.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 

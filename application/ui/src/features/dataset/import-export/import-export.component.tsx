@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Item, Key, Menu, MenuTrigger } from '@geti-ui/ui';
+import { Button, Item, Key, Menu, MenuTrigger } from '@geti/ui';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 
 import { ExportDatasetConfig } from '../../../components/export-dataset-config-dialog/export-dataset-config.component';

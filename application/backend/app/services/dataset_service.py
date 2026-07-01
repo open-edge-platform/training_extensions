@@ -6,10 +6,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from datumaro.experimental import Dataset
+import datumaro.experimental as dm
 from sqlalchemy.orm import Session
 
-from app.datumaro_converter import SampleMode
+from app.datumaro_converter import SampleMode, convert_dataset
 from app.db.schema import DatasetItemDB, MediaDB
 from app.models import (
     DatasetItem,
@@ -351,9 +351,7 @@ class DatasetService(BaseSessionManagedService):
         task: Task,
         annotation_status: DatasetItemAnnotationStatus | None,
         sample_mode: SampleMode,
-    ) -> Dataset:
-        from app.datumaro_converter import SampleMode, convert_dataset
-
+    ) -> dm.Dataset:
         def get_dataset_items_and_media(offset: int, limit: int) -> list[tuple[DatasetItem, Media]]:
             return self.list_dataset_items_with_media(
                 project_id=project_id,

@@ -3,8 +3,8 @@
 
 import { useState } from 'react';
 
-import { ActionButton, Divider, Flex, Text, View } from '@geti-ui/ui';
-import { ChevronDownLight } from '@geti-ui/ui/icons';
+import { ActionButton, Divider, Flex, Text, View } from '@geti/ui';
+import { ChevronDownLight } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 
 import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';

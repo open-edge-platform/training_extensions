@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Item, Picker } from '@geti-ui/ui';
+import { Item, Picker } from '@geti/ui';
 import { useDatasetFiltersSearchParams } from 'hooks/use-dataset-filters-search-params.hook';
 
 import { FilterByStatusKey } from '../../../../../constants/shared-types';

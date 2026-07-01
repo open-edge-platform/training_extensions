@@ -27,9 +27,6 @@ test.describe('Annotator Classification', () => {
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(mockedClassificationProject);
             }),
-            http.get('/api/projects', () => {
-                return HttpResponse.json([mockedClassificationProject]);
-            }),
             candyBinaryHandler
         );
     });

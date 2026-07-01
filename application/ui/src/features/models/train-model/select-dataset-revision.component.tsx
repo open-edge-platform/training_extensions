@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Content, ContextualHelp, Heading, Item, Picker } from '@geti-ui/ui';
+import { Content, ContextualHelp, Heading, Item, Picker } from '@geti/ui';
 
 import { useTrainModelState } from './train-model-provider.component';
 

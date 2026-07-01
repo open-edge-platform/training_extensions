@@ -3,7 +3,7 @@
 
 import { useRef } from 'react';
 
-import { Size, useUnwrapDOMRef, View } from '@geti-ui/ui';
+import { Size, useUnwrapDOMRef, View } from '@geti/ui';
 
 import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { Media } from '../../../../constants/shared-types';

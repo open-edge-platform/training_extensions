@@ -24,8 +24,8 @@ import {
     Text,
     Tooltip,
     TooltipTrigger,
-} from '@geti-ui/ui';
-import { AcceptCircle, CrossCircle, Pending } from '@geti-ui/ui/icons';
+} from '@geti/ui';
+import { AcceptCircle, CrossCircle, Pending } from '@geti/ui/icons';
 
 import { formatBytes, pluralizeItems } from '../../../../shared/util';
 import { useMediaUploadContext } from '../../providers/media-upload-provider.component';

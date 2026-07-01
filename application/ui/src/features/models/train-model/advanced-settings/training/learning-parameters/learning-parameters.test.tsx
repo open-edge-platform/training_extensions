@@ -52,20 +52,10 @@ const expectNumberParameter = async (parameter: NumberConfigurableParameter, gro
 
     expect(parameterInput).toHaveValue(parameter.value.toString());
 
-    // Round to avoid floating-point noise (e.g. 0.004 + 0.0001).
-    const newValue = Math.round((parameter.value + step) * 1e6) / 1e6;
-
     await userEvent.click(parameterInput as HTMLElement);
+    await userEvent.keyboard('{ArrowUp}');
 
-    if (parameter.value_type === 'int') {
-        await userEvent.keyboard('{ArrowUp}');
-    } else {
-        await userEvent.clear(parameterInput as HTMLElement);
-        await userEvent.type(parameterInput as HTMLElement, newValue.toString());
-        await userEvent.tab();
-    }
-
-    expect(parameterInput).toHaveValue(newValue.toString());
+    expect(parameterInput).toHaveValue((parameter.value + step).toString());
 
     resetParameter(parameter.name, wrapper);
     expect(getParameter(parameter.name, wrapper)).toHaveValue(parameter.default_value.toString());

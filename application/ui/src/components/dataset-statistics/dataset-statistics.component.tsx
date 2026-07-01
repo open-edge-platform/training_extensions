@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Text, View } from '@geti-ui/ui';
+import { Flex, Text, View } from '@geti/ui';
 import { Pie, PieChart, Sector } from 'recharts';
 
 import classes from './dataset-statistics.module.scss';

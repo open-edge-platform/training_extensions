@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Divider, Grid, Text } from '@geti-ui/ui';
+import { dimensionValue, Divider, Grid, Text } from '@geti/ui';
 
 import { ImportDatasetAsNewProjectState } from '../../../../dataset/import-export/import-dataset/util';
 

@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Radio, RadioGroup, Text } from '@geti-ui/ui';
-import { InfoOutline } from '@geti-ui/ui/icons';
+import { Flex, Radio, RadioGroup, Text } from '@geti/ui';
+import { InfoOutline } from '@geti/ui/icons';
 
 import classes from './classification-task-type-selection.module.scss';
 

@@ -82,7 +82,7 @@ test.describe('Inference', () => {
 
             await page.goto('/projects/id-1/inference');
 
-            await expect(page.getByRole('switch', { name: /Pipeline disabled/i })).toBeEnabled();
+            await expect(page.getByRole('switch', { name: /Enable pipeline/i })).toBeEnabled();
 
             network.use(
                 http.post('/api/projects/{project_id}/pipeline:enable', () => {
@@ -93,9 +93,9 @@ test.describe('Inference', () => {
                 })
             );
 
-            await page.getByRole('switch', { name: /Pipeline disabled/i }).click();
+            await page.getByRole('switch', { name: /Enable pipeline/i }).click();
 
-            await expect(page.getByRole('switch', { name: 'Pipeline enabled' })).toBeEnabled();
+            await expect(page.getByRole('switch', { name: 'Disable Pipeline' })).toBeEnabled();
             network.use(
                 http.post('/api/projects/{project_id}/pipeline:disable', () => {
                     return HttpResponse.json(null, { status: 204 });
@@ -105,9 +105,9 @@ test.describe('Inference', () => {
                 })
             );
 
-            await page.getByRole('switch', { name: 'Pipeline enabled' }).click();
+            await page.getByRole('switch', { name: 'Disable Pipeline' }).click();
 
-            await expect(page.getByRole('switch', { name: /Pipeline disabled/i })).toBeEnabled();
+            await expect(page.getByRole('switch', { name: /Enable pipeline/i })).toBeEnabled();
         });
 
         await test.step('updates data collection policy', async () => {
@@ -418,7 +418,7 @@ test.describe('Inference', () => {
         await page.getByRole('tab', { name: 'Inference' }).click();
 
         await expect(page.getByTitle('Enable pipeline to start stream')).toBeVisible();
-        await expect(page.getByRole('switch', { name: /Pipeline disabled/i })).toBeVisible();
+        await expect(page.getByRole('switch', { name: /Enable pipeline/i })).toBeVisible();
     });
 
     test('resets stream state when re-opening inference page', async ({ streamPage, page, network }) => {

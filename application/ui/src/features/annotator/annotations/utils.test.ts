@@ -2,59 +2,60 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedAnnotation } from 'mocks/mock-annotation';
-import { getMockedAnnotationLabelRef } from 'mocks/mock-labels';
+import { getMockedAnnotationLabel } from 'mocks/mock-labels';
 import { describe, expect, it } from 'vitest';
 
 import { convertPredictionToAnnotation, isPrediction } from './utils';
 
 describe('isPrediction', () => {
     it('returns true when probability is defined', () => {
-        const labelRef = getMockedAnnotationLabelRef({ probability: 0.9 });
+        const label = getMockedAnnotationLabel({ probability: 0.9 });
 
-        expect(isPrediction(labelRef)).toBe(true);
+        expect(isPrediction(label)).toBe(true);
     });
 
     it('returns true when probability is 0', () => {
-        const labelRef = getMockedAnnotationLabelRef({ probability: 0 });
+        const label = getMockedAnnotationLabel({ probability: 0 });
 
-        expect(isPrediction(labelRef)).toBe(true);
+        expect(isPrediction(label)).toBe(true);
     });
 
     it('returns false when probability is undefined', () => {
-        const labelRef = getMockedAnnotationLabelRef();
+        const label = getMockedAnnotationLabel();
 
-        expect(isPrediction(labelRef)).toBe(false);
+        expect(isPrediction(label)).toBe(false);
     });
 });
 
 describe('convertPredictionToAnnotation', () => {
-    it('removes probability from all prediction label refs', () => {
+    it('removes probability from all prediction labels', () => {
         const annotation = getMockedAnnotation({
             labels: [
-                getMockedAnnotationLabelRef({ probability: 0.95 }),
-                getMockedAnnotationLabelRef({ id: 'label-2', probability: 0.7 }),
+                getMockedAnnotationLabel({ probability: 0.95 }),
+                getMockedAnnotationLabel({ id: 'label-2', name: 'label-2', probability: 0.7 }),
             ],
         });
 
         const result = convertPredictionToAnnotation(annotation);
 
-        result.labels.forEach((ref) => {
-            expect(ref).not.toHaveProperty('probability');
+        result.labels.forEach((label) => {
+            expect(label).not.toHaveProperty('probability');
         });
     });
 
-    it('preserves the id after conversion', () => {
-        const labelRef = getMockedAnnotationLabelRef({ id: 'label-1', probability: 0.85 });
-        const annotation = getMockedAnnotation({ labels: [labelRef] });
+    it('preserves all other label properties after conversion', () => {
+        const label = getMockedAnnotationLabel({ probability: 0.85 });
+        const annotation = getMockedAnnotation({ labels: [label] });
 
         const result = convertPredictionToAnnotation(annotation);
 
-        expect(result.labels[0]).toEqual({ id: 'label-1' });
+        const { probability: _probability, ...expectedLabel } = label;
+        expect(result.labels[0]).toEqual(expectedLabel);
     });
 
     it('preserves annotation shape and id after conversion', () => {
         const annotation = getMockedAnnotation({
-            labels: [getMockedAnnotationLabelRef({ probability: 0.6 })],
+            labels: [getMockedAnnotationLabel({ probability: 0.6 })],
         });
 
         const result = convertPredictionToAnnotation(annotation);

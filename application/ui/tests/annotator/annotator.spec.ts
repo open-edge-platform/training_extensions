@@ -28,9 +28,6 @@ test.describe('Annotator', () => {
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(mockedDetectionProject);
             }),
-            http.get('/api/projects', () => {
-                return HttpResponse.json([mockedDetectionProject]);
-            }),
             candyBinaryHandler,
             http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
                 return HttpResponse.json({

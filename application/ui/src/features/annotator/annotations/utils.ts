@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Annotation, AnnotationLabelRef, Point } from '../../../shared/types';
+import type { Annotation, AnnotationLabel, Point } from '../../../shared/types';
 
 export const getFormattedPoints = (points: Point[]): string => {
     return points.map(({ x, y }) => `${x},${y}`).join(' ');
@@ -15,13 +15,23 @@ export const isPolygon = (annotation: Annotation): annotation is Annotation & { 
     return annotation.shape.type === 'polygon';
 };
 
-export const isPrediction = (label: { probability?: number }): label is Required<{ probability: number }> => {
+export const isPrediction = (
+    label: Pick<AnnotationLabel, 'probability'>
+): label is Required<Pick<AnnotationLabel, 'probability'>> => {
     return label.probability !== undefined;
 };
 
 export const convertPredictionToAnnotation = (prediction: Annotation): Annotation => {
+    const convertedLabels = prediction.labels.map((label) => {
+        if (isPrediction(label)) {
+            const { probability, ...rest } = label;
+            return rest;
+        }
+        return label;
+    });
+
     return {
         ...prediction,
-        labels: prediction.labels.map(({ probability: _probability, ...rest }): AnnotationLabelRef => rest),
+        labels: convertedLabels,
     };
 };

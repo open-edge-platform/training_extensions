@@ -15,8 +15,8 @@ import {
     Loading,
     Tooltip,
     TooltipTrigger,
-} from '@geti-ui/ui';
-import { GraphChart } from '@geti-ui/ui/icons';
+} from '@geti/ui';
+import { GraphChart } from '@geti/ui/icons';
 
 import { DatasetStatisticsContent } from './dataset-statistics-content.component';
 

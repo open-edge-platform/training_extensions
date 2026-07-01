@@ -13,11 +13,11 @@ import {
     InlineAlert,
     Link,
     Text,
-} from '@geti-ui/ui';
+    toast,
+} from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useMatch } from 'react-router';
 
-import { toast } from '../../../components/toast/toast.component';
 import { paths } from '../../../constants/paths';
 import { AdvancedSettings } from './advanced-settings/advanced-settings.component';
 import { BasicTrainModelContent } from './basic-train-model-content.component';

@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { Content, Flex, Heading } from '@geti-ui/ui';
+import { Content, Flex, Heading } from '@geti/ui';
 import { clsx } from 'clsx';
 
 import classes from './box.module.scss';

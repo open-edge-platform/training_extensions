@@ -1,17 +1,39 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { ComponentProps, ComponentRef, ReactNode, useRef, useState } from 'react';
 
-import { ActionButton, AlertDialog, DialogContainer, DialogTrigger, Text, Tooltip, TooltipTrigger } from '@geti-ui/ui';
-import { Add, Edit } from '@geti-ui/ui/icons';
+import { ActionButton, AlertDialog, DialogContainer, Popover, Text, Tooltip, TooltipTrigger } from '@geti/ui';
+import { Add, Edit } from '@geti/ui/icons';
 import { useOverlayTriggerState } from '@react-stately/overlays';
+import { OverlayTriggerState } from 'react-stately';
 
 import type { Label } from '../../../../constants/shared-types';
 import { useLabels } from '../use-labels.hook';
 import { LabelsEditor } from './labels-editor.component';
 
+type LabelEditorPopoverProps = {
+    state: OverlayTriggerState;
+    triggerRef: ComponentProps<typeof Popover>['triggerRef'];
+    children: ReactNode;
+};
+
 const POPOVER_OFFSET_ALIGNMENT = 8;
+
+const LabelEditorPopover = ({ triggerRef, state, children }: LabelEditorPopoverProps) => {
+    return (
+        <Popover
+            hideArrow
+            triggerRef={triggerRef}
+            state={state}
+            placement={'bottom end'}
+            offset={POPOVER_OFFSET_ALIGNMENT}
+            crossOffset={POPOVER_OFFSET_ALIGNMENT}
+        >
+            {children}
+        </Popover>
+    );
+};
 
 type LabelsEditorPopoverProps = {
     isClassification?: boolean;
@@ -26,6 +48,7 @@ export const LabelsEditorPopover = ({
 }: LabelsEditorPopoverProps) => {
     const { deleteLabel } = useLabels({ isClassification, isMultiLabel });
 
+    const triggerRef = useRef<ComponentRef<'svg'>>(null);
     const popoverState = useOverlayTriggerState({});
     const deleteDialogState = useOverlayTriggerState({});
     const [labelToDelete, setLabelToDelete] = useState<Label | null>(null);
@@ -50,40 +73,33 @@ export const LabelsEditorPopover = ({
         popoverState.open();
     };
 
-    const triggerLabel = hasLabels ? 'Edit labels' : 'Create label';
-
     return (
         <>
-            <DialogTrigger
-                type='popover'
-                hideArrow
-                isOpen={popoverState.isOpen}
-                onOpenChange={popoverState.setOpen}
-                placement='bottom end'
-                offset={POPOVER_OFFSET_ALIGNMENT}
-                crossOffset={POPOVER_OFFSET_ALIGNMENT}
-            >
+            {hasLabels ? (
                 <TooltipTrigger>
-                    <ActionButton isQuiet aria-label={triggerLabel}>
-                        {hasLabels ? (
-                            <Edit />
-                        ) : (
-                            <>
-                                <Add />
-                                <Text>Create label</Text>
-                            </>
-                        )}
+                    <ActionButton isQuiet aria-label='Edit labels' onPress={popoverState.open}>
+                        <Edit ref={triggerRef} />
                     </ActionButton>
-                    <Tooltip>{triggerLabel}</Tooltip>
+                    <Tooltip>Edit labels</Tooltip>
                 </TooltipTrigger>
+            ) : (
+                <TooltipTrigger>
+                    <ActionButton isQuiet aria-label='Create label' onPress={popoverState.open}>
+                        <Add ref={triggerRef} />
+                        <Text>Create label</Text>
+                    </ActionButton>
+                    <Tooltip>Create label</Tooltip>
+                </TooltipTrigger>
+            )}
 
+            <LabelEditorPopover state={popoverState} triggerRef={triggerRef}>
                 <LabelsEditor
                     isClassification={isClassification}
                     isMultiLabel={isMultiLabel}
                     onRequestDeleteLabel={handleRequestDeleteLabel}
                     autoCreateNewLabel={!hasLabels}
                 />
-            </DialogTrigger>
+            </LabelEditorPopover>
 
             <DialogContainer onDismiss={handleCancelDeleteLabel}>
                 {deleteDialogState.isOpen && labelToDelete && (

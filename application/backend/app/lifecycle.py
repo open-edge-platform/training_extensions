@@ -19,14 +19,16 @@ from app.core.jobs.models import JobType
 from app.core.logging import LogConfig, setup_logging, setup_uvicorn_logging
 from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
-from app.execution.builders import (
-    build_export_dataset,
-    build_import_as_new_project,
-    build_import_to_project,
-    build_prepare_dataset,
-    build_quantizer,
-    build_trainer,
+from app.execution import (
+    ExportDataset,
+    GetiTuneQuantizer,
+    GetiTuneTrainer,
+    ImportDatasetToProject,
+    PrepareDataset,
+    QuantizationDependencies,
+    TrainingDependencies,
 )
+from app.execution.dataset_import.import_as_new_project import ImportDatasetAsNewProject
 from app.scheduler import Scheduler
 from app.services import (
     DatasetRevisionService,
@@ -84,34 +86,38 @@ def setup_job_controller(
     job_runnable_factory.register(
         JobType.TRAIN,
         partial(
-            build_trainer,
-            base_weights_service=BaseWeightsService(data_dir=data_dir),
-            subset_service=SubsetService(),
-            subset_assigner=SubsetAssigner(),
-            dataset_service=dataset_service,
-            dataset_revision_service=dataset_revision_service,
-            model_service=ModelService(data_dir=data_dir),
-            training_configuration_service=TrainingConfigurationService(),
-            data_dir=data_dir,
-            db_session_factory=get_db_session,
+            GetiTuneTrainer,
+            training_deps=TrainingDependencies(
+                base_weights_service=BaseWeightsService(data_dir=data_dir),
+                subset_service=SubsetService(),
+                subset_assigner=SubsetAssigner(),
+                dataset_service=dataset_service,
+                dataset_revision_service=dataset_revision_service,
+                model_service=ModelService(data_dir=data_dir),
+                training_configuration_service=TrainingConfigurationService(),
+                data_dir=data_dir,
+                db_session_factory=get_db_session,
+            ),
         ),
     )
     job_runnable_factory.register(
         JobType.QUANTIZE,
         partial(
-            build_quantizer,
-            data_dir=data_dir,
-            model_service=ModelService(data_dir=data_dir),
-            dataset_revision_service=dataset_revision_service,
-            project_service=project_service,
-            training_configuration_service=TrainingConfigurationService(),
-            db_session_factory=get_db_session,
+            GetiTuneQuantizer,
+            quantization_deps=QuantizationDependencies(
+                data_dir=data_dir,
+                model_service=ModelService(data_dir=data_dir),
+                dataset_revision_service=dataset_revision_service,
+                project_service=project_service,
+                training_configuration_service=TrainingConfigurationService(),
+                db_session_factory=get_db_session,
+            ),
         ),
     )
     job_runnable_factory.register(
         JobType.EXPORT_DATASET,
         partial(
-            build_export_dataset,
+            ExportDataset,
             staged_datasets_dir=staged_datasets_dir,
             dataset_service=dataset_service,
             dataset_revision_service=dataset_revision_service,
@@ -121,14 +127,14 @@ def setup_job_controller(
     job_runnable_factory.register(
         JobType.PREPARE_DATASET_FOR_IMPORT,
         partial(
-            build_prepare_dataset,
+            PrepareDataset,
             staged_datasets_dir=staged_datasets_dir,
         ),
     )
     job_runnable_factory.register(
         JobType.IMPORT_DATASET_TO_PROJECT,
         partial(
-            build_import_to_project,
+            ImportDatasetToProject,
             staged_datasets_dir=staged_datasets_dir,
             dataset_service=dataset_service,
             label_service=label_service,
@@ -139,7 +145,7 @@ def setup_job_controller(
     job_runnable_factory.register(
         JobType.IMPORT_DATASET_AS_NEW_PROJECT,
         partial(
-            build_import_as_new_project,
+            ImportDatasetAsNewProject,
             staged_datasets_dir=staged_datasets_dir,
             project_service=project_service,
             dataset_service=dataset_service,

@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, useNumberFormatter, View } from '@geti-ui/ui';
+import { dimensionValue, useNumberFormatter, View } from '@geti/ui';
 
 const useFormatFrames = (frames: number) => {
     const formatter = useNumberFormatter({

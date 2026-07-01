@@ -26,11 +26,6 @@ class TestMultilabelClsDataset:
         mock_schema.attributes = mock_attributes
         self.mock_dm_subset.schema = mock_schema
 
-        # Mock label_categories used by the dataset implementation
-        mock_label_categories = Mock()
-        mock_label_categories.labels = ["class_0", "class_1", "class_2", "class_3"]
-        self.mock_dm_subset.label_categories = mock_label_categories
-
         self.mock_transforms = Mock()
 
     def test_init_converts_schema_and_sets_label_info(self):

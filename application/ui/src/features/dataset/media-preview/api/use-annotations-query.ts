@@ -3,7 +3,7 @@
 
 import { queryOptions, useQuery, type QueryKey } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { isEmpty, isObject } from 'lodash-es';
+import { isObject } from 'lodash-es';
 
 import { fetchClient } from '../../../../api/client';
 import type { AnnotationDTO, DatasetSubset, Media } from '../../../../constants/shared-types';
@@ -41,14 +41,6 @@ export const annotationsQueryOptions = (projectId: string, media: Media) =>
         queryKey: getAnnotationsQueryKey(projectId, media),
         queryFn: () => annotationsQueryFn(projectId, media),
     });
-
-const isValidAnnotation = (annotation: AnnotationDTO): boolean => {
-    if (annotation.shape.type === 'polygon' && isEmpty(annotation.shape.points)) {
-        return false;
-    }
-
-    return true;
-};
 
 const annotationsQueryFn = async (
     projectId: string,
@@ -92,14 +84,7 @@ const annotationsQueryFn = async (
         };
     }
 
-    if (data === undefined) {
-        return data;
-    }
-
-    return {
-        ...data,
-        annotations: data.annotations.filter(isValidAnnotation),
-    };
+    return data;
 };
 
 export const useAnnotationsQuery = (media: Media) => {

@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkmark } from '@geti-ui/ui/icons';
+import { Checkmark } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 
 import classes from './silent-checkbox.module.scss';

@@ -3,7 +3,7 @@
 
 import { Dispatch, SetStateAction } from 'react';
 
-import { View } from '@geti-ui/ui';
+import { View } from '@geti/ui';
 
 import { TrainingConfiguration } from '../../../../../constants/shared-types';
 import { LearningParameters } from './learning-parameters/learning-parameters.component';

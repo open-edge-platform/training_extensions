@@ -6,8 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
-
-import sharedEslintConfig from './eslint.shared.config.js';
+import sharedEslintConfig from '@geti/config/lint';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -22,22 +21,22 @@ const compat = new FlatCompat({
 const restrictedImportPaths = [
     {
         name: '@adobe/react-spectrum',
-        message: 'Use component from the @geti-ui/ui package instead.',
+        message: 'Use component from the @geti/ui folder instead.',
     },
 ];
 
 const restrictedImportPatterns = [
     {
         group: ['@react-spectrum'],
-        message: 'Use component from the @geti-ui/ui package instead.',
+        message: 'Use component from the @geti/ui folder instead.',
     },
     {
         group: ['@react-types/*'],
-        message: 'Use type from the @geti-ui/ui package instead.',
+        message: 'Use type from the @geti/ui folder instead.',
     },
     {
         group: ['@spectrum-icons'],
-        message: 'Use icons from the @geti-ui/ui/icons package instead.',
+        message: 'Use icons from the @geti/ui/icons folder instead.',
     },
     {
         group: ['src/*'],

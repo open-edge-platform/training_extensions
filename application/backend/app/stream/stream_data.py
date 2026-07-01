@@ -2,13 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from uuid import UUID
 
 import numpy as np
-
-if TYPE_CHECKING:
-    from model_api.models.result import Result
+from model_api.models.result import Result
 
 
 @dataclass(kw_only=True)
@@ -17,7 +15,7 @@ class InferenceData:
     InferenceData represents the data that is produced by the inference stage of the pipeline.
     """
 
-    prediction: "Result"  # prediction result, e.g., bounding boxes, masks, etc.
+    prediction: Result  # prediction result, e.g., bounding boxes, masks, etc.
     visualized_prediction: np.ndarray  # visualized prediction (e.g., bounding boxes, masks, etc. drawn on the frame)
     model_id: UUID  # ID of the model that produced the prediction
 

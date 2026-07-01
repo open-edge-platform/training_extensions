@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Content, Divider, Flex, Heading, Text, View } from '@geti-ui/ui';
+import { Button, Content, Divider, Flex, Heading, Text, View } from '@geti/ui';
 
 import { Link } from '../../platform/components/link.component';
 import { useAcceptLicense } from './api/use-accept-license.hook';

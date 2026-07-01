@@ -160,13 +160,6 @@ class DatumaroSampleToGetiAnnotationConverter:
         annotations = []
         if polygons is not None and (label_refs := self.__convert_labels_to_refs(labels)):
             for idx, polygon in enumerate(polygons):
-                # Skip empty (zero-point) polygons. These occur when a source dataset contains
-                # bounding-box-only annotations (e.g. COCO annotations with an empty "segmentation"
-                # field): the importer still emits a polygon slot for each annotation, but with no
-                # points. Importing them as empty polygons would create labeled shapes with no
-                # geometry, so they are dropped here.
-                if len(polygon) == 0:
-                    continue
                 if (label_ref := label_refs[idx]) is not None:
                     annotations.append(
                         DatasetItemAnnotation(

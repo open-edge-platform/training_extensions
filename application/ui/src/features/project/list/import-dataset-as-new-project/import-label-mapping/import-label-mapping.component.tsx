@@ -3,7 +3,7 @@
 
 import { useActionState } from 'react';
 
-import { Checkbox, dimensionValue, Divider, Flex, Form, Heading, View } from '@geti-ui/ui';
+import { Checkbox, dimensionValue, Divider, Flex, Form, Heading, View } from '@geti/ui';
 import { useSubmitJob } from 'hooks/api/jobs/jobs.hook';
 import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { useImportDatasetAsNewProject } from 'hooks/storage/use-import-dataset-as-new-project.hook';

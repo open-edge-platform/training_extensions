@@ -1,14 +1,14 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Flex, Heading, View } from '@geti-ui/ui';
+import { dimensionValue, Flex, Heading, View } from '@geti/ui';
 import { useCancelJob, useGetCurrentRunningJobs } from 'hooks/api/jobs/jobs.hook';
 import { isEmpty, isNil } from 'lodash-es';
 
 import { type DatasetRevision } from '../../../../constants/shared-types';
 import { useGetTaskModelArchitectures } from '../../hooks/api/use-get-model-architectures.hook';
+import { ModelsTableHeader } from '../components/models-table-header.component';
 import { GroupByMode } from '../types';
-import { RunningJobTableHeader } from './running-job-table-header.component';
 import { RunningModelRow } from './running-model-row.component';
 
 type CurrentModelRunningProps = {
@@ -43,7 +43,7 @@ export const CurrentModelRunning = ({ groupBy, datasetRevisions }: CurrentModelR
             </Heading>
 
             <View backgroundColor={'gray-75'}>
-                <RunningJobTableHeader groupBy={groupBy} />
+                <ModelsTableHeader />
 
                 <View>
                     {activeRunningJobs.map((job) => (

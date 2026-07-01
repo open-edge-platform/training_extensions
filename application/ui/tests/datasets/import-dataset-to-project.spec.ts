@@ -34,9 +34,6 @@ test.describe('Import dataset to project', () => {
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(mockedProject, { status: 200 });
             }),
-            http.get('/api/projects', () => {
-                return HttpResponse.json([mockedProject]);
-            }),
             http.get('/api/staged_datasets/{staged_dataset_id}', () => {
                 return HttpResponse.json(stagedDatasetWithMetadata, { status: 200 });
             }),

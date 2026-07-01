@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Content, Dialog, DialogTrigger, Flex, PressableElement, Text } from '@geti-ui/ui';
+import { Content, Dialog, DialogTrigger, Flex, PressableElement, Text } from '@geti/ui';
 import { useDatasetFiltersSearchParams } from 'hooks/use-dataset-filters-search-params.hook';
 import { useProjectLabels } from 'hooks/use-project-labels.hook';
 import { isEmpty } from 'lodash-es';
@@ -34,29 +34,21 @@ export const MediaFilterLabels = () => {
 
     return (
         <DialogTrigger hideArrow type='popover'>
-            <PressableElement>
-                <div role='button' aria-label='Filter by labels'>
-                    <Flex
-                        gap={'size-40'}
-                        wrap={'wrap'}
-                        width={'size-3000'}
-                        height={'size-400'}
-                        alignItems={'center'}
-                        UNSAFE_className={classes.filterContainer}
-                    >
-                        {filteredLabels.map((label) => (
-                            <FilterChips
-                                key={label.id}
-                                name={label.name}
-                                onClose={() => handleRemoveFilter(label.id)}
-                            />
-                        ))}
+            <PressableElement aria-label='Filter by labels'>
+                <Flex
+                    gap={'size-40'}
+                    wrap={'wrap'}
+                    width={'size-3000'}
+                    height={'size-400'}
+                    alignItems={'center'}
+                    UNSAFE_className={classes.filterContainer}
+                >
+                    {filteredLabels.map((label) => (
+                        <FilterChips key={label.id} name={label.name} onClose={() => handleRemoveFilter(label.id)} />
+                    ))}
 
-                        {isEmpty(filteredLabels) && (
-                            <Text UNSAFE_className={classes.searchPlaceholder}>Search labels</Text>
-                        )}
-                    </Flex>
-                </div>
+                    {isEmpty(filteredLabels) && <Text UNSAFE_className={classes.searchPlaceholder}>Search labels</Text>}
+                </Flex>
             </PressableElement>
 
             <Dialog width={'size-5000'} UNSAFE_className={classes.dialog} aria-label='Filter media items'>

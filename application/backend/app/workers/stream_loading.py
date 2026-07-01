@@ -102,15 +102,6 @@ class StreamLoader(BaseProcessWorker):
                     _enqueue_frame_with_retry(
                         self._frame_queue, stream_data, self._video_stream.is_real_time(), self._stop_event
                     )
-                elif self._video_stream.is_finished():
-                    # Finite source fully consumed: stop the stream instead of polling forever.
-                    logger.info(
-                        "Video stream finished for source id={} name={!r}; stopping stream until source changes.",
-                        self._source.id,
-                        self._source.name,
-                    )
-                    self._video_stream.release()
-                    self._video_stream = None
                 else:
                     self.stop_aware_sleep(0.1)
             except Exception:

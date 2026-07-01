@@ -176,7 +176,7 @@ class TestImportDatasetAsNewProject:
         project.task = Mock(spec=Task)
         with (
             patch.object(fxt_import, "import_dataset", return_value=dataset) as mock_import_dataset,
-            patch.object(fxt_import, "_has_array_label", return_value=False) as mock_multilabel_dataset,
+            patch.object(fxt_import, "_is_multilabel_dataset", return_value=False) as mock_multilabel_dataset,
             patch.object(fxt_import, "create_project", return_value=project) as mock_create_project,
             patch.object(fxt_import, "prepare_dataset", return_value=dataset) as mock_prepare_dataset,
             patch.object(fxt_import, "create_items") as mock_create,

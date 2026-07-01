@@ -5,7 +5,7 @@ import '@wessberg/pointer-events';
 
 import { ReactNode } from 'react';
 
-import { ThemeProvider } from '@geti-ui/ui';
+import { ThemeProvider } from '@geti/ui/theme';
 import { fireEvent, screen } from '@testing-library/react';
 import { render } from 'test-utils/render';
 

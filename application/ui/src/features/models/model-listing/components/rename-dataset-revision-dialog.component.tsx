@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Button, ButtonGroup, Content, Dialog, Divider, Form, Heading, TextField } from '@geti-ui/ui';
+import { Button, ButtonGroup, Content, Dialog, Divider, Form, Heading, TextField } from '@geti/ui';
 
 interface RenameDatasetRevisionDialogProps {
     currentName: string;

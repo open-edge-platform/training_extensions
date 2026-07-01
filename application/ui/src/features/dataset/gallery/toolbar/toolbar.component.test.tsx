@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ViewModes } from '@geti-ui/ui';
+import { ViewModes } from '@geti/ui';
 import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
 import { getMockedDatasetStatistics } from 'mocks/mock-dataset-item';
 import { getMockedMediaImage } from 'mocks/mock-media';
@@ -108,7 +108,6 @@ describe('Toolbar', () => {
             selectedKeys: new Set(),
             setSelectedKeys: vi.fn(),
             toggleSelectedKeys: vi.fn(),
-            isSelected: vi.fn().mockReturnValue(false),
         });
     });
 
@@ -148,7 +147,6 @@ describe('Toolbar', () => {
             selectedKeys: new Set([item1.id, item2.id]),
             setSelectedKeys: vi.fn(),
             toggleSelectedKeys: vi.fn(),
-            isSelected: vi.fn().mockReturnValue(false),
         });
 
         await renderToolbar([item1, item2]);
@@ -177,7 +175,6 @@ describe('Toolbar', () => {
             selectedKeys: new Set([firstItem.id]),
             setSelectedKeys: vi.fn(),
             toggleSelectedKeys: vi.fn(),
-            isSelected: vi.fn().mockReturnValue(false),
         });
 
         await renderToolbar([firstItem]);
@@ -195,7 +192,6 @@ describe('Toolbar', () => {
             selectedKeys: new Set(),
             setSelectedKeys: vi.fn(),
             toggleSelectedKeys: vi.fn(),
-            isSelected: vi.fn().mockReturnValue(false),
         });
 
         await renderToolbar([firstItem]);
@@ -213,7 +209,6 @@ describe('Toolbar', () => {
             selectedKeys: new Set(firstItem.id),
             setSelectedKeys: vi.fn(),
             toggleSelectedKeys: vi.fn(),
-            isSelected: vi.fn().mockReturnValue(false),
         });
 
         await renderToolbar([firstItem]);

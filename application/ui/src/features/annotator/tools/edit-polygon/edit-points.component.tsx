@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { ActionButton } from '@geti-ui/ui';
+import { ActionButton } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { useEventListener } from '../../../../hooks/event-listener.hook';

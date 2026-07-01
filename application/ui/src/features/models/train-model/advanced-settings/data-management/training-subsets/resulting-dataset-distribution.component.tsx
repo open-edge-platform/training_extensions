@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, repeat, Text, View } from '@geti-ui/ui';
+import { Flex, Grid, repeat, Text, View } from '@geti/ui';
 
 import { distributeByLargestRemainder } from '../../../../utils';
 import { LABEL_COLOR_MAPPING, SubsetTile } from './subset-distribution-stats.component';

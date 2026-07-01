@@ -414,7 +414,7 @@ class TestRFDETR:
     def test_create_model(self) -> None:
         """Test RF-DETR model creation."""
         model = RFDETR(
-            model_name="rfdetr_medium",
+            model_name="rfdetr_base",
             label_info=10,
         )
         created_model = model._create_model()
@@ -429,17 +429,17 @@ class TestRFDETR:
     def test_default_preprocessing_params(self) -> None:
         """Test default preprocessing parameters for different model variants."""
         model = RFDETR(
-            model_name="rfdetr_medium",
+            model_name="rfdetr_base",
             label_info=3,
         )
 
         # Check that default params use 0-1 range normalization
         default_params = model._default_preprocessing_params
-        assert "rfdetr_medium" in default_params
-        assert default_params["rfdetr_medium"].input_size == (576, 576)
+        assert "rfdetr_base" in default_params
+        assert default_params["rfdetr_base"].input_size == (560, 560)
         # ImageNet mean in 0-1 range
-        assert default_params["rfdetr_medium"].mean == (0.485, 0.456, 0.406)
-        assert default_params["rfdetr_medium"].std == (0.229, 0.224, 0.225)
+        assert default_params["rfdetr_base"].mean == (0.485, 0.456, 0.406)
+        assert default_params["rfdetr_base"].std == (0.229, 0.224, 0.225)
 
     def test_optimizer_configuration(self) -> None:
         """Test that optimizer configuration is properly set."""
@@ -471,7 +471,7 @@ class TestRFDETR:
         input_sizes = {
             "rfdetr_nano": (384, 384),
             "rfdetr_small": (512, 512),
-            "rfdetr_medium": (576, 576),
+            "rfdetr_base": (560, 560),
         }
         model = RFDETR(
             model_name=model_name,  # pyrefly: ignore[bad-argument-type]
@@ -504,7 +504,7 @@ class TestRFDETR:
         input_sizes = {
             "rfdetr_nano": (384, 384),
             "rfdetr_small": (512, 512),
-            "rfdetr_medium": (576, 576),
+            "rfdetr_base": (560, 560),
         }
         input_size = input_sizes[model_name]
 
@@ -540,7 +540,7 @@ class TestRFDETR:
         input_sizes = {
             "rfdetr_nano": (384, 384),
             "rfdetr_small": (512, 512),
-            "rfdetr_medium": (576, 576),
+            "rfdetr_base": (560, 560),
         }
         input_size = input_sizes[model_name]
 

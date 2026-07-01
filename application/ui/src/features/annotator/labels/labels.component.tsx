@@ -3,7 +3,7 @@
 
 import { CSSProperties, Fragment, useMemo } from 'react';
 
-import { Divider, Flex, Pressable, Text, Tooltip, TooltipTrigger } from '@geti-ui/ui';
+import { Divider, Flex, Pressable, Text, Tooltip, TooltipTrigger } from '@geti/ui';
 import { clsx } from 'clsx';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';

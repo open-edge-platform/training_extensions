@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 import platform
 import re
-from typing import Any
 
 import cv2
+import openvino as ov
 import psutil
+import torch
 from cv2_enumerate_cameras import enumerate_cameras
 from loguru import logger
 
@@ -18,87 +19,6 @@ CV2_BACKENDS = {
     "Linux": cv2.CAP_V4L2,
     "Darwin": cv2.CAP_AVFOUNDATION,
 }
-
-# torch is imported lazily on first use to keep server startup fast (importing torch eagerly
-# added several seconds to boot). Kept as a module-level name so tests can patch
-# ``app.services.system_service.torch``. Typed as Any because the module is loaded lazily.
-torch: Any = None
-
-
-def _get_torch() -> Any:
-    """Import torch on first use and cache it on the module.
-
-    Returns:
-        The imported ``torch`` module.
-    """
-    if torch is None:
-        import torch as _torch
-
-        # Update the module attribute (rather than a `global` statement) so it stays patchable
-        # via ``app.services.system_service.torch`` while satisfying the linter.
-        globals()["torch"] = _torch
-    return torch
-
-
-def _get_available_devices() -> tuple[Any, list[str]] | None:
-    import openvino as ov
-
-    try:
-        core = ov.Core()
-        return core, list(core.available_devices)
-    except Exception:
-        logger.exception("Failed to query OpenVINO inference devices; falling back to CPU only.")
-        return None
-
-
-def _device_info(core: Any, ov_device: str) -> DeviceInfo | None:
-    if ov_device == "CPU":
-        return DeviceInfo.cpu()
-
-    if ov_device.startswith("GPU"):
-        return _gpu_device_info(core, ov_device)
-
-    logger.debug("Skipping unsupported OpenVINO inference device: {}", ov_device)
-    return None
-
-
-def _gpu_device_info(core: Any, ov_device: str) -> DeviceInfo | None:
-    try:
-        device_type = core.get_property(ov_device, "DEVICE_TYPE")
-        name = str(core.get_property(ov_device, "FULL_DEVICE_NAME"))
-    except Exception:
-        logger.exception("Failed to query required OpenVINO GPU properties for '{}'; skipping.", ov_device)
-        return None
-
-    if not _is_supported_gpu(device_type=device_type, name=name):
-        logger.debug("Skipping non-Intel discrete OpenVINO GPU device: {} ({})", ov_device, name)
-        return None
-
-    return DeviceInfo(
-        type=DeviceType.XPU,
-        name=name,
-        memory=_gpu_memory(core, ov_device),
-        index=_gpu_index(ov_device),
-    )
-
-
-def _is_supported_gpu(device_type: Any, name: str) -> bool:
-    is_integrated = "integrated" in str(device_type).lower()
-    is_intel = "intel" in name.lower()
-    return is_integrated or is_intel
-
-
-def _gpu_index(ov_device: str) -> int:
-    if ov_device == "GPU":
-        return 0
-    return int(ov_device.split(".", maxsplit=1)[1])
-
-
-def _gpu_memory(core: Any, ov_device: str) -> int | None:
-    try:
-        return int(core.get_property(ov_device, "GPU_DEVICE_TOTAL_MEM_SIZE"))
-    except Exception:
-        return None
 
 
 class SystemService:
@@ -134,10 +54,8 @@ class SystemService:
         Returns:
             list[DeviceInfo]: List of available devices
         """
-        torch = _get_torch()
-
         # CPU is always available
-        devices: list[DeviceInfo] = [DeviceInfo.cpu()]
+        devices: list[DeviceInfo] = [DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)]
 
         # Check for Intel XPU devices
         if torch.xpu.is_available():
@@ -170,7 +88,7 @@ class SystemService:
     @staticmethod
     def get_inference_devices() -> list[DeviceInfo]:
         """
-        Get available compute devices for inference (CPU, integrated GPUs, and Intel discrete GPUs).
+        Get available compute devices for inference (CPU, XPU, ...).
 
         Unlike training (which relies on PyTorch), inference is performed via OpenVINO, so devices are listed using
         OpenVINO's `core.available_devices` API.
@@ -178,23 +96,38 @@ class SystemService:
         OpenVINO returns device names such as 'CPU', 'GPU', 'GPU.0', 'GPU.1', ... Per the OpenVINO documentation,
         when an integrated GPU is present it always takes id 0, and 'GPU' is an alias for 'GPU.0'.
 
-        A GPU is included as an inference device when it is either an integrated GPU (iGPU) or an Intel-branded
-        discrete GPU (dGPU), since only Intel GPUs can perform OpenVINO inference. Non-Intel discrete GPUs are
-        intentionally excluded. The integrated vs. discrete distinction is made using OpenVINO's `DEVICE_TYPE`
-        property, and the brand is determined from the `FULL_DEVICE_NAME` property.
-
         Returns:
             list[DeviceInfo]: List of available inference devices.
         """
-        openvino_devices = _get_available_devices()
-        if openvino_devices is None:
-            return [DeviceInfo.cpu()]
+        try:
+            core = ov.Core()
+            available_devices: list[str] = list(core.available_devices)
+        except Exception:
+            logger.exception("Failed to query OpenVINO inference devices; falling back to CPU only.")
+            return [DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)]
 
-        core, available_devices = openvino_devices
-        devices = [device for ov_device in available_devices if (device := _device_info(core, ov_device)) is not None]
+        devices: list[DeviceInfo] = []
+        for ov_device in available_devices:
+            try:
+                if ov_device == "CPU":
+                    devices.append(DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None))
+                elif ov_device.startswith("GPU"):
+                    index = 0 if ov_device == "GPU" else int(ov_device.split(".", 1)[1])
+                    name = core.get_property(ov_device, "FULL_DEVICE_NAME")
+                    try:
+                        memory = int(core.get_property(ov_device, "GPU_DEVICE_TOTAL_MEM_SIZE"))
+                    except Exception:
+                        memory = None
+                    devices.append(DeviceInfo(type=DeviceType.XPU, name=str(name), memory=memory, index=index))
+                else:
+                    # Other OpenVINO devices (e.g., NPU) are not currently mapped to DeviceType.
+                    logger.debug("Skipping unsupported OpenVINO inference device: {}", ov_device)
+            except Exception:
+                logger.exception("Failed to query properties for OpenVINO device '{}'", ov_device)
 
-        if not any(device.type == DeviceType.CPU for device in devices):
-            devices.insert(0, DeviceInfo.cpu())
+        # Ensure CPU is always present.
+        if not any(d.type == DeviceType.CPU for d in devices):
+            devices.insert(0, DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None))
 
         return devices
 
@@ -252,9 +185,9 @@ class SystemService:
 
         device_type, device_index = self._parse_device(device_str)
         if device_type == DeviceType.CPU:
-            return DeviceInfo.cpu()
+            return DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
         if device_type == DeviceType.AUTO:
-            return DeviceInfo.auto()
+            return DeviceInfo(type=DeviceType.AUTO, name="AUTO", memory=None, index=None)
         return next(
             device for device in self.get_devices() if device.type == device_type and device.index == device_index
         )
@@ -280,9 +213,9 @@ class SystemService:
         if device_type == DeviceType.CUDA:
             raise ValueError(f"Device '{device_str}' is not valid for inference (CUDA devices are not supported).")
         if device_type == DeviceType.AUTO:
-            return DeviceInfo.auto()
+            return DeviceInfo(type=DeviceType.AUTO, name="AUTO", memory=None, index=None)
         if device_type == DeviceType.CPU:
-            return DeviceInfo.cpu()
+            return DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
 
         for available_device in self.get_inference_devices():
             if device_type == available_device.type and device_index == (available_device.index or 0):

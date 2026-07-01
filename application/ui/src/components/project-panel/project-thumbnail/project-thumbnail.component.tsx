@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { PhotoPlaceholder, View, type DimensionValue } from '@geti-ui/ui';
+import { PhotoPlaceholder, View, type DimensionValue } from '@geti/ui';
 
 import { type Project } from '../../../constants/shared-types';
 import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
@@ -31,7 +31,7 @@ export const ProjectThumbnail = ({ project, height, width }: ProjectThumbnailPro
     }
 
     return (
-        <View width={width} height={height} flexShrink={0} UNSAFE_className={classes.thumbnailWrapper}>
+        <View width={width} height={height} UNSAFE_className={classes.thumbnailWrapper}>
             <img
                 src={getProjectThumbnailUrl(project.id)}
                 alt={project.name}

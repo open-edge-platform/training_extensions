@@ -3,7 +3,7 @@
 
 import { ReactNode, Suspense } from 'react';
 
-import { Flex, Heading, Item, Loading, TabList, TabPanels, Tabs, Text, View } from '@geti-ui/ui';
+import { Flex, Heading, Item, Loading, TabList, TabPanels, Tabs, Text, View } from '@geti/ui';
 
 import { SinkActions } from '../sinks/sink-actions.component';
 import { SourceActions } from '../sources/source-actions.component';

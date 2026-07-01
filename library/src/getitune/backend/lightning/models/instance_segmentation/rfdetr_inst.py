@@ -8,14 +8,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar, Literal
 
 import torch
-from rfdetr.config import (
-    RFDETRSeg2XLargeConfig,
-    RFDETRSegLargeConfig,
-    RFDETRSegMediumConfig,
-    RFDETRSegNanoConfig,
-    RFDETRSegSmallConfig,
-    RFDETRSegXLargeConfig,
+from rfdetr import (
+    RFDETRSeg2XLarge,
+    RFDETRSegLarge,
+    RFDETRSegMedium,
+    RFDETRSegNano,
+    RFDETRSegSmall,
+    RFDETRSegXLarge,
 )
+from torch.export import Dim
 
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
@@ -42,7 +43,7 @@ class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inc
     that combines a DINOv2 backbone with a lightweight DETR decoder. This implementation
     adds instance segmentation support with a mask prediction head.
 
-    This implementation uses the rfdetr Python package with RFDETRSeg series for the core model components.
+    This implementation uses the rfdetr Python package with RFDETRSegPreview for the core model components.
 
     Args:
         label_info: Information about the labels.
@@ -76,13 +77,13 @@ class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inc
         "rfdetr_seg_2xl": "https://storage.geti.intel.com/weights/rf-detr-seg-2xl-ft.pth",
     }
 
-    _model_config_mapping: ClassVar[dict[str, type]] = {
-        "rfdetr_seg_n": RFDETRSegNanoConfig,
-        "rfdetr_seg_s": RFDETRSegSmallConfig,
-        "rfdetr_seg_m": RFDETRSegMediumConfig,
-        "rfdetr_seg_l": RFDETRSegLargeConfig,
-        "rfdetr_seg_xl": RFDETRSegXLargeConfig,
-        "rfdetr_seg_2xl": RFDETRSeg2XLargeConfig,
+    _model_class_mapping: ClassVar[dict[str, type]] = {
+        "rfdetr_seg_n": RFDETRSegNano,
+        "rfdetr_seg_s": RFDETRSegSmall,
+        "rfdetr_seg_m": RFDETRSegMedium,
+        "rfdetr_seg_l": RFDETRSegLarge,
+        "rfdetr_seg_xl": RFDETRSegXLarge,
+        "rfdetr_seg_2xl": RFDETRSeg2XLarge,
     }
 
     input_size_multiplier = 24
@@ -157,9 +158,8 @@ class RFDETRInst(RFDETRMixin, LightningInstanceSegModel):  # pyrefly: ignore[inc
             onnx_export_configuration={
                 "input_names": ["images"],
                 "output_names": ["boxes", "labels", "masks"],
-                "dynamic_axes": {"images": {0: "batch"}},
-                "dynamo": False,
-                "do_constant_folding": True,
+                "dynamic_shapes": {"inputs": {0: Dim("batch")}},
+                "autograd_inlining": False,
                 "opset_version": 18,
             },
             output_names=["boxes", "labels", "masks"],

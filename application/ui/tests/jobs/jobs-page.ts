@@ -17,11 +17,11 @@ export class JobsPage {
     }
 
     getRunningTag() {
-        return this.page.getByLabel('Running', { exact: true });
+        return this.page.getByRole('button', { name: 'Running', exact: true });
     }
 
     getStatusTag() {
-        return this.page.getByLabel('Training in progress...');
+        return this.page.getByRole('button', { name: 'Training in progress...' });
     }
 
     getCancelButton() {
