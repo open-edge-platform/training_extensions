@@ -36,6 +36,6 @@ export const DatasetRevisionStatistics = ({ datasetRevisionId }: DatasetRevision
     const totalAnnotatedItems = annotatedItems?.pagination.total ?? 0;
 
     return (
-        <DatasetStatistics label='images' totalMediaItems={totalMediaItems} totalAnnotatedItems={totalAnnotatedItems} />
+        <DatasetStatistics label='items' totalMediaItems={totalMediaItems} totalAnnotatedItems={totalAnnotatedItems} />
     );
 };
