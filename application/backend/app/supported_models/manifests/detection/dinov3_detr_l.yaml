@@ -14,7 +14,7 @@ stats:
     coco_map_50_95: 56.0
 
 capabilities:
-  tiling: false
+  tiling: true
 
 hyperparameters:
   training:
