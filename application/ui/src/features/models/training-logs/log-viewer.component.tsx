@@ -3,8 +3,19 @@
 
 import { useMemo, useState } from 'react';
 
-import { ActionButton, Content, ContextualHelp, Flex, Heading, Item, Picker, SearchField, Text, View } from '@geti/ui';
-import { ChevronDownLight } from '@geti/ui/icons';
+import {
+    ActionButton,
+    Content,
+    ContextualHelp,
+    Flex,
+    Heading,
+    Item,
+    Picker,
+    SearchField,
+    Text,
+    View,
+} from '@geti-ui/ui';
+import { ChevronDownLight } from '@geti-ui/ui/icons';
 
 import { useScrollAnchor } from './hooks/use-scroll-anchor.hook';
 import { LogEntry } from './log-entry.component';

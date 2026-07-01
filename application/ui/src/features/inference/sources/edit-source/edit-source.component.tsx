@@ -3,11 +3,13 @@
 
 import { ReactNode, useRef } from 'react';
 
-import { ActionButton, Button, ButtonGroup, Divider, Flex, Form, Text, View } from '@geti/ui';
-import { Back } from '@geti/ui/icons';
+import { ActionButton, Button, ButtonGroup, Divider, Flex, Form, Text, View } from '@geti-ui/ui';
+import { Back } from '@geti-ui/ui/icons';
+import { useQueryClient } from '@tanstack/react-query';
 import { useConnectSourceToPipeline } from 'hooks/api/pipeline.hook';
 
 import type { SourceConfigPayload } from '../../../../constants/shared-types';
+import { testSourceQueryOptions } from '../api/use-test-source';
 import { useSourceAction } from '../hooks/use-source-action.hook';
 
 import classes from './edit-source.module.scss';
@@ -31,6 +33,7 @@ export const EditSource = <T extends SourceConfigPayload>({
 }: EditSourceProps<T>) => {
     const connectToPipeline = useRef(false);
     const connectToPipelineMutation = useConnectSourceToPipeline();
+    const queryClient = useQueryClient();
 
     const [state, submitAction, isPending] = useSourceAction({
         config,
@@ -39,6 +42,7 @@ export const EditSource = <T extends SourceConfigPayload>({
             connectToPipeline.current && (await connectToPipelineMutation(sourceId));
             connectToPipeline.current = false;
             onSaved();
+            void queryClient.fetchQuery(testSourceQueryOptions(sourceId)).catch(() => undefined);
         },
         bodyFormatter,
     });

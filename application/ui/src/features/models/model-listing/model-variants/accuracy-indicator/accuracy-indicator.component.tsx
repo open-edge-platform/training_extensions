@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from '@geti/ui';
+import { Flex } from '@geti-ui/ui';
 import { Pie, PieChart, Sector } from 'recharts';
 
 import { getColor } from './util';

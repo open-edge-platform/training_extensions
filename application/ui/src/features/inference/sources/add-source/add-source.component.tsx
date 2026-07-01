@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { Button, Flex, Form } from '@geti/ui';
+import { Button, Flex, Form } from '@geti-ui/ui';
 
 import type { SourceConfigPayload } from '../../../../constants/shared-types';
 import { useConnectSourceToPipeline } from '../../../../hooks/api/pipeline.hook';
@@ -40,7 +40,7 @@ export const AddSource = <T extends SourceConfigPayload>({
                 <>{componentFields(state)}</>
 
                 <Button type='submit' isDisabled={isPending} UNSAFE_style={{ maxWidth: 'fit-content' }}>
-                    Add & Connect
+                    Add & Use
                 </Button>
             </Flex>
         </Form>

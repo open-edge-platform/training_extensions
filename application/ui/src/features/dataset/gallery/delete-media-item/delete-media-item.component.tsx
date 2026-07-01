@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, DialogContainer, Tooltip, TooltipTrigger } from '@geti/ui';
-import { Delete } from '@geti/ui/icons';
+import { ActionButton, DialogContainer, Tooltip, TooltipTrigger } from '@geti-ui/ui';
+import { Delete } from '@geti-ui/ui/icons';
 
 import { useDeleteMediaItem } from '../../api/use-delete-media-item';
 import { AlertDialogContent } from './alert-dialog-content.component';

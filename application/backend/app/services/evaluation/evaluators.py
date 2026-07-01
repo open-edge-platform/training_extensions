@@ -7,14 +7,8 @@ from typing import Any, cast
 
 import numpy as np
 from datumaro.experimental import Dataset
-from datumaro.experimental.categories import LabelCategories
-from datumaro.experimental.fields import LabelField
 from faster_coco_eval import COCO, COCOeval_faster
 from numpy.typing import NDArray
-from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_score, recall_score
-from sklearn.preprocessing import MultiLabelBinarizer
-
-from app.datumaro_converter import DetectionTrainingSample
 
 
 def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
@@ -28,6 +22,8 @@ def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
     Returns:
         dict: COCO formatted dataset.
     """
+    from datumaro.experimental.categories import LabelCategories
+
     coco_dataset_dict: dict[str, list] = {"images": [], "annotations": [], "categories": []}
 
     # Add categories
@@ -142,6 +138,8 @@ class AccuracyEvaluator(EvaluatorWithLabelArrays):
         super().__init__(predictions_dataset=predictions_dataset, ground_truth_dataset=ground_truth_dataset)
 
     def precision(self, averaging_method: AveragingMethod = AveragingMethod.MACRO) -> float:
+        from sklearn.metrics import precision_score
+
         return float(
             precision_score(
                 y_true=self._gt_labels,
@@ -151,6 +149,8 @@ class AccuracyEvaluator(EvaluatorWithLabelArrays):
         )
 
     def recall(self, averaging_method: AveragingMethod = AveragingMethod.MACRO) -> float:
+        from sklearn.metrics import recall_score
+
         return float(
             recall_score(
                 y_true=self._gt_labels,
@@ -160,9 +160,13 @@ class AccuracyEvaluator(EvaluatorWithLabelArrays):
         )
 
     def accuracy(self) -> float:
+        from sklearn.metrics import accuracy_score
+
         return float(accuracy_score(y_true=self._gt_labels, y_pred=self._pred_labels))
 
     def f1_score(self, averaging_method: AveragingMethod = AveragingMethod.MACRO) -> float:
+        from sklearn.metrics import f1_score
+
         return float(
             f1_score(
                 y_true=self._gt_labels,
@@ -180,6 +184,8 @@ class ConfusionMatrixEvaluator(EvaluatorWithLabelArrays):
 
     def confusion_matrix(self) -> np.ndarray:
         """Compute the confusion matrix"""
+        from sklearn.metrics import confusion_matrix
+
         return confusion_matrix(y_true=self._gt_labels, y_pred=self._pred_labels)
 
 
@@ -204,6 +210,8 @@ class MeanAveragePrecisionEvaluator(EvaluatorBase):
         return self.__pred_coco_dict
 
     def mean_average_precision(self) -> dict:
+        from app.datumaro_converter import DetectionTrainingSample
+
         gt_coco = COCO(self._gt_coco_dict)
         pred_coco = gt_coco.loadRes(self._pred_coco_dict["annotations"])
         coco_evaluator = COCOeval_faster(
@@ -219,6 +227,8 @@ class MultiClassClassificationEvaluator(AccuracyEvaluator, ConfusionMatrixEvalua
     """Evaluator for multi-class classification tasks."""
 
     def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
+        from datumaro.experimental.fields import LabelField
+
         if (
             cast(LabelField, predictions_dataset.schema.attributes["label"].field).multi_label
             or cast(LabelField, ground_truth_dataset.schema.attributes["label"].field).multi_label
@@ -242,6 +252,8 @@ class MultiLabelClassificationEvaluator(AccuracyEvaluator):
     """Evaluator for multi-label classification tasks."""
 
     def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
+        from datumaro.experimental.fields import LabelField
+
         if not (
             cast(LabelField, predictions_dataset.schema.attributes["label"].field).multi_label
             and cast(LabelField, ground_truth_dataset.schema.attributes["label"].field).multi_label
@@ -253,6 +265,8 @@ class MultiLabelClassificationEvaluator(AccuracyEvaluator):
         )
 
     def _build_label_arrays(self) -> tuple[NDArray[np.int_], NDArray[np.int_]]:
+        from sklearn.preprocessing import MultiLabelBinarizer
+
         mlb = MultiLabelBinarizer()
         gt_labels_list = [s.label for s in self.ground_truth_dataset]
         pred_labels_list = [s.label for s in self.predictions_dataset]

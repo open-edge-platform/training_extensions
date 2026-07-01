@@ -3,7 +3,7 @@
 
 import { ReactNode, RefObject, useRef } from 'react';
 
-import { DOMRefValue, Item, TabList, TabPanels, Tabs, Text, useUnwrapDOMRef, View } from '@geti/ui';
+import { DOMRefValue, Item, TabList, TabPanels, Tabs, Text, useUnwrapDOMRef, View } from '@geti-ui/ui';
 
 import { useTrainModelState } from '../train-model-provider.component';
 import { DataManagement } from './data-management/data-management.component';

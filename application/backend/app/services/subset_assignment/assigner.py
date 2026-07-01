@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
-from sklearn.preprocessing import MultiLabelBinarizer
-from skmultilearn.model_selection import IterativeStratification
 
 from app.models import DatasetItemSubset
 
@@ -27,6 +25,8 @@ class SubsetAssigner:
     """
 
     def __init__(self) -> None:
+        from sklearn.preprocessing import MultiLabelBinarizer
+
         self._mlb = MultiLabelBinarizer()
 
     def assign(
@@ -51,6 +51,8 @@ class SubsetAssigner:
         Returns:
             list[SubsetAssignment]: List of subset assignments for each item.
         """
+        from skmultilearn.model_selection import IterativeStratification
+
         if len(items) < 3:
             if not has_all_subsets_assigned:
                 raise ValueError(

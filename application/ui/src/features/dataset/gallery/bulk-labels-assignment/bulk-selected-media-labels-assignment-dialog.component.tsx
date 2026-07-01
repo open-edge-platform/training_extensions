@@ -14,7 +14,7 @@ import {
     Flex,
     Heading,
     Text,
-} from '@geti/ui';
+} from '@geti-ui/ui';
 import { useProject } from 'hooks/api/project.hook';
 
 import { useProjectLabelsWithEmptyLabel } from '../../../../shared/annotator/labels';

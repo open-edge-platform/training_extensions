@@ -113,6 +113,7 @@ def crop_and_resize_masks(
         inds = torch.from_numpy(inds).to(device=device)
 
     num_bbox = bboxes.shape[0]
+    # pyrefly: ignore[no-matching-overload]
     fake_inds = torch.arange(num_bbox, device=device).to(dtype=bboxes.dtype)[:, None]
     rois = torch.cat([fake_inds, bboxes], dim=1)  # Nx5
     rois = rois.to(device=device)

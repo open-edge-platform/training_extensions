@@ -55,6 +55,7 @@ CREATE_SOURCE_BODY_EXAMPLES = {
             "source_type": "video_file",
             "name": "Camera recording 123",
             "video_path": "/path/to/video.mp4",
+            "loop": False,
         },
     ),
     "images_folder": Example(

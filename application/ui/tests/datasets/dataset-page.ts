@@ -3,7 +3,7 @@
 
 import { type Page } from '@playwright/test';
 
-export const pluralizeItems = (count: number) => {
+const pluralizeItems = (count: number) => {
     const pluralRules = new Intl.PluralRules('en');
 
     return pluralRules.select(count) === 'one' ? 'item' : 'items';
@@ -50,7 +50,7 @@ export class DatasetPage {
     }
 
     getImagesCountText(count: number) {
-        return this.page.getByText(`${count} media item`);
+        return this.page.getByText(`${count} media ${pluralizeItems(count)}`);
     }
 
     getUploadInput() {
@@ -135,6 +135,14 @@ export class DatasetPage {
 
     clickContinue() {
         return this.getContinueButton().click();
+    }
+
+    getSkipButton() {
+        return this.page.getByRole('button', { name: 'Skip' });
+    }
+
+    clickSkip() {
+        return this.getSkipButton().click();
     }
 
     getBulkDialogAssignButton() {

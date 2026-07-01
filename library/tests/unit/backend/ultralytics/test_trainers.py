@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import Callable
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -84,6 +85,7 @@ def test_move_batch_to_device_uses_non_blocking_for_xpu() -> None:
 
     trainer = object.__new__(DetectionTrainer)
     trainer.device = torch.device("xpu:0")
+    trainer.args = SimpleNamespace(amp=True)
 
     tensor = MagicMock(spec=torch.Tensor)
     tensor.to.return_value = tensor
@@ -217,3 +219,48 @@ class TestProgressCallback:
         trainer._register_progress_callback()
 
         assert len(registered) == 0
+
+
+class TestDisableExternalLoggerCallbacks:
+    """getitune owns experiment tracking, so Ultralytics' bundled third-party
+    logger callbacks (MLflow, W&B, …) must be stripped to avoid duplicate runs
+    and hangs against remote tracking servers."""
+
+    @staticmethod
+    def _make_cb(module: str) -> Callable[[object], None]:
+        def _cb(trainer: object) -> None:
+            return None
+
+        _cb.__module__ = module
+        return _cb
+
+    def test_strips_external_logger_callbacks(self) -> None:
+        mlflow_cb = self._make_cb("ultralytics.utils.callbacks.mlflow")
+        wandb_cb = self._make_cb("ultralytics.utils.callbacks.wb")
+        base_cb = self._make_cb("ultralytics.utils.callbacks.base")
+        custom_cb = self._make_cb("getitune.backend.ultralytics.trainers.base")
+
+        trainer = object.__new__(DetectionTrainer)
+        trainer._use_getitune_data = True
+        trainer.callbacks = {
+            "on_pretrain_routine_end": [mlflow_cb, base_cb],
+            "on_fit_epoch_end": [mlflow_cb, wandb_cb],
+            "on_train_end": [mlflow_cb, custom_cb],
+        }
+
+        trainer._disable_external_logger_callbacks()
+
+        # External-logger callbacks removed across all events…
+        flat = [fn for fns in trainer.callbacks.values() for fn in fns]
+        assert mlflow_cb not in flat
+        assert wandb_cb not in flat
+        # …while base and getitune callbacks are preserved.
+        assert base_cb in trainer.callbacks["on_pretrain_routine_end"]
+        assert custom_cb in trainer.callbacks["on_train_end"]
+
+    def test_noop_when_no_callbacks_attr(self) -> None:
+        """Must not raise when the trainer has no callbacks dict yet."""
+        trainer = object.__new__(DetectionTrainer)
+        trainer._use_getitune_data = True
+        # No ``callbacks`` attribute set.
+        trainer._disable_external_logger_callbacks()  # should be a no-op

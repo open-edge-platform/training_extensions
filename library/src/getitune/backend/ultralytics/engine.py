@@ -13,10 +13,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Sequence
 
 import torch
+import yaml
 from torchvision import tv_tensors
 from ultralytics.utils.metrics import ClassifyMetrics, DetMetrics, SegmentMetrics
 
 from getitune.backend.ultralytics.data.geometry import scale_boxes_to_letterbox, scale_masks_to_letterbox
+from getitune.backend.ultralytics.tools.configurator import Configurator
 from getitune.data.entity.base import ImageInfo
 from getitune.data.entity.sample import Prediction, SampleBatch
 from getitune.data.module import DataModule
@@ -33,6 +35,7 @@ from .models.base import UltralyticsModel
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
+    from lightning_fabric.plugins.precision.precision import _PRECISION_INPUT
     from torchmetrics import Metric
     from ultralytics import YOLO
 
@@ -65,7 +68,7 @@ class UltralyticsEngine(Engine):
         self,
         model: UltralyticsModel,
         data: DataModule | PathLike,
-        work_dir: PathLike = "./getitune-workspace",
+        work_dir: PathLike | None = None,
         device: str | DeviceType = "auto",
         checkpoint: PathLike | None = None,
         train_args: Mapping[str, Any] | None = None,
@@ -92,7 +95,7 @@ class UltralyticsEngine(Engine):
             raise TypeError(msg)
 
         self._model = model
-        self._work_dir = Path(work_dir).resolve()
+        self._work_dir = Path(work_dir or "./getitune-workspace").resolve()
         self._work_dir.mkdir(parents=True, exist_ok=True)
         self._device = self._resolve_device(device)
         self._kwargs = kwargs
@@ -126,6 +129,7 @@ class UltralyticsEngine(Engine):
         batch: int | None = None,
         lr0: float | None = None,
         patience: int | None = None,
+        precision: _PRECISION_INPUT | None = "16-mixed",
         callbacks: list[Any] | None = None,
         **kwargs,
     ) -> METRICS:
@@ -136,6 +140,13 @@ class UltralyticsEngine(Engine):
             batch: Batch size.
             lr0: Initial learning rate.
             patience: Early stopping patience (0 to disable).
+            precision: Training precision.  Accepted values: ``"16-mixed"``, ``"16"``, ``"bf16-mixed"``,
+                ``"bf16"`` (mixed precision / AMP), ``"32"``, ``"32-true"``
+                (full FP32).  ``None`` leaves the Ultralytics default
+                (``amp=True``, i.e. FP16).  On CPU any FP16/BF16 variant is
+                downgraded to FP32 (a warning is logged).  On XPU the mixin
+                converts the model to BF16 regardless of whether ``"16"`` or
+                ``"bf16"`` was requested.
             callbacks: Accepted for API compatibility; unused by Ultralytics.
             **kwargs: Additional overrides forwarded to Ultralytics training.
 
@@ -154,8 +165,6 @@ class UltralyticsEngine(Engine):
                 dev_type = self._device.type
                 if dev_type != "cpu":
                     self._device = torch.device(f"{dev_type}:{idx}")
-        # Drop Lightning-only kwargs that have no Ultralytics equivalent.
-        kwargs.pop("precision", None)
         explicit: dict[str, Any] = {}
         if max_epochs is not None:
             explicit["epochs"] = max_epochs
@@ -190,6 +199,11 @@ class UltralyticsEngine(Engine):
             "exist_ok": True,
             **merged,
         }
+
+        # Inject amp after **merged so it wins over recipe values.
+        amp_val = self._precision_to_amp(precision, self._device)
+        if amp_val is not None:
+            train_args["amp"] = amp_val
 
         logger.info(
             f"Starting Ultralytics training: model={self._model.model_name}, "
@@ -356,6 +370,70 @@ class UltralyticsEngine(Engine):
     def is_supported(model: MODEL, data: DATA) -> bool:
         """Return ``True`` when *model* is an :class:`UltralyticsModel`."""
         return bool(isinstance(model, UltralyticsModel) and isinstance(data, (DataModule, str, os.PathLike)))
+
+    @classmethod
+    def from_config(
+        cls,
+        config_path: PathLike,
+        data: DataModule | PathLike | None = None,
+        work_dir: PathLike | None = None,
+        device: str | None = None,
+        checkpoint: str | None = None,
+        task: str | None = None,  # noqa: ARG003 (API compatibility with Engine.from_config)
+        **kwargs,
+    ) -> UltralyticsEngine:
+        """Build an engine from an Ultralytics recipe configuration file.
+
+        Args:
+            config_path: Path to the Ultralytics recipe YAML file
+                (must contain ``backend: ultralytics``).
+            data: A pre-built :class:`~getitune.data.module.DataModule` or a
+                filesystem data-root path.  Required.
+            work_dir: Working directory for checkpoints and exports.
+                Defaults to ``"./getitune-workspace"``.
+            device: Device to use (e.g., ``"auto"``, ``"xpu"``, ``"cpu"``, ``"gpu"``).
+                Defaults to None.
+            checkpoint: Optional path to a checkpoint for pretrained or warm-start weights.
+                Defaults to None.
+            task: Task type for disambiguation when a model name matches recipes
+                under multiple tasks. Not forwarded to the engine. Defaults to None.
+            **kwargs: Backend-specific keyword arguments forwarded to
+                :class:`UltralyticsEngine` (e.g. ``train_args``, ``export_args``).
+
+        Returns:
+            A fully configured :class:`UltralyticsEngine`.
+
+        Raises:
+            ValueError: If *data* is ``None``.
+        """
+        if data is None:
+            msg = "data (a DataModule or data-root path) is required for UltralyticsEngine.from_config."
+            raise ValueError(msg)
+
+        # Read the task from the raw YAML (top-level field, no interpolation needed).
+        with Path(str(config_path)).open() as fh:
+            raw = yaml.safe_load(fh)
+        recipe_task: str | None = (raw or {}).get("task")
+
+        configurator = Configurator(data=data, model=Path(str(config_path)), task=recipe_task)
+
+        # Build (or reuse) the DataModule, then derive label_info for the model.
+        datamodule = configurator.build_datamodule()
+        label_info = datamodule.label_info
+        model = configurator.create_model(label_info)
+
+        engine_kwargs: dict[str, Any] = {**kwargs}
+        if device is not None:
+            engine_kwargs["device"] = device
+        if checkpoint is not None:
+            engine_kwargs["checkpoint"] = checkpoint
+
+        return configurator.create_engine(
+            model=model,
+            data=datamodule,
+            work_dir=work_dir,
+            **engine_kwargs,
+        )
 
     @property
     def work_dir(self) -> PathLike:
@@ -541,7 +619,6 @@ class UltralyticsEngine(Engine):
         metric = FMeasure(label_info)
         device = self._device
         yolo = self._model.yolo
-        yolo.model.to(device).eval()  # pyrefly: ignore[missing-attribute]
         metric = metric.to(device)
 
         self._datamodule.setup(stage="fit")
@@ -604,7 +681,6 @@ class UltralyticsEngine(Engine):
 
         yolo = self._model.yolo
         device = self._device
-        yolo.model.to(device).eval()  # pyrefly: ignore[missing-attribute]
 
         predictions: list[Prediction] = []
         for batch in dataloader:
@@ -654,7 +730,7 @@ class UltralyticsEngine(Engine):
         if not checkpoint_text:
             return None
 
-        checkpoint = Path(checkpoint_text).resolve()
+        checkpoint = Path(checkpoint_text)
         if checkpoint.exists():
             return checkpoint
 
@@ -676,11 +752,15 @@ class UltralyticsEngine(Engine):
 
         # Copy to a canonical path so the public API never exposes
         # Ultralytics-internal directory structure (train/weights/best.pt).
+        # Unlink any pre-existing symlink so copyfile writes a real file
+        # instead of following the symlink and overwriting its target.
         canonical_path = self._work_dir / "best_checkpoint.pt"
+        if canonical_path.is_symlink():
+            canonical_path.unlink()
         shutil.copyfile(checkpoint, canonical_path)
 
-        self._last_train_checkpoint = canonical_path.resolve()
-        checkpoint_file.write_text(str(self._last_train_checkpoint), encoding="utf-8")
+        self._last_train_checkpoint = canonical_path
+        checkpoint_file.write_text(str(canonical_path), encoding="utf-8")
 
     def _remap_results_csv(self) -> None:
         """Rename columns in the Ultralytics ``results.csv`` to standard metric names.
@@ -1014,3 +1094,41 @@ class UltralyticsEngine(Engine):
 
         # Anything else (e.g. "cuda:1", "cpu") — let torch.device parse it.
         return torch.device(device)
+
+    @staticmethod
+    def _precision_to_amp(precision: _PRECISION_INPUT | None, device: torch.device) -> bool | None:
+        """Map a Lightning-style precision string to Ultralytics' ``amp`` flag.
+
+        Args:
+            precision: One of Lightning supported precisions: ``64, 32, 16,
+                'transformer-engine', 'transformer-engine-float16',
+                '16-true', '16-mixed', 'bf16-true', 'bf16-mixed', '32-true',
+                '64-true', '64', '32', '16', 'bf16'``,
+                or ``None`` to leave the Ultralytics default (``amp=True``).
+            device: The training device.  CPU does not support AMP; any FP16/
+                BF16 variant is downgraded to FP32 with a warning.
+
+        Returns:
+            ``True`` to enable AMP, ``False`` to disable it, or ``None`` to
+            leave the Ultralytics default unchanged.
+        """
+        if precision is None:
+            return None
+
+        if precision in (
+            "16-mixed",
+            "16",
+            16,
+            "bf16-mixed",
+            "bf16",
+            "16-true",
+            "16-mix",
+            "transformer-engine-float16",
+            "bf16-true",
+        ):
+            if device.type == "cpu":
+                logger.warning(f"precision={precision!r} is not supported on CPU; falling back to FP32 (amp=False)")
+                return False
+            return True
+
+        return False

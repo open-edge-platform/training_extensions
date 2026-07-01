@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useLabelResolver } from '../../../../shared/annotator/labels';
 import type { Annotation } from '../../../../shared/types';
 import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { getFormattedPoints, isPrediction } from '../utils';
@@ -31,9 +32,11 @@ type AnnotationShapeProps = {
 };
 
 export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
+    const { resolveAnnotationLabel } = useLabelResolver();
     const { shape, labels } = annotation;
     const hasMultipleLabels = labels.length > 1;
-    const color = hasMultipleLabels ? 'white' : labels.length ? labels[0].color : '--annotation-fill';
+    const firstResolved = labels.length ? resolveAnnotationLabel(labels[0]) : undefined;
+    const color = hasMultipleLabels ? 'white' : (firstResolved?.color ?? '--annotation-fill');
     const hasPredictionLabel = labels.some(isPrediction);
     const strokeDasharray = hasPredictionLabel ? 'calc(10 / var(--zoom-scale)) calc(6 / var(--zoom-scale))' : undefined;
 

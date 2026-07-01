@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { BoundingBox, Polygon, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
+import { BoundingBox, Polygon, SegmentAnythingIcon, Selector } from '@geti-ui/ui/icons';
 
 import { ReactComponent as MagneticLasso } from '../../../../assets/icons/magnetic-lasso.svg';
 import BoundingBoxImg from '../../../../assets/tools/bounding-box.webp';
@@ -11,7 +11,9 @@ import SAMDetectionImg from '../../../../assets/tools/sam-detection.webp';
 import SAMSegmentationImg from '../../../../assets/tools/sam-segmentation.webp';
 import { useProjectTask } from '../../../../hooks/use-project-task.hook';
 import { HOTKEYS } from '../../../../shared/hotkeys-definition';
+import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { ToolConfig } from '../interface';
+import { canRasteriseAtFullSize } from '../utils';
 
 const SELECTION_TOOL_CONFIG: ToolConfig = {
     type: 'selection',
@@ -92,6 +94,14 @@ const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
 
 export const useAvailableTools = (): ToolConfig[] => {
     const taskType = useProjectTask();
+    const { mediaItem } = useSelectedMediaItem();
+
+    // Disable smart tools (SAM, magnetic lasso, SSIM) for oversized media.
+    if (!canRasteriseAtFullSize(mediaItem.width, mediaItem.height)) {
+        return TASK_TOOL_CONFIG[taskType].filter(
+            (tool) => tool.type !== 'sam' && tool.type !== 'magnetic-lasso' && tool.type !== 'ssim'
+        );
+    }
 
     return TASK_TOOL_CONFIG[taskType];
 };

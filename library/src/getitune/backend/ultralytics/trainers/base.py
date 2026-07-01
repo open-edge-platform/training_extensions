@@ -26,6 +26,26 @@ logger = logging.getLogger(__name__)
 
 _MP_CONTEXT = multiprocessing.get_context("spawn")
 
+# Ultralytics ships bundled third-party experiment-logger callbacks that are
+# auto-registered in ``BaseTrainer.__init__`` via ``add_integration_callbacks``.
+# getitune owns experiment tracking itself (CSV metrics, and MLflow via the
+# benchmark runner / application backend), so these would double-log: they
+# create duplicate runs (one per work-dir / seed), may fail artifact uploads,
+# and — for server-backed loggers like MLflow — can block the training process
+# on the remote tracking server. They are stripped whenever the getitune
+# DataModule bridge is active.
+_EXTERNAL_LOGGER_CALLBACK_MODULES = frozenset(
+    {
+        "ultralytics.utils.callbacks.mlflow",
+        "ultralytics.utils.callbacks.clearml",
+        "ultralytics.utils.callbacks.comet",
+        "ultralytics.utils.callbacks.dvc",
+        "ultralytics.utils.callbacks.neptune",
+        "ultralytics.utils.callbacks.wb",
+        "ultralytics.utils.callbacks.tensorboard",
+    },
+)
+
 
 class GetiTuneBaseTrainer:
     """Shared DataModule bridge logic for Ultralytics trainers."""
@@ -36,6 +56,34 @@ class GetiTuneBaseTrainer:
     _progress_fn: Any = None
     _progress_min: float = 0.0
     _progress_max: float = 100.0
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Initialize the trainer and disable bundled third-party loggers.
+
+        Ultralytics registers its integration logger callbacks (MLflow, W&B,
+        Comet, ClearML, Neptune, TensorBoard) inside ``BaseTrainer.__init__``.
+        Once the base initializer has run, strip those callbacks when the
+        getitune DataModule bridge is active so only getitune-managed logging
+        remains.
+        """
+        super().__init__(*args, **kwargs)
+        if self._use_getitune_data:
+            self._disable_external_logger_callbacks()
+
+    def _disable_external_logger_callbacks(self) -> None:
+        """Remove Ultralytics' bundled third-party experiment-logger callbacks."""
+        callbacks = getattr(self, "callbacks", None)
+        if not isinstance(callbacks, dict):
+            return
+        removed = 0
+        for event, fns in callbacks.items():
+            kept = [fn for fn in fns if getattr(fn, "__module__", "") not in _EXTERNAL_LOGGER_CALLBACK_MODULES]
+            removed += len(fns) - len(kept)
+            callbacks[event] = kept
+        if removed:
+            logger.info(
+                f"Disabled {removed} Ultralytics third-party logger callback(s); getitune manages experiment tracking."
+            )
 
     def get_dataset(self) -> dict[str, Any]:
         """Build data config dict from DataModule or fall back to YAML."""
@@ -207,14 +255,15 @@ class GetiTuneBaseTrainer:
                 ni = counter["ni"]
                 if ni <= natural_nw:
                     xi = [0, natural_nw]
-                    trainer.accumulate = max(1, int(np.interp(ni, xi, [1, nbs / batch_size]).round()))
+                    accumulate = np.interp(ni, xi, [1.0, float(nbs / batch_size)])
+                    trainer.accumulate = max(1, round(accumulate))
                     for pg in trainer.optimizer.param_groups:
                         pg["lr"] = np.interp(
                             ni,
                             xi,
                             [
                                 warmup_bias_lr if pg.get("param_group") == "bias" else 0.0,
-                                pg["initial_lr"] * trainer.lf(trainer.epoch),
+                                float(pg["initial_lr"]) * float(trainer.lf(trainer.epoch)),
                             ],
                         )
                         if "momentum" in pg:

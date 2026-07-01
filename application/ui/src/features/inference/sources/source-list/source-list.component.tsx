@@ -1,15 +1,17 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, dimensionValue, Flex, Text } from '@geti/ui';
-import { Add as AddIcon } from '@geti/ui/icons';
+import { Button, dimensionValue, Flex, Text } from '@geti-ui/ui';
+import { Add as AddIcon } from '@geti-ui/ui/icons';
 import { clsx } from 'clsx';
 import { usePipeline } from 'hooks/api/pipeline.hook';
 import { isEqual } from 'lodash-es';
 
-import { StatusTag } from '../../../../components/status-tag/status-tag.component';
+import { ConnectionStatusBadge } from '../../../../components/connection-status-badge/connection-status-badge.component';
 import type { SourceConfig } from '../../../../constants/shared-types';
+import { getErrorMessage } from '../../../../query-client/query-client';
 import { removeUnderscore } from '../../util';
+import { useTestSource } from '../api/use-test-source';
 import { SourceMenu } from '../source-menu/source-menu.component';
 import { SettingsList } from './settings-list/settings-list.component';
 import { SourceIcon } from './source-icon/source-icon.component';
@@ -30,6 +32,13 @@ type SourceListItemProps = {
 };
 
 const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }: SourceListItemProps) => {
+    const { data, error, isError, isFetched, isFetching, refetch } = useTestSource(String(source.id));
+    const showConnectionStatusBadge = isConnected || isFetched || isFetching || isError;
+
+    const handleTestConnection = async () => {
+        void refetch();
+    };
+
     return (
         <Flex
             key={source.id}
@@ -37,6 +46,14 @@ const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }
             direction='column'
             UNSAFE_className={clsx(classes.card, { [classes.activeCard]: isConnected })}
         >
+            {showConnectionStatusBadge && (
+                <ConnectionStatusBadge
+                    isInUse={isConnected}
+                    isUnreachable={isError || (isFetched && data?.reachable === false)}
+                    isPending={isFetching}
+                    errorMessage={isError ? getErrorMessage(error) : undefined}
+                />
+            )}
             <Flex alignItems={'center'} gap={'size-200'}>
                 <SourceIcon type={source.source_type} />
 
@@ -44,7 +61,6 @@ const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }
                     <Text UNSAFE_className={classes.title}>{source.name}</Text>
                     <Flex gap={'size-100'} alignItems={'center'}>
                         <Text UNSAFE_className={classes.type}>{removeUnderscore(source.source_type)}</Text>
-                        <StatusTag isConnected={isConnected} />
                     </Flex>
                 </Flex>
             </Flex>
@@ -58,6 +74,7 @@ const SourceListItem = ({ source, isConnected, onEditSource, isPipelineRunning }
                     isConnected={isConnected}
                     onEdit={() => onEditSource(source)}
                     isPipelineRunning={isPipelineRunning}
+                    onTest={handleTestConnection}
                 />
             </Flex>
         </Flex>

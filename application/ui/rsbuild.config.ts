@@ -62,6 +62,7 @@ export default defineConfig({
         pluginSass(),
 
         pluginSvgr({
+            parallel: true,
             svgrOptions: {
                 exportType: 'named',
             },

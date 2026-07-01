@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { Button, Form } from '@geti/ui';
+import { Button, Form } from '@geti-ui/ui';
 
 import { usePatchPipeline } from '../../../../hooks/api/pipeline.hook';
 import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
@@ -40,7 +40,7 @@ export const AddSink = <T extends SinkConfig>({ config, onSaved, bodyFormatter, 
                 isDisabled={isPending || pipeline.isPending}
                 UNSAFE_style={{ maxWidth: 'fit-content' }}
             >
-                Add & Connect
+                Add & Use
             </Button>
         </Form>
     );

@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Switch } from '@geti/ui';
+import { Switch } from '@geti-ui/ui';
 
 type BooleanParameterFieldProps = {
     value: boolean;

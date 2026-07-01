@@ -48,7 +48,7 @@ class GetiTuneValidatorMixin:
         for k, v in batch.items():
             if isinstance(v, torch.Tensor):
                 batch[k] = v.to(self.device, non_blocking=True)  # type: ignore[attr-defined]
-        if self.args.half:  # type: ignore[attr-defined]
+        if getattr(self.args, "quantize", None) == 16:  # type: ignore[attr-defined]
             batch["img"] = batch["img"].half()
         if "masks" in batch and isinstance(batch["masks"], torch.Tensor):
             batch["masks"] = batch["masks"].float()
@@ -74,10 +74,10 @@ class GetiTuneValidatorMixin:
         model = AutoBackend(
             model=model or self.args.model,  # pyrefly: ignore[bad-argument-type]  # type: ignore[attr-defined]
             device=dev,  # pyrefly: ignore[bad-argument-type]
-            fp16=self.args.half,  # type: ignore[attr-defined]
+            fp16=getattr(self.args, "quantize", None) == 16,  # type: ignore[attr-defined]
         )
         self.device = model.device  # type: ignore[attr-defined]
-        self.args.half = model.fp16  # type: ignore[attr-defined]
+        self.args.quantize = 16 if model.fp16 else None  # type: ignore[attr-defined]
         imgsz = check_imgsz(self.args.imgsz, stride=model.stride)  # type: ignore[attr-defined]
 
         if self._datamodule is None:

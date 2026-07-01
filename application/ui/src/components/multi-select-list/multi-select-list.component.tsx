@@ -3,7 +3,7 @@
 
 import { ComponentProps, useState } from 'react';
 
-import { Checkbox, Flex, Item, ListView, Selection, Text } from '@geti/ui';
+import { Checkbox, Flex, Item, ListView, Selection, Text } from '@geti-ui/ui';
 
 import { isNonEmptyString } from '../../shared/util';
 

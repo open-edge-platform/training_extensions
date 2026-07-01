@@ -19,17 +19,31 @@ from .base import UltralyticsModel
 class UltralyticsInstSegModel(UltralyticsModel):
     """YOLO instance-segmentation model.
 
-    Supported variants: ``yolo26n-seg``, ``yolo26s-seg``, ``yolo26m-seg``.
+    Supported variants:
+
+    * YOLO26: ``yolo26n-seg``, ``yolo26s-seg``, ``yolo26m-seg``, ``yolo26l-seg``, ``yolo26x-seg``
+    * YOLO11: ``yolo11n-seg``, ``yolo11s-seg``, ``yolo11m-seg``, ``yolo11l-seg``, ``yolo11x-seg``
     """
 
     task: ClassVar[str] = "segment"
     trainer_cls: ClassVar[type] = SegmentationTrainer
     validator_cls: ClassVar[type] = SegmentationValidator
 
+    _BASE_URL: ClassVar[str] = "https://github.com/ultralytics/assets/releases/download/v8.4.0"
+
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "yolo26n-seg": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-seg.pt",
-        "yolo26s-seg": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s-seg.pt",
-        "yolo26m-seg": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-seg.pt",
+        # YOLO26
+        "yolo26n-seg": f"{_BASE_URL}/yolo26n-seg.pt",
+        "yolo26s-seg": f"{_BASE_URL}/yolo26s-seg.pt",
+        "yolo26m-seg": f"{_BASE_URL}/yolo26m-seg.pt",
+        "yolo26l-seg": f"{_BASE_URL}/yolo26l-seg.pt",
+        "yolo26x-seg": f"{_BASE_URL}/yolo26x-seg.pt",
+        # YOLO11
+        "yolo11n-seg": f"{_BASE_URL}/yolo11n-seg.pt",
+        "yolo11s-seg": f"{_BASE_URL}/yolo11s-seg.pt",
+        "yolo11m-seg": f"{_BASE_URL}/yolo11m-seg.pt",
+        "yolo11l-seg": f"{_BASE_URL}/yolo11l-seg.pt",
+        "yolo11x-seg": f"{_BASE_URL}/yolo11x-seg.pt",
     }
 
     @property
@@ -44,11 +58,7 @@ class UltralyticsInstSegModel(UltralyticsModel):
             mean=(0.0, 0.0, 0.0),
             std=(1.0, 1.0, 1.0),
         )
-        return {
-            "yolo26n-seg": default,
-            "yolo26s-seg": default,
-            "yolo26m-seg": default,
-        }
+        return dict.fromkeys(self._pretrained_weights, default)
 
     @property
     def _export_parameters(self) -> TaskLevelExportParameters:

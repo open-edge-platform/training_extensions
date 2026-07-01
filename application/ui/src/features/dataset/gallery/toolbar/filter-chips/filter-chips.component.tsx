@@ -1,8 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Text } from '@geti/ui';
-import { CloseSmall } from '@geti/ui/icons';
+import { Flex, Text } from '@geti-ui/ui';
+import { CloseSmall } from '@geti-ui/ui/icons';
 
 import classes from './filter-chips.module.scss';
 
