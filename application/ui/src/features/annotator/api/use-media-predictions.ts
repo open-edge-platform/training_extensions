@@ -121,7 +121,7 @@ export const useIsFetchingCurrentRangeFramesPredictions = (mediaId: string) => {
     return useIsFetching({ queryKey: rangeQueryKey, exact: true }) > 0;
 };
 
-export const useIsFetchingCurrentFramePredictions = (mediaId: string) => {
+const useIsFetchingCurrentFramePredictions = (mediaId: string) => {
     const projectId = useProjectIdentifier();
     const { selectedModel, selectedDevice } = usePredictionSetup();
     const { mediaItem } = useSelectedMediaItem();
