@@ -29,6 +29,12 @@ jobs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
       run_benchmark_dataset_scripts: ${{ steps.check_benchmark_dataset_scripts.outputs.run }}
     steps:
+      - &harden-runner
+        name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
       - &checkout
         name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
@@ -62,6 +68,8 @@ jobs:
     permissions:
       contents: read
     steps:
+      - *harden-runner
+
       - *checkout
 
       - name: Install Python, uv and Just
@@ -97,6 +105,11 @@ jobs:
     name: unit-tests-with-Python${{ matrix.python-version }}
     steps:
       # YAML anchors not used cause currently zizmor don't support them in matrix strategies
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
@@ -155,6 +168,11 @@ jobs:
     name: integration-tests-${{ matrix.task }}-py${{ matrix.python-version }}
     steps:
       # YAML anchors aren't used because Zizmor fails here and support for them is best-effort for now
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
