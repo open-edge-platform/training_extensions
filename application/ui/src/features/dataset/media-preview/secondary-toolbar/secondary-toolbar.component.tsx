@@ -125,7 +125,7 @@ export const SecondaryToolbar = ({
     const isSubmitDisabled = (!canSubmit && !hasSubsetChanged) || isSaving || isLoadingPredictions;
 
     useHotkeys(
-        HOTKEYS.submit,
+        `${HOTKEYS.submit}, ${HOTKEYS.submitAlternative}`,
         (event) => {
             event.preventDefault();
 

@@ -20,12 +20,12 @@ export const useKeyboardNavigation = ({
     selectedIndex,
     onSelectedMediaItem,
 }: UseKeyboardNavigationProps) => {
-    const getNewIndex = (key: 'ArrowUp' | 'ArrowDown') => {
-        if (key === 'ArrowUp') {
+    const getNewIndex = (key: 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight') => {
+        if (key === 'ArrowUp' || key === 'ArrowLeft') {
             return Math.max(0, selectedIndex - 1);
         }
 
-        if (key === 'ArrowDown') {
+        if (key === 'ArrowDown' || key === 'ArrowRight') {
             return Math.min(items.length - 1, selectedIndex + 1);
         }
 
@@ -35,7 +35,12 @@ export const useKeyboardNavigation = ({
     useEventListener(
         'keydown',
         (event) => {
-            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            if (
+                event.key === 'ArrowUp' ||
+                event.key === 'ArrowDown' ||
+                event.key === 'ArrowLeft' ||
+                event.key === 'ArrowRight'
+            ) {
                 const newIndex = getNewIndex(event.key);
 
                 items[newIndex] && onSelectedMediaItem(items[newIndex]);

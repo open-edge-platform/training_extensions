@@ -25,6 +25,7 @@ export const HOTKEYS = {
     selectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+a`,
     deselectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+d`,
     submit: `${CTRL_OR_COMMAND_KEY}+s`,
+    submitAlternative: 'enter',
 } as const;
 
 const COMMON_HOTKEYS = {
