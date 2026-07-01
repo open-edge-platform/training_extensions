@@ -1,8 +1,8 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Icon, Text } from '@geti/ui';
-import { Checkmark, Edit } from '@geti/ui/icons';
+import { ActionButton, Icon, Text } from '@geti-ui/ui';
+import { Checkmark, Edit } from '@geti-ui/ui/icons';
 
 import { useAnnotationActions } from '../../../../../shared/annotator/annotation-actions-provider.component';
 import type { AnnotatorMode } from '../../../../../shared/annotator/annotator-mode';

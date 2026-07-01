@@ -48,3 +48,7 @@ export const getAllModelsWithOpenVINOVariants = (models: Model[]): SelectableMod
             )
     );
 };
+
+export const isUltralyticsModel = (identifier: string): boolean => {
+    return identifier.toLocaleLowerCase().includes('yolo26-');
+};

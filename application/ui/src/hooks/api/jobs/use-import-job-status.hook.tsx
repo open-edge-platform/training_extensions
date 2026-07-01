@@ -3,10 +3,10 @@
 
 import { useEffect } from 'react';
 
-import { toast } from '@geti/ui';
 import { isFunction } from 'lodash-es';
 
 import { $api } from '../../../api/client';
+import { toast } from '../../../components/toast/toast.component';
 import { isNonEmptyString } from '../../../shared/util';
 import { isInvalidJob, isJobDone, isJobFailed } from '../util';
 

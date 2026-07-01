@@ -1,23 +1,35 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Badge, Flex, Text } from '@geti/ui';
+import { Badge, Flex, Text } from '@geti-ui/ui';
 import { useNavigate } from 'react-router';
 
 import { paths } from '../../../constants/paths';
 import { Project } from '../../../constants/shared-types';
-import { MenuActions } from '../../../features/project/list/menu-actions/menu-actions.component';
+import {
+    ProjectActionsMenu,
+    type ProjectActionMetadata,
+} from '../../../features/project/list/menu-actions/menu-actions.component';
 import { getProjectTypeTitle } from '../../../features/project/list/util';
 import { ProjectThumbnail } from '../project-thumbnail/project-thumbnail.component';
 
 import classes from './project-list-item.module.scss';
 
-interface ProjectListItemProps {
+type ProjectListItemProps = {
     project: Project;
     projectNames: string[];
-}
+    onRename: (target: ProjectActionMetadata) => void;
+    onDelete: (target: ProjectActionMetadata) => void;
+    onEnableBlocked: (target: ProjectActionMetadata) => void;
+};
 
-export const ProjectListItem = ({ project, projectNames }: ProjectListItemProps) => {
+export const ProjectListItem = ({
+    project,
+    projectNames,
+    onRename,
+    onDelete,
+    onEnableBlocked,
+}: ProjectListItemProps) => {
     const navigate = useNavigate();
 
     const taskType = getProjectTypeTitle(project.task);
@@ -41,11 +53,14 @@ export const ProjectListItem = ({ project, projectNames }: ProjectListItemProps)
                     )}
                 </Flex>
 
-                <MenuActions
+                <ProjectActionsMenu
                     projectId={project.id}
                     projectName={project.name}
                     isPipelineRunning={project.active_pipeline}
                     projectNames={projectNames}
+                    onRename={onRename}
+                    onDelete={onDelete}
+                    onEnableBlocked={onEnableBlocked}
                 />
             </Flex>
         </li>

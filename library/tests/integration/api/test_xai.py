@@ -54,7 +54,7 @@ def test_forward_explain(
 
     engine = LightningEngine.from_config(
         config_path=recipe,
-        data_root=fxt_target_dataset_per_task[task],
+        data=fxt_target_dataset_per_task[task],
         device=fxt_accelerator,
     )
 
@@ -105,7 +105,7 @@ def test_predict_with_explain(
     tmp_path = tmp_path / f"xai_{model_name}"
     engine = LightningEngine.from_config(
         config_path=recipe,
-        data_root=fxt_target_dataset_per_task[task],
+        data=fxt_target_dataset_per_task[task],
         device=fxt_accelerator,
         work_dir=tmp_path,
     )

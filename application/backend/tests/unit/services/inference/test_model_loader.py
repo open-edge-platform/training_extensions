@@ -42,11 +42,9 @@ class TestModelLoader:
         fake_adapter = Mock(spec=OpenvinoAdapter)
 
         with (
-            patch("app.services.inference.model_loader.create_core") as mock_create_core,
-            patch("app.services.inference.model_loader.OpenvinoAdapter", return_value=fake_adapter) as mock_adapter_cls,
-            patch(
-                "app.services.inference.model_loader.Model.create_model", return_value=fake_model
-            ) as mock_create_model,
+            patch("model_api.adapters.create_core") as mock_create_core,
+            patch("model_api.adapters.OpenvinoAdapter", return_value=fake_adapter) as mock_adapter_cls,
+            patch("model_api.models.Model.create_model", return_value=fake_model) as mock_create_model,
         ):
             handle = ModelLoader.load(
                 model_id=model_id,

@@ -49,7 +49,7 @@ describe('variant-metrics utilities', () => {
         expect(getFp32PytorchVariant(variants)?.id).toBe('pt-1');
     });
 
-    it('returns performance column name from variants, then fp32 fallback, then Score', () => {
+    it('returns performance column name from variants, then fp32 fallback, then Accuracy', () => {
         const withMetric = [
             getMockedVariant({
                 evaluations: [
@@ -64,7 +64,7 @@ describe('variant-metrics utilities', () => {
 
         expect(getPerformanceColumnName(withMetric, undefined)).toBe('mAP');
         expect(getPerformanceColumnName([], { name: 'Accuracy', value: 87 })).toBe('Accuracy');
-        expect(getPerformanceColumnName([], undefined)).toBe('Score');
+        expect(getPerformanceColumnName([], undefined)).toBe('Accuracy');
     });
 
     it('returns variant performance and applies fallback only for empty evaluations', () => {

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Flex, Text } from '@geti/ui';
+import { Button, Flex, Text } from '@geti-ui/ui';
 import { useNavigate } from 'react-router';
 
 import { ReactComponent as EmptyFolderImage } from '../../../../assets/empty-folder.svg';

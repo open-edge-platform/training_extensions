@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox, DialogContainer, dimensionValue, Flex, Size, ViewModes } from '@geti/ui';
+import { Checkbox, DialogContainer, dimensionValue, Flex, Size, ViewModes } from '@geti-ui/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
 import { GridLayoutOptions } from 'react-aria-components';
@@ -59,9 +59,7 @@ const GalleryList = ({
     isMediaItemReviewedById,
 }: GalleryListProps) => {
     const projectId = useProjectIdentifier();
-    const { selectedKeys, toggleSelectedKeys } = useSelectedData();
-
-    const isSetSelectedKeys = selectedKeys instanceof Set;
+    const { selectedKeys, toggleSelectedKeys, isSelected } = useSelectedData();
 
     return (
         <VirtualizerGridLayout
@@ -77,6 +75,7 @@ const GalleryList = ({
                 const mediaUrl = getThumbnailUrl(projectId, item.id);
                 const downloadUrl = getMediaDownloadUrl(projectId, item.id);
                 const mediaFileName = `${item.name}.${item.format}`;
+                const selected = isSelected(item.id);
 
                 return (
                     <MediaItem
@@ -99,7 +98,7 @@ const GalleryList = ({
                                 <Checkbox
                                     aria-label={`Select media item ${item.id}`}
                                     onChange={() => toggleSelectedKeys([String(item.id)])}
-                                    isSelected={isSetSelectedKeys && selectedKeys.has(String(item.id))}
+                                    isSelected={selected}
                                 />
                             </Flex>
                         )}
@@ -109,7 +108,7 @@ const GalleryList = ({
 
                                 <MediaItemActions
                                     id={item.id}
-                                    onDeleted={toggleSelectedKeys}
+                                    onDeleted={selected ? toggleSelectedKeys : undefined}
                                     mediaUrl={downloadUrl}
                                     mediaFileName={mediaFileName}
                                     onAnnotate={() => onSelectedMediaItemChange(item)}

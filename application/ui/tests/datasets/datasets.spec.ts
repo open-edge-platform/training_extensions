@@ -16,10 +16,9 @@ import { SchemaProjectView } from '../../src/api/openapi-spec';
 import { AnnotationDTO } from '../../src/constants/shared-types';
 import { expect, http, test } from '../fixtures';
 
-const mockedItems = getMultipleMockedMediaImage(20, '1');
+const mockedItems = getMultipleMockedMediaImage(40, '1');
 const mockedItems2 = getMultipleMockedMediaImage(20, '2');
-const mockedItems3 = getMultipleMockedMediaImage(20, '3');
-const totalElements = mockedItems.length + mockedItems2.length + mockedItems3.length;
+const totalElements = mockedItems.length + mockedItems2.length;
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const sampleImagePath = path.resolve(dirname, '../assets/candy-thumbnail.png');
@@ -38,7 +37,7 @@ test.describe('Dataset', () => {
             http.get('/api/projects/{project_id}/dataset/media', ({ query }) => {
                 const offset = Number(query.get('offset') ?? 0);
                 const limit = Number(query.get('limit'));
-                const items = offset === 0 ? mockedItems : offset === 20 ? mockedItems2 : mockedItems3;
+                const items = offset === 0 ? mockedItems : mockedItems2;
 
                 return HttpResponse.json({
                     items,
@@ -59,15 +58,12 @@ test.describe('Dataset', () => {
                 (response) => response.url().includes('/dataset/media') && response.url().includes(`offset=${offset}`)
             );
 
-        const batch20 = waitForBatch(20);
         const batch40 = waitForBatch(40);
 
         await datasetPage.goto();
 
         await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
 
-        await datasetPage.getMediaGrid().press('End');
-        await batch20;
         await datasetPage.getMediaGrid().press('End');
         await batch40;
 
@@ -207,7 +203,11 @@ test.describe('Dataset', () => {
             { name: 'upload-video.mp4', mimeType: 'video/mp4', buffer: sampleVideoBuffer },
         ];
 
-        const mockNetwork = (network: NetworkFixture, project: SchemaProjectView) => {
+        const mockNetwork = (
+            network: NetworkFixture,
+            project: SchemaProjectView,
+            options?: { onUpload?: () => Promise<void> }
+        ) => {
             const createAnnotationPayloads: [string, AnnotationDTO[]][] = [];
             let getMediaCount = 0;
 
@@ -216,6 +216,8 @@ test.describe('Dataset', () => {
                     const media = mockedMedia[getMediaCount];
 
                     getMediaCount++;
+
+                    await options?.onUpload?.();
 
                     return HttpResponse.json(media, {
                         status: 201,
@@ -378,6 +380,40 @@ test.describe('Dataset', () => {
                     [mockedImages[1].id, []],
                 ]);
             }).toPass();
+        });
+
+        test('Skip closes the dialog without waiting for the upload to finish', async ({ network, datasetPage }) => {
+            let releaseUpload: () => void = () => {};
+            const uploadGate = new Promise<void>((resolve) => {
+                releaseUpload = resolve;
+            });
+
+            const createAnnotationPayloads = mockNetwork(
+                network,
+                getMockedProject({
+                    task: {
+                        task_type: 'classification',
+                        exclusive_labels: true,
+                        labels: mockedLabels,
+                    },
+                }),
+                { onUpload: () => uploadGate }
+            );
+
+            await datasetPage.goto();
+
+            await datasetPage.uploadFiles(filesToUpload);
+
+            await expect(datasetPage.getLabelAssignmentHeading()).toBeVisible();
+
+            await datasetPage.clickSkip();
+
+            await expect(datasetPage.getLabelAssignmentHeading()).toBeHidden();
+
+            releaseUpload();
+            await expect(datasetPage.getUploadFinishedText(filesToUpload.length)).toBeVisible();
+
+            expect(createAnnotationPayloads).toEqual([]);
         });
     });
 

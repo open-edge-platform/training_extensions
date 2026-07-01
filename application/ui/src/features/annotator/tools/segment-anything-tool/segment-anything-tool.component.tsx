@@ -4,10 +4,10 @@
 import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
-import { toast } from '@geti/ui';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
+import { toast } from '../../../../components/toast/toast.component';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import type { Annotation, RegionOfInterest, Shape } from '../../../../shared/types';
 import { useNextMediaItem } from '../../../dataset/media-preview/utils';
@@ -135,7 +135,7 @@ export const SegmentAnythingTool = () => {
     const previewAnnotations = previewShapes.map((shape, idx): Annotation => {
         return {
             shape,
-            labels: selectedLabel ? [selectedLabel] : [],
+            labels: selectedLabel ? [{ id: selectedLabel.id }] : [],
             id: `${idx}`,
         };
     });

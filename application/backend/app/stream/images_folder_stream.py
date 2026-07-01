@@ -6,6 +6,7 @@ import threading
 from collections.abc import Callable
 
 import cv2
+import numpy as np
 from loguru import logger
 from watchdog.events import DirCreatedEvent, DirDeletedEvent, FileCreatedEvent, FileDeletedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
@@ -102,7 +103,8 @@ class ImagesFolderStream(VideoStream):
         try:
             file = self.files.pop(0)
             try:
-                image = cv2.imread(file)
+                # IMREAD_UNCHANGED preserves the original bit depth (e.g. 16-bit PNG/TIFF images).
+                image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
             except FileNotFoundError:
                 # On Windows, Ultralytics patches cv2.imread with an np.fromfile-based
                 # version (ultralytics/utils/__init__.py) which raises FileNotFoundError
@@ -112,6 +114,9 @@ class ImagesFolderStream(VideoStream):
             if image is None:
                 # Image cannot be loaded
                 return None
+            # Add explicit channel dimension for 2D grayscale: (H, W) → (H, W, 1)
+            if image.ndim == 2:
+                image = image[..., np.newaxis]
             return StreamData(
                 frame_data=image,
                 timestamp=os.path.getmtime(file),

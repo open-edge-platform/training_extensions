@@ -3,7 +3,7 @@
 
 import { ReactNode, Suspense } from 'react';
 
-import { Flex, Heading } from '@geti/ui';
+import { Flex, Heading } from '@geti-ui/ui';
 import { Outlet } from 'react-router';
 
 import { $api } from '../../api/client';

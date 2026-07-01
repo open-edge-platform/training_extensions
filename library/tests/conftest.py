@@ -221,6 +221,23 @@ def pytest_addoption(parser: pytest):
         action="store_true",
         help="Run only the model category tests that categorised as BALANCE, SPEED, ACCURACY.",
     )
+    parser.addoption(
+        "--run-network",
+        action="store_true",
+        default=False,
+        help="Run tests marked with @pytest.mark.network that perform real network I/O. "
+        "Skipped by default to keep CI fast and offline-friendly.",
+    )
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Auto-skip ``@pytest.mark.network`` tests unless ``--run-network`` is given."""
+    if config.getoption("--run-network"):
+        return
+    skip_network = pytest.mark.skip(reason="needs --run-network to run (network I/O)")
+    for item in items:
+        if "network" in item.keywords:
+            item.add_marker(skip_network)
 
 
 @pytest.fixture(scope="session")

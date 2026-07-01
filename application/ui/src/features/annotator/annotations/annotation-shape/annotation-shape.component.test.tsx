@@ -3,10 +3,25 @@
 
 import { screen } from '@testing-library/react';
 import { getMockedAnnotation } from 'mocks/mock-annotation';
+import { getMockedAnnotationLabel } from 'mocks/mock-labels';
 import { render } from 'test-utils/render';
 
-import type { Annotation, Polygon, Rect } from '../../../../shared/types';
+import type { Annotation, AnnotationLabel, AnnotationLabelRef, Polygon, Rect } from '../../../../shared/types';
 import { AnnotationShape } from './annotation-shape.component';
+
+vi.mock('../../../../shared/annotator/labels', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('../../../../shared/annotator/labels')>();
+    return {
+        ...actual,
+        useLabelResolver: () => ({
+            getLabel: () => undefined,
+            resolveAnnotationLabel: (ref: AnnotationLabelRef): AnnotationLabel | undefined => {
+                const label = getMockedAnnotationLabel({ id: ref.id, color: '#ffff00' });
+                return ref.probability !== undefined ? { ...label, probability: ref.probability } : label;
+            },
+        }),
+    };
+});
 
 type AnnotationRect = Annotation & { shape: Rect };
 type AnnotationPolygon = Annotation & { shape: Polygon };
@@ -20,7 +35,7 @@ describe('AnnotationShape', () => {
 
         expect(rect).toHaveAttribute('x', annotation.shape.x.toString());
         expect(rect).toHaveAttribute('y', annotation.shape.y.toString());
-        expect(rect).toHaveAttribute('fill', annotation.labels[0].color);
+        expect(rect).toHaveAttribute('fill', '#ffff00');
         expect(rect).toHaveAttribute('width', annotation.shape.width.toString());
         expect(rect).toHaveAttribute('height', annotation.shape.height.toString());
     });
@@ -37,6 +52,6 @@ describe('AnnotationShape', () => {
         const polygon = screen.getByLabelText('annotation polygon');
 
         expect(polygon).toHaveAttribute('points', '1,2 3,4 5,6');
-        expect(polygon).toHaveAttribute('fill', annotation.labels[0].color);
+        expect(polygon).toHaveAttribute('fill', '#ffff00');
     });
 });

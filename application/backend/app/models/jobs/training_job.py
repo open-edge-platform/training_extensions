@@ -26,6 +26,11 @@ class TrainingJobParams(JobParams):
 
     @computed_field  # type: ignore[prop-decorator]
     @property
+    def has_model_revision(self) -> bool:
+        return self.parent_model_revision_id is not None
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def model_name(self) -> str:
         """User-friendly model name derived from architecture name and model ID."""
         return f"{self.model_architecture_name} ({str(self.model_id).split('-')[0]})"

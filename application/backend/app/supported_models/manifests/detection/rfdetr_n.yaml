@@ -1,0 +1,52 @@
+id: object-detection-rfdetr-n
+name: RF-DETR-N
+
+pretrained_weights:
+  url: https://storage.geti.intel.com/weights/rf-detr-nano-2026.pth
+  mirror_url: https://storage.googleapis.com/rfdetr/nano_coco/checkpoint_best_regular.pth
+  sha_sum: d8d6b9ee57d4d0ed2b1f305163624712a0532cb7bce0c747317984fc5457440d
+
+description: "RF-DETR is a real-time object detection model that combines a DINOv2 vision transformer backbone with a novel decoder for high-accuracy detection without NMS post-processing."
+stats:
+  gigaflops: 29.0
+  trainable_parameters: 30.5
+  benchmark_metrics:
+    coco_map_50_95: 48.4
+    coco_map_50: 67.6
+
+capabilities:
+  tiling: false
+
+hyperparameters:
+  training:
+    learning_rate: 0.00021
+    weight_decay: 0.0001
+    early_stopping:
+      patience: 15
+    scheduler:
+      factor: 0.1
+      patience: 10
+    gradient_clip:
+      enable: true
+      max_grad_norm: 0.1
+    allowed_values_input_size:
+      - 320
+      - 384
+      - 448
+      - 512
+      - 576
+      - 640
+      - 704
+      - 768
+      - 896
+    input_size_width: 384
+    input_size_height: 384
+  dataset_preparation:
+    augmentation:
+      random_zoom_out:
+        enable: true
+        fill: 0
+        side_range:
+          - 1.0
+          - 4.0
+        probability: 0.5

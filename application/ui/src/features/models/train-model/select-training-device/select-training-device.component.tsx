@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Item, Picker } from '@geti/ui';
+import { Item, Picker } from '@geti-ui/ui';
 
 import { createTrainingDeviceKey, useTrainModelState } from '../train-model-provider.component';
 import { createDeviceName } from './utils';

@@ -2,11 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
+from unittest import mock
 
 import numpy as np
 import pytest
 from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
 from model_api.models.result import Label
+from model_api.visualizer import BoundingBox, Flatten, Polygon
+from model_api.visualizer import Label as VisualizerLabel
 
 from app.utils.visualization import (
     ClassificationVisualizerCreator,
@@ -48,6 +51,16 @@ class TestDetectionVisualizerCreator(unittest.TestCase):
         self.assertIsInstance(result, np.ndarray)
         self.assertFalse(np.array_equal(result, original_image))
 
+    def test_uses_visualizer_label_in_layout(self):
+        creator = DetectionVisualizerCreator()
+        original_image = np.zeros((100, 100, 3), dtype=np.uint8)
+        predictions = DetectionResult(bboxes, labels)
+        with mock.patch("model_api.visualizer.scene.DetectionScene") as mock_scene:
+            creator.create_visualization(original_image, predictions)
+        layout = mock_scene.call_args.kwargs["layout"]
+        self.assertIsInstance(layout, Flatten)
+        self.assertEqual(layout.children, (BoundingBox, VisualizerLabel))
+
 
 class TestInstanceSegmentationVisualizerCreator(unittest.TestCase):
     def test_creates_visualization(self):
@@ -57,6 +70,16 @@ class TestInstanceSegmentationVisualizerCreator(unittest.TestCase):
         result = creator.create_visualization(original_image, predictions)
         self.assertIsInstance(result, np.ndarray)
         self.assertFalse(np.array_equal(result, original_image))
+
+    def test_uses_visualizer_label_in_layout(self):
+        creator = InstanceSegmentationVisualizerCreator()
+        original_image = np.zeros((100, 100, 3), dtype=np.uint8)
+        predictions = InstanceSegmentationResult(bboxes, labels, masks)
+        with mock.patch("model_api.visualizer.scene.InstanceSegmentationScene") as mock_scene:
+            creator.create_visualization(original_image, predictions)
+        layout = mock_scene.call_args.kwargs["layout"]
+        self.assertIsInstance(layout, Flatten)
+        self.assertEqual(layout.children, (Polygon, VisualizerLabel))
 
 
 class TestClassificationVisualizerCreator(unittest.TestCase):

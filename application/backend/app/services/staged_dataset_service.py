@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import shutil
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, BinaryIO
 from uuid import UUID, uuid4
 
-from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, import_dataset
+from anyio import to_thread
+from datumaro.experimental import Dataset
 
 from app.datumaro_converter.domain.samples.import_export import BaseImportExportSample
 from app.models import AnnotationType, DatasetFormat, StagedDataset
@@ -64,6 +64,8 @@ class _Counts:
 
 
 def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
+    from datumaro.experimental import LazyImage, LazyVideoFrame
+
     labels = []
     label_attr_name = "label" if "label" in dataset.schema.attributes else "labels"
     label_attr = dataset.schema.attributes[label_attr_name]
@@ -130,17 +132,18 @@ class StagedDatasetService:
     def __init__(self, staged_datasets_dir: Path) -> None:
         self._staged_datasets_dir = staged_datasets_dir
 
-    async def upload(self, filename: str, chunk_reader: Callable[[], Awaitable[bytes]]) -> StagedDataset:
+    async def upload(self, filename: str, file_obj: BinaryIO) -> StagedDataset:
         """
-        Store an uploaded dataset archive into a new staged dataset directory.
+        Store an uploaded dataset archive using high-speed threaded block copies.
 
         A new UUID is generated, a subdirectory with that UUID is created under the configured staging root,
-        and the incoming byte stream is written to a file with the given filename.
+        and the incoming file stream is written to a file with the given filename. The file copy operation is
+        offloaded to a worker thread using AnyIO to prevent blocking the main asynchronous event loop.
 
         Args:
             filename: Target filename of the uploaded archive within the staged dataset directory.
-            chunk_reader: Async callable that returns the next chunk of bytes from the upload stream.
-                Must return an empty `bytes` object to signal end of stream.
+            file_obj: A readable binary stream (such as SpooledTemporaryFile)
+                containing the dataset payload.
 
         Returns:
             A `StagedDataset` object containing the dataset identifier, the total number of bytes written,
@@ -151,14 +154,34 @@ class StagedDatasetService:
         target_dir.mkdir(parents=True, exist_ok=True)
         target_path = target_dir / filename
 
-        size = 0
-        with target_path.open("wb") as out_f:
-            while True:
-                chunk = await chunk_reader()
-                if not chunk:
-                    break
-                size += len(chunk)
-                out_f.write(chunk)
+        # Run the blocking write operation in a worker thread.
+        def _perform_copy() -> int:
+            # 1. Defensively reset stream pointer if allowed
+            try:
+                file_obj.seek(0)
+            except (AttributeError, OSError, ValueError):
+                pass
+
+            temp_path = target_path.with_suffix(f"{target_path.suffix}.part")
+
+            try:
+                # 2. Copy payload to partial file
+                with temp_path.open("wb") as out_f:
+                    shutil.copyfileobj(file_obj, out_f, length=1024 * 1024)
+
+                # 3. Grab size from the temp file *before* swapping (saves a tiny bit of OS overhead)
+                file_size = temp_path.stat().st_size
+
+                # 4. Atomic swap
+                temp_path.replace(target_path)
+                return file_size
+
+            except Exception:
+                # Explicit clean up if the copy itself errors out
+                temp_path.unlink(missing_ok=True)
+                raise
+
+        size = await to_thread.run_sync(_perform_copy)
 
         return StagedDataset(
             compressed=True,
@@ -243,6 +266,8 @@ class StagedDatasetService:
         return sum(item.stat().st_size for item in path.rglob("*") if item.is_file())
 
     def _get_staged_dataset_from_path(self, dataset_id: UUID, dataset_path: Path) -> StagedDataset:
+        from datumaro.experimental import import_dataset
+
         size = self._calculate_path_size(dataset_path)
         compressed = dataset_path.is_file() and dataset_path.suffix == ".zip"
         dataset_format = _infer_format_from_filename(dataset_path.name) if compressed else DatasetFormat.GETI
