@@ -6,6 +6,7 @@ import { useDatasetFiltersSearchParams } from 'hooks/use-dataset-filters-search-
 import { useDatasetMediaWithReviewStatus } from 'hooks/use-dataset-media-with-review-status.hook';
 import { useViewMode } from 'hooks/use-view-mode.hook';
 
+import { ActiveFilters } from '../../features/dataset/gallery/active-filters/active-filters.component';
 import { Gallery } from '../../features/dataset/gallery/gallery.component';
 import { Toolbar } from '../../features/dataset/gallery/toolbar/toolbar.component';
 import { ExportJobsList } from '../../features/dataset/import-export/export-jobs-list/export-jobs-list.component';
@@ -31,7 +32,7 @@ export const Dataset = () => {
             <Grid
                 height='100%'
                 gridArea='content'
-                rows={['auto', 'auto', 'minmax(0, 1fr)']}
+                rows={['auto', 'auto', 'auto', 'minmax(0, 1fr)']}
                 UNSAFE_style={{ padding: dimensionValue('size-300') }}
             >
                 <View gridRow='1 / 2'>
@@ -43,7 +44,11 @@ export const Dataset = () => {
                     <Toolbar items={items} viewMode={viewMode} setViewMode={setViewMode} />
                 </View>
 
-                <View gridRow='3 / 4'>
+                <View gridRow='3 / 4' marginBottom={hasActiveFilter ? 'size-200' : undefined}>
+                    <ActiveFilters />
+                </View>
+
+                <View gridRow='4 / 5'>
                     <Gallery
                         items={items}
                         viewMode={viewMode as GalleryViewMode}
