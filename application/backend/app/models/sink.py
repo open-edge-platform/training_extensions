@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from datetime import UTC, datetime
 from enum import StrEnum
 from os import getenv
 from typing import Annotated, Literal
@@ -128,3 +129,27 @@ class SinkTestResult(BaseModel):
     @staticmethod
     def failure(error: str | None) -> "SinkTestResult":
         return SinkTestResult(reachable=False, error=error, latency_ms=None)
+
+
+class SinkStatusCode(StrEnum):
+    """Enumeration of possible sink statuses."""
+
+    OK = "ok"
+    ERROR = "error"
+
+
+class SinkStatus(BaseModel):
+    """
+    Status report emitted by Dispatcher to communicate inference result dispatching state
+    to the Scheduler (or any consumer).
+    Attributes:
+        code: High-level status category.
+        sink_id: ID of the sink this status refers to
+        message: Optional free-form description or error message.
+        timestamp: When the status was generated.
+    """
+
+    code: SinkStatusCode
+    sink_id: UUID
+    message: str | None = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))

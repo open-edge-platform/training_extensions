@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 
 from app.models import DisconnectedSinkConfig, SinkType
+from app.models.sink import SinkStatus, SinkStatusCode
 from app.services.dispatchers import DispatchError
 from app.services.event.event_bus import EventBus, EventType
 from app.stream.stream_data import InferenceData, StreamData
@@ -37,6 +38,7 @@ def _make_worker(event_bus: EventBus, broadcaster: FrameBroadcaster[np.ndarray])
             rtc_stream_broadcaster=broadcaster,
             stop_event=mp.Event(),
             data_collector=MagicMock(),
+            sink_status_holder=MagicMock(),
         )
 
 
@@ -100,7 +102,7 @@ class TestDispatchingWorkerSourceChange:
         with patch.object(
             DispatchingWorker,
             "_load_sink",
-            return_value=(MagicMock(sink_type=SinkType.FOLDER), [failing_dispatcher]),
+            return_value=(MagicMock(sink_type=SinkType.FOLDER, id=uuid.uuid4()), [failing_dispatcher]),
         ):
             worker = DispatchingWorker(
                 event_bus=event_bus,
@@ -108,6 +110,7 @@ class TestDispatchingWorkerSourceChange:
                 rtc_stream_broadcaster=broadcaster,
                 stop_event=mp.Event(),
                 data_collector=MagicMock(),
+                sink_status_holder=MagicMock(),
             )
 
         def stop_when_empty() -> bool:
@@ -118,3 +121,8 @@ class TestDispatchingWorkerSourceChange:
 
         assert failing_dispatcher.dispatch.call_count == 2
         assert broadcaster.latest_frame is not None
+
+        # Each failed dispatch reports an ERROR sink status to the holder.
+        sink_status = worker._sink_status_holder.status
+        assert isinstance(sink_status, SinkStatus)
+        assert sink_status.code == SinkStatusCode.ERROR

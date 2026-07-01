@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from datetime import UTC, datetime
 from enum import StrEnum
 from os import getenv
 from typing import Annotated, Literal
@@ -125,3 +126,28 @@ class SourceTestResult(BaseModel):
     @staticmethod
     def failure(error: str | None) -> "SourceTestResult":
         return SourceTestResult(reachable=False, error=error, latency_ms=None)
+
+
+class SourceStatusCode(StrEnum):
+    """Enumeration of possible source statuses."""
+
+    OK = "ok"
+    ERROR = "error"
+    FINISHED = "finished"
+
+
+class SourceStatus(BaseModel):
+    """
+    Status report emitted by StreamLoader to communicate frame-fetching state
+    to the Scheduler (or any consumer in the main process) via shared memory.
+    Attributes:
+        code: High-level status category.
+        source_id: ID of the source this status refers to
+        message: Optional free-form description or error message.
+        timestamp: When the status was generated.
+    """
+
+    code: SourceStatusCode
+    source_id: UUID
+    message: str | None = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))

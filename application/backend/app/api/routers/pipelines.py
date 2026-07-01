@@ -10,17 +10,28 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from pydantic import ValidationError
 
-from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service, get_system_service
+from app.api.dependencies import (
+    get_inference_status_service,
+    get_pipeline_metrics_service,
+    get_pipeline_service,
+    get_sink_status_service,
+    get_source_status_service,
+    get_system_service,
+)
 from app.api.schemas import PipelineMetricsView, PipelineView
+from app.api.schemas.pipeline import PipelineHealth
 from app.api.validators import ProjectID
 from app.models import DataCollectionConfig, DataCollectionPolicyAdapter, PipelineStatus
 from app.services import PipelineMetricsService, PipelineService, SystemService
+from app.services.inference_status_service import InferenceStatusService
 from app.services.pipeline_service import (
     DeviceInt8NotSupportedError,
     FolderSinkNotAccessibleError,
     IncompatibleModelVariantError,
     OtherProjectActiveError,
 )
+from app.services.sink_status_service import SinkStatusService
+from app.services.source_status_service import SourceStatusService
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
 
@@ -109,6 +120,34 @@ def get_pipeline(
     """Get info about a given pipeline"""
     pipeline = pipeline_service.get_pipeline_by_id(project_id)
     return PipelineView.model_validate(pipeline, from_attributes=True)
+
+
+@router.get(
+    ":health",
+    response_model=PipelineHealth,
+    responses={
+        status.HTTP_200_OK: {"description": "Pipeline health status", "model": PipelineHealth},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or pipeline not found"},
+    },
+)
+def get_pipeline_health(
+    project_id: ProjectID,
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+    source_status_service: Annotated[SourceStatusService, Depends(get_source_status_service)],
+    sink_status_service: Annotated[SinkStatusService, Depends(get_sink_status_service)],
+    inference_status_service: Annotated[InferenceStatusService, Depends(get_inference_status_service)],
+) -> PipelineHealth:
+    """Get pipeline health"""
+    pipeline = pipeline_service.get_pipeline_by_id(project_id)
+    if pipeline.status == PipelineStatus.IDLE:
+        return PipelineHealth.idle()
+    source_status = source_status_service.get_status(source_id=pipeline.source_id) if pipeline.source_id else None
+    sink_status = sink_status_service.get_status(sink_id=pipeline.sink_id) if pipeline.sink_id else None
+    inference_status = inference_status_service.get_status(model_id=pipeline.model_id) if pipeline.model_id else None
+    return PipelineHealth.running(
+        source_status=source_status, sink_status=sink_status, inference_status=inference_status
+    )
 
 
 @router.patch(

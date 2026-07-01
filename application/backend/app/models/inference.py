@@ -1,11 +1,12 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from uuid import UUID
 
 import numpy as np
+from pydantic import BaseModel, Field
 
 from app.models import DatasetItemAnnotation
 from app.models.system import DeviceInfo
@@ -65,3 +66,28 @@ class InferenceState:
 
     status: InferenceStatus
     model: InferenceModel | None = None
+
+
+class InferenceWorkerStatusCode(StrEnum):
+    """Status codes reported by the InferenceWorker process via IPC."""
+
+    OK = "ok"
+    ERROR = "error"
+
+
+class InferenceWorkerStatus(BaseModel):
+    """
+    Status report emitted by InferenceWorker to communicate inference state
+    to the Scheduler (or any consumer in the main process) via shared memory.
+
+    Attributes:
+        code: High-level status category.
+        model_id: ID of the model being used.
+        message: Optional free-form description or error message.
+        timestamp: When the status was generated.
+    """
+
+    code: InferenceWorkerStatusCode
+    model_id: UUID
+    message: str | None = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))

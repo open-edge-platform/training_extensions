@@ -35,7 +35,10 @@ from app.services.data_collect import DataCollector
 from app.services.demo_files_service import DemoFilesService
 from app.services.event.event_bus import EventBus
 from app.services.inference import InferenceServer
+from app.services.inference_status_service import InferenceStatusService
 from app.services.license_service import LicenseService
+from app.services.sink_status_service import SinkStatusService
+from app.services.source_status_service import SourceStatusService
 from app.services.training_configuration_service import TrainingConfigurationService
 from app.services.video import VideoService
 from app.webrtc.manager import WebRTCManager
@@ -146,6 +149,31 @@ def get_source_update_service(
 ) -> SourceUpdateService:
     """Provides a SourceUpdateService instance."""
     return SourceUpdateService(event_bus=event_bus, db_session=db)
+
+
+def get_source_status_service(
+    scheduler: Annotated[Scheduler, Depends(get_scheduler)],
+) -> SourceStatusService:
+    """Provides a SourceStatusService instance."""
+    return SourceStatusService(
+        source_status_shm=scheduler.source_status_shm, source_status_lock=scheduler.source_status_lock
+    )
+
+
+def get_sink_status_service(
+    scheduler: Annotated[Scheduler, Depends(get_scheduler)],
+) -> SinkStatusService:
+    """Provides a SinkStatusService instance."""
+    return SinkStatusService(sink_status_holder=scheduler.sink_status_holder)
+
+
+def get_inference_status_service(
+    scheduler: Annotated[Scheduler, Depends(get_scheduler)],
+) -> InferenceStatusService:
+    """Provides an InferenceStatusService instance."""
+    return InferenceStatusService(
+        inference_status_shm=scheduler.inference_status_shm, inference_status_lock=scheduler.inference_status_lock
+    )
 
 
 def get_system_service() -> SystemService:
