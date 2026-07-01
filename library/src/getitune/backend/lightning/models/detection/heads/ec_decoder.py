@@ -483,10 +483,16 @@ class ECTransformerDecoder(nn.Module):
 
         # Segmentation
         if spatial_feat is not None and self.segmentation_head is not None:
-            dec_out_segs = self.segmentation_head(
-                spatial_features=spatial_feat,
-                query_features=dec_out_hs,
-            )
+            if self.training:
+                dec_out_segs = self.segmentation_head(
+                    spatial_features=spatial_feat,
+                    query_features=dec_out_hs,
+                )
+            else:
+                dec_out_segs = self.segmentation_head.forward_export(
+                    spatial_features=spatial_feat,
+                    query_features=dec_out_hs,
+                )
             return (
                 torch.stack(dec_out_bboxes),
                 torch.stack(dec_out_logits),
